@@ -1,0 +1,10 @@
+# Secrets never go in this repo. Keep them in ~/.config/secrets.env (outside the repo).
+*.env
+.env*
+!*.env.example
+*.key
+*.pem
+id_*
+
+# Per-machine overrides that should stay local (not "*.local": that would hide the .local/ stow dirs)
+*.local.lua

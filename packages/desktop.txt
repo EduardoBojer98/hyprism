@@ -1,0 +1,28 @@
+# Hyprland session, installed by system/02-desktop.sh
+hyprland
+xdg-desktop-portal-hyprland
+hyprpolkitagent
+hyprlock
+hypridle
+hyprshutdown
+qt6-wayland
+
+# Stopgap launcher + notifications until the Quickshell shell exists
+fuzzel
+mako
+
+# Clipboard, screenshots, colour picker, media keys
+wl-clipboard
+cliphist
+hyprshot
+satty
+hyprpicker
+brightnessctl
+playerctl
+
+# Fonts
+inter-font
+ttf-jetbrains-mono-nerd
+
+# Dotfiles
+stow

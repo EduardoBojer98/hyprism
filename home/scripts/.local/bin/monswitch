@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Switch the shared Acer XZ322QU S between this laptop and the work PC over DDC/CI,
+# and move Hyprland workspaces off / back onto it.
+#
+#   monswitch toggle   switch to whichever side isn't showing now (keybind / bar button)
+#   monswitch pc       give the monitor to the work PC
+#   monswitch laptop   take the monitor back
+#   monswitch watch    background loop: follows switches made with the monitor's own buttons
+#
+# Linux keeps reporting the monitor as connected while it shows the PC, so Hyprland can't
+# notice on its own. The DDC input register (VCP 0x60) is the source of truth.
+set -euo pipefail
+
+OUT=HDMI-A-1
+LAPTOP=0x12   # monitor input HDMI 2
+PC=0x11       # monitor input HDMI 1
+POLL=3        # seconds between DDC reads in watch mode
+
+STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
+LAYOUT=$STATE_DIR/layout.json
+mkdir -p "$STATE_DIR"
+
+# The i2c bus number can change between boots; the DRM connector always links to the right one.
+BUS=$(readlink -f /sys/class/drm/card*-"$OUT"/ddc | sed 's/.*i2c-//')
+
+ddc_input() {  # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch)
+    { ddcutil --bus "$BUS" getvcp 60 --terse 2>/dev/null || true; } | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}'
+}
+ddc_set() { ddcutil --bus "$BUS" setvcp 60 "$1"; }
+
+out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o)' >/dev/null; }
+
+save_layout() {
+    jq -n \
+        --argjson ws "$(hyprctl -j workspaces | jq --arg o "$OUT" '[.[] | select(.monitor == $o and .id > 0) | .id]')" \
+        --argjson active "$(hyprctl -j monitors | jq --arg o "$OUT" '.[] | select(.name == $o) | .activeWorkspace.id')" \
+        '{workspaces: $ws, active: $active}' > "$LAYOUT"
+}
+
+restore_layout() {
+    [[ -f $LAYOUT ]] || return 0
+    local id
+    for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
+        hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$OUT\" })" >/dev/null
+    done
+    id=$(jq -r '.active // empty' "$LAYOUT")
+    [[ -n $id ]] && hyprctl dispatch "hl.dsp.focus({ workspace = \"$id\" })" >/dev/null
+    return 0
+}
+
+# Hyprland side only: used directly by the watcher when the input was switched by hand.
+# The Acer is mirrored, not disabled: with no signal from the laptop it gives up on the
+# PC input within ~5 s (tested). A mirror keeps a signal but holds no workspaces.
+release() {
+    out_enabled || return 0
+    save_layout
+    hyprctl eval "hl.monitor({ output = \"$OUT\", mode = \"1920x1080@60\", position = \"auto\", scale = 1, mirror = \"eDP-1\" })" >/dev/null
+    local id   # a mirror can keep its workspaces, so move them explicitly
+    for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
+        hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"eDP-1\" })" >/dev/null
+    done
+    notify-send -a monswitch "Monitor → work PC" "Workspaces moved to the laptop screen"
+}
+reclaim() {
+    out_enabled && return 0
+    hyprctl reload >/dev/null   # re-applies the monitor rule from modules/monitors.lua
+    sleep 1
+    restore_layout
+    notify-send -a monswitch "Monitor → laptop" "Workspaces restored"
+}
+
+to_pc() {
+    ddc_set "$PC"   # switch first, while the laptop still sends a picture
+    sleep 2         # the input change causes a ~1 s HDMI disconnect blip; let it pass
+    release
+}
+to_laptop() {
+    reclaim         # send a picture first, so the monitor has a signal to switch to
+    ddc_set "$LAPTOP"
+}
+
+# One action at a time: a keypress and the watcher must never interleave.
+exec 9>"$STATE_DIR/lock"
+
+case ${1:-toggle} in
+    pc)     flock 9; to_pc ;;
+    laptop) flock 9; to_laptop ;;
+    toggle)
+        flock 9
+        if out_enabled && [[ $(ddc_input) == "$LAPTOP" ]]; then to_pc; else to_laptop; fi
+        ;;
+    watch)
+        last=""
+        while sleep "$POLL"; do
+            now=$(ddc_input)
+            # Act only on two identical readings in a row; ignores glitches during a switch.
+            if [[ -n $now && $now == "$last" ]]; then
+                flock 9
+                now=$(ddc_input)   # re-read: a keypress may have switched while we waited for the lock
+                # || true: one failed hyprctl/notify call must not kill the watcher
+                if   [[ $now == "$PC" ]];     then release || true
+                elif [[ $now == "$LAPTOP" ]]; then reclaim || true
+                fi
+                flock -u 9
+            fi
+            last=$now
+        done
+        ;;
+    *) echo "usage: monswitch [toggle|pc|laptop|watch]" >&2; exit 2 ;;
+esac
