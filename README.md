@@ -1,7 +1,7 @@
 # linux-setup
 
 A macOS-style desktop for Arch-based Linux (built on CachyOS): **Hyprland** with a **Quickshell**
-shell in frosted Liquid Glass style (light by default, dark in Settings). Everything is free software, and everything a user would
+shell in frosted Graphite Glass style (dark by default, light in Settings). Everything is free software, and everything a user would
 want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
 install stays untouched and selectable at the login screen.
 
@@ -13,9 +13,10 @@ install stays untouched and selectable at the login screen.
 - **Spotlight** (tap `Super`): apps grid first, then results ranked apps → files → calculator →
   settings → actions → web; clipboard history inside it
 - **Notification centre** with history, grouping and Do Not Disturb; **Mission Control**
-  (`Super+W`, three fingers up); auto-hiding **dock** with minimise
-- Keyboard shortcuts, displays, sound, network, Bluetooth, power, wallpaper, lock and sleep, default
-  apps, weather, appearance: all editable in Settings
+  (`Super+W`, three fingers up); auto-hiding **dock** (drag to reorder, window list on right-click) with minimise
+- Keyboard shortcuts, displays, a shared monitor, sound, network, Bluetooth, power, wallpaper folders
+  and slideshow, startup apps, lock and sleep, default apps, weather, appearance (accent palette or
+  any custom colour, dark tint): all editable in Settings
 - Hardware extras that switch themselves on where the hardware exists: ASUS fan curves and charge
   limit (asusctl), keyboard light, a monitor shared with another computer (DDC/CI)
 
@@ -60,7 +61,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
 | `Super+1…0` / `Super+Shift+1…0` | Go to / send window to desktop; `Super+Tab` previous |
 | `Super+S` / `Super+Shift+S` | Scratchpad / send window there |
-| `Print` / `Shift+Print` / `Super+Shift+T` | Screenshot an area (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
+| `Print` or `Alt+Shift+S` / `Shift+Print` / `Super+Shift+T` | Screenshot an area (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
 | `Super+Shift+C` | Colour picker |
 | `Super+L` / `Super+Shift+E` | Lock / log out |
 | `Super+drag` / `Super+right-drag` | Move / resize window |
