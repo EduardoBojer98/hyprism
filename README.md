@@ -1,120 +1,92 @@
 # linux-setup
 
-My CachyOS + Hyprland desktop for the ASUS ROG Flow X13 (GV301QC, 2021), kept in one repo so the
-whole setup can be rebuilt. KDE Plasma stays installed as a fallback session and is never modified.
+A macOS-style desktop for Arch-based Linux (built on CachyOS): **Hyprland** with a **Quickshell**
+shell in smoked-glass Liquid Glass style. Everything is free software, and everything a user would
+want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
+install stays untouched and selectable at the login screen.
 
-- **Hyprland 0.56** with a modular **Lua** config (hyprlang is deprecated since 0.55)
-- **Quickshell** shell written for this machine: top bar with tray, macOS-style Control Center,
-  auto-hiding dock, Spotlight-style launcher (apps / files / clipboard), OSD, notifications, power menu
-- **Dark liquid glass** look: translucent surfaces over Hyprland blur, hairline strokes,
-  Catppuccin Macchiato accents across Hyprland, shell, Ghostty, Starship, fzf, lock screen and GTK
-- **monswitch**: one key hands the shared Acer monitor to the work PC over DDC/CI and back
-- Tablet mode (auto-rotate, on-screen keyboard button), lid handling, hibernation, 80 % charge limit
+- **Menu bar**: desktops and the app name on the left; weather, date and time (calendar) in the
+  centre; tray, temperatures, keyboard layout, status (Control Center), notifications bell and the
+  utility menu on the right
+- **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, media, power
+  mode, display, sound and microphone
+- **Spotlight** (tap `Super`): apps grid first, then results ranked apps → files → calculator →
+  settings → actions → web; clipboard history inside it
+- **Notification centre** with history, grouping and Do Not Disturb; **Mission Control**
+  (`Super+W`, three fingers up); auto-hiding **dock** with minimise
+- Keyboard shortcuts, displays, sound, network, Bluetooth, power, wallpaper, lock and sleep, default
+  apps, weather, appearance: all editable in Settings
+- Hardware extras that switch themselves on where the hardware exists: ASUS fan curves and charge
+  limit (asusctl), keyboard light, a monitor shared with another computer (DDC/CI)
+
+## Install
+
+Needs an Arch-based system (pacman) with a login screen that lists Wayland sessions.
+
+```bash
+git clone <this repo's URL> ~/linux-setup
+cd ~/linux-setup
+./install.sh --dry-run     # see what would be linked and backed up
+./install.sh --system      # install packages (asks once, uses sudo), then link the dotfiles
+```
+
+Log out and pick **Hyprland** at the login screen. To only (re)link the dotfiles later: `./install.sh`.
+To remove everything: `./install.sh --undo` (puts your previous files back).
+
+| Step | What it does |
+|---|---|
+| `system/02-desktop.sh` | Hyprland, Quickshell and desktop packages (`packages/desktop.txt`), lid behaviour, Hyprland as default session on Plasma Login |
+| `system/03-apps.sh` | Shell tools and everyday apps (`packages/dev.txt`, `packages/apps.txt`): edit the lists first if you don't want them |
+| `system/hosts/<hostname>/` | Steps for one specific computer, run only on the computer with that hostname |
+
+First run: open **Settings** (`Super+I`) and set the weather city, wallpaper, keyboard layouts and
+displays. Your choices are saved on your computer only (see [docs/USER-GUIDE.md](docs/USER-GUIDE.md)).
+
+## Keys (Super = Windows key)
+
+All of these can be changed in **Settings → Keyboard Shortcuts**.
+
+| Keys | Action |
+|---|---|
+| tap `Super`, `Super+Space` | Spotlight (`Super+Shift+Space` files, `Super+A` all apps) |
+| `Super+V` | Clipboard history at the pointer |
+| `Super+C` / `Super+N` / `Super+Shift+N` | Control Center / notification centre / Do Not Disturb |
+| `Super+W`, three fingers up | Mission Control |
+| `Super+I` | Settings |
+| `Super+Enter` / `Super+E` / `Super+B` | Terminal / files / browser |
+| `Super+.` | Emoji picker |
+| `Super+Q` / `Super+H` | Close / minimise window (restore from the dock) |
+| `Super+F` / `Super+Shift+F` / `Super+T` | Fullscreen / maximise / float |
+| `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
+| `Super+1…0` / `Super+Shift+1…0` | Go to / send window to desktop; `Super+Tab` previous |
+| `Super+S` / `Super+Shift+S` | Scratchpad / send window there |
+| `Print` / `Shift+Print` / `Super+Shift+T` | Screenshot area / annotate / copy text from screen (OCR) |
+| `Super+Shift+C` | Colour picker |
+| `Super+L` / `Super+Shift+E` | Lock / log out |
+| `Super+drag` / `Super+right-drag` | Move / resize window |
+| Three-finger swipe sideways | Switch desktop |
 
 ## Layout
 
 | Path | What |
 |---|---|
-| `install.sh` | Links `home/` into `~` with GNU Stow; backs up anything in the way; `--undo` |
-| `home/<package>/` | Stow packages, mirroring `~` (`hypr`, `quickshell`, `ghostty`, `fish`, `starship`, `scripts`, …) |
-| `home/hypr/.config/hypr/hosts/` | Optional per-machine overrides (`<hostname>.lua`) |
-| `packages/*.txt` | Package lists: `hardware`, `desktop`, `dev`, `apps` |
-| `system/NN-*.sh` | System changes (sudo), safe to re-run, in order |
-| `.githooks/pre-commit` | gitleaks secret scan, enabled by `install.sh` |
+| `home/<package>/` | GNU Stow packages mirroring `~`: `hypr`, `quickshell`, `ghostty`, `fish`, `starship`, `scripts`, … |
+| `home/quickshell/.config/quickshell/` | The shell; `ConfigData.qml` holds every default |
+| `home/hypr/.config/hypr/` | Hyprland Lua config; `modules/` shared, `hosts/<hostname>.lua` per computer |
+| `packages/*.txt`, `system/` | Package lists and system steps (`system/hosts/<hostname>/` per computer) |
+| `docs/USER-GUIDE.md` | Configuring, other computers, troubleshooting |
+| `DESIGN.md` | Design system: tokens, components, rules |
 
-## Install (fresh CachyOS)
-
-```bash
-git clone git@github.com:EduardoBojer98/linux-setup.git ~/Documents/projects/linux-setup
-cd ~/Documents/projects/linux-setup
-./install.sh --system      # runs system/01..03 with sudo (asks first), then links the dotfiles
-```
-
-Then log out and pick **Hyprland** at the login screen. To only (re)link the dotfiles: `./install.sh`.
-To preview: `./install.sh --dry-run`.
-
-| Script | Changes |
-|---|---|
-| `01-hardware.sh` | asusctl + ROG Control Center, NVIDIA sleep services, nvidia-powerd off, `@swap` subvolume + 20 GB swapfile + resume params (hibernation) |
-| `02-desktop.sh` | Hyprland and desktop packages, `/dev/dri/amd-igpu` udev link, lid behaviour (logind), Hyprland as default session |
-| `03-apps.sh` | Shell tools, PHP/Composer, uv, gitleaks, Okular, OnlyOffice, Bitwarden |
-
-Manual once per machine: battery limit (`asusctl battery limit 80`), Acer menu **DDC/CI on, Auto Source off**,
-NVIDIA GPU on/off in **ROG Control Center → GPU Configuration** (needs a restart).
-
-## Undo and rollback
+## Undo and recovery
 
 | What broke | Do this |
 |---|---|
-| Dotfiles | `./install.sh --undo` removes the links and offers to restore the last backup (`~/.local/state/linux-setup/backups/`) |
-| Hyprland session | Pick **Plasma** at the login screen. From a black screen: Ctrl+Alt+F3, log in, `sudo systemctl restart plasmalogin` |
-| A package update / system script | Boot menu → **Snapshots** → pick the snapshot before the change, then `sudo limine-snapper-restore`. pacman takes snapshots automatically (snap-pac) |
-| Hibernation | `sudo rm /etc/limine-entry-tool.d/50-hibernate.conf && sudo limine-update` |
-
-## Keybinds (Super = Windows key)
-
-| Keys | Action |
-|---|---|
-| `Super+I` | Settings app |
-| `Super+Space` | Launcher, Apps tab: apps, calculator, system actions, `> command`, web search |
-| `Super+Shift+Space` | Launcher, Files tab (search your home folder) |
-| `Super+V` | Launcher, Clipboard tab |
-| In the launcher | `Tab`/`Shift+Tab` or `Ctrl+1/2/3` switch tabs, `↑↓` move, `Enter` open, `Esc` close |
-| `Super+Enter` | Terminal (Ghostty) |
-| `Super+B` / `Super+E` | Firefox / Dolphin |
-| `Super+Q` | Close window |
-| `Super+F` / `Super+Shift+F` | Fullscreen / maximise |
-| `Super+T` | Float / tile window |
-| `Super+J` | Flip split direction |
-| `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
-| `Super+1…0` / `Super+Shift+1…0` | Go to / send window to workspace (laptop starts on 1, Acer on 2; others open where you are) |
-| `Super+Tab` | Previous workspace |
-| `Super+S` / `Super+Shift+S` | Scratchpad / send window to scratchpad |
-| `Super+M` | Acer monitor → work PC / back |
-| `Super+L` | Lock |
-| `Super+Shift+E` | Log out |
-| `Super+Shift+R` | Reload Hyprland config |
-| `Super+Shift+C` | Colour picker |
-| `Print` / `Shift+Print` | Screenshot area to file / area into the editor (satty) |
-| `Alt+Shift` | Keyboard layout US ↔ Serbian Latin |
-| `Super+drag` / `Super+right-drag` | Move / resize window |
-| Touchpad 3-finger swipe | Switch workspace |
-
-Bar (floating glass capsules): workspaces · focused app · weather | clock | CPU/GPU temperature rings ·
-tray · **status** (layout, Wi-Fi, Bluetooth, volume, battery; scroll = volume) · power menu. Clicking the status pill opens the **Control Center**: Wi-Fi and Bluetooth
-(toggle + pick network/device), on-screen keyboard, Acer monitor, power mode, brightness, output and
-microphone volume + device, shortcut to ROG Control Center. Dock: launcher button, pinned apps, running apps
-(middle-click = new window). Push the pointer to the bottom edge to show the dock.
-
-## Settings app (`Super+I`)
-
-Glass window with native pages: **Displays** (drag to arrange, resolution, scale, rotation, VRR),
-**Sound** (devices, per-app volume), **Wi-Fi & Network**, **Bluetooth** (scan, pair, connect),
-**Battery & Power** (charge limit, power mode, battery health), **Keyboard & Touchpad**, **Wallpaper**,
-**Lock & Sleep**, **Default Apps**, **Weather** (city), **About**. Changes apply immediately and are saved
-in the repo: `hypr/settings/displays.lua`, `hypr/settings/input.lua`, `hypr/hypridle.conf`,
-`hyprpaper.conf`, `quickshell/settings.json`; default apps go to `~/.config/mimeapps.list`.
-Fans, NVIDIA GPU and keyboard lights stay in ROG Control Center.
-
-## Shared monitor (monswitch)
-
-Laptop = Acer input HDMI 1 (`0x11`), work PC = HDMI 2 (`0x12`). `Super+M` or the bar button switches.
-A watcher follows switches made with the monitor's buttons. While the PC has the monitor, Hyprland
-mirrors the laptop onto that port (so the Acer doesn't drop the PC input) and moves workspaces to the laptop.
-
-## Per-machine differences
-
-Shared config describes this laptop. For another computer add `home/hypr/.config/hypr/hosts/<hostname>.lua`
-(loaded last, can override anything) and keep machine-only packages out of the shared lists.
+| Dotfiles | `./install.sh --undo` removes the links and offers to restore the last backup |
+| The Hyprland session | Pick another session at the login screen, or Ctrl+Alt+F3 and log in on a text console |
+| The shell (bar, dock) | `pkill -x qs; qs &` restarts it; `qs log` shows errors |
+| A Settings choice | Delete its file from the user guide's table to go back to defaults; several pages also have **Reset to defaults** |
 
 ## Secrets
 
-Never in this repo: SSH/GPG keys, API keys, tokens, `.env` files (`.gitignore` blocks the common names,
-and the gitleaks pre-commit hook scans every commit). Keep them in `~/.ssh`, Bitwarden, or a local
-`~/.config/secrets.env` sourced from outside the repo.
-
-## Maintenance
-
-- Conventional Commits (`feat:`, `fix:`, `chore:`), one change per commit.
-- Tag working states (`v1.0`, `v1.1`, …) and note them in `CHANGELOG.md`.
-- After a Hyprland or Quickshell update: `hyprctl configerrors` and `qs log` show breakage first.
+Never in this repo: SSH/GPG keys, API keys, tokens, `.env` files. `.gitignore` blocks the common names
+and a gitleaks pre-commit hook (enabled by `install.sh`) scans every commit.

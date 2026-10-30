@@ -84,10 +84,10 @@ lives in root-owned `/etc/asusd/asusd.ron`.
       components' hard-coded sizes onto tokens moves to Phase 6.
 - [x] 4 Hardware: baseline measurements, Balanced fan curve, Caffeine, ASUS page with fan-curve editor
       (PPT per mode not changed: needs root)
-- [ ] 5 Desktop: Control Center, notification centre + DND, MPRIS, night light, OCR, Mission
+- [x] 5 Desktop: Control Center, notification centre + DND, MPRIS, night light, OCR, Mission
       Control, dock minimise, custom launcher actions
-- [ ] 6 Polish and validation
-- [ ] 7 Docs, packages, installer
+- [x] 6 Polish: Tahoe menu bar, smoked glass, 8-14 px corners, hardware detection (Machine.qml)
+- [x] 7 Docs (README, docs/USER-GUIDE.md), package lists, installer with per-host steps
 
 ## Needs the user
 

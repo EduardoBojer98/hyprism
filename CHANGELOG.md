@@ -2,13 +2,23 @@
 
 ## v1.1 (unreleased)
 
-- Top bar redesigned as floating glass complications: workspaces, focused app, weather (Open-Meteo),
-  clock, CPU/GPU temperature rings, tray, status, power; colour only for active or out-of-range states
-- Settings app (Super+I) with native pages for displays, sound, network, Bluetooth, power, keyboard and
-  touchpad, wallpaper, lock and sleep, default apps, weather and system info
-- Display and input settings moved to hypr/settings/*.lua so the Settings app can write them
-- Workspaces numbered from 1, laptop starts on 1 and the Acer on 2
-- DESIGN.md and PRODUCT.md describe the shell's design system and purpose
+- macOS Tahoe look: thin see-through menu bar (desktops, app name; weather, date and time in the
+  centre; tray, temperatures, status, notifications bell, utility menu on the right), neutral
+  smoked glass with a white rim, 8-14 px corners
+- Spotlight: centred, apps grid before you type, results ranked by group (order and groups set in
+  Settings), clipboard history inside it
+- Notification centre (bell, Super+N) with history, grouping and Do Not Disturb (Super+Shift+N);
+  calendar popup under the clock
+- Mission Control (Super+W, three fingers up): live window previews, desktop strip, drag a window
+  onto a desktop to move it
+- Control Center in the Tahoe layout; utility menu with tools and power; Night Light, Caffeine,
+  copy text from screen (OCR), emoji picker
+- Settings app (Super+I): every page above plus Keyboard Shortcuts (record and change any bind)
+  and ASUS Hardware (live readings, fan-curve editor)
+- For any user: Settings choices stay local (gitignored) with defaults in code; hardware features
+  detect themselves; per-computer Hyprland and system steps live under `hosts/<hostname>`;
+  monswitch reads `~/.config/monswitch.conf`; docs/USER-GUIDE.md
+- XWayland apps sharp on scaled screens (zero scaling)
 
 ## v1.0 (2026-10-30)
 
