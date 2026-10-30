@@ -288,8 +288,8 @@ PanelWindow {
                 id: powerCapsule
                 horizontalPadding: 12
                 interactive: true
-                active: powerMenu.visible
-                onClicked: powerMenu.visible = !powerMenu.visible
+                active: UtilityMenu.open
+                onClicked: UtilityMenu.toggle()
                 StatusGlyph { glyph: "\u{F0425}"; tone: Theme.text }
             }
         }
@@ -371,75 +371,6 @@ PanelWindow {
                             text: parent.day
                             color: parent.today ? Theme.accentText : parent.month === calendar.month.getMonth() ? Theme.text : Theme.muted
                             font { family: Theme.font; pixelSize: Theme.fontSize; weight: parent.today ? Font.Bold : Font.Normal; features: { "tnum": 1 } }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Power menu under the power capsule; closes on a choice or a click elsewhere
-    PopupWindow {
-        id: powerMenu
-        anchor.item: powerCapsule
-        anchor.edges: Edges.Bottom | Edges.Right
-        anchor.gravity: Edges.Bottom | Edges.Left
-        anchor.margins.top: 12
-        grabFocus: true
-        implicitWidth: 210
-        implicitHeight: menuColumn.implicitHeight + 14
-        color: "transparent"
-
-        Glass {
-            anchors.fill: parent
-            strong: true
-            radius: Theme.radiusLarge
-
-            Column {
-                id: menuColumn
-                anchors { fill: parent; margins: 7 }
-
-                Repeater {
-                    model: [
-                        { icon: "\u{F033E}", label: "Lock",      cmd: ["loginctl", "lock-session"] },
-                        { icon: "\u{F04B2}", label: "Suspend",   cmd: ["systemctl", "suspend"] },
-                        { icon: "\u{F0717}", label: "Hibernate", cmd: ["systemctl", "hibernate"] },
-                        { icon: "\u{F0343}", label: "Log out",   cmd: ["hyprshutdown"] },
-                        { icon: "\u{F0709}", label: "Restart",   cmd: ["systemctl", "reboot"] },
-                        { icon: "\u{F0425}", label: "Shut down", cmd: ["systemctl", "poweroff"], danger: true },
-                    ]
-
-                    Rectangle {
-                        required property var modelData
-                        width: menuColumn.width
-                        height: 38
-                        radius: 12
-                        color: item.containsMouse ? Theme.fillHover : "transparent"
-
-                        Row {
-                            anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
-                            spacing: 12
-                            Text {
-                                text: modelData.icon
-                                color: modelData.danger ? Theme.red : Theme.text
-                                font { family: Theme.iconFont; pixelSize: 15 }
-                            }
-                            Text {
-                                text: modelData.label
-                                color: Theme.text
-                                font { family: Theme.font; pixelSize: Theme.fontSize }
-                            }
-                        }
-
-                        MouseArea {
-                            id: item
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                powerMenu.visible = false
-                                Quickshell.execDetached(modelData.cmd)
-                            }
                         }
                     }
                 }
