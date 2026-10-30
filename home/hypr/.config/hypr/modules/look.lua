@@ -59,5 +59,11 @@ hl.config({
         force_default_wallpaper = 0,
         disable_hyprland_logo   = true,
     },
+    -- X11 apps draw at the panel's real pixels instead of being stretched 1.2x on eDP-1
+    -- (nearest-neighbour stretching made their text and icons look pixelated). They look a
+    -- little smaller on the laptop screen; the 1x external monitor is unaffected.
+    xwayland = {
+        force_zero_scaling = true,
+    },
 })
 apply_theme()
