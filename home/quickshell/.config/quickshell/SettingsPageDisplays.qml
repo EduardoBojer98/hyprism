@@ -201,4 +201,42 @@ ColumnLayout {
         PillButton { text: "Revert"; enabled: page.dirty; onClicked: page.load() }
         PillButton { text: "Apply"; primary: true; enabled: page.dirty; onClicked: page.apply() }
     }
+
+    SettingGroup {
+        title: "Night Light"
+        SettingRow {
+            label: "Turn on"
+            hint: NightLight.sun ? `Sunset ${NightLight.clock(NightLight.sun.set)}, sunrise ${NightLight.clock(NightLight.sun.rise)} in ${Config.weather.city}` : ""
+            ConfigChoice { section: "nightLight"; key: "mode"; values: ["off", "on", "sun", "schedule"]; labels: ["Off", "Always", "Sunset to sunrise", "Custom hours"] }
+        }
+        SettingRow {
+            label: "Warmth"
+            hint: `${Config.nightLight.temperature} K` + (NightLight.active ? "" : " (applies when Night Light is on)")
+            Slider {
+                Layout.preferredWidth: 220
+                icon: "\u{F0599}"
+                // 6000 K (neutral) at the left, 2500 K (warmest) at the right
+                value: (6000 - Config.nightLight.temperature) / 3500
+                onMoved: v => Config.set("nightLight", "temperature", Math.round((6000 - v * 3500) / 100) * 100)
+            }
+        }
+        SettingRow {
+            visible: Config.nightLight.mode === "schedule"
+            label: "From – to"
+            hint: "24-hour time, e.g. 21:00 – 07:00"
+            RowLayout {
+                spacing: Theme.spaceS
+                Repeater {
+                    model: ["from", "to"]
+                    TextField {
+                        required property string modelData
+                        Layout.preferredWidth: 72
+                        text: Config.nightLight[modelData]
+                        invalid: !/^([01]?\d|2[0-3]):[0-5]\d$/.test(text)
+                        onAccepted: if (!invalid) Config.set("nightLight", modelData, text.length === 4 ? "0" + text : text)
+                    }
+                }
+            }
+        }
+    }
 }

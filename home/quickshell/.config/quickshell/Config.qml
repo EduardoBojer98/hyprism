@@ -79,12 +79,14 @@ Singleton {
         path: Quickshell.shellDir + "/settings.json"
         watchChanges: true
         atomicWrites: true
-        onFileChanged: reload()
+        // debounced: a burst of our own writes (reset) must not reload a half-written state
+        onFileChanged: reloadLater.restart()
         onAdapterUpdated: writeAdapter()
         onLoadFailed: error => { if (error === FileViewError.FileNotFound) writeAdapter() }
 
         adapter: ConfigData { id: adapter }
     }
+    Timer { id: reloadLater; interval: 250; onTriggered: file.reload() }
 
     Component { id: defaults; ConfigData {} }
 }

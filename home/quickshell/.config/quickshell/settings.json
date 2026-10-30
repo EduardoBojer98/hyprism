@@ -2,7 +2,7 @@
     "appearance": {
         "accent": "blue",
         "animations": true,
-        "font": "Inter",
+        "font": "Noto Sans",
         "fontScale": 1,
         "glassOpacity": 0.55,
         "iconTheme": "Papirus-Dark",
@@ -17,17 +17,16 @@
         "maxAgeDays": 30,
         "maxItems": 300,
         "paused": false,
-        "skipSensitive": true
+        "skipSensitive": false
     },
     "controlCenter": {
         "showHardware": true,
         "showMedia": true
     },
     "dock": {
-        "autoHide": true,
-        "iconSize": 44,
+        "autoHide": false,
+        "iconSize": 36,
         "pinned": [
-            "firefox",
             "google-chrome",
             "com.microsoft.VSCode",
             "com.mitchellh.ghostty",
