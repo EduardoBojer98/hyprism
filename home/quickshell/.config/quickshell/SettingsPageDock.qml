@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Desktop & Dock: the dock at the bottom of each screen, and the bar's weather location.
+// Desktop & Dock: the dock at the bottom of each screen.
 ColumnLayout {
     spacing: 20
 
@@ -22,12 +22,9 @@ ColumnLayout {
         }
         SettingRow {
             label: "Pinned apps"
-            hint: "Right-click an icon in the dock to pin, unpin or minimise"
+            hint: "Drag an icon sideways to reorder; right-click it for its windows, pin, minimise or quit"
         }
     }
-
-    Text { text: "Weather in the bar"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold } }
-    Loader { Layout.fillWidth: true; source: "SettingsPageWeather.qml" }
 
     ResetGroup { sections: ["dock"] }
 }
