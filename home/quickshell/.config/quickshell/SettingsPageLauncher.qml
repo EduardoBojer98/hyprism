@@ -56,7 +56,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Before you type, show"
-            ConfigChoice { section: "launcher"; key: "startView"; values: ["apps", "search"]; labels: ["All apps", "Just the search field"] }
+            ConfigChoice { section: "launcher"; key: "startView"; values: ["home", "apps", "search"]; labels: ["Suggestions", "All apps", "Just the search field"] }
         }
         SettingRow {
             label: "Clipboard button"

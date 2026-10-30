@@ -16,14 +16,17 @@ Singleton {
     id: root
 
     readonly property var modes: [
-        { id: "apps",    name: "Applications", glyph: "\u{F003B}" },
-        { id: "files",   name: "Files",        glyph: "\u{F024B}" },
-        { id: "actions", name: "Actions",      glyph: "\u{F0E7}" },
-        { id: "clip",    name: "Clipboard",    glyph: "\u{F014C}" },
+        { id: "apps",    name: "Applications", glyph: "\u{F003B}", hint: "Search applications" },
+        { id: "files",   name: "Files",        glyph: "\u{F024B}", hint: "Search files and folders, or type ~/path" },
+        { id: "actions", name: "Actions",      glyph: "\u{F0E7}",  hint: "Search actions" },
+        { id: "clip",    name: "Clipboard",    glyph: "\u{F014C}", hint: "Search clipboard history" },
     ]
     property string mode: "search"            // search | apps | files | actions | clip
-    // What the panel shows: an empty search opens on the apps grid (Config.launcher.startView)
-    readonly property string view: mode === "search" && Search.query.trim() === "" && Config.launcher.startView === "apps" ? "apps" : mode
+    // What the panel shows: an empty search opens on suggestions or the apps grid (Config.launcher.startView)
+    readonly property string view: mode === "search" && Search.query.trim() === "" && Config.launcher.startView !== "search" ? Config.launcher.startView : mode
+    // home view, in keyboard order: frequent apps, then recent items, then quick actions
+    readonly property var homeItems: Search.frequentApps.concat(Search.recentItems, Search.quickActions)
+    property int homeIndex: 0
     property string category: "All"
     property bool open: popup.open
 
@@ -31,24 +34,33 @@ Singleton {
         mode = m || "search"
         category = "All"
         field.text = ""
+        homeIndex = 0
+        Calendar.now = new Date()
+        Clipboard.prepare()
         popup.show()
     }
     function toggle() { if (popup.open) popup.hide(); else show("search") }
     function setMode(m) {
         if (m === "clip" && !Config.launcher.clipboardInside) { popup.hide(); Clipboard.toggle(); return }
-        if (m === "clip" && mode !== "clip") Clipboard.prepare()
-        mode = mode === m ? "search" : m
-        if (mode === "clip") { field.text = ""; clipView.reset() }
-        results.currentIndex = 0
-        grid.currentIndex = 0
-        field.forceActiveFocus()
+        enter(mode === m ? "search" : m)
     }
     function cycleMode() {
         const order = ["search", "apps", "files", "actions"].concat(Config.launcher.clipboardInside ? ["clip"] : [])
-        mode = order[(order.indexOf(mode) + 1) % order.length]
-        if (mode === "clip") Clipboard.prepare()
-        results.currentIndex = 0
+        enter(order[(order.indexOf(mode) + 1) % order.length])
     }
+    // the text is kept between search modes, but the clipboard filters on its own text
+    function enter(m) {
+        const clipSwitch = (m === "clip") !== (mode === "clip")
+        mode = m
+        if (m === "clip") Clipboard.prepare()
+        if (clipSwitch) { field.text = ""; Clipboard.filter = ""; Search.query = "" }
+        if (m === "clip") clipView.reset()
+        results.currentIndex = 0
+        grid.currentIndex = 0
+        confirmFor = null
+        field.forceActiveFocus()
+    }
+    Binding { target: Search; property: "fileMode"; value: root.open && root.mode === "files" }
 
     IpcHandler {
         target: "launcher"
@@ -105,7 +117,7 @@ Singleton {
         Item {
             id: pill
             width: parent.width
-            height: 52
+            height: 48
 
             Glass {
                 id: searchBox
@@ -125,15 +137,15 @@ Singleton {
                     anchors { left: lens.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
                     color: Theme.text
                     selectionColor: Theme.accent
-                    font { family: Theme.font; pixelSize: Theme.fontHeading }
+                    font { family: Theme.font; pixelSize: Theme.fontHeading - 2 }
                     onTextChanged: {
                         if (root.mode === "clip") { Clipboard.filter = text; clipView.reset(); return }
-                        Search.query = text; results.currentIndex = 0; grid.currentIndex = 0; root.confirmFor = null
+                        Search.query = text; results.currentIndex = 0; grid.currentIndex = 0; root.homeIndex = 0; root.confirmFor = null
                     }
                     Text {
                         visible: !field.text
                         anchors.verticalCenter: parent.verticalCenter
-                        text: root.mode === "search" ? "Spotlight Search" : root.modes.find(m => m.id === root.mode)?.name ?? ""
+                        text: root.mode === "search" ? "Search apps, files, settings and more" : root.modes.find(m => m.id === root.mode)?.hint ?? ""
                         color: Theme.muted
                         font: field.font
                     }
@@ -147,6 +159,19 @@ Singleton {
                             else if (event.key === Qt.Key_Delete) clipView.remove()
                             else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) clipView.pin()
                             else if (event.key === Qt.Key_Space && !field.text) clipView.expand()
+                            else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) root.cycleMode()
+                            else if (event.key === Qt.Key_Escape) popup.hide()
+                            else return
+                            event.accepted = true
+                            return
+                        }
+                        if (root.view === "home" && !root.confirmFor) {
+                            const n = root.homeItems.length, nA = Search.frequentApps.length, i = root.homeIndex
+                            if (event.key === Qt.Key_Right) root.homeIndex = Math.min(n - 1, i + 1)
+                            else if (event.key === Qt.Key_Left) root.homeIndex = Math.max(0, i - 1)
+                            else if (event.key === Qt.Key_Down) root.homeIndex = Math.min(n - 1, i < nA ? nA : i + 1)
+                            else if (event.key === Qt.Key_Up) root.homeIndex = i < nA ? i : i === nA ? 0 : i - 1
+                            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) root.activate(root.homeItems[i])
                             else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) root.cycleMode()
                             else if (event.key === Qt.Key_Escape) popup.hide()
                             else return
@@ -170,25 +195,30 @@ Singleton {
                 }
             }
 
-            Row {
+            Glass {
                 id: buttons
-                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                spacing: Theme.spaceS
+                anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+                width: modeRow.implicitWidth + 12
+                radius: height / 2
+                strong: true
+                Row {
+                    id: modeRow
+                    anchors.centerIn: parent
+                    spacing: 2
                 Repeater {
                     model: root.modes
-                    Glass {
+                    Rectangle {
                         required property var modelData
                         readonly property bool current: root.mode === modelData.id
-                        width: 52; height: 52
+                        width: 36; height: 36
                         radius: width / 2
-                        strong: true
-                        color: current ? Theme.accentWash : buttonArea.containsMouse ? Qt.darker(Theme.glassStrong, 1.2) : Theme.glassStrong
-                        border.color: current ? Theme.accent : Theme.stroke
+                        color: current ? Theme.fillActive : buttonArea.containsMouse ? Theme.fillHover : "transparent"
+                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
                         Text {
                             anchors.centerIn: parent
                             text: modelData.glyph
-                            color: current ? Theme.accent : Theme.text
-                            font { family: Theme.iconFont; pixelSize: Theme.iconMedium }
+                            color: current ? Theme.accent : Theme.subtext
+                            font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 4 }
                         }
                         MouseArea {
                             id: buttonArea
@@ -200,6 +230,7 @@ Singleton {
                         ToolTipText { shown: buttonArea.containsMouse; text: modelData.name }
                     }
                 }
+                }
             }
         }
 
@@ -210,7 +241,8 @@ Singleton {
             strong: true
             radius: Theme.radiusLarge
             visible: root.view !== "search" || field.text.trim() !== ""
-            height: root.view === "apps" || root.view === "clip" ? 460
+            height: root.view === "home" ? home.implicitHeight + Theme.spaceM * 2
+                  : root.view === "apps" || root.view === "clip" ? 460
                   : Math.min(440, Math.max(64, results.contentHeight + Theme.spaceS * 2 + (root.confirmFor ? 44 : 0)))
             Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
@@ -227,6 +259,115 @@ Singleton {
                     text: "Run “" + (root.confirmFor?.title ?? "") + "”? Enter to confirm, Esc to cancel"
                     color: Theme.text
                     font { family: Theme.font; pixelSize: Theme.fontSize }
+                }
+            }
+
+            // Home: at a glance, frequent apps, recent items and quick actions
+            Column {
+                id: home
+                visible: root.view === "home" && !root.confirmFor
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
+                spacing: Theme.spaceS
+
+                // weather, the next calendar event and the last thing copied
+                Row {
+                    id: glance
+                    width: parent.width
+                    spacing: Theme.spaceS
+                    readonly property var clip: Clipboard.entries.find(e => !e.pinned) ?? null
+                    readonly property var tiles: [
+                        Weather.ready ? { glyph: Weather.glyph, title: Math.round(Weather.temperature) + "°  " + Weather.condition, sub: Weather.city,
+                                          run: () => { popup.hide(); Weather.toggle() } } : null,
+                        Calendar.next ? { glyph: "\u{F00ED}", title: Calendar.next.title,
+                                          sub: (Calendar.next.days === 0 ? "Today" : Calendar.next.days === 1 ? "Tomorrow" : Calendar.locale.toString(Calendar.next.date, "ddd d MMM")),
+                                          run: () => { popup.hide(); Calendar.toggle() } } : null,
+                        clip ? { glyph: "\u{F014C}", title: clip.kind === "image" ? "Image" : clip.preview.replace(/\s+/g, " "), sub: "Last copied · click to paste",
+                                 run: () => Clipboard.paste(glance.clip) } : null,
+                    ].filter(t => t)
+                    Repeater {
+                        model: glance.tiles
+                        Rectangle {
+                            id: tile
+                            required property var modelData
+                            width: (glance.width - glance.spacing * (glance.tiles.length - 1)) / glance.tiles.length
+                            height: 52
+                            radius: Theme.radius
+                            color: tileArea.containsMouse ? Theme.fillHover : Theme.fill
+                            Text {
+                                id: tileGlyph
+                                anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+                                text: tile.modelData.glyph
+                                color: Theme.subtext
+                                font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 2 }
+                            }
+                            Column {
+                                anchors { left: tileGlyph.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+                                Text { width: parent.width; text: tile.modelData.title; elide: Text.ElideRight; maximumLineCount: 1; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium } }
+                                Text { width: parent.width; text: tile.modelData.sub; elide: Text.ElideRight; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                            }
+                            MouseArea { id: tileArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tile.modelData.run() }
+                        }
+                    }
+                }
+
+                HomeLabel { text: "Frequently used" }
+                Row {
+                    id: freq
+                    width: parent.width
+                    Repeater {
+                        model: Search.frequentApps
+                        Item {
+                            id: app
+                            required property var modelData
+                            required property int index
+                            readonly property bool current: root.homeIndex === index
+                            width: freq.width / 8; height: 92
+                            Rectangle {
+                                anchors { fill: parent; margins: 3 }
+                                radius: Theme.radius
+                                color: app.current ? Theme.fillActive : appArea.containsMouse ? Theme.fillHover : "transparent"
+                            }
+                            IconImage {
+                                id: freqIcon
+                                anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: Theme.spaceM }
+                                implicitSize: 44
+                                source: Quickshell.iconPath(app.modelData.icon, "application-x-executable")
+                            }
+                            Text {
+                                anchors { left: parent.left; right: parent.right; top: freqIcon.bottom; topMargin: Theme.spaceXs; margins: Theme.spaceXs }
+                                horizontalAlignment: Text.AlignHCenter
+                                text: app.modelData.title
+                                elide: Text.ElideRight
+                                color: Theme.text
+                                font { family: Theme.font; pixelSize: Theme.fontLabel }
+                            }
+                            MouseArea { id: appArea; anchors.fill: parent; hoverEnabled: true; onEntered: root.homeIndex = app.index; onClicked: root.activate(app.modelData) }
+                        }
+                    }
+                }
+
+                HomeLabel { visible: Search.recentItems.length > 0; text: "Recent" }
+                Repeater {
+                    model: Search.recentItems
+                    HomeRow { required property var modelData; required property int index; item: modelData; at: Search.frequentApps.length + index }
+                }
+
+                HomeLabel { text: "Quick actions" }
+                Grid {
+                    width: parent.width
+                    columns: 3
+                    columnSpacing: Theme.spaceXs
+                    rowSpacing: Theme.spaceXs
+                    Repeater {
+                        model: Search.quickActions
+                        HomeRow {
+                            required property var modelData
+                            required property int index
+                            width: (home.width - Theme.spaceXs * 2) / 3
+                            item: modelData
+                            at: Search.frequentApps.length + Search.recentItems.length + index
+                        }
+                    }
                 }
             }
 
@@ -304,7 +445,7 @@ Singleton {
             // Search, Files, Actions: one ranked list, section label when the kind changes
             ListView {
                 id: results
-                visible: root.view !== "apps" && root.view !== "clip"
+                visible: root.view !== "apps" && root.view !== "clip" && root.view !== "home"
                 anchors { fill: parent; margins: Theme.spaceS; topMargin: confirmBar.visible ? 52 : Theme.spaceS }
                 clip: true
                 model: root.listModel
@@ -314,7 +455,7 @@ Singleton {
                 Text {
                     anchors.centerIn: parent
                     visible: results.count === 0
-                    text: root.mode === "files" ? "Type a name, ~/path or /path" : "No results"
+                    text: root.mode === "files" ? (field.text ? "No files found" : "Start typing to search your home folder") : "No results"
                     color: Theme.subtext
                     font { family: Theme.font; pixelSize: Theme.fontSize }
                 }
@@ -324,12 +465,14 @@ Singleton {
                     required property var modelData
                     required property int index
                     readonly property bool topHit: index === 0 && root.mode === "search"
-                    readonly property bool newSection: index > 0 && root.listModel[index - 1]?.kind !== modelData.kind && !(index === 1 && root.mode === "search")
+                    readonly property string group: Search.groupNames[Search.groupOf[modelData.kind]] ?? modelData.kind
+                    readonly property bool newSection: index > 0 && !(index === 1 && root.mode === "search")
+                        && (Search.groupNames[Search.groupOf[root.listModel[index - 1]?.kind]] ?? root.listModel[index - 1]?.kind) !== group
                     width: results.width
 
                     Text {
                         visible: row.topHit || row.newSection || (row.index === 1 && root.mode === "search")
-                        text: row.topHit ? "Top Hit" : row.modelData.kind
+                        text: row.topHit ? "Top Hit" : row.group
                         leftPadding: Theme.spaceM
                         topPadding: row.index === 0 ? 2 : Theme.spaceS
                         bottomPadding: Theme.spaceXs
@@ -341,8 +484,7 @@ Singleton {
                         width: parent.width
                         height: row.topHit ? 56 : Theme.rowHeight + 4
                         radius: Theme.radiusSmall
-                        color: row.ListView.isCurrentItem ? Theme.accentWash : rowArea.containsMouse ? Theme.fillHover : "transparent"
-                        border { color: row.ListView.isCurrentItem ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.5) : "transparent"; width: 1 }
+                        color: row.ListView.isCurrentItem ? Theme.fillActive : rowArea.containsMouse ? Theme.fillHover : "transparent"
 
                         Item {
                             id: iconBox
@@ -398,5 +540,36 @@ Singleton {
                 }
             }
         }
+    }
+
+    component HomeLabel: Text {
+        topPadding: Theme.spaceXs
+        leftPadding: Theme.spaceXs
+        color: Theme.subtext
+        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+    }
+    // one result row on the home view: glyph or icon, title, subtitle; `at` is its keyboard index
+    component HomeRow: Rectangle {
+        id: hr
+        property var item
+        property int at
+        readonly property bool current: root.homeIndex === at
+        width: parent ? parent.width : 0
+        height: Theme.rowHeight + 4
+        radius: Theme.radiusSmall
+        color: current ? Theme.fillActive : hrArea.containsMouse ? Theme.fillHover : "transparent"
+        Item {
+            id: hrIcon
+            anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+            width: Theme.iconMedium; height: width
+            IconImage { anchors.fill: parent; visible: !!hr.item.icon; source: hr.item.icon ? Quickshell.iconPath(hr.item.icon, "application-x-executable") : "" }
+            Text { anchors.centerIn: parent; visible: !hr.item.icon; text: hr.item.glyph ?? ""; color: Theme.text; font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 4 } }
+        }
+        Column {
+            anchors { left: hrIcon.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+            Text { width: parent.width; text: hr.item.title; elide: Text.ElideRight; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium } }
+            Text { width: parent.width; visible: !!hr.item.subtitle; text: hr.item.subtitle ?? ""; elide: Text.ElideMiddle; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+        }
+        MouseArea { id: hrArea; anchors.fill: parent; hoverEnabled: true; onEntered: root.homeIndex = hr.at; onClicked: root.activate(hr.item) }
     }
 }

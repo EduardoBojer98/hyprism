@@ -39,7 +39,7 @@ Singleton {
         },
         dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", pinned: "list" },
         launcher: { webSearch: "string", fileRoots: "list", showFiles: "bool", actions: "list", usage: "object",
-                    placement: ["center", "cursor"], startView: ["apps", "search"], order: "list", clipboardInside: "bool" },
+                    placement: ["center", "cursor"], startView: ["home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], historyMax: [10, 500] },

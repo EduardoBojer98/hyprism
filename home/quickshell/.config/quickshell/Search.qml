@@ -15,6 +15,7 @@ Singleton {
     property string query: ""
     property var files: []          // fd results for the current query
     property string calc: ""        // qalc answer for the current query
+    property bool fileMode: false   // the launcher's Files mode: search from the first letter, more results
 
     readonly property string home: Quickshell.env("HOME")
 
@@ -43,6 +44,7 @@ Singleton {
         const u = Object.assign({}, Config.launcher.usage ?? {})
         u[key] = (u[key] ?? 0) + 1
         Config.set("launcher", "usage", u)
+        Config.set("launcher", "recent", [key].concat((Config.launcher.recent ?? []).filter(k => k !== key)).slice(0, 12))
     }
 
     function apps(q) {
@@ -70,26 +72,34 @@ Singleton {
         { id: "controlcenter", name: "Control Center", words: "control center quick settings" },
         { id: "notifications", name: "Notifications", words: "notification do not disturb dnd" },
         { id: "displays", name: "Displays", words: "display monitor screen resolution scale rotate night light" },
+        { id: "monitor", name: "Shared Monitor", words: "shared monitor acer switch kvm ddc input" },
         { id: "sound", name: "Sound", words: "sound audio volume speaker microphone mic output input" },
         { id: "network", name: "Wi-Fi & Network", words: "wifi wi-fi network internet ethernet vpn" },
         { id: "bluetooth", name: "Bluetooth", words: "bluetooth pair headphones" },
         { id: "input", name: "Keyboard & Touchpad", words: "keyboard touchpad mouse layout repeat scroll" },
+        { id: "language", name: "Language & Region", words: "language region locale translation formats date time currency" },
         { id: "keybinds", name: "Keyboard Shortcuts", words: "keybinds shortcuts hotkeys keys bindings keyboard" },
         { id: "asus", name: "ASUS Hardware", words: "asus rog fan fans curve power mode quiet balanced performance gpu nvidia temperature" },
         { id: "power", name: "Battery & Power", words: "battery power charge limit health" },
         { id: "wallpaper", name: "Wallpaper", words: "wallpaper background" },
+        { id: "weather", name: "Weather", words: "weather forecast city temperature" },
+        { id: "calendar", name: "Calendar", words: "calendar holidays events moon week" },
         { id: "idle", name: "Lock & Sleep", words: "lock sleep suspend idle screen off caffeine" },
         { id: "apps", name: "Default Applications", words: "default apps browser mime open with" },
+        { id: "startup", name: "Startup Apps", words: "startup autostart login apps" },
         { id: "about", name: "About", words: "about system version" },
     ]
     function settings(q) {
         const out = []
         for (const p of settingsPages.filter(p => p.id !== "asus" || Machine.asus)) {
             const s = Math.max(match(p.name, q), ...p.words.split(" ").map(w => match(w, q) * 0.85))
-            if (s > 0.5) out.push({ key: "settings:" + p.id, kind: "Settings", title: p.name, subtitle: "Settings",
-                glyph: "\u{F0493}", score: 30 + s * 45, run: () => SettingsApp.show(p.id) })
+            if (s > 0.5) out.push(settingsItem(p, s))
         }
         return out
+    }
+    function settingsItem(p, s) {
+        return { key: "settings:" + p.id, kind: "Settings", title: p.name, subtitle: "Settings",
+                 glyph: SettingsApp.allSections.find(x => x.id === p.id)?.glyph ?? "\u{F0493}", score: 30 + s * 45, run: () => SettingsApp.show(p.id) }
     }
 
     readonly property var systemActions: [
@@ -116,7 +126,7 @@ Singleton {
         for (const a of systemActions.filter(a => has[a.id] ?? true)) {
             const s = all ? 0.5 : Math.max(match(a.title, q), ...a.words.split(" ").map(w => match(w, q) * 0.9))
             if (s > 0.5 || all) out.push({ key: "action:" + a.id, kind: "Actions", title: a.title, glyph: a.glyph,
-                score: 30 + s * 45 + usageBonus("action:" + a.id), run: () => Quickshell.execDetached(a.cmd) })
+                score: 32 + s * 45 + usageBonus("action:" + a.id), run: () => Quickshell.execDetached(a.cmd) })
         }
         for (const [i, c] of (Config.launcher.actions ?? []).entries()) {
             const s = all ? 0.5 : match(c.name, q)
@@ -188,12 +198,50 @@ Singleton {
         let out = []
         if (calc) out.push({ key: "calc", kind: "Calculator", title: calc, subtitle: raw + " — Enter copies it",
                              glyph: "\u{F00EC}", score: 97, run: () => Quickshell.execDetached(["wl-copy", calc]) })
-        out = out.concat(apps(q), settings(q), actions(q, false), fileResults(q), web(raw))
-        // Group order from Settings > Search & Launcher, then best score inside a group
+        // a few files only, so they don't push settings and actions out of view (Files mode lists them all)
+        out = out.concat(apps(q), settings(q), actions(q, false), fileResults(q).slice(0, 5), web(raw))
+        // Top Hit: the best score of all; the rest by group order from Settings > Search & Launcher,
+        // then best score inside a group
         const order = Config.launcher.order
         const rank = r => order.indexOf(groupOf[r.kind] ?? "")
-        return out.filter(r => rank(r) >= 0).sort((a, b) => rank(a) - rank(b) || b.score - a.score)
+        out = out.filter(r => rank(r) >= 0)
+        if (!out.length) return []
+        const top = out.filter(r => r.kind !== "Web").reduce((a, b) => b.score > a.score ? b : a, out[0])
+        return [top].concat(out.filter(r => r !== top).sort((a, b) => rank(a) - rank(b) || b.score - a.score))
     }
+
+    // ---- home: what the launcher shows before you type ----------------------------------------
+
+    // A result for a remembered key, or null when it no longer exists
+    function resolve(key) {
+        const i = key.indexOf(":"), kind = key.slice(0, i), id = key.slice(i + 1)
+        if (kind === "app") {
+            const e = DesktopEntries.applications.values.find(e => e.id === id && !e.noDisplay)
+            return e ? { key: key, kind: "Applications", title: e.name, subtitle: e.genericName || e.comment, icon: e.icon, entry: e, run: () => e.execute() } : null
+        }
+        if (kind === "settings") { const p = settingsPages.find(p => p.id === id); return p ? settingsItem(p, 0) : null }
+        if (kind === "action" || kind === "custom") return actions("", true).find(r => r.key === key) ?? null
+        if (kind === "file") return { key: key, kind: id.endsWith("/") ? "Folders" : "Files", title: id.replace(/\/$/, "").split("/").pop(),
+            subtitle: id.replace(home, "~"), glyph: id.endsWith("/") ? "\u{F024B}" : fileGlyph(id), run: () => Quickshell.execDetached(["xdg-open", id]) }
+        return null
+    }
+
+    // most launched apps, topped up with the dock's pinned apps
+    readonly property var frequentApps: {
+        if (!DesktopEntries.applications.values.length) return []
+        const u = Config.launcher.usage ?? {}
+        const used = Object.keys(u).filter(k => k.startsWith("app:")).sort((a, b) => u[b] - u[a])
+        const pinned = Config.dock.pinned.map(n => DesktopEntries.heuristicLookup(n)).filter(e => e).map(e => "app:" + e.id)
+        return used.concat(pinned).filter((k, i, a) => a.indexOf(k) === i).map(resolve).filter(r => r).slice(0, 8)
+    }
+    // settings pages, actions and files opened lately (apps have their own row)
+    readonly property var recentItems: {
+        DesktopEntries.applications.values.length
+        return (Config.launcher.recent ?? []).filter(k => !k.startsWith("app:")).map(resolve).filter(r => r).slice(0, 4)
+    }
+    // handy actions not already in the recent list
+    readonly property var quickActions: ["action:shot", "action:ocr", "action:picker", "action:overview", "action:caffeine", "action:lock"]
+        .filter(k => !recentItems.some(r => r.key === k)).map(resolve).filter(r => r).slice(0, 6)
 
     // Lists for the launcher's browse modes (no query needed)
     function actionList(q) { return actions(q.toLowerCase(), !q).sort((a, b) => b.score - a.score) }
@@ -207,6 +255,7 @@ Singleton {
     // ---- async providers -------------------------------------------------------------------------
 
     onQueryChanged: { files = []; calc = ""; slow.restart() }
+    onFileModeChanged: { files = []; slow.restart() }
     Timer {
         id: slow
         interval: 120
@@ -224,8 +273,8 @@ Singleton {
                 const part = path.slice(slash + 1)
                 cmd = ["fd", "--max-depth", "1", "--max-results", "30", "--ignore-case", "--hidden", "--exclude", ".git",
                        "--", part ? "^" + part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : ".", dir]
-            } else if (raw.length >= 3 && Config.launcher.showFiles) {
-                cmd = ["fd", "--ignore-case", "--max-results", "12", "--exclude", "node_modules", "--exclude", "vendor",
+            } else if (root.fileMode || (raw.length >= 3 && Config.launcher.showFiles)) {
+                cmd = ["fd", "--ignore-case", "--max-results", root.fileMode ? "40" : "12", "--exclude", "node_modules", "--exclude", "vendor",
                        "--", raw, root.home]
             }
             // Folders come back with a trailing slash so they can be told apart
