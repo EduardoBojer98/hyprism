@@ -33,6 +33,25 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Window border"
+        SettingRow {
+            label: "Focused window"
+            hint: "The border around the window you're working in"
+            ConfigChoice { section: "appearance"; key: "border"; values: ["rainbow", "accent"]; labels: ["Rainbow", "Accent colour"] }
+        }
+        SettingRow {
+            visible: Config.appearance.border === "rainbow"
+            label: "Rainbow rotation"
+            hint: "Still when animations are off"
+            ConfigChoice { section: "appearance"; key: "borderSpin"; values: [0, 120, 60, 25]; labels: ["Still", "Slow", "Medium", "Fast"] }
+        }
+        SettingRow {
+            label: "Thickness"
+            ConfigChoice { section: "appearance"; key: "borderSize"; values: [1, 2, 3]; labels: ["Thin", "Medium", "Thick"] }
+        }
+    }
+
+    SettingGroup {
         title: "Shape and text"
         SettingRow {
             label: "Corners"

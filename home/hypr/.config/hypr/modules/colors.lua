@@ -15,4 +15,7 @@ return {
     yellow   = "eed49f",
     peach    = "f5a97f",
     red      = "ed8796",
+    pink     = "f5bde6",
+    teal     = "8bd5ca",
+    sapphire = "7dc4e4",
 }

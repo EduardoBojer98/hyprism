@@ -2,7 +2,7 @@ import Quickshell
 import QtQuick
 
 // Carries the shell's design tokens to the parts of the desktop Quickshell can't draw:
-// Hyprland window borders and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
+// Hyprland window borders (accent or rotating rainbow, width) and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
 // the lock screen (hypr/hyprlock-theme.conf, read at next lock), and GTK (gsettings accent and
 // icon theme). Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
@@ -12,13 +12,16 @@ Scope {
     readonly property string accentHex: Theme.accent.toString().slice(1, 7)
     readonly property int rounding: Theme.radius
     readonly property string iconTheme: Theme.iconTheme
+    readonly property string border: Config.appearance.border
+    readonly property int borderSpin: Theme.animate ? Config.appearance.borderSpin : 0
+    readonly property int borderSize: Config.appearance.borderSize
 
     // Catppuccin name -> nearest GNOME accent-color value (GTK4/libadwaita apps)
     readonly property var gtkAccent: ({ blue: "blue", lavender: "purple", mauve: "purple", pink: "pink",
         peach: "orange", yellow: "yellow", green: "green", teal: "teal", sky: "blue" })
 
     function apply() {
-        const t = "{ accent = \"" + accentHex + "\", rounding = " + rounding + " }"
+        const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize} }`
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from Settings > Appearance\nreturn " + t)
         SettingsApp.writeHyprFile("hyprlock-theme.conf", "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])
@@ -56,4 +59,7 @@ Scope {
     onAccentHexChanged: debounce.restart()
     onRoundingChanged: debounce.restart()
     onIconThemeChanged: debounce.restart()
+    onBorderChanged: debounce.restart()
+    onBorderSpinChanged: debounce.restart()
+    onBorderSizeChanged: debounce.restart()
 }

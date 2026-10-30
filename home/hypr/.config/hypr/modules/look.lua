@@ -3,22 +3,32 @@ local c = require("modules.colors")
 -- Accent and corner radius come from the shell's Appearance settings (Quickshell ThemeSync
 -- writes settings/theme.lua and calls apply_theme() live). Defaults until it has run once.
 local ok, saved = pcall(require, "settings.theme")
-THEME = ok and saved or { accent = c.blue, rounding = 12 }
+THEME = ok and saved or {}
+local defaults = { accent = c.blue, rounding = 12, border = "rainbow", border_spin = 60, border_size = 2 }
+for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
+
+-- Catppuccin colours around the wheel, ending where it starts so the turn has no seam
+local RAINBOW = {}
+for _, name in ipairs({ "red", "peach", "yellow", "green", "teal", "sapphire", "mauve", "pink", "red" }) do
+    RAINBOW[#RAINBOW + 1] = "rgba(" .. c[name] .. "ff)"
+end
 
 function apply_theme()
+    local active = THEME.border == "rainbow" and { colors = RAINBOW, angle = 0 }
+        or { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. c.lavender .. "99)" }, angle = 135 }
     hl.config({
-        general = { col = {
-            active_border = { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. c.lavender .. "99)" }, angle = 135 },
-        } },
+        general = { border_size = THEME.border_size, col = { active_border = active } },
         decoration = { rounding = THEME.rounding },
     })
+    -- borderangle "loop" turns the gradient forever; speed is tenths of a second per turn
+    local spin = THEME.border == "rainbow" and THEME.border_spin > 0
+    hl.animation({ leaf = "borderangle", enabled = spin, speed = spin and THEME.border_spin or 1, bezier = "linear", style = "loop" })
 end
 
 hl.config({
     general = {
         gaps_in     = 5,
         gaps_out    = 12,
-        border_size = 1,
         col = {
             inactive_border = "rgba(ffffff14)",
         },

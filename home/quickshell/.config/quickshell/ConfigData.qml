@@ -11,6 +11,9 @@ JsonAdapter {
         property string font: "Inter"
         property bool animations: true
         property string iconTheme: "Papirus-Dark"
+        property string border: "rainbow"       // focused window border: "rainbow" or "accent"
+        property int borderSpin: 60             // seconds x10 per rainbow turn (0 = still)
+        property int borderSize: 2              // px
     }
     property JsonObject dock: JsonObject {
         property int iconSize: 44
