@@ -14,9 +14,9 @@ JsonAdapter {
     }
     property JsonObject dock: JsonObject {
         property int iconSize: 44
-        property bool autoHide: false
+        property bool autoHide: true
         property bool showRunning: true
-        property list<string> pinned: ["firefox", "com.mitchellh.ghostty", "code", "org.kde.dolphin"]
+        property list<string> pinned: ["firefox", "google-chrome", "com.microsoft.VSCode", "com.mitchellh.ghostty", "org.kde.dolphin"]
     }
     property JsonObject launcher: JsonObject {
         property string webSearch: "https://duckduckgo.com/?q=%s"

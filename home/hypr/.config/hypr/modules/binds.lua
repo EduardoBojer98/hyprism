@@ -23,6 +23,7 @@ hl.bind(key("F"),         hl.dsp.window.fullscreen({ action = "toggle" }))
 hl.bind(key("SHIFT + F"), hl.dsp.window.fullscreen({ action = "toggle", mode = "maximized" }))
 hl.bind(key("T"),         hl.dsp.window.float({ action = "toggle" }))
 hl.bind(key("J"),         hl.dsp.layout("togglesplit"))
+hl.bind(key("H"),         hl.dsp.window.move({ workspace = "special:minimized", follow = false }))  -- minimise; restore from the dock
 for _, dir in ipairs({ "left", "right", "up", "down" }) do
     hl.bind(key(dir),             hl.dsp.focus({ direction = dir }))
     hl.bind(key("SHIFT + " .. dir), hl.dsp.window.move({ direction = dir }))

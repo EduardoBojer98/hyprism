@@ -1,64 +1,65 @@
 {
-    "appearance": {
-        "accent": "blue",
-        "animations": true,
-        "font": "Inter",
-        "fontScale": 1,
-        "glassOpacity": 0.55,
-        "iconTheme": "Papirus-Dark",
-        "radiusScale": 1
-    },
-    "caffeine": {
-        "defaultMinutes": 0
-    },
-    "clipboard": {
-        "autoPaste": true,
-        "images": true,
-        "maxAgeDays": 30,
-        "maxItems": 300,
-        "paused": false,
-        "skipSensitive": true
-    },
-    "controlCenter": {
-        "showHardware": true,
-        "showMedia": true
-    },
-    "dock": {
-        "autoHide": false,
-        "iconSize": 44,
-        "pinned": [
-            "firefox",
-            "com.mitchellh.ghostty",
-            "code",
-            "org.kde.dolphin"
-        ],
-        "showRunning": true
-    },
-    "launcher": {
-        "actions": [
-        ],
-        "fileRoots": [
-            "~"
-        ],
-        "showFiles": true,
-        "usage": {
-        },
-        "webSearch": "https://duckduckgo.com/?q=%s"
-    },
-    "nightLight": {
-        "from": "21:00",
-        "mode": "off",
-        "temperature": 4000,
-        "to": "07:00"
-    },
-    "notifications": {
-        "dnd": false,
-        "historyMax": 100,
-        "timeoutSec": 6
-    },
-    "weather": {
-        "city": "Zrenjanin",
-        "latitude": 45.38361,
-        "longitude": 20.38194
-    }
+  "appearance": {
+    "accent": "blue",
+    "animations": true,
+    "font": "Inter",
+    "fontScale": 1,
+    "glassOpacity": 0.55,
+    "iconTheme": "Papirus-Dark",
+    "radiusScale": 1
+  },
+  "caffeine": {
+    "defaultMinutes": 0
+  },
+  "clipboard": {
+    "autoPaste": true,
+    "images": true,
+    "maxAgeDays": 30,
+    "maxItems": 300,
+    "paused": false,
+    "skipSensitive": true
+  },
+  "controlCenter": {
+    "showHardware": true,
+    "showMedia": true
+  },
+  "dock": {
+    "autoHide": true,
+    "iconSize": 44,
+    "pinned": [
+      "firefox",
+      "google-chrome",
+      "com.microsoft.VSCode",
+      "com.mitchellh.ghostty",
+      "org.kde.dolphin",
+      "com.anthropic.Claude",
+      "org.opengamingcollective.rog-control-center"
+    ],
+    "showRunning": true
+  },
+  "launcher": {
+    "actions": [],
+    "fileRoots": [
+      "~"
+    ],
+    "showFiles": true,
+    "usage": {},
+    "webSearch": "https://duckduckgo.com/?q=%s"
+  },
+  "nightLight": {
+    "from": "21:00",
+    "mode": "off",
+    "temperature": 4000,
+    "to": "07:00"
+  },
+  "notifications": {
+    "dnd": false,
+    "historyMax": 100,
+    "timeoutSec": 6
+  },
+  "weather": {
+    "city": "Zrenjanin",
+    "latitude": 45.38361,
+    "longitude": 20.38194
+  }
 }

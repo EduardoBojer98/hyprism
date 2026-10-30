@@ -53,7 +53,10 @@ Tick boxes only for things verified on the machine; untested items say so.
 
 - [x] 1 Audit (this file)
 - [x] 2 Architecture: Config + Theme tokens + ThemeSync + CursorPopup (accent/radius verified live in Hyprland, hyprlock file, GTK)
-- [~] 3 Core: Spotlight (Super, done: search/apps/files/actions), clipboard (Super+V, done; auto-paste needs wtype), Settings on Config (todo), components still to move onto tokens (todo)
+- [x] 3 Core: Spotlight on Super (search/apps/files/actions), clipboard on Super+V (auto-paste needs
+      wtype), Settings on Config, dock on Config (size, auto-hide, pinned, right-click menu with
+      minimise/restore/pin/quit, Super+H minimises), calendar under the clock. Moving the older
+      components' hard-coded sizes onto tokens moves to Phase 6.
 - [ ] 4 Hardware: baseline measurements, fan curves/PPT per mode, Caffeine, hardware dashboard
 - [ ] 5 Desktop: Control Center, notification centre + DND, MPRIS, night light, OCR, Mission
       Control, dock minimise, custom launcher actions
@@ -64,4 +67,5 @@ Tick boxes only for things verified on the machine; untested items say so.
 
 - `sudo pacman -S papirus-icon-theme wtype hyprsunset` (listed in `packages/desktop.txt`).
 - Thermal benchmarks: about 10 of your usual Chrome tabs open while measurements run.
+- Dock right-click menu and the clock calendar: open each once (checked by rendering, not by a real click).
 - JuhRadial: press the gesture button once in Hyprland to confirm the wheel opens at the cursor.

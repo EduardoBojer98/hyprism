@@ -4,42 +4,54 @@ import Quickshell.Hyprland
 import Quickshell.Widgets
 import QtQuick
 
-// Auto-hiding dock: slides up when the pointer touches the bottom edge, and stays
-// visible on an empty workspace. Pinned apps first, then other running apps.
+// Dock: pinned apps (Config.dock.pinned) then other running apps. With auto-hide it slides up when
+// the pointer touches the bottom edge and stays visible on an empty workspace. Right-click an icon
+// to pin, minimise (to Hyprland's special:minimized workspace), restore or quit.
 PanelWindow {
     id: dock
 
-    // Desktop file IDs (ls /usr/share/applications)
-    readonly property var pinned: ["firefox", "google-chrome", "com.microsoft.VSCode", "com.mitchellh.ghostty", "org.kde.dolphin", "com.anthropic.Claude", "org.opengamingcollective.rog-control-center"]
-
+    readonly property int iconSize: Config.dock.iconSize
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
-    readonly property bool shown: hover.hovered || hideTimer.running || emptyWorkspace
+    readonly property bool shown: !Config.dock.autoHide || hover.hovered || hideTimer.running || emptyWorkspace || menu.entry !== null
 
     function entryFor(appId) { return DesktopEntries.heuristicLookup(appId) }
+    // Hyprland's view of the windows (address + workspace), linked to the Wayland toplevel for activate()
     function windowsOf(entry) {
-        return entry ? ToplevelManager.toplevels.values.filter(t => entryFor(t.appId)?.id === entry.id) : []
+        return entry ? Hyprland.toplevels.values.filter(t => t.wayland && entryFor(t.wayland.appId)?.id === entry.id) : []
+    }
+    function isMinimised(t) { return t.workspace?.name === "special:minimized" }
+    function address(t) { return "0x" + String(t.address).replace(/^0x/, "") }
+    function dispatch(lua) { Quickshell.execDetached(["hyprctl", "dispatch", lua]) }
+    function minimise(t) { dispatch(`hl.dsp.window.move({ workspace = "special:minimized", follow = false, window = "address:${address(t)}" })`) }
+    function restore(t) { dispatch(`hl.dsp.window.move({ workspace = "${monitor?.activeWorkspace?.id ?? 1}", window = "address:${address(t)}" })`) }
+    function close(t) { dispatch(`hl.dsp.window.close({ window = "address:${address(t)}" })`) }
+    function setPinned(entry, pin) {
+        const list = Config.dock.pinned.filter(id => id !== entry.id)
+        if (pin) list.push(entry.id)
+        Config.set("dock", "pinned", list)
     }
 
     readonly property var apps: {
-        const list = pinned.map(id => DesktopEntries.byId(id)).filter(e => e)
-        for (const t of ToplevelManager.toplevels.values) {
-            const e = entryFor(t.appId)
-            if (e && !list.some(x => x.id === e.id)) list.push(e)
-        }
+        const list = Config.dock.pinned.map(id => DesktopEntries.byId(id)).filter(e => e)
+        if (Config.dock.showRunning)
+            for (const t of ToplevelManager.toplevels.values) {
+                const e = entryFor(t.appId)
+                if (e && !list.some(x => x.id === e.id)) list.push(e)
+            }
         return list
     }
 
     anchors.bottom: true
     implicitWidth: island.width + 40
-    implicitHeight: 120 // island + room above it for tooltips
-    exclusiveZone: 0
+    implicitHeight: menu.entry ? 340 : 120 // island + room above it for tooltips / the app menu
+    exclusiveZone: Config.dock.autoHide ? 0 : island.height + 10
     color: "transparent"
     WlrLayershell.namespace: "qs-dock"
     WlrLayershell.layer: WlrLayer.Top
 
     // Only the visible island (or a thin strip at the bottom edge when hidden) takes input
-    mask: Region { item: dock.shown ? island : edge }
+    mask: Region { item: dock.shown ? island : edge; Region { item: menu.entry ? menu : null } }
 
     Item {
         id: edge
@@ -60,7 +72,7 @@ PanelWindow {
         Behavior on y { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
         width: row.width + 20
-        height: 66
+        height: dock.iconSize + 22
         radius: Theme.radiusLarge
 
         Row {
@@ -70,13 +82,13 @@ PanelWindow {
 
             // App menu / Spotlight-style launcher
             Item {
-                width: 48
-                height: 52
+                width: dock.iconSize + 4
+                height: dock.iconSize + 8
 
                 Rectangle {
                     anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
-                    width: 44
-                    height: 44
+                    width: dock.iconSize
+                    height: dock.iconSize
                     radius: 12
                     color: launcherArea.containsMouse || Launcher.open ? Theme.accent : Theme.fill
                     scale: launcherArea.containsMouse ? 1.18 : 1
@@ -88,7 +100,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         text: "\u{F003B}"
                         color: launcherArea.containsMouse || Launcher.open ? Theme.accentText : Theme.text
-                        font { family: Theme.iconFont; pixelSize: 22 }
+                        font { family: Theme.iconFont; pixelSize: dock.iconSize / 2 }
                     }
                 }
 
@@ -117,14 +129,15 @@ PanelWindow {
                     id: app
                     required property DesktopEntry modelData
                     readonly property var windows: dock.windowsOf(modelData)
+                    readonly property var visibleWindows: windows.filter(t => !dock.isMinimised(t))
 
-                    width: 48
-                    height: 52
+                    width: dock.iconSize + 4
+                    height: dock.iconSize + 8
 
                     IconImage {
                         id: icon
                         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
-                        implicitSize: 44
+                        implicitSize: dock.iconSize
                         source: Quickshell.iconPath(app.modelData?.icon ?? "", "application-x-executable")
                         scale: area.containsMouse ? 1.18 : 1
                         transformOrigin: Item.Bottom
@@ -135,6 +148,7 @@ PanelWindow {
                     Rectangle {
                         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
                         width: app.windows.some(w => w.activated) ? 14 : 5
+                        opacity: app.visibleWindows.length ? 1 : 0.4
                         height: 4
                         radius: 2
                         color: Theme.accent
@@ -147,19 +161,80 @@ PanelWindow {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                        // Left: focus the app (cycling through its windows) or start it. Middle: always a new window.
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                        // Left: focus the app (cycling through its windows), bring back minimised ones, or start it.
+                        // Middle: always a new window. Right: pin / minimise / quit menu.
                         onClicked: mouse => {
-                            const w = app.windows
-                            if (mouse.button === Qt.MiddleButton || w.length === 0) { app.modelData.execute(); return }
+                            if (!app.modelData) return   // delegate is being replaced
+                            if (mouse.button === Qt.RightButton) { menu.openFor(app); return }
+                            const w = app.visibleWindows
+                            if (mouse.button === Qt.MiddleButton || app.windows.length === 0) { app.modelData.execute(); return }
+                            if (w.length === 0) { for (const t of app.windows) dock.restore(t); return }
                             const i = w.findIndex(t => t.activated)
-                            w[(i + 1) % w.length].activate()
+                            w[(i + 1) % w.length].wayland.activate()
                         }
                     }
 
                     ToolTip {
-                        visible: area.containsMouse
+                        visible: area.containsMouse && menu.entry === null
                         text: app.modelData?.name ?? ""
+                    }
+                }
+            }
+        }
+    }
+
+    // Right-click menu for one dock icon
+    Glass {
+        id: menu
+        property var entry: null      // DesktopEntry
+        property var item: null       // the dock icon it belongs to
+        readonly property var windows: item?.windows ?? []
+        readonly property bool pinned: entry ? Config.dock.pinned.includes(entry.id) : false
+        function openFor(icon) { item = icon; entry = icon.modelData }
+        function done() { entry = null; item = null }
+
+        visible: entry !== null
+        strong: true
+        radius: Theme.radius
+        width: 200
+        height: actions.implicitHeight + Theme.spaceS * 2
+        x: item ? Math.max(8, Math.min(dock.width - width - 8, item.mapToItem(dock.contentItem, item.width / 2, 0).x - width / 2)) : 0
+        y: island.y - height - Theme.spaceS
+
+        HoverHandler { onHoveredChanged: if (!hovered) closeTimer.restart(); else closeTimer.stop() }
+        Timer { id: closeTimer; interval: 900; onTriggered: menu.done() }
+
+        Column {
+            id: actions
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceS }
+            Text {
+                width: parent.width; leftPadding: Theme.spaceS; bottomPadding: Theme.spaceXs
+                text: menu.entry?.name ?? ""; elide: Text.ElideRight
+                color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+            }
+            Repeater {
+                model: [
+                    { label: "New window", show: true, run: () => menu.entry.execute() },
+                    { label: "Minimise", show: menu.windows.some(t => !dock.isMinimised(t)), run: () => menu.windows.forEach(dock.minimise) },
+                    { label: "Restore", show: menu.windows.some(dock.isMinimised), run: () => menu.windows.filter(dock.isMinimised).forEach(dock.restore) },
+                    { label: menu.pinned ? "Unpin from dock" : "Pin to dock", show: true, run: () => dock.setPinned(menu.entry, !menu.pinned) },
+                    { label: menu.windows.length > 1 ? `Quit (${menu.windows.length} windows)` : "Quit", show: menu.windows.length > 0, run: () => menu.windows.forEach(dock.close) }
+                ].filter(a => a.show)
+                Rectangle {
+                    required property var modelData
+                    width: actions.width; height: Theme.controlHeight
+                    radius: Theme.radiusSmall
+                    color: rowArea.containsMouse ? Theme.fillHover : "transparent"
+                    Text {
+                        anchors { left: parent.left; leftMargin: Theme.spaceS; verticalCenter: parent.verticalCenter }
+                        text: parent.modelData.label; color: Theme.text
+                        font { family: Theme.font; pixelSize: Theme.fontSize }
+                    }
+                    MouseArea {
+                        id: rowArea
+                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: { parent.modelData.run(); menu.done() }
                     }
                 }
             }
