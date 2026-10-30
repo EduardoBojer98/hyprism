@@ -12,12 +12,11 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center at the top right of the screen under the pointer (status pill, Super+C,
-// `qs ipc call controlcenter toggle`), laid out like macOS Tahoe: separate glass modules
-// floating on the wallpaper on a 4-column grid.
-//   Wi-Fi pill · media (or battery) square · Bluetooth / Night Light rounds · Do Not Disturb pill ·
-//   Caffeine / Acer rounds · Power card · Display, Sound and Microphone cards · shortcut rounds.
-// Click a module to toggle it; right-click Bluetooth or Caffeine (or click the Wi-Fi name, the
-// device buttons) to open its list underneath.
+// `qs ipc call controlcenter toggle`): one glass panel holding grouped tiles.
+//   Wi-Fi / Bluetooth / Focus rows · media (or battery) tile
+//   quick toggles: Night Light, Caffeine, shared monitor, keyboard light, on-screen keyboard
+//   Display, Sound and Microphone sliders · Power mode · footer: battery, screenshot, settings, power
+// The round icon in a row toggles it; the rest of the row (or a chevron) opens its list underneath.
 Singleton {
     id: cc
 
@@ -42,13 +41,22 @@ Singleton {
         return !UPower.onBattery && !charging ? "Plugged in" : secs > 0 ? (charging ? "Full in " + hm : hm + " left") : charging ? "Charging" : "On battery"
     }
 
-    readonly property int unit: 72        // one grid cell
-    readonly property int gap: 12
+    readonly property int gap: 8          // between tiles
+    readonly property int pad: 10         // panel padding
 
 
     PwObjectTracker { objects: [cc.sink, cc.source] }
 
     function toggle() { popup.toggle() }
+    // the bell / Super+N: open (or close) scrolled down to the notifications
+    property bool toNotes: false
+    function toggleNotifications() { if (popup.open) popup.hide(); else { toNotes = true; popup.show() } }
+
+    // One tooltip for the whole panel, drawn above the scroll area so it is never clipped
+    property Item hintItem: null
+    property string hintText: ""
+    function hint(item, text) { hintText = text; hintItem = item }
+    function unhint(item) { if (hintItem === item) hintItem = null }
     function hide() { popup.hide() }
 
     IpcHandler {
@@ -62,8 +70,12 @@ Singleton {
     }
     function opened(visible) {
         if (wifi) wifi.scannerEnabled = visible
-        if (visible) { scroller.contentY = 0; brightnessRead.running = true; kbdRead.running = Machine.kbdDevice !== ""; now = new Date() }
-        else { expanded = ""; passwordFor = null }
+        if (visible) {
+            scroller.contentY = 0; brightnessRead.running = true; kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
+            Notifications.unread = 0; Notifications.now = new Date(); NotificationCenter.unfolded = ({})
+            if (toNotes) scrollToNotes.restart()
+        }
+        else { expanded = ""; passwordFor = null; hintItem = null; toNotes = false }
     }
 
     Process {
@@ -77,6 +89,11 @@ Singleton {
         stdout: StdioCollector { onStreamFinished: cc.kbdLight = parseInt(text.split(",")[2]) || 0 }
     }
     Timer { interval: 30000; repeat: true; running: popup.open; onTriggered: cc.now = new Date() }
+    Timer {   // after layout settles
+        id: scrollToNotes
+        interval: 30
+        onTriggered: { scroller.contentY = Math.max(0, Math.min(notesHeader.y - 4, scroller.contentHeight - scroller.height)); cc.toNotes = false }
+    }
 
     function nodeName(n) { return n?.description || n?.nickname || n?.name || "" }
     function toggleExpanded(name) { expanded = expanded === name ? "" : name; passwordFor = null }
@@ -89,13 +106,18 @@ Singleton {
     id: popup
     name: "controlcenter"
     placement: "topRight"
-    boxWidth: cc.unit * 4 + cc.gap * 3
+    boxWidth: 330
     // capped to the screen; the content scrolls when lists make it taller
-    boxHeight: Math.min(content.implicitHeight, (popup.targetScreen?.height ?? 1000) - popup.topReserve - popup.edge * 2)
+    boxHeight: Math.min(content.implicitHeight + cc.pad * 2, (popup.targetScreen?.height ?? 1000) - popup.topReserve - popup.edge * 2)
+
+    Glass {   // the backdrop every tile sits on
+        anchors.fill: parent
+        strong: true
+        radius: Theme.radiusLarge + 4
 
     Flickable {
         id: scroller
-        anchors.fill: parent
+        anchors { fill: parent; margins: cc.pad }
         contentHeight: content.implicitHeight
         boundsBehavior: Flickable.StopAtBounds
         clip: true
@@ -106,46 +128,68 @@ Singleton {
         width: scroller.width
         spacing: cc.gap
 
-        // ---- toggles + media ----------------------------------------------------------------
-        GridLayout {
+        // ---- connections + media ------------------------------------------------------------
+        RowLayout {
             Layout.fillWidth: true
-            columns: 4
-            columnSpacing: cc.gap
-            rowSpacing: cc.gap
+            spacing: cc.gap
 
-            Pill {
-                glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}"
-                title: "Wi-Fi"
-                subtitle: !Networking.wifiEnabled ? "Off" : (cc.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected")
-                active: Networking.wifiEnabled
-                expandable: true
-                isExpanded: cc.expanded === "wifi"
-                onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
-                onExpand: cc.toggleExpanded("wifi")
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.preferredHeight: conns.implicitHeight + 8
+                Column {
+                    id: conns
+                    anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 4 }
+                    ConnRow {
+                        glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}"
+                        title: "Wi-Fi"
+                        subtitle: !Networking.wifiEnabled ? "Off" : (cc.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected")
+                        active: Networking.wifiEnabled
+                        isExpanded: cc.expanded === "wifi"
+                        onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
+                        onExpand: cc.toggleExpanded("wifi")
+                    }
+                    ConnRow {
+                        glyph: cc.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}"
+                        title: "Bluetooth"
+                        subtitle: !cc.adapter ? "Unavailable" : !cc.adapter.enabled ? "Off"
+                                : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On")
+                        active: cc.adapter?.enabled ?? false
+                        isExpanded: cc.expanded === "bt"
+                        onToggled: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
+                        onExpand: cc.toggleExpanded("bt")
+                    }
+                    ConnRow {
+                        glyph: "\u{F0594}"
+                        title: "Focus"
+                        subtitle: Config.notifications.dnd ? "Do Not Disturb" : "Off"
+                        active: Config.notifications.dnd
+                        expandable: false
+                        onToggled: Config.set("notifications", "dnd", !Config.notifications.dnd)
+                    }
+                }
             }
 
             // Media when something plays, otherwise the battery
-            Glass {
-                Layout.columnSpan: 2
-                Layout.rowSpan: 2
-                Layout.preferredWidth: cc.unit * 2 + cc.gap
-                Layout.preferredHeight: cc.unit * 2 + cc.gap
-                radius: Theme.radiusLarge
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                Layout.fillHeight: true
 
                 Item {
-                    anchors { fill: parent; margins: 16 }
+                    anchors { fill: parent; margins: 12 }
                     visible: Config.controlCenter.showMedia && cc.player !== null
 
                     Rectangle {
                         id: artBox
-                        width: 52; height: 52; radius: 12
+                        width: 40; height: 40; radius: 8
                         color: Theme.fill
                         clip: true
                         Image {
                             anchors.fill: parent
                             source: cc.player?.trackArtUrl ?? ""
                             fillMode: Image.PreserveAspectCrop
-                            sourceSize { width: 104; height: 104 }
+                            sourceSize { width: 80; height: 80 }
                             visible: status === Image.Ready
                         }
                         Text {
@@ -153,22 +197,22 @@ Singleton {
                             visible: !(cc.player?.trackArtUrl)
                             text: "\u{F075A}"
                             color: Theme.subtext
-                            font { family: Theme.iconFont; pixelSize: 24 }
+                            font { family: Theme.iconFont; pixelSize: 20 }
                         }
                     }
                     Column {
-                        anchors { left: parent.left; right: parent.right; top: artBox.bottom; topMargin: 10 }
-                        Text { width: parent.width; text: cc.player?.trackTitle || cc.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize + 1; weight: Font.DemiBold } }
-                        Text { width: parent.width; text: cc.player?.trackArtist || cc.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+                        anchors { left: parent.left; right: parent.right; top: artBox.bottom; topMargin: 8 }
+                        Text { width: parent.width; text: cc.player?.trackTitle || cc.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                        Text { width: parent.width; text: cc.player?.trackArtist || cc.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                     }
                     Row {
-                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: -4 }
-                        spacing: 14
+                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: -6 }
+                        spacing: 10
                         Repeater {
                             model: [
-                                ["\u{F04AE}", () => cc.player.previous(), cc.player?.canGoPrevious ?? false, 22],
-                                [cc.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}", () => cc.player.togglePlaying(), cc.player?.canTogglePlaying ?? false, 28],
-                                ["\u{F04AD}", () => cc.player.next(), cc.player?.canGoNext ?? false, 22],
+                                ["\u{F04AE}", () => cc.player.previous(), cc.player?.canGoPrevious ?? false, 20],
+                                [cc.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}", () => cc.player.togglePlaying(), cc.player?.canTogglePlaying ?? false, 26],
+                                ["\u{F04AD}", () => cc.player.next(), cc.player?.canGoNext ?? false, 20],
                             ]
                             Text {
                                 required property var modelData
@@ -185,60 +229,66 @@ Singleton {
                 }
 
                 Item {
-                    anchors { fill: parent; margins: 16 }
+                    anchors { fill: parent; margins: 12 }
                     visible: !(Config.controlCenter.showMedia && cc.player !== null)
                     Text {
                         text: cc.charging ? "\u{F0084}" : "\u{F0079}"
                         color: cc.charging ? Theme.success : Theme.text
-                        font { family: Theme.iconFont; pixelSize: 28 }
+                        font { family: Theme.iconFont; pixelSize: 24 }
                     }
                     Column {
                         anchors { left: parent.left; bottom: parent.bottom }
                         Text { text: cc.pct + "%"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontDisplay; weight: Font.DemiBold; features: { "tnum": 1 } } }
-                        Text { text: cc.batteryText; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+                        Text { text: cc.batteryText; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                     }
                 }
             }
+        }
 
-            Round {
-                glyph: cc.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}"
-                expandable: true
-                hint: !cc.adapter ? "No Bluetooth" : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "Bluetooth")
-                active: cc.adapter?.enabled ?? false
-                isExpanded: cc.expanded === "bt"
-                onToggled: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
-                onExpand: cc.toggleExpanded("bt")
-            }
-            Round {
+        // ---- quick toggles ------------------------------------------------------------------
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: cc.gap
+            QuickToggle {
                 glyph: "\u{F0599}"
-                hint: "Night Light · " + ({ off: "off", on: "on", sun: "sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode]
+                label: "Night"
+                hint: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode]
                 active: NightLight.active
                 onToggled: NightLight.toggle()
             }
-
-            Pill {
-                glyph: "\u{F0594}"
-                title: "Focus"
-                subtitle: Config.notifications.dnd ? "Do Not Disturb on" : "Do Not Disturb off"
-                active: Config.notifications.dnd
-                onToggled: Config.set("notifications", "dnd", !Config.notifications.dnd)
-            }
-            Round {
+            QuickToggle {
                 glyph: "\u{F0176}"
-                hint: "Caffeine · " + Caffeine.remaining(cc.now.getTime())
+                label: Caffeine.active ? Caffeine.remaining(cc.now.getTime()) : "Caffeine"
+                hint: "Keep awake · choose how long"
                 active: Caffeine.active
                 expandable: true
                 isExpanded: cc.expanded === "caffeine"
                 onToggled: Caffeine.toggle()
                 onExpand: cc.toggleExpanded("caffeine")
             }
-            Round { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
+            QuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
                 visible: Machine.monitorSwitch
                 readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
                 glyph: "\u{F0379}"
-                hint: "Shared monitor · " + (ours ? "on this computer" : "on the other computer")
+                label: "Monitor"
+                hint: ours ? "On this computer" : "On the other computer"
                 active: ours
                 onToggled: Quickshell.execDetached(["monswitch", "toggle"])
+            }
+            QuickToggle {
+                visible: Machine.kbdDevice !== ""
+                glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
+                label: "Key light"
+                hint: ["Off", "Low", "Medium", "High"][cc.kbdLight] + " · click for next level"
+                active: cc.kbdLight > 0
+                onToggled: cc.setKbd((cc.kbdLight + 1) % 4)
+            }
+            QuickToggle {
+                glyph: "\u{F030C}"
+                label: "Keyboard"
+                hint: "On-screen keyboard"
+                active: Osk.visible
+                onToggled: Osk.toggle()
             }
         }
 
@@ -269,14 +319,14 @@ Singleton {
                 Rectangle {
                     visible: cc.passwordFor !== null
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 38
+                    Layout.preferredHeight: 34
                     Layout.topMargin: 6
                     radius: Theme.radiusSmall
                     color: Theme.fill
                     border { color: psk.activeFocus ? Theme.accent : Theme.stroke; width: 1 }
                     TextInput {
                         id: psk
-                        anchors { fill: parent; leftMargin: 14; rightMargin: 14 }
+                        anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
                         verticalAlignment: TextInput.AlignVCenter
                         echoMode: TextInput.Password
                         color: Theme.text
@@ -286,6 +336,8 @@ Singleton {
                         Keys.onEscapePressed: cc.passwordFor = null
                         Text {
                             visible: !psk.text
+                            width: parent.width
+                            elide: Text.ElideRight
                             text: "Password for " + (cc.passwordFor?.name ?? "") + " — Enter to join"
                             color: Theme.muted
                             font: psk.font
@@ -344,18 +396,96 @@ Singleton {
             }
         }
 
-        // ---- power -----------------------------------------------------------------------------
+        // ---- display and sound: one tile, three sliders ---------------------------------------
+        Tile {
+            Layout.fillWidth: true
+            Layout.preferredHeight: sliders.implicitHeight + 22
+            ColumnLayout {
+                id: sliders
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
+                spacing: 10
+
+                SliderHead { title: "Display" }
+                Bar {
+                    lowIcon: "\u{F00DE}"; highIcon: "\u{F00E0}"
+                    value: cc.brightness
+                    onMoved: v => {
+                        cc.brightness = Math.max(0.05, v)
+                        Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
+                    }
+                }
+
+                SliderHead {
+                    title: "Sound"
+                    detail: cc.nodeName(cc.sink) || "No output"
+                    isExpanded: cc.expanded === "out"
+                    onClicked: cc.toggleExpanded("out")
+                }
+                Bar {
+                    lowIcon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057F}"; highIcon: "\u{F057E}"
+                    value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
+                    onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
+                    onLowClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
+                }
+                ColumnLayout {
+                    visible: cc.expanded === "out"
+                    Layout.fillWidth: true
+                    spacing: 0
+                    Repeater {
+                        model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
+                        ListRow {
+                            required property var modelData
+                            glyph: "\u{F04C3}"
+                            title: cc.nodeName(modelData)
+                            selected: modelData === cc.sink
+                            trailing: selected ? "\u{F012C}" : ""
+                            onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                        }
+                    }
+                }
+
+                SliderHead {
+                    title: "Microphone"
+                    detail: cc.nodeName(cc.source) || "No input"
+                    isExpanded: cc.expanded === "in"
+                    onClicked: cc.toggleExpanded("in")
+                }
+                Bar {
+                    lowIcon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"; highIcon: ""
+                    value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
+                    onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
+                    onLowClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
+                }
+                ColumnLayout {
+                    visible: cc.expanded === "in"
+                    Layout.fillWidth: true
+                    spacing: 0
+                    Repeater {
+                        model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
+                        ListRow {
+                            required property var modelData
+                            glyph: "\u{F036C}"
+                            title: cc.nodeName(modelData)
+                            selected: modelData === cc.source
+                            trailing: selected ? "\u{F012C}" : ""
+                            onClicked: Pipewire.preferredDefaultAudioSource = modelData
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---- power mode ---------------------------------------------------------------------
         Module {
-            title: "Power"
-            detail: (Config.controlCenter.showMedia && cc.player !== null ? cc.pct + "% · " + cc.batteryText : "")
-                    + (Config.controlCenter.showHardware ? (cc.player !== null && Config.controlCenter.showMedia ? "  ·  " : "") + `CPU ${Math.round(Sensors.cpu)}°` : "")
+            title: "Power mode"
+            detail: Config.controlCenter.showHardware ? `CPU ${Math.round(Sensors.cpu)}°` : ""
             warn: Sensors.cpu >= 90
             onDetailClicked: { cc.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 34
-                radius: Theme.radiusSmall + 2
+                Layout.preferredHeight: Theme.controlHeight
+                radius: Theme.radiusSmall + 1
                 color: Theme.fill
 
                 Rectangle {
@@ -363,25 +493,25 @@ Singleton {
                     height: parent.height - 6
                     y: 3
                     x: 3 + PowerProfiles.profile * width
-                    radius: Theme.radiusSmall
+                    radius: Theme.radiusSmall - 1
                     color: Theme.thumb
                     Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
                 }
                 Row {
                     anchors { fill: parent; margins: 3 }
                     Repeater {
-                        model: [["\u{F032A}", "Quiet"], ["\u{F05D1}", "Balanced"], ["\u{F04C5}", "Performance"]]
+                        model: ["Quiet", "Balanced", "Performance"]
                         Item {
-                            required property var modelData
+                            required property string modelData
                             required property int index
                             readonly property bool on: PowerProfiles.profile === index
                             width: parent.width / 3
                             height: parent.height
-                            Row {
+                            Text {
                                 anchors.centerIn: parent
-                                spacing: 5
-                                Text { text: modelData[0]; color: parent.parent.on ? Theme.accent : Theme.subtext; font { family: Theme.iconFont; pixelSize: 14 } }
-                                Text { text: modelData[1]; color: parent.parent.on ? Theme.thumbText : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+                                text: modelData
+                                color: parent.on ? Theme.thumbText : Theme.subtext
+                                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                             }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerProfiles.profile = index }
                         }
@@ -390,164 +520,179 @@ Singleton {
             }
         }
 
-        // ---- display and sound -----------------------------------------------------------------
-        Module {
-            title: "Display"
-            Bar {
-                lowIcon: "\u{F00DE}"; highIcon: "\u{F00E0}"
-                value: cc.brightness
-                onMoved: v => {
-                    cc.brightness = Math.max(0.05, v)
-                    Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
-                }
-            }
-        }
-
-        Module {
-            title: "Sound"
-            detail: cc.nodeName(cc.sink) || "No output"
-            expandable: true
-            isExpanded: cc.expanded === "out"
-            onDetailClicked: cc.toggleExpanded("out")
-            Bar {
-                lowIcon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057F}"; highIcon: "\u{F057E}"
-                value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
-                onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
-                onLowClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
-            }
-            ColumnLayout {
-                visible: cc.expanded === "out"
-                Layout.fillWidth: true
-                spacing: 0
-                Repeater {
-                    model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
-                    ListRow {
-                        required property var modelData
-                        glyph: "\u{F04C3}"
-                        title: cc.nodeName(modelData)
-                        selected: modelData === cc.sink
-                        trailing: selected ? "\u{F012C}" : ""
-                        onClicked: Pipewire.preferredDefaultAudioSink = modelData
-                    }
-                }
-            }
-        }
-
-        Module {
-            title: "Microphone"
-            detail: cc.nodeName(cc.source) || "No input"
-            expandable: true
-            isExpanded: cc.expanded === "in"
-            onDetailClicked: cc.toggleExpanded("in")
-            Bar {
-                lowIcon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"; highIcon: ""
-                value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
-                onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
-                onLowClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
-            }
-            ColumnLayout {
-                visible: cc.expanded === "in"
-                Layout.fillWidth: true
-                spacing: 0
-                Repeater {
-                    model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
-                    ListRow {
-                        required property var modelData
-                        glyph: "\u{F036C}"
-                        title: cc.nodeName(modelData)
-                        selected: modelData === cc.source
-                        trailing: selected ? "\u{F012C}" : ""
-                        onClicked: Pipewire.preferredDefaultAudioSource = modelData
-                    }
-                }
-            }
-        }
-
-        // ---- shortcuts -------------------------------------------------------------------------
+        // ---- footer: battery, then shortcuts --------------------------------------------------
         RowLayout {
             Layout.fillWidth: true
-            spacing: cc.gap
-            Round {
-                glyph: "\u{F030C}"
-                hint: "On-screen keyboard"
-                active: Osk.visible
-                onToggled: Osk.toggle()
+            Layout.leftMargin: 4
+            spacing: 2
+            Text {
+                Layout.fillWidth: true
+                visible: cc.battery?.isPresent ?? false
+                text: (cc.charging ? "\u{F0084} " : "\u{F0079} ") + cc.pct + "%  ·  " + cc.batteryText
+                elide: Text.ElideRight
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
             }
-            Round {
-                visible: Machine.kbdDevice !== ""
-                glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
-                hint: "Keyboard light · " + ["off", "low", "medium", "high"][cc.kbdLight]
-                active: cc.kbdLight > 0
-                onToggled: cc.setKbd((cc.kbdLight + 1) % 4)
+            Item { Layout.fillWidth: true; visible: !(cc.battery?.isPresent ?? false) }
+            IconButton { glyph: "\u{F0100}"; hint: "Screenshot an area"; onClicked: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) } }
+            IconButton { glyph: "\u{F0493}"; hint: "Settings"; onClicked: { cc.hide(); SettingsApp.show("") } }
+            IconButton { glyph: "\u{F0425}"; hint: "Lock, sleep, restart…"; onClicked: { cc.hide(); UtilityMenu.toggle() } }
+        }
+
+        // ---- notifications: the history, grouped by app; a group folds into its newest card ----
+        RowLayout {
+            id: notesHeader
+            Layout.fillWidth: true
+            Layout.topMargin: 6
+            Layout.leftMargin: 4
+            spacing: 4
+            Text {
+                Layout.fillWidth: true
+                text: Notifications.history.length ? "Notifications" : "No notifications"
+                color: Notifications.history.length ? Theme.text : Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
             }
-            Round {
-                glyph: "\u{F0100}"
-                hint: "Screenshot an area"
-                onToggled: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) }
+            Chip {
+                icon: Notifications.dnd ? "\u{F009B}" : "\u{F009A}"
+                label: Notifications.dnd ? "Do Not Disturb" : ""
+                active: Notifications.dnd
+                onClicked: Notifications.toggleDnd()
             }
-            Round {
-                glyph: "\u{F0493}"
-                hint: "Settings"
-                onToggled: { cc.hide(); SettingsApp.show("") }
+            Chip { visible: Notifications.history.length > 0; label: "Clear all"; onClicked: Notifications.clearAll() }
+        }
+        Repeater {
+            model: Notifications.groups
+            ColumnLayout {
+                id: group
+                required property var modelData
+                readonly property bool unfolded: modelData.items.length === 1 || NotificationCenter.unfolded[modelData.app] === true
+                Layout.fillWidth: true
+                Layout.bottomMargin: unfolded ? 0 : 12        // room for the folded stack
+                spacing: 6
+
+                RowLayout {
+                    visible: group.modelData.items.length > 1 && group.unfolded
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 4
+                    Text {
+                        Layout.fillWidth: true
+                        text: group.modelData.app
+                        color: Theme.subtext
+                        elide: Text.ElideRight
+                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                    }
+                    Chip { label: "Show less"; onClicked: NotificationCenter.fold(group.modelData.app, true) }
+                    Chip { icon: "\u{F0156}"; onClicked: Notifications.clearApp(group.modelData.app) }
+                }
+                Repeater {
+                    model: group.unfolded ? group.modelData.items : group.modelData.items.slice(0, 1)
+                    NotificationCard {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        flat: true
+                        notification: modelData
+                        stacked: group.unfolded ? 0 : group.modelData.items.length - 1
+                        onExpandRequested: NotificationCenter.fold(group.modelData.app, false)
+                    }
+                }
             }
         }
     }
     }
+    }
 
+    Rectangle {   // the shared tooltip (cc.hint), kept inside the panel's edges
+        id: hintBox
+        readonly property var at: cc.hintItem ? cc.hintItem.mapToItem(popup.box, 0, 0) : Qt.point(0, 0)
+        readonly property bool fitsBelow: at.y + (cc.hintItem?.height ?? 0) + 6 + height <= popup.box.height - 4
+        z: 100
+        opacity: cc.hintItem ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+        width: Math.min(hintLabel.implicitWidth + Theme.spaceM * 2, popup.box.width - 8)
+        height: hintLabel.implicitHeight + Theme.spaceS
+        x: Math.max(4, Math.min(at.x + (cc.hintItem?.width ?? 0) / 2 - width / 2, popup.box.width - width - 4))
+        y: fitsBelow ? at.y + (cc.hintItem?.height ?? 0) + 6 : at.y - height - 6
+        radius: Theme.radiusSmall - 2
+        color: Theme.menu
+        border { color: Theme.stroke; width: 1 }
+        Text {
+            id: hintLabel
+            anchors.centerIn: parent
+            width: Math.min(implicitWidth, popup.box.width - 8 - Theme.spaceM * 2)
+            text: cc.hintText
+            elide: Text.ElideRight
+            color: Theme.text
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
+        }
+    }
     }
 
     // ---- building blocks -----------------------------------------------------------------------
 
-    // Two cells wide: a round icon that toggles, then the name and a chevron that open its list
-    component Pill: Glass {
-        id: pill
+    // A grouping tile on the panel: a slightly lighter rounded area, no border
+    component Tile: Rectangle {
+        radius: Theme.radius
+        color: Theme.fill
+    }
+
+    // Connection row: round icon that toggles, then name and status that open its list
+    component ConnRow: Item {
+        id: conn
         property string glyph
         property string title
         property string subtitle
         property bool active: false
-        property bool expandable: false
+        property bool expandable: true
         property bool isExpanded: false
         signal toggled()
         signal expand()
 
-        Layout.columnSpan: 2
-        Layout.preferredWidth: cc.unit * 2 + cc.gap
-        Layout.preferredHeight: cc.unit
-        radius: Theme.radiusLarge
-        border.color: isExpanded ? Theme.accent : Theme.stroke
+        width: parent ? parent.width : 0
+        height: 44
 
-        Bubble {
-            id: bubble
-            anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
-            size: 46
-            glyph: pill.glyph
-            active: pill.active
-            onClicked: pill.toggled()
-        }
-        Chevron {
-            id: pillChevron
-            visible: pill.expandable
-            width: visible ? implicitWidth : 0
-            anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
-            open: pill.isExpanded
-        }
-        Column {
-            anchors { left: bubble.right; leftMargin: 10; right: pillChevron.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
-            Text { width: parent.width; text: pill.title; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize + 1; weight: Font.DemiBold } }
-            Text { width: parent.width; text: pill.subtitle; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+        Rectangle {   // hover / open highlight for the list part
+            anchors { fill: parent; margins: 1 }
+            radius: Theme.radiusSmall + 2
+            color: conn.isExpanded ? Theme.fillHover : rowHover.containsMouse && conn.expandable ? Theme.fill : "transparent"
+            Behavior on color { ColorAnimation { duration: Theme.animFast } }
         }
         MouseArea {
-            visible: pill.expandable
-            anchors { fill: parent; leftMargin: bubble.width + 12 }
-            cursorShape: Qt.PointingHandCursor
-            onClicked: pill.expand()
+            id: rowHover
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: conn.expandable ? Qt.PointingHandCursor : Qt.ArrowCursor
+            onClicked: conn.expandable ? conn.expand() : conn.toggled()
+        }
+        Rectangle {   // round toggle (inline: components declared in this file can't nest)
+            id: disc
+            anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
+            width: 30; height: 30; radius: 15
+            color: conn.active ? Theme.selected : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
+            scale: discArea.pressed ? 0.92 : 1
+            Behavior on color { ColorAnimation { duration: Theme.anim } }
+            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+            Text {
+                anchors.centerIn: parent
+                text: conn.glyph
+                color: conn.active ? Theme.onSelected : Theme.text
+                font { family: Theme.iconFont; pixelSize: 15 }
+            }
+            MouseArea { id: discArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
+        }
+        Column {
+            anchors { left: disc.right; leftMargin: 8; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            Text { width: parent.width; text: conn.title; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+            Text { width: parent.width; text: conn.subtitle; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
         }
     }
 
-    // One cell: a big round toggle. With a list, a chevron badge (or right-click) opens it.
-    component Round: Item {
-        id: round
+    // A square tile in the quick-toggle row: icon over a short label; accent when on.
+    // With a list, a small chevron in the corner opens it (right-click works too).
+    component QuickToggle: Rectangle {
+        id: qt
         property string glyph
+        property string label
         property string hint
         property bool active: false
         property bool expandable: false
@@ -555,76 +700,118 @@ Singleton {
         signal toggled()
         signal expand()
 
-        Layout.preferredWidth: cc.unit
-        Layout.preferredHeight: cc.unit
-
-        Bubble {
-            anchors.fill: parent
-            size: cc.unit
-            glyph: round.glyph
-            iconSize: 24
-            active: round.active
-            outlined: round.isExpanded
-            onClicked: round.toggled()
-            onRightClicked: round.expand()
-            ToolTipText { shown: parent.hovered && round.hint !== ""; text: round.hint; z: 10 }
-        }
-        Rectangle {
-            visible: round.expandable
-            anchors { right: parent.right; bottom: parent.bottom }
-            width: 26; height: 26; radius: 13
-            color: badgeArea.containsMouse || round.isExpanded ? Theme.glassStrong : Theme.glass
-            border { color: round.isExpanded ? Theme.accent : Theme.stroke; width: 1 }
-            Chevron { anchors.centerIn: parent; open: round.isExpanded; size: 14 }
-            MouseArea {
-                id: badgeArea
-                anchors { fill: parent; margins: -4 }
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: round.expand()
-            }
-        }
-    }
-
-
-    // White when on (icon in the accent), glass when off, like Tahoe's toggles
-    component Bubble: Rectangle {
-        id: b
-        property string glyph
-        property int size: 46
-        property int iconSize: 20
-        property bool active: false
-        property bool outlined: false
-        readonly property bool hovered: area.containsMouse
-        signal clicked()
-        signal rightClicked()
-
-        width: size; height: size; radius: size / 2
-        color: active ? Theme.selected : area.containsMouse ? Theme.fillHover : Theme.glass
-        border { color: outlined ? Theme.accent : active ? "transparent" : Theme.stroke; width: outlined ? 2 : 1 }
-        scale: area.pressed ? 0.94 : 1
+        Layout.fillWidth: true
+        Layout.preferredWidth: 1
+        Layout.preferredHeight: 58
+        radius: Theme.radius
+        color: active ? Theme.selected : qtArea.containsMouse ? Theme.fillHover : Theme.fill
+        border { color: isExpanded ? Theme.accent : "transparent"; width: 1 }
+        scale: qtArea.pressed ? 0.96 : 1
         Behavior on color { ColorAnimation { duration: Theme.anim } }
         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
-        Text {
+        Column {
             anchors.centerIn: parent
-            text: b.glyph
-            color: b.active ? Theme.onSelected : Theme.text
-            font { family: Theme.iconFont; pixelSize: b.iconSize }
+            width: parent.width - 8
+            spacing: 3
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qt.glyph
+                color: qt.active ? Theme.onSelected : Theme.text
+                font { family: Theme.iconFont; pixelSize: 18 }
+            }
+            Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                text: qt.label
+                elide: Text.ElideRight
+                color: qt.active ? Theme.onSelected : Theme.subtext
+                font { family: Theme.font; pixelSize: 10; weight: Font.Medium }
+            }
         }
         MouseArea {
-            id: area
+            id: qtArea
             anchors.fill: parent
             hoverEnabled: true
+            onContainsMouseChanged: containsMouse && qt.hint !== "" ? cc.hint(qt, qt.hint) : cc.unhint(qt)
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             cursorShape: Qt.PointingHandCursor
-            onClicked: mouse => mouse.button === Qt.RightButton ? b.rightClicked() : b.clicked()
+            onClicked: mouse => mouse.button === Qt.RightButton && qt.expandable ? qt.expand() : qt.toggled()
+        }
+        Rectangle {
+            visible: qt.expandable
+            anchors { right: parent.right; top: parent.top; margins: 3 }
+            width: 18; height: 18; radius: 9
+            color: chevArea.containsMouse ? Theme.fillActive : "transparent"
+            Chevron { anchors.centerIn: parent; open: qt.isExpanded; size: 12 }
+            MouseArea { id: chevArea; anchors { fill: parent; margins: -3 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
+        }
+
+    }
+
+    // Small round icon button for the footer
+    component IconButton: Rectangle {
+        id: ib
+        property string glyph
+        property string hint
+        signal clicked()
+        Layout.preferredWidth: 30
+        Layout.preferredHeight: 30
+        radius: 15
+        color: ibArea.containsMouse ? Theme.fillHover : "transparent"
+        Text { anchors.centerIn: parent; text: ib.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
+        MouseArea {
+            id: ibArea
+            anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+            onClicked: ib.clicked()
+            onContainsMouseChanged: containsMouse ? cc.hint(ib, ib.hint) : cc.unhint(ib)
         }
     }
 
-    // A full-width glass card with an optional title (and a clickable detail on the right)
-    component Module: Glass {
+    // Label over a slider; with a detail (device name) it is a button that opens the device list
+    component SliderHead: Item {
+        id: sh
+        property string title
+        property string detail
+        property bool isExpanded: false
+        signal clicked()
+        Layout.fillWidth: true
+        Layout.preferredHeight: 16
+        Layout.bottomMargin: -4
+        Text {
+            id: shTitle
+            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+            text: sh.title
+            color: Theme.text
+            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+        }
+        Row {
+            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+            visible: sh.detail !== ""
+            spacing: 2
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(implicitWidth, sh.width - shTitle.implicitWidth - 30)
+                text: sh.detail
+                elide: Text.ElideRight
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
+            Chevron { open: sh.isExpanded; size: 13; anchors.verticalCenter: parent.verticalCenter }
+        }
+        MouseArea {
+            anchors.fill: parent
+            enabled: sh.detail !== ""
+            cursorShape: Qt.PointingHandCursor
+            onClicked: sh.clicked()
+        }
+    }
+
+    // A tile with a title row (and a clickable detail on the right)
+    component Module: Rectangle {   // same look as Tile
         id: mod
+        radius: Theme.radius
+        color: Theme.fill
         property string title
         property string detail
         property bool warn: false          // detail in the warning colour
@@ -634,24 +821,23 @@ Singleton {
         signal detailClicked()
 
         Layout.fillWidth: true
-        Layout.preferredHeight: inner.implicitHeight + 28
-        radius: Theme.radiusLarge
+        Layout.preferredHeight: inner.implicitHeight + 22
 
         ColumnLayout {
             id: inner
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14; leftMargin: 18; rightMargin: 18 }
-            spacing: 8
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
+            spacing: 6
             Item {
                 id: header
                 visible: mod.title !== ""
                 Layout.fillWidth: true
-                Layout.preferredHeight: 18
+                Layout.preferredHeight: 16
                 Text {
                     id: headerTitle
                     anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                     text: mod.title
                     color: Theme.text
-                    font { family: Theme.font; pixelSize: Theme.fontSize + 1; weight: Font.DemiBold }
+                    font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
                 }
                 Row {
                     id: headerDetail
@@ -665,7 +851,7 @@ Singleton {
                         color: mod.warn ? Theme.warning : Theme.subtext
                         font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
                     }
-                    Chevron { visible: mod.expandable; open: mod.isExpanded; size: 15; anchors.verticalCenter: parent.verticalCenter }
+                    Chevron { visible: mod.expandable; open: mod.isExpanded; size: 13; anchors.verticalCenter: parent.verticalCenter }
                 }
                 MouseArea {
                     anchors.fill: mod.expandable ? header : headerDetail
@@ -677,7 +863,7 @@ Singleton {
         }
     }
 
-    // Thin Tahoe slider: icon, track, icon
+    // Thin slider: icon, track, icon
     component Bar: RowLayout {
         id: bar
         property real value: 0
@@ -697,12 +883,12 @@ Singleton {
         }
         Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: 24
+            Layout.preferredHeight: 20
             Rectangle {
                 id: track
                 anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
-                height: 8
-                radius: 4
+                height: 6
+                radius: 3
                 color: Theme.fill
                 Rectangle {
                     width: Math.max(track.height, track.width * Math.max(0, Math.min(1, bar.value)))
@@ -736,8 +922,8 @@ Singleton {
         property bool selected: false
         signal clicked()
         Layout.fillWidth: true
-        implicitHeight: 36
-        radius: 12
+        implicitHeight: Theme.controlHeight + 4
+        radius: Theme.radiusSmall
         color: rowArea.containsMouse ? Theme.fillHover : "transparent"
         Text {
             id: rowGlyph
