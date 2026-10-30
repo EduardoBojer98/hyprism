@@ -179,7 +179,7 @@ PanelWindow {
                 }
             }
             BarItem {
-                active: Calendar.open
+                active: Calendar.open === true   // the singleton is created after the first bar
                 onPressed: Calendar.toggle()
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
