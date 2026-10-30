@@ -18,14 +18,14 @@ Glass {
     implicitHeight: 40
     radius: height / 2
     border.color: active ? Theme.accent : Theme.stroke
-    color: active ? Theme.accentWash : area.containsMouse ? Qt.rgba(0.12, 0.13, 0.18, 0.55) : Theme.glass
+    color: active ? Theme.accentWash : area.containsMouse ? Theme.fillHover : Theme.glass
     Behavior on color { ColorAnimation { duration: Theme.anim } }
 
     // Soft offset shadow so the capsules float above the wallpaper
     layer.enabled: true
     layer.effect: MultiEffect {
         shadowEnabled: true
-        shadowColor: Qt.rgba(0, 0, 0, 0.32)
+        shadowColor: Theme.shadow
         shadowVerticalOffset: 4
         shadowBlur: 0.6
     }

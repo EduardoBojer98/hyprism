@@ -15,7 +15,7 @@ Rectangle {
     implicitWidth: row.implicitWidth + 18
     implicitHeight: 26
     radius: 13
-    color: active ? Qt.rgba(1, 1, 1, 0.24) : interactive && area.containsMouse ? Qt.rgba(1, 1, 1, 0.13) : "transparent"
+    color: active ? Theme.fillActive : interactive && area.containsMouse ? Theme.fillHover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
     Row {

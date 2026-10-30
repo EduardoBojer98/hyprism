@@ -4,7 +4,8 @@ import Quickshell.Io
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
     property JsonObject appearance: JsonObject {
-        property string accent: "blue"          // a Catppuccin Macchiato colour name
+        property string mode: "light"           // "light" or "dark"
+        property string accent: "blue"          // a system colour name (Theme.accents)
         property real glassOpacity: 0.55        // tint over the blur (0.2 clear .. 0.9 solid)
         property real radiusScale: 1            // 0 square .. 1.5 extra round
         property real fontScale: 1

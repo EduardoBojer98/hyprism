@@ -1,7 +1,7 @@
 # linux-setup
 
 A macOS-style desktop for Arch-based Linux (built on CachyOS): **Hyprland** with a **Quickshell**
-shell in smoked-glass Liquid Glass style. Everything is free software, and everything a user would
+shell in frosted Liquid Glass style (light by default, dark in Settings). Everything is free software, and everything a user would
 want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
 install stays untouched and selectable at the login screen.
 

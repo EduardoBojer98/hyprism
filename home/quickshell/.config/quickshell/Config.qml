@@ -25,6 +25,7 @@ Singleton {
     // Allowed values; set() refuses anything else. Numbers are [min, max].
     readonly property var schema: ({
         appearance: {
+            mode: ["light", "dark"],
             accent: ["blue", "lavender", "mauve", "pink", "peach", "yellow", "green", "teal", "sky"],
             glassOpacity: [0.2, 0.9], radiusScale: [0, 1.5], fontScale: [0.85, 1.25],
             font: "string", animations: "bool", iconTheme: "string",

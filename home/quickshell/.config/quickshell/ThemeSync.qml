@@ -3,8 +3,8 @@ import QtQuick
 
 // Carries the shell's design tokens to the parts of the desktop Quickshell can't draw:
 // Hyprland window borders (accent or rotating rainbow, width) and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
-// the lock screen (hypr/hyprlock-theme.conf, read at next lock), and GTK (gsettings accent and
-// icon theme). Qt/KDE apps keep following KDE's own settings, which this never writes.
+// the lock screen (hypr/hyprlock-theme.conf, read at next lock), and GTK (gsettings light/dark,
+// accent and icon theme). Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
 Scope {
     id: root
@@ -15,6 +15,7 @@ Scope {
     readonly property string border: Config.appearance.border
     readonly property int borderSpin: Theme.animate ? Config.appearance.borderSpin : 0
     readonly property int borderSize: Config.appearance.borderSize
+    readonly property bool light: Theme.light
 
     // Catppuccin name -> nearest GNOME accent-color value (GTK4/libadwaita apps)
     readonly property var gtkAccent: ({ blue: "blue", lavender: "purple", mauve: "purple", pink: "pink",
@@ -26,7 +27,8 @@ Scope {
         SettingsApp.writeHyprFile("hyprlock-theme.conf", "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])
         Quickshell.execDetached(["sh", "-c",
-            "gsettings set org.gnome.desktop.interface accent-color " + (gtkAccent[Config.appearance.accent] ?? "blue")
+            "gsettings set org.gnome.desktop.interface color-scheme prefer-" + (light ? "light" : "dark")
+            + "; gsettings set org.gnome.desktop.interface accent-color " + (gtkAccent[Config.appearance.accent] ?? "blue")
             + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"])
     }
 
@@ -58,6 +60,7 @@ Scope {
     Timer { id: debounce; interval: 400; onTriggered: if (Config.loaded) root.apply() }
     onAccentHexChanged: debounce.restart()
     onRoundingChanged: debounce.restart()
+    onLightChanged: debounce.restart()
     onIconThemeChanged: debounce.restart()
     onBorderChanged: debounce.restart()
     onBorderSpinChanged: debounce.restart()

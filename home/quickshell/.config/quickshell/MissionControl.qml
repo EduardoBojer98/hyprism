@@ -127,7 +127,7 @@ Singleton {
                 event.accepted = true
             }
 
-            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.38) }
+            Rectangle { anchors.fill: parent; color: Theme.light ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(0, 0, 0, 0.38) }
             MouseArea { anchors.fill: parent; onClicked: root.hide() }
 
             // ---- desktops: a glass bar along the top ----

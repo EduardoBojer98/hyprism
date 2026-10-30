@@ -341,7 +341,7 @@ Singleton {
                     y: 3
                     x: 3 + PowerProfiles.profile * width
                     radius: Theme.radiusSmall
-                    color: "#f2f4fa"
+                    color: Theme.thumb
                     Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
                 }
                 Row {
@@ -358,7 +358,7 @@ Singleton {
                                 anchors.centerIn: parent
                                 spacing: 5
                                 Text { text: modelData[0]; color: parent.parent.on ? Theme.accent : Theme.subtext; font { family: Theme.iconFont; pixelSize: 14 } }
-                                Text { text: modelData[1]; color: parent.parent.on ? "#1e2030" : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+                                Text { text: modelData[1]; color: parent.parent.on ? Theme.thumbText : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
                             }
                             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerProfiles.profile = index }
                         }
@@ -548,7 +548,7 @@ Singleton {
         signal rightClicked()
 
         width: size; height: size; radius: size / 2
-        color: active ? "#f2f4fa" : area.containsMouse ? Theme.fillHover : Theme.glass
+        color: active ? Theme.selected : area.containsMouse ? Theme.fillHover : Theme.glass
         border { color: outlined ? Theme.accent : active ? "transparent" : Theme.stroke; width: outlined ? 2 : 1 }
         scale: area.pressed ? 0.94 : 1
         Behavior on color { ColorAnimation { duration: Theme.anim } }
@@ -557,7 +557,7 @@ Singleton {
         Text {
             anchors.centerIn: parent
             text: b.glyph
-            color: b.active ? Theme.accent : Theme.text
+            color: b.active ? Theme.onSelected : Theme.text
             font { family: Theme.iconFont; pixelSize: b.iconSize }
         }
         MouseArea {
@@ -641,7 +641,7 @@ Singleton {
                     width: Math.max(track.height, track.width * Math.max(0, Math.min(1, bar.value)))
                     height: parent.height
                     radius: parent.radius
-                    color: "#f2f4fa"
+                    color: Theme.selected
                 }
             }
             MouseArea {

@@ -88,7 +88,7 @@ Singleton {
                 id: sidebar
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                 width: win.compact ? 64 : 240
-                color: Qt.rgba(0, 0, 0, 0.18)
+                color: Theme.sidebar
                 Behavior on width { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
                 Flickable {

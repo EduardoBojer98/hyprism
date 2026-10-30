@@ -76,7 +76,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: 260
         radius: Theme.radius
-        color: Qt.rgba(0, 0, 0, 0.22)
+        color: Theme.fill
         border { color: Theme.stroke; width: 1 }
 
         Item {
@@ -106,7 +106,7 @@ ColumnLayout {
                     width: size.w * stage.k
                     height: size.h * stage.k
                     radius: 8
-                    color: page.selected === modelData ? Qt.rgba(0.54, 0.68, 0.96, 0.28) : Theme.fillHover
+                    color: page.selected === modelData ? Theme.accentWash : Theme.fillHover
                     border { color: page.selected === modelData ? Theme.accent : Theme.stroke; width: page.selected === modelData ? 2 : 1 }
 
                     Column {

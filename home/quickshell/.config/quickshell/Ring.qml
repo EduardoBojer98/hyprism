@@ -27,7 +27,7 @@ Item {
             ctx.reset()
             ctx.lineWidth = 2.5
             ctx.lineCap = "round"
-            ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.14)
+            ctx.strokeStyle = Theme.fillActive
             ctx.beginPath(); ctx.arc(width / 2, height / 2, r, 0, 2 * Math.PI); ctx.stroke()
             ctx.strokeStyle = ring.tone
             ctx.beginPath(); ctx.arc(width / 2, height / 2, r, -Math.PI / 2, -Math.PI / 2 + t * 2 * Math.PI); ctx.stroke()

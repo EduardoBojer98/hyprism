@@ -9,6 +9,11 @@ ColumnLayout {
     SettingGroup {
         title: "Colour"
         SettingRow {
+            label: "Appearance"
+            hint: "Light or dark glass for the bar, panels and Settings"
+            ConfigChoice { section: "appearance"; key: "mode"; values: ["light", "dark"]; labels: ["Light", "Dark"] }
+        }
+        SettingRow {
             label: "Accent"
             hint: "Active items, toggles, selection, window borders"
             Row {
@@ -18,7 +23,7 @@ ColumnLayout {
                     Rectangle {
                         required property string modelData
                         width: 24; height: 24; radius: 12
-                        color: Theme.macchiato[modelData]
+                        color: Theme.accents[modelData]
                         border { color: Config.appearance.accent === modelData ? Theme.text : "transparent"; width: 2 }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Config.set("appearance", "accent", parent.modelData) }
                     }

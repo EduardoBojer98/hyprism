@@ -75,12 +75,12 @@ PanelWindow {
 
     SystemClock { id: clock; precision: SystemClock.Minutes }
 
-    // soft shade from the top edge so white text reads on any wallpaper
+    // frosted strip (light) or soft shade (dark) so the text reads on any wallpaper
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.42) }
-            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.12) }
+            GradientStop { position: 0.0; color: Theme.light ? Qt.rgba(1, 1, 1, 0.62) : Qt.rgba(0, 0, 0, 0.42) }
+            GradientStop { position: 1.0; color: Theme.light ? Qt.rgba(1, 1, 1, 0.44) : Qt.rgba(0, 0, 0, 0.12) }
         }
     }
 
@@ -88,7 +88,7 @@ PanelWindow {
         id: content
         anchors { fill: parent; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS }
         layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowColor: Qt.rgba(0, 0, 0, 0.45); shadowBlur: 0.35; shadowVerticalOffset: 1 }
+        layer.effect: MultiEffect { shadowEnabled: true; shadowColor: Theme.light ? Qt.rgba(1, 1, 1, 0.5) : Qt.rgba(0, 0, 0, 0.45); shadowBlur: 0.35; shadowVerticalOffset: 1 }
 
         // ---- left ----------------------------------------------------------------------------
         Row {
@@ -109,7 +109,7 @@ PanelWindow {
                         width: current ? 26 : 20
                         height: 18
                         radius: 9
-                        color: current ? Theme.text : modelData.urgent ? Qt.rgba(0.96, 0.66, 0.5, 0.45) : wsArea.containsMouse ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(1, 1, 1, 0.1)
+                        color: current ? Theme.accent : modelData.urgent ? Qt.rgba(0.96, 0.66, 0.5, 0.45) : wsArea.containsMouse ? Theme.fillActive : Theme.fillHover
                         Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: Theme.anim } }
                         Text {

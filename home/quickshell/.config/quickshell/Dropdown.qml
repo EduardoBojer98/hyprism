@@ -51,7 +51,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: Theme.radius
-            color: Qt.rgba(0.06, 0.06, 0.09, 0.96)
+            color: Theme.menu
             border { color: Theme.stroke; width: 1 }
 
             ListView {

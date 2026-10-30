@@ -15,7 +15,7 @@ ScrollBar {
 
     contentItem: Rectangle {
         radius: Math.min(width, height) / 2
-        color: bar.pressed ? Theme.strokeStrong : bar.hovered ? Qt.rgba(1, 1, 1, 0.24) : Theme.stroke
+        color: bar.pressed ? Theme.strokeStrong : bar.hovered ? Theme.muted : Theme.stroke
         Behavior on color { ColorAnimation { duration: Theme.animFast } }
     }
     background: Item {}

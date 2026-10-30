@@ -18,7 +18,7 @@ own settings in your fork, remove the matching lines from `.gitignore`.
 
 ## What you can change in Settings
 
-- **Appearance**: accent colour, how much of the blur shows through the glass, corners, text size,
+- **Appearance**: light or dark, accent colour, how much of the blur shows through the glass, corners, text size,
   font, animations
 - **Desktop & Dock**: icon size, auto-hide, running apps, pinned apps
 - **Search & Launcher**: where Spotlight opens, what it shows before you type, result order and
