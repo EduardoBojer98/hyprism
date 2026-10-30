@@ -55,6 +55,25 @@ Tick boxes only for things verified on the machine; untested items say so.
 | Hardware | `Sensors.qml` | One 2–3 s timer for temps; dashboard-only reads (fans, PPT, util, net) run only while the dashboard is visible. The NVIDIA GPU is never queried unless its runtime status is `active`. |
 | Caffeine | `Caffeine.qml` | `systemd-inhibit --what=idle` held by a child process tied to Quickshell's PID, so it dies with qs. hypridle honours systemd idle inhibitors. |
 
+## Thermal measurements (Phase 4)
+
+Same load for every run: 4 busy threads (about 25-35 % CPU), 180 s, after 90 s settling, on AC
+(`thermlog`; script in the session scratchpad). Averages:
+
+| Run | CPU °C | Package W | Clock MHz | CPU fan rpm (avg / max) |
+|---|---|---|---|---|
+| Quiet, firmware curve | 84 | 28.8 | 2176 | 5958 / 7000 |
+| Balanced, old custom curve | 90 | 32.0 | 2282 | 8864 / 9300 |
+| Performance, firmware curve | 96 | 41.2 | 2674 | 9158 / 10400 |
+| Balanced, new smooth curve | 90 | 29.7 | 2621 | 7695 / 8900 |
+
+The CPU boosts until it reaches ~90-96 °C in every mode, so a fan curve mostly sets the noise,
+not the temperature. The new Balanced CPU curve (50c:8 %, 60:18, 65:26, 70:34, 75:43, 80:52,
+85:62, 92:80) has no 68-70 °C jump and is ~1200 rpm quieter on average at the same temperature.
+Caveat: background load was higher during that run (idle 20 % vs 2 %), so treat it as indicative.
+Quiet and Performance keep their firmware curves. Power limits (PPT) are unchanged: per-mode PPT
+lives in root-owned `/etc/asusd/asusd.ron`.
+
 ## Phases
 
 - [x] 1 Audit (this file)
@@ -63,7 +82,8 @@ Tick boxes only for things verified on the machine; untested items say so.
       wtype), Settings on Config, dock on Config (size, auto-hide, pinned, right-click menu with
       minimise/restore/pin/quit, Super+H minimises), calendar under the clock. Moving the older
       components' hard-coded sizes onto tokens moves to Phase 6.
-- [ ] 4 Hardware: baseline measurements, fan curves/PPT per mode, Caffeine, hardware dashboard
+- [x] 4 Hardware: baseline measurements, Balanced fan curve, Caffeine, ASUS page with fan-curve editor
+      (PPT per mode not changed: needs root)
 - [ ] 5 Desktop: Control Center, notification centre + DND, MPRIS, night light, OCR, Mission
       Control, dock minimise, custom launcher actions
 - [ ] 6 Polish and validation
@@ -74,4 +94,6 @@ Tick boxes only for things verified on the machine; untested items say so.
 - `sudo pacman -S papirus-icon-theme wtype hyprsunset` (listed in `packages/desktop.txt`).
 - Thermal benchmarks: about 10 of your usual Chrome tabs open while measurements run.
 - Dock right-click menu and the clock calendar: open each once (checked by rendering, not by a real click).
+- JuhRadial slices (in ~/.config/juhradial, not in this repo): Emoji = emojipick, Screenshot =
+  grim+slurp+satty; de_defaults_applied=true stops its settings app overwriting them.
 - JuhRadial: press the gesture button once in Hyprland to confirm the wheel opens at the cursor.
