@@ -28,3 +28,5 @@ apply_input()
 
 -- Three-finger swipe on the touchpad switches workspaces
 hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+-- Three fingers up opens Mission Control, like macOS
+hl.gesture({ fingers = 3, direction = "up", action = { finish = function() hl.dispatch(hl.dsp.exec_cmd("qs ipc call overview toggle")) end } })
