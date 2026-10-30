@@ -4,12 +4,13 @@ import Quickshell.Io
 import Quickshell.Widgets
 import QtQuick
 
-// Spotlight: opens at the cursor (Super). A search pill plus four round buttons, like macOS Tahoe:
-//   Search    everything at once, best match first (Search.qml decides: apps, settings, actions,
-//             calculator, "> command", files, "~/path", custom actions, web)
+// Spotlight (Super): centred on the screen under the pointer, or at the pointer (Settings >
+// Search & Launcher). A search pill plus four round buttons, like macOS Tahoe:
+//   Search    opens on the apps grid; typing switches to results ranked by group in the order set
+//             in Settings (default: apps, files, calculator, settings, actions, web)
 //   Apps      every application as a grid, filtered by category chips and by what you type
 //   Files     files and folders only        Actions   system and custom actions only
-//   Clipboard opens the clipboard history (Super+V)
+//   Clipboard the clipboard history inside this panel (or the Super+V popup, per Settings)
 // Keys: type · ↑↓ (←→ in Apps) move · Enter open · Tab next mode · Esc close
 Singleton {
     id: root
@@ -20,7 +21,9 @@ Singleton {
         { id: "actions", name: "Actions",      glyph: "\u{F0E7}" },
         { id: "clip",    name: "Clipboard",    glyph: "\u{F014C}" },
     ]
-    property string mode: "search"            // search | apps | files | actions
+    property string mode: "search"            // search | apps | files | actions | clip
+    // What the panel shows: an empty search opens on the apps grid (Config.launcher.startView)
+    readonly property string view: mode === "search" && Search.query.trim() === "" && Config.launcher.startView === "apps" ? "apps" : mode
     property string category: "All"
     property bool open: popup.open
 
@@ -32,15 +35,18 @@ Singleton {
     }
     function toggle() { if (popup.open) popup.hide(); else show("search") }
     function setMode(m) {
-        if (m === "clip") { popup.hide(); Clipboard.toggle(); return }
+        if (m === "clip" && !Config.launcher.clipboardInside) { popup.hide(); Clipboard.toggle(); return }
+        if (m === "clip" && mode !== "clip") Clipboard.prepare()
         mode = mode === m ? "search" : m
+        if (mode === "clip") { field.text = ""; clipView.reset() }
         results.currentIndex = 0
         grid.currentIndex = 0
         field.forceActiveFocus()
     }
     function cycleMode() {
-        const order = ["search", "apps", "files", "actions"]
+        const order = ["search", "apps", "files", "actions"].concat(Config.launcher.clipboardInside ? ["clip"] : [])
         mode = order[(order.indexOf(mode) + 1) % order.length]
+        if (mode === "clip") Clipboard.prepare()
         results.currentIndex = 0
     }
 
@@ -51,6 +57,7 @@ Singleton {
         function files(): void { root.show("files") }
         function clipboard(): void { Clipboard.toggle() }
         function search(text: string): void { root.show("search"); field.text = text }
+        function mode(m: string): void { root.show("search"); if (m !== "search") root.setMode(m) }
     }
 
     // ---- data for the current mode -------------------------------------------------------------
@@ -82,10 +89,13 @@ Singleton {
     }
     property var confirmFor: null          // a custom action marked "ask first"
 
+    Connections { target: Clipboard; function onPasted() { popup.hide() } }
+
     // ---- window --------------------------------------------------------------------------------
     CursorPopup {
         id: popup
         name: "launcher"
+        placement: Config.launcher.placement
         boxWidth: 720
         boxHeight: pill.height + (panel.visible ? panel.height + Theme.spaceS : 0)
         focusItem: field
@@ -116,7 +126,10 @@ Singleton {
                     color: Theme.text
                     selectionColor: Theme.accent
                     font { family: Theme.font; pixelSize: Theme.fontHeading }
-                    onTextChanged: { Search.query = text; results.currentIndex = 0; grid.currentIndex = 0; root.confirmFor = null }
+                    onTextChanged: {
+                        if (root.mode === "clip") { Clipboard.filter = text; clipView.reset(); return }
+                        Search.query = text; results.currentIndex = 0; grid.currentIndex = 0; root.confirmFor = null
+                    }
                     Text {
                         visible: !field.text
                         anchors.verticalCenter: parent.verticalCenter
@@ -126,8 +139,20 @@ Singleton {
                     }
 
                     Keys.onPressed: event => {
-                        const inGrid = root.mode === "apps"
-                        const view = inGrid ? grid : results
+                        const inGrid = root.view === "apps"
+                        if (root.view === "clip") {
+                            if (event.key === Qt.Key_Down) clipView.down()
+                            else if (event.key === Qt.Key_Up) clipView.up()
+                            else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) clipView.paste()
+                            else if (event.key === Qt.Key_Delete) clipView.remove()
+                            else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) clipView.pin()
+                            else if (event.key === Qt.Key_Space && !field.text) clipView.expand()
+                            else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) root.cycleMode()
+                            else if (event.key === Qt.Key_Escape) popup.hide()
+                            else return
+                            event.accepted = true
+                            return
+                        }
                         if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) { root.cycleMode() }
                         else if (event.key === Qt.Key_Down) { inGrid ? grid.moveCurrentIndexDown() : results.incrementCurrentIndex() }
                         else if (event.key === Qt.Key_Up) { inGrid ? grid.moveCurrentIndexUp() : results.decrementCurrentIndex() }
@@ -184,8 +209,8 @@ Singleton {
             anchors { top: pill.bottom; topMargin: Theme.spaceS; left: parent.left; right: parent.right }
             strong: true
             radius: Theme.radiusLarge
-            visible: root.mode !== "search" || field.text.trim() !== ""
-            height: root.mode === "apps" ? 460
+            visible: root.view !== "search" || field.text.trim() !== ""
+            height: root.view === "apps" || root.view === "clip" ? 460
                   : Math.min(440, Math.max(64, results.contentHeight + Theme.spaceS * 2 + (root.confirmFor ? 44 : 0)))
             Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
@@ -205,10 +230,17 @@ Singleton {
                 }
             }
 
+            // Clipboard history inside Spotlight
+            ClipboardView {
+                id: clipView
+                visible: root.view === "clip"
+                anchors { fill: parent; margins: Theme.spaceS }
+            }
+
             // Apps: category chips and icon grid
             Item {
                 anchors.fill: parent
-                visible: root.mode === "apps"
+                visible: root.view === "apps"
                 Flow {
                     id: chips
                     anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
@@ -272,7 +304,7 @@ Singleton {
             // Search, Files, Actions: one ranked list, section label when the kind changes
             ListView {
                 id: results
-                visible: root.mode !== "apps"
+                visible: root.view !== "apps" && root.view !== "clip"
                 anchors { fill: parent; margins: Theme.spaceS; topMargin: confirmBar.visible ? 52 : Theme.spaceS }
                 clip: true
                 model: root.listModel

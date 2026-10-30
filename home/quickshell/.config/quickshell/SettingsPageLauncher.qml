@@ -27,10 +27,63 @@ ColumnLayout {
         error = Config.set("launcher", "actions", list)
         if (!error) { nameField.text = ""; valueField.text = ""; newConfirm = false }
     }
+    // Result groups: move up/down, turn on/off (Config.launcher.order lists the ones that are on)
+    readonly property var allGroups: ["apps", "files", "calc", "settings", "actions", "web"]
+    readonly property var groupRows: Config.launcher.order.concat(allGroups.filter(g => !Config.launcher.order.includes(g)))
+    function moveGroup(g, d) {
+        const o = Array.from(Config.launcher.order), i = o.indexOf(g), j = i + d
+        if (i < 0 || j < 0 || j >= o.length) return
+        o[i] = o[j]; o[j] = g
+        Config.set("launcher", "order", o)
+    }
+    function toggleGroup(g) {
+        const o = Array.from(Config.launcher.order)
+        Config.set("launcher", "order", o.includes(g) ? o.filter(x => x !== g) : o.concat([g]))
+    }
+
     function remove(i) {
         const list = Array.from(Config.launcher.actions ?? [])
         list.splice(i, 1)
         Config.set("launcher", "actions", list)
+    }
+
+    SettingGroup {
+        title: "Spotlight"
+        SettingRow {
+            label: "Opens"
+            hint: "Super taps open it on the screen under the pointer"
+            ConfigChoice { section: "launcher"; key: "placement"; values: ["center", "cursor"]; labels: ["Centred", "At the pointer"] }
+        }
+        SettingRow {
+            label: "Before you type, show"
+            ConfigChoice { section: "launcher"; key: "startView"; values: ["apps", "search"]; labels: ["All apps", "Just the search field"] }
+        }
+        SettingRow {
+            label: "Clipboard button"
+            hint: "Super+V always opens the history at the pointer"
+            ConfigChoice { section: "launcher"; key: "clipboardInside"; values: [true, false]; labels: ["History inside Spotlight", "Open the clipboard popup"] }
+        }
+    }
+
+    SettingGroup {
+        title: "Result order"
+        Repeater {
+            model: page.groupRows
+            SettingRow {
+                id: groupRow
+                required property string modelData
+                required property int index
+                readonly property bool on: Config.launcher.order.includes(modelData)
+                label: (on ? (index + 1) + ".  " : "") + Search.groupNames[modelData]
+                hint: on ? "" : "Hidden from results"
+                RowLayout {
+                    spacing: Theme.spaceXs
+                    Chip { icon: "\u{F0143}"; visible: groupRow.on && groupRow.index > 0; onClicked: page.moveGroup(groupRow.modelData, -1) }
+                    Chip { icon: "\u{F0140}"; visible: groupRow.on && groupRow.index < Config.launcher.order.length - 1; onClicked: page.moveGroup(groupRow.modelData, 1) }
+                    Toggle { checked: groupRow.on; onToggled: page.toggleGroup(groupRow.modelData) }
+                }
+            }
+        }
     }
 
     SettingGroup {

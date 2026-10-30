@@ -172,6 +172,11 @@ Singleton {
 
     // ---- merged results ------------------------------------------------------------------------
 
+    readonly property var groupOf: ({ Applications: "apps", Files: "files", Folders: "files", Calculator: "calc",
+                                      Settings: "settings", Actions: "actions", Web: "web" })
+    readonly property var groupNames: ({ apps: "Applications", files: "Files and folders", calc: "Calculator",
+                                         settings: "Settings pages", actions: "Actions", web: "Web search" })
+
     readonly property var results: {
         const raw = query.trim()
         const q = raw.toLowerCase()
@@ -181,7 +186,10 @@ Singleton {
         if (calc) out.push({ key: "calc", kind: "Calculator", title: calc, subtitle: raw + " — Enter copies it",
                              glyph: "\u{F00EC}", score: 97, run: () => Quickshell.execDetached(["wl-copy", calc]) })
         out = out.concat(apps(q), settings(q), actions(q, false), fileResults(q), web(raw))
-        return out.sort((a, b) => b.score - a.score)
+        // Group order from Settings > Search & Launcher, then best score inside a group
+        const order = Config.launcher.order
+        const rank = r => order.indexOf(groupOf[r.kind] ?? "")
+        return out.filter(r => rank(r) >= 0).sort((a, b) => rank(a) - rank(b) || b.score - a.score)
     }
 
     // Lists for the launcher's browse modes (no query needed)

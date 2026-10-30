@@ -26,8 +26,12 @@ Singleton {
     function toggle() { popup.toggle() }
     function reload() { lister.running = true }
 
+    signal pasted()
+    // Fresh list and the focused window's type (terminals paste with Ctrl+Shift+V)
+    function prepare() { filter = ""; expandedId = ""; reload(); focused.running = true }
     function paste(e) {
         popup.hide()
+        pasted()
         Quickshell.execDetached(Config.clipboard.autoPaste
             ? ["clipstore", "paste", e.id, root.terminalFocused ? "1" : "0"]
             : ["clipstore", "copy", e.id])
@@ -65,7 +69,7 @@ Singleton {
         boxWidth: 400
         boxHeight: 540
         focusItem: search
-        onOpened: { root.filter = ""; search.text = ""; list.currentIndex = 0; root.expandedId = ""; root.reload(); focused.running = true }
+        onOpened: { root.filter = ""; search.text = ""; clipView.reset(); root.expandedId = ""; root.reload(); focused.running = true }
 
         Glass {
             anchors.fill: parent
@@ -116,111 +120,26 @@ Singleton {
                         color: Theme.text
                         selectionColor: Theme.accent
                         font { family: Theme.font; pixelSize: Theme.fontSize }
-                        onTextChanged: { root.filter = text; list.currentIndex = 0 }
+                        onTextChanged: { root.filter = text; clipView.reset() }
                         Text { visible: !search.text; text: "Search history"; color: Theme.muted; font: search.font }
 
-                        Keys.onUpPressed: list.decrementCurrentIndex()
-                        Keys.onDownPressed: list.incrementCurrentIndex()
-                        Keys.onReturnPressed: if (root.shown[list.currentIndex]) root.paste(root.shown[list.currentIndex])
-                        Keys.onEnterPressed: if (root.shown[list.currentIndex]) root.paste(root.shown[list.currentIndex])
+                        Keys.onUpPressed: clipView.up()
+                        Keys.onDownPressed: clipView.down()
+                        Keys.onReturnPressed: clipView.paste()
+                        Keys.onEnterPressed: clipView.paste()
                         Keys.onEscapePressed: popup.hide()
                         Keys.onPressed: event => {
-                            const e = root.shown[list.currentIndex]
-                            if (!e) return
-                            if (event.key === Qt.Key_Delete) { root.run(["delete", e.id]); event.accepted = true }
-                            else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) { root.run([e.pinned ? "unpin" : "pin", e.id]); event.accepted = true }
-                            else if (event.key === Qt.Key_Space && !search.text) { root.expandedId = root.expandedId === e.id ? "" : e.id; event.accepted = true }
+                            if (event.key === Qt.Key_Delete) { clipView.remove(); event.accepted = true }
+                            else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) { clipView.pin(); event.accepted = true }
+                            else if (event.key === Qt.Key_Space && !search.text) { clipView.expand(); event.accepted = true }
                         }
                     }
                 }
             }
 
-            ListView {
-                id: list
+            ClipboardView {
+                id: clipView
                 anchors { left: parent.left; right: parent.right; top: header.bottom; bottom: parent.bottom; margins: Theme.spaceS; topMargin: Theme.spaceM }
-                clip: true
-                spacing: Theme.spaceXs
-                model: root.shown
-                boundsBehavior: Flickable.StopAtBounds
-                highlightMoveDuration: Theme.animFast
-
-                Text {
-                    anchors.centerIn: parent
-                    visible: list.count === 0
-                    text: root.filter ? "Nothing matches" : Config.clipboard.paused ? "History is paused" : "Copy something and it shows up here"
-                    color: Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontSize }
-                }
-
-                delegate: Rectangle {
-                    id: card
-                    required property var modelData
-                    required property int index
-                    readonly property bool current: ListView.isCurrentItem
-                    readonly property bool expanded: root.expandedId === modelData.id
-                    width: list.width
-                    height: Math.max(48, content.implicitHeight + Theme.spaceM * 2)
-                    radius: Theme.radiusSmall
-                    color: current ? Theme.fillActive : area.containsMouse ? Theme.fillHover : Theme.fill
-                    border { color: current ? Theme.strokeStrong : "transparent"; width: 1 }
-                    Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
-
-                    MouseArea {
-                        id: area
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton
-                        onEntered: list.currentIndex = card.index
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.RightButton) root.expandedId = card.expanded ? "" : card.modelData.id
-                            else root.paste(card.modelData)
-                        }
-                    }
-
-                    Item {
-                        id: content
-                        anchors { left: parent.left; right: tools.left; top: parent.top; margins: Theme.spaceM }
-                        implicitHeight: card.modelData.kind === "image" ? thumb.height : body.implicitHeight
-
-                        Image {
-                            id: thumb
-                            visible: card.modelData.kind === "image"
-                            source: visible ? "file://" + card.modelData.path : ""
-                            width: Math.min(parent.width, implicitWidth)
-                            height: visible ? Math.min(card.expanded ? 300 : 110, width * implicitHeight / Math.max(1, implicitWidth)) : 0
-                            fillMode: Image.PreserveAspectFit
-                            horizontalAlignment: Image.AlignLeft
-                            asynchronous: true
-                            sourceSize.width: 720
-                        }
-                        Text {
-                            id: body
-                            visible: card.modelData.kind !== "image"
-                            width: parent.width
-                            text: card.modelData.kind === "files"
-                                  ? card.modelData.preview.trim().split("\n").map(p => "\u{F0214}  " + p.split("/").pop()).join("\n")
-                                  : card.modelData.preview.trim()
-                            color: Theme.text
-                            wrapMode: Text.WrapAnywhere
-                            maximumLineCount: card.expanded ? 24 : 3
-                            elide: Text.ElideRight
-                            font { family: card.modelData.kind === "files" ? Theme.iconFont : Theme.font; pixelSize: Theme.fontSize }
-                        }
-                    }
-
-                    Row {
-                        id: tools
-                        anchors { right: parent.right; top: parent.top; margins: Theme.spaceS }
-                        spacing: 2
-                        opacity: card.current || card.modelData.pinned ? 1 : 0
-                        Chip {
-                            icon: card.modelData.pinned ? "\u{F0403}" : "\u{F0931}"
-                            active: card.modelData.pinned
-                            onClicked: root.run([card.modelData.pinned ? "unpin" : "pin", card.modelData.id])
-                        }
-                        Chip { icon: "\u{F0A7A}"; visible: card.current; onClicked: root.run(["delete", card.modelData.id]) }
-                    }
-                }
             }
         }
     }

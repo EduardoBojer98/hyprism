@@ -25,6 +25,11 @@ JsonAdapter {
         // [{ name, kind: "command"|"terminal"|"open"|"snippet", value, confirm }]
         property list<var> actions: []
         property var usage: ({})                // launch counts, for ranking
+        property string placement: "center"     // center | cursor
+        property string startView: "apps"       // apps (grid until you type) | search (empty pill)
+        // result groups, best first; a group missing from the list is hidden
+        property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
+        property bool clipboardInside: true     // Spotlight's clipboard button shows history in the panel
     }
     property JsonObject clipboard: JsonObject {
         property int maxItems: 300
