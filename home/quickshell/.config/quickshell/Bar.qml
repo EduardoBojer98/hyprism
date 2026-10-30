@@ -12,7 +12,7 @@ import QtQuick
 import QtQuick.Layouts
 
 // Top bar: one thin frosted strip across the screen, monochrome items that light up on hover.
-// Desktops are dots; the current one is a capsule with its number.
+// Desktops are numbers in a recessed pill; an accent pill slides to the current one.
 //   desktops · app name and title      weather · date and time (calendar)      tray · temperatures ·
 //   layout · Wi-Fi/Bluetooth/volume/battery (Control Center) · notifications bell · power
 // Amber/red appear only when a value leaves its normal range.
@@ -94,39 +94,59 @@ PanelWindow {
             spacing: 2
 
             Item { width: Theme.spaceXs; height: 1 }
-            Row { // desktops on this screen: dot per desktop, the current one a capsule with its number
+            Rectangle { // desktops on this screen: numbers in a recessed pill, an accent pill slides to the current one
+                id: desks
+                readonly property var list: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === bar.monitor).sort((a, b) => a.id - b.id)
+                readonly property int current: list.findIndex(w => w.active)
+                readonly property int slot: 22
+                // scroll on it to step through this screen's desktops
+                function step(dy) { const next = list[current + (dy < 0 ? 1 : -1)]; if (next) next.activate() }
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 0
-                Repeater {
-                    model: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === bar.monitor)
-                    Item {
-                        id: ws
-                        required property HyprlandWorkspace modelData
-                        readonly property bool current: modelData.active
-                        readonly property bool busy: modelData.toplevels.values.length > 0
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: dot.width + 10; height: 22     // roomy click target around a small mark
-                        Rectangle {
-                            id: dot
-                            anchors.centerIn: parent
-                            width: ws.current ? 22 : wsArea.containsMouse ? 8 : 6
-                            height: ws.current ? 14 : width
-                            radius: height / 2
-                            color: ws.current ? Theme.text : ws.modelData.urgent ? Theme.warning
-                                 : ws.busy || wsArea.containsMouse ? Theme.subtext : Theme.muted
-                            Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-                            Behavior on height { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-                            Behavior on color { ColorAnimation { duration: Theme.anim } }
+                width: list.length * slot + 4
+                height: 22
+                radius: height / 2
+                color: Theme.fill
+                border { color: Theme.stroke; width: 1 }
+                Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+
+                Rectangle {
+                    visible: desks.current >= 0
+                    x: 2 + Math.max(0, desks.current) * desks.slot
+                    y: 2
+                    width: desks.slot; height: desks.height - 4
+                    radius: height / 2
+                    color: Theme.accent
+                    Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                }
+
+                Row {
+                    x: 2; y: 2
+                    Repeater {
+                        model: desks.list
+                        Item {
+                            id: ws
+                            required property HyprlandWorkspace modelData
+                            required property int index
+                            readonly property bool current: index === desks.current
+                            readonly property bool busy: modelData.toplevels.values.length > 0
+                            width: desks.slot; height: desks.height - 4
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: height / 2
+                                color: Theme.fillHover
+                                opacity: wsArea.containsMouse && !ws.current ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                            }
                             Text {
                                 anchors.centerIn: parent
                                 text: ws.modelData.id
-                                opacity: ws.current ? 1 : 0
-                                color: Theme.light ? "#ffffff" : "#1d1d1f"
-                                font { family: Theme.font; pixelSize: 10; weight: Font.Bold; features: { "tnum": 1 } }
-                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                                color: ws.current ? Theme.accentText : ws.modelData.urgent ? Theme.warning
+                                     : ws.busy || wsArea.containsMouse ? Theme.text : Theme.muted
+                                font { family: Theme.font; pixelSize: 11; weight: ws.current || ws.busy ? Font.DemiBold : Font.Medium; features: { "tnum": 1 } }
+                                Behavior on color { ColorAnimation { duration: Theme.animFast } }
                             }
+                            MouseArea { id: wsArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ws.modelData.activate(); onWheel: w => desks.step(w.angleDelta.y) }
                         }
-                        MouseArea { id: wsArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ws.modelData.activate() }
                     }
                 }
             }
