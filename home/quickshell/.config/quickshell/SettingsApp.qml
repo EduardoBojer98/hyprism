@@ -11,23 +11,29 @@ Singleton {
     id: root
 
     property bool open: false
-    property string section: "displays"
+    property string section: "appearance"
 
     readonly property var sections: [
-        { id: "displays",   name: "Displays",           glyph: "\u{F0379}" },
-        { id: "sound",      name: "Sound",              glyph: "\u{F057E}" },
-        { id: "network",    name: "Wi-Fi & Network",    glyph: "\u{F05A9}" },
-        { id: "bluetooth",  name: "Bluetooth",          glyph: "\u{F00AF}" },
-        { id: "power",      name: "Battery & Power",    glyph: "\u{F0079}" },
-        { id: "input",      name: "Keyboard & Touchpad", glyph: "\u{F030C}" },
-        { id: "appearance", name: "Wallpaper",          glyph: "\u{F02E9}" },
-        { id: "idle",       name: "Lock & Sleep",       glyph: "\u{F033E}" },
-        { id: "apps",       name: "Default Apps",       glyph: "\u{F003B}" },
-        { id: "weather",    name: "Weather",            glyph: "\u{F0595}" },
-        { id: "about",      name: "About",              glyph: "\u{F02FD}" },
+        { id: "appearance",    name: "Appearance & Themes", glyph: "\u{F03D8}" },
+        { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
+        { id: "dock",          name: "Desktop & Dock",      glyph: "\u{F0379}" },
+        { id: "launcher",      name: "Search & Launcher",   glyph: "\u{F0349}" },
+        { id: "clipboard",     name: "Clipboard",           glyph: "\u{F014C}" },
+        { id: "controlcenter", name: "Control Center",      glyph: "\u{F0493}" },
+        { id: "notifications", name: "Notifications",       glyph: "\u{F009A}" },
+        { id: "displays",      name: "Displays",            glyph: "\u{F0379}" },
+        { id: "sound",         name: "Sound",               glyph: "\u{F057E}" },
+        { id: "network",       name: "Wi-Fi & Network",     glyph: "\u{F05A9}" },
+        { id: "bluetooth",     name: "Bluetooth",           glyph: "\u{F00AF}" },
+        { id: "input",         name: "Keyboard & Touchpad", glyph: "\u{F030C}" },
+        { id: "power",         name: "Battery & Power",     glyph: "\u{F0079}" },
+        { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}" },
+        { id: "idle",          name: "Lock & Sleep",        glyph: "\u{F033E}" },
+        { id: "apps",          name: "Default Applications", glyph: "\u{F003B}" },
+        { id: "about",         name: "About",               glyph: "\u{F02FD}" },
     ]
 
-    function show(s) { if (s) section = s; open = true }
+    function show(s) { if (s && sections.some(x => x.id === s)) section = s; open = true }
 
     IpcHandler {
         target: "settings"
@@ -91,8 +97,8 @@ Singleton {
                             required property var modelData
                             readonly property bool current: root.section === modelData.id
                             width: parent.width
-                            height: 36
-                            radius: 10
+                            height: 34
+                            radius: Theme.radiusSmall
                             color: current ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
                             border { color: current ? Theme.stroke : "transparent"; width: 1 }
                             Row {

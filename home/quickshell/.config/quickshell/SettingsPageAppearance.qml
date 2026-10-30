@@ -1,76 +1,57 @@
-import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Wallpaper: pick any image in ~/Pictures/Wallpapers. Applied live (hyprpaper IPC) and saved
-// in hyprpaper.conf and the lock screen.
+// Appearance & Themes: the knobs every shell surface derives its tokens from (Theme.qml).
+// Applied live; the accent and corners also reach window borders, the lock screen and GTK apps.
 ColumnLayout {
-    id: page
-    spacing: 16
+    spacing: 20
 
-    property var images: []
-    property string current: ""
-    readonly property string dir: Quickshell.env("HOME") + "/Pictures/Wallpapers"
-
-    Process {
-        running: true
-        command: ["sh", "-c", "ls -1 \"$HOME/Pictures/Wallpapers\" | grep -iE '\\.(png|jpe?g|webp)$'; echo '--'; grep -oP 'path\\s*=\\s*\\K.*' \"$HOME/.config/hypr/hyprpaper.conf\" | head -1"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const [list, cur] = text.split("--\n")
-                page.images = list.trim().split("\n").filter(x => x)
-                page.current = (cur ?? "").trim().split("/").pop()
-            }
-        }
-    }
-
-    function pick(file) {
-        current = file
-        const path = dir + "/" + file
-        Quickshell.execDetached(["hyprctl", "hyprpaper", "wallpaper", "," + path])
-        Quickshell.execDetached(["sh", "-c",
-            "sed -i 's|^\\(\\s*path\\s*=\\s*\\).*Wallpapers/.*|\\1~/Pictures/Wallpapers/" + file.replace(/[|'\\]/g, "") + "|' \"$HOME/.config/hypr/hyprpaper.conf\" \"$HOME/.config/hypr/hyprlock.conf\""])
-    }
-
-    Text {
-        Layout.fillWidth: true
-        text: "Add your own images to ~/Pictures/Wallpapers (that folder lives in the linux-setup repo)."
-        color: Theme.muted
-        wrapMode: Text.Wrap
-        font { family: Theme.font; pixelSize: 12 }
-    }
-
-    Flow {
-        Layout.fillWidth: true
-        spacing: 14
-        Repeater {
-            model: page.images
-            Column {
-                required property string modelData
+    SettingGroup {
+        title: "Colour"
+        SettingRow {
+            label: "Accent"
+            hint: "Active items, toggles, selection, window borders"
+            Row {
                 spacing: 6
-                Rectangle {
-                    width: 220; height: 124; radius: 12
-                    color: Theme.fill
-                    border { color: modelData === page.current ? Theme.accent : Theme.stroke; width: modelData === page.current ? 2 : 1 }
-                    clip: true
-                    Image {
-                        anchors { fill: parent; margins: 2 }
-                        source: "file://" + page.dir + "/" + modelData
-                        sourceSize: Qt.size(440, 248)
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
+                Repeater {
+                    model: ["blue", "lavender", "mauve", "pink", "peach", "yellow", "green", "teal", "sky"]
+                    Rectangle {
+                        required property string modelData
+                        width: 24; height: 24; radius: 12
+                        color: Theme.macchiato[modelData]
+                        border { color: Config.appearance.accent === modelData ? Theme.text : "transparent"; width: 2 }
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Config.set("appearance", "accent", parent.modelData) }
                     }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: page.pick(modelData) }
-                }
-                Text {
-                    width: 220
-                    text: modelData
-                    elide: Text.ElideMiddle
-                    color: modelData === page.current ? Theme.text : Theme.subtext
-                    font { family: Theme.font; pixelSize: 11 }
                 }
             }
         }
+        SettingRow {
+            label: "Glass"
+            hint: "How much of the blurred background shows through panels"
+            ConfigChoice { section: "appearance"; key: "glassOpacity"; values: [0.35, 0.55, 0.8]; labels: ["Clear", "Balanced", "Solid"] }
+        }
     }
+
+    SettingGroup {
+        title: "Shape and text"
+        SettingRow {
+            label: "Corners"
+            ConfigChoice { section: "appearance"; key: "radiusScale"; values: [0, 0.6, 1, 1.4]; labels: ["Square", "Subtle", "Round", "Extra"] }
+        }
+        SettingRow {
+            label: "Text size"
+            ConfigChoice { section: "appearance"; key: "fontScale"; values: [0.92, 1, 1.1]; labels: ["Small", "Default", "Large"] }
+        }
+        SettingRow {
+            label: "Font"
+            ConfigChoice { section: "appearance"; key: "font"; values: ["Inter", "Cantarell", "Noto Sans"]; labels: ["Inter", "Cantarell", "Noto Sans"] }
+        }
+        SettingRow {
+            label: "Animations"
+            hint: "Off makes every panel open and move instantly"
+            ConfigToggle { section: "appearance"; key: "animations" }
+        }
+    }
+
+    ResetGroup { sections: ["appearance"] }
 }
