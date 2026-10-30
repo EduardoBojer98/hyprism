@@ -8,6 +8,7 @@ import Quickshell.Services.Mpris
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center at the top right of the screen under the pointer (status pill, Super+C,
@@ -61,7 +62,7 @@ Singleton {
     }
     function opened(visible) {
         if (wifi) wifi.scannerEnabled = visible
-        if (visible) { brightnessRead.running = true; kbdRead.running = Machine.kbdDevice !== ""; now = new Date() }
+        if (visible) { scroller.contentY = 0; brightnessRead.running = true; kbdRead.running = Machine.kbdDevice !== ""; now = new Date() }
         else { expanded = ""; passwordFor = null }
     }
 
@@ -89,11 +90,20 @@ Singleton {
     name: "controlcenter"
     placement: "topRight"
     boxWidth: cc.unit * 4 + cc.gap * 3
-    boxHeight: content.implicitHeight
+    // capped to the screen; the content scrolls when lists make it taller
+    boxHeight: Math.min(content.implicitHeight, (popup.targetScreen?.height ?? 1000) - popup.topReserve - popup.edge * 2)
+
+    Flickable {
+        id: scroller
+        anchors.fill: parent
+        contentHeight: content.implicitHeight
+        boundsBehavior: Flickable.StopAtBounds
+        clip: true
+        ScrollBar.vertical: GlassScrollBar {}
 
     ColumnLayout {
         id: content
-        width: parent.width
+        width: scroller.width
         spacing: cc.gap
 
         // ---- toggles + media ----------------------------------------------------------------
@@ -108,6 +118,7 @@ Singleton {
                 title: "Wi-Fi"
                 subtitle: !Networking.wifiEnabled ? "Off" : (cc.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected")
                 active: Networking.wifiEnabled
+                expandable: true
                 isExpanded: cc.expanded === "wifi"
                 onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
                 onExpand: cc.toggleExpanded("wifi")
@@ -191,7 +202,8 @@ Singleton {
 
             Round {
                 glyph: cc.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}"
-                hint: !cc.adapter ? "No Bluetooth" : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "Bluetooth") + " · right-click for devices"
+                expandable: true
+                hint: !cc.adapter ? "No Bluetooth" : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "Bluetooth")
                 active: cc.adapter?.enabled ?? false
                 isExpanded: cc.expanded === "bt"
                 onToggled: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
@@ -213,8 +225,9 @@ Singleton {
             }
             Round {
                 glyph: "\u{F0176}"
-                hint: "Caffeine · " + Caffeine.remaining(cc.now.getTime()) + " · right-click for durations"
+                hint: "Caffeine · " + Caffeine.remaining(cc.now.getTime())
                 active: Caffeine.active
+                expandable: true
                 isExpanded: cc.expanded === "caffeine"
                 onToggled: Caffeine.toggle()
                 onExpand: cc.toggleExpanded("caffeine")
@@ -232,6 +245,9 @@ Singleton {
         // ---- lists that open under the toggles -----------------------------------------------
         Module {
             visible: cc.expanded === "wifi"
+            title: "Wi-Fi networks"
+            expandable: true; isExpanded: true
+            onDetailClicked: cc.toggleExpanded("wifi")
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 0
@@ -283,6 +299,9 @@ Singleton {
 
         Module {
             visible: cc.expanded === "bt"
+            title: "Bluetooth devices"
+            expandable: true; isExpanded: true
+            onDetailClicked: cc.toggleExpanded("bt")
             ColumnLayout {
                 Layout.fillWidth: true
                 spacing: 0
@@ -306,6 +325,9 @@ Singleton {
 
         Module {
             visible: cc.expanded === "caffeine"
+            title: "Keep awake for"
+            expandable: true; isExpanded: true
+            onDetailClicked: cc.toggleExpanded("caffeine")
             Flow {
                 Layout.fillWidth: true
                 spacing: Theme.spaceS
@@ -327,6 +349,7 @@ Singleton {
             title: "Power"
             detail: (Config.controlCenter.showMedia && cc.player !== null ? cc.pct + "% · " + cc.batteryText : "")
                     + (Config.controlCenter.showHardware ? (cc.player !== null && Config.controlCenter.showMedia ? "  ·  " : "") + `CPU ${Math.round(Sensors.cpu)}°` : "")
+            warn: Sensors.cpu >= 90
             onDetailClicked: { cc.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
 
             Rectangle {
@@ -382,14 +405,15 @@ Singleton {
 
         Module {
             title: "Sound"
+            detail: cc.nodeName(cc.sink) || "No output"
+            expandable: true
+            isExpanded: cc.expanded === "out"
+            onDetailClicked: cc.toggleExpanded("out")
             Bar {
                 lowIcon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057F}"; highIcon: "\u{F057E}"
                 value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
-                device: true
-                deviceOpen: cc.expanded === "out"
                 onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
                 onLowClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
-                onDeviceClicked: cc.toggleExpanded("out")
             }
             ColumnLayout {
                 visible: cc.expanded === "out"
@@ -411,14 +435,15 @@ Singleton {
 
         Module {
             title: "Microphone"
+            detail: cc.nodeName(cc.source) || "No input"
+            expandable: true
+            isExpanded: cc.expanded === "in"
+            onDetailClicked: cc.toggleExpanded("in")
             Bar {
                 lowIcon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"; highIcon: ""
                 value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
-                device: true
-                deviceOpen: cc.expanded === "in"
                 onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
                 onLowClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
-                onDeviceClicked: cc.toggleExpanded("in")
             }
             ColumnLayout {
                 visible: cc.expanded === "in"
@@ -467,18 +492,20 @@ Singleton {
             }
         }
     }
+    }
 
     }
 
     // ---- building blocks -----------------------------------------------------------------------
 
-    // Two cells wide: a round icon that toggles, then the name; clicking the name opens a list
+    // Two cells wide: a round icon that toggles, then the name and a chevron that open its list
     component Pill: Glass {
         id: pill
         property string glyph
         property string title
         property string subtitle
         property bool active: false
+        property bool expandable: false
         property bool isExpanded: false
         signal toggled()
         signal expand()
@@ -497,24 +524,33 @@ Singleton {
             active: pill.active
             onClicked: pill.toggled()
         }
+        Chevron {
+            id: pillChevron
+            visible: pill.expandable
+            width: visible ? implicitWidth : 0
+            anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+            open: pill.isExpanded
+        }
         Column {
-            anchors { left: bubble.right; leftMargin: 10; right: parent.right; rightMargin: 14; verticalCenter: parent.verticalCenter }
+            anchors { left: bubble.right; leftMargin: 10; right: pillChevron.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
             Text { width: parent.width; text: pill.title; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize + 1; weight: Font.DemiBold } }
             Text { width: parent.width; text: pill.subtitle; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontLabel } }
         }
         MouseArea {
+            visible: pill.expandable
             anchors { fill: parent; leftMargin: bubble.width + 12 }
             cursorShape: Qt.PointingHandCursor
             onClicked: pill.expand()
         }
     }
 
-    // One cell: a big round toggle. Right-click opens its list, if it has one.
+    // One cell: a big round toggle. With a list, a chevron badge (or right-click) opens it.
     component Round: Item {
         id: round
         property string glyph
         property string hint
         property bool active: false
+        property bool expandable: false
         property bool isExpanded: false
         signal toggled()
         signal expand()
@@ -533,7 +569,23 @@ Singleton {
             onRightClicked: round.expand()
             ToolTipText { shown: parent.hovered && round.hint !== ""; text: round.hint; z: 10 }
         }
+        Rectangle {
+            visible: round.expandable
+            anchors { right: parent.right; bottom: parent.bottom }
+            width: 26; height: 26; radius: 13
+            color: badgeArea.containsMouse || round.isExpanded ? Theme.glassStrong : Theme.glass
+            border { color: round.isExpanded ? Theme.accent : Theme.stroke; width: 1 }
+            Chevron { anchors.centerIn: parent; open: round.isExpanded; size: 14 }
+            MouseArea {
+                id: badgeArea
+                anchors { fill: parent; margins: -4 }
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: round.expand()
+            }
+        }
     }
+
 
     // White when on (icon in the accent), glass when off, like Tahoe's toggles
     component Bubble: Rectangle {
@@ -575,6 +627,9 @@ Singleton {
         id: mod
         property string title
         property string detail
+        property bool warn: false          // detail in the warning colour
+        property bool expandable: false    // header shows a chevron and opens/closes a list
+        property bool isExpanded: false
         default property alias body: inner.data
         signal detailClicked()
 
@@ -587,37 +642,49 @@ Singleton {
             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14; leftMargin: 18; rightMargin: 18 }
             spacing: 8
             Item {
+                id: header
                 visible: mod.title !== ""
                 Layout.fillWidth: true
                 Layout.preferredHeight: 18
                 Text {
+                    id: headerTitle
                     anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                     text: mod.title
                     color: Theme.text
                     font { family: Theme.font; pixelSize: Theme.fontSize + 1; weight: Font.DemiBold }
                 }
-                Text {
+                Row {
+                    id: headerDetail
                     anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                    text: mod.detail
-                    color: Sensors.cpu >= 90 ? Theme.warning : Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: mod.detailClicked() }
+                    spacing: 4
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(implicitWidth, header.width - headerTitle.implicitWidth - 40)
+                        text: mod.detail
+                        elide: Text.ElideRight
+                        color: mod.warn ? Theme.warning : Theme.subtext
+                        font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
+                    }
+                    Chevron { visible: mod.expandable; open: mod.isExpanded; size: 15; anchors.verticalCenter: parent.verticalCenter }
+                }
+                MouseArea {
+                    anchors.fill: mod.expandable ? header : headerDetail
+                    anchors.margins: -6
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: mod.detailClicked()
                 }
             }
         }
     }
 
-    // Thin Tahoe slider: icon, track, icon, and optionally a round device button at the end
+    // Thin Tahoe slider: icon, track, icon
     component Bar: RowLayout {
         id: bar
         property real value: 0
         property string lowIcon
         property string highIcon
-        property bool device: false
-        property bool deviceOpen: false
         signal moved(real value)
         signal lowClicked()
-        signal deviceClicked()
 
         Layout.fillWidth: true
         spacing: 10
@@ -658,14 +725,6 @@ Singleton {
             text: bar.highIcon
             color: Theme.text
             font { family: Theme.iconFont; pixelSize: 18 }
-        }
-        Bubble {
-            visible: bar.device
-            size: 30
-            iconSize: 15
-            glyph: "\u{F04C3}"
-            active: bar.deviceOpen
-            onClicked: bar.deviceClicked()
         }
     }
 
