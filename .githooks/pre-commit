@@ -1,0 +1,7 @@
+#!/bin/sh
+# Block commits that contain secrets (API keys, tokens, private keys). Enabled by install.sh.
+if ! command -v gitleaks >/dev/null; then
+    echo "pre-commit: gitleaks not installed, secret scan skipped (sudo pacman -S gitleaks)" >&2
+    exit 0
+fi
+exec gitleaks git --pre-commit --staged --redact --no-banner

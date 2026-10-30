@@ -14,8 +14,17 @@ hl.window_rule({
 
 hl.window_rule({
     name  = "float-small-tools",
-    match = { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-connection-editor|com.gabm.satty)$" },
+    match = { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-connection-editor|com.gabm.satty|org.opengamingcollective.rog-control-center)$" },
     float = true,
+})
+
+-- Frosted glass behind the Quickshell bar, dock, OSD and notifications
+hl.layer_rule({
+    name  = "blur-shell",
+    match = { namespace = "^qs-.*$" },  -- rules must match the whole name
+    blur         = true,
+    blur_popups  = true,   -- Control Center and menus are popups of the bar
+    ignore_alpha = 0.05,  -- blur even behind the very transparent glass
 })
 
 hl.window_rule({

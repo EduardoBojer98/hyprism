@@ -26,4 +26,10 @@ mkdir -p /etc/systemd/logind.conf.d
 printf '[Login]\nHandleLidSwitch=suspend-then-hibernate\nHandleLidSwitchExternalPower=suspend\nHandleLidSwitchDocked=ignore\n' \
   > /etc/systemd/logind.conf.d/50-lid.conf
 
+# NVIDIA EGL hiding for the Hyprland session lives in home/fish/.config/fish/conf.d/hyprland-igpu.fish
+rm -f /usr/share/wayland-sessions/hyprland-igpu.desktop  # older approach, replaced by the fish snippet
+
+step "Hyprland as the default session (KDE Plasma stays selectable at the login screen)"
+sed -i 's/^Session=plasma$/Session=hyprland/' /etc/plasmalogin.conf
+
 step "Done. The lid setting applies after the next reboot."

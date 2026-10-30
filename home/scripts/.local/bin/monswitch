@@ -12,8 +12,8 @@
 set -euo pipefail
 
 OUT=HDMI-A-1
-LAPTOP=0x12   # monitor input HDMI 2
-PC=0x11       # monitor input HDMI 1
+LAPTOP=0x11   # monitor input HDMI 1
+PC=0x12       # monitor input HDMI 2
 POLL=3        # seconds between DDC reads in watch mode
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch

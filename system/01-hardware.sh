@@ -10,12 +10,20 @@ SWAP_SIZE=20g   # >= RAM (16 GB) so a full hibernation image always fits
 
 step() { printf '\n==> %s\n' "$*"; }
 
-step "asusctl (charge limit, power profiles, keyboard LEDs)"
-pacman -S --needed --noconfirm asusctl
+step "asusctl + ROG Control Center (charge limit, power profiles, fans, keyboard LEDs)"
+cd "$(dirname "$0")/.."
+grep -vE '^\s*(#|$)' packages/hardware.txt | pacman -S --needed --noconfirm -
 systemctl enable --now asusd 2>/dev/null || systemctl start asusd
 
 step "NVIDIA suspend/hibernate helpers (save GPU memory across sleep)"
 systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
+
+step "NVIDIA: no runtime power saving on this model, so the GPU is switched off in ROG Control Center instead"
+# The driver reports "Runtime D3: Not supported" on the GV301QC, so an NVreg option can't help;
+# remove the one an earlier version of this script added.
+rm -f /etc/modprobe.d/nvidia-runtime-pm.conf
+# Dynamic Boost: its own log says the BIOS disables it on battery, and it kept the GPU awake.
+systemctl disable --now nvidia-powerd 2>/dev/null || true
 
 step "Subvolume @swap at top level, so snapshots never include the swapfile"
 mkdir -p /swap

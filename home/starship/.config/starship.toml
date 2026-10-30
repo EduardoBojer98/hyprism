@@ -1,0 +1,47 @@
+# Rounded "pill" prompt: folder pill + git pill, then a clean input line.
+# Language versions and command time sit on the right. Catppuccin Macchiato colours.
+add_newline = true
+format = """
+[](#8aadf4)$directory[](fg:#8aadf4 bg:#363a4f)$git_branch$git_status[](#363a4f)
+$character"""
+right_format = "$nodejs$php$python$cmd_duration"
+
+[character]
+success_symbol = "[❯](bold #8aadf4)"
+error_symbol = "[❯](bold #ed8796)"
+
+[directory]
+style = "bold fg:#181926 bg:#8aadf4"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncate_to_repo = true
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = ""
+style = "fg:#c6a0f6 bg:#363a4f"
+format = "[ $symbol $branch ]($style)"
+
+[git_status]
+style = "fg:#eed49f bg:#363a4f"
+format = "[($all_status$ahead_behind )]($style)"
+
+[nodejs]
+symbol = " "
+style = "#a6da95"
+format = "[$symbol$version]($style) "
+
+[php]
+symbol = " "
+style = "#b7bdf8"
+format = "[$symbol$version]($style) "
+
+[python]
+symbol = " "
+style = "#eed49f"
+format = "[$symbol$version]($style) "
+
+[cmd_duration]
+min_time = 2000
+style = "#6e738d"
+format = "[󱎫 $duration]($style)"

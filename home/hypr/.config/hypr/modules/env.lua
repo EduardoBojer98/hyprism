@@ -10,6 +10,7 @@ if gpu then
 end
 
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VS Code, Chrome and other Electron apps run natively on Wayland
+hl.env("QT_QPA_PLATFORMTHEME", "kde")          -- Qt/KDE apps (Dolphin, ...) keep Breeze Dark + Papirus, same as in Plasma
 hl.env("XCURSOR_THEME", "oreo_white")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")

@@ -1,15 +1,16 @@
 -- Keybinds. SUPER is the main key; SHIFT means "move" or "bigger version".
 local mod      = "SUPER"
-local terminal = "alacritty" -- Ghostty replaces this in the apps phase
+local terminal = "ghostty"
 local function key(k) return mod .. " + " .. k end
 local exec = hl.dsp.exec_cmd
 
 -- Apps
 hl.bind(key("Return"), exec(terminal))
-hl.bind(key("Space"),  exec("fuzzel"))
+hl.bind(key("Space"),  exec("qs ipc call launcher toggle"))      -- launcher, Apps tab (fuzzel stays as a fallback)
 hl.bind(key("E"),      exec("dolphin"))
 hl.bind(key("B"),      exec("firefox"))
-hl.bind(key("V"),      exec("cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"))
+hl.bind(key("V"),      exec("qs ipc call launcher clipboard"))   -- launcher, Clipboard tab
+hl.bind(key("SHIFT + Space"), exec("qs ipc call launcher files")) -- launcher, Files tab
 
 -- Windows
 hl.bind(key("Q"),         hl.dsp.window.close())
@@ -44,6 +45,12 @@ hl.bind(key("SHIFT + C"),  exec("hyprpicker -a"))
 -- Shared Acer: hand it to the work PC and back (~/.local/bin/monswitch)
 hl.bind(key("M"),          exec("monswitch toggle"))
 
+-- Hinge and lid (~/.local/bin/panel)
+hl.bind("switch:on:AMD SFH tablet mode switch",  exec("panel tablet on"),  { locked = true })
+hl.bind("switch:off:AMD SFH tablet mode switch", exec("panel tablet off"), { locked = true })
+hl.bind("switch:on:Lid Switch",                  exec("panel lid close"),  { locked = true })
+hl.bind("switch:off:Lid Switch",                 exec("panel lid open"),   { locked = true })
+
 -- Session
 hl.bind(key("L"),          exec("loginctl lock-session"))
 hl.bind(key("SHIFT + R"),  exec("hyprctl reload"))
@@ -55,8 +62,9 @@ hl.bind("XF86AudioRaiseVolume",  exec("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK
 hl.bind("XF86AudioLowerVolume",  exec("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      held)
 hl.bind("XF86AudioMute",         exec("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true })
 hl.bind("XF86AudioMicMute",      exec("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true })
-hl.bind("XF86MonBrightnessUp",   exec("brightnessctl -e4 -n2 set 5%+"),                  held)
-hl.bind("XF86MonBrightnessDown", exec("brightnessctl -e4 -n2 set 5%-"),                  held)
+local osd = " && qs ipc call osd brightness $(brightnessctl -m | cut -d, -f4 | tr -d %)"
+hl.bind("XF86MonBrightnessUp",   exec("brightnessctl -e4 -n2 set 5%+" .. osd),           held)
+hl.bind("XF86MonBrightnessDown", exec("brightnessctl -e4 -n2 set 5%-" .. osd),           held)
 hl.bind("XF86AudioNext",         exec("playerctl next"),       { locked = true })
 hl.bind("XF86AudioPrev",         exec("playerctl previous"),   { locked = true })
 hl.bind("XF86AudioPlay",         exec("playerctl play-pause"), { locked = true })

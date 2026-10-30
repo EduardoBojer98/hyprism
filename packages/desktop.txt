@@ -6,10 +6,18 @@ hyprlock
 hypridle
 hyprshutdown
 qt6-wayland
+hyprpaper
 
-# Stopgap launcher + notifications until the Quickshell shell exists
+# Look: GTK theme, terminal
+adw-gtk-theme
+ghostty
+
+# Shell (bar, dock, OSD, notifications), launcher, on-screen keyboard; mako stays as a fallback
 fuzzel
 mako
+quickshell
+pavucontrol
+squeekboard
 
 # Clipboard, screenshots, colour picker, media keys
 wl-clipboard
@@ -23,6 +31,7 @@ playerctl
 # Fonts
 inter-font
 ttf-jetbrains-mono-nerd
+ttf-firacode-nerd
 
 # Dotfiles
 stow

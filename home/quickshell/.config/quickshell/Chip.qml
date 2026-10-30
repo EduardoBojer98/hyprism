@@ -1,0 +1,49 @@
+import QtQuick
+
+// A clickable item in the bar: Nerd Font icon plus optional label.
+Rectangle {
+    id: chip
+
+    property string icon
+    property string label
+    property color iconColor: Theme.text
+    property bool active: false
+    signal clicked()
+    signal scrolled(int delta)
+
+    implicitWidth: row.implicitWidth + 18
+    implicitHeight: 26
+    radius: height / 2
+    color: active ? Theme.fillActive : mouse.containsMouse ? Theme.fillHover : "transparent"
+    Behavior on color { ColorAnimation { duration: Theme.anim } }
+
+    Row {
+        id: row
+        anchors.centerIn: parent
+        spacing: 6
+
+        Text {
+            visible: chip.icon !== ""
+            text: chip.icon
+            color: chip.iconColor
+            font { family: Theme.iconFont; pixelSize: 15 }
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        Text {
+            visible: chip.label !== ""
+            text: chip.label
+            color: Theme.text
+            font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium }
+            anchors.verticalCenter: parent.verticalCenter
+        }
+    }
+
+    MouseArea {
+        id: mouse
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: chip.clicked()
+        onWheel: wheel => chip.scrolled(wheel.angleDelta.y > 0 ? 1 : -1)
+    }
+}

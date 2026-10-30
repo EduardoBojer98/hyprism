@@ -1,0 +1,4 @@
+#!/bin/sh
+# Run one app on the NVIDIA GPU:  nv blender
+# The Hyprland session hides NVIDIA's EGL driver so the dGPU can sleep; this brings it back for one app.
+exec env -u __EGL_VENDOR_LIBRARY_FILENAMES prime-run "$@"

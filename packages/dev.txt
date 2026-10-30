@@ -1,0 +1,10 @@
+# Development: shell tools and runtimes (Docker, Lando, Node via nvm.fish and VS Code were already set up)
+starship
+zoxide
+fd
+ripgrep
+fzf
+uv
+php
+composer
+gitleaks        # secret scan before commits in linux-setup (.githooks/pre-commit)

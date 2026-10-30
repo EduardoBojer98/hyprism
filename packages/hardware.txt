@@ -1,2 +1,3 @@
 # ROG Flow X13 (GV301QC), installed by system/01-hardware.sh
 asusctl
+rog-control-center
