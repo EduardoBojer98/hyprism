@@ -17,7 +17,7 @@ Singleton {
     readonly property color fillActive: Qt.rgba(1, 1, 1, 0.18)
 
     readonly property color text: "#eceffa"
-    readonly property color subtext: "#a5adcb"
+    readonly property color subtext: Qt.rgba(0.93, 0.94, 0.98, 0.64)  // neutral, no blue cast
     readonly property color muted: "#6e738d"
     readonly property color accent: "#8aadf4"
     readonly property color accent2: "#b7bdf8"

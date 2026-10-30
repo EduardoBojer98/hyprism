@@ -1,23 +1,32 @@
--- Acer XZ322QU S on top, laptop panel centred below it (same layout as in KDE).
--- 1920x1200 / 1.2 = 1600x1000 logical, so the panel starts at x = (2560 - 1600) / 2 = 480.
+-- Monitor layout comes from settings/displays.lua, which the Settings app writes.
+-- DISPLAYS and apply_displays() are global so the Settings app and ~/.local/bin/panel can change
+-- things at runtime with `hyprctl eval`.
 
-hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@144", position = "0x0", scale = 1, vrr = 2 }) -- VRR only in fullscreen
-hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })                -- anything else
+DISPLAYS = require("settings.displays")
 
--- Laptop panel. A global function so ~/.local/bin/tabletmode can rotate it at runtime:
---   hyprctl eval 'laptop_panel(1)'   (0 normal, 1 = 90°, 2 = 180°, 3 = 270°)
+local function monitor(name, overrides)
+    local spec = { output = name }
+    for k, v in pairs(DISPLAYS[name] or {}) do spec[k] = v end
+    for k, v in pairs(overrides or {}) do spec[k] = v end
+    hl.monitor(spec)
+end
+
+function apply_displays()
+    for name in pairs(DISPLAYS) do monitor(name) end
+end
+
+-- Laptop panel rotation for tablet mode: hyprctl eval 'laptop_panel(1)' (0 normal … 3 = 270°).
 -- Touchscreen and stylus rotate with it.
 function laptop_panel(transform)
-    hl.monitor({ output = "eDP-1", mode = "1920x1200@120", position = "480x1440", scale = 1.2, transform = transform })
+    if DISPLAYS["eDP-1"] then DISPLAYS["eDP-1"].transform = transform end
+    monitor("eDP-1", { transform = transform })
     hl.config({ input = { touchdevice = { transform = transform }, tablet = { transform = transform } } })
 end
-laptop_panel(0)
 
--- Workspaces 1-5 live on the big screen, 6-10 on the laptop.
-for i = 1, 10 do
-    hl.workspace_rule({
-        workspace = tostring(i),
-        monitor   = i <= 5 and "HDMI-A-1" or "eDP-1",
-        default   = (i == 1 or i == 6),
-    })
-end
+apply_displays()
+hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" }) -- any other screen
+
+-- Workspaces are numbered 1, 2, 3, … in the order you open them. At login the laptop starts on
+-- workspace 1 and the Acer on 2; any other number opens on the screen you're working on.
+hl.workspace_rule({ workspace = "1", monitor = "eDP-1",    default = true })
+hl.workspace_rule({ workspace = "2", monitor = "HDMI-A-1", default = true })

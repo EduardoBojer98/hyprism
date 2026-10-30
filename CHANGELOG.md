@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1 (unreleased)
+
+- Top bar redesigned as floating glass complications: workspaces, focused app, weather (Open-Meteo),
+  clock, CPU/GPU temperature rings, tray, status, power; colour only for active or out-of-range states
+- Settings app (Super+I) with native pages for displays, sound, network, Bluetooth, power, keyboard and
+  touchpad, wallpaper, lock and sleep, default apps, weather and system info
+- Display and input settings moved to hypr/settings/*.lua so the Settings app can write them
+- Workspaces numbered from 1, laptop starts on 1 and the Acer on 2
+- DESIGN.md and PRODUCT.md describe the shell's design system and purpose
+
 ## v1.0 (2026-10-30)
 
 First complete setup on the ROG Flow X13 (GV301QC).

@@ -8,6 +8,7 @@ local exec = hl.dsp.exec_cmd
 hl.bind(key("Return"), exec(terminal))
 hl.bind(key("Space"),  exec("qs ipc call launcher toggle"))      -- launcher, Apps tab (fuzzel stays as a fallback)
 hl.bind(key("E"),      exec("dolphin"))
+hl.bind(key("I"),      exec("qs ipc call settings toggle"))   -- Settings app
 hl.bind(key("B"),      exec("firefox"))
 hl.bind(key("V"),      exec("qs ipc call launcher clipboard"))   -- launcher, Clipboard tab
 hl.bind(key("SHIFT + Space"), exec("qs ipc call launcher files")) -- launcher, Files tab

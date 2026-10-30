@@ -32,3 +32,11 @@ hl.window_rule({
     match = { title = "^Picture-in-Picture$" },
     float = true,
 })
+
+hl.window_rule({
+    name   = "settings-app",
+    match  = { class = "^org\\.quickshell$", title = "^Settings$" },
+    float  = true,
+    size   = "1020 700",
+    center = true,
+})

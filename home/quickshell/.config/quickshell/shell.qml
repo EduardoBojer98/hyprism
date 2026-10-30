@@ -18,6 +18,7 @@ ShellRoot {
     }
 
     Osd {}
-    Component.onCompleted: Launcher.open = false // create the launcher now so its IPC handler exists
+    // Create the singletons with IPC handlers now, so `qs ipc call …` works before first use
+    Component.onCompleted: { Launcher.open = false; SettingsApp.open = false }
     Notifications {}
 }

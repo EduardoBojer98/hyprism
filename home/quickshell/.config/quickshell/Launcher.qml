@@ -90,6 +90,7 @@ Singleton {
         { title: "Screenshot (area)", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; hyprshot -m region -o ~/Pictures/Screenshots"] },
         { title: "Colour picker", glyph: "\u{F0266}", cmd: ["sh", "-c", "sleep 0.3; hyprpicker -a"] },
         { title: "ROG Control Center", glyph: "\u{F0493}", cmd: ["rog-control-center"] },
+        { title: "Settings", glyph: "\u{F0493}", cmd: ["qs", "ipc", "call", "settings", "open", ""] },
     ]
 
     // 0 = no match; prefix beats word start beats substring
@@ -445,7 +446,7 @@ Singleton {
                             width: keyLabel.implicitWidth + 10; height: 18; radius: 5
                             color: Theme.fill
                             border { color: Theme.stroke; width: 1 }
-                            Text { id: keyLabel; anchors.centerIn: parent; text: modelData[0]; color: Theme.subtext; font { family: Theme.font; pixelSize: 10 } }
+                            Text { id: keyLabel; anchors.centerIn: parent; text: modelData[0]; color: Theme.subtext; font { family: Theme.font; pixelSize: 11 } }
                         }
                         Text { anchors.verticalCenter: parent.verticalCenter; text: modelData[1]; color: Theme.muted; font { family: Theme.font; pixelSize: 11 } }
                     }

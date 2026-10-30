@@ -1,0 +1,74 @@
+import Quickshell
+import Quickshell.Io
+import QtQuick
+import QtQuick.Layouts
+
+// Lock & Sleep: when to lock, turn the screens off and sleep. Writes hypr/hypridle.conf and
+// restarts hypridle.
+ColumnLayout {
+    id: page
+    spacing: 20
+
+    readonly property var lockOptions: [2, 5, 10, 15, 0]     // minutes, 0 = never
+    readonly property var sleepOptions: [10, 20, 30, 60, 0]
+    property int lockMin: 5
+    property int sleepMin: 20
+
+    Process {
+        running: true
+        command: ["sh", "-c", "cat \"$HOME/.config/hypr/hypridle.conf\""]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                // each listener block: its timeout and what it runs
+                const blocks = text.split("listener").slice(1)
+                const lock = blocks.find(b => b.includes("lock-session"))
+                const sleep = blocks.find(b => b.includes("systemctl suspend"))
+                const minutes = b => b ? Math.round(parseInt(b.match(/timeout\s*=\s*(\d+)/)[1]) / 60) : 0
+                page.lockMin = minutes(lock)
+                page.sleepMin = minutes(sleep)
+            }
+        }
+    }
+
+    function label(m) { return m === 0 ? "Never" : m + " min" }
+
+    function save() {
+        const blocks = []
+        if (lockMin > 0) {
+            blocks.push("# " + lockMin + " min: lock\nlistener {\n    timeout    = " + lockMin * 60 + "\n    on-timeout = loginctl lock-session\n}")
+            blocks.push("# 30 s later: screens off\nlistener {\n    timeout    = " + (lockMin * 60 + 30) + "\n    on-timeout = hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'\n    on-resume  = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'\n}")
+        }
+        if (sleepMin > 0)
+            blocks.push("# " + sleepMin + " min: sleep, then hibernate after 60 more min\nlistener {\n    timeout    = " + sleepMin * 60 + "\n    on-timeout = systemctl suspend-then-hibernate\n}")
+        const text = "# Written by the Settings app (Lock & Sleep). hypridle still uses hyprlang.\n"
+            + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = loginctl lock-session\n"
+            + "    after_sleep_cmd  = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'\n}\n\n" + blocks.join("\n\n")
+        SettingsApp.writeHyprFile("hypridle.conf", text)
+        Quickshell.execDetached(["sh", "-c", "sleep 0.3; pkill -x hypridle; hyprctl dispatch 'hl.dsp.exec_cmd(\"hypridle\")'"])
+    }
+
+    SettingGroup {
+        SettingRow {
+            label: "Lock the screen after"
+            hint: "Screens turn off 30 seconds later"
+            Choice {
+                options: page.lockOptions.map(page.label)
+                index: page.lockOptions.indexOf(page.lockMin)
+                onPicked: i => { page.lockMin = page.lockOptions[i]; page.save() }
+            }
+        }
+        SettingRow {
+            label: "Sleep after"
+            hint: "Sleeping laptops hibernate after another hour to save the battery"
+            Choice {
+                options: page.sleepOptions.map(page.label)
+                index: page.sleepOptions.indexOf(page.sleepMin)
+                onPicked: i => { page.sleepMin = page.sleepOptions[i]; page.save() }
+            }
+        }
+        SettingRow {
+            label: "Lock now"
+            PillButton { text: "Lock"; onClicked: Quickshell.execDetached(["loginctl", "lock-session"]) }
+        }
+    }
+}

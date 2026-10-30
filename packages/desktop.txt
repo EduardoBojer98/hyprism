@@ -17,6 +17,7 @@ fuzzel
 mako
 quickshell
 pavucontrol
+nm-connection-editor
 squeekboard
 
 # Clipboard, screenshots, colour picker, media keys

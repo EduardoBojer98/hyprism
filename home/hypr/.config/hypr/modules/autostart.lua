@@ -5,7 +5,6 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("qs")                                       -- Quickshell: bar, dock, OSD, notifications
     hl.exec_cmd("hyprpaper")                                -- wallpaper
     hl.exec_cmd("pgrep -x squeekboard || squeekboard")      -- on-screen keyboard, hidden until the bar button
-    hl.exec_cmd("kdeconnect-indicator")                     -- phone integration, shows in the bar's tray
     -- GTK look for this session. dconf is shared with KDE, and KDE re-applies Breeze at its own login.
     hl.exec_cmd("gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark"
         .. " && gsettings set org.gnome.desktop.interface color-scheme prefer-dark"

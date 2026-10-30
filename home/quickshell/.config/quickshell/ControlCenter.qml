@@ -91,8 +91,8 @@ PopupWindow {
                 }
                 RoundButton {
                     glyph: "\u{F0493}"
-                    hint: "ROG Control Center"
-                    onClicked: { cc.visible = false; Quickshell.execDetached(["rog-control-center"]) }
+                    hint: "Settings"
+                    onClicked: { cc.visible = false; SettingsApp.show("") }
                 }
             }
 

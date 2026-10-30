@@ -55,6 +55,7 @@ NVIDIA GPU on/off in **ROG Control Center → GPU Configuration** (needs a resta
 
 | Keys | Action |
 |---|---|
+| `Super+I` | Settings app |
 | `Super+Space` | Launcher, Apps tab: apps, calculator, system actions, `> command`, web search |
 | `Super+Shift+Space` | Launcher, Files tab (search your home folder) |
 | `Super+V` | Launcher, Clipboard tab |
@@ -66,7 +67,7 @@ NVIDIA GPU on/off in **ROG Control Center → GPU Configuration** (needs a resta
 | `Super+T` | Float / tile window |
 | `Super+J` | Flip split direction |
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
-| `Super+1…0` / `Super+Shift+1…0` | Go to / send window to workspace (1–5 Acer, 6–10 laptop) |
+| `Super+1…0` / `Super+Shift+1…0` | Go to / send window to workspace (laptop starts on 1, Acer on 2; others open where you are) |
 | `Super+Tab` | Previous workspace |
 | `Super+S` / `Super+Shift+S` | Scratchpad / send window to scratchpad |
 | `Super+M` | Acer monitor → work PC / back |
@@ -79,11 +80,21 @@ NVIDIA GPU on/off in **ROG Control Center → GPU Configuration** (needs a resta
 | `Super+drag` / `Super+right-drag` | Move / resize window |
 | Touchpad 3-finger swipe | Switch workspace |
 
-Bar: workspaces · clock · tray · keyboard layout · **status pill** (Wi-Fi, Bluetooth, volume, battery;
-scroll = volume) · power menu. Clicking the status pill opens the **Control Center**: Wi-Fi and Bluetooth
+Bar (floating glass capsules): workspaces · focused app · weather | clock | CPU/GPU temperature rings ·
+tray · **status** (layout, Wi-Fi, Bluetooth, volume, battery; scroll = volume) · power menu. Clicking the status pill opens the **Control Center**: Wi-Fi and Bluetooth
 (toggle + pick network/device), on-screen keyboard, Acer monitor, power mode, brightness, output and
 microphone volume + device, shortcut to ROG Control Center. Dock: launcher button, pinned apps, running apps
 (middle-click = new window). Push the pointer to the bottom edge to show the dock.
+
+## Settings app (`Super+I`)
+
+Glass window with native pages: **Displays** (drag to arrange, resolution, scale, rotation, VRR),
+**Sound** (devices, per-app volume), **Wi-Fi & Network**, **Bluetooth** (scan, pair, connect),
+**Battery & Power** (charge limit, power mode, battery health), **Keyboard & Touchpad**, **Wallpaper**,
+**Lock & Sleep**, **Default Apps**, **Weather** (city), **About**. Changes apply immediately and are saved
+in the repo: `hypr/settings/displays.lua`, `hypr/settings/input.lua`, `hypr/hypridle.conf`,
+`hyprpaper.conf`, `quickshell/settings.json`; default apps go to `~/.config/mimeapps.list`.
+Fans, NVIDIA GPU and keyboard lights stay in ROG Control Center.
 
 ## Shared monitor (monswitch)
 

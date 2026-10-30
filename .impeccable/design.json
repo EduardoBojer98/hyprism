@@ -1,0 +1,405 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-30T00:00:00Z",
+  "title": "Design System: linux-setup shell",
+  "extensions": {
+    "platform": "Native Wayland shell, Quickshell 0.3 QML on Hyprland 0.56. Canonical values live in home/quickshell/.config/quickshell/Theme.qml; CSS in components is a preview translation.",
+    "colorMeta": {
+      "glass": {
+        "role": "neutral",
+        "displayName": "Glass Tint",
+        "canonical": "Theme.glass = Qt.rgba(0.05, 0.05, 0.08, 0.42)"
+      },
+      "glass-strong": {
+        "role": "neutral",
+        "displayName": "Strong Glass",
+        "canonical": "Theme.glassStrong = Qt.rgba(0.05, 0.05, 0.08, 0.70)"
+      },
+      "stroke": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "Theme.stroke = Qt.rgba(1, 1, 1, 0.10)"
+      },
+      "highlight": {
+        "role": "neutral",
+        "displayName": "Top Light",
+        "canonical": "Theme.highlight = Qt.rgba(1, 1, 1, 0.07)"
+      },
+      "fill": {
+        "role": "neutral",
+        "displayName": "Idle Fill",
+        "canonical": "Theme.fill = Qt.rgba(1, 1, 1, 0.07)"
+      },
+      "fill-hover": {
+        "role": "neutral",
+        "displayName": "Hover Fill",
+        "canonical": "Theme.fillHover = Qt.rgba(1, 1, 1, 0.12)"
+      },
+      "fill-active": {
+        "role": "neutral",
+        "displayName": "Pressed Fill",
+        "canonical": "Theme.fillActive = Qt.rgba(1, 1, 1, 0.18)"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "White Ink",
+        "canonical": "Theme.text = #eceffa  (oklch(95.3% 0.015 273.8))",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#24252a",
+          "#404248",
+          "#5f6169",
+          "#7f828c",
+          "#a2a5ad",
+          "#c7c9d0",
+          "#eceef5"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Soft Ink",
+        "canonical": "Theme.subtext = Qt.rgba(0.93, 0.94, 0.98, 0.64)"
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "Theme.muted = #6e738d  (oklch(56.1% 0.041 276.5))",
+        "tonalRamp": [
+          "#090a13",
+          "#222431",
+          "#3d4152",
+          "#5c6076",
+          "#7c819b",
+          "#9fa4bb",
+          "#c4c8dd",
+          "#eaedff"
+        ]
+      },
+      "macchiato-blue": {
+        "role": "primary",
+        "displayName": "Macchiato Blue",
+        "canonical": "Theme.accent = #8aadf4  (oklch(75.0% 0.110 263.8))",
+        "tonalRamp": [
+          "#020921",
+          "#142345",
+          "#2b406d",
+          "#456098",
+          "#6081c4",
+          "#87a5e1",
+          "#afc9fe",
+          "#d8efff"
+        ]
+      },
+      "macchiato-blue-wash": {
+        "role": "primary",
+        "displayName": "Open Wash",
+        "canonical": "Capsule.qml active fill = Qt.rgba(0.54, 0.68, 0.96, 0.18)"
+      },
+      "macchiato-blue-edge": {
+        "role": "primary",
+        "displayName": "Open Edge",
+        "canonical": "Capsule.qml active border = Qt.rgba(0.54, 0.68, 0.96, 0.7)"
+      },
+      "macchiato-lavender": {
+        "role": "tertiary",
+        "displayName": "Macchiato Lavender",
+        "canonical": "hypr colors.lua lavender = #b7bdf8  (oklch(81.4% 0.083 279.9))",
+        "tonalRamp": [
+          "#08091b",
+          "#20223d",
+          "#3b3e62",
+          "#595c8a",
+          "#787db3",
+          "#9ca1d2",
+          "#c1c6f1",
+          "#e7ecff"
+        ]
+      },
+      "on-accent": {
+        "role": "neutral",
+        "displayName": "On-Accent Ink",
+        "canonical": "Theme.accentText = #0f1117  (oklch(17.8% 0.013 270.6))",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#242529",
+          "#404247",
+          "#5f6168",
+          "#7f828a",
+          "#a2a5ac",
+          "#c7c9cf",
+          "#eceef4"
+        ]
+      },
+      "signal-amber": {
+        "role": "secondary",
+        "displayName": "Amber Signal",
+        "canonical": "Theme.yellow = #eed49f  (oklch(87.9% 0.074 84.8))",
+        "tonalRamp": [
+          "#120a00",
+          "#2f2307",
+          "#50401d",
+          "#725e34",
+          "#977f4d",
+          "#b8a277",
+          "#dac7a2",
+          "#fcedce"
+        ]
+      },
+      "signal-peach": {
+        "role": "secondary",
+        "displayName": "Peach Signal",
+        "canonical": "Theme.peach = #f5a97f  (oklch(79.9% 0.106 49.6))",
+        "tonalRamp": [
+          "#1b0400",
+          "#3d1a03",
+          "#633417",
+          "#8b502d",
+          "#b56e46",
+          "#d49471",
+          "#f3bb9d",
+          "#ffe3ca"
+        ]
+      },
+      "signal-red": {
+        "role": "secondary",
+        "displayName": "Red Signal",
+        "canonical": "Theme.red = #ed8796  (oklch(73.7% 0.125 11.2))",
+        "tonalRamp": [
+          "#1e0005",
+          "#42111c",
+          "#6a2935",
+          "#944351",
+          "#c06070",
+          "#df8894",
+          "#feb1ba",
+          "#ffdbe2"
+        ]
+      },
+      "state-green": {
+        "role": "secondary",
+        "displayName": "Charging Green",
+        "canonical": "Theme.green = #a6da95  (oklch(83.5% 0.108 138.2))",
+        "tonalRamp": [
+          "#011000",
+          "#132c0a",
+          "#2b4c20",
+          "#456e37",
+          "#619151",
+          "#88b37a",
+          "#b0d6a4",
+          "#daf9d0"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Bar clock only (HH:mm)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "App name, weather temperature, notification titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Theme.fontSize: menus, rows, panel text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Workspace ids, battery %, CPU/GPU labels, pill buttons."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Date, weather city/condition; the 11px floor."
+      },
+      "gauge": {
+        "displayName": "Gauge",
+        "purpose": "Value inside a ring gauge, with degree sign."
+      },
+      "icon": {
+        "displayName": "Icon",
+        "purpose": "Nerd Font (MDI) status glyphs; 15-22px by context."
+      }
+    },
+    "shadows": [
+      {
+        "name": "capsule-float",
+        "value": "MultiEffect { shadowColor: Qt.rgba(0,0,0,0.32); shadowVerticalOffset: 4; shadowBlur: 0.6 }",
+        "purpose": "Every bar capsule; soft float above the wallpaper."
+      },
+      {
+        "name": "window",
+        "value": "Hyprland shadow { range 28, render_power 4, offset 0 6, color 0x66000000, color_inactive 0x33000000 }",
+        "purpose": "Application windows."
+      },
+      {
+        "name": "scrim",
+        "value": "Qt.rgba(0,0,0,0.18); launcher Qt.rgba(0,0,0,0.35) when open",
+        "purpose": "Behind Control Center/Settings content and the open launcher."
+      },
+      {
+        "name": "compositor-blur",
+        "value": "Hyprland layer_rule blur-shell: namespace ^qs-.*$, blur, blur_popups, ignore_alpha 0.05; decoration.blur size 10, passes 3, noise 0.015, brightness 0.85, vibrancy 0.25",
+        "purpose": "The frost behind every shell surface; not a shadow but the base of all depth."
+      }
+    ],
+    "motion": [
+      {
+        "name": "anim",
+        "value": "Theme.anim = 220ms",
+        "purpose": "Default colour and width transitions (capsules, chips, toggles, workspace pills)."
+      },
+      {
+        "name": "ease-out",
+        "value": "Easing.OutCubic",
+        "purpose": "All movement (widths, knobs, gauge values)."
+      },
+      {
+        "name": "knob",
+        "value": "160ms OutCubic",
+        "purpose": "Toggle knob slide."
+      },
+      {
+        "name": "gauge",
+        "value": "600ms OutCubic",
+        "purpose": "Ring gauge arc follows new readings."
+      }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Capsule",
+      "kind": "custom",
+      "refersTo": "capsule",
+      "description": "Floating glass complication in the top bar; hover deepens, active (panel open) turns blue.",
+      "html": "<button class=\"ds-capsule\">Wi-Fi · 96%</button> <button class=\"ds-capsule ds-capsule-active\">Open</button>",
+      "css": ".ds-capsule { background: rgba(13,13,20,0.42); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 4px 14px rgba(0,0,0,0.32); backdrop-filter: blur(20px) brightness(0.85); background-image: linear-gradient(to bottom, rgba(255,255,255,0.07), transparent 50%); font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; height: 40px; padding: 0 14px; border-radius: 9999px; color: #eceffa; font-size: 12px; font-weight: 600; cursor: pointer; transition: background-color 220ms; } .ds-capsule:hover { background-color: rgba(31,33,46,0.55); } .ds-capsule:focus-visible { outline: 2px solid #8aadf4; outline-offset: 2px; } .ds-capsule-active { background-color: rgba(138,173,244,0.18); border-color: rgba(138,173,244,0.7); }"
+    },
+    {
+      "name": "Clock Capsule",
+      "kind": "custom",
+      "refersTo": "capsule",
+      "description": "Centre capsule: 20px bold tabular time over 11px soft date.",
+      "html": "<div class=\"ds-clock\"><div class=\"ds-clock-time\">09:29</div><div class=\"ds-clock-date\">Friday 30 October</div></div>",
+      "css": ".ds-clock { background: rgba(13,13,20,0.42); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 4px 14px rgba(0,0,0,0.32); backdrop-filter: blur(20px) brightness(0.85); background-image: linear-gradient(to bottom, rgba(255,255,255,0.07), transparent 50%); font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; height: 40px; padding: 0 22px; border-radius: 9999px; } .ds-clock-time { color: #eceffa; font-size: 20px; font-weight: 700; line-height: 0.95; } .ds-clock-date { color: rgba(237,240,250,0.64); font-size: 11px; }"
+    },
+    {
+      "name": "Workspace Pills",
+      "kind": "nav",
+      "refersTo": "workspace-pill",
+      "description": "24px pills; the current one stretches to 34px and fills blue.",
+      "html": "<div class=\"ds-ws\"><button class=\"ds-ws-pill ds-ws-on\">1</button><button class=\"ds-ws-pill ds-ws-busy\">2</button><button class=\"ds-ws-pill\">3</button></div>",
+      "css": ".ds-ws { background: rgba(13,13,20,0.42); border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 4px 14px rgba(0,0,0,0.32); backdrop-filter: blur(20px) brightness(0.85); background-image: linear-gradient(to bottom, rgba(255,255,255,0.07), transparent 50%); display: inline-flex; gap: 10px; align-items: center; height: 40px; padding: 0 14px; border-radius: 9999px; } .ds-ws-pill { font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; width: 24px; height: 24px; border: 0; border-radius: 12px; background: rgba(255,255,255,0.07); color: #6e738d; font-size: 12px; font-weight: 600; cursor: pointer; transition: width 220ms cubic-bezier(0.33,1,0.68,1), background-color 220ms; } .ds-ws-pill:hover { background: rgba(255,255,255,0.12); } .ds-ws-pill:focus-visible { outline: 2px solid #8aadf4; } .ds-ws-busy { color: #eceffa; } .ds-ws-on, .ds-ws-on:hover { width: 34px; background: #8aadf4; color: #0f1117; }"
+    },
+    {
+      "name": "Ring Gauge",
+      "kind": "custom",
+      "refersTo": "ring-gauge",
+      "description": "32px ring with the live value inside; white in range, amber at warn, red at alert.",
+      "html": "<span class=\"ds-ring\" style=\"--t:0.47\"><b>63°</b></span> <span class=\"ds-ring ds-ring-warn\" style=\"--t:0.77\"><b>84°</b></span>",
+      "css": ".ds-ring { --c: #eceffa; position: relative; display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(closest-side, #1a1b24 calc(100% - 2.5px), transparent calc(100% - 2.5px)), conic-gradient(var(--c) calc(var(--t) * 360deg), rgba(255,255,255,0.14) 0); } .ds-ring b { font-family: Inter, sans-serif; font-variant-numeric: tabular-nums; color: var(--c); font-size: 11px; font-weight: 600; } .ds-ring-warn { --c: #eed49f; }"
+    },
+    {
+      "name": "Pill Button",
+      "kind": "button",
+      "refersTo": "pill-button",
+      "description": "Secondary text button on glass.",
+      "html": "<button class=\"ds-btn\">Cancel</button>",
+      "css": ".ds-btn { height: 30px; padding: 0 14px; border-radius: 9999px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.10); color: #eceffa; font: 600 12px Inter, sans-serif; cursor: pointer; } .ds-btn:hover { background: rgba(255,255,255,0.12); } .ds-btn:focus-visible { outline: 2px solid #8aadf4; outline-offset: 2px; } .ds-btn:disabled { opacity: 0.45; }"
+    },
+    {
+      "name": "Primary Pill Button",
+      "kind": "button",
+      "refersTo": "pill-button-primary",
+      "description": "Filled blue action button.",
+      "html": "<button class=\"ds-btn-primary\">Apply</button>",
+      "css": ".ds-btn-primary { height: 30px; padding: 0 14px; border-radius: 9999px; background: #8aadf4; border: 1px solid transparent; color: #0f1117; font: 600 12px Inter, sans-serif; cursor: pointer; } .ds-btn-primary:hover { background: #95b8ff; } .ds-btn-primary:focus-visible { outline: 2px solid #eceffa; outline-offset: 2px; }"
+    },
+    {
+      "name": "Toggle",
+      "kind": "input",
+      "refersTo": "toggle",
+      "description": "42x24 switch; blue when on, white knob slides 160ms.",
+      "html": "<button class=\"ds-toggle\" aria-pressed=\"true\"><i></i></button> <button class=\"ds-toggle\" aria-pressed=\"false\"><i></i></button>",
+      "css": ".ds-toggle { position: relative; width: 42px; height: 24px; border-radius: 9999px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.18); cursor: pointer; transition: background-color 220ms; } .ds-toggle i { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 9px; background: #fff; transition: left 160ms cubic-bezier(0.33,1,0.68,1); } .ds-toggle[aria-pressed=true] { background: #8aadf4; } .ds-toggle[aria-pressed=true] i { left: 20px; } .ds-toggle:focus-visible { outline: 2px solid #8aadf4; outline-offset: 2px; }"
+    },
+    {
+      "name": "Slider",
+      "kind": "input",
+      "refersTo": "slider",
+      "description": "32px pill track with white fill and the icon inside the track.",
+      "html": "<div class=\"ds-slider\" style=\"--v:0.6\"><span class=\"ds-slider-fill\"></span></div>",
+      "css": ".ds-slider { position: relative; width: 240px; height: 32px; border-radius: 9999px; background: rgba(255,255,255,0.07); overflow: hidden; cursor: pointer; } .ds-slider-fill { position: absolute; inset: 0 auto 0 0; width: max(32px, calc(var(--v) * 100%)); border-radius: 9999px; background: #eceffa; opacity: 0.92; } .ds-slider:hover .ds-slider-fill { opacity: 1; }"
+    },
+    {
+      "name": "Glass Panel Menu",
+      "kind": "card",
+      "refersTo": "glass-panel",
+      "description": "Strong-glass popup (power menu) with 38px hover rows; danger tints only the icon.",
+      "html": "<div class=\"ds-panel\"><div class=\"ds-row\">Lock</div><div class=\"ds-row\">Suspend</div><div class=\"ds-row ds-row-danger\">Shut down</div></div>",
+      "css": ".ds-panel { width: 210px; padding: 7px; border-radius: 22px; background: rgba(13,13,20,0.70) linear-gradient(to bottom, rgba(255,255,255,0.07), transparent 50%); border: 1px solid rgba(255,255,255,0.10); backdrop-filter: blur(20px) brightness(0.85); } .ds-row { height: 38px; display: flex; align-items: center; padding-left: 12px; border-radius: 12px; color: #eceffa; font: 400 13px Inter, sans-serif; cursor: pointer; } .ds-row:hover { background: rgba(255,255,255,0.12); } .ds-row-danger::before { content: ''; width: 8px; height: 8px; margin-right: 12px; border-radius: 4px; background: #ed8796; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Glass Complications",
+    "overview": "The shell is a set of separate floating instruments over the wallpaper, each a dark frosted object that reads one live thing. Hyprland blurs whatever sits behind every `qs-*` layer; the QML only lays a near-black tint, a hairline white stroke and a soft top-lit highlight over that blur. Nothing is opaque, nothing is edge-to-edge. The top bar is the clearest example: capsules float 10px below the screen edge with 8px gaps where the wallpaper shows through, and the clock in the centre carries the largest type.\n\nInk is white. Colour is a signal, not decoration: Macchiato blue says \"this is where you are / this is open\", amber and red say \"this value has left normal range\". Everything else, including rings, glyphs and labels, stays in white or a neutral soft white. Numbers are always tabular so live values do not jitter.\n\nDensity is calm but rich. Type stays between 11px and 20px; rank comes from size and weight, never from colour. Motion is short and eased out (220ms default, OutCubic), with one slower 600ms ease on gauge values so temperature changes glide instead of jumping.",
+    "keyCharacteristics": [
+      "Dark frosted glass over compositor blur: tint + 1px white stroke + top highlight.",
+      "Separate pill-shaped complications with gaps, never one strip.",
+      "White ink; blue only for active/open; amber/red only off-normal.",
+      "Inter with tabular figures; JetBrainsMono Nerd Font for icons.",
+      "Ring gauges that carry real values."
+    ],
+    "rules": [
+      {
+        "name": "The Two-Signal Rule",
+        "body": "Blue means active or open; amber, peach and red mean out of normal range. A value in normal range is white. If a colour does not answer one of those two questions, it should not be on screen.",
+        "section": "colors"
+      },
+      {
+        "name": "The Neutral Subtext Rule",
+        "body": "Secondary text is white at reduced alpha, never a tinted grey. A blue-grey subtext reads as a second accent on dark glass.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Figures Rule",
+        "body": "Every live number (clock, temperatures, battery, workspace ids) sets `features: { \"tnum\": 1 }`. Values that tick must not shift their neighbours.",
+        "section": "typography"
+      },
+      {
+        "name": "The 11px Floor Rule",
+        "body": "No text below 11px. The only 10px use (a keycap hint in the launcher) is drift, not precedent.",
+        "section": "typography"
+      },
+      {
+        "name": "The Rank-By-Size Rule",
+        "body": "Importance is shown by size and weight: the clock is the one 20px bold element in the bar. Do not promote anything with colour instead.",
+        "section": "typography"
+      },
+      {
+        "name": "The Separate Complications Rule",
+        "body": "Bar content lives in separate capsules with wallpaper showing between them. Do not join them into an edge-to-edge strip or put unrelated readouts in one capsule.",
+        "section": "layout"
+      },
+      {
+        "name": "The Glass Recipe Rule",
+        "body": "A shell surface is tint + 1px `stroke` + top `highlight` fading out by 50% height, over Hyprland blur. Never ship an opaque panel, and never a surface whose namespace does not start with `qs-` (it will not be blurred).",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** build every new shell surface from `Glass` (or `Capsule` in the bar) and the `Theme` tokens, in a `qs-*` layer namespace so Hyprland blurs it.",
+      "**Do** keep values in normal range white and reach for `signal-amber` / `signal-red` only past a defined threshold.",
+      "**Do** set tabular figures on every live number.",
+      "**Do** use full pills for anything one row tall and 12 / 16 / 22px for containers.",
+      "**Do** ease state changes over `Theme.anim` (220ms), OutCubic for movement."
+    ],
+    "donts": [
+      "**Don't** use blue for decoration, branding or emphasis; it means active or open only.",
+      "**Don't** set text below 11px or tint secondary text blue-grey.",
+      "**Don't** make a shell surface opaque or join the bar capsules into a single strip.",
+      "**Don't** use hard-edged offset shadows; the capsule shadow is soft (blur 0.6) and the only shadow the shell draws itself."
+    ]
+  }
+}
