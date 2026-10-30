@@ -17,7 +17,9 @@ PanelWindow {
     readonly property bool shown: !Config.dock.autoHide || hover.hovered || hideTimer.running || emptyWorkspace
                                   || menu.entry !== null || dragId !== ""
 
-    function entryFor(appId) { return DesktopEntries.heuristicLookup(appId) }
+    // app list size: lookups below re-run once it has loaded (it is empty for a moment at login)
+    readonly property int appCount: DesktopEntries.applications.values.length
+    function entryFor(appId) { return appCount ? DesktopEntries.heuristicLookup(appId) : null }
     // Hyprland's view of the windows (address + workspace), linked to the Wayland toplevel for activate()
     function windowsOf(entry) {
         return entry ? Hyprland.toplevels.values.filter(t => t.wayland && entryFor(t.wayland.appId)?.id === entry.id) : []
@@ -40,7 +42,7 @@ PanelWindow {
     property string dragId: ""
     property real dragX: 0            // pointer, in row coordinates
     readonly property var pinnedIds: dragOrder ?? Config.dock.pinned
-    readonly property var pinnedEntries: pinnedIds.map(id => DesktopEntries.byId(id)).filter(e => e)
+    readonly property var pinnedEntries: appCount ? pinnedIds.map(id => DesktopEntries.byId(id)).filter(e => e) : []
     function dragTo(x) {
         dragX = x
         const first = launcher.width + row.spacing * 2 + 1          // launcher + divider

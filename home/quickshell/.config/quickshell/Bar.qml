@@ -139,7 +139,7 @@ PanelWindow {
                 readonly property var other: focusedScreen ? null : (bar.monitor?.activeWorkspace?.toplevels.values[0] ?? null)
                 readonly property string appId: focusedScreen ? bar.appClass : (other?.wayland?.appId ?? "")
                 readonly property string title: focusedScreen ? bar.appTitle : (other?.title ?? "")
-                readonly property var entry: appId ? DesktopEntries.heuristicLookup(appId) : null
+                readonly property var entry: appId && DesktopEntries.applications.values.length ? DesktopEntries.heuristicLookup(appId) : null
                 // no desktop entry: "com.anthropic.Claude" -> "Claude"
                 readonly property string name: entry?.name ?? (appId.split(".").pop().replace(/^./, c => c.toUpperCase()))
                 anchors.verticalCenter: parent.verticalCenter
