@@ -16,7 +16,7 @@ import QtQuick.Effects
 // Top bar in the macOS Tahoe style: one thin see-through strip across the screen, white
 // monochrome items that light up on hover.
 //   desktops · app name and title      date and time      tray · temperatures · weather · layout ·
-//   Wi-Fi/Bluetooth/volume/battery · Control Center · notifications bell · power
+//   Wi-Fi/Bluetooth/volume/battery (opens Control Center) · notifications bell · power
 // Amber/red appear only when a value leaves its normal range.
 PanelWindow {
     id: bar
@@ -274,30 +274,6 @@ PanelWindow {
                         text: status.charging ? "\u{F0084}" : status.pct >= 95 ? "\u{F0079}" : String.fromCodePoint(0xF007A + Math.max(0, Math.floor(status.pct / 10) - 1))
                         color: status.low ? Theme.red : Theme.text
                         font { family: Theme.iconFont; pixelSize: 17 }
-                    }
-                }
-            }
-
-            BarItem { // Control Center: the macOS two-switch icon
-                active: ControlCenter.open
-                onPressed: ControlCenter.toggle()
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 2
-                    Repeater {
-                        model: [true, false]
-                        Rectangle {
-                            required property bool modelData
-                            width: 16; height: 7; radius: 3.5
-                            color: "transparent"
-                            border { color: Theme.text; width: 1.4 }
-                            Rectangle {
-                                width: 3.5; height: 3.5; radius: 1.75
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: parent.modelData ? parent.width - width - 2 : 2
-                                color: Theme.text
-                            }
-                        }
                     }
                 }
             }
