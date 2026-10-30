@@ -6,12 +6,14 @@ want to change is in the **Settings app** (`Super+I`), not in config files. An e
 install stays untouched and selectable at the login screen.
 
 - **Menu bar**: desktops and the app name on the left; weather, date and time (calendar) in the
-  centre; tray, temperatures, keyboard layout, status (Control Center), notifications bell and the
-  utility menu on the right
+  centre; tray, temperatures, keyboard layout (its own list of layouts), status (Control Center), notifications bell on the right;
+  utility menu behind the system logo at the left end
 - **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, media, power
   mode, display, sound and microphone
-- **Spotlight** (tap `Super`): apps grid first, then results ranked apps → files → calculator →
-  settings → actions → web; clipboard history inside it
+- **Spotlight** (tap `Super`): suggestions first (weather, next event, last copied, most used apps, recent items, quick actions), then a Top Hit and results grouped apps → files →
+  calculator → settings → actions → web; Files, Actions and clipboard history modes
+- **Calendar** (click the clock): month grid with public holidays for your country, worldwide
+  observances and moon phases (each switchable in Settings > Calendar), the selected day and what's coming up
 - **Notification centre** with history, grouping and Do Not Disturb; **Mission Control**
   (`Super+W`, three fingers up); auto-hiding **dock** (drag to reorder, window list on right-click) with minimise
 - Keyboard shortcuts, displays, a shared monitor, sound, network, Bluetooth, power, wallpaper folders
