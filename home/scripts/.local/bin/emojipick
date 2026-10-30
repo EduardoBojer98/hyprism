@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Emoji picker for Hyprland (JuhRadial's Emoji slice, Super+.): search by name or keyword with
+# fuzzel, then type the emoji into the focused app (wtype) and leave it on the clipboard.
+# The list comes from KDE's emoji dictionary (/usr/share/plasma/emoji/<lang>.dict), cached as TSV.
+set -euo pipefail
+
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/emojipick.tsv"
+dict=/usr/share/plasma/emoji/en.dict
+
+if [[ ! -s "$cache" || "$dict" -nt "$cache" ]]; then
+    # qCompress'd QDataStream: u32 count, then per emoji: string emoji, string name, u32 category,
+    # u32 n, n strings of keywords (strings are u32 length + UTF-8)
+    python3 -I - "$dict" >"$cache.tmp" <<'EOF'
+import struct, sys, zlib
+raw = zlib.decompress(open(sys.argv[1], "rb").read()[4:])
+pos = 0
+def u32():
+    global pos
+    v = struct.unpack_from("<I", raw, pos)[0]; pos += 4; return v
+def string():
+    global pos
+    n = u32(); s = raw[pos:pos + n].decode("utf-8", "replace"); pos += n; return s
+for _ in range(u32()):
+    emoji, name = string(), string()
+    u32()
+    words = [string() for _ in range(u32())]
+    print(f"{emoji}\t{name}\t{' '.join(w for w in words if w not in name)}")
+EOF
+    mv "$cache.tmp" "$cache"
+fi
+
+choice=$(awk -F'\t' '{ printf "%s  %s%s\n", $1, $2, ($3 ? "  · " $3 : "") }' "$cache" |
+    fuzzel --dmenu --prompt "Emoji  " --width 48 --lines 12) || exit 0
+emoji=${choice%%  *}
+[[ -n "$emoji" ]] || exit 0
+
+printf '%s' "$emoji" | wl-copy
+command -v wtype >/dev/null && { sleep 0.15; wtype -- "$emoji"; }

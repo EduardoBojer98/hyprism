@@ -14,6 +14,7 @@ hl.bind(key("E"),      exec("dolphin"))
 hl.bind(key("I"),      exec("qs ipc call settings toggle"))   -- Settings app
 hl.bind(key("B"),      exec("firefox"))
 hl.bind(key("V"),      exec("qs ipc call clipboard toggle"))     -- clipboard history at the cursor
+hl.bind(key("period"),   exec("emojipick"))                          -- emoji picker (also on the JuhRadial wheel)
 hl.bind(key("SHIFT + Space"), exec("qs ipc call launcher files")) -- Spotlight in Files mode
 hl.bind(key("A"),      exec("qs ipc call launcher apps"))        -- all applications grid
 
