@@ -20,6 +20,7 @@ Singleton {
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
     readonly property alias keybinds: adapter.keybinds
+    readonly property alias calendar: adapter.calendar
     readonly property alias language: adapter.language
     readonly property alias startup: adapter.startup
     readonly property alias system: adapter.system
@@ -46,6 +47,8 @@ Singleton {
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showMedia: "bool", showHardware: "bool" },
         keybinds: { overrides: "object" },
+        calendar: { holidays: "bool", country: "string", localNames: "bool", observances: "bool", moon: "bool",
+                    weekNumbers: "bool", firstDay: ["monday", "sunday"] },
         language: { languages: "list", formats: "string" },
         startup: { apps: "list" },
         system: { taskManager: "string" },

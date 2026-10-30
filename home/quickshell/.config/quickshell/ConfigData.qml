@@ -79,6 +79,15 @@ JsonAdapter {
     property JsonObject system: JsonObject {
         property string taskManager: "auto"      // desktop id, or "auto": first installed (Sensors.taskManagers)
     }
+    property JsonObject calendar: JsonObject {
+        property bool holidays: true            // public holidays (date.nager.at, cached per year)
+        property string country: "RS"           // ISO country code for holidays
+        property bool localNames: false         // holiday names in the country's language
+        property bool observances: true         // worldwide days: New Year, Earth Day, …
+        property bool moon: false               // new / full moon and quarters
+        property bool weekNumbers: false
+        property string firstDay: "monday"      // monday | sunday
+    }
     property JsonObject language: JsonObject {
         property list<string> languages: ["en_US"]   // glibc locale ids; the first is the apps' language, the rest fallbacks
         property string formats: ""                  // locale id for dates, numbers, units; "" = the first language

@@ -36,6 +36,7 @@ Singleton {
         { id: "asus",          name: "ASUS Hardware",       glyph: "\u{F061A}" },
         { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}" },
         { id: "weather",       name: "Weather",             glyph: "\u{F0595}" },
+        { id: "calendar",      name: "Calendar",            glyph: "\u{F00ED}" },
         { id: "idle",          name: "Lock & Sleep",        glyph: "\u{F033E}" },
         { id: "apps",          name: "Default Applications", glyph: "\u{F003B}" },
         { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}" },
