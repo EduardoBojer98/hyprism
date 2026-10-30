@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Copy the text in a screen area (Super+Shift+T, Spotlight "Copy text from screen").
+# Select an area with slurp; tesseract reads it; the text goes to the clipboard (and so into the
+# Super+V history, where it is searchable). Languages: SCREENTEXT_LANG, default "eng"
+# (installed packs: tesseract --list-langs).
+set -euo pipefail
+
+area=$(slurp) || exit 0                                  # Esc cancels
+text=$(grim -g "$area" - | tesseract stdin stdout -l "${SCREENTEXT_LANG:-eng}" 2>/dev/null |
+       sed -e 's/[[:space:]]*$//' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')   # trim trailing blanks
+
+if [[ -z "${text//[[:space:]]/}" ]]; then
+    notify-send -a "Screen text" -i edit-copy "No text found" "Try a larger or sharper area"
+    exit 1
+fi
+printf '%s' "$text" | wl-copy --type 'text/plain;charset=utf-8'
+notify-send -a "Screen text" -i edit-copy "Copied $(wc -w <<<"$text") words" "${text:0:160}"

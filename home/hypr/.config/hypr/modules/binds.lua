@@ -47,6 +47,7 @@ hl.bind(key("SHIFT + S"),  hl.dsp.window.move({ workspace = "special:scratch" })
 -- Screenshots and colour picker
 hl.bind("Print",           exec("hyprshot -m region -o ~/Pictures/Screenshots"))
 hl.bind("SHIFT + Print",   exec([[grim -g "$(slurp)" - | satty --filename -]]))
+hl.bind(key("SHIFT + T"), exec("screentext"))                              -- copy text from a screen area (OCR)
 hl.bind(key("SHIFT + C"),  exec("hyprpicker -a"))
 
 -- Shared Acer: hand it to the work PC and back (~/.local/bin/monswitch)
