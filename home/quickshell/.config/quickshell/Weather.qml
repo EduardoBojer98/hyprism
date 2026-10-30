@@ -198,7 +198,7 @@ Singleton {
                     Rectangle {
                         visible: root.c.showHourly && root.hours.length > 0
                         Layout.fillWidth: true
-                        implicitHeight: 82
+                        implicitHeight: hourRow.implicitHeight + 16   // sized by its content so nothing gets clipped
                         radius: Theme.radius
                         color: Theme.fill
                         Flickable {
@@ -209,7 +209,6 @@ Singleton {
                             flickableDirection: Flickable.HorizontalFlick
                             Row {
                                 id: hourRow
-                                height: parent.height
                                 spacing: 0
                                 Repeater {
                                     model: root.hours
@@ -217,7 +216,6 @@ Singleton {
                                         required property var modelData
                                         required property int index
                                         width: 44
-                                        anchors.verticalCenter: parent.verticalCenter
                                         spacing: 3
                                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: index === 0 ? "Now" : modelData.time.slice(0, 2); color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
                                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.glyphOf(modelData.code, modelData.day); color: Theme.text; font { family: Theme.iconFont; pixelSize: 17 } }
