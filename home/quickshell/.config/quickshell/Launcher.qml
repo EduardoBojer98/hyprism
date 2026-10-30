@@ -111,7 +111,7 @@ Singleton {
                 id: searchBox
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: buttons.left; rightMargin: Theme.spaceS }
                 strong: true
-                radius: height / 2
+                radius: Theme.radiusLarge
 
                 Text {
                     id: lens

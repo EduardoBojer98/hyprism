@@ -16,7 +16,7 @@ Scope {
     property string name: "popup"              // layer namespace: qs-<name> (blurred by Hyprland)
     property int boxWidth: 600
     property int boxHeight: 400
-    property string placement: "cursor"        // "cursor": under the pointer; "center"; "topRight" (under the bar)
+    property string placement: "cursor"        // "cursor": under the pointer; "center"; "top" / "topRight" (under the bar)
     property bool open: false
     readonly property bool visible: open || box.opacity > 0
     property var targetScreen: Quickshell.screens[0]
@@ -82,11 +82,11 @@ Scope {
             id: box
             width: popup.boxWidth
             height: popup.boxHeight
-            x: popup.placement === "center" ? (win.width - width) / 2
+            x: popup.placement === "center" || popup.placement === "top" ? (win.width - width) / 2
                : popup.placement === "topRight" ? win.width - width - popup.edge
                : Math.max(popup.edge, Math.min(popup.cursorX - width / 2, win.width - width - popup.edge))
             y: popup.placement === "center" ? win.height * 0.22
-               : popup.placement === "topRight" ? popup.topReserve
+               : popup.placement === "topRight" || popup.placement === "top" ? popup.topReserve
                : Math.max(popup.topReserve, Math.min(popup.cursorY - 28, win.height - height - popup.edge))
 
             opacity: popup.open ? 1 : 0

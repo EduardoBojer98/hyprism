@@ -119,7 +119,7 @@ Singleton {
                 Layout.rowSpan: 2
                 Layout.preferredWidth: cc.unit * 2 + cc.gap
                 Layout.preferredHeight: cc.unit * 2 + cc.gap
-                radius: 28
+                radius: Theme.radiusLarge
 
                 Item {
                     anchors { fill: parent; margins: 16 }
@@ -255,7 +255,7 @@ Singleton {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 38
                     Layout.topMargin: 6
-                    radius: 19
+                    radius: Theme.radiusSmall
                     color: Theme.fill
                     border { color: psk.activeFocus ? Theme.accent : Theme.stroke; width: 1 }
                     TextInput {
@@ -332,7 +332,7 @@ Singleton {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 34
-                radius: height / 2
+                radius: Theme.radiusSmall + 2
                 color: Theme.fill
 
                 Rectangle {
@@ -340,7 +340,7 @@ Singleton {
                     height: parent.height - 6
                     y: 3
                     x: 3 + PowerProfiles.profile * width
-                    radius: height / 2
+                    radius: Theme.radiusSmall
                     color: "#f2f4fa"
                     Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
                 }
@@ -486,7 +486,7 @@ Singleton {
         Layout.columnSpan: 2
         Layout.preferredWidth: cc.unit * 2 + cc.gap
         Layout.preferredHeight: cc.unit
-        radius: height / 2
+        radius: Theme.radiusLarge
         border.color: isExpanded ? Theme.accent : Theme.stroke
 
         Bubble {
@@ -580,7 +580,7 @@ Singleton {
 
         Layout.fillWidth: true
         Layout.preferredHeight: inner.implicitHeight + 28
-        radius: 26
+        radius: Theme.radiusLarge
 
         ColumnLayout {
             id: inner

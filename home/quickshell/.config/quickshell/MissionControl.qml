@@ -312,7 +312,7 @@ Singleton {
                             anchors { top: tile.bottom; topMargin: Theme.spaceM; horizontalCenter: tile.horizontalCenter }
                             width: label.implicitWidth + Theme.spaceM * 2
                             height: 30
-                            radius: 15
+                            radius: Theme.radiusSmall
                             strong: true
                             opacity: slot.lit ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: Theme.animFast } }

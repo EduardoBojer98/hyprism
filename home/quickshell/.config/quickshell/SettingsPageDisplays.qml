@@ -75,7 +75,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         Layout.preferredHeight: 260
-        radius: 14
+        radius: Theme.radius
         color: Qt.rgba(0, 0, 0, 0.22)
         border { color: Theme.stroke; width: 1 }
 

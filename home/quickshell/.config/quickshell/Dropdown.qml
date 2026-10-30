@@ -15,7 +15,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 10
+        radius: Theme.radiusSmall
         color: area.containsMouse ? Theme.fillHover : Theme.fill
         border { color: dd.open ? Theme.accent : Theme.stroke; width: 1 }
         Text {
@@ -50,7 +50,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: 12
+            radius: Theme.radius
             color: Qt.rgba(0.06, 0.06, 0.09, 0.96)
             border { color: Theme.stroke; width: 1 }
 

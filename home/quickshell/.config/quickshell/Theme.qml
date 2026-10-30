@@ -2,8 +2,8 @@ pragma Singleton
 import Quickshell
 import QtQuick
 
-// Design tokens for every shell surface. Dark Liquid Glass over Hyprland blur, Catppuccin
-// Macchiato colours. The user-facing knobs live in Config.appearance; everything here derives
+// Design tokens for every shell surface. macOS-style smoked glass (neutral grey tint, bright rim)
+// over Hyprland blur, Catppuccin Macchiato accents. The user-facing knobs live in Config.appearance; everything here derives
 // from them, so changing one option restyles the whole desktop live. ThemeSync.qml pushes the
 // same values to Hyprland, hyprlock, GTK and Qt.
 Singleton {
@@ -20,11 +20,12 @@ Singleton {
 
     // ---- colour roles ---------------------------------------------------------------------------
     readonly property real glassAlpha: a.glassOpacity
-    readonly property color glass: Qt.rgba(0.07, 0.07, 0.11, glassAlpha * 0.8)       // bar, dock, OSD
-    readonly property color glassStrong: Qt.rgba(0.07, 0.07, 0.11, Math.min(0.95, glassAlpha + 0.2)) // panels with text
-    readonly property color stroke: Qt.rgba(1, 1, 1, 0.10)
-    readonly property color strokeStrong: Qt.rgba(1, 1, 1, 0.18)
-    readonly property color highlight: Qt.rgba(1, 1, 1, 0.07)
+    // neutral smoke, no blue cast: the blurred wallpaper shows through, white text stays readable
+    readonly property color glass: Qt.rgba(0.22, 0.22, 0.24, glassAlpha * 0.75)       // bar, dock, OSD
+    readonly property color glassStrong: Qt.rgba(0.17, 0.17, 0.19, Math.min(0.88, glassAlpha + 0.15)) // panels with text
+    readonly property color stroke: Qt.rgba(1, 1, 1, 0.16)                             // the white rim
+    readonly property color strokeStrong: Qt.rgba(1, 1, 1, 0.28)
+    readonly property color highlight: Qt.rgba(1, 1, 1, 0.12)
     readonly property color scrim: Qt.rgba(0, 0, 0, 0.18)
 
     readonly property color fill: Qt.rgba(1, 1, 1, 0.07)          // idle control / track
@@ -33,7 +34,7 @@ Singleton {
 
     readonly property color text: "#eceffa"
     readonly property color subtext: Qt.rgba(0.93, 0.94, 0.98, 0.64)
-    readonly property color muted: macchiato.overlay0
+    readonly property color muted: Qt.rgba(1, 1, 1, 0.40)
     readonly property color accent: macchiato[a.accent] ?? macchiato.blue
     readonly property color accent2: macchiato.lavender
     readonly property color accentWash: Qt.rgba(accent.r, accent.g, accent.b, 0.18)
@@ -60,9 +61,9 @@ Singleton {
 
     // ---- shape and space -------------------------------------------------------------------
     readonly property real radiusScale: a.radiusScale
-    readonly property int radiusSmall: Math.round(10 * radiusScale)   // rows, tiles, keycaps
-    readonly property int radius: Math.round(16 * radiusScale)        // default surface
-    readonly property int radiusLarge: Math.round(22 * radiusScale)   // panels, launcher, dock
+    readonly property int radiusSmall: Math.round(8 * radiusScale)   // rows, tiles, keycaps
+    readonly property int radius: Math.round(12 * radiusScale)        // default surface
+    readonly property int radiusLarge: Math.round(14 * radiusScale)   // panels, launcher, dock
     readonly property int spaceXs: 4
     readonly property int spaceS: 8
     readonly property int spaceM: 12

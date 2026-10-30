@@ -15,8 +15,8 @@ import QtQuick.Effects
 
 // Top bar in the macOS Tahoe style: one thin see-through strip across the screen, white
 // monochrome items that light up on hover.
-//   desktops · app name and title      date and time      tray · temperatures · weather · layout ·
-//   Wi-Fi/Bluetooth/volume/battery (opens Control Center) · notifications bell · power
+//   desktops · app name and title      weather · date and time (calendar)      tray · temperatures ·
+//   layout · Wi-Fi/Bluetooth/volume/battery (Control Center) · notifications bell · power
 // Amber/red appear only when a value leaves its normal range.
 PanelWindow {
     id: bar
@@ -161,16 +161,32 @@ PanelWindow {
             }
         }
 
-        // ---- centre: date and time ("Fri 30 Oct  14:40"); opens the notification centre -------
-        BarItem {
-            anchors.horizontalCenter: parent.horizontalCenter
-            active: NotificationCenter.open
-            onPressed: NotificationCenter.toggle()
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
-                color: Theme.text
-                font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold; features: { "tnum": 1 } }
+        // ---- centre: weather, then date and time ("Fri 30 Oct  14:40"), which opens the calendar ----
+        Row {
+            anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
+            spacing: 2
+
+            BarItem {
+                visible: Weather.ready
+                interactive: false
+                spacing: 5
+                Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Math.round(Weather.temperature) + "°"
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+                }
+            }
+            BarItem {
+                active: Calendar.open
+                onPressed: Calendar.toggle()
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold; features: { "tnum": 1 } }
+                }
             }
         }
 
@@ -218,19 +234,6 @@ PanelWindow {
                         color: v >= 90 ? Theme.red : v >= 80 ? Theme.yellow : Theme.text
                         font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
                     }
-                }
-            }
-
-            BarItem { // weather
-                visible: Weather.ready
-                interactive: false
-                spacing: 5
-                Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Math.round(Weather.temperature) + "°"
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
                 }
             }
 

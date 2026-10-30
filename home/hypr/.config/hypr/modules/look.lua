@@ -1,9 +1,9 @@
--- Dark liquid glass: hairline borders, strong blur behind translucent surfaces, soft shadows.
+-- Smoked glass: white hairline rims, strong blur behind translucent surfaces, soft shadows.
 local c = require("modules.colors")
 -- Accent and corner radius come from the shell's Appearance settings (Quickshell ThemeSync
 -- writes settings/theme.lua and calls apply_theme() live). Defaults until it has run once.
 local ok, saved = pcall(require, "settings.theme")
-THEME = ok and saved or { accent = c.blue, rounding = 16 }
+THEME = ok and saved or { accent = c.blue, rounding = 12 }
 
 function apply_theme()
     hl.config({
@@ -44,8 +44,8 @@ hl.config({
             passes     = 3,
             noise      = 0.015,
             contrast   = 1.0,
-            brightness = 0.85,
-            vibrancy   = 0.25,
+            brightness = 1.0,   -- lighter smoke, like macOS
+            vibrancy   = 0.18,
             popups     = true,
         },
         dim_inactive = false,

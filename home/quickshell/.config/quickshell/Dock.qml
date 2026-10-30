@@ -89,7 +89,7 @@ PanelWindow {
                     anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
                     width: dock.iconSize
                     height: dock.iconSize
-                    radius: 12
+                    radius: Theme.radius
                     color: launcherArea.containsMouse || Launcher.open ? Theme.accent : Theme.fill
                     scale: launcherArea.containsMouse ? 1.18 : 1
                     transformOrigin: Item.Bottom

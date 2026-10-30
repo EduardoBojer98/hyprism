@@ -22,7 +22,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: box.implicitHeight
-        radius: 14
+        radius: Theme.radius
         color: Theme.fill
         border { color: Theme.stroke; width: 1 }
 
