@@ -11,11 +11,13 @@ import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Effects
 
-// Top bar as a row of floating glass complications:
-//   workspaces · focused app · weather        clock        temperatures · tray · status · power
-// Blue marks only the active workspace and an open panel; amber/red appear only when a value
-// leaves its normal range. The status capsule opens the Control Center.
+// Top bar in the macOS Tahoe style: one thin see-through strip across the screen, white
+// monochrome items that light up on hover.
+//   desktops · app name and window title        tray · temperatures · weather · layout ·
+//   Wi-Fi/Bluetooth/volume/battery · Control Center · notifications bell · date and time · power
+// Amber/red appear only when a value leaves its normal range.
 PanelWindow {
     id: bar
 
@@ -31,7 +33,7 @@ PanelWindow {
     property string layout: "US"
 
     anchors { top: true; left: true; right: true }
-    implicitHeight: 64
+    implicitHeight: 34
     color: "transparent"
     WlrLayershell.namespace: "qs-bar"
 
@@ -71,15 +73,30 @@ PanelWindow {
 
     SystemClock { id: clock; precision: SystemClock.Minutes }
 
+    // soft shade from the top edge so white text reads on any wallpaper
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.42) }
+            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.12) }
+        }
+    }
+
     Item {
-        anchors { fill: parent; topMargin: 10; leftMargin: 12; rightMargin: 12; bottomMargin: 14 }
+        id: content
+        anchors { fill: parent; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS }
+        layer.enabled: true
+        layer.effect: MultiEffect { shadowEnabled: true; shadowColor: Qt.rgba(0, 0, 0, 0.45); shadowBlur: 0.35; shadowVerticalOffset: 1 }
 
         // ---- left ----------------------------------------------------------------------------
         Row {
             anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-            spacing: 8
+            spacing: 2
 
-            Capsule { // workspaces on this screen
+            Item { width: Theme.spaceXs; height: 1 }
+            Row { // desktops on this screen
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 4
                 Repeater {
                     model: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === bar.monitor)
                     Rectangle {
@@ -87,121 +104,57 @@ PanelWindow {
                         readonly property bool current: modelData.active
                         readonly property bool busy: modelData.toplevels.values.length > 0
                         anchors.verticalCenter: parent.verticalCenter
-                        width: current ? 34 : 24
-                        height: 24
-                        radius: 12
-                        color: current ? Theme.accent : wsArea.containsMouse ? Theme.fillHover : modelData.urgent ? Qt.rgba(0.96, 0.66, 0.5, 0.3) : Theme.fill
+                        width: current ? 26 : 20
+                        height: 18
+                        radius: 9
+                        color: current ? Theme.text : modelData.urgent ? Qt.rgba(0.96, 0.66, 0.5, 0.45) : wsArea.containsMouse ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(1, 1, 1, 0.1)
                         Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
                         Behavior on color { ColorAnimation { duration: Theme.anim } }
                         Text {
                             anchors.centerIn: parent
                             text: modelData.id
-                            color: parent.current ? Theme.accentText : parent.busy ? Theme.text : Theme.muted
-                            font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold; features: { "tnum": 1 } }
+                            color: parent.current ? Theme.accentText : parent.busy ? Theme.text : Theme.subtext
+                            font { family: Theme.font; pixelSize: 11; weight: Font.Bold; features: { "tnum": 1 } }
                         }
                         MouseArea { id: wsArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData.activate() }
                     }
                 }
             }
+            Item { width: Theme.spaceS; height: 1 }
 
-            Capsule { // focused app, on the screen that holds it
-                id: appCapsule
+            Item { // focused app, on the screen that holds it: bold name, then the window title
+                id: app
                 // Focused screen: the focused window. Other screen: the window on its visible workspace, dimmed.
                 readonly property bool focusedScreen: Hyprland.focusedMonitor?.name === bar.monitor?.name
                 readonly property var other: focusedScreen ? null : (bar.monitor?.activeWorkspace?.toplevels.values[0] ?? null)
                 readonly property string appId: focusedScreen ? bar.appClass : (other?.wayland?.appId ?? "")
                 readonly property string title: focusedScreen ? bar.appTitle : (other?.title ?? "")
                 readonly property var entry: appId ? DesktopEntries.heuristicLookup(appId) : null
+                // no desktop entry: "com.anthropic.Claude" -> "Claude"
+                readonly property string name: entry?.name ?? (appId.split(".").pop().replace(/^./, c => c.toUpperCase()))
+                anchors.verticalCenter: parent.verticalCenter
                 visible: appId !== ""
-                opacity: focusedScreen ? 1 : 0.7
-                IconImage {
+                opacity: focusedScreen ? 1 : 0.6
+                width: appRow.implicitWidth; height: 26
+                Row {
+                    id: appRow
                     anchors.verticalCenter: parent.verticalCenter
-                    implicitSize: 18
-                    source: Quickshell.iconPath(appCapsule.entry?.icon ?? "", "application-x-executable")
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: appCapsule.entry?.name ?? appCapsule.appId
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold }
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: Math.min(implicitWidth, 300)
-                    elide: Text.ElideRight
-                    text: appCapsule.title
-                    visible: appCapsule.title !== "" && appCapsule.title !== (appCapsule.entry?.name ?? appCapsule.appId)
-                    color: Theme.subtext
-                    font { family: Theme.font; pixelSize: 12 }
-                }
-            }
-
-            Capsule { // weather
-                visible: Weather.ready
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Weather.glyph
-                    color: Theme.text
-                    font { family: Theme.iconFont; pixelSize: 18 }
-                }
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: Theme.spaceM
                     Text {
-                        text: Math.round(Weather.temperature) + "°"
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: app.name
                         color: Theme.text
-                        font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold; features: { "tnum": 1 } }
+                        font { family: Theme.font; pixelSize: 13; weight: Font.Bold }
                     }
                     Text {
-                        text: Weather.city + " · " + Weather.condition
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(implicitWidth, bar.width * 0.3)
+                        elide: Text.ElideRight
+                        text: app.title
+                        visible: app.title !== "" && app.title !== app.name
                         color: Theme.subtext
-                        font { family: Theme.font; pixelSize: 11 }
+                        font { family: Theme.font; pixelSize: 13 }
                     }
-                }
-            }
-        }
-
-        // ---- centre: the clock leads ---------------------------------------------------------
-        Capsule {
-            id: clockCapsule
-            anchors.centerIn: parent
-            horizontalPadding: 22
-            interactive: true
-            active: NotificationCenter.open
-            onClicked: NotificationCenter.toggle()
-            Column {
-                anchors.verticalCenter: parent.verticalCenter
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDateTime(clock.date, "HH:mm")
-                    color: Theme.text
-                    lineHeight: 0.95
-                    lineHeightMode: Text.ProportionalHeight
-                    font { family: Theme.font; pixelSize: 20; weight: Font.Bold; features: { "tnum": 1 } }
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDateTime(clock.date, "dddd d MMMM")
-                    color: Theme.subtext
-                    font { family: Theme.font; pixelSize: 11 }
-                }
-            }
-            // Do Not Disturb, or how many notifications came in since the centre was opened
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                visible: Notifications.dnd || Notifications.unread > 0
-                spacing: 3
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Notifications.dnd ? "\u{F009B}" : "\u{F009A}"
-                    color: Notifications.dnd ? Theme.subtext : Theme.accent
-                    font { family: Theme.iconFont; pixelSize: 15 }
-                }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: Notifications.unread > 0
-                    text: Notifications.unread
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold; features: { "tnum": 1 } }
                 }
             }
         }
@@ -209,67 +162,78 @@ PanelWindow {
         // ---- right ---------------------------------------------------------------------------
         Row {
             anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-            spacing: 8
+            spacing: 2
 
-            Capsule { // temperatures
-                spacing: 8
-                Ring { anchors.verticalCenter: parent.verticalCenter; value: Sensors.cpu }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "CPU"; color: Theme.subtext; font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold } }
-                Item { width: 2; height: 1 }
-                Ring { anchors.verticalCenter: parent.verticalCenter; value: Sensors.gpu }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "GPU"; color: Theme.subtext; font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold } }
-            }
-
-            Capsule { // tray
-                visible: SystemTray.items.values.length > 0
-                spacing: 4
-                Repeater {
-                    model: SystemTray.items
-                    MouseArea {
-                        id: trayItem
-                        required property SystemTrayItem modelData
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 28
-                        height: 28
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: mouse => {
-                            if (mouse.button === Qt.MiddleButton) modelData.secondaryActivate()
-                            else if (mouse.button === Qt.RightButton || modelData.onlyMenu) { if (modelData.hasMenu) trayMenu.open() }
-                            else modelData.activate()
-                        }
-                        onWheel: wheel => modelData.scroll(wheel.angleDelta.y, false)
-                        Rectangle { anchors.fill: parent; radius: 14; color: trayItem.containsMouse ? Theme.fillHover : "transparent" }
-                        IconImage { anchors.centerIn: parent; implicitSize: 16; source: trayItem.modelData.icon }
-                        QsMenuAnchor {
-                            id: trayMenu
-                            menu: trayItem.modelData.menu
-                            anchor.item: trayItem
-                            anchor.edges: Edges.Bottom
-                            anchor.gravity: Edges.Bottom
-                            anchor.margins.top: 12
-                        }
+            Repeater { // tray
+                model: SystemTray.items
+                BarItem {
+                    id: trayItem
+                    required property SystemTrayItem modelData
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+                    onPressed: button => {
+                        if (button === Qt.MiddleButton) modelData.secondaryActivate()
+                        else if (button === Qt.RightButton || modelData.onlyMenu) { if (modelData.hasMenu) trayMenu.open() }
+                        else modelData.activate()
+                    }
+                    onScrolled: d => modelData.scroll(d * 120, false)
+                    IconImage { anchors.verticalCenter: parent.verticalCenter; implicitSize: 16; source: trayItem.modelData.icon }
+                    QsMenuAnchor {
+                        id: trayMenu
+                        menu: trayItem.modelData.menu
+                        anchor.item: trayItem
+                        anchor.edges: Edges.Bottom
+                        anchor.gravity: Edges.Bottom
+                        anchor.margins.top: 6
                     }
                 }
             }
 
-            Capsule { // status: layout, network, bluetooth, volume, battery → Control Center
-                id: statusCapsule
+            BarItem { // temperatures; warm values turn amber, hot red
+                interactive: false
+                spacing: Theme.spaceS
+                Repeater {
+                    model: [["CPU", Sensors.cpu], ["GPU", Sensors.gpu]]
+                    Text {
+                        required property var modelData
+                        readonly property real v: modelData[1]
+                        anchors.verticalCenter: parent.verticalCenter
+                        visible: !isNaN(v)
+                        text: `<span style="font-size:10px;font-weight:700">${modelData[0]}</span> ${Math.round(v)}°`
+                        textFormat: Text.StyledText
+                        color: v >= 90 ? Theme.red : v >= 80 ? Theme.yellow : Theme.text
+                        font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+                    }
+                }
+            }
+
+            BarItem { // weather
+                visible: Weather.ready
+                interactive: false
+                spacing: 5
+                Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Math.round(Weather.temperature) + "°"
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+                }
+            }
+
+            BarItem { // status → Control Center; scroll for volume
+                id: status
                 readonly property int pct: Math.round((bar.battery?.percentage ?? 0) * 100)
                 readonly property bool charging: bar.battery?.state === UPowerDeviceState.Charging || !UPower.onBattery
                 readonly property bool low: pct <= 15 && !charging
-                interactive: true
+                spacing: Theme.spaceM
                 active: ControlCenter.open
-                spacing: 12
-                onClicked: ControlCenter.toggle()
+                onPressed: ControlCenter.toggle()
                 onScrolled: d => { const a = bar.sink?.audio; if (a) a.volume = Math.max(0, Math.min(1, a.volume + d * 0.05)) }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: bar.layout
-                    color: Theme.subtext
-                    font { family: Theme.font; pixelSize: 11; weight: Font.DemiBold }
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 11; weight: Font.Bold }
                 }
                 StatusGlyph {
                     glyph: bar.wired ? "\u{F0200}" : bar.network ? "\u{F05A9}" : "\u{F05AA}"
@@ -278,38 +242,94 @@ PanelWindow {
                 StatusGlyph {
                     visible: bar.adapter?.enabled ?? false
                     glyph: (bar.adapter?.devices.values.some(d => d.connected) ?? false) ? "\u{F00B1}" : "\u{F00AF}"
-                    tone: Theme.text
                 }
-                StatusGlyph {
-                    glyph: bar.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
-                    tone: bar.sink?.audio?.muted ? Theme.muted : Theme.text
-                }
+                StatusGlyph { glyph: bar.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}" }
                 Row {
                     visible: bar.battery?.isPresent ?? false
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: 5
+                    spacing: 4
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: statusCapsule.charging ? "\u{F0084}" : statusCapsule.pct >= 95 ? "\u{F0079}" : String.fromCodePoint(0xF007A + Math.max(0, Math.floor(statusCapsule.pct / 10) - 1))
-                        color: statusCapsule.low ? Theme.red : Theme.text
-                        font { family: Theme.iconFont; pixelSize: 16 }
+                        text: status.pct + "%"
+                        color: status.low ? Theme.red : Theme.text
+                        font { family: Theme.font; pixelSize: 12; weight: Font.Medium; features: { "tnum": 1 } }
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: statusCapsule.pct + "%"
-                        color: statusCapsule.low ? Theme.red : Theme.text
-                        font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold; features: { "tnum": 1 } }
+                        text: status.charging ? "\u{F0084}" : status.pct >= 95 ? "\u{F0079}" : String.fromCodePoint(0xF007A + Math.max(0, Math.floor(status.pct / 10) - 1))
+                        color: status.low ? Theme.red : Theme.text
+                        font { family: Theme.iconFont; pixelSize: 17 }
                     }
                 }
             }
 
-            Capsule { // power
-                id: powerCapsule
-                horizontalPadding: 12
-                interactive: true
+            BarItem { // Control Center: the macOS two-switch icon
+                active: ControlCenter.open
+                onPressed: ControlCenter.toggle()
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
+                    Repeater {
+                        model: [true, false]
+                        Rectangle {
+                            required property bool modelData
+                            width: 16; height: 7; radius: 3.5
+                            color: "transparent"
+                            border { color: Theme.text; width: 1.4 }
+                            Rectangle {
+                                width: 3.5; height: 3.5; radius: 1.75
+                                anchors.verticalCenter: parent.verticalCenter
+                                x: parent.modelData ? parent.width - width - 2 : 2
+                                color: Theme.text
+                            }
+                        }
+                    }
+                }
+            }
+
+            BarItem { // notifications: bell with the unread count; crossed out during Do Not Disturb
+                active: NotificationCenter.open
+                onPressed: NotificationCenter.toggle()
+                Item {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 16; height: 18
+                    Text {
+                        anchors.centerIn: parent
+                        text: Notifications.dnd ? "\u{F009B}" : "\u{F009C}"
+                        color: Theme.text
+                        font { family: Theme.iconFont; pixelSize: 16 }
+                    }
+                    Rectangle {
+                        visible: Notifications.unread > 0 && !Notifications.dnd
+                        x: parent.width - 7; y: -3
+                        width: Math.max(14, badge.implicitWidth + 6); height: 14; radius: 7
+                        color: Theme.red
+                        Text {
+                            id: badge
+                            anchors.centerIn: parent
+                            text: Notifications.unread > 9 ? "9+" : Notifications.unread
+                            color: "white"
+                            font { family: Theme.font; pixelSize: 9; weight: Font.Bold; features: { "tnum": 1 } }
+                        }
+                    }
+                }
+            }
+
+            BarItem { // date and time, like macOS: "Fri 30 Oct 14:40"
+                active: NotificationCenter.open
+                onPressed: NotificationCenter.toggle()
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+                }
+            }
+
+            BarItem { // power and tools
                 active: UtilityMenu.open
-                onClicked: UtilityMenu.toggle()
-                StatusGlyph { glyph: "\u{F0425}"; tone: Theme.text }
+                onPressed: UtilityMenu.toggle()
+                StatusGlyph { glyph: "\u{F0425}"; font.pixelSize: 15 }
             }
         }
     }
