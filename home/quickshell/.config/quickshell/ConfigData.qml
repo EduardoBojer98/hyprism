@@ -52,6 +52,10 @@ JsonAdapter {
         property bool showMedia: true
         property bool showHardware: true
     }
+    property JsonObject keybinds: JsonObject {
+        // id -> { keys: "SUPER + K" ("" = turned off), label, group, def } (Settings > Keyboard Shortcuts)
+        property var overrides: ({})
+    }
     property JsonObject weather: JsonObject {
         property string city: "Belgrade"
         property real latitude: 44.82

@@ -19,6 +19,7 @@ Singleton {
     readonly property alias nightLight: adapter.nightLight
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
+    readonly property alias keybinds: adapter.keybinds
     readonly property bool loaded: file.loaded
 
     // Allowed values; set() refuses anything else. Numbers are [min, max].
@@ -36,6 +37,7 @@ Singleton {
         caffeine: { defaultMinutes: [0, 600] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showMedia: "bool", showHardware: "bool" },
+        keybinds: { overrides: "object" },
         weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180] }
     })
 

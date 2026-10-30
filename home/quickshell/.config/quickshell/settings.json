@@ -36,6 +36,10 @@
         ],
         "showRunning": true
     },
+    "keybinds": {
+        "overrides": {
+        }
+    },
     "launcher": {
         "actions": [
         ],

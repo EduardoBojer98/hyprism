@@ -5,6 +5,7 @@ import QtQuick
 // Hyprland window borders and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
 // the lock screen (hypr/hyprlock-theme.conf, read at next lock), and GTK (gsettings accent and
 // icon theme). Qt/KDE apps keep following KDE's own settings, which this never writes.
+// Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
 Scope {
     id: root
 
@@ -25,6 +26,30 @@ Scope {
             "gsettings set org.gnome.desktop.interface accent-color " + (gtkAccent[Config.appearance.accent] ?? "blue")
             + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"])
     }
+
+    // Only key names Hyprland understands get through; anything else is dropped
+    function keybindsLua(o) {
+        const lines = []
+        for (const id of Object.keys(o).sort()) {
+            if (!/^[a-z0-9-]+$/.test(id)) continue
+            const k = String(o[id]?.keys ?? "")
+            if (k === "") lines.push(`    ["${id}"] = false,`)
+            else if (/^[A-Za-z0-9_+: ]+$/.test(k)) lines.push(`    ["${id}"] = "${k}",`)
+        }
+        return "-- Written by Quickshell from Settings > Keyboard Shortcuts (id = keys, false = off)\nreturn {\n" + lines.join("\n") + "\n}"
+    }
+    property string lastKeybinds: ""
+    function applyKeybinds() {
+        const text = keybindsLua(Config.keybinds.overrides)
+        if (text === lastKeybinds) return
+        const first = lastKeybinds === ""
+        lastKeybinds = text
+        SettingsApp.writeHyprFile("settings/keybinds.lua", text)
+        if (!first) Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprctl reload"])
+    }
+    Timer { id: keyDebounce; interval: 300; onTriggered: if (Config.loaded) root.applyKeybinds() }
+    Connections { target: Config.keybinds; function onOverridesChanged() { keyDebounce.restart() } }
+    Connections { target: Config; function onLoadedChanged() { keyDebounce.restart() } }
 
     // Debounced, and only once Config has loaded so defaults never overwrite saved values
     Timer { id: debounce; interval: 400; onTriggered: if (Config.loaded) root.apply() }

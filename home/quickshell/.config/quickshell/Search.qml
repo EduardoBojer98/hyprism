@@ -74,6 +74,7 @@ Singleton {
         { id: "network", name: "Wi-Fi & Network", words: "wifi wi-fi network internet ethernet vpn" },
         { id: "bluetooth", name: "Bluetooth", words: "bluetooth pair headphones" },
         { id: "input", name: "Keyboard & Touchpad", words: "keyboard touchpad mouse layout repeat scroll" },
+        { id: "keybinds", name: "Keyboard Shortcuts", words: "keybinds shortcuts hotkeys keys bindings keyboard" },
         { id: "asus", name: "ASUS Hardware", words: "asus rog fan fans curve power mode quiet balanced performance gpu nvidia temperature" },
         { id: "power", name: "Battery & Power", words: "battery power charge limit health" },
         { id: "wallpaper", name: "Wallpaper", words: "wallpaper background" },
