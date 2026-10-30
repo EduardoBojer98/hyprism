@@ -166,8 +166,8 @@ PanelWindow {
             anchors.centerIn: parent
             horizontalPadding: 22
             interactive: true
-            active: calendar.visible
-            onClicked: { calendar.month = new Date(); calendar.visible = !calendar.visible }
+            active: NotificationCenter.open
+            onClicked: NotificationCenter.toggle()
             Column {
                 anchors.verticalCenter: parent.verticalCenter
                 Text {
@@ -183,6 +183,25 @@ PanelWindow {
                     text: Qt.formatDateTime(clock.date, "dddd d MMMM")
                     color: Theme.subtext
                     font { family: Theme.font; pixelSize: 11 }
+                }
+            }
+            // Do Not Disturb, or how many notifications came in since the centre was opened
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                visible: Notifications.dnd || Notifications.unread > 0
+                spacing: 3
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: Notifications.dnd ? "\u{F009B}" : "\u{F009A}"
+                    color: Notifications.dnd ? Theme.subtext : Theme.accent
+                    font { family: Theme.iconFont; pixelSize: 15 }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: Notifications.unread > 0
+                    text: Notifications.unread
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold; features: { "tnum": 1 } }
                 }
             }
         }
@@ -291,89 +310,6 @@ PanelWindow {
                 active: UtilityMenu.open
                 onClicked: UtilityMenu.toggle()
                 StatusGlyph { glyph: "\u{F0425}"; tone: Theme.text }
-            }
-        }
-    }
-
-
-    // Month calendar under the clock; scroll or the arrows change month, the title goes back to today
-    PopupWindow {
-        id: calendar
-        property date month: new Date()
-        readonly property var locale: Qt.locale("en_GB")   // Monday first, English names
-        function shift(n) { month = new Date(month.getFullYear(), month.getMonth() + n, 1) }
-
-        anchor.item: clockCapsule
-        anchor.edges: Edges.Bottom
-        anchor.gravity: Edges.Bottom
-        anchor.margins.top: 12
-        grabFocus: true
-        implicitWidth: 300
-        implicitHeight: calColumn.implicitHeight + Theme.spaceL * 2
-        color: "transparent"
-
-        Glass {
-            anchors.fill: parent
-            strong: true
-            radius: Theme.radiusLarge
-            WheelHandler { onWheel: event => calendar.shift(event.angleDelta.y > 0 ? -1 : 1) }
-
-            Column {
-                id: calColumn
-                anchors { fill: parent; margins: Theme.spaceL }
-                spacing: Theme.spaceS
-
-                Item {
-                    width: parent.width; height: Theme.controlHeight
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: calendar.locale.standaloneMonthName(calendar.month.getMonth()) + " " + calendar.month.getFullYear()
-                        color: Theme.text
-                        font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold }
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: calendar.month = new Date() }
-                    }
-                    Row {
-                        anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                        spacing: Theme.spaceXs
-                        Chip { icon: "\u{F0141}"; onClicked: calendar.shift(-1) }
-                        Chip { icon: "\u{F0142}"; onClicked: calendar.shift(1) }
-                    }
-                }
-
-                DayOfWeekRow {
-                    width: parent.width
-                    locale: calendar.locale
-                    delegate: Text {
-                        required property string shortName
-                        text: shortName.slice(0, 2)
-                        horizontalAlignment: Text.AlignHCenter
-                        color: Theme.muted
-                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
-                    }
-                }
-
-                MonthGrid {
-                    width: parent.width
-                    height: 6 * 34 + 5 * spacing   // the grid sizes its cells from its own height
-                    locale: calendar.locale
-                    month: calendar.month.getMonth()
-                    year: calendar.month.getFullYear()
-                    spacing: 2
-                    delegate: Rectangle {
-                        required property int day
-                        required property int month
-                        required property bool today
-                        implicitHeight: 34
-                        color: "transparent"
-                        Rectangle { anchors.centerIn: parent; width: 32; height: 32; radius: 16; visible: parent.today; color: Theme.accent }
-                        Text {
-                            anchors.centerIn: parent
-                            text: parent.day
-                            color: parent.today ? Theme.accentText : parent.month === calendar.month.getMonth() ? Theme.text : Theme.muted
-                            font { family: Theme.font; pixelSize: Theme.fontSize; weight: parent.today ? Font.Bold : Font.Normal; features: { "tnum": 1 } }
-                        }
-                    }
-                }
             }
         }
     }

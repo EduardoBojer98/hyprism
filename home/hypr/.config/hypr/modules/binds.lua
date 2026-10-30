@@ -27,6 +27,8 @@ add("emoji",     "Apps", "Emoji picker",                 key("period"), exec("em
 add("find-files","Apps", "Spotlight: files",             key("SHIFT + Space"), exec("qs ipc call launcher files"))
 add("all-apps",  "Apps", "All applications",             key("A"), exec("qs ipc call launcher apps"))
 add("control-center", "Apps", "Control Center",          key("C"), exec("qs ipc call controlcenter toggle"))
+add("notifications", "Apps", "Notification centre",       key("N"), exec("qs ipc call notifications toggle"))
+add("dnd",           "Apps", "Do Not Disturb on / off",   key("SHIFT + N"), exec("qs ipc call notifications dnd"))
 
 -- Windows
 add("close",      "Windows", "Close window",             key("Q"), hl.dsp.window.close())
