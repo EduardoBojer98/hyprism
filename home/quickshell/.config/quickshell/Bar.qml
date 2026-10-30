@@ -241,9 +241,9 @@ PanelWindow {
                 readonly property bool charging: bar.battery?.state === UPowerDeviceState.Charging || !UPower.onBattery
                 readonly property bool low: pct <= 15 && !charging
                 interactive: true
-                active: controlCenter.visible
+                active: ControlCenter.open
                 spacing: 12
-                onClicked: controlCenter.visible = !controlCenter.visible
+                onClicked: ControlCenter.toggle()
                 onScrolled: d => { const a = bar.sink?.audio; if (a) a.volume = Math.max(0, Math.min(1, a.volume + d * 0.05)) }
 
                 Text {
@@ -295,14 +295,6 @@ PanelWindow {
         }
     }
 
-    ControlCenter {
-        id: controlCenter
-        anchorItem: statusCapsule
-    }
-    Connections {
-        target: Panels
-        function onToggleControlCenter() { if (Hyprland.focusedMonitor?.name === bar.monitor?.name) controlCenter.visible = !controlCenter.visible }
-    }
 
     // Month calendar under the clock; scroll or the arrows change month, the title goes back to today
     PopupWindow {
