@@ -14,3 +14,8 @@ hl.env("QT_QPA_PLATFORMTHEME", "kde")          -- Qt/KDE apps (Dolphin, ...) kee
 hl.env("XCURSOR_THEME", "oreo_white")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+
+-- Language & Region (Settings app writes settings/language.lua): LANG, LANGUAGE and LC_* for apps
+-- started in this session. KDE keeps its own language.
+local ok, lang = pcall(require, "settings.language")
+if ok and type(lang) == "table" then for k, v in pairs(lang) do hl.env(k, v) end end

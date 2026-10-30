@@ -20,6 +20,7 @@ Singleton {
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
     readonly property alias keybinds: adapter.keybinds
+    readonly property alias language: adapter.language
     readonly property alias startup: adapter.startup
     readonly property alias system: adapter.system
     readonly property alias wallpaper: adapter.wallpaper
@@ -45,6 +46,7 @@ Singleton {
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showMedia: "bool", showHardware: "bool" },
         keybinds: { overrides: "object" },
+        language: { languages: "list", formats: "string" },
         startup: { apps: "list" },
         system: { taskManager: "string" },
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],

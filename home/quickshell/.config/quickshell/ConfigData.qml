@@ -79,6 +79,10 @@ JsonAdapter {
     property JsonObject system: JsonObject {
         property string taskManager: "auto"      // desktop id, or "auto": first installed (Sensors.taskManagers)
     }
+    property JsonObject language: JsonObject {
+        property list<string> languages: ["en_US"]   // glibc locale ids; the first is the apps' language, the rest fallbacks
+        property string formats: ""                  // locale id for dates, numbers, units; "" = the first language
+    }
     property JsonObject startup: JsonObject {
         property list<string> apps: []           // desktop entry ids opened at login (startup-apps)
     }

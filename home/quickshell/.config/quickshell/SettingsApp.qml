@@ -30,6 +30,7 @@ Singleton {
         { id: "network",       name: "Wi-Fi & Network",     glyph: "\u{F05A9}" },
         { id: "bluetooth",     name: "Bluetooth",           glyph: "\u{F00AF}" },
         { id: "input",         name: "Keyboard & Touchpad", glyph: "\u{F030C}" },
+        { id: "language",      name: "Language & Region",   glyph: "\u{F05CA}" },
         { id: "keybinds",      name: "Keyboard Shortcuts",  glyph: "\u{F0313}" },
         { id: "power",         name: "Battery & Power",     glyph: "\u{F0079}" },
         { id: "asus",          name: "ASUS Hardware",       glyph: "\u{F061A}" },
