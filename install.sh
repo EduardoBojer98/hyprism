@@ -2,7 +2,8 @@
 # Install this repo's dotfiles into ~ with GNU Stow. Safe to re-run.
 #
 #   ./install.sh            back up anything in the way, then link every package in home/
-#   ./install.sh --system   also run system/NN-*.sh first (asks once, uses sudo)
+#   ./install.sh --system   also install packages and run system/NN-*.sh, plus
+#                           system/hosts/<hostname>/ on that computer (asks once, uses sudo)
 #   ./install.sh --dry-run  only show what would be backed up and linked
 #   ./install.sh --undo     remove the links and put the latest backup back
 #
@@ -60,9 +61,13 @@ undo() {
 case ${1:-} in
     --undo) undo; exit 0 ;;
     --system)
-        say "System steps (need sudo): $(cd "$REPO/system" && ls | tr '\n' ' ')"
+        # system/NN-*.sh for every computer, then system/hosts/<hostname>/*.sh for this one only
+        host=$(cat /etc/hostname 2>/dev/null || hostname)
+        steps=("$REPO"/system/[0-9][0-9]-*.sh)
+        [[ -d $REPO/system/hosts/$host ]] && steps+=("$REPO"/system/hosts/"$host"/[0-9][0-9]-*.sh)
+        say "System steps (need sudo):"; printf '  %s\n' "${steps[@]#"$REPO"/}"
         if ask "Run them now?"; then
-            for s in "$REPO"/system/[0-9][0-9]-*.sh; do sudo bash "$s"; done
+            for s in "${steps[@]}"; do sudo bash "$s"; done
         fi
         ;;
     --dry-run|"") ;;

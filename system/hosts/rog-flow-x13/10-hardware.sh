@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Phase 1 hardware setup for the ROG Flow X13 (GV301QC) on CachyOS + Limine.
+# ROG Flow X13 (GV301QC) on CachyOS + Limine only: install.sh --system runs it on the computer
+# named rog-flow-x13. A copy for another machine needs its own ROOT_UUID, swap size and packages.
 # Safe to re-run: every step checks before it changes anything.
-# Run: sudo bash system/01-hardware.sh
+# Run: sudo bash system/hosts/rog-flow-x13/10-hardware.sh
 set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "Run with sudo"; exit 1; }
 
@@ -11,8 +12,8 @@ SWAP_SIZE=20g   # >= RAM (16 GB) so a full hibernation image always fits
 step() { printf '\n==> %s\n' "$*"; }
 
 step "asusctl + ROG Control Center (charge limit, power profiles, fans, keyboard LEDs)"
-cd "$(dirname "$0")/.."
-grep -vE '^\s*(#|$)' packages/hardware.txt | pacman -S --needed --noconfirm -
+cd "$(dirname "$0")"
+grep -vE '^\s*(#|$)' packages.txt | pacman -S --needed --noconfirm -
 systemctl enable --now asusd 2>/dev/null || systemctl start asusd
 
 step "NVIDIA suspend/hibernate helpers (save GPU memory across sleep)"

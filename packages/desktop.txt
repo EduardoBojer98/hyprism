@@ -22,6 +22,11 @@ nm-connection-editor
 squeekboard
 
 # Clipboard, screenshots, colour picker, media keys
+grim
+slurp
+jq
+curl
+libnotify
 wl-clipboard
 cliphist
 wtype
@@ -42,3 +47,6 @@ ttf-firacode-nerd
 
 # Dotfiles
 stow
+
+# Shared monitor switch (optional, only used with ~/.config/monswitch.conf)
+ddcutil
