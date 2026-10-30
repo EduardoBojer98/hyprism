@@ -30,7 +30,7 @@ Scope {
     signal closed()
 
     readonly property int edge: Theme.spaceM
-    readonly property int topReserve: 44        // keep clear of the bar
+    readonly property int topReserve: 38        // keep clear of the bar (30) with a small gap
 
     function show() { locate.running = true }
     function hide() { if (open) { open = false; closed() } }

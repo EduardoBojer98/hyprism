@@ -17,9 +17,14 @@ Scope {
     readonly property int borderSize: Config.appearance.borderSize
     readonly property bool light: Theme.light
 
-    // Catppuccin name -> nearest GNOME accent-color value (GTK4/libadwaita apps)
-    readonly property var gtkAccent: ({ blue: "blue", lavender: "purple", mauve: "purple", pink: "pink",
-        peach: "orange", yellow: "yellow", green: "green", teal: "teal", sky: "blue" })
+    // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
+    readonly property string gtkAccent: {
+        const c = Theme.accent
+        if (c.hslSaturation < 0.18) return "slate"
+        const h = c.hslHue * 360
+        return h < 15 || h >= 345 ? "red" : h < 40 ? "orange" : h < 65 ? "yellow" : h < 160 ? "green"
+             : h < 195 ? "teal" : h < 250 ? "blue" : h < 300 ? "purple" : "pink"
+    }
 
     function apply() {
         const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize} }`
@@ -28,7 +33,7 @@ Scope {
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])
         Quickshell.execDetached(["sh", "-c",
             "gsettings set org.gnome.desktop.interface color-scheme prefer-" + (light ? "light" : "dark")
-            + "; gsettings set org.gnome.desktop.interface accent-color " + (gtkAccent[Config.appearance.accent] ?? "blue")
+            + "; gsettings set org.gnome.desktop.interface accent-color " + gtkAccent
             + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"])
     }
 

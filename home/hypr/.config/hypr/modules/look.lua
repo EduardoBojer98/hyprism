@@ -27,10 +27,10 @@ end
 
 hl.config({
     general = {
-        gaps_in     = 5,
-        gaps_out    = 12,
+        gaps_in     = 4,
+        gaps_out    = 10,
         col = {
-            inactive_border = "rgba(ffffff14)",
+            inactive_border = "rgba(ffffff10)",
         },
         resize_on_border = true,
         layout = "dwindle",
@@ -42,11 +42,11 @@ hl.config({
         inactive_opacity = 0.96,
         shadow = {
             enabled      = true,
-            range        = 28,
-            render_power = 4,
-            offset       = "0 6",
-            color        = 0x66000000,
-            color_inactive = 0x33000000,
+            range        = 32,          -- wide and soft: floating depth without a dark halo
+            render_power = 3,
+            offset       = "0 8",
+            color        = 0x5a000000,
+            color_inactive = 0x26000000,
         },
         blur = {
             enabled    = true,

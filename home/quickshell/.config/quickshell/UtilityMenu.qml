@@ -56,7 +56,7 @@ Singleton {
         id: popup
         name: "utilitymenu"
         placement: "topRight"
-        boxWidth: 250
+        boxWidth: 236
         boxHeight: menu.implicitHeight + Theme.spaceS * 2
         onOpened: { root.confirming = ""; info.running = true }
 
@@ -74,7 +74,7 @@ Singleton {
                     Layout.fillWidth: true
                     Layout.margins: Theme.spaceS
                     Layout.bottomMargin: Theme.spaceXs
-                    Text { text: root.host; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize + 1; weight: Font.DemiBold } }
+                    Text { text: root.host; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
                     Text { text: root.uptime ? "Up " + root.uptime : ""; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                 }
                 Divider {}
@@ -116,14 +116,14 @@ Singleton {
         property bool danger: false
         signal clicked()
         Layout.fillWidth: true
-        Layout.preferredHeight: 34
-        radius: Theme.radiusSmall
-        color: area.containsMouse ? Theme.fillHover : "transparent"
+        Layout.preferredHeight: Theme.controlHeight
+        radius: Theme.radiusSmall - 2
+        color: area.containsMouse ? (row.danger ? Theme.error : Theme.accent) : "transparent"
         RowLayout {
-            anchors { fill: parent; leftMargin: Theme.spaceM; rightMargin: Theme.spaceM }
-            spacing: Theme.spaceM
-            Text { text: row.icon; color: row.danger ? Theme.error : Theme.subtext; font { family: Theme.iconFont; pixelSize: 15 } }
-            Text { Layout.fillWidth: true; text: row.label; elide: Text.ElideRight; color: row.danger ? Theme.error : Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize } }
+            anchors { fill: parent; leftMargin: Theme.spaceS + 2; rightMargin: Theme.spaceS + 2 }
+            spacing: Theme.spaceS + 2
+            Text { text: row.icon; color: area.containsMouse ? Theme.accentText : row.danger ? Theme.error : Theme.subtext; font { family: Theme.iconFont; pixelSize: 14 } }
+            Text { Layout.fillWidth: true; text: row.label; elide: Text.ElideRight; color: area.containsMouse ? Theme.accentText : row.danger ? Theme.error : Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize } }
         }
         MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: row.clicked() }
     }

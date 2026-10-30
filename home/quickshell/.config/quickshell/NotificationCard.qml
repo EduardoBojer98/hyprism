@@ -19,8 +19,9 @@ Glass {
 
     implicitHeight: content.implicitHeight + Theme.spaceM * 2
     strong: true
-    radius: Theme.radius
+    radius: flat ? Theme.radius : Theme.radiusLarge
     border.color: critical ? Theme.peach : Theme.stroke
+    border.width: critical || !flat ? 1 : 0
 
     // folded cards peek out underneath, like the macOS stack
     Repeater {
@@ -31,8 +32,8 @@ Glass {
             x: (index + 1) * 8; width: card.width - x * 2
             y: card.height - card.radius; height: card.radius + (index + 1) * 6
             radius: card.radius
-            color: Theme.glassStrong
-            border { color: Theme.stroke; width: 1 }
+            color: card.flat ? Theme.fill : Theme.glassStrong
+            border { color: Theme.stroke; width: card.flat ? 0 : 1 }
             opacity: 0.8 - index * 0.25
         }
     }
@@ -54,7 +55,7 @@ Glass {
             readonly property string src: card.notification ? Notifications.iconOf(card.notification) : ""
             Layout.alignment: Qt.AlignTop
             visible: src !== ""
-            implicitSize: 36
+            implicitSize: 32
             source: src
         }
 

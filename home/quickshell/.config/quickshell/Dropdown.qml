@@ -10,7 +10,7 @@ Item {
     signal picked(string value)
 
     implicitWidth: 200
-    implicitHeight: 30
+    implicitHeight: 28
     property bool open: false
 
     Rectangle {
@@ -62,13 +62,21 @@ Item {
                 delegate: Rectangle {
                     required property string modelData
                     width: list.width
-                    height: 30
-                    radius: 8
-                    color: optArea.containsMouse ? Theme.fillHover : modelData === dd.current ? Theme.fill : "transparent"
+                    height: 26
+                    radius: 6
+                    color: optArea.containsMouse ? Theme.accent : "transparent"
+                    Text {   // checkmark beside the current value
+                        anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+                        visible: modelData === dd.current
+                        text: "\u2713"
+                        color: optArea.containsMouse ? Theme.accentText : Theme.text
+                        font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold }
+                    }
                     Text {
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                        anchors { left: parent.left; leftMargin: 24; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
                         text: modelData
-                        color: modelData === dd.current ? Theme.accent : Theme.text
+                        elide: Text.ElideRight
+                        color: optArea.containsMouse ? Theme.accentText : Theme.text
                         font { family: Theme.font; pixelSize: 12 }
                     }
                     MouseArea {

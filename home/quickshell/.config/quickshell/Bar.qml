@@ -10,11 +10,9 @@ import Quickshell.Networking
 import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
-import QtQuick.Effects
 
-// Top bar in the macOS Tahoe style: one thin see-through strip across the screen, white
-// monochrome items that light up on hover.
+// Top bar: one thin frosted strip across the screen, monochrome items that light up on hover.
+// Desktops are dots; the current one is a capsule with its number.
 //   desktops · app name and title      weather · date and time (calendar)      tray · temperatures ·
 //   layout · Wi-Fi/Bluetooth/volume/battery (Control Center) · notifications bell · power
 // Amber/red appear only when a value leaves its normal range.
@@ -33,7 +31,7 @@ PanelWindow {
     property string layout: "US"
 
     anchors { top: true; left: true; right: true }
-    implicitHeight: 34
+    implicitHeight: 30
     color: "transparent"
     WlrLayershell.namespace: "qs-bar"
 
@@ -75,20 +73,20 @@ PanelWindow {
 
     SystemClock { id: clock; precision: SystemClock.Minutes }
 
-    // frosted strip (light) or soft shade (dark) so the text reads on any wallpaper
+    // frosted strip: Hyprland blurs what's behind it (layer rule blur-shell), a hairline closes it off
     Rectangle {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: Theme.light ? Qt.rgba(1, 1, 1, 0.62) : Qt.rgba(0, 0, 0, 0.42) }
-            GradientStop { position: 1.0; color: Theme.light ? Qt.rgba(1, 1, 1, 0.44) : Qt.rgba(0, 0, 0, 0.12) }
+        color: Theme.light ? Qt.rgba(1, 1, 1, 0.55) : Theme.tinted(0.75, 0.40)
+        Rectangle {
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: 1
+            color: Theme.light ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.06)
         }
     }
 
     Item {
         id: content
         anchors { fill: parent; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS }
-        layer.enabled: true
-        layer.effect: MultiEffect { shadowEnabled: true; shadowColor: Theme.light ? Qt.rgba(1, 1, 1, 0.5) : Qt.rgba(0, 0, 0, 0.45); shadowBlur: 0.35; shadowVerticalOffset: 1 }
 
         // ---- left ----------------------------------------------------------------------------
         Row {
@@ -96,29 +94,39 @@ PanelWindow {
             spacing: 2
 
             Item { width: Theme.spaceXs; height: 1 }
-            Row { // desktops on this screen
+            Row { // desktops on this screen: dot per desktop, the current one a capsule with its number
                 anchors.verticalCenter: parent.verticalCenter
-                spacing: 4
+                spacing: 0
                 Repeater {
                     model: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === bar.monitor)
-                    Rectangle {
+                    Item {
+                        id: ws
                         required property HyprlandWorkspace modelData
                         readonly property bool current: modelData.active
                         readonly property bool busy: modelData.toplevels.values.length > 0
                         anchors.verticalCenter: parent.verticalCenter
-                        width: current ? 26 : 20
-                        height: 18
-                        radius: 9
-                        color: current ? Theme.accent : modelData.urgent ? Qt.rgba(0.96, 0.66, 0.5, 0.45) : wsArea.containsMouse ? Theme.fillActive : Theme.fillHover
-                        Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
-                        Behavior on color { ColorAnimation { duration: Theme.anim } }
-                        Text {
+                        width: dot.width + 10; height: 22     // roomy click target around a small mark
+                        Rectangle {
+                            id: dot
                             anchors.centerIn: parent
-                            text: modelData.id
-                            color: parent.current ? Theme.accentText : parent.busy ? Theme.text : Theme.subtext
-                            font { family: Theme.font; pixelSize: 11; weight: Font.Bold; features: { "tnum": 1 } }
+                            width: ws.current ? 22 : wsArea.containsMouse ? 8 : 6
+                            height: ws.current ? 14 : width
+                            radius: height / 2
+                            color: ws.current ? Theme.text : ws.modelData.urgent ? Theme.warning
+                                 : ws.busy || wsArea.containsMouse ? Theme.subtext : Theme.muted
+                            Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                            Behavior on height { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                            Behavior on color { ColorAnimation { duration: Theme.anim } }
+                            Text {
+                                anchors.centerIn: parent
+                                text: ws.modelData.id
+                                opacity: ws.current ? 1 : 0
+                                color: Theme.light ? "#ffffff" : "#1d1d1f"
+                                font { family: Theme.font; pixelSize: 10; weight: Font.Bold; features: { "tnum": 1 } }
+                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                            }
                         }
-                        MouseArea { id: wsArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData.activate() }
+                        MouseArea { id: wsArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ws.modelData.activate() }
                     }
                 }
             }
@@ -146,7 +154,7 @@ PanelWindow {
                         anchors.verticalCenter: parent.verticalCenter
                         text: app.name
                         color: Theme.text
-                        font { family: Theme.font; pixelSize: 13; weight: Font.Bold }
+                        font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold }
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
@@ -166,9 +174,10 @@ PanelWindow {
             anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
             spacing: 2
 
-            BarItem {
+            BarItem {   // weather: opens the forecast
                 visible: Weather.ready
-                interactive: false
+                active: Weather.open
+                onPressed: Weather.toggle()
                 spacing: 5
                 Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
                 Text {
@@ -179,13 +188,13 @@ PanelWindow {
                 }
             }
             BarItem {
-                active: Calendar.open === true   // the singleton is created after the first bar
+                active: Calendar.open === true   // ours, not QtQuick.Controls.Calendar: Bar must not import Controls
                 onPressed: Calendar.toggle()
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
                     color: Theme.text
-                    font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold; features: { "tnum": 1 } }
+                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
                 }
             }
         }
@@ -203,24 +212,22 @@ PanelWindow {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                     onPressed: button => {
                         if (button === Qt.MiddleButton) modelData.secondaryActivate()
-                        else if (button === Qt.RightButton || modelData.onlyMenu) { if (modelData.hasMenu) trayMenu.open() }
+                        else if (button === Qt.RightButton || modelData.onlyMenu) { if (modelData.hasMenu) trayMenu.open = !trayMenu.open }
                         else modelData.activate()
                     }
                     onScrolled: d => modelData.scroll(d * 120, false)
                     IconImage { anchors.verticalCenter: parent.verticalCenter; implicitSize: 16; source: trayItem.modelData.icon }
-                    QsMenuAnchor {
+                    TrayMenu {
                         id: trayMenu
+                        anchorItem: trayItem
                         menu: trayItem.modelData.menu
-                        anchor.item: trayItem
-                        anchor.edges: Edges.Bottom
-                        anchor.gravity: Edges.Bottom
-                        anchor.margins.top: 6
                     }
                 }
             }
 
-            BarItem { // temperatures; warm values turn amber, hot red
-                interactive: false
+            BarItem { // temperatures (warm amber, hot red); click for the system dropdown
+                active: Sensors.open
+                onPressed: Sensors.toggle()
                 spacing: Theme.spaceS
                 Repeater {
                     model: [["CPU", Sensors.cpu], ["GPU", Sensors.gpu]]
@@ -283,7 +290,7 @@ PanelWindow {
 
             BarItem { // notifications: bell with the unread count; crossed out during Do Not Disturb
                 active: NotificationCenter.open
-                onPressed: NotificationCenter.toggle()
+                onPressed: NotificationCenter.toggle()   // the Control Center, scrolled to notifications
                 Item {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 16; height: 18

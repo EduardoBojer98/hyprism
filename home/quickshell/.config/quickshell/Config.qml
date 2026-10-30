@@ -20,13 +20,17 @@ Singleton {
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
     readonly property alias keybinds: adapter.keybinds
+    readonly property alias startup: adapter.startup
+    readonly property alias system: adapter.system
+    readonly property alias wallpaper: adapter.wallpaper
     readonly property bool loaded: file.loaded
 
     // Allowed values; set() refuses anything else. Numbers are [min, max].
     readonly property var schema: ({
         appearance: {
             mode: ["light", "dark"],
-            accent: ["blue", "lavender", "mauve", "pink", "peach", "yellow", "green", "teal", "sky"],
+            accent: ["blue", "lavender", "mauve", "pink", "peach", "yellow", "green", "mint", "teal", "sky", "champagne", "silver", "custom"],
+            customAccent: "color", darkTint: ["midnight", "graphite", "mocha"],
             glassOpacity: [0.2, 0.9], radiusScale: [0, 1.5], fontScale: [0.85, 1.25],
             font: "string", animations: "bool", iconTheme: "string",
             border: ["rainbow", "accent"], borderSpin: [0, 300], borderSize: [1, 4]
@@ -41,7 +45,12 @@ Singleton {
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showMedia: "bool", showHardware: "bool" },
         keybinds: { overrides: "object" },
-        weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180] }
+        startup: { apps: "list" },
+        system: { taskManager: "string" },
+        wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
+                     source: ["all", "selected"], selected: "list", order: ["shuffle", "name"] },
+        weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],
+                   showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] }
     })
 
     // Set one option. Returns "" when saved, or the reason it was refused.
@@ -56,6 +65,7 @@ Singleton {
         } else if (rule === "bool" && typeof value !== "boolean") return "Must be on or off"
         else if (rule === "list" && !Array.isArray(value)) return "Must be a list"
         else if (rule === "time" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return "Use HH:MM"
+        else if (rule === "color" && !/^#[0-9a-fA-F]{6}$/.test(value)) return "Use a colour like #ff7a59"
         else if (rule === "string" && typeof value !== "string") return "Must be text"
         adapter[section][key] = value
         return ""

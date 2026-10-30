@@ -1,6 +1,6 @@
 import QtQuick
 
-// One top-bar item: a rounded highlight on hover, brighter while its panel is open.
+// One top-bar item: a soft rounded-rect highlight on hover, brighter while its panel is open.
 Rectangle {
     id: pill
     default property alias content: row.data
@@ -12,9 +12,9 @@ Rectangle {
     signal scrolled(int delta)
 
     anchors.verticalCenter: parent.verticalCenter
-    implicitWidth: row.implicitWidth + 18
-    implicitHeight: 26
-    radius: 13
+    implicitWidth: row.implicitWidth + 16
+    implicitHeight: 22
+    radius: 7
     color: active ? Theme.fillActive : interactive && area.containsMouse ? Theme.fillHover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
 

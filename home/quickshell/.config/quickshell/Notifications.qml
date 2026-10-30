@@ -108,7 +108,7 @@ Singleton {
         screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
         anchors { top: true; right: true }
         margins { top: 8; right: 10 }
-        implicitWidth: 370
+        implicitWidth: 344
         implicitHeight: Math.max(1, list.contentHeight)
         exclusiveZone: 0
         color: "transparent"
@@ -123,8 +123,15 @@ Singleton {
             interactive: false
             model: ScriptModel { values: root.popups.slice(0, 5) }
 
-            add: Transition { NumberAnimation { property: "x"; from: 380; duration: Theme.anim; easing.type: Easing.OutCubic } }
-            remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.animFast } }
+            // slide in from the right edge with a fade; leave by fading and drifting right
+            add: Transition { ParallelAnimation {
+                NumberAnimation { property: "x"; from: 60; to: 0; duration: Theme.anim + 60; easing.type: Easing.OutQuint }
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.anim }
+            } }
+            remove: Transition { ParallelAnimation {
+                NumberAnimation { property: "opacity"; to: 0; duration: Theme.anim }
+                NumberAnimation { property: "x"; to: 40; duration: Theme.anim; easing.type: Easing.InCubic }
+            } }
             displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Easing.OutCubic } }
 
             delegate: NotificationCard {

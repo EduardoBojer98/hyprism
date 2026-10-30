@@ -4,8 +4,10 @@ import Quickshell.Io
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
     property JsonObject appearance: JsonObject {
-        property string mode: "light"           // "light" or "dark"
-        property string accent: "blue"          // a system colour name (Theme.accents)
+        property string mode: "dark"           // "light" or "dark"
+        property string accent: "blue"          // a palette name (Theme.accents) or "custom"
+        property string customAccent: "#ff7a59" // used when accent is "custom"
+        property string darkTint: "midnight"    // dark glass base: midnight (cool), graphite (neutral), mocha (warm)
         property real glassOpacity: 0.55        // tint over the blur (0.2 clear .. 0.9 solid)
         property real radiusScale: 1            // 0 square .. 1.5 extra round
         property real fontScale: 1
@@ -69,5 +71,24 @@ JsonAdapter {
         property string city: "Belgrade"
         property real latitude: 44.82
         property real longitude: 20.46
+        property int days: 7                     // forecast days in the weather dropdown
+        property bool showHourly: true           // next 12 hours strip
+        property bool showDetails: true          // feels like, humidity, wind, UV, sunrise/sunset
+        property string units: "celsius"         // "celsius" (km/h) or "fahrenheit" (mph)
+    }
+    property JsonObject system: JsonObject {
+        property string taskManager: "auto"      // desktop id, or "auto": first installed (Sensors.taskManagers)
+    }
+    property JsonObject startup: JsonObject {
+        property list<string> apps: []           // desktop entry ids opened at login (startup-apps)
+    }
+    property JsonObject wallpaper: JsonObject {
+        property list<string> folders: ["~/Pictures/Wallpapers"]
+        property string current: ""             // full path; empty = whatever hyprpaper.conf says
+        property bool slideshow: false
+        property int interval: 30                // minutes between slideshow changes
+        property string source: "all"            // "all": every image in the folders, "selected": only picked ones
+        property list<string> selected: []       // full paths for source "selected"
+        property string order: "shuffle"         // "shuffle" or "name"
     }
 }
