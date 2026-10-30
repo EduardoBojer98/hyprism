@@ -8,3 +8,7 @@ id_*
 
 # Per-machine overrides that should stay local (not "*.local": that would hide the .local/ stow dirs)
 *.local.lua
+
+# Your own choices from the Settings app: written on first use, kept on this computer only
+home/quickshell/.config/quickshell/settings.json
+home/hypr/.config/hypr/settings/*.lua

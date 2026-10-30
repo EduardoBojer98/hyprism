@@ -8,4 +8,4 @@ Use it for things that differ between computers, for example a second PC:
 hl.monitor({ output = "DP-1", mode = "2560x1440@165", position = "0x0", scale = 1 })
 ```
 
-This laptop (`rog-flow-x13`) needs no file: the shared modules describe it.
+This laptop has `hosts/rog-flow-x13.lua` (which workspace starts on which screen).

@@ -55,7 +55,8 @@ Singleton {
 
     // Write a text file in the Hyprland config (the repo, through the stow link)
     function writeHyprFile(rel, text) {
-        Quickshell.execDetached(["sh", "-c", "cat > \"$HOME/.config/hypr/" + rel + "\" <<'QS_EOF'\n" + text + "\nQS_EOF"])
+        // mkdir: settings/ isn't in git (your own choices), so a fresh install has to create it
+        Quickshell.execDetached(["sh", "-c", "f=\"$HOME/.config/hypr/" + rel + "\"; mkdir -p \"$(dirname \"$f\")\"; cat > \"$f\" <<'QS_EOF'\n" + text + "\nQS_EOF"])
     }
 
     FloatingWindow {

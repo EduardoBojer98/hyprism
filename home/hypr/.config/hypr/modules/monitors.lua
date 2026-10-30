@@ -2,7 +2,9 @@
 -- DISPLAYS and apply_displays() are global so the Settings app and ~/.local/bin/panel can change
 -- things at runtime with `hyprctl eval`.
 
-DISPLAYS = require("settings.displays")
+-- No file yet (fresh install): every screen at its preferred mode until Settings saves a layout.
+local ok, saved = pcall(require, "settings.displays")
+DISPLAYS = ok and type(saved) == "table" and saved or {}
 
 local function monitor(name, overrides)
     local spec = { output = name }
@@ -26,7 +28,4 @@ end
 apply_displays()
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" }) -- any other screen
 
--- Workspaces are numbered 1, 2, 3, … in the order you open them. At login the laptop starts on
--- workspace 1 and the Acer on 2; any other number opens on the screen you're working on.
-hl.workspace_rule({ workspace = "1", monitor = "eDP-1",    default = true })
-hl.workspace_rule({ workspace = "2", monitor = "HDMI-A-1", default = true })
+-- Workspaces open on the screen you're working on; pin some to a screen in hosts/<hostname>.lua.

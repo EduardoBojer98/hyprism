@@ -1,7 +1,11 @@
 -- Keyboard, touchpad and pointer settings come from settings/input.lua (Settings app).
 -- INPUT and apply_input() are global so the Settings app can apply changes with `hyprctl eval`.
 
-INPUT = require("settings.input")
+-- Defaults for a fresh install; Settings > Keyboard & Touchpad writes settings/input.lua.
+INPUT = { kb_layout = "us", kb_variant = "", kb_options = "grp:alt_shift_toggle", repeat_rate = 25,
+          repeat_delay = 600, sensitivity = 0, natural_scroll = true, tap_to_click = true }
+local ok, saved = pcall(require, "settings.input")
+if ok and type(saved) == "table" then for k, v in pairs(saved) do INPUT[k] = v end end
 
 function apply_input()
     hl.config({
