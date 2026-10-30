@@ -299,6 +299,10 @@ PanelWindow {
         id: controlCenter
         anchorItem: statusCapsule
     }
+    Connections {
+        target: Panels
+        function onToggleControlCenter() { if (Hyprland.focusedMonitor?.name === bar.monitor?.name) controlCenter.visible = !controlCenter.visible }
+    }
 
     // Month calendar under the clock; scroll or the arrows change month, the title goes back to today
     PopupWindow {

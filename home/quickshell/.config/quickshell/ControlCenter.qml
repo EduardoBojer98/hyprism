@@ -3,14 +3,16 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import Quickshell.Services.Mpris
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 
 // macOS-style Control Center under the bar's status pill:
-// battery · Wi-Fi / Bluetooth / keyboard / Acer tiles (chevron expands lists) · power mode ·
-// brightness · output volume + device · microphone + device.
+// battery · Wi-Fi / Bluetooth / keyboard / Acer / Caffeine / Night Light / Do Not Disturb tiles
+// (chevron expands lists) · power mode + temperatures · media · brightness + keyboard light ·
+// output volume + device · microphone + device.
 PopupWindow {
     id: cc
 
@@ -18,12 +20,15 @@ PopupWindow {
     property string expanded: ""     // "", "wifi", "bt", "out", "in"
     property var passwordFor: null   // Wi-Fi network waiting for a password
     property real brightness: 0
+    property int kbdLight: 0           // 0-3
+    property date now: new Date()
 
     readonly property var wifi: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var source: Pipewire.defaultAudioSource
     readonly property var battery: UPower.displayDevice
+    readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
 
     anchor.item: anchorItem
     anchor.edges: Edges.Bottom | Edges.Right
@@ -38,7 +43,7 @@ PopupWindow {
 
     onVisibleChanged: {
         if (wifi) wifi.scannerEnabled = visible
-        if (visible) brightnessRead.running = true
+        if (visible) { brightnessRead.running = true; kbdRead.running = true; now = new Date() }
         else { expanded = ""; passwordFor = null }
     }
 
@@ -47,6 +52,13 @@ PopupWindow {
         command: ["brightnessctl", "-m"]   // amdgpu_bl1,backlight,123,48%,255
         stdout: StdioCollector { onStreamFinished: cc.brightness = parseInt(text.split(",")[3]) / 100 }
     }
+
+    Process {
+        id: kbdRead
+        command: ["brightnessctl", "-m", "-d", "asus::kbd_backlight"]   // asus::kbd_backlight,leds,1,33%,3
+        stdout: StdioCollector { onStreamFinished: cc.kbdLight = parseInt(text.split(",")[2]) || 0 }
+    }
+    Timer { interval: 30000; repeat: true; running: cc.visible; onTriggered: cc.now = new Date() }
 
     function nodeName(n) { return n?.description || n?.nickname || n?.name || "" }
     function toggleExpanded(name) { expanded = expanded === name ? "" : name; passwordFor = null }
@@ -140,6 +152,47 @@ PopupWindow {
                     active: ours
                     onToggled: Quickshell.execDetached(["monswitch", "toggle"])
                 }
+                Tile {
+                    glyph: "\u{F0176}"
+                    title: "Caffeine"
+                    subtitle: Caffeine.remaining(cc.now.getTime())
+                    active: Caffeine.active
+                    expandable: true
+                    isExpanded: cc.expanded === "caffeine"
+                    onToggled: Caffeine.toggle()
+                    onExpand: cc.toggleExpanded("caffeine")
+                }
+                Tile {
+                    glyph: "\u{F0599}"
+                    title: "Night Light"
+                    subtitle: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode]
+                    active: NightLight.active
+                    onToggled: NightLight.toggle()
+                }
+                Tile {
+                    glyph: Config.notifications.dnd ? "\u{F009B}" : "\u{F009A}"
+                    title: "Do Not Disturb"
+                    subtitle: Config.notifications.dnd ? "Notifications go to the list" : "Off"
+                    active: Config.notifications.dnd
+                    onToggled: Config.set("notifications", "dnd", !Config.notifications.dnd)
+                }
+            }
+
+            // ---- Caffeine durations --------------------------------------------------------
+            Flow {
+                visible: cc.expanded === "caffeine"
+                Layout.fillWidth: true
+                spacing: Theme.spaceS
+                Repeater {
+                    model: Caffeine.choices
+                    Chip {
+                        required property int modelData
+                        label: Caffeine.label(modelData)
+                        active: Caffeine.active && Caffeine.minutes === modelData
+                        onClicked: { Caffeine.start(modelData); cc.now = new Date() }
+                    }
+                }
+                Chip { label: "Turn off"; visible: Caffeine.active; onClicked: Caffeine.stop() }
             }
 
             // ---- Wi-Fi networks ------------------------------------------------------------
@@ -257,6 +310,63 @@ PopupWindow {
                 }
             }
 
+            // ---- temperatures (Settings > ASUS Hardware for the rest) --------------------------
+            Text {
+                visible: Config.controlCenter.showHardware
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                text: `CPU ${Math.round(Sensors.cpu)}°  ·  Graphics ${Math.round(Sensors.gpu)}°  ·  Fans and more \u{203A}`
+                color: Sensors.cpu >= 90 ? Theme.warning : Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { cc.visible = false; SettingsApp.show("asus") } }
+            }
+
+            // ---- media ---------------------------------------------------------------------
+            Rectangle {
+                visible: Config.controlCenter.showMedia && cc.player !== null
+                Layout.fillWidth: true
+                Layout.preferredHeight: 64
+                radius: Theme.radius
+                color: Theme.fill
+                border { color: Theme.stroke; width: 1 }
+
+                Image {
+                    id: art
+                    anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                    width: 44; height: 44
+                    source: cc.player?.trackArtUrl ?? ""
+                    fillMode: Image.PreserveAspectCrop
+                    sourceSize { width: 88; height: 88 }
+                    visible: status === Image.Ready
+                }
+                Column {
+                    anchors { left: art.visible ? art.right : parent.left; leftMargin: art.visible ? 10 : 14; right: controls.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                    Text { width: parent.width; text: cc.player?.trackTitle || cc.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                    Text { width: parent.width; text: cc.player?.trackArtist || cc.player?.identity || ""; color: Theme.muted; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                }
+                Row {
+                    id: controls
+                    anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                    Repeater {
+                        model: [
+                            ["\u{F04AE}", () => cc.player.previous(), cc.player?.canGoPrevious ?? false],
+                            [cc.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}", () => cc.player.togglePlaying(), cc.player?.canTogglePlaying ?? false],
+                            ["\u{F04AD}", () => cc.player.next(), cc.player?.canGoNext ?? false],
+                        ]
+                        Text {
+                            required property var modelData
+                            width: 32; height: 32
+                            horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                            text: modelData[0]
+                            opacity: modelData[2] ? 1 : 0.35
+                            color: Theme.text
+                            font { family: Theme.iconFont; pixelSize: 20 }
+                            MouseArea { anchors.fill: parent; enabled: parent.modelData[2]; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData[1]() }
+                        }
+                    }
+                }
+            }
+
             // ---- sliders ---------------------------------------------------------------------
             SectionLabel { text: "Display" }
             Slider {
@@ -266,6 +376,19 @@ PopupWindow {
                 onMoved: v => {
                     cc.brightness = Math.max(0.05, v)
                     Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
+                }
+            }
+            Slider {
+                Layout.fillWidth: true
+                icon: "\u{F030C}"
+                value: cc.kbdLight / 3
+                onMoved: v => {
+                    cc.kbdLight = Math.round(v * 3)
+                    Quickshell.execDetached(["brightnessctl", "-q", "-d", "asus::kbd_backlight", "set", String(cc.kbdLight)])
+                }
+                onIconClicked: {
+                    cc.kbdLight = cc.kbdLight > 0 ? 0 : 2
+                    Quickshell.execDetached(["brightnessctl", "-q", "-d", "asus::kbd_backlight", "set", String(cc.kbdLight)])
                 }
             }
 
