@@ -1,0 +1,142 @@
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+import QtQuick
+import QtQuick.Layouts
+
+// Shared Monitor: one monitor used by this computer and another one (a work PC, a console),
+// switched over DDC/CI from the Control Center or the monitor's own buttons. Writes
+// ~/.config/monswitch.conf (read by ~/.local/bin/monswitch); turning it off keeps the values in
+// monswitch.conf.off.
+ColumnLayout {
+    id: page
+    spacing: 20
+
+    readonly property string conf: Quickshell.env("HOME") + "/.config/monswitch.conf"
+    // VCP 0x60 values most monitors use (MCCS); a value outside this list shows as "Other"
+    readonly property var presets: [["0x11", "HDMI 1"], ["0x12", "HDMI 2"], ["0x13", "HDMI 3"],
+                                    ["0x0f", "DisplayPort 1"], ["0x10", "DisplayPort 2"], ["0x1b", "USB-C"]]
+    property bool enabled: false
+    property string out: ""
+    property string mine: "0x11"
+    property string other: "0x12"
+    property string mirror: "eDP-1"
+    property string mirrorMode: "1920x1080@60"
+    property string status: ""
+    readonly property var outputs: {
+        const names = Hyprland.monitors.values.map(m => m.name)
+        if (out && !names.includes(out)) names.push(out)
+        return names
+    }
+
+    function label(v) { const p = presets.find(x => x[0] === v.toLowerCase()); return p ? `${p[1]} (${v})` : `Other (${v})` }
+    function options(v) { const l = presets.map(p => `${p[1]} (${p[0]})`); return presets.some(p => p[0] === v.toLowerCase()) ? l : l.concat([label(v)]) }
+    function valueOf(option) { return option.match(/\((0x[0-9a-fA-F]+)\)/)?.[1] ?? "" }
+
+    function save() {
+        if (enabled && (!out || !mine || !other)) { status = "Pick the monitor and both inputs first"; return }
+        if (enabled && mine === other) { status = "The two inputs must differ"; return }
+        const body = `# Written by Settings > Shared Monitor (see ~/.local/bin/monswitch)\nOUT=${out}\nLAPTOP=${mine}\nPC=${other}\nMIRROR=${mirror}\nMIRROR_MODE=${mirrorMode}\n`
+        writer.command = ["sh", "-c",
+            (enabled ? "printf '%s' \"$2\" > \"$1\" && rm -f \"$1.off\""
+                     : "[ -f \"$1\" ] && mv \"$1\" \"$1.off\"; true")
+            // restart the watcher with the new values ([h]: don't match this shell's own command line)
+            + "; pkill -f 'bin/monswitch watc[h]'; [ -f \"$1\" ] && (setsid monswitch watch >/dev/null 2>&1 &); true",
+            "sh", conf, body]
+        writer.running = true
+    }
+
+    Process {   // current values: the live file, or the switched-off copy
+        running: true
+        command: ["sh", "-c", "if [ -f \"$1\" ]; then echo on; cat \"$1\"; elif [ -f \"$1.off\" ]; then echo off; cat \"$1.off\"; fi", "sh", page.conf]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const lines = text.split("\n")
+                page.enabled = lines[0] === "on"
+                for (const l of lines) {
+                    const m = l.match(/^\s*(\w+)=([^#\s]*)/)
+                    if (!m) continue
+                    if (m[1] === "OUT") page.out = m[2]
+                    else if (m[1] === "LAPTOP") page.mine = m[2]
+                    else if (m[1] === "PC") page.other = m[2]
+                    else if (m[1] === "MIRROR") page.mirror = m[2]
+                    else if (m[1] === "MIRROR_MODE") page.mirrorMode = m[2]
+                }
+                if (!page.out) page.out = Hyprland.monitors.values.find(x => !x.name.startsWith("eDP"))?.name ?? ""
+            }
+        }
+    }
+    Process {
+        id: writer
+        onExited: code => { page.status = code === 0 ? "Saved" : "Couldn't save"; Machine.refresh() }
+    }
+    Process {   // the input the monitor shows right now
+        id: detect
+        command: ["sh", "-c", "b=$(readlink -f /sys/class/drm/card*-\"$1\"/ddc | sed 's/.*i2c-//'); ddcutil --bus \"$b\" getvcp 60 --terse 2>/dev/null | awk '$1 == \"VCP\" {sub(/^x/, \"0x\", $4); print $4}'", "sh", page.out]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const v = text.trim()
+                if (v) { page.mine = v; page.status = "This computer is on " + page.label(v) }
+                else page.status = "The monitor didn't answer (DDC/CI off in its menu, or not connected)"
+            }
+        }
+    }
+
+    SettingGroup {
+        SettingRow {
+            label: "Share a monitor with another computer"
+            hint: "Adds a monitor button to the Control Center and follows switches you make with the monitor's own buttons"
+            Toggle { checked: page.enabled; onToggled: c => page.enabled = c }
+        }
+    }
+
+    SettingGroup {
+        title: "Monitor and inputs"
+        opacity: page.enabled ? 1 : 0.5
+        enabled: page.enabled
+        SettingRow {
+            label: "Monitor"
+            Dropdown { width: 200; options: page.outputs; current: page.out; onPicked: v => page.out = v }
+        }
+        SettingRow {
+            label: "This computer's input"
+            hint: "Detect while the monitor shows this computer"
+            Dropdown { width: 200; options: page.options(page.mine); current: page.label(page.mine); onPicked: v => page.mine = page.valueOf(v) }
+            PillButton { text: "Detect"; onClicked: { page.status = "Asking the monitor…"; detect.running = true } }
+        }
+        SettingRow {
+            label: "Other computer's input"
+            Dropdown { width: 200; options: page.options(page.other); current: page.label(page.other); onPicked: v => page.other = page.valueOf(v) }
+        }
+        SettingRow {
+            label: "While it's away, mirror"
+            hint: "Some monitors drop the other input without a signal from this computer, so it mirrors this screen instead of turning off"
+            Dropdown { width: 200; options: Hyprland.monitors.values.map(m => m.name).filter(n => n !== page.out); current: page.mirror; onPicked: v => page.mirror = v }
+        }
+        SettingRow {
+            label: "Mirror mode"
+            hint: "Resolution@refresh both screens support"
+            TextField { width: 160; text: page.mirrorMode; onTextChanged: page.mirrorMode = text.trim() }
+        }
+    }
+
+    RowLayout {
+        Layout.fillWidth: true
+        Text {
+            Layout.fillWidth: true
+            text: page.status
+            color: Theme.subtext
+            wrapMode: Text.Wrap
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
+        }
+        PillButton { text: "Save"; primary: true; onClicked: page.save() }
+    }
+
+    Text {
+        Layout.fillWidth: true
+        text: "Needs DDC/CI turned on in the monitor's menu. Input numbers are the monitor's own (VCP 60); the usual ones are listed, and Detect reads the current one."
+        color: Theme.muted
+        wrapMode: Text.Wrap
+        font { family: Theme.font; pixelSize: Theme.fontCaption }
+    }
+}

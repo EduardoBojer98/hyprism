@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Opens the apps chosen in Settings > Startup Apps (settings.json: startup.apps, desktop entry ids).
+# Run once from Hyprland's autostart, so KDE's own autostart stays separate.
+set -uo pipefail
+conf="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/settings.json"
+[[ -f "$conf" ]] || exit 0
+jq -r '.startup.apps[]? // empty' "$conf" | while IFS= read -r id; do
+    [[ -n "$id" ]] && gtk-launch "${id%.desktop}" >/dev/null 2>&1 &
+done
+wait

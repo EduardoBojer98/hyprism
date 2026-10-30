@@ -25,6 +25,7 @@ Singleton {
         { id: "controlcenter", name: "Control Center",      glyph: "\u{F0493}" },
         { id: "notifications", name: "Notifications",       glyph: "\u{F009A}" },
         { id: "displays",      name: "Displays",            glyph: "\u{F0379}" },
+        { id: "monitor",       name: "Shared Monitor",      glyph: "\u{F0E58}" },
         { id: "sound",         name: "Sound",               glyph: "\u{F057E}" },
         { id: "network",       name: "Wi-Fi & Network",     glyph: "\u{F05A9}" },
         { id: "bluetooth",     name: "Bluetooth",           glyph: "\u{F00AF}" },
@@ -33,8 +34,10 @@ Singleton {
         { id: "power",         name: "Battery & Power",     glyph: "\u{F0079}" },
         { id: "asus",          name: "ASUS Hardware",       glyph: "\u{F061A}" },
         { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}" },
+        { id: "weather",       name: "Weather",             glyph: "\u{F0595}" },
         { id: "idle",          name: "Lock & Sleep",        glyph: "\u{F033E}" },
         { id: "apps",          name: "Default Applications", glyph: "\u{F003B}" },
+        { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}" },
         { id: "about",         name: "About",               glyph: "\u{F02FD}" },
     ]
 

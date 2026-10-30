@@ -15,13 +15,17 @@ set -euo pipefail
 #   OUT=HDMI-A-1   # Hyprland output name of the shared monitor
 #   LAPTOP=0x11    # monitor input this computer is on (VCP 0x60 value)
 #   PC=0x12        # monitor input of the other computer
-# Find the values with: ddcutil detect; ddcutil getvcp 60
+#   MIRROR=eDP-1   # optional: screen it mirrors while the other computer has it (keeps a signal)
+#   MIRROR_MODE=1920x1080@60   # optional: mode used for that mirror
+# Settings > Shared Monitor writes this file. By hand: ddcutil detect; ddcutil getvcp 60
 CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
 [[ -f $CONF ]] || { echo "monswitch: no $CONF, nothing to do" >&2; exit 0; }
 POLL=3        # seconds between DDC reads in watch mode
 # shellcheck source=/dev/null
 . "$CONF"
 : "${OUT:?set OUT in $CONF}" "${LAPTOP:?set LAPTOP in $CONF}" "${PC:?set PC in $CONF}"
+MIRROR=${MIRROR:-eDP-1}
+MIRROR_MODE=${MIRROR_MODE:-1920x1080@60}
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
 LAYOUT=$STATE_DIR/layout.json
@@ -56,24 +60,24 @@ restore_layout() {
 }
 
 # Hyprland side only: used directly by the watcher when the input was switched by hand.
-# The Acer is mirrored, not disabled: with no signal from the laptop it gives up on the
-# PC input within ~5 s (tested). A mirror keeps a signal but holds no workspaces.
+# The monitor is mirrored, not disabled: with no signal from this computer some monitors (the Acer)
+# give up on the other input within ~5 s. A mirror keeps a signal but holds no workspaces.
 release() {
     out_enabled || return 0
     save_layout
-    hyprctl eval "hl.monitor({ output = \"$OUT\", mode = \"1920x1080@60\", position = \"auto\", scale = 1, mirror = \"eDP-1\" })" >/dev/null
+    hyprctl eval "hl.monitor({ output = \"$OUT\", mode = \"$MIRROR_MODE\", position = \"auto\", scale = 1, mirror = \"$MIRROR\" })" >/dev/null
     local id   # a mirror can keep its workspaces, so move them explicitly
     for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
-        hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"eDP-1\" })" >/dev/null
+        hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$MIRROR\" })" >/dev/null
     done
-    notify-send -a monswitch "Monitor → work PC" "Workspaces moved to the laptop screen"
+    notify-send -a monswitch "Monitor → other computer" "Workspaces moved to $MIRROR"
 }
 reclaim() {
     out_enabled && return 0
     hyprctl reload >/dev/null   # re-applies the monitor rule from modules/monitors.lua
     sleep 1
     restore_layout
-    notify-send -a monswitch "Monitor → laptop" "Workspaces restored"
+    notify-send -a monswitch "Monitor → this computer" "Workspaces restored"
 }
 
 to_pc() {

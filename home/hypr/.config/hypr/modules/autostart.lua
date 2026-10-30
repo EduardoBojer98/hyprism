@@ -19,4 +19,5 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY HYPRLAND_INSTANCE_SIGNATURE"
         .. " XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && systemctl --user try-restart juhradialmx-daemon.service")
     hl.exec_cmd("command -v juhradial-mx >/dev/null && (pgrep -f juhradial-overlay.py || juhradial-mx)") -- MX Master radial menu
+    hl.exec_cmd("sleep 3 && startup-apps")                  -- Settings > Startup Apps (after the shell is up)
 end)

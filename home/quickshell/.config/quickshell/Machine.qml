@@ -12,13 +12,17 @@ Singleton {
     property string switchOutput: ""   // monitor monswitch hands over, e.g. HDMI-A-1
     readonly property bool monitorSwitch: switchOutput !== ""
 
+    function refresh() { probe.running = false; probe.running = true }   // after Settings > Shared Monitor saves
+
     Process {
+        id: probe
         running: true
         command: ["sh", "-c", "command -v asusctl >/dev/null && echo asus; "
             + "for l in /sys/class/leds/*kbd_backlight; do [ -e \"$l\" ] && echo \"kbd ${l##*/}\" && break; done; "
             + "f=\"${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf\"; [ -f \"$f\" ] && (. \"$f\"; echo \"switch $OUT\"); true"]
         stdout: StdioCollector {
             onStreamFinished: {
+                switchOutput = ""
                 for (const line of text.trim().split("\n")) {
                     const [key, value] = [line.split(" ")[0], line.slice(line.indexOf(" ") + 1)]
                     if (key === "asus") asus = true
