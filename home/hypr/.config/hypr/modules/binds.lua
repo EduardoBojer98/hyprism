@@ -63,8 +63,8 @@ add("screenshot-annotate", "Screen", "Screenshot an area and annotate", "SHIFT +
 add("ocr",                 "Screen", "Copy text from the screen",    key("SHIFT + T"), exec("screentext"))
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))
 
--- Shared Acer: hand it to the work PC and back (~/.local/bin/monswitch)
-add("monitor-switch", "Screen", "Hand the Acer to the work PC and back", key("M"), exec("monswitch toggle"))
+-- Shared monitor: hand it to the other computer and back (~/.local/bin/monswitch; off without ~/.config/monswitch.conf)
+add("monitor-switch", "Screen", "Hand the shared monitor over and back", key("M"), exec("monswitch toggle"))
 
 -- Hinge and lid (~/.local/bin/panel)
 add("tablet-on",  "Hardware", "Tablet mode on",  "switch:on:AMD SFH tablet mode switch",  exec("panel tablet on"),  { locked = true, fixed = true })

@@ -40,6 +40,7 @@ ColumnLayout {
             }
         }
         SettingRow {
+            visible: Machine.asus
             label: "Charge limit"
             hint: "Stopping at 80 % keeps the battery healthy when the laptop is mostly plugged in"
             Choice {

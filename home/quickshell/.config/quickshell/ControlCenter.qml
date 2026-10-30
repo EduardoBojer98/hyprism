@@ -61,7 +61,7 @@ Singleton {
     }
     function opened(visible) {
         if (wifi) wifi.scannerEnabled = visible
-        if (visible) { brightnessRead.running = true; kbdRead.running = true; now = new Date() }
+        if (visible) { brightnessRead.running = true; kbdRead.running = Machine.kbdDevice !== ""; now = new Date() }
         else { expanded = ""; passwordFor = null }
     }
 
@@ -72,7 +72,7 @@ Singleton {
     }
     Process {
         id: kbdRead
-        command: ["brightnessctl", "-m", "-d", "asus::kbd_backlight"]   // asus::kbd_backlight,leds,1,33%,3
+        command: ["brightnessctl", "-m", "-d", Machine.kbdDevice]   // asus::kbd_backlight,leds,1,33%,3
         stdout: StdioCollector { onStreamFinished: cc.kbdLight = parseInt(text.split(",")[2]) || 0 }
     }
     Timer { interval: 30000; repeat: true; running: popup.open; onTriggered: cc.now = new Date() }
@@ -81,7 +81,7 @@ Singleton {
     function toggleExpanded(name) { expanded = expanded === name ? "" : name; passwordFor = null }
     function setKbd(level) {
         kbdLight = level
-        Quickshell.execDetached(["brightnessctl", "-q", "-d", "asus::kbd_backlight", "set", String(level)])
+        Quickshell.execDetached(["brightnessctl", "-q", "-d", Machine.kbdDevice, "set", String(level)])
     }
 
     CursorPopup {
@@ -219,10 +219,11 @@ Singleton {
                 onToggled: Caffeine.toggle()
                 onExpand: cc.toggleExpanded("caffeine")
             }
-            Round {
-                readonly property bool ours: Hyprland.monitors.values.some(m => m.name === "HDMI-A-1")
+            Round { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
+                visible: Machine.monitorSwitch
+                readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
                 glyph: "\u{F0379}"
-                hint: "Acer monitor · " + (ours ? "on this laptop" : "on the work PC")
+                hint: "Shared monitor · " + (ours ? "on this computer" : "on the other computer")
                 active: ours
                 onToggled: Quickshell.execDetached(["monswitch", "toggle"])
             }
@@ -326,7 +327,7 @@ Singleton {
             title: "Power"
             detail: (Config.controlCenter.showMedia && cc.player !== null ? cc.pct + "% · " + cc.batteryText : "")
                     + (Config.controlCenter.showHardware ? (cc.player !== null && Config.controlCenter.showMedia ? "  ·  " : "") + `CPU ${Math.round(Sensors.cpu)}°` : "")
-            onDetailClicked: { cc.hide(); SettingsApp.show("asus") }
+            onDetailClicked: { cc.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
 
             Rectangle {
                 Layout.fillWidth: true
@@ -448,6 +449,7 @@ Singleton {
                 onToggled: Osk.toggle()
             }
             Round {
+                visible: Machine.kbdDevice !== ""
                 glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
                 hint: "Keyboard light · " + ["off", "low", "medium", "high"][cc.kbdLight]
                 active: cc.kbdLight > 0

@@ -13,7 +13,9 @@ Singleton {
     property bool open: false
     property string section: "appearance"
 
-    readonly property var sections: [
+    // ASUS Hardware only on machines with asusctl
+    readonly property var sections: allSections.filter(s => s.id !== "asus" || Machine.asus)
+    readonly property var allSections: [
         { id: "appearance",    name: "Appearance & Themes", glyph: "\u{F03D8}" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
         { id: "dock",          name: "Desktop & Dock",      glyph: "\u{F0379}" },

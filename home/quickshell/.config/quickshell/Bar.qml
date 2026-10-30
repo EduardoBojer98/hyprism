@@ -15,8 +15,8 @@ import QtQuick.Effects
 
 // Top bar in the macOS Tahoe style: one thin see-through strip across the screen, white
 // monochrome items that light up on hover.
-//   desktops · app name and window title        tray · temperatures · weather · layout ·
-//   Wi-Fi/Bluetooth/volume/battery · Control Center · notifications bell · date and time · power
+//   desktops · app name and title      date and time      tray · temperatures · weather · layout ·
+//   Wi-Fi/Bluetooth/volume/battery · Control Center · notifications bell · power
 // Amber/red appear only when a value leaves its normal range.
 PanelWindow {
     id: bar
@@ -43,7 +43,7 @@ PanelWindow {
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (event.name === "activelayout") bar.layout = event.data.includes("Serbian") ? "SR" : "US"
+            if (event.name === "activelayout") kbRead.running = true
             else if (event.name === "activewindow") {
                 const comma = event.data.indexOf(",")
                 bar.appClass = event.data.slice(0, comma)
@@ -61,12 +61,14 @@ PanelWindow {
         }
     }
     Process {
+        id: kbRead
         running: true
         command: ["hyprctl", "-j", "devices"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const main = JSON.parse(text).keyboards.find(k => k.main)
-                if (main) bar.layout = main.active_keymap.includes("Serbian") ? "SR" : "US"
+                // "us,rs" + index 1 -> "RS"
+                if (main) bar.layout = (main.layout.split(",")[main.active_layout_index] ?? main.layout).toUpperCase()
             }
         }
     }
@@ -156,6 +158,19 @@ PanelWindow {
                         font { family: Theme.font; pixelSize: 13 }
                     }
                 }
+            }
+        }
+
+        // ---- centre: date and time ("Fri 30 Oct  14:40"); opens the notification centre -------
+        BarItem {
+            anchors.horizontalCenter: parent.horizontalCenter
+            active: NotificationCenter.open
+            onPressed: NotificationCenter.toggle()
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
+                color: Theme.text
+                font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold; features: { "tnum": 1 } }
             }
         }
 
@@ -312,17 +327,6 @@ PanelWindow {
                             font { family: Theme.font; pixelSize: 9; weight: Font.Bold; features: { "tnum": 1 } }
                         }
                     }
-                }
-            }
-
-            BarItem { // date and time, like macOS: "Fri 30 Oct 14:40"
-                active: NotificationCenter.open
-                onPressed: NotificationCenter.toggle()
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
                 }
             }
 

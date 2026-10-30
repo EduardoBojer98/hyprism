@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Switch the shared Acer XZ322QU S between this laptop and the work PC over DDC/CI,
+# Switch a monitor shared with another computer (e.g. a work PC) over DDC/CI,
 # and move Hyprland workspaces off / back onto it.
 #
 #   monswitch toggle   switch to whichever side isn't showing now (keybind / bar button)
@@ -11,10 +11,17 @@
 # notice on its own. The DDC input register (VCP 0x60) is the source of truth.
 set -euo pipefail
 
-OUT=HDMI-A-1
-LAPTOP=0x11   # monitor input HDMI 1
-PC=0x12       # monitor input HDMI 2
+# Per-computer values live in ~/.config/monswitch.conf (no file = feature off), for example:
+#   OUT=HDMI-A-1   # Hyprland output name of the shared monitor
+#   LAPTOP=0x11    # monitor input this computer is on (VCP 0x60 value)
+#   PC=0x12        # monitor input of the other computer
+# Find the values with: ddcutil detect; ddcutil getvcp 60
+CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
+[[ -f $CONF ]] || { echo "monswitch: no $CONF, nothing to do" >&2; exit 0; }
 POLL=3        # seconds between DDC reads in watch mode
+# shellcheck source=/dev/null
+. "$CONF"
+: "${OUT:?set OUT in $CONF}" "${LAPTOP:?set LAPTOP in $CONF}" "${PC:?set PC in $CONF}"
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
 LAYOUT=$STATE_DIR/layout.json

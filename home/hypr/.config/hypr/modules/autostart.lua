@@ -13,7 +13,7 @@ hl.on("hyprland.start", function()
         .. " && gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 11'")
     hl.exec_cmd("hypridle")                                 -- lock / screen off / sleep
     hl.exec_cmd("wl-paste --watch clipstore store")         -- clipboard history (Super+V), ~/.local/bin/clipstore
-    hl.exec_cmd("monswitch watch")                          -- follows Acer input switches made on the monitor
+    hl.exec_cmd("[ -f ~/.config/monswitch.conf ] && monswitch watch")                          -- follows Acer input switches made on the monitor
     -- Give user services this session's display and Hyprland socket, then restart the ones that
     -- started too early to see it (JuhRadial MX finds the cursor and focused app through them).
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY HYPRLAND_INSTANCE_SIGNATURE"

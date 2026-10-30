@@ -84,7 +84,7 @@ Singleton {
     ]
     function settings(q) {
         const out = []
-        for (const p of settingsPages) {
+        for (const p of settingsPages.filter(p => p.id !== "asus" || Machine.asus)) {
             const s = Math.max(match(p.name, q), ...p.words.split(" ").map(w => match(w, q) * 0.85))
             if (s > 0.5) out.push({ key: "settings:" + p.id, kind: "Settings", title: p.name, subtitle: "Settings",
                 glyph: "\u{F0493}", score: 30 + s * 45, run: () => SettingsApp.show(p.id) })
@@ -99,7 +99,7 @@ Singleton {
         { id: "logout", title: "Log out", words: "logout log out exit", glyph: "\u{F0343}", cmd: ["hyprshutdown"] },
         { id: "reboot", title: "Restart", words: "restart reboot", glyph: "\u{F0709}", cmd: ["systemctl", "reboot"] },
         { id: "poweroff", title: "Shut down", words: "shutdown shut down power off", glyph: "\u{F0425}", cmd: ["systemctl", "poweroff"] },
-        { id: "monswitch", title: "Hand the Acer to the work PC / back", words: "monitor acer switch pc input", glyph: "\u{F0379}", cmd: ["monswitch", "toggle"] },
+        { id: "monswitch", title: "Hand the shared monitor over / back", words: "monitor acer switch pc input shared", glyph: "\u{F0379}", cmd: ["monswitch", "toggle"] },
         { id: "shot", title: "Screenshot an area", words: "screenshot capture", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; hyprshot -m region -o ~/Pictures/Screenshots"] },
         { id: "ocr", title: "Copy text from screen (OCR)", words: "ocr text recognise recognize screenshot", glyph: "\u{F0A3B}", cmd: ["sh", "-c", "sleep 0.3; screentext"] },
         { id: "picker", title: "Pick a colour", words: "colour color picker", glyph: "\u{F0266}", cmd: ["sh", "-c", "sleep 0.3; hyprpicker -a"] },
@@ -110,7 +110,9 @@ Singleton {
     ]
     function actions(q, all) {
         const out = []
-        for (const a of systemActions) {
+        // hardware-only actions appear where the hardware is
+        const has = { monswitch: Machine.monitorSwitch, rog: Machine.asus }
+        for (const a of systemActions.filter(a => has[a.id] ?? true)) {
             const s = all ? 0.5 : Math.max(match(a.title, q), ...a.words.split(" ").map(w => match(w, q) * 0.9))
             if (s > 0.5 || all) out.push({ key: "action:" + a.id, kind: "Actions", title: a.title, glyph: a.glyph,
                 score: 30 + s * 45 + usageBonus("action:" + a.id), run: () => Quickshell.execDetached(a.cmd) })
