@@ -27,6 +27,7 @@ Singleton {
         { id: "bluetooth",     name: "Bluetooth",           glyph: "\u{F00AF}" },
         { id: "input",         name: "Keyboard & Touchpad", glyph: "\u{F030C}" },
         { id: "power",         name: "Battery & Power",     glyph: "\u{F0079}" },
+        { id: "asus",          name: "ASUS Hardware",       glyph: "\u{F061A}" },
         { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}" },
         { id: "idle",          name: "Lock & Sleep",        glyph: "\u{F033E}" },
         { id: "apps",          name: "Default Applications", glyph: "\u{F003B}" },

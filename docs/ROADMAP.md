@@ -29,8 +29,14 @@ Tick boxes only for things verified on the machine; untested items say so.
   - PPT PL1 is 45 W (range 15–45) and PL2 is 80 W (65–80), both at their maximum.
   - CPU driver: amd-pstate-epp, boost on.
   - Package power can be read from `amdgpu` `power1_input` (PPT). RAPL `energy_uj` is root-only.
-  - The Balanced CPU fan curve jumps from 46 % to 70 % between 68 and 70 °C. This is the likely
-    cause of the loud fans in Chrome.
+  - Only the Balanced CPU curve is custom (enabled); every other profile/fan runs the firmware
+    curve. That Balanced curve jumps from 46 % to 70 % between 68 and 70 °C, the likely cause of
+    the loud fans in Chrome.
+  - Originals backed up 2026-10-30 in `~/.local/state/asus-backup/<time>/` (all three profiles'
+    curves, asusd configs, PPT values, EPP). `asusfan restore` puts the oldest backup back.
+  - The NVIDIA GPU was awake because the Whatsie Flatpak opened `/dev/nvidia*`. A per-app
+    `flatpak override --user` now points it at the Mesa EGL/Vulkan drivers (takes effect on its
+    next start; undo with `flatpak override --user --reset com.ktechpit.whatsie`).
 - **JuhRadial MX**: the daemon is a user service (default.target) that started before Hyprland,
   so it had no `HYPRLAND_INSTANCE_SIGNATURE` or `DISPLAY` and couldn't find the cursor or the
   focused app. The overlay also had no window rule. Fixed in autostart.lua and rules.lua.
