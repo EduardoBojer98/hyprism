@@ -1,11 +1,12 @@
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 
 // The one popup framework: a floating glass box that opens at the mouse cursor, on the monitor
 // the cursor is on, pushed back inside that monitor near its edges. It takes the keyboard while
-// open; Esc or a click outside closes it. Used by the launcher, clipboard, and other quick panels.
+// open; Esc or a click outside closes it, on any monitor. Used by the launcher, clipboard, and other quick panels.
 //
 //   CursorPopup { id: p; name: "launcher"; boxWidth: 640; boxHeight: content.implicitHeight
 //                 SomeContent { id: content; anchors.fill: parent } }
@@ -16,7 +17,7 @@ Scope {
     property string name: "popup"              // layer namespace: qs-<name> (blurred by Hyprland)
     property int boxWidth: 600
     property int boxHeight: 400
-    property string placement: "cursor"        // "cursor": under the pointer; "center"; "top" / "topRight" (under the bar)
+    property string placement: "cursor"        // "cursor": under the pointer; "center"; "top" / "topLeft" / "topRight" (under the bar)
     property bool open: false
     readonly property bool visible: open || box.opacity > 0
     property var targetScreen: Quickshell.screens[0]
@@ -84,9 +85,10 @@ Scope {
             height: popup.boxHeight
             x: popup.placement === "center" || popup.placement === "top" ? (win.width - width) / 2
                : popup.placement === "topRight" ? win.width - width - popup.edge
+               : popup.placement === "topLeft" ? popup.edge
                : Math.max(popup.edge, Math.min(popup.cursorX - width / 2, win.width - width - popup.edge))
             y: popup.placement === "center" ? win.height * 0.22
-               : popup.placement === "topRight" || popup.placement === "top" ? popup.topReserve
+               : popup.placement === "topRight" || popup.placement === "topLeft" || popup.placement === "top" ? popup.topReserve
                : Math.max(popup.topReserve, Math.min(popup.cursorY - 28, win.height - height - popup.edge))
 
             opacity: popup.open ? 1 : 0
@@ -100,6 +102,13 @@ Scope {
         }
 
         onVisibleChanged: if (visible && popup.focusItem) popup.focusItem.forceActiveFocus()
+    }
+
+    // the catcher above only covers this monitor; Hyprland reports clicks on the others
+    HyprlandFocusGrab {
+        windows: [win]
+        active: popup.open
+        onCleared: popup.hide()
     }
 
     onOpenChanged: if (open && focusItem) focusItem.forceActiveFocus()
