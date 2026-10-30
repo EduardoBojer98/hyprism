@@ -3,8 +3,8 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
-import Quickshell.Services.UPower
 import Quickshell.Services.Mpris
+import Quickshell.Services.UPower   // PowerProfiles
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import QtQuick
@@ -13,10 +13,11 @@ import QtQuick.Layouts
 
 // Control Center at the top right of the screen under the pointer (status pill, Super+C,
 // `qs ipc call controlcenter toggle`): one glass panel holding grouped tiles.
-//   Wi-Fi / Bluetooth / Focus rows · media (or battery) tile
-//   quick toggles: Night Light, Caffeine, shared monitor, keyboard light, on-screen keyboard
-//   Display, Sound and Microphone sliders · Power mode · footer: battery, screenshot, settings, power
-// The round icon in a row toggles it; the rest of the row (or a chevron) opens its list underneath.
+//   Wi-Fi / Bluetooth / Focus / Night Light tiles · Caffeine, shared monitor, key light, on-screen keyboard
+//   media (while something plays) · Display, Sound and Microphone sliders · Power mode
+//   shortcuts (screenshot, settings, lock, power) · notifications
+// A tile's round icon toggles it; the rest of the tile (or a chevron) opens its list underneath.
+// The battery lives in the bar, so it isn't repeated here.
 Singleton {
     id: cc
 
@@ -31,15 +32,7 @@ Singleton {
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var source: Pipewire.defaultAudioSource
-    readonly property var battery: UPower.displayDevice
     readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
-    readonly property int pct: Math.round((battery?.percentage ?? 0) * 100)
-    readonly property bool charging: battery?.state === UPowerDeviceState.Charging
-    readonly property string batteryText: {
-        const secs = charging ? (battery?.timeToFull ?? 0) : (battery?.timeToEmpty ?? 0)
-        const hm = Math.floor(secs / 3600) + " h " + Math.round(secs % 3600 / 60) + " min"
-        return !UPower.onBattery && !charging ? "Plugged in" : secs > 0 ? (charging ? "Full in " + hm : hm + " left") : charging ? "Charging" : "On battery"
-    }
 
     readonly property int gap: 8          // between tiles
     readonly property int pad: 10         // panel padding
@@ -71,7 +64,7 @@ Singleton {
     function opened(visible) {
         if (wifi) wifi.scannerEnabled = visible
         if (visible) {
-            scroller.contentY = 0; brightnessRead.running = true; kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
+            scroller.contentY = 0; brightnessRead.running = true; Hyprland.refreshMonitors(); kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
             Notifications.unread = 0; Notifications.now = new Date(); NotificationCenter.unfolded = ({})
             if (toNotes) scrollToNotes.restart()
         }
@@ -95,7 +88,13 @@ Singleton {
         onTriggered: { scroller.contentY = Math.max(0, Math.min(notesHeader.y - 4, scroller.contentHeight - scroller.height)); cc.toNotes = false }
     }
 
-    function nodeName(n) { return n?.description || n?.nickname || n?.name || "" }
+    // short device names: the monitor's own name for HDMI/DP audio, "Built-in …" for the laptop's codec
+    function nodeName(n) {
+        const d = n?.description ?? "", nick = n?.nickname ?? ""
+        if (/HDMI|DisplayPort|\bDP\b/.test(d) && nick) return nick
+        if (/Analog/.test(d) && /Controller/.test(d)) return n.type === PwNodeType.AudioSink ? "Built-in speakers" : "Built-in microphone"
+        return d || nick || n?.name || ""
+    }
     function toggleExpanded(name) { expanded = expanded === name ? "" : name; passwordFor = null }
     function setKbd(level) {
         kbdLight = level
@@ -128,171 +127,50 @@ Singleton {
         width: scroller.width
         spacing: cc.gap
 
-        // ---- connections + media ------------------------------------------------------------
-        RowLayout {
+        // ---- connections: Wi-Fi, Bluetooth, Focus, Night Light --------------------------------
+        GridLayout {
             Layout.fillWidth: true
-            spacing: cc.gap
-
-            Tile {
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                Layout.preferredHeight: conns.implicitHeight + 8
-                Column {
-                    id: conns
-                    anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 4 }
-                    ConnRow {
-                        glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}"
-                        title: "Wi-Fi"
-                        subtitle: !Networking.wifiEnabled ? "Off" : (cc.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected")
-                        active: Networking.wifiEnabled
-                        isExpanded: cc.expanded === "wifi"
-                        onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
-                        onExpand: cc.toggleExpanded("wifi")
-                    }
-                    ConnRow {
-                        glyph: cc.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}"
-                        title: "Bluetooth"
-                        subtitle: !cc.adapter ? "Unavailable" : !cc.adapter.enabled ? "Off"
-                                : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On")
-                        active: cc.adapter?.enabled ?? false
-                        isExpanded: cc.expanded === "bt"
-                        onToggled: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
-                        onExpand: cc.toggleExpanded("bt")
-                    }
-                    ConnRow {
-                        glyph: "\u{F0594}"
-                        title: "Focus"
-                        subtitle: Config.notifications.dnd ? "Do Not Disturb" : "Off"
-                        active: Config.notifications.dnd
-                        expandable: false
-                        onToggled: Config.set("notifications", "dnd", !Config.notifications.dnd)
-                    }
-                }
+            columns: 2
+            columnSpacing: cc.gap
+            rowSpacing: cc.gap
+            ConnTile {
+                glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}"
+                title: "Wi-Fi"
+                subtitle: !Networking.wifiEnabled ? "Off" : (cc.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected")
+                active: Networking.wifiEnabled
+                isExpanded: cc.expanded === "wifi"
+                onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
+                onExpand: cc.toggleExpanded("wifi")
             }
-
-            // Media when something plays, otherwise the battery
-            Tile {
-                Layout.fillWidth: true
-                Layout.preferredWidth: 1
-                Layout.fillHeight: true
-
-                Item {
-                    anchors { fill: parent; margins: 12 }
-                    visible: Config.controlCenter.showMedia && cc.player !== null
-
-                    Rectangle {
-                        id: artBox
-                        width: 40; height: 40; radius: 8
-                        color: Theme.fill
-                        clip: true
-                        Image {
-                            anchors.fill: parent
-                            source: cc.player?.trackArtUrl ?? ""
-                            fillMode: Image.PreserveAspectCrop
-                            sourceSize { width: 80; height: 80 }
-                            visible: status === Image.Ready
-                        }
-                        Text {
-                            anchors.centerIn: parent
-                            visible: !(cc.player?.trackArtUrl)
-                            text: "\u{F075A}"
-                            color: Theme.subtext
-                            font { family: Theme.iconFont; pixelSize: 20 }
-                        }
-                    }
-                    Column {
-                        anchors { left: parent.left; right: parent.right; top: artBox.bottom; topMargin: 8 }
-                        Text { width: parent.width; text: cc.player?.trackTitle || cc.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
-                        Text { width: parent.width; text: cc.player?.trackArtist || cc.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
-                    }
-                    Row {
-                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: -6 }
-                        spacing: 10
-                        Repeater {
-                            model: [
-                                ["\u{F04AE}", () => cc.player.previous(), cc.player?.canGoPrevious ?? false, 20],
-                                [cc.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}", () => cc.player.togglePlaying(), cc.player?.canTogglePlaying ?? false, 26],
-                                ["\u{F04AD}", () => cc.player.next(), cc.player?.canGoNext ?? false, 20],
-                            ]
-                            Text {
-                                required property var modelData
-                                width: 30; height: 30
-                                horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                                text: modelData[0]
-                                opacity: modelData[2] ? 1 : 0.35
-                                color: Theme.text
-                                font { family: Theme.iconFont; pixelSize: modelData[3] }
-                                MouseArea { anchors.fill: parent; enabled: parent.modelData[2]; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData[1]() }
-                            }
-                        }
-                    }
-                }
-
-                Item {
-                    anchors { fill: parent; margins: 12 }
-                    visible: !(Config.controlCenter.showMedia && cc.player !== null)
-                    Text {
-                        text: cc.charging ? "\u{F0084}" : "\u{F0079}"
-                        color: cc.charging ? Theme.success : Theme.text
-                        font { family: Theme.iconFont; pixelSize: 24 }
-                    }
-                    Column {
-                        anchors { left: parent.left; bottom: parent.bottom }
-                        Text { text: cc.pct + "%"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontDisplay; weight: Font.DemiBold; features: { "tnum": 1 } } }
-                        Text { text: cc.batteryText; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
-                    }
-                }
+            ConnTile {
+                glyph: cc.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}"
+                title: "Bluetooth"
+                subtitle: !cc.adapter ? "Unavailable" : !cc.adapter.enabled ? "Off"
+                        : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On")
+                active: cc.adapter?.enabled ?? false
+                isExpanded: cc.expanded === "bt"
+                onToggled: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
+                onExpand: cc.toggleExpanded("bt")
             }
-        }
-
-        // ---- quick toggles ------------------------------------------------------------------
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: cc.gap
-            QuickToggle {
+            ConnTile {
+                glyph: "\u{F0594}"
+                title: "Focus"
+                subtitle: Config.notifications.dnd ? "Do Not Disturb" : "Off"
+                active: Config.notifications.dnd
+                expandable: false
+                onToggled: Config.set("notifications", "dnd", !Config.notifications.dnd)
+            }
+            ConnTile {
                 glyph: "\u{F0599}"
-                label: "Night"
-                hint: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode]
+                title: "Night Light"
+                subtitle: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode]
                 active: NightLight.active
+                expandable: false
                 onToggled: NightLight.toggle()
             }
-            QuickToggle {
-                glyph: "\u{F0176}"
-                label: Caffeine.active ? Caffeine.remaining(cc.now.getTime()) : "Caffeine"
-                hint: "Keep awake · choose how long"
-                active: Caffeine.active
-                expandable: true
-                isExpanded: cc.expanded === "caffeine"
-                onToggled: Caffeine.toggle()
-                onExpand: cc.toggleExpanded("caffeine")
-            }
-            QuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
-                visible: Machine.monitorSwitch
-                readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
-                glyph: "\u{F0379}"
-                label: "Monitor"
-                hint: ours ? "On this computer" : "On the other computer"
-                active: ours
-                onToggled: Quickshell.execDetached(["monswitch", "toggle"])
-            }
-            QuickToggle {
-                visible: Machine.kbdDevice !== ""
-                glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
-                label: "Key light"
-                hint: ["Off", "Low", "Medium", "High"][cc.kbdLight] + " · click for next level"
-                active: cc.kbdLight > 0
-                onToggled: cc.setKbd((cc.kbdLight + 1) % 4)
-            }
-            QuickToggle {
-                glyph: "\u{F030C}"
-                label: "Keyboard"
-                hint: "On-screen keyboard"
-                active: Osk.visible
-                onToggled: Osk.toggle()
-            }
         }
 
-        // ---- lists that open under the toggles -----------------------------------------------
+        // ---- Wi-Fi and Bluetooth lists, under their tiles --------------------------------------
         Module {
             visible: cc.expanded === "wifi"
             title: "Wi-Fi networks"
@@ -375,6 +253,50 @@ Singleton {
             }
         }
 
+        // ---- quick toggles: name, then what it's doing ---------------------------------------
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: cc.gap
+            QuickToggle {
+                glyph: "\u{F0176}"
+                label: "Caffeine"
+                status: Caffeine.active ? Caffeine.remaining(cc.now.getTime()) : "Off"
+                hint: "Keep awake · chevron to choose how long"
+                active: Caffeine.active
+                expandable: true
+                isExpanded: cc.expanded === "caffeine"
+                onToggled: Caffeine.toggle()
+                onExpand: cc.toggleExpanded("caffeine")
+            }
+            QuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
+                visible: Machine.monitorSwitch
+                readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
+                glyph: "\u{F0379}"
+                label: "Monitor"
+                status: ours ? "Here" : "Other PC"
+                hint: ours ? "Shared monitor shows this computer · click to hand it over" : "Shared monitor shows the other computer · click to take it back"
+                active: ours
+                onToggled: Quickshell.execDetached(["monswitch", "toggle"])
+            }
+            QuickToggle {
+                visible: Machine.kbdDevice !== ""
+                glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
+                label: "Key light"
+                status: ["Off", "Low", "Medium", "High"][cc.kbdLight]
+                hint: "Keyboard backlight · click for the next level"
+                active: cc.kbdLight > 0
+                onToggled: cc.setKbd((cc.kbdLight + 1) % 4)
+            }
+            QuickToggle {
+                glyph: "\u{F030C}"
+                label: "Keyboard"
+                status: Osk.visible ? "Shown" : "Hidden"
+                hint: "On-screen keyboard"
+                active: Osk.visible
+                onToggled: Osk.toggle()
+            }
+        }
+
         Module {
             visible: cc.expanded === "caffeine"
             title: "Keep awake for"
@@ -396,6 +318,63 @@ Singleton {
             }
         }
 
+        // ---- media, while a player is around ----------------------------------------------------
+        Tile {
+            visible: Config.controlCenter.showMedia && cc.player !== null
+            Layout.fillWidth: true
+            Layout.preferredHeight: 64
+            Rectangle {
+                id: artBox
+                anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                width: 44; height: 44; radius: Theme.radiusSmall
+                color: Theme.fill
+                clip: true
+                Image {
+                    anchors.fill: parent
+                    source: cc.player?.trackArtUrl ?? ""
+                    fillMode: Image.PreserveAspectCrop
+                    sourceSize { width: 88; height: 88 }
+                    visible: status === Image.Ready
+                }
+                Text {
+                    anchors.centerIn: parent
+                    visible: !(cc.player?.trackArtUrl)
+                    text: "\u{F075A}"
+                    color: Theme.subtext
+                    font { family: Theme.iconFont; pixelSize: 20 }
+                }
+            }
+            Column {
+                anchors { left: artBox.right; leftMargin: 10; right: controls.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                Text { width: parent.width; text: cc.player?.trackTitle || cc.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                Text { width: parent.width; text: cc.player?.trackArtist || cc.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+            }
+            Row {
+                id: controls
+                anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                Repeater {
+                    model: [
+                        ["\u{F04AE}", () => cc.player.previous(), cc.player?.canGoPrevious ?? false, 18],
+                        [cc.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}", () => cc.player.togglePlaying(), cc.player?.canTogglePlaying ?? false, 24],
+                        ["\u{F04AD}", () => cc.player.next(), cc.player?.canGoNext ?? false, 18],
+                    ]
+                    Rectangle {
+                        required property var modelData
+                        width: 32; height: 32; radius: 16
+                        color: mediaArea.containsMouse && modelData[2] ? Theme.fillHover : "transparent"
+                        Text {
+                            anchors.centerIn: parent
+                            text: parent.modelData[0]
+                            opacity: parent.modelData[2] ? 1 : 0.35
+                            color: Theme.text
+                            font { family: Theme.iconFont; pixelSize: parent.modelData[3] }
+                        }
+                        MouseArea { id: mediaArea; anchors.fill: parent; hoverEnabled: true; enabled: parent.modelData[2]; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData[1]() }
+                    }
+                }
+            }
+        }
+
         // ---- display and sound: one tile, three sliders ---------------------------------------
         Tile {
             Layout.fillWidth: true
@@ -406,12 +385,62 @@ Singleton {
                 spacing: 10
 
                 SliderHead { title: "Display" }
+                Text { // names only once there's more than one screen to tell apart
+                    visible: externals.count > 0
+                    Layout.bottomMargin: -6
+                    text: "Built-in"
+                    color: Theme.subtext
+                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                }
                 Bar {
-                    lowIcon: "\u{F00DE}"; highIcon: "\u{F00E0}"
+                    icon: "\u{F00DF}"
                     value: cc.brightness
                     onMoved: v => {
                         cc.brightness = Math.max(0.05, v)
                         Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
+                    }
+                }
+                // external monitors over DDC/CI (VCP 0x10); read each time the panel opens, hidden when
+                // a monitor doesn't answer (DDC/CI off in its menu)
+                Repeater {
+                    id: externals
+                    model: popup.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP")) : []
+                    ColumnLayout {
+                        id: ext
+                        required property var modelData
+                        property string bus: ""
+                        property int max: 100
+                        property real value: -1
+                        visible: value >= 0
+                        Layout.fillWidth: true
+                        spacing: 4
+                        Text {
+                            text: ext.modelData.lastIpcObject?.model || ext.modelData.name
+                            color: Theme.subtext
+                            font { family: Theme.font; pixelSize: Theme.fontCaption }
+                        }
+                        Bar {
+                            icon: "\u{F0379}"
+                            value: Math.max(0, ext.value)
+                            onMoved: v => { ext.value = Math.max(0.01, v); ddcSet.restart() }
+                        }
+                        Process {
+                            running: true
+                            command: ["sh", "-c", "b=$(readlink -f /sys/class/drm/card*-\"$1\"/ddc | sed 's/.*i2c-//'); [ -n \"$b\" ] || exit 1; echo \"$b\"; ddcutil --bus \"$b\" getvcp 10 --terse", "sh", ext.modelData.name]
+                            stdout: StdioCollector {
+                                onStreamFinished: {
+                                    const l = text.trim().split("\n")   // "6", "VCP 10 C 80 100"
+                                    const v = (l[1] ?? "").split(" ")
+                                    if (v[0] !== "VCP" || !(parseInt(v[4]) > 0)) return
+                                    ext.bus = l[0]; ext.max = parseInt(v[4]); ext.value = parseInt(v[3]) / ext.max
+                                }
+                            }
+                        }
+                        Timer {   // DDC is slow: send once dragging pauses
+                            id: ddcSet
+                            interval: 150
+                            onTriggered: Quickshell.execDetached(["ddcutil", "--bus", ext.bus, "--noverify", "setvcp", "10", String(Math.round(ext.value * ext.max))])
+                        }
                     }
                 }
 
@@ -422,10 +451,11 @@ Singleton {
                     onClicked: cc.toggleExpanded("out")
                 }
                 Bar {
-                    lowIcon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057F}"; highIcon: "\u{F057E}"
+                    icon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
+                    hint: cc.sink?.audio?.muted ? "Unmute" : "Mute"
                     value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
                     onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
-                    onLowClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
+                    onIconClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
                 }
                 ColumnLayout {
                     visible: cc.expanded === "out"
@@ -451,10 +481,11 @@ Singleton {
                     onClicked: cc.toggleExpanded("in")
                 }
                 Bar {
-                    lowIcon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"; highIcon: ""
+                    icon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
+                    hint: cc.source?.audio?.muted ? "Unmute" : "Mute"
                     value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
                     onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
-                    onLowClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
+                    onIconClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
                 }
                 ColumnLayout {
                     visible: cc.expanded === "in"
@@ -520,23 +551,14 @@ Singleton {
             }
         }
 
-        // ---- footer: battery, then shortcuts --------------------------------------------------
+        // ---- shortcuts ------------------------------------------------------------------------
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 4
-            spacing: 2
-            Text {
-                Layout.fillWidth: true
-                visible: cc.battery?.isPresent ?? false
-                text: (cc.charging ? "\u{F0084} " : "\u{F0079} ") + cc.pct + "%  ·  " + cc.batteryText
-                elide: Text.ElideRight
-                color: Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
-            }
-            Item { Layout.fillWidth: true; visible: !(cc.battery?.isPresent ?? false) }
-            IconButton { glyph: "\u{F0100}"; hint: "Screenshot an area"; onClicked: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) } }
-            IconButton { glyph: "\u{F0493}"; hint: "Settings"; onClicked: { cc.hide(); SettingsApp.show("") } }
-            IconButton { glyph: "\u{F0425}"; hint: "Lock, sleep, restart…"; onClicked: { cc.hide(); UtilityMenu.toggle() } }
+            spacing: cc.gap
+            IconButton { glyph: "\u{F0100}"; label: "Screenshot"; onClicked: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) } }
+            IconButton { glyph: "\u{F0493}"; label: "Settings"; onClicked: { cc.hide(); SettingsApp.show("") } }
+            IconButton { glyph: "\u{F033E}"; label: "Lock"; onClicked: { cc.hide(); Quickshell.execDetached(["loginctl", "lock-session"]) } }
+            IconButton { glyph: "\u{F0425}"; label: "Power"; onClicked: { cc.hide(); UtilityMenu.toggle() } }
         }
 
         // ---- notifications: the history, grouped by app; a group folds into its newest card ----
@@ -552,11 +574,11 @@ Singleton {
                 color: Notifications.history.length ? Theme.text : Theme.subtext
                 font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
             }
-            Chip {
-                icon: Notifications.dnd ? "\u{F009B}" : "\u{F009A}"
-                label: Notifications.dnd ? "Do Not Disturb" : ""
-                active: Notifications.dnd
-                onClicked: Notifications.toggleDnd()
+            Text {
+                visible: Notifications.dnd
+                text: "\u{F009B}  Silenced"
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
             }
             Chip { visible: Notifications.history.length > 0; label: "Clear all"; onClicked: Notifications.clearAll() }
         }
@@ -636,8 +658,8 @@ Singleton {
         color: Theme.fill
     }
 
-    // Connection row: round icon that toggles, then name and status that open its list
-    component ConnRow: Item {
+    // Connection tile: round icon that toggles, then name and status that open its list (chevron)
+    component ConnTile: Rectangle {
         id: conn
         property string glyph
         property string title
@@ -648,26 +670,25 @@ Singleton {
         signal toggled()
         signal expand()
 
-        width: parent ? parent.width : 0
-        height: 44
+        Layout.fillWidth: true
+        Layout.preferredWidth: 1
+        Layout.preferredHeight: 52
+        radius: Theme.radius
+        color: conn.isExpanded || rowHover.containsMouse ? Theme.fillHover : Theme.fill
+        border { color: conn.isExpanded ? Theme.strokeStrong : "transparent"; width: 1 }
+        Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-        Rectangle {   // hover / open highlight for the list part
-            anchors { fill: parent; margins: 1 }
-            radius: Theme.radiusSmall + 2
-            color: conn.isExpanded ? Theme.fillHover : rowHover.containsMouse && conn.expandable ? Theme.fill : "transparent"
-            Behavior on color { ColorAnimation { duration: Theme.animFast } }
-        }
         MouseArea {
             id: rowHover
             anchors.fill: parent
             hoverEnabled: true
-            cursorShape: conn.expandable ? Qt.PointingHandCursor : Qt.ArrowCursor
+            cursorShape: Qt.PointingHandCursor
             onClicked: conn.expandable ? conn.expand() : conn.toggled()
         }
         Rectangle {   // round toggle (inline: components declared in this file can't nest)
             id: disc
-            anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
-            width: 30; height: 30; radius: 15
+            anchors { left: parent.left; leftMargin: 9; verticalCenter: parent.verticalCenter }
+            width: 32; height: 32; radius: 16
             color: conn.active ? Theme.selected : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
             scale: discArea.pressed ? 0.92 : 1
             Behavior on color { ColorAnimation { duration: Theme.anim } }
@@ -676,23 +697,25 @@ Singleton {
                 anchors.centerIn: parent
                 text: conn.glyph
                 color: conn.active ? Theme.onSelected : Theme.text
-                font { family: Theme.iconFont; pixelSize: 15 }
+                font { family: Theme.iconFont; pixelSize: 16 }
             }
             MouseArea { id: discArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
         }
         Column {
-            anchors { left: disc.right; leftMargin: 8; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            anchors { left: disc.right; leftMargin: 9; right: chev.visible ? chev.left : parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
             Text { width: parent.width; text: conn.title; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
             Text { width: parent.width; text: conn.subtitle; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
         }
+        Chevron { id: chev; visible: conn.expandable; open: conn.isExpanded; size: 12; anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter } }
     }
 
-    // A square tile in the quick-toggle row: icon over a short label; accent when on.
+    // A square tile in the quick-toggle row: icon, name, and what it's doing; white when on.
     // With a list, a small chevron in the corner opens it (right-click works too).
     component QuickToggle: Rectangle {
         id: qt
         property string glyph
         property string label
+        property string status
         property string hint
         property bool active: false
         property bool expandable: false
@@ -702,7 +725,7 @@ Singleton {
 
         Layout.fillWidth: true
         Layout.preferredWidth: 1
-        Layout.preferredHeight: 58
+        Layout.preferredHeight: 66
         radius: Theme.radius
         color: active ? Theme.selected : qtArea.containsMouse ? Theme.fillHover : Theme.fill
         border { color: isExpanded ? Theme.accent : "transparent"; width: 1 }
@@ -713,7 +736,7 @@ Singleton {
         Column {
             anchors.centerIn: parent
             width: parent.width - 8
-            spacing: 3
+            spacing: 1
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qt.glyph
@@ -725,8 +748,17 @@ Singleton {
                 horizontalAlignment: Text.AlignHCenter
                 text: qt.label
                 elide: Text.ElideRight
+                color: qt.active ? Theme.onSelected : Theme.text
+                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+            }
+            Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                text: qt.status
+                elide: Text.ElideRight
+                opacity: 0.75
                 color: qt.active ? Theme.onSelected : Theme.subtext
-                font { family: Theme.font; pixelSize: 10; weight: Font.Medium }
+                font { family: Theme.font; pixelSize: 10; features: { "tnum": 1 } }
             }
         }
         MouseArea {
@@ -749,23 +781,27 @@ Singleton {
 
     }
 
-    // Small round icon button for the footer
+    // Shortcut in the bottom row: icon over a small label, on a quiet tile
     component IconButton: Rectangle {
         id: ib
         property string glyph
-        property string hint
+        property string label
         signal clicked()
-        Layout.preferredWidth: 30
-        Layout.preferredHeight: 30
-        radius: 15
-        color: ibArea.containsMouse ? Theme.fillHover : "transparent"
-        Text { anchors.centerIn: parent; text: ib.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
-        MouseArea {
-            id: ibArea
-            anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-            onClicked: ib.clicked()
-            onContainsMouseChanged: containsMouse ? cc.hint(ib, ib.hint) : cc.unhint(ib)
+        Layout.fillWidth: true
+        Layout.preferredWidth: 1
+        Layout.preferredHeight: 50
+        radius: Theme.radius
+        color: ibArea.containsMouse ? Theme.fillHover : Theme.fill
+        scale: ibArea.pressed ? 0.96 : 1
+        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+        Column {
+            anchors.centerIn: parent
+            spacing: 2
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: ib.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: ib.label; color: Theme.subtext; font { family: Theme.font; pixelSize: 10; weight: Font.Medium } }
         }
+        MouseArea { id: ibArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ib.clicked() }
     }
 
     // Label over a slider; with a detail (device name) it is a button that opens the device list
@@ -863,54 +899,55 @@ Singleton {
         }
     }
 
-    // Thin slider: icon, track, icon
-    component Bar: RowLayout {
+    // Pill slider: the fill carries the icon (click it to mute), the value sits at the right end
+    component Bar: Item {
         id: bar
         property real value: 0
-        property string lowIcon
-        property string highIcon
+        property string icon
+        property string hint
         signal moved(real value)
-        signal lowClicked()
+        signal iconClicked()
+        readonly property real v: Math.max(0, Math.min(1, value))
 
         Layout.fillWidth: true
-        spacing: 10
+        Layout.preferredHeight: 26
 
-        Text {
-            text: bar.lowIcon
-            color: Theme.text
-            font { family: Theme.iconFont; pixelSize: 16 }
-            MouseArea { anchors { fill: parent; margins: -6 } cursorShape: Qt.PointingHandCursor; onClicked: bar.lowClicked() }
-        }
-        Item {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 20
+        Rectangle {
+            id: track
+            anchors.fill: parent
+            radius: height / 2
+            color: Theme.fill
             Rectangle {
-                id: track
-                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
-                height: 6
-                radius: 3
-                color: Theme.fill
-                Rectangle {
-                    width: Math.max(track.height, track.width * Math.max(0, Math.min(1, bar.value)))
-                    height: parent.height
-                    radius: parent.radius
-                    color: Theme.selected
-                }
-            }
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                function set(x) { bar.moved(Math.max(0, Math.min(1, x / width))) }
-                onPressed: mouse => set(mouse.x)
-                onPositionChanged: mouse => { if (pressed) set(mouse.x) }
-                onWheel: wheel => bar.moved(Math.max(0, Math.min(1, bar.value + (wheel.angleDelta.y > 0 ? 0.05 : -0.05))))
+                width: Math.max(track.height, track.width * bar.v)
+                height: parent.height
+                radius: parent.radius
+                color: Theme.selected
             }
         }
         Text {
-            visible: bar.highIcon !== ""
-            text: bar.highIcon
-            color: Theme.text
-            font { family: Theme.iconFont; pixelSize: 18 }
+            id: barIcon
+            anchors { left: parent.left; leftMargin: 7; verticalCenter: parent.verticalCenter }
+            text: bar.icon
+            color: Theme.onSelected
+            font { family: Theme.iconFont; pixelSize: 14 }
+        }
+        Text {
+            anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+            text: Math.round(bar.v * 100) + "%"
+            // over the fill near the top, on the track otherwise
+            color: track.width * bar.v >= track.width - anchors.rightMargin - width - 2 ? Theme.onSelected : Theme.subtext
+            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; features: { "tnum": 1 } }
+        }
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            hoverEnabled: true
+            property bool onIcon: false
+            function set(x) { bar.moved(Math.max(0, Math.min(1, x / width))) }
+            onPressed: mouse => { onIcon = bar.hint !== "" && mouse.x < track.height; if (!onIcon) set(mouse.x) }
+            onPositionChanged: mouse => { if (pressed && !onIcon) set(mouse.x) }
+            onReleased: mouse => { if (onIcon && mouse.x < track.height) bar.iconClicked() }
+            onWheel: wheel => bar.moved(Math.max(0, Math.min(1, bar.value + (wheel.angleDelta.y > 0 ? 0.05 : -0.05))))
         }
     }
 
