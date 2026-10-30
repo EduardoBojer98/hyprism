@@ -13,9 +13,8 @@ adw-gtk-theme
 ghostty
 papirus-icon-theme
 
-# Shell (bar, dock, OSD, notifications), launcher, on-screen keyboard; mako stays as a fallback
+# Shell (bar, dock, OSD, notifications), emoji picker (fuzzel), on-screen keyboard
 fuzzel
-mako
 quickshell
 pavucontrol
 nm-connection-editor
@@ -28,7 +27,6 @@ jq
 curl
 libnotify
 wl-clipboard
-cliphist
 wtype
 flameshot
 hyprpicker
