@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 
 // The Settings app: one glass window with a sidebar of sections, like macOS System Settings.
 // Open with Super+I, the Control Center's gear, the launcher ("Settings"), or
@@ -63,12 +64,17 @@ Singleton {
 
     FloatingWindow {
         id: win
+        // Narrow window: the sidebar shrinks to icons and the page margins tighten; rows put their
+        // control under the label when both don't fit (SettingRow). Anything still too big scrolls.
+        readonly property bool compact: width < 780
+        readonly property int pad: width < 640 ? Theme.spaceL : 28
+
         visible: root.open
         title: "Settings"
         color: "transparent"
         implicitWidth: 1020
         implicitHeight: 700
-        minimumSize: Qt.size(860, 560)
+        minimumSize: Qt.size(460, 360)
         onVisibleChanged: if (!visible) root.open = false
 
         Glass {
@@ -81,52 +87,68 @@ Singleton {
             Rectangle {
                 id: sidebar
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                width: 240
+                width: win.compact ? 64 : 240
                 color: Qt.rgba(0, 0, 0, 0.18)
+                Behavior on width { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
-                Column {
-                    anchors { fill: parent; margins: 12; topMargin: 18 }
-                    spacing: 2
+                Flickable {
+                    id: nav
+                    anchors.fill: parent
+                    contentHeight: navColumn.implicitHeight + 30
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    ScrollBar.vertical: GlassScrollBar {}
 
-                    Text {
-                        text: "Settings"
-                        leftPadding: 10
-                        bottomPadding: 12
-                        color: Theme.text
-                        font { family: Theme.font; pixelSize: 20; weight: Font.Bold }
-                    }
+                    Column {
+                        id: navColumn
+                        x: 12; y: 18
+                        width: sidebar.width - 24
+                        spacing: 2
 
-                    Repeater {
-                        model: root.sections
-                        Rectangle {
-                            required property var modelData
-                            readonly property bool current: root.section === modelData.id
-                            width: parent.width
-                            height: 34
-                            radius: Theme.radiusSmall
-                            color: current ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
-                            border { color: current ? Theme.stroke : "transparent"; width: 1 }
-                            Row {
-                                anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                                spacing: 10
-                                Rectangle {
-                                    width: 24; height: 24; radius: 7
-                                    color: current ? Theme.accent : Theme.fill
+                        Text {
+                            visible: !win.compact
+                            text: "Settings"
+                            leftPadding: 10
+                            bottomPadding: 12
+                            color: Theme.text
+                            font { family: Theme.font; pixelSize: 20; weight: Font.Bold }
+                        }
+
+                        Repeater {
+                            model: root.sections
+                            Rectangle {
+                                required property var modelData
+                                readonly property bool current: root.section === modelData.id
+                                width: parent.width
+                                height: 34
+                                radius: Theme.radiusSmall
+                                color: current ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
+                                border { color: current ? Theme.stroke : "transparent"; width: 1 }
+                                Row {
+                                    anchors { left: parent.left; leftMargin: win.compact ? (parent.width - 24) / 2 : 10; verticalCenter: parent.verticalCenter }
+                                    spacing: 10
+                                    Rectangle {
+                                        width: 24; height: 24; radius: 7
+                                        color: current ? Theme.accent : Theme.fill
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.glyph
+                                            color: current ? Theme.accentText : Theme.text
+                                            font { family: Theme.iconFont; pixelSize: 14 }
+                                        }
+                                    }
                                     Text {
-                                        anchors.centerIn: parent
-                                        text: modelData.glyph
-                                        color: current ? Theme.accentText : Theme.text
-                                        font { family: Theme.iconFont; pixelSize: 14 }
+                                        visible: !win.compact
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: sidebar.width - 24 - 54
+                                        elide: Text.ElideRight
+                                        text: modelData.name
+                                        color: Theme.text
+                                        font { family: Theme.font; pixelSize: 13; weight: current ? Font.DemiBold : Font.Normal }
                                     }
                                 }
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: modelData.name
-                                    color: Theme.text
-                                    font { family: Theme.font; pixelSize: 13; weight: current ? Font.DemiBold : Font.Normal }
-                                }
+                                MouseArea { id: navArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.section = modelData.id }
                             }
-                            MouseArea { id: navArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.section = modelData.id }
                         }
                     }
                 }
@@ -142,17 +164,25 @@ Singleton {
             Flickable {
                 id: page
                 anchors { left: sidebar.right; leftMargin: 1; right: parent.right; top: parent.top; bottom: parent.bottom }
-                contentHeight: pageColumn.implicitHeight + 48
+                contentHeight: pageColumn.implicitHeight + win.pad * 2
+                contentWidth: pageColumn.width + win.pad * 2     // wider than the window only below ~340 px of page
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: GlassScrollBar {}
+                ScrollBar.horizontal: GlassScrollBar {}
+
+                Connections { target: root; function onSectionChanged() { page.contentY = 0; page.contentX = 0 } }
 
                 ColumnLayout {
                     id: pageColumn
-                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 28 }
+                    x: win.pad; y: win.pad
+                    width: Math.max(page.width - win.pad * 2, 340)
                     spacing: 20
 
                     Text {
+                        Layout.fillWidth: true
                         text: root.sections.find(s => s.id === root.section)?.name ?? ""
+                        elide: Text.ElideRight
                         color: Theme.text
                         font { family: Theme.font; pixelSize: 22; weight: Font.Bold }
                     }

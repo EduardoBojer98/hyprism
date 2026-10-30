@@ -1,20 +1,23 @@
 import QtQuick
 import QtQuick.Layouts
 
-// One row in a Settings group: label (+ optional hint) on the left, a control on the right.
+// One setting: label and hint on the left, its control on the right. When the window is too
+// narrow for both side by side, the control moves under the text.
 Item {
     id: row
 
     property string label
     property string hint
     default property alias control: slot.data
+    readonly property bool stacked: width > 0 && slot.implicitWidth + 200 > width - 32
 
     Layout.fillWidth: true
-    implicitHeight: Math.max(48, texts.implicitHeight + 20)
+    implicitHeight: stacked ? texts.implicitHeight + slot.implicitHeight + 34 : Math.max(48, texts.implicitHeight + 20)
 
     Column {
         id: texts
-        anchors { left: parent.left; leftMargin: 16; right: slot.left; rightMargin: 16; verticalCenter: parent.verticalCenter }
+        anchors { left: parent.left; leftMargin: 16; right: row.stacked ? parent.right : slot.left; rightMargin: 16 }
+        y: row.stacked ? 12 : (row.height - height) / 2
         Text {
             width: parent.width
             text: row.label
@@ -34,7 +37,8 @@ Item {
 
     Row {
         id: slot
-        anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
+        x: row.stacked ? 16 : row.width - width - 16
+        y: row.stacked ? texts.y + texts.height + 10 : (row.height - height) / 2
         spacing: 8
     }
 }
