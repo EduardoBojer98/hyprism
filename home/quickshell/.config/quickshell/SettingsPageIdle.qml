@@ -71,4 +71,17 @@ ColumnLayout {
             PillButton { text: "Lock"; onClicked: Quickshell.execDetached(["loginctl", "lock-session"]) }
         }
     }
+
+    SettingGroup {
+        title: "Caffeine"
+        SettingRow {
+            label: "Keep awake for"
+            hint: "Used by the Caffeine button and Spotlight. Stops early when you turn it off or log out."
+            ConfigChoice { section: "caffeine"; key: "defaultMinutes"; values: Caffeine.choices; labels: Caffeine.choices.map(Caffeine.label) }
+        }
+        SettingRow {
+            label: Caffeine.active ? "Caffeine is on" : "Caffeine is off"
+            PillButton { text: Caffeine.active ? "Turn off" : "Turn on"; onClicked: Caffeine.toggle() }
+        }
+    }
 }
