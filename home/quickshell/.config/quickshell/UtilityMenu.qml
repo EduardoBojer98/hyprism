@@ -4,7 +4,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Small utility menu behind the power button at the right end of the bar (also
+// Small utility menu behind the system logo at the left end of the bar (also
 // `qs ipc call utilitymenu toggle`): this computer, quick tools, then power. Log out, Restart and
 // Shut down ask for a second click so a stray click can't end the session.
 Singleton {
@@ -55,7 +55,7 @@ Singleton {
     CursorPopup {
         id: popup
         name: "utilitymenu"
-        placement: "topRight"
+        placement: "topLeft"
         boxWidth: 236
         boxHeight: menu.implicitHeight + Theme.spaceS * 2
         onOpened: { root.confirming = ""; info.running = true }

@@ -55,7 +55,7 @@ Singleton {
         if (!action || n.resident) n.dismiss()
     }
     function clearApp(app) { for (const n of history.filter(x => (x.appName || "Other") === app)) n.dismiss() }
-    function clearAll() { for (const n of history.slice()) n.dismiss() }
+    function clearAll() { for (const n of history.slice()) n.dismiss(); unread = 0 }
     function toggleDnd() { Config.set("notifications", "dnd", !dnd) }
 
     function forget(n) {

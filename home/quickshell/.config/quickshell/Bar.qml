@@ -14,7 +14,7 @@ import QtQuick.Layouts
 // Top bar: one thin frosted strip across the screen, monochrome items that light up on hover.
 // Desktops are numbers in a recessed pill; an accent pill slides to the current one.
 //   desktops · app name and title      weather · date and time (calendar)      tray · temperatures ·
-//   layout · Wi-Fi/Bluetooth/volume/battery (Control Center) · notifications bell · power
+//   keyboard layout (its own dropdown) · Wi-Fi/Bluetooth/volume/battery (Control Center) · notifications bell
 // Amber/red appear only when a value leaves its normal range.
 PanelWindow {
     id: bar
@@ -28,7 +28,6 @@ PanelWindow {
     readonly property var battery: UPower.displayDevice
     property string appClass: ""   // focused window, from Hyprland's activewindow event
     property string appTitle: ""
-    property string layout: "US"
 
     anchors { top: true; left: true; right: true }
     implicitHeight: 30
@@ -37,12 +36,11 @@ PanelWindow {
 
     PwObjectTracker { objects: [bar.sink] }
 
-    // Keyboard layout: starting value from hyprctl, then Hyprland's activelayout events
+    // Focused app from Hyprland's activewindow events (the keyboard layout lives in Keyboard.qml)
     Connections {
         target: Hyprland
         function onRawEvent(event) {
-            if (event.name === "activelayout") kbRead.running = true
-            else if (event.name === "activewindow") {
+            if (event.name === "activewindow") {
                 const comma = event.data.indexOf(",")
                 bar.appClass = event.data.slice(0, comma)
                 bar.appTitle = event.data.slice(comma + 1)
@@ -55,18 +53,6 @@ PanelWindow {
         stdout: StdioCollector {
             onStreamFinished: {
                 try { const w = JSON.parse(text); bar.appClass = w.class ?? ""; bar.appTitle = w.title ?? "" } catch (e) {}
-            }
-        }
-    }
-    Process {
-        id: kbRead
-        running: true
-        command: ["hyprctl", "-j", "devices"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const main = JSON.parse(text).keyboards.find(k => k.main)
-                // "us,rs" + index 1 -> "RS"
-                if (main) bar.layout = (main.layout.split(",")[main.active_layout_index] ?? main.layout).toUpperCase()
             }
         }
     }
@@ -93,6 +79,12 @@ PanelWindow {
             anchors { left: parent.left; verticalCenter: parent.verticalCenter }
             spacing: 2
 
+            Item { width: Theme.spaceXs; height: 1 }
+            BarItem { // this computer: about, tools and power, behind the system logo (like the Apple menu)
+                active: UtilityMenu.open
+                onPressed: UtilityMenu.toggle()
+                StatusGlyph { glyph: "\u{F303}"; font.pixelSize: 15 }   // Arch logo; Nerd Fonts has no CachyOS one
+            }
             Item { width: Theme.spaceXs; height: 1 }
             Rectangle { // desktops on this screen: numbers in a recessed pill, an accent pill slides to the current one
                 id: desks
@@ -250,16 +242,46 @@ PanelWindow {
                 onPressed: Sensors.toggle()
                 spacing: Theme.spaceS
                 Repeater {
-                    model: [["CPU", Sensors.cpu], ["GPU", Sensors.gpu]]
-                    Text {
+                    model: [["\u{F4BC}", Sensors.cpu], ["\u{F08AE}", Sensors.gpu]]   // chip, graphics card
+                    Row { // quiet icon, the number carries the colour
                         required property var modelData
                         readonly property real v: modelData[1]
                         anchors.verticalCenter: parent.verticalCenter
                         visible: !isNaN(v)
-                        text: `<span style="font-size:10px;font-weight:700">${modelData[0]}</span> ${Math.round(v)}°`
-                        textFormat: Text.StyledText
-                        color: v >= 90 ? Theme.red : v >= 80 ? Theme.yellow : Theme.text
-                        font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+                        spacing: 4
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: parent.modelData[0]
+                            color: Theme.subtext
+                            font { family: Theme.iconFont; pixelSize: 14 }
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: Math.round(parent.v) + "°"
+                            color: parent.v >= 90 ? Theme.red : parent.v >= 80 ? Theme.yellow : Theme.text
+                            font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+                        }
+                    }
+                }
+            }
+
+            BarItem { // keyboard layout as a small keycap; click for the list of layouts
+                visible: Keyboard.layouts.length > 1
+                active: Keyboard.open
+                onPressed: Keyboard.toggle()
+                onScrolled: d => Keyboard.use((Keyboard.active + (d > 0 ? 1 : Keyboard.layouts.length - 1)) % Keyboard.layouts.length)
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(22, layoutText.implicitWidth + 8); height: 15
+                    radius: 4
+                    color: "transparent"
+                    border { color: Qt.alpha(Theme.text, 0.45); width: 1 }
+                    Text {
+                        id: layoutText
+                        anchors.centerIn: parent
+                        text: Keyboard.short
+                        color: Theme.text
+                        font { family: Theme.font; pixelSize: 9; weight: Font.Bold; letterSpacing: 0.3 }
                     }
                 }
             }
@@ -267,28 +289,37 @@ PanelWindow {
             BarItem { // status → Control Center; scroll for volume
                 id: status
                 readonly property int pct: Math.round((bar.battery?.percentage ?? 0) * 100)
-                readonly property bool charging: bar.battery?.state === UPowerDeviceState.Charging || !UPower.onBattery
-                readonly property bool low: pct <= 15 && !charging
+                readonly property bool plugged: !UPower.onBattery
+                readonly property bool charging: bar.battery?.state === UPowerDeviceState.Charging
+                readonly property bool low: pct <= 15 && !plugged
                 spacing: Theme.spaceM
                 active: ControlCenter.open
                 onPressed: ControlCenter.toggle()
                 onScrolled: d => { const a = bar.sink?.audio; if (a) a.volume = Math.max(0, Math.min(1, a.volume + d * 0.05)) }
 
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: bar.layout
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: 11; weight: Font.Bold }
-                }
                 StatusGlyph {
-                    glyph: bar.wired ? "\u{F0200}" : bar.network ? "\u{F05A9}" : "\u{F05AA}"
-                    tone: bar.wired || bar.network ? Theme.text : Theme.red
+                    visible: bar.wired || !Networking.wifiEnabled
+                    glyph: bar.wired ? "\u{F0200}" : "\u{F05AA}"
+                    tone: bar.wired ? Theme.text : Theme.muted
+                    font.pixelSize: 15
                 }
-                StatusGlyph {
+                WifiGlyph {   // signal strength; all dim while not connected
+                    visible: !bar.wired && Networking.wifiEnabled
+                    strength: bar.network ? bar.network.signalStrength : -1
+                }
+                StatusGlyph { // bluetooth: dim until something is connected
+                    readonly property bool linked: bar.adapter?.devices.values.some(d => d.connected) ?? false
                     visible: bar.adapter?.enabled ?? false
-                    glyph: (bar.adapter?.devices.values.some(d => d.connected) ?? false) ? "\u{F00B1}" : "\u{F00AF}"
+                    glyph: linked ? "\u{F00B1}" : "\u{F00AF}"
+                    tone: linked ? Theme.text : Theme.subtext
+                    font.pixelSize: 15
                 }
-                StatusGlyph { glyph: bar.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}" }
+                StatusGlyph { // volume: muted / low / medium / high
+                    readonly property real vol: bar.sink?.audio?.volume ?? 0
+                    glyph: bar.sink?.audio?.muted || vol === 0 ? "\u{F075F}" : vol < 0.34 ? "\u{F057F}" : vol < 0.67 ? "\u{F0580}" : "\u{F057E}"
+                    tone: bar.sink?.audio?.muted ? Theme.subtext : Theme.text
+                    font.pixelSize: 15
+                }
                 Row {
                     visible: bar.battery?.isPresent ?? false
                     anchors.verticalCenter: parent.verticalCenter
@@ -299,16 +330,42 @@ PanelWindow {
                         color: status.low ? Theme.red : Theme.text
                         font { family: Theme.font; pixelSize: 12; weight: Font.Medium; features: { "tnum": 1 } }
                     }
-                    Text {
+                    Item { // drawn battery: hairline body, fill to the charge, nub; green while charging, red when low
                         anchors.verticalCenter: parent.verticalCenter
-                        text: status.charging ? "\u{F0084}" : status.pct >= 95 ? "\u{F0079}" : String.fromCodePoint(0xF007A + Math.max(0, Math.floor(status.pct / 10) - 1))
-                        color: status.low ? Theme.red : Theme.text
-                        font { family: Theme.iconFont; pixelSize: 17 }
+                        readonly property color tone: status.low ? Theme.red : status.charging ? Theme.success : Theme.text
+                        width: 25; height: 12
+                        Rectangle {
+                            id: batteryBody
+                            width: 22; height: 12; radius: 3.5
+                            color: "transparent"
+                            border { color: Qt.alpha(Theme.text, 0.45); width: 1 }
+                            Rectangle {
+                                x: 2; y: 2
+                                width: Math.max(2, (parent.width - 4) * Math.min(1, status.pct / 100))
+                                height: parent.height - 4
+                                radius: 2
+                                color: parent.parent.tone
+                                Behavior on width { NumberAnimation { duration: Theme.anim } }
+                            }
+                        }
+                        Rectangle { // nub
+                            anchors { left: batteryBody.right; leftMargin: 1; verticalCenter: batteryBody.verticalCenter }
+                            width: 2; height: 4; radius: 1
+                            color: Qt.alpha(Theme.text, 0.45)
+                        }
+                    }
+                    Text { // bolt while charging, plug while plugged in and held (charge limit)
+                        visible: status.plugged || status.charging
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: status.charging ? "\u{F0241}" : "\u{F06A5}"
+                        color: Theme.text
+                        font { family: Theme.iconFont; pixelSize: 12 }
                     }
                 }
             }
 
-            BarItem { // notifications: bell with the unread count; crossed out during Do Not Disturb
+            BarItem { // notifications: bell with the unread count, only while there are some; crossed out during Do Not Disturb
+                visible: Notifications.history.length > 0
                 active: NotificationCenter.open
                 onPressed: NotificationCenter.toggle()   // the Control Center, scrolled to notifications
                 Item {
@@ -336,11 +393,6 @@ PanelWindow {
                 }
             }
 
-            BarItem { // power and tools
-                active: UtilityMenu.open
-                onPressed: UtilityMenu.toggle()
-                StatusGlyph { glyph: "\u{F0425}"; font.pixelSize: 15 }
-            }
         }
     }
 }
