@@ -40,3 +40,10 @@ hl.window_rule({
     size   = "1020 700",
     center = true,
 })
+
+-- JuhRadial MX radial menu (Logitech MX Master): the daemon places it at the cursor itself
+hl.window_rule({
+    name = "juhradial-overlay",
+    match = { title = "^(JuhRadial MX)$" },
+    float = true, pin = true, no_blur = true, no_shadow = true, no_anim = true, border_size = 0,
+})

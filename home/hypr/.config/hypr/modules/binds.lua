@@ -6,12 +6,16 @@ local exec = hl.dsp.exec_cmd
 
 -- Apps
 hl.bind(key("Return"), exec(terminal))
-hl.bind(key("Space"),  exec("qs ipc call launcher toggle"))      -- launcher, Apps tab (fuzzel stays as a fallback)
+-- Spotlight at the cursor: tap Super alone (fires on release, only if no other key was pressed).
+-- Super+Space does the same for muscle memory; fuzzel stays installed as a fallback launcher.
+hl.bind("SUPER + Super_L", exec("qs ipc call launcher toggle"), { release = true })
+hl.bind(key("Space"),  exec("qs ipc call launcher toggle"))
 hl.bind(key("E"),      exec("dolphin"))
 hl.bind(key("I"),      exec("qs ipc call settings toggle"))   -- Settings app
 hl.bind(key("B"),      exec("firefox"))
-hl.bind(key("V"),      exec("qs ipc call launcher clipboard"))   -- launcher, Clipboard tab
-hl.bind(key("SHIFT + Space"), exec("qs ipc call launcher files")) -- launcher, Files tab
+hl.bind(key("V"),      exec("qs ipc call clipboard toggle"))     -- clipboard history at the cursor
+hl.bind(key("SHIFT + Space"), exec("qs ipc call launcher files")) -- Spotlight in Files mode
+hl.bind(key("A"),      exec("qs ipc call launcher apps"))        -- all applications grid
 
 -- Windows
 hl.bind(key("Q"),         hl.dsp.window.close())

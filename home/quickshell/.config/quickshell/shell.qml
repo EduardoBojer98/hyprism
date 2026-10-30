@@ -18,7 +18,8 @@ ShellRoot {
     }
 
     Osd {}
+    ThemeSync {}
     // Create the singletons with IPC handlers now, so `qs ipc call …` works before first use
-    Component.onCompleted: { Launcher.open = false; SettingsApp.open = false }
+    Component.onCompleted: { Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = "" }
     Notifications {}
 }

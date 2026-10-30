@@ -20,13 +20,13 @@ Rectangle {
     Row {
         id: row
         anchors.centerIn: parent
-        spacing: 6
+        spacing: Theme.spaceXs + 2
 
         Text {
             visible: chip.icon !== ""
             text: chip.icon
             color: chip.iconColor
-            font { family: Theme.iconFont; pixelSize: 15 }
+            font { family: Theme.iconFont; pixelSize: Theme.iconSmall - 1 }
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {

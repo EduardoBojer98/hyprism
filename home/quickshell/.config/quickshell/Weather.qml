@@ -4,14 +4,13 @@ import Quickshell.Io
 import QtQuick
 
 // Current weather from Open-Meteo (free, no account), refreshed every 15 minutes.
-// The place comes from settings.json ({ "weather": { "city", "latitude", "longitude" } }),
-// which the Settings app writes; until then it defaults to Belgrade.
+// The place comes from Config.weather, which the Settings app (Weather) writes.
 Singleton {
     id: root
 
-    property string city: "Belgrade"
-    property real latitude: 44.82
-    property real longitude: 20.46
+    readonly property string city: Config.weather.city
+    readonly property real latitude: Config.weather.latitude
+    readonly property real longitude: Config.weather.longitude
     property real temperature: NaN
     property int code: -1
     property bool isDay: true
@@ -41,23 +40,9 @@ Singleton {
         fetch.running = true
     }
 
-    FileView {
-        path: Quickshell.shellDir + "/settings.json"
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: {
-            try {
-                const w = JSON.parse(text()).weather
-                if (w?.latitude !== undefined) {
-                    root.city = w.city
-                    root.latitude = w.latitude
-                    root.longitude = w.longitude
-                }
-            } catch (e) {}
-            root.refresh()
-        }
-        onLoadFailed: root.refresh()
-    }
+    onLatitudeChanged: refreshSoon.restart()
+    onLongitudeChanged: refreshSoon.restart()
+    Timer { id: refreshSoon; interval: 200; running: true; onTriggered: root.refresh() }
 
     Process {
         id: fetch

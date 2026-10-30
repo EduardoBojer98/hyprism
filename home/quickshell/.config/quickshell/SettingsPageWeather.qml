@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 
 // Weather: choose the city the bar shows (Open-Meteo geocoding, no account). Saved in
-// quickshell/settings.json; the bar refreshes immediately.
+// Config.weather; the bar refreshes immediately.
 ColumnLayout {
     id: page
     spacing: 20
@@ -24,17 +24,10 @@ ColumnLayout {
         }
     }
 
-    FileView {
-        id: settingsFile
-        path: Quickshell.shellDir + "/settings.json"
-        printErrors: false
-    }
-
     function choose(r) {
-        let data = {}
-        try { data = JSON.parse(settingsFile.text()) } catch (e) {}
-        data.weather = { city: r.name, latitude: r.latitude, longitude: r.longitude }
-        settingsFile.setText(JSON.stringify(data, null, 2) + "\n")
+        Config.set("weather", "city", r.name)
+        Config.set("weather", "latitude", r.latitude)
+        Config.set("weather", "longitude", r.longitude)
         results = []
         field.text = ""
     }

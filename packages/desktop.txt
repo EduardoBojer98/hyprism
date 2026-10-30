@@ -11,6 +11,7 @@ hyprpaper
 # Look: GTK theme, terminal
 adw-gtk-theme
 ghostty
+papirus-icon-theme
 
 # Shell (bar, dock, OSD, notifications), launcher, on-screen keyboard; mako stays as a fallback
 fuzzel
@@ -23,11 +24,16 @@ squeekboard
 # Clipboard, screenshots, colour picker, media keys
 wl-clipboard
 cliphist
+wtype
 hyprshot
 satty
 hyprpicker
 brightnessctl
 playerctl
+hyprsunset
+tesseract
+tesseract-data-eng
+libqalculate
 
 # Fonts
 inter-font

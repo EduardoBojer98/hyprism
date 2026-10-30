@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# Clipboard history store for the Quickshell clipboard panel (Super+V).
+#
+#   wl-paste --watch clipstore store    started by hypr/modules/autostart.lua; runs once per copy
+#   clipstore list                      JSON array, newest first (pinned flagged)
+#   clipstore copy  ID                  put an entry back on the clipboard, with its MIME type
+#   clipstore paste ID [terminal]       copy, then press Ctrl+V (Ctrl+Shift+V in terminals)
+#   clipstore pin|unpin|delete ID       pinned entries survive limits, expiry and clear
+#   clipstore clear                     delete everything not pinned
+#   clipstore text STRING               copy plain text and paste it (launcher snippets)
+#
+# Each entry is a folder <ms-timestamp>-<hash>/ holding `data`, `mime` and, when pinned, `pinned`.
+# Limits come from Config.clipboard in ~/.config/quickshell/settings.json.
+set -euo pipefail
+
+STORE="${XDG_DATA_HOME:-$HOME/.local/share}/clipboard"
+SETTINGS="$HOME/.config/quickshell/settings.json"
+mkdir -p "$STORE"
+
+setting() { jq -r ".clipboard.$1 // empty" "$SETTINGS" 2>/dev/null || true; }
+
+entry() {   # resolve and validate an id (folder name) inside the store
+    [[ "${1:-}" =~ ^[0-9]+-[0-9a-f]+$ && -d "$STORE/$1" ]] || { echo "no such entry: ${1:-}" >&2; exit 1; }
+    echo "$STORE/$1"
+}
+
+prune() {
+    local max age n=0
+    max=$(setting maxItems); max=${max:-300}
+    age=$(setting maxAgeDays); age=${age:-30}
+    local cutoff=$(( ($(date +%s) - age * 86400) * 1000 ))
+    for d in $(ls -1 "$STORE" | sort -r); do
+        [[ -f "$STORE/$d/pinned" ]] && continue
+        n=$((n + 1))
+        if (( n > max )) || { (( age > 0 )) && (( ${d%%-*} < cutoff )); }; then rm -rf -- "${STORE:?}/$d"; fi
+    done
+}
+
+store() {
+    [[ "${CLIPBOARD_STATE:-data}" == "data" ]] || { cat >/dev/null; exit 0; }   # nil/clear/sensitive
+    cat >/dev/null                                   # we fetch the best type ourselves below
+    [[ "$(setting paused)" == "true" ]] && exit 0
+    local types; types=$(wl-paste --list-types 2>/dev/null) || exit 0
+    if [[ "$(setting skipSensitive)" != "false" ]] && grep -qx 'x-kde-passwordManagerHint' <<<"$types"; then exit 0; fi
+
+    local mime=""
+    if grep -qx 'text/uri-list' <<<"$types"; then mime=text/uri-list
+    elif [[ "$(setting images)" != "false" ]] && grep -q '^image/' <<<"$types"; then
+        mime=$(grep -m1 -x 'image/png' <<<"$types" || grep -m1 '^image/' <<<"$types")
+    elif grep -qx 'text/plain;charset=utf-8' <<<"$types"; then mime='text/plain;charset=utf-8'
+    elif grep -qE '^(text/plain|UTF8_STRING|TEXT|STRING)$' <<<"$types"; then mime=$(grep -m1 -E '^(text/plain|UTF8_STRING|TEXT|STRING)$' <<<"$types")
+    else exit 0; fi
+
+    local tmp; tmp=$(mktemp -d "$STORE/.new.XXXXXX")
+    trap 'rm -rf -- "$tmp"' EXIT
+    wl-paste --no-newline --type "$mime" >"$tmp/data" 2>/dev/null || exit 0
+    [[ -s "$tmp/data" ]] || exit 0
+    if [[ "$mime" == text/* || "$mime" =~ STRING|TEXT ]] && ! grep -q '[^[:space:]]' "$tmp/data"; then exit 0; fi
+    printf '%s' "$mime" >"$tmp/mime"
+
+    local hash; hash=$(sha1sum "$tmp/data" | cut -c1-12)
+    for old in "$STORE"/*-"$hash"; do                # same content again: move it to the top
+        [[ -d "$old" ]] || continue
+        [[ -f "$old/pinned" ]] && touch "$tmp/pinned"
+        rm -rf -- "$old"
+    done
+    mv "$tmp" "$STORE/$(date +%s%3N)-$hash"
+    trap - EXIT
+    prune
+}
+
+list() {
+    local first=1
+    printf '['
+    for d in $(ls -1 "$STORE" | sort -r); do
+        [[ -f "$STORE/$d/mime" ]] || continue
+        local mime preview kind
+        mime=$(<"$STORE/$d/mime")
+        case "$mime" in
+            image/*)       kind=image; preview="" ;;
+            text/uri-list) kind=files; preview=$(grep -v '^#' "$STORE/$d/data" | sed 's|^file://||' | head -c 600) ;;
+            *)             kind=text;  preview=$(head -c 600 "$STORE/$d/data") ;;
+        esac
+        (( first )) || printf ','
+        first=0
+        jq -cn --arg id "$d" --arg mime "$mime" --arg kind "$kind" --arg preview "$preview" \
+              --arg path "$STORE/$d/data" --argjson time "${d%%-*}" \
+              --argjson pinned "$([[ -f "$STORE/$d/pinned" ]] && echo true || echo false)" \
+              --argjson size "$(stat -c %s "$STORE/$d/data")" \
+              '{id:$id,mime:$mime,kind:$kind,preview:$preview,path:$path,time:$time,pinned:$pinned,size:$size}'
+    done
+    printf ']\n'
+}
+
+press_paste() {   # $1 = 1 for terminals (Ctrl+Shift+V)
+    command -v wtype >/dev/null || return 0         # no wtype: the entry stays on the clipboard for Ctrl+V
+    sleep 0.25                                       # let the popup close and focus return
+    if [[ "${1:-0}" == 1 ]]; then wtype -M ctrl -M shift -k v -m shift -m ctrl
+    else wtype -M ctrl -k v -m ctrl; fi
+}
+
+case "${1:-}" in
+    store) store ;;
+    list)  list ;;
+    copy)  d=$(entry "${2:-}"); wl-copy --type "$(<"$d/mime")" <"$d/data" ;;
+    paste) d=$(entry "${2:-}"); wl-copy --type "$(<"$d/mime")" <"$d/data"; press_paste "${3:-0}" ;;
+    pin)   d=$(entry "${2:-}"); touch "$d/pinned" ;;
+    unpin) d=$(entry "${2:-}"); rm -f "$d/pinned" ;;
+    delete) d=$(entry "${2:-}"); rm -rf -- "$d" ;;
+    clear) for d in "$STORE"/*/; do [[ -f "$d/pinned" ]] || rm -rf -- "$d"; done ;;
+    text)  printf '%s' "${2:-}" | wl-copy --type 'text/plain;charset=utf-8'; press_paste "${3:-0}" ;;
+    *) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+esac

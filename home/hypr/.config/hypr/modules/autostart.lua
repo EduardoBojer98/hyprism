@@ -12,6 +12,11 @@ hl.on("hyprland.start", function()
         .. " && gsettings set org.gnome.desktop.interface font-name 'Inter 11'"
         .. " && gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 11'")
     hl.exec_cmd("hypridle")                                 -- lock / screen off / sleep
-    hl.exec_cmd("wl-paste --watch cliphist store")          -- clipboard history
+    hl.exec_cmd("wl-paste --watch clipstore store")         -- clipboard history (Super+V), ~/.local/bin/clipstore
     hl.exec_cmd("monswitch watch")                          -- follows Acer input switches made on the monitor
+    -- Give user services this session's display and Hyprland socket, then restart the ones that
+    -- started too early to see it (JuhRadial MX finds the cursor and focused app through them).
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY HYPRLAND_INSTANCE_SIGNATURE"
+        .. " XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && systemctl --user try-restart juhradialmx-daemon.service")
+    hl.exec_cmd("command -v juhradial-mx >/dev/null && (pgrep -f juhradial-overlay.py || juhradial-mx)") -- MX Master radial menu
 end)

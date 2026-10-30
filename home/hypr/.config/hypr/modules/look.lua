@@ -1,5 +1,18 @@
 -- Dark liquid glass: hairline borders, strong blur behind translucent surfaces, soft shadows.
 local c = require("modules.colors")
+-- Accent and corner radius come from the shell's Appearance settings (Quickshell ThemeSync
+-- writes settings/theme.lua and calls apply_theme() live). Defaults until it has run once.
+local ok, saved = pcall(require, "settings.theme")
+THEME = ok and saved or { accent = c.blue, rounding = 16 }
+
+function apply_theme()
+    hl.config({
+        general = { col = {
+            active_border = { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. c.lavender .. "99)" }, angle = 135 },
+        } },
+        decoration = { rounding = THEME.rounding },
+    })
+end
 
 hl.config({
     general = {
@@ -7,7 +20,6 @@ hl.config({
         gaps_out    = 12,
         border_size = 1,
         col = {
-            active_border   = { colors = { "rgba(" .. c.blue .. "cc)", "rgba(ffffff33)", "rgba(" .. c.lavender .. "99)" }, angle = 135 },
             inactive_border = "rgba(ffffff14)",
         },
         resize_on_border = true,
@@ -15,7 +27,6 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 16,
         rounding_power = 2.4,           -- squircle-like corners
         active_opacity   = 1.0,
         inactive_opacity = 0.96,
@@ -49,3 +60,4 @@ hl.config({
         disable_hyprland_logo   = true,
     },
 })
+apply_theme()
