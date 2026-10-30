@@ -57,6 +57,22 @@ ColumnLayout {
         }
     }
 
+
+    SettingGroup {
+        title: "Task manager"
+        SettingRow {
+            label: "Opens from the temperatures in the bar and Ctrl+Shift+Esc"
+            hint: Sensors.taskManagers.some(id => DesktopEntries.byId(id)) && !DesktopEntries.byId("io.missioncenter.MissionCenter")
+                  ? "Mission Center looks most like Windows Task Manager: sudo pacman -S mission-center" : ""
+            Dropdown {
+                width: 240
+                readonly property var installed: Sensors.taskManagers.map(id => DesktopEntries.byId(id)).filter(e => e)
+                options: ["Automatic"].concat(installed.map(e => e.name))
+                current: Config.system.taskManager === "auto" ? "Automatic" : (DesktopEntries.byId(Config.system.taskManager)?.name ?? "Automatic")
+                onPicked: v => Config.set("system", "taskManager", v === "Automatic" ? "auto" : installed.find(e => e.name === v).id)
+            }
+        }
+    }
     Text {
         Layout.fillWidth: true
         text: "Saved in ~/.config/mimeapps.list, which KDE Plasma also uses."

@@ -3,8 +3,8 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Weather: choose the city the bar shows (Open-Meteo geocoding, no account). Saved in
-// Config.weather; the bar refreshes immediately.
+// Weather: the city the bar shows (Open-Meteo geocoding, no account) and what the forecast
+// dropdown (click the temperature in the bar) contains. Saved in Config.weather; applied live.
 ColumnLayout {
     id: page
     spacing: 20
@@ -58,6 +58,28 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Forecast"
+        SettingRow {
+            label: "Days"
+            hint: "How many days the dropdown lists"
+            ConfigChoice { section: "weather"; key: "days"; values: [3, 5, 7, 10, 14]; labels: ["3", "5", "7", "10", "14"] }
+        }
+        SettingRow {
+            label: "Next 12 hours"
+            ConfigToggle { section: "weather"; key: "showHourly" }
+        }
+        SettingRow {
+            label: "Details"
+            hint: "Feels like, humidity, wind, UV index, sunrise and sunset"
+            ConfigToggle { section: "weather"; key: "showDetails" }
+        }
+        SettingRow {
+            label: "Units"
+            ConfigChoice { section: "weather"; key: "units"; values: ["celsius", "fahrenheit"]; labels: ["°C, km/h", "°F, mph"] }
+        }
+    }
+
+    SettingGroup {
         title: "Results"
         visible: page.results.length > 0
         Repeater {
@@ -70,4 +92,5 @@ ColumnLayout {
             }
         }
     }
+    ResetGroup { sections: ["weather"] }
 }

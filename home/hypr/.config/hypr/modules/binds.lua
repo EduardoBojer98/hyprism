@@ -60,6 +60,8 @@ add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("SHIFT 
 -- Screenshots and colour picker
 add("screenshot",          "Screen", "Screenshot an area (annotate, copy, save)", "Print", exec("screenshot"))
 add("screenshot-all",      "Screen", "Screenshot the whole screen (copy and save)", "SHIFT + Print", exec("screenshot all"))
+add("screenshot-alt",      "Screen", "Screenshot an area (second shortcut)", "ALT + SHIFT + S", exec("screenshot"))
+add("task-manager",        "Apps",   "Task manager",                 "CTRL + SHIFT + Escape", exec("qs ipc call system taskmanager"))
 add("ocr",                 "Screen", "Copy text from the screen",    key("SHIFT + T"), exec("screentext"))
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))
 
