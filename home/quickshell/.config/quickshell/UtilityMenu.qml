@@ -25,7 +25,7 @@ Singleton {
         { icon: "\u{F02FD}", label: "About this computer",  act: () => { popup.hide(); SettingsApp.show("about") } },
         { icon: "\u{F0493}", label: "Settings",             act: () => { popup.hide(); SettingsApp.show("") } },
         { icon: "\u{F0313}", label: "Keyboard shortcuts",   act: () => { popup.hide(); SettingsApp.show("keybinds") } },
-        { icon: "\u{F0100}", label: "Screenshot an area",   act: () => root.run("grim -g \"$(slurp)\" - | satty --filename -", true) },
+        { icon: "\u{F0100}", label: "Screenshot an area",   act: () => root.run("screenshot", true) },
         { icon: "\u{F0A3B}", label: "Copy text from screen", act: () => root.run("screentext", true) },
         { icon: "\u{F0485}", label: "Colour picker",        act: () => root.run("hyprpicker -a", true) },
         { icon: "\u{F014C}", label: "Clipboard history",    act: () => { popup.hide(); Clipboard.toggle() } },

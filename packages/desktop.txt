@@ -30,8 +30,7 @@ libnotify
 wl-clipboard
 cliphist
 wtype
-hyprshot
-satty
+flameshot
 hyprpicker
 brightnessctl
 playerctl

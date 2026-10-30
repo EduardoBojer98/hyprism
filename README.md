@@ -60,7 +60,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
 | `Super+1…0` / `Super+Shift+1…0` | Go to / send window to desktop; `Super+Tab` previous |
 | `Super+S` / `Super+Shift+S` | Scratchpad / send window there |
-| `Print` / `Shift+Print` / `Super+Shift+T` | Screenshot area / annotate / copy text from screen (OCR) |
+| `Print` / `Shift+Print` / `Super+Shift+T` | Screenshot an area (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
 | `Super+Shift+C` | Colour picker |
 | `Super+L` / `Super+Shift+E` | Lock / log out |
 | `Super+drag` / `Super+right-drag` | Move / resize window |

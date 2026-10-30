@@ -27,6 +27,18 @@ hl.layer_rule({
     ignore_alpha = 0.05,  -- blur even behind the very transparent glass
 })
 
+-- Flameshot's capture overlay: no frame or open animation, keeps focus. It resizes itself after
+-- opening, which undoes a fullscreen rule, so the screenshot script makes it fullscreen instead.
+hl.window_rule({
+    name         = "flameshot-overlay",
+    match        = { class = "^flameshot$", title = "^flameshot$" },
+    stay_focused = true,
+    no_anim      = true,
+    border_size = 0,
+    rounding    = 0,
+    no_shadow   = true,
+})
+
 hl.window_rule({
     name  = "float-picture-in-picture",
     match = { title = "^Picture-in-Picture$" },

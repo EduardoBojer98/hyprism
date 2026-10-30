@@ -58,8 +58,8 @@ add("scratchpad",      "Workspaces", "Show / hide scratchpad",       key("S"), h
 add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("SHIFT + S"), hl.dsp.window.move({ workspace = "special:scratch" }))
 
 -- Screenshots and colour picker
-add("screenshot",          "Screen", "Screenshot an area to a file", "Print", exec("hyprshot -m region -o ~/Pictures/Screenshots"))
-add("screenshot-annotate", "Screen", "Screenshot an area and annotate", "SHIFT + Print", exec([[grim -g "$(slurp)" - | satty --filename -]]))
+add("screenshot",          "Screen", "Screenshot an area (annotate, copy, save)", "Print", exec("screenshot"))
+add("screenshot-all",      "Screen", "Screenshot the whole screen (copy and save)", "SHIFT + Print", exec("screenshot all"))
 add("ocr",                 "Screen", "Copy text from the screen",    key("SHIFT + T"), exec("screentext"))
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))
 

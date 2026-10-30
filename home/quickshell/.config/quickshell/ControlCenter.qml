@@ -458,7 +458,7 @@ Singleton {
             Round {
                 glyph: "\u{F0100}"
                 hint: "Screenshot an area"
-                onToggled: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; grim -g \"$(slurp)\" - | satty --filename -"]) }
+                onToggled: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) }
             }
             Round {
                 glyph: "\u{F0493}"
