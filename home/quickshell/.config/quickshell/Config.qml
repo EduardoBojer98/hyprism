@@ -36,7 +36,7 @@ Singleton {
             terminal: "bool",
             glassOpacity: [0.2, 0.9], radiusScale: [0, 1.5], fontScale: [0.85, 1.25],
             font: "string", animations: "bool", iconTheme: "string",
-            border: ["rainbow", "accent"], borderSpin: [0, 300], borderSize: [1, 4], gaps: [0, 40]
+            border: ["rainbow", "accent"], borderSpin: [0, 100], borderSize: [1, 4], gaps: [0, 40]
         },
         dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",

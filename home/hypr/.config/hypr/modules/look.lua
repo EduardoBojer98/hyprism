@@ -22,7 +22,8 @@ function apply_theme()
     })
     -- borderangle "loop" turns the gradient forever; speed is tenths of a second per turn
     local spin = THEME.border == "rainbow" and THEME.border_spin > 0
-    hl.animation({ leaf = "borderangle", enabled = spin, speed = spin and THEME.border_spin or 1, bezier = "linear", style = "loop" })
+    -- Hyprland refuses speeds above 100, so an older saved 120 ("Slow") is clamped
+    hl.animation({ leaf = "borderangle", enabled = spin, speed = spin and math.min(THEME.border_spin, 100) or 1, bezier = "linear", style = "loop" })
 end
 
 hl.config({

@@ -308,7 +308,7 @@ ColumnLayout {
             visible: page.a.border === "rainbow"
             label: "Rainbow rotation"
             hint: Theme.animate ? "How fast the colours go round" : "Still while animations are off"
-            ConfigChoice { section: "appearance"; key: "borderSpin"; values: [0, 120, 60, 25]; labels: ["Still", "Slow", "Medium", "Fast"] }
+            ConfigChoice { section: "appearance"; key: "borderSpin"; values: [0, 100, 60, 25]; labels: ["Still", "Slow", "Medium", "Fast"] }
         }
         SettingRow {
             label: "Thickness"
