@@ -20,7 +20,7 @@ Singleton {
     // Page ids still work everywhere (show("sound"), `qs ipc call settings open bluetooth`).
     readonly property var allGroups: [
         { id: "display",    name: "Display",              glyph: "\u{F0379}", pages: ["displays", "monitor"] },
-        { id: "appearance", name: "Appearance",           glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons"] },
+        { id: "appearance", name: "Appearance",           glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons", "cursor"] },
         { id: "desktop",    name: "Desktop",              glyph: "\u{F0349}", pages: ["bar", "dock", "hotcorners", "launcher", "controlcenter", "notifications", "clipboard", "weather", "calendar"] },
         { id: "input",      name: "Input",                glyph: "\u{F030C}", pages: ["input"] },
         { id: "sound",      name: "Sound",                glyph: "\u{F057E}", pages: ["sound"] },
@@ -40,6 +40,7 @@ Singleton {
     readonly property var allSections: [
         { id: "appearance",    name: "Themes & Colours",    glyph: "\u{F03D8}" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
+        { id: "cursor",        name: "Cursor",              glyph: "\u{F01BF}" },
         { id: "dock",          name: "Dock",                glyph: "\u{F0379}" },
         { id: "bar",           name: "Menu Bar",            glyph: "\u{F0E7F}" },
         { id: "hotcorners",    name: "Hot Corners",         glyph: "\u{F0A1C}" },

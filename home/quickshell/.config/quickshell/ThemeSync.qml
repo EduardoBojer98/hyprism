@@ -4,7 +4,7 @@ import QtQuick
 // Carries the shell's design tokens to the parts of the desktop Quickshell can't draw:
 // Hyprland window borders (accent or rotating rainbow, width) and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
 // the lock screen (hypr/settings/hyprlock-theme.conf, read at next lock), and GTK (gsettings light/dark,
-// accent and icon theme) and Ghostty (ghostty/theme.conf: the theme's terminal colours, reloaded live).
+// accent, icon and cursor theme) and Ghostty (ghostty/theme.conf: the theme's terminal colours, reloaded live).
 // Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
 Scope {
@@ -13,6 +13,9 @@ Scope {
     readonly property string accentHex: Theme.accent.toString().slice(1, 7)
     readonly property int rounding: Theme.radius
     readonly property string iconTheme: Theme.iconTheme
+    // only plain folder names reach the shell commands below
+    readonly property string cursorTheme: /^[A-Za-z0-9._+ -]+$/.test(Config.appearance.cursorTheme) ? Config.appearance.cursorTheme : ""
+    readonly property int cursorSize: Config.appearance.cursorSize
     readonly property string border: Config.appearance.border
     readonly property int borderSpin: Theme.animate ? Config.appearance.borderSpin : 0
     readonly property int borderSize: Config.appearance.borderSize
@@ -32,14 +35,18 @@ Scope {
     }
 
     function apply() {
-        const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize}, gaps = ${gaps} }`
+        const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize}, gaps = ${gaps}, cursor = "${cursorTheme}", cursor_size = ${cursorSize} }`
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from Settings > Appearance\nreturn " + t)
         SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])
         Quickshell.execDetached(["sh", "-c",
             "gsettings set org.gnome.desktop.interface color-scheme prefer-" + (light ? "light" : "dark")
             + "; gsettings set org.gnome.desktop.interface accent-color " + gtkAccent
-            + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"])
+            + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"
+            + (cursorTheme ? "; gsettings set org.gnome.desktop.interface cursor-theme '" + cursorTheme + "'"
+                + "; gsettings set org.gnome.desktop.interface cursor-size " + cursorSize : "")])
+        // live for Hyprland and apps started from now on; env.lua reads theme.lua at the next login
+        if (cursorTheme) Quickshell.execDetached(["hyprctl", "setcursor", cursorTheme, String(cursorSize)])
         Quickshell.execDetached(["sh", "-c", "cat > \"$HOME/.config/ghostty/theme.conf\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from Settings > Appearance (empty: the config's own theme)\n"
             + terminal + "\nQS_EOF\npkill -USR2 -x ghostty || true"])   // SIGUSR2 = reload config
     }
@@ -74,6 +81,8 @@ Scope {
     onRoundingChanged: debounce.restart()
     onLightChanged: debounce.restart()
     onIconThemeChanged: debounce.restart()
+    onCursorThemeChanged: debounce.restart()
+    onCursorSizeChanged: debounce.restart()
     onBorderChanged: debounce.restart()
     onBorderSpinChanged: debounce.restart()
     onBorderSizeChanged: debounce.restart()

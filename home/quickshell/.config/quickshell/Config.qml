@@ -38,7 +38,7 @@ Singleton {
             customAccent: "color", theme: ["midnight", "graphite", "cocoa", "catppuccin", "tokyonight", "dracula", "nord", "gruvbox", "rosepine", "everforest", "kanagawa", "onedark", "solarized"],
             terminal: "bool",
             glassOpacity: [0.2, 0.9], radiusScale: [0, 1.5], fontScale: [0.85, 1.25],
-            font: "string", animations: "bool", iconTheme: "string",
+            font: "string", animations: "bool", iconTheme: "string", cursorTheme: "string", cursorSize: [16, 64],
             border: ["rainbow", "accent"], borderSpin: [0, 100], borderSize: [1, 4], gaps: [0, 40]
         },
         dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
