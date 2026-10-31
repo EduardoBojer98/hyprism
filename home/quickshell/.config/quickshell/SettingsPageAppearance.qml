@@ -145,5 +145,5 @@ ColumnLayout {
         }
     }
 
-    ResetGroup { sections: ["appearance"] }
+    ResetGroup { sections: ["appearance"]; keys: Object.keys(Config.schema.appearance).filter(k => k !== "iconTheme") }   // icons have their own page
 }

@@ -27,7 +27,6 @@ JsonAdapter {
     }
     property JsonObject launcher: JsonObject {
         property string webSearch: "https://duckduckgo.com/?q=%s"
-        property list<string> fileRoots: ["~"]
         property bool showFiles: true
         // [{ name, kind: "command"|"terminal"|"open"|"snippet", value, confirm }]
         property list<var> actions: []

@@ -38,7 +38,7 @@ Singleton {
             border: ["rainbow", "accent"], borderSpin: [0, 300], borderSize: [1, 4], gaps: [0, 40]
         },
         dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", pinned: "list" },
-        launcher: { webSearch: "string", fileRoots: "list", showFiles: "bool", actions: "list", usage: "object",
+        launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
                     placement: ["center", "cursor"], startView: ["home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
                      skipSensitive: "bool", autoPaste: "bool" },
@@ -77,9 +77,9 @@ Singleton {
     }
 
     // Put a whole section back to its defaults
-    function reset(section) {
+    function reset(section, keys) {   // keys: only these (default: the whole section)
         const fresh = defaults.createObject(null)
-        for (const key in schema[section]) adapter[section][key] = fresh[section][key]
+        for (const key of keys ?? Object.keys(schema[section])) adapter[section][key] = fresh[section][key]
         fresh.destroy()
     }
 

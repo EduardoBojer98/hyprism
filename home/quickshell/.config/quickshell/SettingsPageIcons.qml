@@ -28,5 +28,5 @@ ColumnLayout {
             }
         }
     }
-    ResetGroup { sections: ["appearance"] }
+    ResetGroup { sections: ["appearance"]; keys: ["iconTheme"] }
 }
