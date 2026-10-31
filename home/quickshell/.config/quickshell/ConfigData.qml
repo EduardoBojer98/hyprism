@@ -51,6 +51,10 @@ JsonAdapter {
         property bool dnd: false
         property int timeoutSec: 6
         property int historyMax: 100
+        property string sound: "message-new-instant"   // a freedesktop sound name (Notifications.sounds), "" = none
+        property int volume: 60                          // %
+        property string position: "top-right"            // where popups appear: top-right, top-center, top-left
+        property list<string> mutedApps: []              // app names that only go to the notification centre
     }
     property JsonObject caffeine: JsonObject {
         property int defaultMinutes: 0          // 0 = until turned off

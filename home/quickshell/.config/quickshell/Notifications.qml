@@ -47,6 +47,18 @@ Singleton {
         return src === "" ? "" : src.startsWith("/") || src.includes("://") ? src : Quickshell.iconPath(src, true)
     }
 
+    // ---- sound: Config.notifications.sound (a freedesktop sound name, "" = none) at .volume
+    readonly property var sounds: ({ "message-new-instant": "Chime", "message": "Message", "bell": "Bell",
+                                     "complete": "Complete", "dialog-information": "Soft", "window-attention": "Attention" })
+    property double lastSound: 0
+    function playSound(name) {
+        if (!name || Date.now() - lastSound < 800) return   // a burst of notifications plays once
+        lastSound = Date.now()
+        Quickshell.execDetached(["pw-play", "--volume", String(Config.notifications.volume / 100),
+                                 "/usr/share/sounds/freedesktop/stereo/" + name + ".oga"])
+    }
+    function muted(n) { return Config.notifications.mutedApps.includes(n.appName || "Other") }
+
     function hidePopup(n) { popups = popups.filter(x => x !== n) }
     // Click: the app's default action if it has one (that also closes it), otherwise just close it
     function activate(n) {
@@ -80,9 +92,11 @@ Singleton {
                 if (!NotificationCenter.open) root.unread++
                 for (const old of root.history.slice(Config.notifications.historyMax)) old.dismiss()
             }
-            if (!root.dnd || n.urgency === NotificationUrgency.Critical)
+            // muted apps and Do Not Disturb (except critical) only go to the notification centre
+            if (!root.muted(n) && (!root.dnd || n.urgency === NotificationUrgency.Critical)) {
                 root.popups = [n].concat(root.popups.filter(x => x !== n))
-            else if (n.transient) n.expire()
+                if (!n.hints?.["suppress-sound"]) root.playSound(Config.notifications.sound)
+            } else if (n.transient) n.expire()
         }
     }
 
@@ -106,8 +120,9 @@ Singleton {
     // Banners
     PanelWindow {
         screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
-        anchors { top: true; right: true }
-        margins { top: 8; right: 10 }
+        readonly property string place: Config.notifications.position
+        anchors { top: true; right: place === "top-right"; left: place === "top-left" }
+        margins { top: 8; right: 10; left: 10 }
         implicitWidth: 344
         implicitHeight: Math.max(1, list.contentHeight)
         exclusiveZone: 0
@@ -125,12 +140,12 @@ Singleton {
 
             // slide in from the right edge with a fade; leave by fading and drifting right
             add: Transition { ParallelAnimation {
-                NumberAnimation { property: "x"; from: 60; to: 0; duration: Theme.anim + 60; easing.type: Easing.OutQuint }
+                NumberAnimation { property: "x"; from: Config.notifications.position === "top-left" ? -60 : 60; to: 0; duration: Theme.anim + 60; easing.type: Easing.OutQuint }
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.anim }
             } }
             remove: Transition { ParallelAnimation {
                 NumberAnimation { property: "opacity"; to: 0; duration: Theme.anim }
-                NumberAnimation { property: "x"; to: 40; duration: Theme.anim; easing.type: Easing.InCubic }
+                NumberAnimation { property: "x"; to: Config.notifications.position === "top-left" ? -40 : 40; duration: Theme.anim; easing.type: Easing.InCubic }
             } }
             displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Easing.OutCubic } }
 

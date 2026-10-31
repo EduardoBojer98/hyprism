@@ -24,6 +24,8 @@ ttf-firacode-nerd            # second code font (ghostty / editor choice); nothi
 quickshell                   # the whole shell (home/quickshell)
 fuzzel                       # emoji picker window (emojipick)
 pavucontrol                  # full sound mixer (floating window rule in rules.lua)
+pipewire-audio               # pw-play, which plays the notification sound
+sound-theme-freedesktop      # the notification sounds to choose from in Settings > Notifications
 nm-connection-editor         # advanced network settings (VPN, static IP), from Settings > Network
 squeekboard                  # on-screen keyboard for tablet mode (the X13 flips into a tablet)
 bluez                        # Bluetooth stack; the shell's Bluetooth controls talk to it over D-Bus
