@@ -221,6 +221,8 @@ PanelWindow {
                 BarItem {
                     id: trayItem
                     required property SystemTrayItem modelData
+                    // Passive = "nothing to show right now" (e.g. the update notifier when up to date)
+                    visible: modelData.status !== Status.Passive
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                     onPressed: button => {
                         if (button === Qt.MiddleButton) modelData.secondaryActivate()
