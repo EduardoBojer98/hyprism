@@ -98,6 +98,8 @@ Singleton {
         // control under the label when both don't fit (SettingRow). Anything still too big scrolls.
         readonly property bool compact: width < 780
         readonly property int pad: width < 640 ? Theme.spaceL : 28
+        // filling (almost) the whole screen means Hyprland has it maximised
+        readonly property bool maximised: screen ? width >= screen.width - 80 && height >= screen.height - 120 : false
 
         visible: root.open
         title: "Settings"
@@ -249,6 +251,33 @@ Singleton {
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // ---- window buttons: minimise, maximise, close (the shell draws its own, like a GTK app) ----
+            Row {
+                anchors { top: parent.top; right: parent.right; margins: 12 }
+                spacing: 8
+                Repeater {
+                    model: [
+                        { glyph: "\u{F05B0}", tip: "Minimise", act: () => Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.window.move({ workspace = \"special:minimized\", follow = false })"]) },
+                        { glyph: win.maximised ? "\u{F05B2}" : "\u{F05AF}", tip: win.maximised ? "Restore" : "Maximise", act: () => Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.window.fullscreen({ action = \"toggle\", mode = \"maximized\" })"]) },
+                        { glyph: "\u{F05AD}", tip: "Close", act: () => root.open = false }
+                    ]
+                    Rectangle {
+                        required property var modelData
+                        width: 24; height: 24; radius: 12
+                        color: btnArea.pressed ? Theme.fillActive : btnArea.containsMouse ? Theme.fillHover : Theme.fill
+                        border { color: Theme.stroke; width: 1 }
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData.glyph
+                            color: Theme.text
+                            font { family: Theme.iconFont; pixelSize: 13 }
+                        }
+                        MouseArea { id: btnArea; anchors.fill: parent; hoverEnabled: true; onClicked: modelData.act() }
+                        ToolTipText { shown: btnArea.containsMouse; text: modelData.tip }
                     }
                 }
             }
