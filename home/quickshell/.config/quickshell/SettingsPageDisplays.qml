@@ -3,35 +3,67 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Displays: drag screens to arrange them, pick resolution, scale, rotation and adaptive sync.
-// Apply changes Hyprland live (hyprctl eval) and saves hypr/settings/displays.lua.
+// Displays: drag screens to arrange them; per screen: on/off, mirror, resolution, refresh rate, scale,
+// rotation, adaptive sync and 10-bit colour. Apply changes Hyprland live (hyprctl eval) and saves
+// hypr/settings/displays.lua; unless you keep them, the old settings come back after 15 s.
 ColumnLayout {
     id: page
     spacing: 20
 
     property var monitors: []      // from hyprctl -j monitors all
-    property var edits: ({})       // name -> { mode, x, y, scale, transform, vrr }
+    property var edits: ({})       // name -> { mode, x, y, scale, transform, vrr, bitdepth, mirror, disabled }
+    property var saved: ({})       // edits as last loaded, for Revert and the keep-or-revert countdown
+    property var previous: null    // what to go back to while the countdown runs
     property string selected: ""
     property bool dirty: false
 
     readonly property var sel: monitors.find(m => m.name === selected) ?? null
     readonly property var selEdit: edits[selected] ?? null
+    // screens drawn on the canvas: on, and not showing another screen's picture
+    readonly property var placed: Object.keys(edits).filter(n => !edits[n].disabled && !edits[n].mirror)
+    // "1920x1200" -> [120, 60, ...] for the selected screen
+    readonly property var rates: {
+        const out = {}
+        for (const m of sel?.availableModes ?? []) {
+            const [res, hz] = m.split("@")
+            const r = Math.round(parseFloat(hz))
+            if (!(out[res] ?? []).includes(r)) out[res] = (out[res] ?? []).concat([r])
+        }
+        for (const k in out) out[k].sort((a, b) => b - a)
+        return out
+    }
+    readonly property var resolutions: Object.keys(rates).sort((a, b) => {
+        const [aw, ah] = a.split("x").map(Number), [bw, bh] = b.split("x").map(Number)
+        return bw * bh - aw * ah || bw - aw
+    })
+    readonly property string selRes: selEdit?.mode.split("@")[0] ?? ""
+    readonly property int selHz: Number(selEdit?.mode.split("@")[1] ?? 0)
 
+    function label(m) { return m.name.startsWith("eDP") ? "Laptop" : (m.make || m.name).split(" ")[0] }
     function load() { read.running = true }
     Component.onCompleted: load()
 
     Process {
         id: read
-        command: ["hyprctl", "-j", "monitors", "all"]
+        // Hyprland reports the live state; adaptive sync's mode (on / fullscreen) only lives in the saved file
+        command: ["sh", "-c", "hyprctl -j monitors all; echo '@@'; cat \"$HOME/.config/hypr/settings/displays.lua\" 2>/dev/null"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const list = JSON.parse(text)
+                const [json, lua] = text.split("@@\n")
+                const list = JSON.parse(json)
                 const e = {}
-                for (const m of list)
-                    e[m.name] = { mode: m.width + "x" + m.height + "@" + Math.round(m.refreshRate), x: m.x, y: m.y,
-                                  scale: m.scale, transform: m.transform, vrr: m.name === "HDMI-A-1" ? 2 : 0 }
+                for (const m of list) {
+                    const block = (lua ?? "").match(new RegExp('\\["' + m.name + '"\\] = \\{([^}]*)\\}'))?.[1] ?? ""
+                    // a screen that's off may report 0x0: its first (preferred) mode then
+                    const first = (m.availableModes?.[0] ?? "1920x1080@60").split("@")
+                    e[m.name] = { mode: m.width ? m.width + "x" + m.height + "@" + Math.round(m.refreshRate) : first[0] + "@" + Math.round(parseFloat(first[1])), x: m.x, y: m.y,
+                                  scale: m.scale, transform: m.transform, vrr: Number(block.match(/\["vrr"\] = (\d)/)?.[1] ?? 0),
+                                  bitdepth: /2101010/.test(m.currentFormat) ? 10 : 8,
+                                  mirror: m.mirrorOf && m.mirrorOf !== "none" ? m.mirrorOf : "", disabled: m.disabled === true }
+                }
                 page.monitors = list
                 page.edits = e
+                page.saved = e
                 if (!page.selected && list.length) page.selected = list[0].name
                 page.dirty = false
             }
@@ -53,16 +85,21 @@ ColumnLayout {
         dirty = true
     }
 
-    function apply() {
+    function apply(confirm) {
         // Normalise so the top-left screen sits at 0,0
         const names = Object.keys(edits)
-        const minX = Math.min(...names.map(n => edits[n].x)), minY = Math.min(...names.map(n => edits[n].y))
+        const shown = names.filter(n => !edits[n].disabled && !edits[n].mirror)
+        const minX = Math.min(...shown.map(n => edits[n].x)), minY = Math.min(...shown.map(n => edits[n].y))
         const out = {}
         for (const n of names) {
             const e = edits[n]
+            if (e.disabled) { out[n] = { disabled: true }; continue }
             out[n] = { mode: e.mode, position: (e.x - minX) + "x" + (e.y - minY), scale: e.scale, transform: e.transform }
             if (e.vrr) out[n].vrr = e.vrr
+            if (e.bitdepth === 10) out[n].bitdepth = 10
+            if (e.mirror) out[n].mirror = e.mirror
         }
+        if (confirm) { previous = saved; countdown.left = 15; countdown.start() }
         const table = SettingsApp.lua(out)
         Quickshell.execDetached(["hyprctl", "eval", "DISPLAYS = " + table.replace(/\n/g, " ") + "; apply_displays()"])
         SettingsApp.writeHyprFile("settings/displays.lua",
@@ -70,6 +107,14 @@ ColumnLayout {
         reloadTimer.restart()
     }
     Timer { id: reloadTimer; interval: 800; onTriggered: page.load() }
+    function keep() { countdown.stop(); previous = null }
+    function revert() { countdown.stop(); edits = previous; previous = null; apply(false) }
+    Timer {
+        id: countdown
+        property int left: 15
+        interval: 1000; repeat: true
+        onTriggered: if (--left <= 0) page.revert()
+    }
 
     // ---- arrangement canvas -----------------------------------------------------------------
     Rectangle {
@@ -83,7 +128,7 @@ ColumnLayout {
             id: stage
             anchors { fill: parent; margins: 24 }
             readonly property var bounds: {
-                const names = Object.keys(page.edits)
+                const names = page.placed
                 if (!names.length) return { x: 0, y: 0, w: 1, h: 1 }
                 let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
                 for (const n of names) {
@@ -95,7 +140,7 @@ ColumnLayout {
             readonly property real k: Math.min(width / (bounds.w * 1.15), height / (bounds.h * 1.1))
 
             Repeater {
-                model: Object.keys(page.edits)
+                model: page.placed
                 Rectangle {
                     id: screenRect
                     required property string modelData
@@ -111,8 +156,8 @@ ColumnLayout {
 
                     Column {
                         anchors.centerIn: parent
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.modelData === "eDP-1" ? "Laptop" : screenRect.modelData === "HDMI-A-1" ? "Acer" : screenRect.modelData; color: Theme.text; font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold } }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.e.mode.split("@")[0]; color: Theme.subtext; font { family: Theme.font; pixelSize: 11 } }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: page.label(page.monitors.find(m => m.name === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold } }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.e.mode.replace("@", " · ") + " Hz"; color: Theme.subtext; font { family: Theme.font; pixelSize: 11 } }
                     }
 
                     MouseArea {
@@ -124,7 +169,7 @@ ColumnLayout {
                             // back to logical pixels, snapped to the other screen's edges
                             let nx = Math.round((parent.x - (stage.width - stage.bounds.w * stage.k) / 2) / stage.k + stage.bounds.x)
                             let ny = Math.round((parent.y - (stage.height - stage.bounds.h * stage.k) / 2) / stage.k + stage.bounds.y)
-                            for (const o of Object.keys(page.edits)) {
+                            for (const o of page.placed) {
                                 if (o === screenRect.modelData) continue
                                 const oe = page.edits[o], os = page.logicalSize(o), me = screenRect.size, snap = 80
                                 for (const [a, b] of [[nx, oe.x + os.w], [nx + me.w, oe.x], [nx, oe.x], [nx + me.w, oe.x + os.w], [nx + (me.w - os.w) / 2, oe.x]])
@@ -149,19 +194,53 @@ ColumnLayout {
 
     // ---- selected screen ---------------------------------------------------------------------
     SettingGroup {
-        title: page.sel ? (page.sel.name === "eDP-1" ? "Laptop" : page.sel.name === "HDMI-A-1" ? "Acer" : page.sel.name) + " — " + page.sel.description : ""
+        title: page.sel ? page.label(page.sel) + " — " + page.sel.description : ""
         visible: page.sel !== null
 
         SettingRow {
-            label: "Resolution & refresh rate"
-            Dropdown {
-                width: 240
-                current: page.selEdit?.mode ?? ""
-                options: page.sel ? [...new Set(page.sel.availableModes.map(m => { const [r, hz] = m.split("@"); return r + "@" + Math.round(parseFloat(hz)) }))] : []
-                onPicked: v => page.set("mode", v)
+            label: "Use this display"
+            hint: page.placed.length <= 1 && !page.selEdit?.disabled ? "It's the only screen showing the desktop" : "Off leaves the screen dark and moves its windows"
+            Toggle {
+                checked: !(page.selEdit?.disabled ?? false)
+                // never turn off the last screen that shows the desktop
+                onToggled: on => { if (on || page.placed.length > 1 || page.selEdit?.mirror) page.set("disabled", !on) }
             }
         }
         SettingRow {
+            visible: !page.selEdit?.disabled && Object.keys(page.edits).length > 1
+            label: "Mirror"
+            hint: "Show the same picture as another screen"
+            Dropdown {
+                width: 200
+                readonly property var others: Object.keys(page.edits).filter(n => n !== page.selected && !page.edits[n].disabled && !page.edits[n].mirror)
+                options: ["Don't mirror"].concat(others.map(n => page.label(page.monitors.find(m => m.name === n))))
+                current: page.selEdit?.mirror ? page.label(page.monitors.find(m => m.name === page.selEdit.mirror)) : "Don't mirror"
+                onPicked: v => page.set("mirror", v === "Don't mirror" ? "" : others[options.indexOf(v) - 1])
+            }
+        }
+        SettingRow {
+            visible: !page.selEdit?.disabled
+            label: "Resolution"
+            Dropdown {
+                width: 200
+                current: page.selRes
+                options: page.resolutions
+                onPicked: v => page.set("mode", v + "@" + (page.rates[v].includes(page.selHz) ? page.selHz : page.rates[v][0]))
+            }
+        }
+        SettingRow {
+            visible: !page.selEdit?.disabled
+            label: "Refresh rate"
+            hint: "Higher is smoother; lower saves battery"
+            Dropdown {
+                width: 200
+                current: page.selHz + " Hz"
+                options: (page.rates[page.selRes] ?? []).map(r => r + " Hz")
+                onPicked: v => page.set("mode", page.selRes + "@" + parseInt(v))
+            }
+        }
+        SettingRow {
+            visible: !page.selEdit?.disabled && !page.selEdit?.mirror
             label: "Scale"
             hint: "Bigger text and controls; 1.2–1.25 suits the 13\" laptop panel"
             Choice {
@@ -172,6 +251,7 @@ ColumnLayout {
             }
         }
         SettingRow {
+            visible: !page.selEdit?.disabled && !page.selEdit?.mirror
             label: "Rotation"
             Choice {
                 options: ["Normal", "90°", "180°", "270°"]
@@ -188,6 +268,12 @@ ColumnLayout {
                 onPicked: i => page.set("vrr", i)
             }
         }
+        SettingRow {
+            visible: !page.selEdit?.disabled
+            label: "10-bit colour"
+            hint: "Smoother gradients on screens that support it; turn off if colours look wrong"
+            Toggle { checked: page.selEdit?.bitdepth === 10; onToggled: on => page.set("bitdepth", on ? 10 : 8) }
+        }
     }
 
     RowLayout {
@@ -199,7 +285,28 @@ ColumnLayout {
             font { family: Theme.font; pixelSize: 12 }
         }
         PillButton { text: "Revert"; enabled: page.dirty; onClicked: page.load() }
-        PillButton { text: "Apply"; primary: true; enabled: page.dirty; onClicked: page.apply() }
+        PillButton { text: "Apply"; primary: true; enabled: page.dirty; onClicked: page.apply(true) }
+    }
+
+    // after Apply: keep the new settings, or they go back on their own (a mode the screen can't show)
+    Rectangle {
+        visible: countdown.running
+        Layout.fillWidth: true
+        implicitHeight: 52
+        radius: Theme.radius
+        color: Theme.accentWash
+        border { color: Theme.accent; width: 1 }
+        RowLayout {
+            anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
+            Text {
+                Layout.fillWidth: true
+                text: `Keep these display settings? Going back in ${countdown.left} s`
+                color: Theme.text
+                font { family: Theme.font; pixelSize: 13; weight: Font.Medium }
+            }
+            PillButton { text: "Go back"; onClicked: page.revert() }
+            PillButton { text: "Keep"; primary: true; onClicked: page.keep() }
+        }
     }
 
     SettingGroup {
