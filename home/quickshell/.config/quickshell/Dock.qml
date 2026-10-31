@@ -198,8 +198,6 @@ PanelWindow {
                     readonly property bool dragged: dock.dragId !== "" && dock.dragId === modelData?.id
                     readonly property var windows: dock.windowsOf(modelData)
                     readonly property var visibleWindows: windows.filter(t => !dock.isMinimised(t))
-                    readonly property bool focused: windows.some(w => w.activated)
-                    readonly property bool urgent: windows.some(w => w.urgent)
                     property bool launching: false
                     onWindowsChanged: if (windows.length) launching = false
 
@@ -246,22 +244,6 @@ PanelWindow {
                             }
                         }
                         Timer { running: app.launching; interval: 10000; onTriggered: app.launching = false }
-
-                        // one dot per window (up to 3): bright when focused, dim when all are minimised,
-                        // warning colour when one asks for attention
-                        Row {
-                            anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 1 }
-                            spacing: 3
-                            Repeater {
-                                model: Math.min(3, app.windows.length)
-                                Rectangle {
-                                    width: 4; height: 4; radius: 2
-                                    color: app.urgent ? Theme.warning : Theme.text
-                                    opacity: app.urgent || app.focused ? 1 : app.visibleWindows.length ? 0.55 : 0.3
-                                    Behavior on opacity { NumberAnimation { duration: Theme.anim } }
-                                }
-                            }
-                        }
                     }
 
                     MouseArea {
