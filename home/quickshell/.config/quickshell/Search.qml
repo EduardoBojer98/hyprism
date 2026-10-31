@@ -142,7 +142,7 @@ Singleton {
     function runCustom(c) {
         if (c.kind === "snippet") Clipboard.pasteText(c.value)
         else if (c.kind === "open") Quickshell.execDetached(["xdg-open", c.value.replace(/^~/, home)])
-        else if (c.kind === "terminal") Quickshell.execDetached(["ghostty", "-e", "sh", "-c", c.value + "; echo; read -p 'Press Enter to close' _"])
+        else if (c.kind === "terminal") Quickshell.execDetached(["ghostty", "+new-window", "-e", "sh", "-c", c.value + "; echo; read -p 'Press Enter to close' _"])
         else Quickshell.execDetached(["sh", "-c", c.value])
     }
 
@@ -151,7 +151,7 @@ Singleton {
         if (!cmd) return []
         return [
             { key: "cmd", kind: "Command", title: cmd, subtitle: "Run in a terminal", glyph: "\u{F018D}", score: 100,
-              run: () => Quickshell.execDetached(["ghostty", "-e", "sh", "-c", cmd + "; echo; read -p 'Press Enter to close' _"]) },
+              run: () => Quickshell.execDetached(["ghostty", "+new-window", "-e", "sh", "-c", cmd + "; echo; read -p 'Press Enter to close' _"]) },
             { key: "cmd-bg", kind: "Command", title: cmd, subtitle: "Run in the background", glyph: "\u{F0A2D}", score: 99,
               run: () => Quickshell.execDetached(["sh", "-c", cmd]) },
         ]

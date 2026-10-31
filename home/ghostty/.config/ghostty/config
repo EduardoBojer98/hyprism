@@ -21,6 +21,10 @@ cursor-style-blink = true
 mouse-hide-while-typing = true
 
 shell-integration = fish
+
+# One Ghostty stays running in the background (~55 MB), so new windows open in ~0.2 s instead of
+# ~2.5 s. Launchers use `ghostty +new-window`; the first one after login starts it through D-Bus.
+quit-after-last-window-closed = false
 confirm-close-surface = false
 copy-on-select = clipboard
 

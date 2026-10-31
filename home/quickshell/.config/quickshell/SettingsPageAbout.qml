@@ -71,7 +71,7 @@ ColumnLayout {
         }
     }
     function inTerminal(cmd) {
-        Quickshell.execDetached(["ghostty", "-e", "sh", "-c", "cd \"$1\" && " + cmd + "; echo; read -p 'Press Enter to close' _", "sh", page.info.repo])
+        Quickshell.execDetached(["ghostty", "+new-window", "-e", "sh", "-c", "cd \"$1\" && " + cmd + "; echo; read -p 'Press Enter to close' _", "sh", page.info.repo])
     }
 
     component Value: Text {

@@ -20,7 +20,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("[ -f ~/.config/monswitch.conf ] && monswitch watch")                          -- follows Acer input switches made on the monitor
     -- Give user services this session's display and Hyprland socket, then restart the ones that
     -- started too early to see it (JuhRadial MX finds the cursor and focused app through them).
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY HYPRLAND_INSTANCE_SIGNATURE"
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY HYPRLAND_INSTANCE_SIGNATURE __EGL_VENDOR_LIBRARY_FILENAMES"
         .. " XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && systemctl --user try-restart juhradialmx-daemon.service")
     hl.exec_cmd("command -v juhradial-mx >/dev/null && (pgrep -f juhradial-overlay.py || juhradial-mx)") -- MX Master radial menu
     hl.exec_cmd("sleep 3 && startup-apps")                  -- Settings > Startup Apps (after the shell is up)

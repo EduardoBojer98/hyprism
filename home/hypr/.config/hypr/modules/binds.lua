@@ -3,7 +3,7 @@
 -- in settings/keybinds.lua as { id = "SUPER + K" } or { id = false }. Hyprland's bind
 -- description carries "id|group|label" so the Settings page can list them (hyprctl -j binds).
 local mod      = "SUPER"
-local terminal = "ghostty"
+local terminal = "ghostty +new-window"  -- opens in the running Ghostty (see ghostty/config)
 local function key(k) return mod .. " + " .. k end
 local exec = hl.dsp.exec_cmd
 
