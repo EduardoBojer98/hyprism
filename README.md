@@ -7,7 +7,8 @@ install stays untouched and selectable at the login screen.
 
 - **Menu bar**: desktops and the app name on the left; weather, date and time (calendar) in the
   centre; tray, CPU and NVIDIA GPU temperatures (click for CPU, both GPUs, memory, disk, fans and top processes), keyboard layout (its own list of layouts), status (Control Center), notifications bell on the right;
-  utility menu behind the system logo at the left end
+  utility menu behind the system logo at the left end (its **Power…** entry opens the power menu: lock, sleep,
+  hibernate, log out, restart, shut down)
 - **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, media, power
   mode, display, sound and microphone
 - **Spotlight** (tap `Super`): suggestions first (weather, next event, last copied, most used apps, recent items, quick actions), then a Top Hit and results grouped apps → files →
@@ -63,7 +64,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
 | `Super+1…0` / `Super+Shift+1…0` | Go to / send window to desktop; `Super+Tab` previous |
 | `Super+S` / `Super+Shift+S` | Scratchpad / send window there |
-| `Print` or `Alt+Shift+S` / `Shift+Print` / `Super+Shift+T` | Screenshot an area (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
+| `Print` or `Alt+Shift+S` / `Shift+Print` / `Super+Shift+T` | Screenshot an area on the screen under the mouse (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
 | `Super+Shift+C` | Colour picker |
 | `Super+L` / `Super+Shift+E` | Lock / log out |
 | `Super+drag` / `Super+right-drag` | Move / resize window |
@@ -86,7 +87,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 |---|---|
 | Dotfiles | `./install.sh --undo` removes the links and offers to restore the last backup |
 | The Hyprland session | Pick another session at the login screen, or Ctrl+Alt+F3 and log in on a text console |
-| The shell (bar, dock) | `pkill -x qs; qs &` restarts it; `qs log` shows errors |
+| The shell (bar, dock) | `pkill -x qs; pkill -x quickshell; qs &` restarts it (exactly one copy); `qs log` shows errors |
 | A Settings choice | Delete its file from the user guide's table to go back to defaults; several pages also have **Reset to defaults** |
 
 ## Secrets

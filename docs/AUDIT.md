@@ -170,7 +170,8 @@ Performance, set the AC profile to Balanced in ROG Control Center or Settings > 
 | Battery, power profiles | ⚠️ | Balanced, charge limit 80 %. asusd's **AC profile is Performance**, which hit 95 °C in 10 s in the load test |
 | Wi-Fi, Bluetooth | ✅ | NetworkManager connected, adapter powered |
 | Advanced network settings | ✅ | `nm-connection-editor` was declared but missing; installed 2026-10-31 |
-| Flameshot (Alt+Shift+S), clipboard history | ✅ | flameshot running; `wl-paste --watch clipstore store` running |
+| Flameshot (Print, Alt+Shift+S) | ❌→🔧 | With both monitors on, Flameshot 14 showed a broken "pick a monitor" screen: the script's XWayland setting never applied (the capture went to Flameshot's Wayland background copy), and under XWayland it crops the wrong part of the desktop. Now `flameshot screen -n N -e` for the monitor under the mouse; tested on both monitors. `screenshot all` saved twice; fixed |
+| Clipboard history | ✅ | `wl-paste --watch clipstore store` running |
 | Default apps | ⚠️ | https → Chrome, **PDF → Chrome** (Okular is installed), text → micro, images → Gwenview, folders → Dolphin. Change in Settings > Default Apps if you want Okular |
 | Portals | ✅/🖐 | xdg-desktop-portal, -hyprland, -gtk active; browser screen share not exercised |
 | Polkit agent | ✅ | hyprpolkitagent running |
@@ -183,3 +184,25 @@ Performance, set the AC profile to Balanced in ROG Control Center or Settings > 
 | KDE fallback | ✅/🖐 | `plasma.desktop` still listed; Hyprland-only bits are guarded (fish snippet checks `XDG_SESSION_DESKTOP`, autostart lives in Hyprland's config). Shared: GTK dconf (KDE re-applies Breeze). Log into Plasma once to confirm |
 | Autostart entries in `~/.config/autostart` | ⚠️ | flameshot, rog-control-center, juhradial: only KDE runs these (Hyprland has no XDG autostart) |
 | Package lists | 🔧 | all commented, missing ones declared (see Packages); `hyprshot` and `ttf-firacode-nerd` unused |
+| Duplicate Flameshot background copies | ⚠️ | Two start at login (one by D-Bus activation, one from the session); harmless, the shortcut works with either |
+
+## Phase 3 and 4 — fixes, restructure, verification (2026-10-31)
+
+| Change | Status | Evidence |
+|---|---|---|
+| Settings: 24 pages grouped into 11 sections (Display, Appearance, Desktop, Input, Sound, Network & Bluetooth, Power & Battery, Keyboard Shortcuts, Default Apps, Startup Apps, System) | 🔧 | `SettingsApp.qml`; old page ids still open the right section (`qs ipc call settings open bluetooth`); screenshots of each group |
+| New rows: Space around windows, lid behaviour (read only), MX Master buttons, Update from GitHub | 🔧 | gaps were rejected by the config schema at first; fixed and tested through the real save path (`gaps_out` 10 → 18 → 10) |
+| Reset buttons | ❌→🔧 | Icons' Reset wiped all of Appearance, Appearance's wiped the icon theme; now each resets only its own options. Idle, Displays and Default Apps have no Reset (their files can be deleted, see the user guide) |
+| Power menu | 🔧 | One **Power…** entry in the utility menu and the Control Center's power button open a centred card; 3/2 columns of tiles, compact rows on narrow screens, keyboard control; tested at 1600, 781 and 180 px wide |
+| Bar temperatures and system dropdown | 🔧 | CPU + NVIDIA GPU in the bar ("Off" while it sleeps). Dropdown: CPU, built-in GPU, NVIDIA GPU, memory ("16 GB installed": Linux sees 15 GB because 0.5 GB goes to the built-in GPU), both GPUs' memory, disk, power, fans. The old dropdown asked the NVIDIA GPU every 2 s, which kept it awake; now every 10 s and only when already awake (tested: stays `suspended` with the dropdown open) |
+| Fresh install | ✅ | Arch container, repo at a different path: `--dry-run`, install, re-run (idempotent), backups. Found and fixed: stow linked `~/.local`, `~/Pictures`, `~/.config/fish` as whole folders into the repo on an empty home. `onlyoffice-bin` is AUR on plain Arch |
+| Unlisted packages | 🔧 | xdg-utils, glib2, fastfetch, cantarell-fonts, noto-fonts declared |
+| Live shell restarts | ⚠️ | `qs kill` stops one copy only; restarting with `pkill -x qs; pkill -x quickshell; qs &` avoids two bars (README) |
+
+### Still needs your hands 🖐
+- Super+L once (wallpaper on the lock screen), Chrome saved passwords, minimise from a Chrome title bar
+- Monitor hotplug, Super+M input switch, suspend/resume, lid close, MX haptics, browser screen share
+- Log into KDE Plasma once to confirm the fallback
+- Decide: asusd AC profile (Performance hit 95 °C), PDF default app (Chrome or Okular)
+- After a reboot: the LTS kernel stays the default (`30-thermal.sh`, temporary until the NVIDIA driver works on 7.x)
+
