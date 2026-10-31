@@ -70,6 +70,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `Print` or `Alt+Shift+S` / `Shift+Print` / `Super+Shift+T` | Screenshot an area on the screen under the mouse (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
 | `Super+Shift+C` | Colour picker |
 | `Super+L` / `Super+Shift+E` | Lock / log out |
+| `Super+F5` | Next power mode: Quiet → Balanced → Performance (also `powermode` in a terminal) |
 | `Super+drag` / `Super+right-drag` | Move / resize window |
 | Three-finger swipe sideways | Switch desktop |
 
@@ -82,6 +83,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `home/hypr/.config/hypr/` | Hyprland Lua config; `modules/` shared, `hosts/<hostname>.lua` per computer |
 | `packages/*.txt`, `system/` | Package lists and system steps (`system/hosts/<hostname>/` per computer) |
 | `docs/USER-GUIDE.md` | Configuring, other computers, troubleshooting |
+| `docs/thermal-audit.md` | ROG Flow X13 temperatures and power modes: what each mode does, how to switch, how to undo |
 | `DESIGN.md` | Design system: tokens, components, rules |
 
 ## Undo and recovery
