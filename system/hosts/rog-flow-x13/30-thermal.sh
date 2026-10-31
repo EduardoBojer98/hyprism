@@ -7,10 +7,8 @@ set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "Run with sudo"; exit 1; }
 step() { printf '\n==> %s\n' "$*"; }
 
-step "Fans: the firmware drives both fans in Balanced"
-# A custom curve on only the GPU fan left the CPU fan at 0 RPM after boot (or stuck at max after a
-# profile switch). Undo: asusctl fan-curve --mod-profile balanced --enable-fan-curve true --fan gpu
-asusctl fan-curve --mod-profile balanced --enable-fan-curves false
+# Fan curves and power limits moved to 50-power.user.sh (both curves on or both off: a curve on only
+# the GPU fan left the CPU fan at 0 RPM).
 
 step "NVIDIA: power the dGPU off (D3cold) whenever no app uses it"
 # Fine-grained RTD3 (NVIDIA README, "Dynamic Power Management"). nvidia isn't in the initramfs on

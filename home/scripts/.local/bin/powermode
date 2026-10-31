@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Power mode (quiet / balanced / performance) from the terminal, a keybind or the shell.
+#
+#   powermode                     print the current mode
+#   powermode quiet|balanced|performance
+#   powermode next                cycle quiet -> balanced -> performance -> quiet
+#   powermode watch               print the mode now and again after every change (for Quickshell)
+#
+# On ASUS laptops asusd owns the mode (it also applies fan curves, power limits and EPP per mode,
+# see system/hosts/rog-flow-x13/50-power.user.sh); elsewhere power-profiles-daemon does.
+set -euo pipefail
+MODES=(quiet balanced performance)
+
+get() {
+    if command -v asusctl >/dev/null; then
+        # this firmware's quiet mode is "LowPower" to asusd
+        asusctl profile get 2>/dev/null | awk '/Active profile/{p=tolower($3); print p == "lowpower" ? "quiet" : p}'
+    else
+        powerprofilesctl get | sed 's/power-saver/quiet/'
+    fi
+}
+
+set_mode() {
+    if command -v asusctl >/dev/null; then
+        asusctl profile set "$1" 2>/dev/null >/dev/null
+    else
+        powerprofilesctl set "${1/quiet/power-saver}"
+    fi
+}
+
+case ${1:-} in
+    "") get ;;
+    quiet|balanced|performance) set_mode "$1" ;;
+    next)
+        now=$(get)
+        for i in 0 1 2; do [[ ${MODES[i]} == "$now" ]] && break; done
+        set_mode "${MODES[(i + 1) % 3]}"
+        command -v notify-send >/dev/null && notify-send -a "Power mode" -t 1500 "Power mode: $(get)" || true
+        ;;
+    watch)
+        get
+        if command -v asusctl >/dev/null; then dest=xyz.ljones.Asusd path=/xyz/ljones
+        else dest=net.hadess.PowerProfiles path=/net/hadess/PowerProfiles; fi
+        # re-read the mode on every profile signal (asusd: PlatformProfile, ppd: ActiveProfile)
+        gdbus monitor --system --dest "$dest" --object-path "$path" | while read -r line; do
+            [[ $line == *"Profile'"* ]] && get
+        done
+        ;;
+    *) echo "usage: powermode [quiet|balanced|performance|next|watch]" >&2; exit 2 ;;
+esac

@@ -81,8 +81,8 @@ ColumnLayout {
             hint: "Quiet saves battery and keeps fans down; Performance for heavy builds and games"
             Choice {
                 options: ["Quiet", "Balanced", "Performance"]
-                index: PowerProfiles.profile
-                onPicked: i => PowerProfiles.profile = i
+                index: PowerMode.profile
+                onPicked: i => PowerMode.set(i)
             }
         }
     }

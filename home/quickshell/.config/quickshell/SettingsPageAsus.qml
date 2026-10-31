@@ -1,6 +1,5 @@
 import Quickshell
 import Quickshell.Io
-import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 
@@ -118,11 +117,11 @@ ColumnLayout {
         title: "Power mode"
         SettingRow {
             label: "Mode"
-            hint: "Changes power limits and fans only. Plugging in switches to Performance, battery to Quiet."
+            hint: "Changes power limits and fans only. Plugging in switches to Balanced, battery to Quiet."
             Choice {
                 options: page.profiles
-                index: PowerProfiles.profile
-                onPicked: i => PowerProfiles.profile = i
+                index: PowerMode.profile
+                onPicked: i => PowerMode.set(i)
             }
         }
     }

@@ -4,7 +4,6 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
-import Quickshell.Services.UPower   // PowerProfiles
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import QtQuick
@@ -687,7 +686,7 @@ Singleton {
                         width: (parent.width - 6) / 3
                         height: parent.height - 6
                         y: 3
-                        x: 3 + PowerProfiles.profile * width
+                        x: 3 + PowerMode.profile * width
                         radius: Theme.radiusSmall - 1
                         color: Theme.thumb
                         Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
@@ -699,7 +698,7 @@ Singleton {
                             Item {
                                 required property string modelData
                                 required property int index
-                                readonly property bool on: PowerProfiles.profile === index
+                                readonly property bool on: PowerMode.profile === index
                                 width: parent.width / 3
                                 height: parent.height
                                 Text {
@@ -708,7 +707,7 @@ Singleton {
                                     color: parent.on ? Theme.thumbText : Theme.subtext
                                     font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                                 }
-                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerProfiles.profile = index }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerMode.set(index) }
                             }
                         }
                     }

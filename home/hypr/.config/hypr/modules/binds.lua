@@ -73,6 +73,7 @@ add("tablet-on",  "Hardware", "Tablet mode on",  "switch:on:AMD SFH tablet mode 
 add("tablet-off", "Hardware", "Tablet mode off", "switch:off:AMD SFH tablet mode switch", exec("panel tablet off"), { locked = true, fixed = true })
 add("lid-close",  "Hardware", "Lid closed",      "switch:on:Lid Switch",                  exec("panel lid close"),  { locked = true, fixed = true })
 add("lid-open",   "Hardware", "Lid opened",      "switch:off:Lid Switch",                 exec("panel lid open"),   { locked = true, fixed = true })
+add("power-mode", "Hardware", "Next power mode (Quiet, Balanced, Performance)", key("F5"), exec("powermode next"))
 
 -- Session
 add("lock",   "Session", "Lock the screen",  key("L"), exec("loginctl lock-session"))

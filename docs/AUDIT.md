@@ -14,7 +14,7 @@ Status keys: ✅ works · ⚠️ works but messy · ❌ broken.
 | `home/hypr/` | Hyprland (`hyprland.lua` → `modules/*.lua`, then `hosts/<hostname>.lua`), hypridle, hyprlock, hyprpaper | `~/.config/hypr` (whole dir is one symlink) |
 | `home/hypr/.config/hypr/settings/*.lua` | Written by the Settings app (displays, input, keybinds, theme); gitignored | same dir |
 | `home/quickshell/` | The whole shell: bar, dock, launcher (Spotlight), notifications, OSD, lock-free UI, Settings app (`SettingsApp.qml` + `SettingsPage*.qml`), theme tokens (`Theme.qml`) | `~/.config/quickshell` (whole dir) |
-| `home/scripts/.local/bin/` | Helper scripts: `asusfan`, `clipstore`, `emojipick`, `monswitch`, `nv`, `panel`, `screenshot`, `screentext`, `startup-apps` | `~/.local/bin/*` (per-file links) |
+| `home/scripts/.local/bin/` | Helper scripts: `asusfan`, `clipstore`, `emojipick`, `monswitch`, `nv`, `panel`, `powermode`, `screenshot`, `screentext`, `startup-apps`, `thermlog` | `~/.local/bin/*` (per-file links) |
 | `home/fish/` | `conf.d/tools.fish`, `conf.d/hyprland-igpu.fish` (hides NVIDIA EGL in Hyprland only) | `~/.config/fish/conf.d/*` |
 | `home/fuzzel/` | Fuzzel (emoji picker UI) | `~/.config/fuzzel` |
 | `home/ghostty/` | Terminal config (Ghostty, not Alacritty) | `~/.config/ghostty` |
@@ -25,7 +25,7 @@ Status keys: ✅ works · ⚠️ works but messy · ❌ broken.
 | `packages/dev.txt`, `packages/apps.txt` | Dev tools, everyday apps | installed by `system/03-apps.sh` |
 | `system/02-desktop.sh` | Packages + `/etc/systemd/logind.conf.d/50-lid.conf` + default session in `/etc/plasmalogin.conf` | `/etc` (sudo) |
 | `system/03-apps.sh` | Packages only | — |
-| `system/hosts/rog-flow-x13/` | `10-hardware.sh` (asusctl, NVIDIA sleep services, btrfs swap + hibernate, Limine resume cmdline, sleep.conf), `20-igpu.sh` (udev `/dev/dri/amd-igpu` link), `packages.txt` | `/etc`, `/boot`, `/etc/fstab` (sudo, only on that hostname) |
+| `system/hosts/rog-flow-x13/` | `10-hardware.sh` (asusctl, NVIDIA sleep services, btrfs swap + hibernate, Limine resume cmdline, sleep.conf), `20-igpu.sh` (udev `/dev/dri/amd-igpu` link), `30-thermal.sh` (NVIDIA RTD3, LTS default), `50-power.user.sh` (power modes: curves, limits, EPP, ppd drop-in), `packages.txt` | `/etc`, `/boot`, `/etc/fstab` (sudo, only on that hostname) |
 | `.githooks/pre-commit` | gitleaks secret scan; `install.sh` sets `core.hooksPath` | — |
 | `README.md`, `DESIGN.md`, `docs/USER-GUIDE.md` | Docs | — |
 
@@ -142,9 +142,7 @@ Groups: user is in `docker`, `input`, `video`; not in `i2c`, but `ddcutil detect
 | Layout switch key | None; the bar widget is enough | no change |
 | VS Code twice | Not a duplicate: `visual-studio-code-bin` *provides* `code`, only one package is installed | nothing to remove; `~/.config/Code - OSS` and `~/.vscode-oss*` are leftovers from an older OSS install |
 
-Watch: asusd's **AC profile is Performance** (`asusctl profile get`). The thermal load test hit 95 °C in
-Performance within 10 s. Right now the active profile is Balanced; if plugging in switches you to
-Performance, set the AC profile to Balanced in ROG Control Center or Settings > Power.
+Resolved in docs/thermal-audit.md: asusd's AC profile is now Balanced (`system/hosts/rog-flow-x13/50-power.user.sh`).
 
 ## Findings (Phase 2) — tested live on 2026-10-31
 
@@ -167,7 +165,7 @@ Performance, set the AC profile to Balanced in ROG Control Center or Settings > 
 | Lock / idle | ✅/🖐 | hypridle restarted on its new config path; lock screen not opened (press Super+L once to check the wallpaper shows) |
 | Audio | ✅ | PipeWire + WirePlumber, default out = Acer HDMI, mic = internal (with `51-flow-x13-mic.conf`) |
 | Brightness, media, volume keys | ✅ | bound in `binds.lua:85-94`; tools present |
-| Battery, power profiles | ⚠️ | Balanced, charge limit 80 %. asusd's **AC profile is Performance**, which hit 95 °C in 10 s in the load test |
+| Battery, power profiles | 🔧 | Charge limit 80 %. Plug in -> Balanced, battery -> Quiet; per-mode curves and limits in `50-power.user.sh`; `powermode` / Super+F5 (see docs/thermal-audit.md) |
 | Wi-Fi, Bluetooth | ✅ | NetworkManager connected, adapter powered |
 | Advanced network settings | ✅ | `nm-connection-editor` was declared but missing; installed 2026-10-31 |
 | Flameshot (Print, Alt+Shift+S) | ❌→🔧 | With both monitors on, Flameshot 14 showed a broken "pick a monitor" screen: the script's XWayland setting never applied (the capture went to Flameshot's Wayland background copy), and under XWayland it crops the wrong part of the desktop. Now `flameshot screen -n N -e` for the monitor under the mouse; tested on both monitors. `screenshot all` saved twice; fixed |
@@ -203,6 +201,6 @@ Performance, set the AC profile to Balanced in ROG Control Center or Settings > 
 - Super+L once (wallpaper on the lock screen), Chrome saved passwords, minimise from a Chrome title bar
 - Monitor hotplug, Super+M input switch, suspend/resume, lid close, MX haptics, browser screen share
 - Log into KDE Plasma once to confirm the fallback
-- Decide: asusd AC profile (Performance hit 95 °C), PDF default app (Chrome or Okular)
+- Decide: PDF default app (Chrome or Okular)
 - After a reboot: the LTS kernel stays the default (`30-thermal.sh`, temporary until the NVIDIA driver works on 7.x)
 
