@@ -8,6 +8,7 @@ Rectangle {
     property string label
     property color iconColor: Theme.text
     property bool active: false
+    readonly property alias hovered: mouse.containsMouse
     signal clicked()
     signal scrolled(int delta)
 

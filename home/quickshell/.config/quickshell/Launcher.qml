@@ -345,7 +345,7 @@ Singleton {
                                 color: Theme.text
                                 font { family: Theme.font; pixelSize: Theme.fontLabel }
                             }
-                            ToolTipText { anchors.topMargin: -Theme.spaceS; shown: appArea.containsMouse && appName.truncated; text: app.modelData.title }
+                            ToolTipText { gap: -Theme.spaceS; shown: appArea.containsMouse && appName.truncated; text: app.modelData.title }
                             MouseArea { id: appArea; anchors.fill: parent; hoverEnabled: true; onEntered: root.homeIndex = app.index; onClicked: root.activate(app.modelData) }
                         }
                     }
@@ -438,7 +438,7 @@ Singleton {
                             color: Theme.text
                             font { family: Theme.font; pixelSize: Theme.fontLabel }
                         }
-                        ToolTipText { anchors.topMargin: -Theme.spaceS; shown: cellArea.containsMouse && cellName.truncated; text: cell.modelData.name }
+                        ToolTipText { gap: -Theme.spaceS; shown: cellArea.containsMouse && cellName.truncated; text: cell.modelData.name }
                         MouseArea {
                             id: cellArea
                             anchors.fill: parent

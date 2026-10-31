@@ -208,13 +208,13 @@ ColumnLayout {
                             visible: !row.modelData.fixed && row.modelData.keys !== ""
                             icon: "\u{F0156}"
                             onClicked: page.save(row.modelData, "")
-                            ToolTipText { text: "Turn off" }
+                            ToolTipText { shown: parent.hovered; text: "Turn off" }
                         }
                         Chip {
                             visible: row.changed
                             icon: "\u{F0450}"
                             onClicked: page.save(row.modelData, row.modelData.def)
-                            ToolTipText { text: "Back to default" }
+                            ToolTipText { shown: parent.hovered; text: "Back to default" }
                         }
                     }
                 }
