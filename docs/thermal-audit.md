@@ -130,7 +130,7 @@ Quiet's full-load clock drops from 2.9 to 1.8 GHz: it's for quiet, not for build
 | 7 | `powermode` command and **Super+F5** = next mode (rebind it in Settings > Keyboard Shortcuts, e.g. to the Fn+F5 fan key) | remove the bind / script |
 | 8 | `thermlog LABEL [SECONDS]`: the sampler used for every number here | — |
 | 9 | **Fullscreen video black screen on the Acer** (it acted like a source change on entering and leaving fullscreen). Cause: Hyprland's auto HDR switched the HDMI colorspace from Default to BT.2020 for Chrome's fullscreen video (seen with `modetest -c`). Fix in `home/hypr/.config/hypr/modules/look.lua`: `render.cm_auto_hdr = 0` and `send_content_type = false`. Verified: colorspace and content type stay the same in fullscreen; you confirmed both screens are fine. | remove the `render` block |
-| 10 | Chrome: `~/.config/chrome-flags.conf` (`home/chrome/`) turns on VA-API video decode. **Not effective yet:** YouTube sends AV1, which this GPU (VCN 2) can't decode, so Chrome still decodes on the CPU. | delete the file, restart Chrome |
+| 10 | Chrome: `~/.config/chrome-flags.conf` (`home/chrome/`) turns on VA-API video decode. **Works together with the enhanced-h264ify extension (Block AV1 only):** YouTube's default AV1 can't be decoded by this GPU (VCN 2). See section 5. | delete the file, restart Chrome |
 
 ### How to switch modes
 - Control Center > Power mode, or Settings > Power & Battery
@@ -157,11 +157,13 @@ The dGPU stays off unless an app asks for it: `nv <app>` runs one app on it (AI,
    The iGPU still reads 25 % busy with nothing open, but at under 7 W total that costs little.
 4. **Hardware: no maintenance needed.** At 6.7 W the CPU sits below 60 °C with fans at medium speed, so
    heat gets into the heatsink fine. No cleaning or repaste based on this evidence.
-5. **Chrome is the main heat source.** Chrome alone (tabs + YouTube, Claude app closed, 20:04): **72.5 °C, 24.9 W**,
-   CPU fan 6,900 RPM, iGPU 57 %. Same as Chrome + Claude app, so the Claude app adds little.
-   Likely cause: YouTube sends AV1 and this GPU can't decode AV1, so the CPU does it (no `radeonsi_drv_video`
-   in Chrome's GPU process while playing). Next: YouTube > Settings > Playback and performance > AV1 settings >
-   "Prefer SD for AV1" (YouTube then sends VP9, which the GPU decodes), then re-measure `thermlog chrome-youtube-gpu 300`.
+5. **Chrome was the main heat source; fixed.** Chrome alone with YouTube (20:04): 72.5 °C, 24.9 W, CPU fan 6,900 RPM,
+   iGPU 57 %. Cause: YouTube sent AV1, which this GPU (VCN 2) can't decode, so the CPU decoded it.
+   Fix: the free *enhanced-h264ify* Chrome extension with only "Block AV1" ticked (YouTube's own AV1 setting
+   was gone), so YouTube sends VP9 (`vp09` in Stats for nerds), plus `chrome-flags.conf` so Chrome decodes it
+   on the GPU (the GPU process's `drm-engine-dec` counter rises while playing).
+   After (20:37, Claude app also open): **65.8 °C, 16.6 W, CPU fan 5,500 RPM, iGPU 31 %**.
+   Caveat: the video was paused for the first part of that run.
 6. Not measured yet: laptop screen only, battery.
 
 ## 6. Measurements that need you
@@ -169,5 +171,5 @@ The dGPU stays off unless an app asks for it: `nv <app>` runs one app on it (AI,
 Each takes ~5 minutes, one command each (`thermlog NAME 300`; results in `~/.local/state/thermlog/`):
 1. ~~True idle~~: done, see section 5.
 2. **Laptop screen only**: unplug HDMI, same idle.
-3. ~~Browsing~~: done (section 5); re-run after the YouTube AV1 setting.
+3. ~~Browsing~~: done (section 5).
 4. **Battery**: unplug the charger, light use, once in Quiet and once in Balanced (battery watts).
