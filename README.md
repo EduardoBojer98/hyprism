@@ -6,7 +6,7 @@ want to change is in the **Settings app** (`Super+I`), not in config files. An e
 install stays untouched and selectable at the login screen.
 
 - **Menu bar**: desktops and the app name on the left; weather, date and time (calendar) in the
-  centre; tray, temperatures, keyboard layout (its own list of layouts), status (Control Center), notifications bell on the right;
+  centre; tray, CPU and NVIDIA GPU temperatures (click for CPU, both GPUs, memory, disk, fans and top processes), keyboard layout (its own list of layouts), status (Control Center), notifications bell on the right;
   utility menu behind the system logo at the left end
 - **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, media, power
   mode, display, sound and microphone

@@ -5,22 +5,32 @@ import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 
-// CPU (k10temp) and GPU (amdgpu) temperatures for the bar, every 3 seconds. Clicking them opens
-// the system dropdown: load, memory, every temperature and fan, the top processes, and a button for
-// the task manager (Settings > Default Applications, Ctrl+Shift+Esc). The extra readings run only
-// while the dropdown is open. The NVIDIA GPU is read only when it is already awake: asking a
-// sleeping one would wake it and cost battery.
+// CPU (k10temp) and NVIDIA GPU temperatures for the bar (the built-in GPU's on machines without
+// NVIDIA). Clicking them opens the system dropdown: CPU, both GPUs, memory, disk, every temperature
+// and fan, the top processes, and a button for the task manager (Settings > Default Applications,
+// Ctrl+Shift+Esc). The extra readings run only while the dropdown is open.
+// The NVIDIA GPU is read only when something else already woke it: asking a sleeping one wakes it,
+// and it goes back to sleep ~6 s after the last question, so it's asked every 10 s at most.
 Singleton {
     id: root
 
     property real cpu: NaN
-    property real gpu: NaN
+    property real gpu: NaN            // built-in (amdgpu)
+    property string nvState: ""       // NVIDIA: "active", "suspended", "" (none)
+    property var nv: null             // { name, temp, load, memUsed, memTotal, power, mhz } while awake
+    property string nvName: "NVIDIA GPU"
     readonly property bool open: popup.open
 
     // dropdown readings
     property real cpuLoad: 0          // 0..1
     property real cpuGhz: 0
+    property string cpuName: "CPU"
     property real gpuLoad: 0          // amdgpu busy, 0..1
+    property real gpuMhz: 0
+    property real chipWatts: NaN      // CPU + built-in GPU package power (amdgpu PPT)
+    property real diskUsed: 0         // GiB, the / filesystem
+    property real diskTotal: 0
+    property string profile: ""       // platform profile: quiet, balanced, performance
     property real vramUsed: 0         // GiB
     property real vramTotal: 0
     property real memUsed: 0          // GiB
@@ -31,8 +41,6 @@ Singleton {
     property real ssd: NaN
     property real wifi: NaN
     property real watts: NaN          // battery charge / discharge
-    property string nvState: ""       // "active", "suspended", "" (none)
-    property var nv: null             // { temp, load, mem, power } while awake
     property var procs: []            // [{ name, cpu, mem }]
     property var lastStat: null
 
@@ -63,6 +71,32 @@ Singleton {
     }
     Timer { interval: 3000; running: true; repeat: true; triggeredOnStart: true; onTriggered: read.running = true }
 
+    Process {
+        id: nvRead
+        command: ["sh", "-c", `
+            for d in /sys/bus/pci/devices/*; do
+                if [ "$(cat $d/vendor)" = 0x10de ] && [ "$(cat $d/class)" != 0x040300 ]; then
+                    s=$(cat $d/power/runtime_status); echo $s
+                    sed -n 's/^Model:[[:space:]]*//p' /proc/driver/nvidia/gpus/*/information 2>/dev/null | head -1   # readable while asleep
+                    [ "$s" = active ] && command -v nvidia-smi >/dev/null &&
+                        nvidia-smi --query-gpu=name,temperature.gpu,utilization.gpu,memory.used,memory.total,power.draw,clocks.gr --format=csv,noheader,nounits
+                    break
+                fi
+            done`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const l = text.trim().split("\n")
+                root.nvState = l[0] ?? ""
+                if (l[1]) root.nvName = l[1].replace(/^NVIDIA (GeForce )?/, "")
+                const v = (l[2] ?? "").split(/,\s*/)
+                if (v.length < 7) { root.nv = null; return }
+                root.nv = { temp: Number(v[1]), load: Number(v[2]) / 100, memUsed: Number(v[3]) / 1024, memTotal: Number(v[4]) / 1024, power: Number(v[5]), mhz: Number(v[6]) }
+            }
+        }
+    }
+    // 10 s, longer than the GPU's ~6 s sleep delay, so these reads never keep it awake
+    Timer { interval: 10000; running: true; repeat: true; triggeredOnStart: true; onTriggered: nvRead.running = true }
+
     // Everything else, as "key value…" lines
     Process {
         id: detail
@@ -70,21 +104,18 @@ Singleton {
             hw() { grep -lx "$1" /sys/class/hwmon/*/name 2>/dev/null | head -1 | sed 's/name$//'; }
             head -1 /proc/stat
             awk '/MemTotal|MemAvailable|SwapTotal|SwapFree/ {print $1, $2}' /proc/meminfo
+            grep -m1 '^model name' /proc/cpuinfo | sed 's/^[^:]*: */cpuname /'
             echo freq $(cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq 2>/dev/null | awk '{s+=$1; n++} END {if (n) print s/n}')
             for c in /sys/class/drm/card*/device; do
                 [ -f $c/gpu_busy_percent ] && echo gpubusy $(cat $c/gpu_busy_percent) $(cat $c/mem_info_vram_used 2>/dev/null) $(cat $c/mem_info_vram_total 2>/dev/null) && break
             done
+            g=$(hw amdgpu); [ -n "$g" ] && echo igpu $(cat $g/freq1_input 2>/dev/null || echo 0) $(cat $g/power1_input 2>/dev/null || cat $g/power1_average 2>/dev/null)
+            echo disk $(df -B1 --output=used,size / | tail -1)
+            echo profile $(cat /sys/firmware/acpi/platform_profile 2>/dev/null)
             a=$(hw asus); [ -n "$a" ] && echo fans $(cat $a/fan*_input 2>/dev/null)
             n=$(hw nvme); [ -n "$n" ] && echo ssd $(cat $n/temp1_input)
             w=$(hw iwlwifi_1); [ -n "$w" ] && echo wifi $(cat $w/temp1_input)
             b=$(hw BAT0); [ -n "$b" ] && echo watts $(cat $b/power1_input 2>/dev/null)
-            for d in /sys/bus/pci/devices/*; do
-                if [ "$(cat $d/vendor)" = 0x10de ] && [ "$(cat $d/class)" != 0x040300 ]; then
-                    s=$(cat $d/power/runtime_status); echo nvstate $s
-                    [ "$s" = active ] && command -v nvidia-smi >/dev/null && echo nv $(nvidia-smi --query-gpu=temperature.gpu,utilization.gpu,memory.used,power.draw --format=csv,noheader,nounits | tr -d ' ' | tr ',' ' ')
-                    break
-                fi
-            done
             # current use (top's second sample), as a share of the whole CPU like Windows shows it
             n=$(nproc)
             top -b -n 2 -d 0.4 -o %CPU -w 512 | awk -v n=$n '/^ *PID /{h++; next} h==2 && NF>=12 && c<6 {printf "proc %s %.1f %s\\n", $12, $9/n, $10; c++}'
@@ -92,7 +123,6 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 const procs = []
-                let nvState = "", nv = null
                 for (const line of text.trim().split("\n")) {
                     const p = line.trim().split(/\s+/)
                     const k = p[0]
@@ -105,20 +135,20 @@ Singleton {
                     else if (k === "MemAvailable:") root.memUsed = root.memTotal - p[1] / 1048576
                     else if (k === "SwapTotal:") root.swapTotal = p[1] / 1048576
                     else if (k === "SwapFree:") root.swapUsed = root.swapTotal - p[1] / 1048576
+                    else if (k === "cpuname") root.cpuName = p.slice(1).join(" ").replace(/^AMD |^Intel\(R\) Core\(TM\) /, "").replace(/ with .*| CPU @.*/, "")
+                    else if (k === "igpu") { root.gpuMhz = Number(p[1]) / 1e6; root.chipWatts = p[2] ? Number(p[2]) / 1e6 : NaN }
+                    else if (k === "disk") { root.diskUsed = Number(p[1]) / 1073741824; root.diskTotal = Number(p[2]) / 1073741824 }
+                    else if (k === "profile") root.profile = p[1] ?? ""
                     else if (k === "freq") root.cpuGhz = Number(p[1] ?? 0) / 1e6
                     else if (k === "gpubusy") { root.gpuLoad = Number(p[1]) / 100; root.vramUsed = Number(p[2] ?? 0) / 1073741824; root.vramTotal = Number(p[3] ?? 0) / 1073741824 }
                     else if (k === "fans") root.fans = p.slice(1).map(Number)
                     else if (k === "ssd") root.ssd = Number(p[1]) / 1000
                     else if (k === "wifi") root.wifi = Number(p[1]) / 1000
                     else if (k === "watts") root.watts = Number(p[1]) / 1e6
-                    else if (k === "nvstate") nvState = p[1]
-                    else if (k === "nv") nv = { temp: Number(p[1]), load: Number(p[2]) / 100, mem: Number(p[3]), power: Number(p[4]) }
                     else if (k === "proc") procs.push({ name: p[1], cpu: Number(p[2]), mem: Number(p[3]) })
                 }
                 // top lists itself; drop our own helpers
                 root.procs = procs.filter(x => !["top", "sh", "awk"].includes(x.name)).slice(0, 5)
-                root.nvState = nvState
-                root.nv = nv
             }
         }
     }
@@ -155,17 +185,20 @@ Singleton {
                     width: parent.width
                     spacing: 8
 
-                    // CPU and GPU side by side: temperature, load, then clock or video memory
+                    // CPU and built-in GPU side by side, the NVIDIA GPU under them: temperature, load, clock
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 8
-                        Chip_ { title: "CPU"; temp: root.cpu; load: root.cpuLoad; detail: root.cpuGhz > 0 ? root.cpuGhz.toFixed(1) + " GHz" : "" }
-                        Chip_ {
-                            title: "GPU"
-                            temp: root.gpu
-                            load: root.gpuLoad
-                            detail: root.vramTotal > 0 ? `${root.vramUsed.toFixed(1)} / ${root.vramTotal.toFixed(1)} GB` : ""
-                        }
+                        Chip_ { title: root.cpuName; temp: root.cpu; load: root.cpuLoad; detail: root.cpuGhz > 0 ? root.cpuGhz.toFixed(1) + " GHz" : "" }
+                        Chip_ { title: "Built-in GPU"; temp: root.gpu; load: root.gpuLoad; detail: root.gpuMhz > 0 ? Math.round(root.gpuMhz) + " MHz" : "" }
+                    }
+                    Chip_ {
+                        visible: root.nvState !== ""
+                        title: root.nvName
+                        temp: root.nv?.temp ?? NaN
+                        load: root.nv?.load ?? 0
+                        detail: root.nv ? `${root.nv.mhz} MHz${isNaN(root.nv.power) ? "" : "  ·  " + root.nv.power.toFixed(0) + " W"}` : ""
+                        note: root.nv ? "" : root.nvState === "active" ? "On" : "Sleeping, uses no power"
                     }
 
                     // memory
@@ -178,6 +211,9 @@ Singleton {
                             spacing: 6
                             Meter { label: "Memory"; used: root.memUsed; total: root.memTotal }
                             Meter { visible: root.swapTotal > 0; label: "Swap"; used: root.swapUsed; total: root.swapTotal }
+                            Meter { visible: root.vramTotal > 0; label: "Built-in GPU memory"; used: root.vramUsed; total: root.vramTotal }
+                            Meter { visible: root.nv !== null; label: root.nvName.replace(/ Laptop GPU$/, "") + " memory"; used: root.nv?.memUsed ?? 0; total: root.nv?.memTotal ?? 1 }
+                            Meter { visible: root.diskTotal > 0; label: "Disk"; used: root.diskUsed; total: root.diskTotal }
                         }
                     }
 
@@ -189,11 +225,11 @@ Singleton {
                             id: sensorList
                             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6; leftMargin: 12; rightMargin: 12 }
                             Line {
-                                visible: root.nvState !== ""
-                                glyph: "\u{F08AE}"; label: "NVIDIA GPU"
-                                value: root.nv ? `${root.nv.temp}°  ·  ${Math.round(root.nv.load * 100)}%  ·  ${root.nv.power.toFixed(0)} W` : root.nvState === "active" ? "On" : "Sleeping"
-                                tone: root.nv && root.nv.temp >= 85 ? Theme.warning : Theme.text
+                                visible: root.profile !== ""
+                                glyph: "\u{F04C5}"; label: "Power mode"
+                                value: ({ "low-power": "Quiet", quiet: "Quiet", balanced: "Balanced", performance: "Performance" })[root.profile] ?? root.profile
                             }
+                            Line { visible: !isNaN(root.chipWatts); glyph: "\u{F0E90}"; label: "CPU + built-in GPU power"; value: root.chipWatts.toFixed(1) + " W" }
                             Repeater {
                                 model: root.fans
                                 Line { required property int index; required property var modelData; glyph: "\u{F0210}"; label: ["CPU fan", "GPU fan"][index] ?? `Fan ${index + 1}`; value: modelData > 0 ? modelData + " rpm" : "Off" }
@@ -269,6 +305,7 @@ Singleton {
         property real temp: NaN
         property real load: 0
         property string detail
+        property string note              // replaces the load line (a sleeping GPU)
         Layout.fillWidth: true
         Layout.preferredWidth: 1
         implicitHeight: 86
@@ -277,20 +314,21 @@ Singleton {
         Column {
             anchors { fill: parent; margins: 12 }
             spacing: 4
-            Text { text: chip.title; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
+            Text { width: parent.width; elide: Text.ElideRight; text: chip.title; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
             Text {
                 text: isNaN(chip.temp) ? "–" : Math.round(chip.temp) + "°"
                 color: chip.temp >= 90 ? Theme.error : chip.temp >= 80 ? Theme.warning : Theme.text
                 font { family: Theme.font; pixelSize: 24; weight: Font.DemiBold; features: { "tnum": 1 } }
             }
             Rectangle {
+                visible: !chip.note
                 width: parent.width; height: 4; radius: 2
                 color: Theme.fill
                 Rectangle { width: Math.max(4, parent.width * chip.load); height: parent.height; radius: 2; color: chip.load >= 0.85 ? Theme.warning : Theme.selected; Behavior on width { NumberAnimation { duration: Theme.anim } } }
             }
             Text {
                 width: parent.width
-                text: Math.round(chip.load * 100) + "% load" + (chip.detail ? "  ·  " + chip.detail : "")
+                text: chip.note || Math.round(chip.load * 100) + "% load" + (chip.detail ? "  ·  " + chip.detail : "")
                 elide: Text.ElideRight
                 color: Theme.subtext
                 font { family: Theme.font; pixelSize: 10; features: { "tnum": 1 } }

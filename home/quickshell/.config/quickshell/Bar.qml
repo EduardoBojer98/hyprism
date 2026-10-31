@@ -242,12 +242,14 @@ PanelWindow {
                 onPressed: Sensors.toggle()
                 spacing: Theme.spaceS
                 Repeater {
-                    model: [["\u{F4BC}", Sensors.cpu], ["\u{F08AE}", Sensors.gpu]]   // chip, graphics card
+                    // chip, graphics card: the NVIDIA one ("Off" while it sleeps), else the built-in one
+                    model: [["\u{F4BC}", Sensors.cpu, ""],
+                            Sensors.nvState === "" ? ["\u{F08AE}", Sensors.gpu, ""] : ["\u{F08AE}", Sensors.nv?.temp ?? NaN, Sensors.nvState === "active" ? "On" : "Off"]]
                     Row { // quiet icon, the number carries the colour
                         required property var modelData
                         readonly property real v: modelData[1]
                         anchors.verticalCenter: parent.verticalCenter
-                        visible: !isNaN(v)
+                        visible: !isNaN(v) || modelData[2] !== ""
                         spacing: 4
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
@@ -257,8 +259,8 @@ PanelWindow {
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: Math.round(parent.v) + "°"
-                            color: parent.v >= 90 ? Theme.red : parent.v >= 80 ? Theme.yellow : Theme.text
+                            text: isNaN(parent.v) ? parent.modelData[2] : Math.round(parent.v) + "°"
+                            color: isNaN(parent.v) ? Theme.subtext : parent.v >= 90 ? Theme.red : parent.v >= 80 ? Theme.yellow : Theme.text
                             font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
                         }
                     }
