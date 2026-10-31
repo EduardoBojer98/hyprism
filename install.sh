@@ -67,7 +67,10 @@ case ${1:-} in
         [[ -d $REPO/system/hosts/$host ]] && steps+=("$REPO"/system/hosts/"$host"/[0-9][0-9]-*.sh)
         say "System steps (need sudo):"; printf '  %s\n' "${steps[@]#"$REPO"/}"
         if ask "Run them now?"; then
-            for s in "${steps[@]}"; do sudo bash "$s"; done
+            # NN-*.user.sh steps run as you (their installers ask for sudo themselves)
+            for s in "${steps[@]}"; do
+                if [[ $s == *.user.sh ]]; then bash "$s"; else sudo bash "$s"; fi
+            done
         fi
         ;;
     --dry-run|"") ;;
