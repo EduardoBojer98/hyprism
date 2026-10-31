@@ -21,7 +21,8 @@ ColumnLayout {
             + "echo \"nvidia=$(cat /sys/class/firmware-attributes/asus-armoury/attributes/dgpu_disable/current_value 2>/dev/null)\"; "
             + "echo \"hypr=$(hyprctl version -j | grep -oP '\\\"tag\\\":\\s*\\\"\\K[^\\\"]+')\"; "
             + "echo \"qs=$(qs --version 2>/dev/null | head -1)\"; "
-            + "echo \"setup=$(git -C \"$HOME/Documents/projects/linux-setup\" describe --tags --always 2>/dev/null)\""]
+            + "echo \"setup=$(git -C \"$(readlink -f \"$HOME/.config/quickshell\")\" describe --tags --always 2>/dev/null)\"; "
+            + "echo \"repo=$(git -C \"$(readlink -f \"$HOME/.config/quickshell\")\" rev-parse --show-toplevel 2>/dev/null)\""]
         stdout: StdioCollector {
             onStreamFinished: {
                 const o = {}
@@ -51,7 +52,7 @@ ColumnLayout {
             label: "linux-setup"
             hint: "github.com/EduardoBojer98/linux-setup"
             Value { text: page.info.setup ?? "" }
-            PillButton { text: "Open folder"; onClicked: Quickshell.execDetached(["xdg-open", Quickshell.env("HOME") + "/Documents/projects/linux-setup"]) }
+            PillButton { text: "Open folder"; onClicked: Quickshell.execDetached(["xdg-open", page.info.repo ?? ""]) }   // wherever the repo was cloned
         }
     }
 
