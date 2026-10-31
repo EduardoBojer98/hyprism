@@ -79,7 +79,7 @@ ColumnLayout {
         title: "Caffeine"
         SettingRow {
             label: "Keep awake for"
-            hint: "Used by the Caffeine button and Spotlight. Stops early when you turn it off or log out."
+            hint: "Used by the Caffeine button and Spotlight. Stays on across restarts until you turn it off or the time runs out."
             ConfigChoice { section: "caffeine"; key: "defaultMinutes"; values: Caffeine.choices; labels: Caffeine.choices.map(Caffeine.label) }
         }
         SettingRow {

@@ -43,7 +43,7 @@ Singleton {
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], historyMax: [10, 500] },
-        caffeine: { defaultMinutes: [0, 600] },
+        caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showMedia: "bool", showHardware: "bool" },
         keybinds: { overrides: "object" },

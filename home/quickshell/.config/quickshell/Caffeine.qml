@@ -5,7 +5,9 @@ import QtQuick
 
 // Caffeine: keeps the screen on and the laptop awake for a while. Holds a systemd idle inhibitor
 // (hypridle and logind both honour it). The inhibitor's child waits on Quickshell's PID, so it is
-// released when the time runs out, when you turn it off, when the session ends or if qs crashes.
+// released when the time runs out, when you turn it off, or when the shell stops. On or off is
+// saved in settings.json and comes back when the shell starts again (reload, login, reboot); a
+// timed run still ends at its original time.
 //   qs ipc call caffeine toggle | start <minutes, 0 = until turned off> | stop
 Singleton {
     id: root
@@ -16,12 +18,32 @@ Singleton {
     readonly property var choices: [30, 60, 120, 0]
 
     function start(min) {
-        minutes = Math.max(0, min)
-        endsAt = minutes > 0 ? Date.now() + minutes * 60000 : 0
-        inhibitor.running = true
-        if (minutes > 0) expiry.restart(); else expiry.stop()
+        min = Math.max(0, min)
+        run(min, min > 0 ? Date.now() + min * 60000 : 0)
+        save()
     }
-    function stop() { expiry.stop(); inhibitor.running = false; endsAt = 0 }
+    function stop() { expiry.stop(); inhibitor.running = false; endsAt = 0; save() }
+    function run(min, end) {
+        minutes = min
+        endsAt = end
+        inhibitor.running = true
+        if (end > 0) expiry.restart(); else expiry.stop()
+    }
+    function save() {
+        Config.set("caffeine", "on", inhibitor.running)
+        Config.set("caffeine", "minutes", minutes)
+        Config.set("caffeine", "endsAt", endsAt)
+    }
+    // once settings.json is read: pick up where the last session left off
+    function restore() {
+        const c = Config.caffeine
+        if (!c.on || inhibitor.running) return
+        if (c.endsAt === 0 || c.endsAt > Date.now()) run(c.minutes, c.endsAt)
+        else Config.set("caffeine", "on", false)   // the timed run ended while the shell was off
+    }
+    // a tick later: `loaded` turns true before the file's values reach the adapter
+    Component.onCompleted: if (Config.loaded) Qt.callLater(restore)
+    Connections { target: Config; function onLoadedChanged() { if (Config.loaded) Qt.callLater(root.restore) } }
     function toggle() { active ? stop() : start(Config.caffeine.defaultMinutes) }
     function label(min) { return min === 0 ? "Until turned off" : min < 60 ? `${min} min` : `${min / 60} h` }
     // "45 min left" style text for the Control Center

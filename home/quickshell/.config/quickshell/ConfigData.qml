@@ -53,6 +53,10 @@ JsonAdapter {
     }
     property JsonObject caffeine: JsonObject {
         property int defaultMinutes: 0          // 0 = until turned off
+        // the current state, so Caffeine stays on (or off) across shell reloads, logouts and reboots
+        property bool on: false
+        property int minutes: 0                 // length of the current run, 0 = until turned off
+        property real endsAt: 0                 // ms since epoch, 0 = until turned off
     }
     property JsonObject nightLight: JsonObject {
         property string mode: "off"             // off | on | sun | schedule
