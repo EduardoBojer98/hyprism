@@ -25,19 +25,18 @@ Item {
             color: Theme.text
             font { family: Theme.font; pixelSize: 12 }
         }
-        Text {
+        Chevron {
             id: chevron
             anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
-            text: dd.open ? "\u{F0143}" : "\u{F0140}"
-            color: Theme.subtext
-            font { family: Theme.iconFont; pixelSize: 14 }
+            open: dd.open
+            size: 14
         }
         MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dd.open = !dd.open }
     }
 
     // A popup so the list floats above the rows below instead of being covered by them
     PopupWindow {
-        visible: dd.open
+        visible: dd.open || box.opacity > 0   // stays up while it fades out
         anchor.item: dd
         anchor.edges: Edges.Bottom
         anchor.gravity: Edges.Bottom
@@ -49,9 +48,15 @@ Item {
         onVisibleChanged: if (!visible) dd.open = false
 
         Rectangle {
+            id: box
             anchors.fill: parent
             radius: Theme.radius
             color: Theme.menu
+            opacity: dd.open ? 1 : 0
+            scale: dd.open ? 1 : 0.96
+            transformOrigin: Item.Top
+            Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
             border { color: Theme.stroke; width: 1 }
 
             ListView {

@@ -18,7 +18,7 @@ PopupWindow {
     anchor.gravity: Edges.Bottom
     anchor.margins.top: 6
     grabFocus: true
-    visible: open
+    visible: open || box.opacity > 0   // stays up while it fades out
     implicitWidth: 236
     implicitHeight: Math.min(col.implicitHeight + 10, 560)
     color: "transparent"
@@ -27,9 +27,15 @@ PopupWindow {
     QsMenuOpener { id: opener; menu: root.stack.length ? root.stack[root.stack.length - 1] : root.menu }
 
     Rectangle {
+        id: box
         anchors.fill: parent
         radius: Theme.radius
         color: Theme.menu
+        opacity: root.open ? 1 : 0
+        scale: root.open ? 1 : 0.96
+        transformOrigin: Item.Top
+        Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         border { color: Theme.stroke; width: 1 }
 
         Flickable {
