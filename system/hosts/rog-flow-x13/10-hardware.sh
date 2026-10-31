@@ -13,7 +13,7 @@ step() { printf '\n==> %s\n' "$*"; }
 
 step "asusctl + ROG Control Center (charge limit, power profiles, fans, keyboard LEDs)"
 cd "$(dirname "$0")"
-grep -vE '^\s*(#|$)' packages.txt | pacman -S --needed --noconfirm -
+sed 's/#.*//' packages.txt | xargs pacman -S --needed --noconfirm
 systemctl enable --now asusd 2>/dev/null || systemctl start asusd
 
 step "NVIDIA suspend/hibernate helpers (save GPU memory across sleep)"

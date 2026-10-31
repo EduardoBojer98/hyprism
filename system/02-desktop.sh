@@ -8,7 +8,11 @@ cd "$(dirname "$0")/.."
 step() { printf '\n==> %s\n' "$*"; }
 
 step "Packages from packages/desktop.txt"
-grep -vE '^\s*(#|$)' packages/desktop.txt | pacman -S --needed --noconfirm -
+# Package lists allow "# comments", also at the end of a line
+sed 's/#.*//' packages/desktop.txt | xargs pacman -S --needed --noconfirm
+
+step "Bluetooth service (the shell's Bluetooth controls need it)"
+systemctl enable --now bluetooth
 
 step "Lid: suspend-then-hibernate on battery; ignored while an external screen is plugged in"
 # KDE's power settings take over the lid while Plasma runs, so this only affects Hyprland.

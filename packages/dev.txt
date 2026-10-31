@@ -1,10 +1,15 @@
-# Development: shell tools and runtimes (Docker, Lando, Node via nvm.fish and VS Code were already set up)
-starship
-zoxide
-fd
-ripgrep
-fzf
-uv
-php
-composer
-gitleaks        # secret scan before commits in linux-setup (.githooks/pre-commit)
+# Development, installed by system/03-apps.sh. Node comes from nvm.fish (per user), VS Code from the AUR.
+git              # version control
+github-cli       # gh: pull requests and issues from the terminal
+docker           # containers (Lando, local services); 03-apps.sh enables it and adds you to the docker group
+docker-compose   # multi-container projects
+python           # scripts, tooling
+uv               # Python versions and virtualenvs
+php              # PHP / WordPress work outside containers
+composer         # PHP dependencies
+starship         # shell prompt (home/starship)
+zoxide           # `z` jump to recent folders (tools.fish)
+fd               # fast file search, fzf's file list (tools.fish)
+ripgrep          # fast text search
+fzf              # fuzzy finder in the shell
+gitleaks         # secret scan before commits in this repo (.githooks/pre-commit)
