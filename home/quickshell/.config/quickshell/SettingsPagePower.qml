@@ -5,7 +5,8 @@ import QtQuick
 import QtQuick.Layouts
 
 // Battery & Power: battery state and health, power mode, charge limit (asusctl).
-// Fans, GPU and keyboard lights live in ROG Control Center.
+// Fans and power limits live on the ASUS Hardware page (asusd); not in ROG Control Center, which
+// changes the same settings behind this setup's back.
 ColumnLayout {
     id: page
     spacing: 20
@@ -78,7 +79,7 @@ ColumnLayout {
         title: "Performance"
         SettingRow {
             label: "Power mode"
-            hint: "Quiet saves battery and keeps fans down; Performance for heavy builds and games"
+            hint: "Quiet: browsing, documents, battery. Balanced: daily work and builds. Performance: short heavy jobs on AC. Plugging in switches to Balanced, battery to Quiet."
             Choice {
                 options: ["Quiet", "Balanced", "Performance"]
                 index: PowerMode.profile
@@ -120,11 +121,11 @@ ColumnLayout {
     }
 
     SettingGroup {
+        visible: Machine.asus
         title: "ASUS hardware"
         SettingRow {
-            label: "Fans, NVIDIA GPU, keyboard lights"
-            hint: "ROG Control Center"
-            PillButton { text: "Open"; onClicked: Quickshell.execDetached(["rog-control-center"]) }
+            label: "Temperatures, fans and power limits"
+            PillButton { text: "Open"; onClicked: SettingsApp.show("asus") }
         }
     }
 

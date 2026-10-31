@@ -41,7 +41,6 @@ mode balanced    25 65 "45c:15%,55c:25%,62c:35%,67c:48%,72c:62%,77c:76%,82c:90%,
                        "45c:30%,55c:32%,62c:38%,67c:48%,72c:60%,77c:72%,82c:88%,87c:100%"
 mode performance 45 80 "48c:32%,56c:34%,60c:46%,63c:52%,67c:67%,72c:94%,77c:96%,82c:100%" \
                        "48c:55%,56c:56%,60c:58%,63c:62%,67c:68%,72c:88%,77c:94%,82c:100%"
-a profile set "${was/lowpower/quiet}"
 
 step "CPU energy preference (EPP) per mode, set by asusd"
 # asusd values: 1 performance, 2 balance_performance, 3 balance_power, 4 power
@@ -50,6 +49,8 @@ busctl --system set-property xyz.ljones.Asusd /xyz/ljones $p PlatformProfileLink
 busctl --system set-property xyz.ljones.Asusd /xyz/ljones $p ProfileQuietEpp u 4
 busctl --system set-property xyz.ljones.Asusd /xyz/ljones $p ProfileBalancedEpp u 3
 busctl --system set-property xyz.ljones.Asusd /xyz/ljones $p ProfilePerformanceEpp u 1
+# asusd applies an EPP to the CPU as soon as it is set, whatever the mode; re-enter the mode you were in
+a profile set "${was/lowpower/quiet}"
 
 step "power-profiles-daemon: stop it writing EPP (asusd does), keep the profile switch"
 # Undo: sudo rm -r /etc/systemd/system/power-profiles-daemon.service.d; sudo systemctl daemon-reload;

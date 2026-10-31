@@ -137,10 +137,12 @@ ColumnLayout {
             label: "Fan"
             Choice { options: ["CPU", "GPU"]; index: page.fan === "cpu" ? 0 : 1; onPicked: i => { page.dirty = false; page.fan = i ? "gpu" : "cpu" } }
         }
+        // No "use the built-in curve" switch: each mode's power limit needs both curves on (asusd), and
+        // one curve on with the other off left a fan stuck on this BIOS. Apply turns both on.
         SettingRow {
-            label: page.current?.enabled ? "Using your curve" : "Using the built-in curve"
-            hint: page.current?.enabled ? "The curve below sets the fan" : "The firmware decides; the curve below is what Apply will use"
-            PillButton { visible: page.current?.enabled ?? false; text: "Use built-in"; onClicked: page.run(["enable", page.profile, page.fan, "false"], "Back on the built-in curve") }
+            visible: !(page.current?.enabled ?? true)
+            label: "Using the built-in curve"
+            hint: "Apply switches both fans of this mode to your curves"
         }
 
         // Drag the points: left/right = temperature, up/down = fan speed
@@ -256,9 +258,9 @@ ColumnLayout {
             }
         }
         SettingRow {
-            label: "Original curves"
-            hint: "Saved in ~/.local/state/asus-backup before the first change"
-            PillButton { text: "Restore"; onClicked: page.run(["restore"], "Original curves restored") }
+            label: "Recommended setup"
+            hint: "Puts back the tested curves, power limits and modes for every mode (docs/thermal-audit.md)"
+            PillButton { text: "Reset"; onClicked: page.run(["recommended"], "Recommended setup restored") }
         }
     }
 }

@@ -3,12 +3,15 @@
 #
 #   asusfan get                          JSON: {profile: {cpu|gpu: {enabled, temp[8], pct[8]}}}
 #   asusfan set PROFILE FAN DATA         DATA = "40c:10%,50c:20%,..." (8 points), validated, enabled
-#   asusfan enable PROFILE FAN true|false   false = firmware curve
+#   asusfan enable PROFILE FAN true|false   both fans of PROFILE (FAN is kept for compatibility)
+#   asusfan recommended                  re-apply this computer's system/hosts/<host>/50-power.user.sh
 #   asusfan backup                       copy curves + settings to ~/.local/state/asus-backup/<time>/
-#   asusfan restore [DIR]                put back the curves from DIR (default: the oldest backup)
+#   asusfan restore DIR                  put back the curves from a backup DIR
 #   asusfan sample                       one line of JSON with temps, power, clocks, load, fans
 #
 # Only fan curves are touched; firmware thermal protection stays in charge above them.
+# Both fans of a mode are always on or off together: with only one curve on, this BIOS (415) left
+# the other fan stuck (CPU fan at 0 RPM). asusd also needs the curves on for a mode's power limit.
 set -euo pipefail
 
 BACKUPS="${XDG_STATE_HOME:-$HOME/.local/state}/asus-backup"
@@ -74,8 +77,8 @@ backup() {
 }
 
 restore() {
-    local dir=${1:-$(ls -d "$BACKUPS"/*/ 2>/dev/null | head -1)}
-    [[ -d "$dir" ]] || die "no backup found in $BACKUPS"
+    local dir=$1
+    [[ -d "$dir" ]] || die "no backup at $dir (see $BACKUPS)"
     for p in "${PROFILES[@]}"; do
         local f="$dir/fan-curve-$p.ron"; [[ -f "$f" ]] || continue
         awk '/fan:/{gsub(/[ ,]/,"",$2); fan=tolower($2)} /pwm:/{gsub(/.*\(|\).*/,""); pwm=$0}
@@ -117,16 +120,21 @@ case "${1:-}" in
         msg=$(validate "$4") || die "$msg"
         [[ -n "$(ls -A "$BACKUPS" 2>/dev/null)" ]] || backup >/dev/null   # first change: keep the originals
         asusctl fan-curve --mod-profile "$2" --fan "$3" --data "$4" >/dev/null
-        asusctl fan-curve --mod-profile "$2" --fan "$3" --enable-fan-curve true >/dev/null
+        asusctl fan-curve --mod-profile "$2" --enable-fan-curves true >/dev/null
         echo ok ;;
     enable)
         [[ $# -eq 4 && ( "$4" == true || "$4" == false ) ]] || die "usage: asusfan enable PROFILE cpu|gpu true|false"
         valid_profile "$2"; valid_fan "$3"
-        asusctl fan-curve --mod-profile "$2" --fan "$3" --enable-fan-curve "$4" >/dev/null
+        asusctl fan-curve --mod-profile "$2" --enable-fan-curves "$4" >/dev/null
         echo ok ;;
+    recommended)
+        repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
+        f=$repo/system/hosts/$(cat /etc/hostname)/50-power.user.sh
+        [[ -f $f ]] || die "no recommended setup for this computer"
+        bash "$f" </dev/null >/dev/null && echo ok ;;
     validate) msg=$(validate "${2:-}") && echo ok || die "$msg" ;;
     backup) backup ;;
-    restore) restore "${2:-}" ;;
+    restore) restore "${2:?usage: asusfan restore DIR}" ;;
     sample) sample ;;
     *) sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac
