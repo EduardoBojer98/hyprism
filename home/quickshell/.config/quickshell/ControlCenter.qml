@@ -1065,13 +1065,21 @@ Singleton {
             cursorShape: Qt.PointingHandCursor
             onClicked: mouse => mouse.button === Qt.RightButton && qt.expandable ? qt.expand() : qt.toggled()
         }
-        Rectangle {
+        Rectangle {   // dropdown button: a small round badge that reads on both the light (on) and dark (off) tile
             visible: qt.expandable
-            anchors { right: parent.right; top: parent.top; margins: 3 }
-            width: 18; height: 18; radius: 9
-            color: chevArea.containsMouse ? Theme.fillActive : "transparent"
-            Chevron { anchors.centerIn: parent; open: qt.isExpanded; size: 12 }
-            MouseArea { id: chevArea; anchors { fill: parent; margins: -3 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
+            anchors { right: parent.right; top: parent.top; margins: 5 }
+            width: 20; height: 20; radius: 10
+            color: qt.active ? Qt.rgba(0, 0, 0, chevArea.containsMouse || qt.isExpanded ? 0.16 : 0.09)
+                             : chevArea.containsMouse || qt.isExpanded ? Theme.fillActive : Theme.fillHover
+            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+            Chevron {
+                anchors.centerIn: parent
+                anchors.verticalCenterOffset: qt.isExpanded ? -1 : 1
+                open: qt.isExpanded
+                size: 13
+                color: qt.active ? Theme.onSelected : Theme.text
+            }
+            MouseArea { id: chevArea; anchors { fill: parent; margins: -4 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
         }
 
     }
