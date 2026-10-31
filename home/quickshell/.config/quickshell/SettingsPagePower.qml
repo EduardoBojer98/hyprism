@@ -68,6 +68,38 @@ ColumnLayout {
         }
     }
 
+    // Lid: read only. logind's file is a system file (system/02-desktop.sh writes it)
+    readonly property var lidWords: ({ "suspend": "Sleep", "suspend-then-hibernate": "Sleep, then hibernate", "hibernate": "Hibernate",
+                                       "ignore": "Nothing", "lock": "Lock", "poweroff": "Shut down" })
+    property var lid: ({})
+    Process {
+        running: true
+        command: ["sh", "-c", "systemd-analyze cat-config systemd/logind.conf 2>/dev/null | grep -E '^HandleLidSwitch'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const o = {}
+                for (const l of text.trim().split("\n")) { const i = l.indexOf("="); if (i > 0) o[l.slice(0, i)] = l.slice(i + 1).trim() }
+                page.lid = o
+            }
+        }
+    }
+    SettingGroup {
+        title: "When the lid closes"
+        SettingRow {
+            label: "On battery"
+            hint: "Set by the install script (system/02-desktop.sh)"
+            LidValue { text: page.lidWords[page.lid.HandleLidSwitch ?? "suspend"] ?? page.lid.HandleLidSwitch }
+        }
+        SettingRow {
+            label: "Plugged in"
+            LidValue { text: page.lidWords[page.lid.HandleLidSwitchExternalPower ?? page.lid.HandleLidSwitch ?? "suspend"] ?? "" }
+        }
+        SettingRow {
+            label: "With an external screen"
+            LidValue { text: page.lidWords[page.lid.HandleLidSwitchDocked ?? "ignore"] ?? "" }
+        }
+    }
+
     SettingGroup {
         title: "ASUS hardware"
         SettingRow {
@@ -75,5 +107,11 @@ ColumnLayout {
             hint: "ROG Control Center"
             PillButton { text: "Open"; onClicked: Quickshell.execDetached(["rog-control-center"]) }
         }
+    }
+
+    component LidValue: Text {
+        anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        color: Theme.subtext
+        font { family: Theme.font; pixelSize: 13 }
     }
 }

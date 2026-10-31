@@ -56,6 +56,24 @@ ColumnLayout {
         }
     }
 
+    // Both run in a terminal so you see what happens (and git or sudo can ask questions)
+    SettingGroup {
+        title: "Update"
+        SettingRow {
+            label: "Update from GitHub"
+            hint: "Pulls the latest setup, then relinks the configs"
+            PillButton { enabled: !!page.info.repo; text: "Update"; onClicked: page.inTerminal("git pull --ff-only && ./install.sh") }
+        }
+        SettingRow {
+            label: "Re-run the full install"
+            hint: "Packages and system settings too; asks for your password"
+            PillButton { enabled: !!page.info.repo; text: "Run"; onClicked: page.inTerminal("./install.sh --system") }
+        }
+    }
+    function inTerminal(cmd) {
+        Quickshell.execDetached(["ghostty", "-e", "sh", "-c", "cd \"$1\" && " + cmd + "; echo; read -p 'Press Enter to close' _", "sh", page.info.repo])
+    }
+
     component Value: Text {
         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
         color: Theme.subtext

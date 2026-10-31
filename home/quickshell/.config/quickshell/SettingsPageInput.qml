@@ -183,6 +183,23 @@ ColumnLayout {
         }
     }
 
+    // MX Master buttons, gestures and haptics are JuhRadial MX's own settings app
+    property bool juhradial: false
+    Process {
+        running: true
+        command: ["sh", "-c", "command -v juhradial-settings"]
+        onExited: code => page.juhradial = code === 0
+    }
+    SettingGroup {
+        visible: page.juhradial
+        title: "Mouse buttons"
+        SettingRow {
+            label: "MX Master buttons, gestures and haptics"
+            hint: "JuhRadial MX settings"
+            PillButton { text: "Open"; onClicked: Quickshell.execDetached(["juhradial-settings"]) }
+        }
+    }
+
     // Read the current values back from Hyprland
     Component.onCompleted: reader.running = true
     Process {
