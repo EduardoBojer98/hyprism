@@ -21,7 +21,7 @@ add("spotlight-tap", "Apps", "Spotlight (tap Super)",    "SUPER + Super_L", exec
 add("spotlight", "Apps", "Spotlight",                    key("Space"), exec("qs ipc call launcher toggle"))
 add("files-app", "Apps", "File manager",                 key("E"), exec("dolphin"))
 add("settings",  "Apps", "Settings",                     key("I"), exec("qs ipc call settings toggle"))
-add("browser",   "Apps", "Web browser",                  key("B"), exec("firefox"))
+add("browser",   "Apps", "Web browser",                  key("B"), exec("gtk-launch \"$(xdg-settings get default-web-browser)\""))  -- Settings > Default Apps
 add("clipboard", "Apps", "Clipboard history",            key("V"), exec("qs ipc call clipboard toggle"))
 add("emoji",     "Apps", "Emoji picker",                 key("period"), exec("emojipick"))
 add("find-files","Apps", "Spotlight: files",             key("SHIFT + Space"), exec("qs ipc call launcher files"))
@@ -30,6 +30,7 @@ add("control-center", "Apps", "Control Center",          key("C"), exec("qs ipc 
 add("notifications", "Apps", "Notification centre",       key("N"), exec("qs ipc call notifications toggle"))
 add("dnd",           "Apps", "Do Not Disturb on / off",   key("SHIFT + N"), exec("qs ipc call notifications dnd"))
 add("overview",      "Windows", "Mission Control",          key("W"), exec("qs ipc call overview toggle"))
+add("layout-next",   "Keyboard", "Next keyboard layout",      key("CTRL + Space"), exec("hyprctl switchxkblayout all next"))
 
 -- Windows
 add("close",      "Windows", "Close window",             key("Q"), hl.dsp.window.close())
