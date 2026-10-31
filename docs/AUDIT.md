@@ -245,7 +245,7 @@ Tested live on 2026-10-31 in the running Hyprland session. Each row names the ev
 |---|---|---|---|
 | 1 | ❌ | **Secret service not reachable in Hyprland.** `ksecretd` runs, but nothing owns `org.freedesktop.secrets` and `secret-tool` reports "The name is not activatable". As a result `gh` keeps its token in plain text (`~/.config/gh/hosts.yml`), and libsecret apps can't store passwords. | `modules/autostart.lua:7` (`pam_kwallet_init` only) |
 | 2 | ❌ | **No shortcut to switch keyboard layout.** US + Serbian Latin are loaded and `hyprctl switchxkblayout` works, but `kb_options` is empty. | `~/.config/hypr/settings/input.lua:5`, default `modules/input.lua:5` |
-| 3 | ❌ | **`./install.sh --system` stops on a fresh install.** It exits with "GNU Stow is missing" *before* the step that would install stow. | `install.sh:23` before `case` at `:59` |
+| 3 | ❌ | **`./install.sh --system` stops on a fresh install.** It exits with "GNU Stow is missing" *before* the step that would install stow. | `install.sh:22` before `case` at `:61` |
 | 4 | ❌ | **Cursor theme name is wrong.** `XCURSOR_THEME=oreo_white`, but the folder is `~/.icons/oreo_white_cursors`, so apps fall back to Adwaita (`/usr/share/icons/default`) while GTK's `settings.ini` asks for `oreo_white_cursors`. The theme also sits in `~/.icons` from no package and no repo, so a fresh install won't have it. Verify by eye. | `modules/env.lua:14` |
 | 5 | ⚠️ | **Two Flameshot daemons** (PIDs started in the same second at login). One comes from `startup-apps` (`gtk-launch org.flameshot.Flameshot`, Settings > Startup Apps), the other is D-Bus activated (`dbus-:1.2-org.flameshot.Flameshot@0.service`). Likely a race at login. | `home/scripts/.local/bin/startup-apps:8`, `settings.json` `startup.apps` |
 | 6 | ⚠️ | **`nvidia-powerd` runs although the repo disables it.** It started at 21:37:54, one second after asusd saw AC plugged in. Something activates it on power-source changes. The repo's own comment says it keeps the dGPU awake. The dGPU still reached `suspended` afterwards. | `system/hosts/rog-flow-x13/10-hardware.sh:26` |
@@ -260,14 +260,14 @@ Tested live on 2026-10-31 in the running Hyprland session. Each row names the ev
 |---|---|---|
 | ✅ | Hyprland is split into `env`, `monitors`, `input`, `look`, `animations`, `binds`, `rules`, `autostart`, all loaded from one entry file, with a per-host file last. | `hyprland.lua:4-17` |
 | ✅ | One module per app (Stow package per app), readable comments in every file. | `home/*` |
-| ⚠️ | **Two places for per-machine config, both keyed on hostname**: `home/hypr/.config/hypr/hosts/<hostname>.lua` and `system/hosts/<hostname>/`. No generic default host, no `--host` flag. | `hyprland.lua:11-17`, `install.sh:62-64` |
+| ⚠️ | **Two places for per-machine config, both keyed on hostname**: `home/hypr/.config/hypr/hosts/<hostname>.lua` and `system/hosts/<hostname>/`. No generic default host, no `--host` flag. | `hyprland.lua:11-17`, `install.sh:63-66` |
 | ⚠️ | **Machine-specific values in shared modules** (harmless on other machines, but not separated): touchscreen/stylus pinned to `eDP-1` (`input.lua:25-26`, `monitors.lua:22-25`), AMD SFH tablet switch and lid binds (`binds.lua:72-75`), squeekboard started on every machine (`autostart.lua:11`), AMD iGPU link (`env.lua:6-10`, guarded), JuhRadial (`autostart.lua:23-25`, guarded). | as listed |
 | ⚠️ | `env.lua:3-4` says the iGPU link "comes from system/02-desktop.sh"; it actually comes from `system/hosts/rog-flow-x13/20-igpu.sh:9`. | `modules/env.lua:4` |
 | ⚠️ | **Theme isn't in one place.** The real source is `Theme.qml:34+` (13 themes). `ThemeSync.qml` carries it to `settings/theme.lua`, `hyprlock-theme.conf`, `ghostty/theme.conf` and gsettings. That part is good. But `modules/colors.lua:1` claims to be "the one place colours are defined" and is only used for one gradient stop (`look.lua:18`). `fuzzel.ini:12-18` hardcodes Catppuccin Macchiato, and `hyprlock.conf:15-42` hardcodes rgba values. | as listed |
-| ⚠️ | **Distro-specific commands are mixed in.** `pacman` appears in `system/02-desktop.sh:12`, `03-apps.sh:9`, `hosts/rog-flow-x13/10-hardware.sh:16`, `30-thermal.sh:22` and the hint at `install.sh:23`, plus a Settings hint at `SettingsPageApps.qml:66`. Package lists use Arch names. No Fedora path. | as listed |
+| ⚠️ | **Distro-specific commands are mixed in.** `pacman` appears in `system/02-desktop.sh:12`, `03-apps.sh:9`, `hosts/rog-flow-x13/10-hardware.sh:16`, `30-thermal.sh:22` and the hint at `install.sh:22`, plus a Settings hint at `SettingsPageApps.qml:66`. Package lists use Arch names. No Fedora path. | as listed |
 | ⚠️ | **Undeclared runtime dependencies of the shell/scripts**: `kdialog` (Wallpaper "Browse…", `SettingsPageWallpaper.qml:42`), `gtk-launch` (gtk3, `startup-apps:8`), `ksecretd`/kwallet (`autostart.lua:7`), `power-profiles-daemon` (non-ASUS power modes), `upower`, `networkmanager`, `wireplumber`, `udisks2`, `noto-fonts-emoji`, `mesa-utils` (none needed), `nvidia-prime` (`prime-run` in `nv`). They're present only because CachyOS + KDE installed them. | as listed |
 | ✅ | No hardcoded `/home/eduardo` or repo path in tracked files. `install.sh` and the About page find the repo themselves (`SettingsPageAbout.qml:25`). | — |
-| ⚠️ | Stow folds whole dirs (`~/.config/hypr`, `quickshell`, `ghostty` …) into links. Moving the clone breaks them until you re-run `./install.sh`. Settings files written there live inside the repo folder (gitignored). | `install.sh:96` |
+| ⚠️ | Stow folds whole dirs (`~/.config/hypr`, `quickshell`, `ghostty` …) into links. Moving the clone breaks them until you re-run `./install.sh`. Settings files written there live inside the repo folder (gitignored). | `install.sh:106` |
 | ✅ | shellcheck (`koalaman/shellcheck:stable`, in a container) on `install.sh`, `system/**/*.sh`, `.githooks/pre-commit` and all 12 scripts: **0 errors, 0 warnings**, 8 style notes (SC2086 ×3, SC2012 ×3, SC2015, SC2035). | — |
 
 ### Does it work (live)
@@ -306,7 +306,7 @@ Tested live on 2026-10-31 in the running Hyprland session. Each row names the ev
 | Settings panel persistence | ✅/⚠️ | See below. |
 | Docker without sudo | ✅ | `docker run --rm hello-world` OK as user; user in `docker`. |
 | Node / npm / PHP / Composer / Python / uv / Git / gh / VS Code / Lando | ✅ | node 24.22.1 (nvm.fish), npm 11.19.1, PHP 8.5.12, Composer 2.11.1, Python 3.14.8, uv 0.13.6, git 2.56.0, gh 2.102.1, code 1.144.0, lando present. ⚠️ nvm.fish, VS Code and Lando aren't installed by the repo. |
-| KDE fallback | ✅/🖐 | `plasma.desktop` session present, Plasma Login lists it; `[Autologin]` has no `User=`, so no autologin loop if Hyprland breaks. Hyprland env lives in Lua (not seen by KDE), the fish iGPU snippet checks `XDG_SESSION_DESKTOP=Hyprland`, and the KDE guard in `install.sh:26` blocks Plasma files. Shared on purpose: `wireplumber` mic fix, `chrome-flags.conf`, gsettings (KDE reapplies its own). Logging into KDE 🖐. ⚠️ A `hyprland-uwsm.desktop` session also exists; picking it would run XDG autostart under systemd and double-start apps. |
+| KDE fallback | ✅/🖐 | `plasma.desktop` session present, Plasma Login lists it; `[Autologin]` has no `User=`, so no autologin loop if Hyprland breaks. Hyprland env lives in Lua (not seen by KDE), the fish iGPU snippet checks `XDG_SESSION_DESKTOP=Hyprland`, and the KDE guard in `install.sh:24-28` blocks Plasma files. Shared on purpose: `wireplumber` mic fix, `chrome-flags.conf`, gsettings (KDE reapplies its own). Logging into KDE 🖐. ⚠️ A `hyprland-uwsm.desktop` session also exists; picking it would run XDG autostart under systemd and double-start apps. |
 
 ### Settings panel
 
@@ -328,12 +328,12 @@ clipboard, weather and calendar pages sit there.
 
 | Status | Finding | Where |
 |---|---|---|
-| ✅ | Linking is idempotent (`stow -R`), backs up clashes with timestamps, has `--undo`, never overwrites Settings choices (`cp -n`). | `install.sh:84-104` |
-| ❌ | Fresh install can't start (#3). | `install.sh:23` |
-| ⚠️ | `--dry-run` shows links and backups only, not packages, services or system steps. | `install.sh:73-80` |
-| ⚠️ | No `--host`, `--only`, `--yes`, no `doctor`. `--system` asks once, then runs every step. | `install.sh:59-71` |
+| ✅ | Linking is idempotent (`stow -R`), backs up clashes with timestamps, has `--undo`, never overwrites Settings choices (`cp -n`). | `install.sh:80-111` |
+| ❌ | Fresh install can't start (#3). | `install.sh:22` |
+| ⚠️ | `--dry-run` shows links and backups only, not packages, services or system steps. | `install.sh:82-88` |
+| ⚠️ | No `--host`, `--only`, `--yes`, no `doctor`. `--system` asks once, then runs every step. | `install.sh:61-77` |
 | ⚠️ | Order: system steps (packages → services → groups) run before linking. That's right. But post-install steps a new machine needs are missing: fisher + nvm.fish + a Node version, VS Code, Chrome, Ollama, cursor theme, flatpaks, Lando. | — |
-| ⚠️ | Pacman lists are applied with `--noconfirm`. Host steps change the kernel, bootloader order, fstab, swap and modprobe without a separate prompt (one "Run them now?" for all). Phase 3 should keep those behind an explicit question, per the brief's rule 7. | `install.sh:66`, `30-thermal.sh:16-36`, `10-hardware.sh:28-55` |
+| ⚠️ | Pacman lists are applied with `--noconfirm`. Host steps change the kernel, bootloader order, fstab, swap and modprobe without a separate prompt (one "Run them now?" for all). Phase 3 should keep those behind an explicit question, per the brief's rule 7. | `install.sh:69`, `30-thermal.sh:16-36`, `10-hardware.sh:28-55` |
 | ✅ | Works from any clone path (paths are resolved at runtime). | `install.sh:14` |
 
 ### Needs your hands (can't test from here without disrupting you)
