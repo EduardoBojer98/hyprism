@@ -5,7 +5,7 @@ import Quickshell.Widgets
 import QtQuick
 
 // Dock: the all-apps button, pinned apps (Config.dock.pinned, drag to reorder), a divider, then
-// every window on this dock's monitor as its own app icon. With auto-hide it slides up
+// every window on this dock's monitor as its own live thumbnail with the app's icon on it. With auto-hide it slides up
 // when the pointer touches the bottom edge and stays visible on an empty workspace.
 // Right-click an icon or a window for windows and pin / minimise / restore / quit.
 PanelWindow {
@@ -69,6 +69,10 @@ PanelWindow {
         if (!isMinimised(t)) { if (t.monitor) homes[t.address] = t.monitor.name; return t.monitor === monitor }
         return (homes[t.address] ?? t.monitor?.name) === monitor?.name
     }) : []
+    readonly property int thumbWidth: Math.round(iconSize * 1.6)
+    // window pictures started while the shell is still starting fail for good; start them a bit later
+    property bool captureReady: false
+    Timer { running: true; interval: 3000; onTriggered: dock.captureReady = true }
 
     // Shared tooltip: appears after a short pause, then follows the pointer between icons at once
     property Item tipItem: null
@@ -300,7 +304,7 @@ PanelWindow {
                 color: Theme.stroke
             }
 
-            // ---- open windows: one app icon each (dimmed while minimised) ------------------------
+            // ---- open windows: a live picture of each, its app's icon in the corner ---------------
             Repeater {
                 model: ScriptModel { values: dock.openWindows }
 
@@ -312,8 +316,14 @@ PanelWindow {
                     readonly property bool focused: modelData.activated
                     readonly property real mid: width / 2   // tooltip / menu centre
                     readonly property var windows: [modelData]
+                    // the window's shape (from its picture once there is one), fitted into the tile
+                    readonly property real aspect: shot.hasContent && shot.sourceSize.height > 0
+                        ? Math.max(0.5, Math.min(2.4, shot.sourceSize.width / shot.sourceSize.height)) : 1.6
+                    property bool retrying: false
+                    // the capture breaks when the window changes workspace: start it again once it's back
+                    onMinimisedChanged: if (!minimised) { retrying = true; retry.restart() }
 
-                    width: dock.slot
+                    width: dock.thumbWidth
                     height: dock.iconSize + 8
 
                     Rectangle {   // hover plate
@@ -324,14 +334,42 @@ PanelWindow {
                         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                     }
 
-                    IconImage {
-                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
-                        implicitSize: dock.iconSize
-                        source: Quickshell.iconPath(win.entry?.icon ?? "", "application-x-executable")
-                        opacity: win.minimised ? 0.5 : 1
-                        scale: winArea.pressed ? 0.9 : 1
+                    Rectangle {
+                        id: frame
+                        readonly property real boxH: dock.iconSize - 4
+                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 2 }
+                        height: Math.min(boxH, (win.width - 6) / win.aspect)
+                        width: height * win.aspect
+                        radius: Theme.radiusSmall - 2
+                        color: Theme.fill
+                        border { color: win.focused ? Theme.accent : Theme.stroke; width: win.focused ? 2 : 1 }
+                        opacity: win.minimised ? 0.55 : 1
+                        scale: winArea.pressed ? 0.94 : 1
                         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+                        clip: true
+
+                        ScreencopyView {
+                            id: shot
+                            anchors { fill: parent; margins: frame.border.width }
+                            // only while the dock can be seen: each live picture costs a little GPU
+                            captureSource: dock.shown && dock.captureReady && !win.retrying ? win.modelData.wayland : null
+                            live: dock.shown && !win.minimised   // a minimised window keeps its last picture
+                            // a capture can fail (e.g. right at login); start it again a moment later
+                            onStopped: { win.retrying = true; retry.restart() }
+                        }
+                        Timer { id: retry; interval: 600; onTriggered: win.retrying = false }
+                        IconImage {   // no picture (yet): the app's icon fills in
+                            anchors.centerIn: parent
+                            visible: !shot.hasContent
+                            implicitSize: Math.round(frame.height * 0.72)
+                            source: Quickshell.iconPath(win.entry?.icon ?? "", "application-x-executable")
+                        }
+                    }
+                    IconImage {   // whose window it is
+                        visible: shot.hasContent
+                        anchors { right: frame.right; bottom: frame.bottom; rightMargin: -4; bottomMargin: -5 }
+                        implicitSize: Math.round(dock.iconSize * 0.42)
+                        source: Quickshell.iconPath(win.entry?.icon ?? "", "application-x-executable")
                     }
                     Rectangle {   // focused / asking for attention
                         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 1 }
