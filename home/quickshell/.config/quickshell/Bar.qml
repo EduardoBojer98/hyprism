@@ -6,15 +6,15 @@ import Quickshell.Services.SystemTray
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
+import Quickshell.Services.Mpris
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 
 // Top bar: one thin frosted strip across the screen, monochrome items that light up on hover.
+// Three zones (left, centre, right), each a list of the items below, arranged in Settings > Menu Bar.
 // Desktops are numbers in a recessed pill; an accent pill slides to the current one.
-//   desktops · app name and title      weather · date and time (calendar)      tray · temperatures ·
-//   keyboard layout (its own dropdown) · Wi-Fi/Bluetooth/volume/battery (Control Center) · notifications bell
 // Amber/red appear only when a value leaves its normal range.
 PanelWindow {
     id: bar
@@ -73,152 +73,198 @@ PanelWindow {
         }
     }
 
+    // Each zone shows its items in the order Settings > Menu Bar gives (Config.bar.left/center/right)
+    readonly property var widgets: ({ logo: logoW, desktops: desktopsW, app: appW, weather: weatherW, clock: clockW,
+        media: mediaW, tray: trayW, netspeed: netspeedW, cpu: cpuW, memory: memoryW, temperatures: temperaturesW,
+        keyboard: keyboardW, status: statusW, notifications: notificationsW })
+
     Item {
-        id: content
-        anchors { fill: parent; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS }
+        anchors { fill: parent; leftMargin: Theme.spaceS + 4; rightMargin: Theme.spaceS }
+        Zone { id: leftZone; anchors.left: parent.left; items: Config.bar.left }
+        Zone { // centred, but moves aside rather than run into a crowded side
+            items: Config.bar.center
+            x: Math.max(leftZone.width + 12, Math.min((parent.width - width) / 2, rightZone.x - width - 12))
+        }
+        Zone { id: rightZone; anchors.right: parent.right; items: Config.bar.right }
+    }
 
-        // ---- left ----------------------------------------------------------------------------
-        Row {
-            anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-            spacing: 2
-
-            Item { width: Theme.spaceXs; height: 1 }
-            BarItem { // this computer: about, tools and power, behind the system logo (like the Apple menu)
-                active: UtilityMenu.open
-                onPressed: UtilityMenu.toggle()
-                StatusGlyph { glyph: "\u{F303}"; font.pixelSize: 15 }   // Arch logo; Nerd Fonts has no CachyOS one
-            }
-            Item { width: Theme.spaceXs; height: 1 }
-            Rectangle { // desktops on this screen: numbers in a recessed pill, an accent pill slides to the current one
-                id: desks
-                readonly property var list: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === bar.monitor).sort((a, b) => a.id - b.id)
-                readonly property int current: list.findIndex(w => w.active)
-                readonly property int slot: 22
-                // scroll on it to step through this screen's desktops
-                function step(dy) { const next = list[current + (dy < 0 ? 1 : -1)]; if (next) next.activate() }
+    component Zone: Row {
+        property var items: []
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 4
+        Repeater {
+            model: parent.items
+            Loader {
+                required property string modelData
                 anchors.verticalCenter: parent.verticalCenter
-                width: list.length * slot + 4
-                height: 22
+                sourceComponent: bar.widgets[modelData] ?? null
+                visible: item?.shown ?? true   // a widget that has nothing to show takes no room
+            }
+        }
+    }
+    component BarText: Text {
+        anchors.verticalCenter: parent.verticalCenter
+        color: Theme.text
+        font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+    }
+
+    Component {
+        id: logoW
+        BarItem { // this computer: about, tools and power, behind the system logo (like the Apple menu)
+            active: UtilityMenu.open
+            onPressed: UtilityMenu.toggle()
+            StatusGlyph { glyph: "\u{F303}"; font.pixelSize: 15 }   // Arch logo; Nerd Fonts has no CachyOS one
+        }
+    }
+    Component {
+        id: desktopsW
+        Rectangle { // desktops on this screen: numbers in a recessed pill, an accent pill slides to the current one
+            id: desks
+            readonly property var list: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === bar.monitor).sort((a, b) => a.id - b.id)
+            readonly property int current: list.findIndex(w => w.active)
+            readonly property int slot: 22
+            // scroll on it to step through this screen's desktops
+            function step(dy) { const next = list[current + (dy < 0 ? 1 : -1)]; if (next) next.activate() }
+            anchors.verticalCenter: parent.verticalCenter
+            width: list.length * slot + 4
+            height: 22
+            radius: height / 2
+            color: Theme.fill
+            border { color: Theme.stroke; width: 1 }
+            Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+
+            Rectangle {
+                visible: desks.current >= 0
+                x: 2 + Math.max(0, desks.current) * desks.slot
+                y: 2
+                width: desks.slot; height: desks.height - 4
                 radius: height / 2
-                color: Theme.fill
-                border { color: Theme.stroke; width: 1 }
-                Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                color: Theme.accent
+                Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+            }
 
-                Rectangle {
-                    visible: desks.current >= 0
-                    x: 2 + Math.max(0, desks.current) * desks.slot
-                    y: 2
-                    width: desks.slot; height: desks.height - 4
-                    radius: height / 2
-                    color: Theme.accent
-                    Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-                }
-
-                Row {
-                    x: 2; y: 2
-                    Repeater {
-                        model: desks.list
-                        Item {
-                            id: ws
-                            required property HyprlandWorkspace modelData
-                            required property int index
-                            readonly property bool current: index === desks.current
-                            readonly property bool busy: modelData.toplevels.values.length > 0
-                            width: desks.slot; height: desks.height - 4
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: height / 2
-                                color: Theme.fillHover
-                                opacity: wsArea.containsMouse && !ws.current ? 1 : 0
-                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                text: ws.modelData.id
-                                color: ws.current ? Theme.accentText : ws.modelData.urgent ? Theme.warning
-                                     : ws.busy || wsArea.containsMouse ? Theme.text : Theme.muted
-                                font { family: Theme.font; pixelSize: 11; weight: ws.current || ws.busy ? Font.DemiBold : Font.Medium; features: { "tnum": 1 } }
-                                Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                            }
-                            MouseArea { id: wsArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ws.modelData.activate(); onWheel: w => desks.step(w.angleDelta.y) }
+            Row {
+                x: 2; y: 2
+                Repeater {
+                    model: desks.list
+                    Item {
+                        id: ws
+                        required property HyprlandWorkspace modelData
+                        required property int index
+                        readonly property bool current: index === desks.current
+                        readonly property bool busy: modelData.toplevels.values.length > 0
+                        width: desks.slot; height: desks.height - 4
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: height / 2
+                            color: Theme.fillHover
+                            opacity: wsArea.containsMouse && !ws.current ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                         }
+                        Text {
+                            anchors.centerIn: parent
+                            text: ws.modelData.id
+                            color: ws.current ? Theme.accentText : ws.modelData.urgent ? Theme.warning
+                                 : ws.busy || wsArea.containsMouse ? Theme.text : Theme.muted
+                            font { family: Theme.font; pixelSize: 11; weight: ws.current || ws.busy ? Font.DemiBold : Font.Medium; features: { "tnum": 1 } }
+                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                        }
+                        MouseArea { id: wsArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ws.modelData.activate(); onWheel: w => desks.step(w.angleDelta.y) }
                     }
                 }
             }
-            Item { width: Theme.spaceS; height: 1 }
-
-            Item { // focused app, on the screen that holds it: bold name, then the window title
-                id: app
-                // Focused screen: the focused window. Other screen: the window on its visible workspace, dimmed.
-                readonly property bool focusedScreen: Hyprland.focusedMonitor?.name === bar.monitor?.name
-                readonly property var other: focusedScreen ? null : (bar.monitor?.activeWorkspace?.toplevels.values[0] ?? null)
-                readonly property string appId: focusedScreen ? bar.appClass : (other?.wayland?.appId ?? "")
-                readonly property string title: focusedScreen ? bar.appTitle : (other?.title ?? "")
-                readonly property var entry: appId && DesktopEntries.applications.values.length ? DesktopEntries.heuristicLookup(appId) : null
-                // no desktop entry: "com.anthropic.Claude" -> "Claude"
-                readonly property string name: entry?.name ?? (appId.split(".").pop().replace(/^./, c => c.toUpperCase()))
+        }
+    }
+    Component {
+        id: appW
+        Item { // focused app, on the screen that holds it: bold name, then the window title
+            id: app
+            // Focused screen: the focused window. Other screen: the window on its visible workspace, dimmed.
+            readonly property bool focusedScreen: Hyprland.focusedMonitor?.name === bar.monitor?.name
+            readonly property var other: focusedScreen ? null : (bar.monitor?.activeWorkspace?.toplevels.values[0] ?? null)
+            readonly property string appId: focusedScreen ? bar.appClass : (other?.wayland?.appId ?? "")
+            readonly property string title: focusedScreen ? bar.appTitle : (other?.title ?? "")
+            readonly property var entry: appId && DesktopEntries.applications.values.length ? DesktopEntries.heuristicLookup(appId) : null
+            // no desktop entry: "com.anthropic.Claude" -> "Claude"
+            readonly property string name: entry?.name ?? (appId.split(".").pop().replace(/^./, c => c.toUpperCase()))
+            anchors.verticalCenter: parent.verticalCenter
+            readonly property bool shown: appId !== ""
+            visible: shown
+            opacity: focusedScreen ? 1 : 0.6
+            width: appRow.implicitWidth; height: 26
+            Row {
+                id: appRow
                 anchors.verticalCenter: parent.verticalCenter
-                visible: appId !== ""
-                opacity: focusedScreen ? 1 : 0.6
-                width: appRow.implicitWidth; height: 26
-                Row {
-                    id: appRow
+                spacing: Theme.spaceM
+                Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: Theme.spaceM
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: app.name
-                        color: Theme.text
-                        font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold }
-                    }
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(implicitWidth, bar.width * 0.3)
-                        elide: Text.ElideRight
-                        text: app.title
-                        visible: app.title !== "" && app.title !== app.name && Config.bar.windowTitle
-                        color: Theme.subtext
-                        font { family: Theme.font; pixelSize: 13 }
-                    }
+                    text: app.name
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold }
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.min(implicitWidth, bar.width * 0.3)
+                    elide: Text.ElideRight
+                    text: app.title
+                    visible: app.title !== "" && app.title !== app.name && Config.bar.windowTitle
+                    color: Theme.subtext
+                    font { family: Theme.font; pixelSize: 13 }
                 }
             }
         }
-
-        // ---- centre: weather, then date and time ("Fri 30 Oct  14:40"), which opens the calendar ----
-        Row {
-            anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter }
-            spacing: 2
-
-            BarItem {   // weather: opens the forecast
-                visible: Weather.ready && Config.bar.weather
-                active: Weather.open
-                onPressed: Weather.toggle()
-                spacing: 5
-                Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Math.round(Weather.temperature) + "°"
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
-                }
-            }
-            BarItem {
-                active: Calendar.open === true   // ours, not QtQuick.Controls.Calendar: Bar must not import Controls
-                onPressed: Calendar.toggle()
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: Qt.formatDateTime(clock.date, bar.clockFormat)
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
-                }
+    }
+    Component {
+        id: weatherW
+        BarItem {   // weather: opens the forecast
+            shown: Weather.ready
+            active: Weather.open
+            onPressed: Weather.toggle()
+            spacing: 5
+            Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 15 } }
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: Math.round(Weather.temperature) + "°"
+                color: Theme.text
+                font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
             }
         }
-
-        // ---- right ---------------------------------------------------------------------------
-        Row {
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+    }
+    Component {
+        id: clockW
+        BarItem { // date and time: opens the calendar
+            active: Calendar.open === true   // ours, not QtQuick.Controls.Calendar: Bar must not import Controls
+            onPressed: Calendar.toggle()
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: Qt.formatDateTime(clock.date, bar.clockFormat)
+                color: Theme.text
+                font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
+            }
+        }
+    }
+    Component {
+        id: mediaW
+        BarItem { // what's playing: click to play or pause, scroll for next or previous
+            id: media
+            readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
+            shown: player !== null
+            spacing: 5
+            onPressed: if (player?.canTogglePlaying) player.togglePlaying()
+            onScrolled: d => { if (d < 0 && player?.canGoNext) player.next(); else if (d > 0 && player?.canGoPrevious) player.previous() }
+            StatusGlyph { glyph: media.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}"; font.pixelSize: 14 }
+            BarText {
+                width: Math.min(implicitWidth, 220)
+                elide: Text.ElideRight
+                text: [media.player?.trackTitle, media.player?.trackArtist].filter(x => x).join(" · ")
+            }
+        }
+    }
+    Component {
+        id: trayW
+        Row { // tray
+            anchors.verticalCenter: parent.verticalCenter
             spacing: 2
-
             Repeater { // tray
                 model: SystemTray.items
                 BarItem {
@@ -241,167 +287,204 @@ PanelWindow {
                     }
                 }
             }
-
-            BarItem { // temperatures (warm amber, hot red); click for the system dropdown
-                visible: Config.bar.temperatures
-                active: Sensors.open
-                onPressed: Sensors.toggle()
-                spacing: Theme.spaceS
-                Repeater {
-                    // chip, graphics card: the NVIDIA one ("Off" while it sleeps), else the built-in one
-                    model: [["\u{F4BC}", Sensors.cpu, ""],
-                            Sensors.nvState === "" ? ["\u{F08AE}", Sensors.gpu, ""] : ["\u{F08AE}", Sensors.nv?.temp ?? NaN, Sensors.nvState === "active" ? "On" : "Off"]]
-                    Row { // quiet icon, the number carries the colour
-                        required property var modelData
-                        readonly property real v: modelData[1]
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !isNaN(v) || modelData[2] !== ""
-                        spacing: 4
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: parent.modelData[0]
-                            color: Theme.subtext
-                            font { family: Theme.iconFont; pixelSize: 14 }
-                        }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: isNaN(parent.v) ? parent.modelData[2] : Math.round(parent.v) + "°"
-                            color: isNaN(parent.v) ? Theme.subtext : parent.v >= 90 ? Theme.red : parent.v >= 80 ? Theme.yellow : Theme.text
-                            font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
-                        }
-                    }
-                }
-            }
-
-            BarItem { // keyboard layout as a small keycap; click for the list of layouts
-                visible: Keyboard.layouts.length > 1 && Config.bar.keyboard
-                active: Keyboard.open
-                onPressed: Keyboard.toggle()
-                onScrolled: d => Keyboard.use((Keyboard.active + (d > 0 ? 1 : Keyboard.layouts.length - 1)) % Keyboard.layouts.length)
-                Rectangle {
+        }
+    }
+    Component {
+        id: netspeedW
+        BarItem { // network speed, down and up
+            spacing: 4
+            onPressed: ControlCenter.toggle()
+            StatusGlyph { glyph: "\u{F01DA}"; tone: Theme.subtext; font.pixelSize: 13 }
+            BarText { text: BarStats.speed(BarStats.down) }
+            StatusGlyph { glyph: "\u{F0552}"; tone: Theme.subtext; font.pixelSize: 13 }
+            BarText { text: BarStats.speed(BarStats.up) }
+        }
+    }
+    Component {
+        id: cpuW
+        BarItem { // CPU use; click for the system dropdown
+            spacing: 4
+            active: Sensors.open
+            onPressed: Sensors.toggle()
+            StatusGlyph { glyph: "\u{F0EE0}"; tone: Theme.subtext; font.pixelSize: 14 }
+            BarText { text: Math.round(BarStats.cpu * 100) + "%"; color: BarStats.cpu >= 0.9 ? Theme.yellow : Theme.text }
+        }
+    }
+    Component {
+        id: memoryW
+        BarItem { // memory in use; click for the system dropdown
+            spacing: 4
+            active: Sensors.open
+            onPressed: Sensors.toggle()
+            StatusGlyph { glyph: "\u{F035B}"; tone: Theme.subtext; font.pixelSize: 14 }
+            BarText { text: BarStats.memUsed.toFixed(1) + " GB"; color: BarStats.memUsed > BarStats.memTotal * 0.9 ? Theme.yellow : Theme.text }
+        }
+    }
+    Component {
+        id: temperaturesW
+        BarItem { // temperatures (warm amber, hot red); click for the system dropdown
+            active: Sensors.open
+            onPressed: Sensors.toggle()
+            spacing: Theme.spaceS
+            Repeater {
+                // chip, graphics card: the NVIDIA one ("Off" while it sleeps), else the built-in one
+                model: [["\u{F4BC}", Sensors.cpu, ""],
+                        Sensors.nvState === "" ? ["\u{F08AE}", Sensors.gpu, ""] : ["\u{F08AE}", Sensors.nv?.temp ?? NaN, Sensors.nvState === "active" ? "On" : "Off"]]
+                Row { // quiet icon, the number carries the colour
+                    required property var modelData
+                    readonly property real v: modelData[1]
                     anchors.verticalCenter: parent.verticalCenter
-                    width: Math.max(22, layoutText.implicitWidth + 8); height: 15
-                    radius: 4
-                    color: "transparent"
-                    border { color: Qt.alpha(Theme.text, 0.45); width: 1 }
-                    Text {
-                        id: layoutText
-                        anchors.centerIn: parent
-                        text: Keyboard.short
-                        color: Theme.text
-                        font { family: Theme.font; pixelSize: 9; weight: Font.Bold; letterSpacing: 0.3 }
-                    }
-                }
-            }
-
-            BarItem { // status → Control Center; scroll for volume
-                id: status
-                readonly property int pct: Math.round((bar.battery?.percentage ?? 0) * 100)
-                readonly property bool plugged: !UPower.onBattery
-                readonly property bool charging: bar.battery?.state === UPowerDeviceState.Charging
-                readonly property bool low: pct <= 15 && !plugged
-                spacing: Theme.spaceM
-                active: ControlCenter.open
-                onPressed: ControlCenter.toggle()
-                onScrolled: d => { const a = bar.sink?.audio; if (a) a.volume = Math.max(0, Math.min(1, a.volume + d * 0.05)) }
-
-                StatusGlyph {
-                    visible: bar.wired || !Networking.wifiEnabled
-                    glyph: bar.wired ? "\u{F0200}" : "\u{F05AA}"
-                    tone: bar.wired ? Theme.text : Theme.muted
-                    font.pixelSize: 15
-                }
-                WifiGlyph {   // signal strength; all dim while not connected
-                    visible: !bar.wired && Networking.wifiEnabled
-                    strength: bar.network ? bar.network.signalStrength : -1
-                }
-                StatusGlyph { // bluetooth: dim until something is connected
-                    readonly property bool linked: bar.adapter?.devices.values.some(d => d.connected) ?? false
-                    visible: bar.adapter?.enabled ?? false
-                    glyph: linked ? "\u{F00B1}" : "\u{F00AF}"
-                    tone: linked ? Theme.text : Theme.subtext
-                    font.pixelSize: 15
-                }
-                StatusGlyph { // volume: muted / low / medium / high
-                    readonly property real vol: bar.sink?.audio?.volume ?? 0
-                    glyph: bar.sink?.audio?.muted || vol === 0 ? "\u{F075F}" : vol < 0.34 ? "\u{F057F}" : vol < 0.67 ? "\u{F0580}" : "\u{F057E}"
-                    tone: bar.sink?.audio?.muted ? Theme.subtext : Theme.text
-                    font.pixelSize: 15
-                }
-                Row {
-                    visible: bar.battery?.isPresent ?? false
-                    anchors.verticalCenter: parent.verticalCenter
+                    visible: !isNaN(v) || modelData[2] !== ""
                     spacing: 4
                     Text {
-                        visible: Config.bar.batteryPercent
                         anchors.verticalCenter: parent.verticalCenter
-                        text: status.pct + "%"
-                        color: status.low ? Theme.red : Theme.text
-                        font { family: Theme.font; pixelSize: 12; weight: Font.Medium; features: { "tnum": 1 } }
+                        text: parent.modelData[0]
+                        color: Theme.subtext
+                        font { family: Theme.iconFont; pixelSize: 14 }
                     }
-                    Item { // drawn battery: hairline body, fill to the charge, nub; green while charging, red when low
-                        anchors.verticalCenter: parent.verticalCenter
-                        readonly property color tone: status.low ? Theme.red : status.charging ? Theme.success : Theme.text
-                        width: 25; height: 12
-                        Rectangle {
-                            id: batteryBody
-                            width: 22; height: 12; radius: 3.5
-                            color: "transparent"
-                            border { color: Qt.alpha(Theme.text, 0.45); width: 1 }
-                            Rectangle {
-                                x: 2; y: 2
-                                width: Math.max(2, (parent.width - 4) * Math.min(1, status.pct / 100))
-                                height: parent.height - 4
-                                radius: 2
-                                color: parent.parent.tone
-                                Behavior on width { NumberAnimation { duration: Theme.anim } }
-                            }
-                        }
-                        Rectangle { // nub
-                            anchors { left: batteryBody.right; leftMargin: 1; verticalCenter: batteryBody.verticalCenter }
-                            width: 2; height: 4; radius: 1
-                            color: Qt.alpha(Theme.text, 0.45)
-                        }
-                    }
-                    Text { // bolt while charging, plug while plugged in and held (charge limit)
-                        visible: status.plugged || status.charging
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: status.charging ? "\u{F0241}" : "\u{F06A5}"
-                        color: Theme.text
-                        font { family: Theme.iconFont; pixelSize: 12 }
-                    }
-                }
-            }
-
-            BarItem { // notifications: bell with the unread count, only while there are some; crossed out during Do Not Disturb
-                visible: Notifications.history.length > 0
-                active: NotificationCenter.open
-                onPressed: NotificationCenter.toggle()   // the Control Center, scrolled to notifications
-                Item {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 16; height: 18
                     Text {
-                        anchors.centerIn: parent
-                        text: Notifications.dnd ? "\u{F009B}" : "\u{F009C}"
-                        color: Theme.text
-                        font { family: Theme.iconFont; pixelSize: 16 }
-                    }
-                    Rectangle {
-                        visible: Notifications.unread > 0 && !Notifications.dnd
-                        x: parent.width - 7; y: -3
-                        width: Math.max(14, badge.implicitWidth + 6); height: 14; radius: 7
-                        color: Theme.red
-                        Text {
-                            id: badge
-                            anchors.centerIn: parent
-                            text: Notifications.unread > 9 ? "9+" : Notifications.unread
-                            color: "white"
-                            font { family: Theme.font; pixelSize: 9; weight: Font.Bold; features: { "tnum": 1 } }
-                        }
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: isNaN(parent.v) ? parent.modelData[2] : Math.round(parent.v) + "°"
+                        color: isNaN(parent.v) ? Theme.subtext : parent.v >= 90 ? Theme.red : parent.v >= 80 ? Theme.yellow : Theme.text
+                        font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
                     }
                 }
             }
+        }
+    }
+    Component {
+        id: keyboardW
+        BarItem { // keyboard layout as a small keycap; click for the list of layouts
+            shown: Keyboard.layouts.length > 1
+            active: Keyboard.open
+            onPressed: Keyboard.toggle()
+            onScrolled: d => Keyboard.use((Keyboard.active + (d > 0 ? 1 : Keyboard.layouts.length - 1)) % Keyboard.layouts.length)
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.max(22, layoutText.implicitWidth + 8); height: 15
+                radius: 4
+                color: "transparent"
+                border { color: Qt.alpha(Theme.text, 0.45); width: 1 }
+                Text {
+                    id: layoutText
+                    anchors.centerIn: parent
+                    text: Keyboard.short
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: 9; weight: Font.Bold; letterSpacing: 0.3 }
+                }
+            }
+        }
+    }
+    Component {
+        id: statusW
+        BarItem { // status → Control Center; scroll for volume
+            id: status
+            readonly property int pct: Math.round((bar.battery?.percentage ?? 0) * 100)
+            readonly property bool plugged: !UPower.onBattery
+            readonly property bool charging: bar.battery?.state === UPowerDeviceState.Charging
+            readonly property bool low: pct <= 15 && !plugged
+            spacing: Theme.spaceM
+            active: ControlCenter.open
+            onPressed: ControlCenter.toggle()
+            onScrolled: d => { const a = bar.sink?.audio; if (a) a.volume = Math.max(0, Math.min(1, a.volume + d * 0.05)) }
 
+            StatusGlyph {
+                visible: bar.wired || !Networking.wifiEnabled
+                glyph: bar.wired ? "\u{F0200}" : "\u{F05AA}"
+                tone: bar.wired ? Theme.text : Theme.muted
+                font.pixelSize: 15
+            }
+            WifiGlyph {   // signal strength; all dim while not connected
+                visible: !bar.wired && Networking.wifiEnabled
+                strength: bar.network ? bar.network.signalStrength : -1
+            }
+            StatusGlyph { // bluetooth: dim until something is connected
+                readonly property bool linked: bar.adapter?.devices.values.some(d => d.connected) ?? false
+                visible: bar.adapter?.enabled ?? false
+                glyph: linked ? "\u{F00B1}" : "\u{F00AF}"
+                tone: linked ? Theme.text : Theme.subtext
+                font.pixelSize: 15
+            }
+            StatusGlyph { // volume: muted / low / medium / high
+                readonly property real vol: bar.sink?.audio?.volume ?? 0
+                glyph: bar.sink?.audio?.muted || vol === 0 ? "\u{F075F}" : vol < 0.34 ? "\u{F057F}" : vol < 0.67 ? "\u{F0580}" : "\u{F057E}"
+                tone: bar.sink?.audio?.muted ? Theme.subtext : Theme.text
+                font.pixelSize: 15
+            }
+            Row {
+                visible: bar.battery?.isPresent ?? false
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 4
+                Text {
+                    visible: Config.bar.batteryPercent
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: status.pct + "%"
+                    color: status.low ? Theme.red : Theme.text
+                    font { family: Theme.font; pixelSize: 12; weight: Font.Medium; features: { "tnum": 1 } }
+                }
+                Item { // drawn battery: hairline body, fill to the charge, nub; green while charging, red when low
+                    anchors.verticalCenter: parent.verticalCenter
+                    readonly property color tone: status.low ? Theme.red : status.charging ? Theme.success : Theme.text
+                    width: 25; height: 12
+                    Rectangle {
+                        id: batteryBody
+                        width: 22; height: 12; radius: 3.5
+                        color: "transparent"
+                        border { color: Qt.alpha(Theme.text, 0.45); width: 1 }
+                        Rectangle {
+                            x: 2; y: 2
+                            width: Math.max(2, (parent.width - 4) * Math.min(1, status.pct / 100))
+                            height: parent.height - 4
+                            radius: 2
+                            color: parent.parent.tone
+                            Behavior on width { NumberAnimation { duration: Theme.anim } }
+                        }
+                    }
+                    Rectangle { // nub
+                        anchors { left: batteryBody.right; leftMargin: 1; verticalCenter: batteryBody.verticalCenter }
+                        width: 2; height: 4; radius: 1
+                        color: Qt.alpha(Theme.text, 0.45)
+                    }
+                }
+                Text { // bolt while charging, plug while plugged in and held (charge limit)
+                    visible: status.plugged || status.charging
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: status.charging ? "\u{F0241}" : "\u{F06A5}"
+                    color: Theme.text
+                    font { family: Theme.iconFont; pixelSize: 12 }
+                }
+            }
+        }
+    }
+    Component {
+        id: notificationsW
+        BarItem { // notifications: bell with the unread count, only while there are some; crossed out during Do Not Disturb
+            shown: Notifications.history.length > 0
+            active: NotificationCenter.open
+            onPressed: NotificationCenter.toggle()   // the Control Center, scrolled to notifications
+            Item {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 16; height: 18
+                Text {
+                    anchors.centerIn: parent
+                    text: Notifications.dnd ? "\u{F009B}" : "\u{F009C}"
+                    color: Theme.text
+                    font { family: Theme.iconFont; pixelSize: 16 }
+                }
+                Rectangle {
+                    visible: Notifications.unread > 0 && !Notifications.dnd
+                    x: parent.width - 7; y: -3
+                    width: Math.max(14, badge.implicitWidth + 6); height: 14; radius: 7
+                    color: Theme.red
+                    Text {
+                        id: badge
+                        anchors.centerIn: parent
+                        text: Notifications.unread > 9 ? "9+" : Notifications.unread
+                        color: "white"
+                        font { family: Theme.font; pixelSize: 9; weight: Font.Bold; features: { "tnum": 1 } }
+                    }
+                }
+            }
         }
     }
 }

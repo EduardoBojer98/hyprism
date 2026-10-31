@@ -7,6 +7,8 @@ Rectangle {
     property alias spacing: row.spacing
     property bool active: false
     property bool interactive: true
+    property bool shown: true     // false: nothing to show, the bar leaves no gap
+    visible: shown
     property alias acceptedButtons: area.acceptedButtons
     signal pressed(int button)
     signal scrolled(int delta)

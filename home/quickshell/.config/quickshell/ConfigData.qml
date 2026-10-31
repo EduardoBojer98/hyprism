@@ -116,11 +116,12 @@ JsonAdapter {
         property bool clock24: true
         property bool seconds: false
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
-        property bool weather: true
-        property bool temperatures: true
-        property bool keyboard: true             // the layout keycap (only shown with 2+ layouts)
         property bool batteryPercent: true
         property bool windowTitle: true          // the focused window's title after the app name
+        // what each part of the bar shows, in order (all items: Bar.qml's widgets)
+        property list<string> left: ["logo", "desktops", "app"]
+        property list<string> center: ["weather", "clock"]
+        property list<string> right: ["tray", "temperatures", "keyboard", "status", "notifications"]
     }
     property JsonObject battery: JsonObject {
         property bool warn: true                 // a notification when the battery runs low
