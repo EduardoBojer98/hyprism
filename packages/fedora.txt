@@ -1,8 +1,8 @@
 # Fedora Workstation 44: logical name (packages/manifest.txt) -> package(s), source.
 # Sources: repo = official Fedora repos (fedora + updates), copr:OWNER/PROJECT = COPR (dnf copr enable),
-# rpmfusion-free / rpmfusion-nonfree = RPM Fusion, vendor:URL = vendor .repo file, flatpak:APP-ID = Flathub,
+# rpmfusion-free / rpmfusion-nonfree = RPM Fusion,
 # none = not packaged (comment above says what to do instead). Several packages: comma-separated.
-# Checked with dnf repoquery in a fedora:latest (Fedora 44) container, and the Flathub API, on 2026-10-31.
+# Checked with dnf repoquery in a fedora:latest (Fedora 44) container on 2026-10-31.
 #
 # Hyprland is NOT in Fedora's own repos (Fedora 44). The whole ecosystem comes from copr:sdegler/hyprland
 # (solopasha/hyprland is abandoned: rawhide only, last build 0.51.1 in 2025-10). Versions there match Arch.
@@ -84,32 +84,9 @@ font-noto-emoji          google-noto-color-emoji-fonts      repo
 # No JetBrainsMono Nerd Font RPM (copr:che/nerd-fonts 3.5.1 only ships the Symbols Nerd Font).
 # Falls back to plain JetBrains Mono (no icons in the prompt). For icons: that COPR's nerd-fonts, or unpack JetBrainsMono.tar.xz from github.com/ryanoasis/nerd-fonts/releases into ~/.local/share/fonts.
 font-jetbrains-nerd      jetbrains-mono-fonts               repo
-# No Oreo cursor RPM in Fedora or COPR. Alternative: build/unpack from github.com/varlesh/oreo-cursors into ~/.local/share/icons (the repo's theme-add does this).
-oreo-cursors             none                               none
 # ghostty 1.4.0-1.fc44 (no ghostty in Fedora's own repo)
 ghostty                  ghostty                            copr:scottames/ghostty
 dolphin                  dolphin                            repo
-# google-chrome-stable 156.0.8078.79-1
-chrome                   google-chrome-stable               vendor:https://dl.google.com/linux/chrome/rpm/stable/x86_64
-okular                   okular                             repo
-gwenview                 gwenview                           repo
-micro                    micro                              repo
-# Flathub org.onlyoffice.desktopeditors 10.0.0 (ONLYOFFICE's own repo.onlyoffice.com .repo could not be fetched: not verified)
-onlyoffice               org.onlyoffice.desktopeditors      flatpak:org.onlyoffice.desktopeditors
-# Flathub com.bitwarden.desktop 2026.10.2 (no bitwarden RPM in Fedora)
-bitwarden                com.bitwarden.desktop              flatpak:com.bitwarden.desktop
-# Fedora's package is named gh (2.97.0)
-github-cli               gh                                 repo
-# Fedora ships moby-engine 29.8.2 (docker-ce 29.9.2 exists at download.docker.com/linux/fedora/docker-ce.repo if newer is wanted). Service: docker.service.
-docker                   moby-engine,docker-cli             repo
-# docker-compose 5.6.0 (Compose v2 as "docker compose" needs docker-compose; docker-compose-switch only adds a docker-compose shim)
-docker-compose           docker-compose                     repo
-python                   python3                            repo
-uv                       uv                                 repo
-php                      php                                repo
-composer                 composer                           repo
-# code 1.144.0 (packages.microsoft.com/yumrepos/vscode, key https://packages.microsoft.com/keys/microsoft.asc)
-vscode                   code                               vendor:https://packages.microsoft.com/yumrepos/vscode
 # starship 1.24.2-1.fc44 (not in Fedora's own repo)
 starship                 starship                           copr:atim/starship
 zoxide                   zoxide                             repo
@@ -122,8 +99,3 @@ gitleaks                 gitleaks                           repo
 asusctl                  asusctl                            copr:lukenukem/asus-linux
 # Same COPR, GUI is the subpackage asusctl-rog-gui 6.3.8-2.fc44
 rog-control-center       asusctl-rog-gui                    copr:lukenukem/asus-linux
-# Fedora's ollama 0.12.11-4 is built for AMD ROCm (requires hipblas/rocblas), not CUDA. Alternative: ollama's install script
-# (ollama.com/install.sh, bundles CUDA) with rpmfusion-nonfree xorg-x11-drv-nvidia-cuda, or the ollama/ollama docker image with the NVIDIA container toolkit.
-ollama-nvidia            none                               none
-# Flathub com.openwebui.open-webui 0.0.8 (exists; whether it is the same app as Arch's open-webui-desktop-bin is not verified)
-open-webui               com.openwebui.open-webui           flatpak:com.openwebui.open-webui

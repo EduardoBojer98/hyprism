@@ -70,30 +70,15 @@ font-cantarell           look      "Cantarell" choice under Appearance > Font
 font-noto                look      "Noto Sans" choice; fallback for missing glyphs
 font-noto-emoji          look      emoji in the picker, notifications and browser
 font-jetbrains-nerd      look      terminal and code font with icons
-oreo-cursors             look      the default cursor (Appearance > Cursor)
 
 # Everyday apps
 ghostty                  apps      terminal (Super+Return)
 dolphin                  apps      file manager (Super+E)
-chrome                   apps      web browser (default in Default Apps, chrome-flags.conf)
-okular                   apps      PDF reader with annotations
-gwenview                 apps      image viewer
-micro                    apps      small terminal text editor (default for text files)
-onlyoffice               apps      best free Microsoft Office file compatibility
-bitwarden                apps      password manager, syncs with phone and browser
 
-# Development
-github-cli               dev       gh: pull requests and issues, Git credential helper
-docker                   dev       containers (Lando, local services); install adds you to the docker group
-docker-compose           dev       multi-container projects
-python                   dev       scripts, tooling
-uv                       dev       Python versions and virtualenvs
-php                      dev       PHP / WordPress work outside containers
-composer                 dev       PHP dependencies
-vscode                   dev       code editor
-starship                 dev       shell prompt
-zoxide                   dev       `z` jumps to recent folders
-fd                       dev       fast file search
-ripgrep                  dev       fast text search
-fzf                      dev       fuzzy finder in the shell
-gitleaks                 dev       secret scan before commits in this repo (.githooks/pre-commit)
+# Shell (fish config in config/fish uses these) and this repo's secret scan
+starship                 shell     shell prompt
+zoxide                   shell     `z` jumps to recent folders
+fd                       shell     fast file search
+ripgrep                  shell     fast text search
+fzf                      shell     fuzzy finder in the shell
+gitleaks                 shell     secret scan before commits in this repo (.githooks/pre-commit)

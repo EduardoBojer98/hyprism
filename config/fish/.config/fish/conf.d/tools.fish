@@ -12,5 +12,3 @@ set -gx FZF_DEFAULT_COMMAND "fd --type f --hidden --exclude .git"
 # Colours from the terminal palette, which follows Settings > Appearance (Ghostty theme.conf)
 set -gx FZF_DEFAULT_OPTS "--height 40% --layout reverse --border rounded --color=16"
 
-# Lando (installed by its own script into ~/.lando)
-test -d $HOME/.lando/bin; and fish_add_path -g $HOME/.lando/bin

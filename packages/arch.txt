@@ -63,23 +63,8 @@ font-cantarell           cantarell-fonts                    repo
 font-noto                noto-fonts                         repo
 font-noto-emoji          noto-fonts-emoji                   repo
 font-jetbrains-nerd      ttf-jetbrains-mono-nerd            repo
-oreo-cursors             oreo-cursors-git                   aur
 ghostty                  ghostty                            repo
 dolphin                  dolphin                            repo
-chrome                   google-chrome                      aur
-okular                   okular                             repo
-gwenview                 gwenview                           repo
-micro                    micro                              repo
-onlyoffice               onlyoffice-bin                     cachyos
-bitwarden                bitwarden                          repo
-github-cli               github-cli                         repo
-docker                   docker                             repo
-docker-compose           docker-compose                     repo
-python                   python                             repo
-uv                       uv                                 repo
-php                      php                                repo
-composer                 composer                           repo
-vscode                   visual-studio-code-bin             aur
 starship                 starship                           repo
 zoxide                   zoxide                             repo
 fd                       fd                                 repo
@@ -89,5 +74,3 @@ gitleaks                 gitleaks                           repo
 # Host extras (hosts/*/packages.txt)
 asusctl                  asusctl                            repo
 rog-control-center       rog-control-center                 repo
-ollama-nvidia            ollama-cuda                        repo
-open-webui               open-webui-desktop-bin             aur
