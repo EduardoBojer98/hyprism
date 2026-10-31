@@ -8,7 +8,8 @@ install stays untouched and selectable at the login screen.
 - **Menu bar**: desktops and the app name on the left; weather, date and time (calendar) in the
   centre; tray, CPU and NVIDIA GPU temperatures (click for CPU, both GPUs, memory, disk, fans and top processes), keyboard layout (its own list of layouts), status (Control Center), notifications bell on the right;
   utility menu behind the system logo at the left end (its **Power…** entry opens the power menu: lock, sleep,
-  hibernate, log out, restart, shut down)
+  hibernate, log out, restart, shut down). Arrange it in Settings > Menu Bar: move any item left, centre or
+  right, hide it, or add network speed, CPU use, memory and now playing
 - **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, dark mode, media, power
   mode, display, sound and microphone; rearrange, show or hide its sections and tiles in Settings
 - **Spotlight** (tap `Super`): suggestions first (weather, next event, last copied, most used apps, recent items, quick actions), then a Top Hit and results grouped apps → files →
