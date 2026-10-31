@@ -209,7 +209,8 @@ Singleton {
                             id: mem
                             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
                             spacing: 6
-                            Meter { label: "Memory"; used: root.memUsed; total: root.memTotal }
+                            // usable is below installed: the built-in GPU's memory (and a little firmware) is carved out of it
+                            Meter { label: root.memTotal > 0 ? `Memory (${Math.ceil(root.memTotal + root.vramTotal)} GB installed)` : "Memory"; used: root.memUsed; total: root.memTotal }
                             Meter { visible: root.swapTotal > 0; label: "Swap"; used: root.swapUsed; total: root.swapTotal }
                             Meter { visible: root.vramTotal > 0; label: "Built-in GPU memory"; used: root.vramUsed; total: root.vramTotal }
                             Meter { visible: root.nv !== null; label: root.nvName.replace(/ Laptop GPU$/, "") + " memory"; used: root.nv?.memUsed ?? 0; total: root.nv?.memTotal ?? 1 }
@@ -308,11 +309,12 @@ Singleton {
         property string note              // replaces the load line (a sleeping GPU)
         Layout.fillWidth: true
         Layout.preferredWidth: 1
-        implicitHeight: 86
+        implicitHeight: chipCol.implicitHeight + 24
         radius: Theme.radius
         color: Theme.fill
         Column {
-            anchors { fill: parent; margins: 12 }
+            id: chipCol
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
             spacing: 4
             Text { width: parent.width; elide: Text.ElideRight; text: chip.title; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
             Text {
