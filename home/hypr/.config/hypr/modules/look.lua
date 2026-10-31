@@ -74,5 +74,12 @@ hl.config({
     xwayland = {
         force_zero_scaling = true,
     },
+    -- Fullscreen video made the Acer go black for a few seconds, like a source change: Hyprland
+    -- switched its HDMI colorspace to BT.2020 (auto HDR) and sent a new content type. Neither
+    -- screen here is HDR, so keep the signal the same in and out of fullscreen.
+    render = {
+        cm_auto_hdr       = 0,
+        send_content_type = false,
+    },
 })
 apply_theme()

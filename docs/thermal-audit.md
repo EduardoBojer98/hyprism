@@ -35,8 +35,9 @@ A Ryzen 5800HS should draw well under 10 W on a quiet desktop. Here it draws 2-3
 - **The built-in GPU runs flat out.** `gpu_busy_percent` 53-59 %, shader clock at its 2000 MHz max,
   memory/fabric clock at 1600 MHz. Per-process GPU time (`/proc/*/fdinfo`) shows Hyprland as almost
   the only client (the compositor), Claude desktop a distant second.
-- **It scales with how often the screens redraw, not with effects.** Turning blur off, colour management off,
-  or pausing Quickshell changed nothing (53 % -> 53-54 %). Earlier today, the external monitor at 60 Hz
+- **It scales with how often the screens redraw.** Pausing Quickshell changed nothing (53 %). *Correction:*
+  the blur and colour-management toggles reported here never applied: with this Lua config `hyprctl keyword`
+  is ignored ("unknown request"; use `hyprctl eval 'hl.config({...})'`), so effects remain untested. Earlier today, the external monitor at 60 Hz
   instead of 144 Hz saved ~4 W. Both screens run at 120 Hz (the Acer was at 144 Hz until 18:29),
   so every animating window (Claude streaming text, Chrome) makes Hyprland redraw up to 240 frames/s
   across two screens.
@@ -128,6 +129,8 @@ Quiet's full-load clock drops from 2.9 to 1.8 GHz: it's for quiet, not for build
 | 6 | Control Center and Settings (Power, ASUS) switch modes through asusd (`PowerMode.qml` -> `powermode`) instead of power-profiles-daemon. They follow changes made anywhere (keybind, KDE, terminal, plugging in). Other computers still use power-profiles-daemon. | `git revert` |
 | 7 | `powermode` command and **Super+F5** = next mode (rebind it in Settings > Keyboard Shortcuts, e.g. to the Fn+F5 fan key) | remove the bind / script |
 | 8 | `thermlog LABEL [SECONDS]`: the sampler used for every number here | — |
+| 9 | **Fullscreen video black screen on the Acer** (it acted like a source change on entering and leaving fullscreen). Cause: Hyprland's auto HDR switched the HDMI colorspace from Default to BT.2020 for Chrome's fullscreen video (seen with `modetest -c`). Fix in `home/hypr/.config/hypr/modules/look.lua`: `render.cm_auto_hdr = 0` and `send_content_type = false`. Verified: colorspace and content type stay the same in fullscreen; you confirmed both screens are fine. | remove the `render` block |
+| 10 | Chrome: `~/.config/chrome-flags.conf` (`home/chrome/`) turns on VA-API video decode. **Not effective yet:** YouTube sends AV1, which this GPU (VCN 2) can't decode, so Chrome still decodes on the CPU. | delete the file, restart Chrome |
 
 ### How to switch modes
 - Control Center > Power mode, or Settings > Power & Battery
@@ -147,15 +150,24 @@ The dGPU stays off unless an app asks for it: `nv <app>` runs one app on it (AI,
    Quiet `power`, Balanced `balance_power`, Performance `performance` every time.
 2. Balanced EPP tested after the fix (2 rounds x 2 min each, normal use): `balance_power` 73.1-73.6 °C, 23.5-24.3 W;
    `power` 72.4-73.6 °C, 25.6-27.9 W. No gain, so Balanced keeps `balance_power`.
-3. **The built-in GPU stays ~55 % busy at idle** (cause 1). It keeps light-load power at 16-25 W in every mode;
-   Quiet even sits on its 15 W cap at idle. The true-idle test below decides whether it's this session's
-   streaming windows or something else.
-4. Hardware: no verdict yet; same true-idle test.
+3. **True idle, measured (19:54, Balanced, AC, both screens, Claude app and Chrome closed, 5 min):**
+   CPU **57.7 °C** (still falling at the end), package **6.7 W**, CPU fan **4,400 RPM**, iGPU 25 % busy, dGPU off.
+   Same desktop with the Claude app and Chrome open: 72-75 °C, 23-26 W, 7,000+ RPM.
+   **So ~17 W of the light-load heat comes from those apps**, not from the system, drivers or Hyprland.
+   The iGPU still reads 25 % busy with nothing open, but at under 7 W total that costs little.
+4. **Hardware: no maintenance needed.** At 6.7 W the CPU sits below 60 °C with fans at medium speed, so
+   heat gets into the heatsink fine. No cleaning or repaste based on this evidence.
+5. **Chrome is the main heat source.** Chrome alone (tabs + YouTube, Claude app closed, 20:04): **72.5 °C, 24.9 W**,
+   CPU fan 6,900 RPM, iGPU 57 %. Same as Chrome + Claude app, so the Claude app adds little.
+   Likely cause: YouTube sends AV1 and this GPU can't decode AV1, so the CPU does it (no `radeonsi_drv_video`
+   in Chrome's GPU process while playing). Next: YouTube > Settings > Playback and performance > AV1 settings >
+   "Prefer SD for AV1" (YouTube then sends VP9, which the GPU decodes), then re-measure `thermlog chrome-youtube-gpu 300`.
+6. Not measured yet: laptop screen only, battery.
 
 ## 6. Measurements that need you
 
 Each takes ~5 minutes, one command each (`thermlog NAME 300`; results in `~/.local/state/thermlog/`):
-1. **True idle**: in a terminal run `sleep 30; thermlog true-idle 300`, then close the Claude app and Chrome and don't touch anything for 5 min.
+1. ~~True idle~~: done, see section 5.
 2. **Laptop screen only**: unplug HDMI, same idle.
-3. **Browsing**: Chrome with several tabs + a YouTube video playing (also tells us if video decode is in hardware).
+3. ~~Browsing~~: done (section 5); re-run after the YouTube AV1 setting.
 4. **Battery**: unplug the charger, light use, once in Quiet and once in Balanced (battery watts).
