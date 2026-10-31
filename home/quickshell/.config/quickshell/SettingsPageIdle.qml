@@ -30,6 +30,8 @@ ColumnLayout {
         }
     }
 
+    readonly property string screensOn: "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"
+
     function label(m) { return m === 0 ? "Never" : m + " min" }
 
     function save() {
@@ -39,9 +41,10 @@ ColumnLayout {
             blocks.push("# 30 s later: screens off\nlistener {\n    timeout    = " + (lockMin * 60 + 30) + "\n    on-timeout = hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'\n    on-resume  = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'\n}")
         }
         if (sleepMin > 0)
-            blocks.push("# " + sleepMin + " min: sleep, then hibernate after 60 more min\nlistener {\n    timeout    = " + sleepMin * 60 + "\n    on-timeout = systemctl suspend-then-hibernate\n}")
+            // screens on first: an output that sleeps while off loses its CRTC and wakes black
+            blocks.push("# " + sleepMin + " min: sleep, then hibernate after 60 more min\nlistener {\n    timeout    = " + sleepMin * 60 + "\n    on-timeout = " + page.screensOn + "; systemctl suspend-then-hibernate\n}")
         const text = "# Written by the Settings app (Lock & Sleep). hypridle still uses hyprlang.\n"
-            + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = loginctl lock-session\n"
+            + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = loginctl lock-session; " + page.screensOn + "\n"
             + "    after_sleep_cmd  = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'\n}\n\n" + blocks.join("\n\n")
         SettingsApp.writeHyprFile("hypridle.conf", text)
         Quickshell.execDetached(["sh", "-c", "sleep 0.3; pkill -x hypridle; hyprctl dispatch 'hl.dsp.exec_cmd(\"hypridle\")'"])
