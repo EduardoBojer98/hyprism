@@ -19,9 +19,8 @@ systemctl enable --now asusd 2>/dev/null || systemctl start asusd
 step "NVIDIA suspend/hibernate helpers (save GPU memory across sleep)"
 systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
 
-step "NVIDIA: no runtime power saving on this model, so the GPU is switched off in ROG Control Center instead"
-# The driver reports "Runtime D3: Not supported" on the GV301QC, so an NVreg option can't help;
-# remove the one an earlier version of this script added.
+step "NVIDIA: drop old power-saving files (runtime power-off now lives in 30-thermal.sh)"
+# "Runtime D3: Not supported" turned out to be a kernel 7.3 bug, not this model: it works on LTS.
 rm -f /etc/modprobe.d/nvidia-runtime-pm.conf
 # Dynamic Boost: its own log says the BIOS disables it on battery, and it kept the GPU awake.
 systemctl disable --now nvidia-powerd 2>/dev/null || true
