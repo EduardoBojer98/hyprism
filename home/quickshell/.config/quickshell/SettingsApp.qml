@@ -7,15 +7,35 @@ import QtQuick.Controls
 
 // The Settings app: one glass window with a sidebar of sections, like macOS System Settings.
 // Open with Super+I, the Control Center's gear, the launcher ("Settings"), or
-// `qs ipc call settings open [section]`.
+// `qs ipc call settings open [group or page]`.
 Singleton {
     id: root
 
     property bool open: false
-    property string section: "appearance"
+    property string section: "appearance"   // the group shown
+    property string focusPage: ""           // page to scroll to inside it (from show())
 
+    // The sidebar: groups like a normal desktop's settings, each showing one or more pages below.
+    // Page ids still work everywhere (show("sound"), `qs ipc call settings open bluetooth`).
+    readonly property var allGroups: [
+        { id: "display",    name: "Display",              glyph: "\u{F0379}", pages: ["displays", "monitor"] },
+        { id: "appearance", name: "Appearance",           glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons"] },
+        { id: "desktop",    name: "Desktop",              glyph: "\u{F0349}", pages: ["dock", "launcher", "controlcenter", "notifications", "clipboard", "weather", "calendar"] },
+        { id: "input",      name: "Input",                glyph: "\u{F030C}", pages: ["input"] },
+        { id: "sound",      name: "Sound",                glyph: "\u{F057E}", pages: ["sound"] },
+        { id: "network",    name: "Network & Bluetooth",  glyph: "\u{F05A9}", pages: ["network", "bluetooth"] },
+        { id: "power",      name: "Power & Battery",      glyph: "\u{F0079}", pages: ["power", "idle", "asus"] },
+        { id: "keybinds",   name: "Keyboard Shortcuts",   glyph: "\u{F0313}", pages: ["keybinds"] },
+        { id: "apps",       name: "Default Apps",         glyph: "\u{F003B}", pages: ["apps"] },
+        { id: "startup",    name: "Startup Apps",         glyph: "\u{F040A}", pages: ["startup"] },
+        { id: "system",     name: "System",               glyph: "\u{F02FD}", pages: ["about", "language"] },
+    ]
     // ASUS Hardware only on machines with asusctl
-    readonly property var sections: allSections.filter(s => s.id !== "asus" || Machine.asus)
+    readonly property var sections: allGroups.map(g => Object.assign({}, g, { pages: g.pages.filter(p => p !== "asus" || Machine.asus) }))
+    readonly property var currentGroup: sections.find(g => g.id === section) ?? sections[0]
+    function pageName(id) { return allSections.find(p => p.id === id)?.name ?? "" }
+
+    // Pages: what each SettingsPage<Id>.qml is called (Spotlight searches these too)
     readonly property var allSections: [
         { id: "appearance",    name: "Appearance & Themes", glyph: "\u{F03D8}" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
@@ -43,7 +63,12 @@ Singleton {
         { id: "about",         name: "About",               glyph: "\u{F02FD}" },
     ]
 
-    function show(s) { if (s && sections.some(x => x.id === s)) section = s; open = true }
+    // s: a group id, a page id (opens its group scrolled to that page), or "" (last group)
+    function show(s) {
+        const g = sections.find(x => x.id === s) ?? sections.find(x => x.pages.includes(s))
+        if (g) { section = g.id; focusPage = g.id === s ? "" : s }
+        open = true
+    }
 
     IpcHandler {
         target: "settings"
@@ -152,7 +177,7 @@ Singleton {
                                         font { family: Theme.font; pixelSize: 13; weight: current ? Font.DemiBold : Font.Normal }
                                     }
                                 }
-                                MouseArea { id: navArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.section = modelData.id }
+                                MouseArea { id: navArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData.id) }
                             }
                         }
                     }
@@ -186,16 +211,44 @@ Singleton {
 
                     Text {
                         Layout.fillWidth: true
-                        text: root.sections.find(s => s.id === root.section)?.name ?? ""
+                        text: root.currentGroup.name
                         elide: Text.ElideRight
                         color: Theme.text
                         font { family: Theme.font; pixelSize: 22; weight: Font.Bold }
                     }
 
-                    Loader {
-                        Layout.fillWidth: true
-                        active: root.open
-                        source: "SettingsPage" + root.section.charAt(0).toUpperCase() + root.section.slice(1) + ".qml"
+                    // the group's pages one below the other, each under its own heading
+                    Repeater {
+                        model: root.currentGroup.pages
+                        ColumnLayout {
+                            id: part
+                            required property string modelData
+                            required property int index
+                            Layout.fillWidth: true
+                            Layout.topMargin: index > 0 ? 16 : 0
+                            spacing: 12
+
+                            Text {
+                                visible: root.currentGroup.pages.length > 1
+                                text: root.pageName(part.modelData)
+                                color: Theme.text
+                                font { family: Theme.font; pixelSize: 17; weight: Font.DemiBold }
+                            }
+                            Loader {
+                                Layout.fillWidth: true
+                                active: root.open
+                                source: "SettingsPage" + part.modelData.charAt(0).toUpperCase() + part.modelData.slice(1) + ".qml"
+                            }
+                            // show("bluetooth") lands on Bluetooth inside Network & Bluetooth, once the layout has placed it
+                            Timer {
+                                running: root.open && root.focusPage === part.modelData
+                                interval: 80
+                                onTriggered: {
+                                    page.contentY = Math.max(0, Math.min(part.y + win.pad, page.contentHeight - page.height))
+                                    root.focusPage = ""
+                                }
+                            }
+                        }
                     }
                 }
             }
