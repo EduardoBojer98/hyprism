@@ -1,7 +1,7 @@
 # Thermal & power audit: ROG Flow X13 GV301QC (2026-10-31)
 
-Phase 1 (read-only). Builds on the two fixes made earlier today (`~/thermal-debug/report.md`,
-`system/hosts/rog-flow-x13/30-thermal.sh`): firmware/custom fan curves and the dGPU power-down.
+Phase 1 (read-only). Builds on the two fixes made earlier today (`system/hosts/rog-flow-x13/30-thermal.sh`):
+the stuck CPU fan and the dGPU power-down. Fan curve backups from asusfan: `~/.local/state/asus-backup/`.
 This audit checks they still hold and finds what is still making the laptop hot.
 
 Session: Hyprland 0.57 (Wayland), kernel `6.18.55-2-cachyos-lts`, on AC, charge limit 80 %.
