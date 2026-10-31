@@ -145,3 +145,41 @@ Groups: user is in `docker`, `input`, `video`; not in `i2c`, but `ddcutil detect
 Watch: asusd's **AC profile is Performance** (`asusctl profile get`). The thermal load test hit 95 °C in
 Performance within 10 s. Right now the active profile is Balanced; if plugging in switches you to
 Performance, set the AC profile to Balanced in ROG Control Center or Settings > Power.
+
+## Findings (Phase 2) — tested live on 2026-10-31
+
+✅ works · ⚠️ works but messy · ❌ broken · 🔧 fixed in this branch · 🖐 needs your hands
+
+| Area | Status | Evidence / file |
+|---|---|---|
+| Hyprland starts, config | ✅ | `hyprctl configerrors` empty after every change; log has only the normal "wayland backend" probe error |
+| Monitors | ✅ | eDP-1 1920x1200@120 ×1.2 at 480x1440, HDMI-A-1 2560x1440@144 ×1 at 0x0 (from `settings/displays.lua`) |
+| Hotplug, input switch (Super+M) | 🖐 | `ddcutil detect` sees the Acer on i2c-6 without root; switching not exercised |
+| GPU | ✅ | Hyprland on the AMD iGPU (`AQ_DRM_DEVICES=/dev/dri/amd-igpu`), NVIDIA EGL hidden, dGPU `suspended`; `nv <app>` runs one app on NVIDIA |
+| Overheating | 🔧 | `system/hosts/rog-flow-x13/30-thermal.sh` (see Decisions) |
+| Suspend / resume, lid | 🖐 | NVIDIA sleep services enabled; not exercised |
+| Keyboard layouts | ✅ | us + rs(latin) on all keyboards; switch from the bar widget (no hotkey, your choice) |
+| Keychron Q1 HE, touchpad | ✅ | listed by `hyprctl devices` |
+| MX Master 4 | ✅/🖐 | juhradialmx-daemon active, HID++ connected, DPI applied; haptics need a physical check |
+| **Minimise button in app title bars** | ❌→🔧 | Hyprland 0.57 drops `xdg_toplevel.set_minimized` (read in its source). New `plugins/minimize` + `~/.local/bin/hypr-plugins` (built and loaded at login). Tested on GTK3 and GTK4 windows in a nested Hyprland, then live. Wayland apps only; XWayland apps still ignore the button |
+| Super+H / dock minimise | ✅ | Moves to `special:minimized` and back (tested) |
+| Bar, dock, launcher, notifications, OSD | ✅ | Quickshell running, no QML errors in `qs log` after edits |
+| Lock / idle | ✅/🖐 | hypridle restarted on its new config path; lock screen not opened (press Super+L once to check the wallpaper shows) |
+| Audio | ✅ | PipeWire + WirePlumber, default out = Acer HDMI, mic = internal (with `51-flow-x13-mic.conf`) |
+| Brightness, media, volume keys | ✅ | bound in `binds.lua:85-94`; tools present |
+| Battery, power profiles | ⚠️ | Balanced, charge limit 80 %. asusd's **AC profile is Performance**, which hit 95 °C in 10 s in the load test |
+| Wi-Fi, Bluetooth | ✅ | NetworkManager connected, adapter powered |
+| Advanced network settings | ❌ | `nm-connection-editor` is declared but not installed: `sudo pacman -S nm-connection-editor` |
+| Flameshot (Alt+Shift+S), clipboard history | ✅ | flameshot running; `wl-paste --watch clipstore store` running |
+| Default apps | ⚠️ | https → Chrome, **PDF → Chrome** (Okular is installed), text → micro, images → Gwenview, folders → Dolphin. Change in Settings > Default Apps if you want Okular |
+| Portals | ✅/🖐 | xdg-desktop-portal, -hyprland, -gtk active; browser screen share not exercised |
+| Polkit agent | ✅ | hyprpolkitagent running |
+| **Keyring / Secret Service** | ❌→🔧 | No `org.freedesktop.secrets` in Hyprland: Plasma runs `pam_kwallet_init` from an autostart entry that only shows in KDE. Added to `modules/autostart.lua`; after running it, `ksecretd` owns the name. 🖐 Check Chrome still shows your saved passwords |
+| USB auto-mount | ⚠️ | No auto-mount daemon (udiskie not installed); Dolphin mounts on click |
+| Settings app → tracked files | ❌→🔧 | Wallpaper, lock theme and idle timings were written into tracked files (the dirty tree at the start). Now in gitignored `hypr/settings/`, defaults in `hypr/defaults/`, seeded by `install.sh` |
+| Hardcoded paths | ❌→🔧 | `SettingsPageAbout.qml` assumed `~/Documents/projects/linux-setup`; now resolved from the link |
+| Secrets in repo | ✅ | gitleaks clean (history + tree); pre-commit hook active |
+| Docker, Node, PHP, Python, Git, VS Code | ✅ | `docker ps` without sudo; node 24.22.1, npm 11.19.1, PHP 8.5.12, Python 3.14.8, git 2.56.0, VS Code 1.144.0 |
+| KDE fallback | ✅/🖐 | `plasma.desktop` still listed; Hyprland-only bits are guarded (fish snippet checks `XDG_SESSION_DESKTOP`, autostart lives in Hyprland's config). Shared: GTK dconf (KDE re-applies Breeze). Log into Plasma once to confirm |
+| Autostart entries in `~/.config/autostart` | ⚠️ | flameshot, rog-control-center, juhradial: only KDE runs these (Hyprland has no XDG autostart) |
+| Package lists | 🔧 | all commented, missing ones declared (see Packages); `hyprshot` and `ttf-firacode-nerd` unused |
