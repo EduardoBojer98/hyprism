@@ -16,7 +16,7 @@ install stays untouched and selectable at the login screen.
 - **Calendar** (click the clock): month grid with public holidays for your country, worldwide
   observances and moon phases (each switchable in Settings > Calendar), the selected day and what's coming up
 - **Notification centre** with history, grouping and Do Not Disturb; **Mission Control**
-  (`Super+W`, three fingers up); **dock**: all-apps button, pinned apps (drag to reorder), then each open window as its own live picture (click to bring up or minimise, middle-click to close, right-click for more)
+  (`Super+W`, three fingers up); **dock**: all-apps button, pinned apps (drag to reorder), then each open window as its own app icon (click to bring up or minimise, middle-click to close, right-click for more)
 - Keyboard shortcuts, displays, a shared monitor, sound, network, Bluetooth, power, wallpaper folders
   and slideshow, startup apps, lock and sleep, default apps, weather, appearance (13 colour themes:
   Midnight, Graphite, Cocoa, Catppuccin, Tokyo Night, Dracula, Nord, Gruvbox, Rosé Pine, Everforest,

@@ -18,7 +18,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Show open windows"
-            hint: "Each window as its own live picture, right of the pinned apps"
+            hint: "Each window as its own app icon, right of the pinned apps"
             ConfigToggle { section: "dock"; key: "showRunning" }
         }
         SettingRow {
