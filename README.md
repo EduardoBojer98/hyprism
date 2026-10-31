@@ -9,8 +9,8 @@ install stays untouched and selectable at the login screen.
   centre; tray, CPU and NVIDIA GPU temperatures (click for CPU, both GPUs, memory, disk, fans and top processes), keyboard layout (its own list of layouts), status (Control Center), notifications bell on the right;
   utility menu behind the system logo at the left end (its **Power…** entry opens the power menu: lock, sleep,
   hibernate, log out, restart, shut down)
-- **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, media, power
-  mode, display, sound and microphone
+- **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, dark mode, media, power
+  mode, display, sound and microphone; rearrange, show or hide its sections and tiles in Settings
 - **Spotlight** (tap `Super`): suggestions first (weather, next event, last copied, most used apps, recent items, quick actions), then a Top Hit and results grouped apps → files →
   calculator → settings → actions → web; Files, Actions and clipboard history modes
 - **Calendar** (click the clock): month grid with public holidays for your country, worldwide

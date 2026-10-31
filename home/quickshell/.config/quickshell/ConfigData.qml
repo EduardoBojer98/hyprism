@@ -69,9 +69,15 @@ JsonAdapter {
         property string from: "21:00"
         property string to: "07:00"
     }
+    // order of the Control Center's sections and tiles (ControlCenter.defaults lists them; missing ones
+    // go at the end) and what's hidden; edited in Settings > Control Center
     property JsonObject controlCenter: JsonObject {
-        property bool showMedia: true
         property bool showHardware: true
+        property list<string> sections: []
+        property list<string> tiles: []
+        property list<string> toggles: []
+        property list<string> shortcuts: []
+        property list<string> hidden: ["darkmode", "colorpicker", "mission"]
     }
     property JsonObject keybinds: JsonObject {
         // id -> { keys: "SUPER + K" ("" = turned off), label, group, def } (Settings > Keyboard Shortcuts)

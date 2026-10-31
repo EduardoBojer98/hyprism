@@ -22,6 +22,61 @@ Singleton {
     id: cc
 
     readonly property bool open: popup.open
+    // ---- layout (Settings > Control Center): order of sections and tiles, and what's hidden ----
+    readonly property var defaults: ({
+        sections: ["connections", "toggles", "media", "sliders", "power", "shortcuts", "notifications"],
+        tiles: ["wifi", "bt", "focus", "nightlight"],
+        toggles: ["caffeine", "monitor", "keylight", "keyboard", "darkmode"],
+        shortcuts: ["screenshot", "settings", "lock", "power", "colorpicker", "mission"]
+    })
+    // the saved order, plus anything newer than the saved list at the end
+    function order(group) {
+        const saved = (Config.controlCenter[group] ?? []).filter(id => defaults[group].includes(id))
+        return saved.concat(defaults[group].filter(id => !saved.includes(id)))
+    }
+    function available(id) {
+        switch (id) {
+        case "monitor": return Machine.monitorSwitch
+        case "keylight": return Machine.kbdDevice !== ""
+        case "media": return player !== null
+        default: return true
+        }
+    }
+    function shown(group) { return order(group).filter(id => !Config.controlCenter.hidden.includes(id) && available(id)) }
+    readonly property var shownSections: shown("sections")
+    readonly property var shownTiles: shown("tiles")
+    readonly property var shownToggles: shown("toggles")
+    readonly property var shownShortcuts: shown("shortcuts")
+
+    // names and icons of everything the layout editor (Settings > Control Center) can move or hide
+    readonly property var itemInfo: ({
+        connections: { label: "Connections", glyph: "\u{F05A9}", group: "tiles" },
+        toggles: { label: "Quick toggles", glyph: "\u{F0176}", group: "toggles" },
+        media: { label: "Media (while playing)", glyph: "\u{F075A}" },
+        sliders: { label: "Display and sound", glyph: "\u{F00DF}" },
+        power: { label: "Power mode", glyph: "\u{F0079}" },
+        shortcuts: { label: "Shortcuts", glyph: "\u{F0100}", group: "shortcuts" },
+        notifications: { label: "Notifications", glyph: "\u{F009A}" },
+        wifi: { label: "Wi-Fi", glyph: "\u{F05A9}" },
+        bt: { label: "Bluetooth", glyph: "\u{F00AF}" },
+        focus: { label: "Focus", glyph: "\u{F0594}" },
+        nightlight: { label: "Night Light", glyph: "\u{F0599}" },
+        caffeine: { label: "Caffeine", glyph: "\u{F0176}" },
+        monitor: { label: "Shared monitor", glyph: "\u{F0379}" },
+        keylight: { label: "Key light", glyph: "\u{F0E5B}" },
+        keyboard: { label: "On-screen keyboard", glyph: "\u{F030C}" },
+        darkmode: { label: "Dark mode", glyph: "\u{F050E}" }
+    })
+    // shortcut buttons: what each one shows and does (the Settings editor lists them too)
+    readonly property var shortcutInfo: ({
+        screenshot: { glyph: "\u{F0100}", label: "Screenshot", run: () => Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) },
+        settings: { glyph: "\u{F0493}", label: "Settings", run: () => SettingsApp.show("") },
+        lock: { glyph: "\u{F033E}", label: "Lock", run: () => Quickshell.execDetached(["loginctl", "lock-session"]) },
+        power: { glyph: "\u{F0425}", label: "Power", run: () => PowerMenu.show() },
+        colorpicker: { glyph: "\u{F020A}", label: "Colour", run: () => Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprpicker -a"]) },
+        mission: { glyph: "\u{F0570}", label: "Windows", run: () => MissionControl.toggle() }
+    })
+
     property string expanded: ""     // "", "wifi", "bt", "caffeine", "out", "in"
     property var passwordFor: null   // Wi-Fi network waiting for a password
     property string wifiFailed: ""   // name of the network that just failed to connect
@@ -106,7 +161,7 @@ Singleton {
     Timer {   // after layout settles
         id: scrollToNotes
         interval: 30
-        onTriggered: { scroller.contentY = Math.max(0, Math.min(notesHeader.y - 4, scroller.contentHeight - scroller.height)); cc.toNotes = false }
+        onTriggered: { scroller.contentY = Math.max(0, Math.min(notesSection.y + notesHeader.y - 4, scroller.contentHeight - scroller.height)); cc.toNotes = false }
     }
 
     // short device names: the monitor's own name for HDMI/DP audio, "Built-in …" for the laptop's codec
@@ -143,518 +198,603 @@ Singleton {
         clip: true
         ScrollBar.vertical: GlassScrollBar {}
 
-    ColumnLayout {
+    GridLayout {   // one column; each section takes the row of its place in cc.shownSections
         id: content
         width: scroller.width
-        spacing: cc.gap
+        columns: 1
+        rowSpacing: cc.gap
 
-        // ---- connections: Wi-Fi, Bluetooth, Focus, Night Light --------------------------------
-        GridLayout {
+        ColumnLayout {
             Layout.fillWidth: true
-            columns: 2
-            columnSpacing: cc.gap
-            rowSpacing: cc.gap
-            ConnTile {
-                glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}"
-                title: "Wi-Fi"
-                subtitle: !Networking.wifiEnabled ? "Off" : (cc.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected")
-                active: Networking.wifiEnabled
-                isExpanded: cc.expanded === "wifi"
-                onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
-                onExpand: cc.toggleExpanded("wifi")
-            }
-            ConnTile {
-                glyph: cc.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}"
-                title: "Bluetooth"
-                subtitle: !cc.adapter ? "Unavailable" : !cc.adapter.enabled ? "Off"
-                        : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On")
-                active: cc.adapter?.enabled ?? false
-                isExpanded: cc.expanded === "bt"
-                onToggled: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
-                onExpand: cc.toggleExpanded("bt")
-            }
-            ConnTile {
-                glyph: "\u{F0594}"
-                title: "Focus"
-                subtitle: Config.notifications.dnd ? "Do Not Disturb" : "Off"
-                active: Config.notifications.dnd
-                expandable: false
-                onToggled: Config.set("notifications", "dnd", !Config.notifications.dnd)
-            }
-            ConnTile {
-                glyph: "\u{F0599}"
-                title: "Night Light"
-                subtitle: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode]
-                active: NightLight.active
-                expandable: false
-                onToggled: NightLight.toggle()
-            }
-        }
-
-        // ---- Wi-Fi and Bluetooth dropdowns, under their tiles ----------------------------------
-        Drop {
-            id: wifiDrop
-            visible: cc.expanded === "wifi"
-            title: "Wi-Fi"
-            switchOn: Networking.wifiEnabled
-            onSwitched: Networking.wifiEnabled = !Networking.wifiEnabled
-            settingsLabel: "Network Settings…"
-            settingsPage: "network"
-
-            // one row per name (the strongest access point), known networks first
-            readonly property var nets: {
-                const best = {}
-                for (const n of cc.wifi?.networks.values ?? []) if (n.name && (!best[n.name] || n.connected || n.signalStrength > best[n.name].signalStrength)) best[n.name] = n
-                return Object.values(best).sort((a, b) => b.connected - a.connected || b.signalStrength - a.signalStrength)
-            }
-            readonly property var known: nets.filter(n => n.known || n.connected)
-            readonly property var others: nets.filter(n => !n.known && !n.connected).slice(0, 6)
-
-            SectionLabel { visible: wifiDrop.known.length > 0 && Networking.wifiEnabled; text: "Known networks" }
-            Repeater { model: Networking.wifiEnabled ? wifiDrop.known : []; WifiRow {} }
-            SectionLabel { visible: wifiDrop.others.length > 0 && Networking.wifiEnabled; text: "Other networks" }
-            Repeater { model: Networking.wifiEnabled ? wifiDrop.others : []; WifiRow {} }
-            Empty {
-                shown: !Networking.wifiEnabled || wifiDrop.nets.length === 0
-                text: !Networking.wifiEnabled ? "Wi-Fi is off." : "Looking for networks…"
-            }
-        }
-
-        Drop {
-            id: btDrop
-            visible: cc.expanded === "bt"
-            title: "Bluetooth"
-            switchOn: cc.adapter?.enabled ?? false
-            onSwitched: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
-            settingsLabel: "Bluetooth Settings…"
-            settingsPage: "bluetooth"
-
-            readonly property var devices: (cc.adapter?.devices.values ?? []).filter(d => d.paired || d.connected)
-                .sort((a, b) => b.connected - a.connected || a.name.localeCompare(b.name))
-
-            SectionLabel { visible: btDrop.devices.length > 0 && (cc.adapter?.enabled ?? false); text: "My devices" }
-            Repeater {
-                model: cc.adapter?.enabled ? btDrop.devices : []
-                DeviceRow {
-                    required property var modelData
-                    readonly property bool busy: modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
-                    glyph: cc.btGlyph(modelData.icon)
-                    title: modelData.name
-                    subtitle: modelData.state === BluetoothDeviceState.Connecting ? "Connecting…"
-                            : modelData.state === BluetoothDeviceState.Disconnecting ? "Disconnecting…"
-                            : modelData.connected ? "Connected" + (modelData.batteryAvailable ? `  ·  ${Math.round(modelData.battery * 100)}% battery` : "")
-                            : "Not connected"
-                    selected: modelData.connected
-                    action: busy ? "" : modelData.connected ? "Disconnect" : "Connect"
-                    onClicked: if (!busy) modelData.connected ? modelData.disconnect() : modelData.connect()
-                }
-            }
-            Empty {
-                shown: !(cc.adapter?.enabled ?? false) || btDrop.devices.length === 0
-                text: !cc.adapter ? "No Bluetooth adapter." : !cc.adapter.enabled ? "Bluetooth is off." : "No paired devices yet. Pair one in Bluetooth Settings."
-            }
-        }
-
-        // ---- quick toggles: name, then what it's doing ---------------------------------------
-        RowLayout {
-            Layout.fillWidth: true
+            Layout.row: Math.max(0, cc.shownSections.indexOf("connections"))
+            visible: cc.shownSections.includes("connections")
             spacing: cc.gap
-            QuickToggle {
-                glyph: "\u{F0176}"
-                label: "Caffeine"
-                status: Caffeine.active ? Caffeine.remaining(cc.now.getTime()) : "Off"
-                hint: "Keep awake · chevron to choose how long"
-                active: Caffeine.active
-                expandable: true
-                isExpanded: cc.expanded === "caffeine"
-                onToggled: Caffeine.toggle()
-                onExpand: cc.toggleExpanded("caffeine")
-            }
-            QuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
-                visible: Machine.monitorSwitch
-                readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
-                glyph: "\u{F0379}"
-                label: "Monitor"
-                status: ours ? "Here" : "Other PC"
-                hint: ours ? "Shared monitor shows this computer · click to hand it over" : "Shared monitor shows the other computer · click to take it back"
-                active: ours
-                onToggled: Quickshell.execDetached(["monswitch", "toggle"])
-            }
-            QuickToggle {
-                visible: Machine.kbdDevice !== ""
-                glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
-                label: "Key light"
-                status: ["Off", "Low", "Medium", "High"][cc.kbdLight]
-                hint: "Keyboard backlight · click for the next level"
-                active: cc.kbdLight > 0
-                onToggled: cc.setKbd((cc.kbdLight + 1) % 4)
-            }
-            QuickToggle {
-                glyph: "\u{F030C}"
-                label: "Keyboard"
-                status: Osk.visible ? "Shown" : "Hidden"
-                hint: "On-screen keyboard"
-                active: Osk.visible
-                onToggled: Osk.toggle()
-            }
-        }
 
-        Drop {
-            visible: cc.expanded === "caffeine"
-            title: "Caffeine"
-            switchOn: Caffeine.active
-            onSwitched: Caffeine.toggle()
-            settingsLabel: "Lock & Sleep Settings…"
-            settingsPage: "idle"
-
-            Text {
+            // ---- connections: Wi-Fi, Bluetooth, Focus, Night Light --------------------------------
+            GridLayout {
                 Layout.fillWidth: true
-                Layout.leftMargin: 6
-                Layout.rightMargin: 6
-                Layout.bottomMargin: 2
-                wrapMode: Text.Wrap
-                text: !Caffeine.active ? "Keeps the screen on and stops sleep. Stays on after a restart until you turn it off."
-                    : Caffeine.endsAt === 0 ? "Keeping the screen on until you turn it off."
-                    : "Keeping the screen on until " + Qt.formatTime(new Date(Caffeine.endsAt), "HH:mm") + "  ·  " + Caffeine.remaining(cc.now.getTime())
-                color: Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontCaption }
+                columns: 2
+                columnSpacing: cc.gap
+                rowSpacing: cc.gap
+                ConnTile {
+                    visible: cc.shownTiles.includes("wifi")
+                    Layout.row: Math.floor(Math.max(0, cc.shownTiles.indexOf("wifi")) / 2); Layout.column: Math.max(0, cc.shownTiles.indexOf("wifi")) % 2
+                    glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}"
+                    title: "Wi-Fi"
+                    subtitle: !Networking.wifiEnabled ? "Off" : (cc.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected")
+                    active: Networking.wifiEnabled
+                    isExpanded: cc.expanded === "wifi"
+                    onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
+                    onExpand: cc.toggleExpanded("wifi")
+                }
+                ConnTile {
+                    visible: cc.shownTiles.includes("bt")
+                    Layout.row: Math.floor(Math.max(0, cc.shownTiles.indexOf("bt")) / 2); Layout.column: Math.max(0, cc.shownTiles.indexOf("bt")) % 2
+                    glyph: cc.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}"
+                    title: "Bluetooth"
+                    subtitle: !cc.adapter ? "Unavailable" : !cc.adapter.enabled ? "Off"
+                            : (cc.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On")
+                    active: cc.adapter?.enabled ?? false
+                    isExpanded: cc.expanded === "bt"
+                    onToggled: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
+                    onExpand: cc.toggleExpanded("bt")
+                }
+                ConnTile {
+                    visible: cc.shownTiles.includes("focus")
+                    Layout.row: Math.floor(Math.max(0, cc.shownTiles.indexOf("focus")) / 2); Layout.column: Math.max(0, cc.shownTiles.indexOf("focus")) % 2
+                    glyph: "\u{F0594}"
+                    title: "Focus"
+                    subtitle: Config.notifications.dnd ? "Do Not Disturb" : "Off"
+                    active: Config.notifications.dnd
+                    expandable: false
+                    onToggled: Config.set("notifications", "dnd", !Config.notifications.dnd)
+                }
+                ConnTile {
+                    visible: cc.shownTiles.includes("nightlight")
+                    Layout.row: Math.floor(Math.max(0, cc.shownTiles.indexOf("nightlight")) / 2); Layout.column: Math.max(0, cc.shownTiles.indexOf("nightlight")) % 2
+                    glyph: "\u{F0599}"
+                    title: "Night Light"
+                    subtitle: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode]
+                    active: NightLight.active
+                    expandable: false
+                    onToggled: NightLight.toggle()
+                }
             }
-            SectionLabel { text: Caffeine.active ? "Change to" : "Turn on for" }
-            Segmented {
-                options: Caffeine.choices.map(m => m === 0 ? "Always" : Caffeine.label(m))
-                current: Caffeine.active ? Caffeine.choices.indexOf(Caffeine.minutes) : -1
-                onPicked: i => { Caffeine.start(Caffeine.choices[i]); cc.now = new Date() }
-            }
-        }
 
-        // ---- media, while a player is around ----------------------------------------------------
-        Tile {
-            visible: Config.controlCenter.showMedia && cc.player !== null
-            Layout.fillWidth: true
-            Layout.preferredHeight: 64
-            Rectangle {
-                id: artBox
-                anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                width: 44; height: 44; radius: Theme.radiusSmall
-                color: Theme.fill
-                clip: true
-                Image {
-                    anchors.fill: parent
-                    source: cc.player?.trackArtUrl ?? ""
-                    fillMode: Image.PreserveAspectCrop
-                    sourceSize { width: 88; height: 88 }
-                    visible: status === Image.Ready
+            // ---- Wi-Fi and Bluetooth dropdowns, under their tiles ----------------------------------
+            Drop {
+                id: wifiDrop
+                visible: cc.expanded === "wifi"
+                title: "Wi-Fi"
+                switchOn: Networking.wifiEnabled
+                onSwitched: Networking.wifiEnabled = !Networking.wifiEnabled
+                settingsLabel: "Network Settings…"
+                settingsPage: "network"
+
+                // one row per name (the strongest access point), known networks first
+                readonly property var nets: {
+                    const best = {}
+                    for (const n of cc.wifi?.networks.values ?? []) if (n.name && (!best[n.name] || n.connected || n.signalStrength > best[n.name].signalStrength)) best[n.name] = n
+                    return Object.values(best).sort((a, b) => b.connected - a.connected || b.signalStrength - a.signalStrength)
                 }
-                Text {
-                    anchors.centerIn: parent
-                    visible: !(cc.player?.trackArtUrl)
-                    text: "\u{F075A}"
-                    color: Theme.subtext
-                    font { family: Theme.iconFont; pixelSize: 20 }
+                readonly property var known: nets.filter(n => n.known || n.connected)
+                readonly property var others: nets.filter(n => !n.known && !n.connected).slice(0, 6)
+
+                SectionLabel { visible: wifiDrop.known.length > 0 && Networking.wifiEnabled; text: "Known networks" }
+                Repeater { model: Networking.wifiEnabled ? wifiDrop.known : []; WifiRow {} }
+                SectionLabel { visible: wifiDrop.others.length > 0 && Networking.wifiEnabled; text: "Other networks" }
+                Repeater { model: Networking.wifiEnabled ? wifiDrop.others : []; WifiRow {} }
+                Empty {
+                    shown: !Networking.wifiEnabled || wifiDrop.nets.length === 0
+                    text: !Networking.wifiEnabled ? "Wi-Fi is off." : "Looking for networks…"
                 }
             }
-            Column {
-                anchors { left: artBox.right; leftMargin: 10; right: controls.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
-                Text { width: parent.width; text: cc.player?.trackTitle || cc.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
-                Text { width: parent.width; text: cc.player?.trackArtist || cc.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
-            }
-            Row {
-                id: controls
-                anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
+
+            Drop {
+                id: btDrop
+                visible: cc.expanded === "bt"
+                title: "Bluetooth"
+                switchOn: cc.adapter?.enabled ?? false
+                onSwitched: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
+                settingsLabel: "Bluetooth Settings…"
+                settingsPage: "bluetooth"
+
+                readonly property var devices: (cc.adapter?.devices.values ?? []).filter(d => d.paired || d.connected)
+                    .sort((a, b) => b.connected - a.connected || a.name.localeCompare(b.name))
+
+                SectionLabel { visible: btDrop.devices.length > 0 && (cc.adapter?.enabled ?? false); text: "My devices" }
                 Repeater {
-                    model: [
-                        ["\u{F04AE}", () => cc.player.previous(), cc.player?.canGoPrevious ?? false, 18],
-                        [cc.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}", () => cc.player.togglePlaying(), cc.player?.canTogglePlaying ?? false, 24],
-                        ["\u{F04AD}", () => cc.player.next(), cc.player?.canGoNext ?? false, 18],
-                    ]
-                    Rectangle {
+                    model: cc.adapter?.enabled ? btDrop.devices : []
+                    DeviceRow {
                         required property var modelData
-                        width: 32; height: 32; radius: 16
-                        color: mediaArea.containsMouse && modelData[2] ? Theme.fillHover : "transparent"
-                        Text {
-                            anchors.centerIn: parent
-                            text: parent.modelData[0]
-                            opacity: parent.modelData[2] ? 1 : 0.35
-                            color: Theme.text
-                            font { family: Theme.iconFont; pixelSize: parent.modelData[3] }
-                        }
-                        MouseArea { id: mediaArea; anchors.fill: parent; hoverEnabled: true; enabled: parent.modelData[2]; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData[1]() }
+                        readonly property bool busy: modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
+                        glyph: cc.btGlyph(modelData.icon)
+                        title: modelData.name
+                        subtitle: modelData.state === BluetoothDeviceState.Connecting ? "Connecting…"
+                                : modelData.state === BluetoothDeviceState.Disconnecting ? "Disconnecting…"
+                                : modelData.connected ? "Connected" + (modelData.batteryAvailable ? `  ·  ${Math.round(modelData.battery * 100)}% battery` : "")
+                                : "Not connected"
+                        selected: modelData.connected
+                        action: busy ? "" : modelData.connected ? "Disconnect" : "Connect"
+                        onClicked: if (!busy) modelData.connected ? modelData.disconnect() : modelData.connect()
                     }
                 }
+                Empty {
+                    shown: !(cc.adapter?.enabled ?? false) || btDrop.devices.length === 0
+                    text: !cc.adapter ? "No Bluetooth adapter." : !cc.adapter.enabled ? "Bluetooth is off." : "No paired devices yet. Pair one in Bluetooth Settings."
+                }
             }
         }
 
-        // ---- display and sound: one tile, three sliders ---------------------------------------
-        Tile {
+        ColumnLayout {
             Layout.fillWidth: true
-            Layout.preferredHeight: sliders.implicitHeight + 22
-            ColumnLayout {
-                id: sliders
-                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
-                spacing: 10
+            Layout.row: Math.max(0, cc.shownSections.indexOf("toggles"))
+            visible: cc.shownSections.includes("toggles")
+            spacing: cc.gap
 
-                SliderHead { title: "Display" }
-                Text { // names only once there's more than one screen to tell apart
-                    visible: externals.count > 0
-                    Layout.bottomMargin: -6
-                    text: "Built-in"
+            // ---- quick toggles: name, then what it's doing ---------------------------------------
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 4
+                columnSpacing: cc.gap
+                rowSpacing: cc.gap
+                QuickToggle {
+                    visible: cc.shownToggles.includes("caffeine")
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("caffeine")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("caffeine")) % 4
+                    glyph: "\u{F0176}"
+                    label: "Caffeine"
+                    status: Caffeine.active ? Caffeine.remaining(cc.now.getTime()) : "Off"
+                    hint: "Keep awake · chevron to choose how long"
+                    active: Caffeine.active
+                    expandable: true
+                    isExpanded: cc.expanded === "caffeine"
+                    onToggled: Caffeine.toggle()
+                    onExpand: cc.toggleExpanded("caffeine")
+                }
+                QuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
+                    visible: cc.shownToggles.includes("monitor")
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("monitor")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("monitor")) % 4
+                    readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
+                    glyph: "\u{F0379}"
+                    label: "Monitor"
+                    status: ours ? "Here" : "Other PC"
+                    hint: ours ? "Shared monitor shows this computer · click to hand it over" : "Shared monitor shows the other computer · click to take it back"
+                    active: ours
+                    onToggled: Quickshell.execDetached(["monswitch", "toggle"])
+                }
+                QuickToggle {
+                    visible: cc.shownToggles.includes("keylight")
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("keylight")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("keylight")) % 4
+                    glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
+                    label: "Key light"
+                    status: ["Off", "Low", "Medium", "High"][cc.kbdLight]
+                    hint: "Keyboard backlight · click for the next level"
+                    active: cc.kbdLight > 0
+                    onToggled: cc.setKbd((cc.kbdLight + 1) % 4)
+                }
+                QuickToggle {
+                    visible: cc.shownToggles.includes("keyboard")
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("keyboard")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("keyboard")) % 4
+                    glyph: "\u{F030C}"
+                    label: "Keyboard"
+                    status: Osk.visible ? "Shown" : "Hidden"
+                    hint: "On-screen keyboard"
+                    active: Osk.visible
+                    onToggled: Osk.toggle()
+                }
+                QuickToggle {
+                    visible: cc.shownToggles.includes("darkmode")
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("darkmode")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("darkmode")) % 4
+                    glyph: "\u{F050E}"
+                    label: "Dark mode"
+                    status: Theme.light ? "Off" : "On"
+                    hint: "Light or dark glass · Appearance settings for more"
+                    active: !Theme.light
+                    onToggled: Config.set("appearance", "mode", Theme.light ? "dark" : "light")
+                }
+            }
+
+            Drop {
+                visible: cc.expanded === "caffeine"
+                title: "Caffeine"
+                switchOn: Caffeine.active
+                onSwitched: Caffeine.toggle()
+                settingsLabel: "Lock & Sleep Settings…"
+                settingsPage: "idle"
+
+                Text {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 6
+                    Layout.rightMargin: 6
+                    Layout.bottomMargin: 2
+                    wrapMode: Text.Wrap
+                    text: !Caffeine.active ? "Keeps the screen on and stops sleep. Stays on after a restart until you turn it off."
+                        : Caffeine.endsAt === 0 ? "Keeping the screen on until you turn it off."
+                        : "Keeping the screen on until " + Qt.formatTime(new Date(Caffeine.endsAt), "HH:mm") + "  ·  " + Caffeine.remaining(cc.now.getTime())
                     color: Theme.subtext
                     font { family: Theme.font; pixelSize: Theme.fontCaption }
                 }
-                Bar {
-                    icon: "\u{F00DF}"
-                    value: cc.brightness
-                    onMoved: v => {
-                        cc.brightness = Math.max(0.05, v)
-                        Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
-                    }
+                SectionLabel { text: Caffeine.active ? "Change to" : "Turn on for" }
+                Segmented {
+                    options: Caffeine.choices.map(m => m === 0 ? "Always" : Caffeine.label(m))
+                    current: Caffeine.active ? Caffeine.choices.indexOf(Caffeine.minutes) : -1
+                    onPicked: i => { Caffeine.start(Caffeine.choices[i]); cc.now = new Date() }
                 }
-                // external monitors over DDC/CI (VCP 0x10); read each time the panel opens, hidden when
-                // a monitor doesn't answer (DDC/CI off in its menu)
-                Repeater {
-                    id: externals
-                    model: popup.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP")) : []
-                    ColumnLayout {
-                        id: ext
-                        required property var modelData
-                        property string bus: ""
-                        property int max: 100
-                        property real value: -1
-                        visible: value >= 0
-                        Layout.fillWidth: true
-                        spacing: 4
-                        Text {
-                            text: ext.modelData.lastIpcObject?.model || ext.modelData.name
-                            color: Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontCaption }
-                        }
-                        Bar {
-                            icon: "\u{F0379}"
-                            value: Math.max(0, ext.value)
-                            onMoved: v => { ext.value = Math.max(0.01, v); ddcSet.restart() }
-                        }
-                        Process {
-                            running: true
-                            command: ["sh", "-c", "b=$(readlink -f /sys/class/drm/card*-\"$1\"/ddc | sed 's/.*i2c-//'); [ -n \"$b\" ] || exit 1; echo \"$b\"; ddcutil --bus \"$b\" getvcp 10 --terse", "sh", ext.modelData.name]
-                            stdout: StdioCollector {
-                                onStreamFinished: {
-                                    const l = text.trim().split("\n")   // "6", "VCP 10 C 80 100"
-                                    const v = (l[1] ?? "").split(" ")
-                                    if (v[0] !== "VCP" || !(parseInt(v[4]) > 0)) return
-                                    ext.bus = l[0]; ext.max = parseInt(v[4]); ext.value = parseInt(v[3]) / ext.max
-                                }
-                            }
-                        }
-                        Timer {   // DDC is slow: send once dragging pauses
-                            id: ddcSet
-                            interval: 150
-                            onTriggered: Quickshell.execDetached(["ddcutil", "--bus", ext.bus, "--noverify", "setvcp", "10", String(Math.round(ext.value * ext.max))])
-                        }
-                    }
-                }
+            }
+        }
 
-                SliderHead {
-                    title: "Sound"
-                    detail: cc.nodeName(cc.sink) || "No output"
-                    isExpanded: cc.expanded === "out"
-                    onClicked: cc.toggleExpanded("out")
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.row: Math.max(0, cc.shownSections.indexOf("media"))
+            visible: cc.shownSections.includes("media")
+            spacing: cc.gap
+
+            // ---- media, while a player is around ----------------------------------------------------
+            Tile {
+                visible: cc.player !== null
+                Layout.fillWidth: true
+                Layout.preferredHeight: 64
+                Rectangle {
+                    id: artBox
+                    anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                    width: 44; height: 44; radius: Theme.radiusSmall
+                    color: Theme.fill
+                    clip: true
+                    Image {
+                        anchors.fill: parent
+                        source: cc.player?.trackArtUrl ?? ""
+                        fillMode: Image.PreserveAspectCrop
+                        sourceSize { width: 88; height: 88 }
+                        visible: status === Image.Ready
+                    }
+                    Text {
+                        anchors.centerIn: parent
+                        visible: !(cc.player?.trackArtUrl)
+                        text: "\u{F075A}"
+                        color: Theme.subtext
+                        font { family: Theme.iconFont; pixelSize: 20 }
+                    }
                 }
-                Bar {
-                    icon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
-                    hint: cc.sink?.audio?.muted ? "Unmute" : "Mute"
-                    value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
-                    onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
-                    onIconClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
+                Column {
+                    anchors { left: artBox.right; leftMargin: 10; right: controls.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                    Text { width: parent.width; text: cc.player?.trackTitle || cc.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                    Text { width: parent.width; text: cc.player?.trackArtist || cc.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                 }
-                ColumnLayout {
-                    visible: cc.expanded === "out"
-                    Layout.fillWidth: true
-                    spacing: 2
-                    SectionLabel { text: "Play sound through" }
+                Row {
+                    id: controls
+                    anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
                     Repeater {
-                        model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
-                        DeviceRow {
+                        model: [
+                            ["\u{F04AE}", () => cc.player.previous(), cc.player?.canGoPrevious ?? false, 18],
+                            [cc.player?.isPlaying ? "\u{F03E4}" : "\u{F040A}", () => cc.player.togglePlaying(), cc.player?.canTogglePlaying ?? false, 24],
+                            ["\u{F04AD}", () => cc.player.next(), cc.player?.canGoNext ?? false, 18],
+                        ]
+                        Rectangle {
                             required property var modelData
-                            glyph: cc.audioGlyph(modelData)
-                            title: cc.nodeName(modelData)
-                            subtitle: cc.audioKind(modelData)
-                            selected: modelData === cc.sink
-                            onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                            width: 32; height: 32; radius: 16
+                            color: mediaArea.containsMouse && modelData[2] ? Theme.fillHover : "transparent"
+                            Text {
+                                anchors.centerIn: parent
+                                text: parent.modelData[0]
+                                opacity: parent.modelData[2] ? 1 : 0.35
+                                color: Theme.text
+                                font { family: Theme.iconFont; pixelSize: parent.modelData[3] }
+                            }
+                            MouseArea { id: mediaArea; anchors.fill: parent; hoverEnabled: true; enabled: parent.modelData[2]; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData[1]() }
                         }
                     }
-                    SectionLabel { visible: cc.streams.length > 0; text: "Apps" }
+                }
+            }
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.row: Math.max(0, cc.shownSections.indexOf("sliders"))
+            visible: cc.shownSections.includes("sliders")
+            spacing: cc.gap
+
+            // ---- display and sound: one tile, three sliders ---------------------------------------
+            Tile {
+                Layout.fillWidth: true
+                Layout.preferredHeight: sliders.implicitHeight + 22
+                ColumnLayout {
+                    id: sliders
+                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
+                    spacing: 10
+
+                    SliderHead { title: "Display" }
+                    Text { // names only once there's more than one screen to tell apart
+                        visible: externals.count > 0
+                        Layout.bottomMargin: -6
+                        text: "Built-in"
+                        color: Theme.subtext
+                        font { family: Theme.font; pixelSize: Theme.fontCaption }
+                    }
+                    Bar {
+                        icon: "\u{F00DF}"
+                        value: cc.brightness
+                        onMoved: v => {
+                            cc.brightness = Math.max(0.05, v)
+                            Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
+                        }
+                    }
+                    // external monitors over DDC/CI (VCP 0x10); read each time the panel opens, hidden when
+                    // a monitor doesn't answer (DDC/CI off in its menu)
                     Repeater {
-                        model: cc.streams
+                        id: externals
+                        model: popup.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP")) : []
                         ColumnLayout {
-                            id: app
+                            id: ext
                             required property var modelData
+                            property string bus: ""
+                            property int max: 100
+                            property real value: -1
+                            visible: value >= 0
                             Layout.fillWidth: true
-                            Layout.leftMargin: 6
-                            Layout.rightMargin: 6
-                            Layout.bottomMargin: 4
                             spacing: 4
                             Text {
-                                Layout.fillWidth: true
-                                text: app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name
-                                elide: Text.ElideRight
+                                text: ext.modelData.lastIpcObject?.model || ext.modelData.name
                                 color: Theme.subtext
                                 font { family: Theme.font; pixelSize: Theme.fontCaption }
                             }
                             Bar {
-                                icon: app.modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
-                                hint: app.modelData.audio?.muted ? "Unmute" : "Mute"
-                                value: app.modelData.audio?.muted ? 0 : (app.modelData.audio?.volume ?? 0)
-                                onMoved: v => { if (app.modelData.audio) { app.modelData.audio.muted = false; app.modelData.audio.volume = v } }
-                                onIconClicked: if (app.modelData.audio) app.modelData.audio.muted = !app.modelData.audio.muted
+                                icon: "\u{F0379}"
+                                value: Math.max(0, ext.value)
+                                onMoved: v => { ext.value = Math.max(0.01, v); ddcSet.restart() }
+                            }
+                            Process {
+                                running: true
+                                command: ["sh", "-c", "b=$(readlink -f /sys/class/drm/card*-\"$1\"/ddc | sed 's/.*i2c-//'); [ -n \"$b\" ] || exit 1; echo \"$b\"; ddcutil --bus \"$b\" getvcp 10 --terse", "sh", ext.modelData.name]
+                                stdout: StdioCollector {
+                                    onStreamFinished: {
+                                        const l = text.trim().split("\n")   // "6", "VCP 10 C 80 100"
+                                        const v = (l[1] ?? "").split(" ")
+                                        if (v[0] !== "VCP" || !(parseInt(v[4]) > 0)) return
+                                        ext.bus = l[0]; ext.max = parseInt(v[4]); ext.value = parseInt(v[3]) / ext.max
+                                    }
+                                }
+                            }
+                            Timer {   // DDC is slow: send once dragging pauses
+                                id: ddcSet
+                                interval: 150
+                                onTriggered: Quickshell.execDetached(["ddcutil", "--bus", ext.bus, "--noverify", "setvcp", "10", String(Math.round(ext.value * ext.max))])
                             }
                         }
                     }
-                    SettingsLink { label: "Sound Settings…"; page: "sound" }
-                }
 
-                SliderHead {
-                    title: "Microphone"
-                    detail: cc.nodeName(cc.source) || "No input"
-                    isExpanded: cc.expanded === "in"
-                    onClicked: cc.toggleExpanded("in")
-                }
-                Bar {
-                    icon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
-                    hint: cc.source?.audio?.muted ? "Unmute" : "Mute"
-                    value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
-                    onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
-                    onIconClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
-                }
-                ColumnLayout {
-                    visible: cc.expanded === "in"
-                    Layout.fillWidth: true
-                    spacing: 2
-                    SectionLabel { text: "Record from" }
-                    Repeater {
-                        model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
-                        DeviceRow {
-                            required property var modelData
-                            glyph: modelData.name.startsWith("bluez") ? "\u{F02CE}" : "\u{F036C}"
-                            title: cc.nodeName(modelData)
-                            subtitle: cc.audioKind(modelData)
-                            selected: modelData === cc.source
-                            onClicked: Pipewire.preferredDefaultAudioSource = modelData
-                        }
+                    SliderHead {
+                        title: "Sound"
+                        detail: cc.nodeName(cc.sink) || "No output"
+                        isExpanded: cc.expanded === "out"
+                        onClicked: cc.toggleExpanded("out")
                     }
-                    SettingsLink { label: "Sound Settings…"; page: "sound" }
+                    Bar {
+                        icon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
+                        hint: cc.sink?.audio?.muted ? "Unmute" : "Mute"
+                        value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
+                        onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
+                        onIconClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
+                    }
+                    ColumnLayout {
+                        visible: cc.expanded === "out"
+                        Layout.fillWidth: true
+                        spacing: 2
+                        SectionLabel { text: "Play sound through" }
+                        Repeater {
+                            model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
+                            DeviceRow {
+                                required property var modelData
+                                glyph: cc.audioGlyph(modelData)
+                                title: cc.nodeName(modelData)
+                                subtitle: cc.audioKind(modelData)
+                                selected: modelData === cc.sink
+                                onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                            }
+                        }
+                        SectionLabel { visible: cc.streams.length > 0; text: "Apps" }
+                        Repeater {
+                            model: cc.streams
+                            ColumnLayout {
+                                id: app
+                                required property var modelData
+                                Layout.fillWidth: true
+                                Layout.leftMargin: 6
+                                Layout.rightMargin: 6
+                                Layout.bottomMargin: 4
+                                spacing: 4
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name
+                                    elide: Text.ElideRight
+                                    color: Theme.subtext
+                                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                                }
+                                Bar {
+                                    icon: app.modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
+                                    hint: app.modelData.audio?.muted ? "Unmute" : "Mute"
+                                    value: app.modelData.audio?.muted ? 0 : (app.modelData.audio?.volume ?? 0)
+                                    onMoved: v => { if (app.modelData.audio) { app.modelData.audio.muted = false; app.modelData.audio.volume = v } }
+                                    onIconClicked: if (app.modelData.audio) app.modelData.audio.muted = !app.modelData.audio.muted
+                                }
+                            }
+                        }
+                        SettingsLink { label: "Sound Settings…"; page: "sound" }
+                    }
+
+                    SliderHead {
+                        title: "Microphone"
+                        detail: cc.nodeName(cc.source) || "No input"
+                        isExpanded: cc.expanded === "in"
+                        onClicked: cc.toggleExpanded("in")
+                    }
+                    Bar {
+                        icon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
+                        hint: cc.source?.audio?.muted ? "Unmute" : "Mute"
+                        value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
+                        onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
+                        onIconClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
+                    }
+                    ColumnLayout {
+                        visible: cc.expanded === "in"
+                        Layout.fillWidth: true
+                        spacing: 2
+                        SectionLabel { text: "Record from" }
+                        Repeater {
+                            model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
+                            DeviceRow {
+                                required property var modelData
+                                glyph: modelData.name.startsWith("bluez") ? "\u{F02CE}" : "\u{F036C}"
+                                title: cc.nodeName(modelData)
+                                subtitle: cc.audioKind(modelData)
+                                selected: modelData === cc.source
+                                onClicked: Pipewire.preferredDefaultAudioSource = modelData
+                            }
+                        }
+                        SettingsLink { label: "Sound Settings…"; page: "sound" }
+                    }
                 }
             }
         }
 
-        // ---- power mode ---------------------------------------------------------------------
-        Module {
-            title: "Power mode"
-            detail: Config.controlCenter.showHardware ? `CPU ${Math.round(Sensors.cpu)}°` : ""
-            warn: Sensors.cpu >= 90
-            onDetailClicked: { cc.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.row: Math.max(0, cc.shownSections.indexOf("power"))
+            visible: cc.shownSections.includes("power")
+            spacing: cc.gap
 
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: Theme.controlHeight
-                radius: Theme.radiusSmall + 1
-                color: Theme.fill
+            // ---- power mode ---------------------------------------------------------------------
+            Module {
+                title: "Power mode"
+                detail: Config.controlCenter.showHardware ? `CPU ${Math.round(Sensors.cpu)}°` : ""
+                warn: Sensors.cpu >= 90
+                onDetailClicked: { cc.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
 
                 Rectangle {
-                    width: (parent.width - 6) / 3
-                    height: parent.height - 6
-                    y: 3
-                    x: 3 + PowerProfiles.profile * width
-                    radius: Theme.radiusSmall - 1
-                    color: Theme.thumb
-                    Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-                }
-                Row {
-                    anchors { fill: parent; margins: 3 }
-                    Repeater {
-                        model: ["Quiet", "Balanced", "Performance"]
-                        Item {
-                            required property string modelData
-                            required property int index
-                            readonly property bool on: PowerProfiles.profile === index
-                            width: parent.width / 3
-                            height: parent.height
-                            Text {
-                                anchors.centerIn: parent
-                                text: modelData
-                                color: parent.on ? Theme.thumbText : Theme.subtext
-                                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: Theme.controlHeight
+                    radius: Theme.radiusSmall + 1
+                    color: Theme.fill
+
+                    Rectangle {
+                        width: (parent.width - 6) / 3
+                        height: parent.height - 6
+                        y: 3
+                        x: 3 + PowerProfiles.profile * width
+                        radius: Theme.radiusSmall - 1
+                        color: Theme.thumb
+                        Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                    }
+                    Row {
+                        anchors { fill: parent; margins: 3 }
+                        Repeater {
+                            model: ["Quiet", "Balanced", "Performance"]
+                            Item {
+                                required property string modelData
+                                required property int index
+                                readonly property bool on: PowerProfiles.profile === index
+                                width: parent.width / 3
+                                height: parent.height
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: modelData
+                                    color: parent.on ? Theme.thumbText : Theme.subtext
+                                    font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                                }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerProfiles.profile = index }
                             }
-                            MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerProfiles.profile = index }
                         }
                     }
                 }
             }
         }
 
-        // ---- shortcuts ------------------------------------------------------------------------
-        RowLayout {
+        ColumnLayout {
             Layout.fillWidth: true
+            Layout.row: Math.max(0, cc.shownSections.indexOf("shortcuts"))
+            visible: cc.shownSections.includes("shortcuts")
             spacing: cc.gap
-            IconButton { glyph: "\u{F0100}"; label: "Screenshot"; onClicked: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) } }
-            IconButton { glyph: "\u{F0493}"; label: "Settings"; onClicked: { cc.hide(); SettingsApp.show("") } }
-            IconButton { glyph: "\u{F033E}"; label: "Lock"; onClicked: { cc.hide(); Quickshell.execDetached(["loginctl", "lock-session"]) } }
-            IconButton { glyph: "\u{F0425}"; label: "Power"; onClicked: { cc.hide(); PowerMenu.show() } }
-        }
 
-        // ---- notifications: the history, grouped by app; a group folds into its newest card ----
-        RowLayout {
-            id: notesHeader
-            Layout.fillWidth: true
-            Layout.topMargin: 6
-            Layout.leftMargin: 4
-            spacing: 4
-            Text {
+            // ---- shortcuts ------------------------------------------------------------------------
+            GridLayout {
                 Layout.fillWidth: true
-                text: Notifications.history.length ? "Notifications" : "No notifications"
-                color: Notifications.history.length ? Theme.text : Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
-            }
-            Text {
-                visible: Notifications.dnd
-                text: "\u{F009B}  Silenced"
-                color: Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontCaption }
-            }
-            Chip { visible: Notifications.history.length > 0; label: "Clear all"; onClicked: Notifications.clearAll() }
-        }
-        Repeater {
-            model: Notifications.groups
-            ColumnLayout {
-                id: group
-                required property var modelData
-                readonly property bool unfolded: modelData.items.length === 1 || NotificationCenter.unfolded[modelData.app] === true
-                Layout.fillWidth: true
-                Layout.bottomMargin: unfolded ? 0 : 12        // room for the folded stack
-                spacing: 6
-
-                RowLayout {
-                    visible: group.modelData.items.length > 1 && group.unfolded
-                    Layout.fillWidth: true
-                    Layout.leftMargin: 4
-                    Text {
-                        Layout.fillWidth: true
-                        text: group.modelData.app
-                        color: Theme.subtext
-                        elide: Text.ElideRight
-                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
-                    }
-                    Chip { label: "Show less"; onClicked: NotificationCenter.fold(group.modelData.app, true) }
-                    Chip { icon: "\u{F0156}"; onClicked: Notifications.clearApp(group.modelData.app) }
-                }
+                columns: 4
+                columnSpacing: cc.gap
+                rowSpacing: cc.gap
                 Repeater {
-                    model: group.unfolded ? group.modelData.items : group.modelData.items.slice(0, 1)
-                    NotificationCard {
-                        required property var modelData
+                    model: cc.shownShortcuts
+                    IconButton {
+                        required property string modelData
+                        readonly property var sc: cc.shortcutInfo[modelData]
+                        glyph: sc.glyph
+                        label: sc.label
+                        onClicked: { cc.hide(); sc.run() }
+                    }
+                }
+            }
+        }
+
+        ColumnLayout {
+            id: notesSection
+            Layout.fillWidth: true
+            Layout.row: Math.max(0, cc.shownSections.indexOf("notifications"))
+            visible: cc.shownSections.includes("notifications")
+            spacing: cc.gap
+
+            // ---- notifications: the history, grouped by app; a group folds into its newest card ----
+            RowLayout {
+                id: notesHeader
+                Layout.fillWidth: true
+                Layout.topMargin: 6
+                Layout.leftMargin: 4
+                spacing: 4
+                Text {
+                    Layout.fillWidth: true
+                    text: Notifications.history.length ? "Notifications" : "No notifications"
+                    color: Notifications.history.length ? Theme.text : Theme.subtext
+                    font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+                }
+                Text {
+                    visible: Notifications.dnd
+                    text: "\u{F009B}  Silenced"
+                    color: Theme.subtext
+                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                }
+                Chip { visible: Notifications.history.length > 0; label: "Clear all"; onClicked: Notifications.clearAll() }
+            }
+            Repeater {
+                model: Notifications.groups
+                ColumnLayout {
+                    id: group
+                    required property var modelData
+                    readonly property bool unfolded: modelData.items.length === 1 || NotificationCenter.unfolded[modelData.app] === true
+                    Layout.fillWidth: true
+                    Layout.bottomMargin: unfolded ? 0 : 12        // room for the folded stack
+                    spacing: 6
+
+                    RowLayout {
+                        visible: group.modelData.items.length > 1 && group.unfolded
                         Layout.fillWidth: true
-                        flat: true
-                        notification: modelData
-                        stacked: group.unfolded ? 0 : group.modelData.items.length - 1
-                        onExpandRequested: NotificationCenter.fold(group.modelData.app, false)
+                        Layout.leftMargin: 4
+                        Text {
+                            Layout.fillWidth: true
+                            text: group.modelData.app
+                            color: Theme.subtext
+                            elide: Text.ElideRight
+                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                        }
+                        Chip { label: "Show less"; onClicked: NotificationCenter.fold(group.modelData.app, true) }
+                        Chip { icon: "\u{F0156}"; onClicked: Notifications.clearApp(group.modelData.app) }
+                    }
+                    Repeater {
+                        model: group.unfolded ? group.modelData.items : group.modelData.items.slice(0, 1)
+                        NotificationCard {
+                            required property var modelData
+                            Layout.fillWidth: true
+                            flat: true
+                            notification: modelData
+                            stacked: group.unfolded ? 0 : group.modelData.items.length - 1
+                            onExpandRequested: NotificationCenter.fold(group.modelData.app, false)
+                        }
                     }
                 }
             }
