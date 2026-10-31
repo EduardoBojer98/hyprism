@@ -1,6 +1,6 @@
 # Recommendations (2026-10-31)
 
-Report only: nothing here is done yet. Sorted by value for effort, best first. Effort is a rough
+**Done (2026-10-31): #1–#5** (see `AUDIT.md`, "Follow-up"). The rest is a report only. Sorted by value for effort, best first. Effort is a rough
 time for one person; risk is what could go wrong. Every item is free; new dependencies are named
 with where they come from (checked on this machine on 2026-10-31).
 

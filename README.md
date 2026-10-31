@@ -50,7 +50,7 @@ Log out and pick **Hyprland** at the login screen. KDE Plasma (or whatever you h
 | `host` | the host's `steps/NN-*.sh`, each shown and asked separately |
 
 Options: `--yes` (no questions), `--host <name>`, `--only <steps or modules>` (e.g. `--only links`,
-`--only dev`), `--dry-run`. `./install.sh undo` removes the links and offers the last backup back.
+`--only shell`), `--dry-run`. `./install.sh undo` removes the links and offers the last backup back.
 
 On Fedora, Hyprland 0.57 comes from the `sdegler/hyprland` COPR and Quickshell 0.3.2 from
 `errornointernet/quickshell` (Fedora's own Quickshell is too old). A few packages have no Fedora

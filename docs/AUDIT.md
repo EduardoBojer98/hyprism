@@ -363,6 +363,21 @@ Commits on `audit/2026-10-31`, oldest first. Each one leaves the desktop working
 | `2c8cf2b` | Theme in one place: `colors.lua` removed, fuzzel and Hyprland's gradient follow the Appearance theme. **USB auto-mount (#8)** with udiskie. "Run doctor" in Settings → About; the install button no longer assumes pacman (also the task-manager hint). |
 | docs | README rewritten (install per distro, doctor, layout, hosts/distros, keys); user guide and this audit updated; `RECOMMENDATIONS.md`. |
 
+### Follow-up: desktop only, and recommendations 1-5
+
+You asked for the repo to hold only the Hyprland desktop and what comes with it, and for
+recommendations 1-5. Commits `d5e4434`..`a4f9920`:
+
+| What | Why |
+|---|---|
+| Removed from the package lists: Chrome, Okular, Gwenview, micro, OnlyOffice, Bitwarden, gh, Docker, Compose, Python, uv, PHP, Composer, VS Code, Ollama, Open WebUI, Oreo cursors. Gone with them: the `post` step (fisher, nvm.fish, Node, `gh auth setup-git`, Lando note), the docker group, Fedora's vendor repos and Flathub code, the Lando line in `tools.fish`. Module `dev` is now `shell` (starship, zoxide, fd, ripgrep, fzf, gitleaks: what the fish config and the hook use). | Not part of the desktop; you install them yourself. Nothing the shell or Settings calls was removed. `chrome-flags.conf` stays (the VA-API fix from the thermal audit, harmless without Chrome). |
+| Cursor default `default` (the system's cursor theme: `default-cursors` on Arch, `libXcursor` on Fedora). | Your choice. Your own pick in Settings stays as it is. |
+| Rec 1: `docker.socket` instead of `docker.service` at boot, only when Docker is installed; doctor flags `docker.service` enabled. | ~5 s faster boot. |
+| Rec 2: `.github/workflows/ci.yml` + `tests/container-test.sh`. | shellcheck and a fresh install (twice, then doctor) on Arch and Fedora on every push. |
+| Rec 3: `./install.sh update` and Settings → About → Update. `distro_update` in each backend. | One command for repo, system, new packages, links, doctor. |
+| Rec 4: `hosts/flow-x13/steps/10-hardware.sh` masks `nvidia-powerd`. | `disable` didn't hold. |
+| Rec 5: doctor checks snapper's `root` config, snap-pac, limine-snapper-sync (on btrfs); README "Roll back an update". | Rollback already worked; now it's known and checked. |
+
 ## After (Phase 4)
 
 | # | Before | After | How checked |
@@ -388,10 +403,11 @@ Commits on `audit/2026-10-31`, oldest first. Each one leaves the desktop working
 
 ### Needs your hands (after)
 
-- **Decide:** install `oreo-cursors-git` (AUR) so the cursor comes from a package, not `~/.icons`;
-  `ollama-cuda` (repo) vs the manual `/usr/local/bin/ollama`; remove leftovers `hyprshot`, `satty`,
-  `ydotool`; mask `nvidia-powerd` (writes under `/etc`). None done without your yes.
-- **Install:** `udiskie` (`./install.sh --only desktop`, asks for sudo).
+- **Decided (your answers):** the cursor is the system's default unless you pick or add one;
+  Ollama is yours to install by hand; `nvidia-powerd` gets masked (my recommendation: it only adds
+  Dynamic Boost on AC, which this laptop's BIOS limits anyway, and it kept the RTX 3050 awake);
+  `hyprshot` goes. `satty` and `ydotool` stay: JuhRadial MX uses them (the radial menu's screenshot
+  slice runs `grim | satty`, and its daemon types with `ydotool`).
 - **gh token:** `gh auth logout && gh auth login` once the keyring works, so the token moves out of
   `~/.config/gh/hosts.yml`.
 - **Startup:** ROG Control Center's autostart entry now also runs in Hyprland (switch it off in
