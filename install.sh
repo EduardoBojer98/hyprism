@@ -100,6 +100,9 @@ if ((${#clash[@]})); then
 fi
 
 say "Linking: $PACKAGES"
+# Folders other programs write into must be real folders, or stow links the whole folder into the
+# repo on a fresh home and their files (nvm, app data, your pictures) end up inside git
+mkdir -p "$HOME"/.local/{bin,share,state} "$HOME/Pictures/Wallpapers" "$HOME/.config/fish/conf.d"
 stow -R -d "$REPO/home" -t "$HOME" $PACKAGES
 
 # Settings app files start from the defaults; existing ones (your choices) are never overwritten

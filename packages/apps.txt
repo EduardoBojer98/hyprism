@@ -1,5 +1,5 @@
 # Everyday apps (all free), installed by system/03-apps.sh
 firefox          # browser on Super+B
 okular           # PDF reader with annotations, same Qt look as Dolphin
-onlyoffice-bin   # best free Microsoft Office file compatibility
+onlyoffice-bin   # best free Microsoft Office file compatibility (CachyOS repo; AUR on plain Arch)
 bitwarden        # password manager, syncs with phone and browser extensions
