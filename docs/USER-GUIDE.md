@@ -6,31 +6,37 @@ Everything you change in **Settings** (`Super+I`) is saved on your computer only
 
 | File | Written by |
 |---|---|
-| `~/.config/quickshell/settings.json` | Every Settings page (appearance, dock, Spotlight, notifications, weather, …) |
-| `~/.config/hypr/settings/displays.lua` | Displays |
-| `~/.config/hypr/settings/input.lua` | Keyboard & Touchpad |
+| `~/.config/quickshell/settings.json` | Most pages (appearance, gaps, dock, Spotlight, notifications, weather, …) |
+| `~/.config/hypr/settings/displays.lua` | Display |
+| `~/.config/hypr/settings/input.lua` | Input (layouts, repeat, touchpad, pointer) |
+| `~/.config/hypr/settings/language.lua` | System > Language & Region |
 | `~/.config/hypr/settings/keybinds.lua` | Keyboard Shortcuts |
-| `~/.config/hypr/settings/theme.lua`, `settings/hyprlock-theme.conf` | Appearance (accent and corners for windows and the lock screen) |
+| `~/.config/hypr/settings/theme.lua`, `hyprlock-theme.conf` | Appearance (accent, corners, borders, gaps; lock screen colours) |
+| `~/.config/hypr/settings/hypridle.conf` | Power & Battery > Lock & Sleep |
+| `~/.config/hypr/settings/wallpaper` (a link to the image) | Appearance > Wallpaper |
 
-A missing file means "use the defaults", so deleting one resets that part. The defaults themselves
-are in `home/quickshell/.config/quickshell/ConfigData.qml` and the Hyprland modules. To keep your
+A missing file means "use the defaults", so deleting one resets that part (`./install.sh` puts back
+the ones Hyprland needs). The defaults are in `home/quickshell/.config/quickshell/ConfigData.qml`,
+`home/hypr/.config/hypr/defaults/` and the Hyprland modules. To keep your
 own settings in your fork, remove the matching lines from `.gitignore`.
 
 ## What you can change in Settings
 
-- **Appearance**: light or dark, accent colour, how much of the blur shows through the glass, corners, text size,
-  font, animations
-- **Desktop & Dock**: icon size, auto-hide, running apps, pinned apps
-- **Search & Launcher**: where Spotlight opens, what it shows before you type, result order and
-  which kinds of results appear, clipboard inside Spotlight or as its own popup, web search engine
-- **Clipboard**, **Notifications** (Do Not Disturb, how long popups stay, history size),
-  **Control Center** (which modules show)
-- **Displays** (arrange, resolution, scale, rotation, VRR, Night Light), **Sound**, **Wi-Fi &
-  Network**, **Bluetooth**, **Keyboard & Touchpad** (layouts, repeat, touchpad)
-- **Keyboard Shortcuts**: click a shortcut's keys and press new ones; Esc cancels, taken
-  combinations are refused, each can be turned off or reset
-- **Battery & Power**, **Wallpaper** (images in `~/Pictures/Wallpapers`), **Lock & Sleep**,
-  **Default Applications**, **Weather**, **About**
+| Group | What's in it |
+|---|---|
+| **Display** | arrange screens, resolution and refresh rate, scale, rotation, adaptive sync, Night Light; Shared Monitor (input switch with the work PC) |
+| **Appearance** | light or dark, accent colour, glass, window border, corners, space around windows, text size, font, animations; Wallpaper (folders, slideshow); Icons |
+| **Desktop** | Dock, Search & Launcher (Spotlight), Control Center, Notifications, Clipboard, Weather, Calendar |
+| **Input** | keyboard layouts, key repeat, touchpad and pointer; MX Master buttons (opens JuhRadial MX) |
+| **Sound** | output and input devices, volumes, per-app volume |
+| **Network & Bluetooth** | Wi-Fi, advanced network editor, Bluetooth devices |
+| **Power & Battery** | battery health, charge limit, power mode, what the lid does (shown only), Lock & Sleep timings, ASUS hardware |
+| **Keyboard Shortcuts** | click a shortcut's keys and press new ones; Esc cancels, taken combinations are refused, each can be turned off or reset |
+| **Default Apps**, **Startup Apps** | which app opens links, files and folders; what starts at login |
+| **System** | About this computer, Update from GitHub, Re-run the full install, Language & Region |
+
+Everything applies right away except language (next login) and lid behaviour (a system file set by
+`system/02-desktop.sh`).
 
 ## Another computer
 
