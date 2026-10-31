@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Screenshots with Flameshot (Print, Shift+Print, Control Center, Spotlight, utility menu).
-#   screenshot [area]   pick an area, annotate; Enter copies (and saves), Ctrl+S saves, Esc cancels
+#   screenshot [area]   pick an area on the screen under the mouse, annotate; Enter copies (and saves), Ctrl+S saves, Esc cancels
 #   screenshot all      every screen, copied and saved
 # Files go to ~/Pictures/Screenshots. The first run writes Flameshot's settings if it has none;
 # after that, change them in Flameshot's own settings (flameshot config).
@@ -30,10 +30,6 @@ contrastUiColor=#ffffff
 EOF
 fi
 
-# XWayland: its Wayland overlay draws the frozen screen zoomed and shifted on scaled screens
-# (Flameshot 14, Hyprland fractional scale). Under XWayland screens are 1:1 (force_zero_scaling).
-export QT_QPA_PLATFORM=xcb
-
 # Run under Flameshot's own app id so the screenshot permission prompt (once) names Flameshot
 run() {
     if command -v systemd-run >/dev/null; then
@@ -55,8 +51,24 @@ cover() {
     return 0
 }
 
+# The screen under the mouse. Flameshot 14's `gui` asks "which monitor?" when there are two, and
+# under XWayland it crops the wrong part of the desktop, so: Wayland, one screen by number.
+# shortcut: Flameshot numbers screens in Hyprland's monitor id order; fine until ids get reused oddly after hotplug.
+mouse_screen() {
+    local x y
+    IFS=', ' read -r x y < <(hyprctl cursorpos)
+    hyprctl -j monitors | jq -r --argjson x "${x%.*}" --argjson y "${y%.*}" '
+        sort_by(.id) | to_entries[] | .value as $m
+        | select($x >= $m.x and $y >= $m.y and $x < $m.x + ($m.width / $m.scale) and $y < $m.y + ($m.height / $m.scale))
+        | "\(.key) \($m.name)"' | head -1
+}
+
 case "${1:-area}" in
-    area)   run gui & cover; wait ;;
-    all)    run full --clipboard --path "$dir" ;;
+    area)
+        read -r n name < <(mouse_screen) || { n=0; name=""; }
+        # the overlay opens on the focused monitor; make that the one under the mouse
+        [[ -n $name ]] && hyprctl dispatch "hl.dsp.focus({ monitor = \"$name\" })" >/dev/null
+        run screen -n "$n" -e & cover; wait ;;
+    all)    run full --clipboard ;;   # saved too: saveAfterCopy in flameshot.ini
     *)      echo "usage: screenshot [area|all]" >&2; exit 2 ;;
 esac
