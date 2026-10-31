@@ -17,7 +17,8 @@ ColumnLayout {
             ConfigToggle { section: "dock"; key: "autoHide" }
         }
         SettingRow {
-            label: "Show open apps that aren't pinned"
+            label: "Show open windows"
+            hint: "Each window as its own live picture, right of the pinned apps"
             ConfigToggle { section: "dock"; key: "showRunning" }
         }
         SettingRow {

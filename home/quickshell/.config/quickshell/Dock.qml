@@ -4,9 +4,10 @@ import Quickshell.Hyprland
 import Quickshell.Widgets
 import QtQuick
 
-// Dock: pinned apps (Config.dock.pinned, drag to reorder), a divider, then other running apps. With
-// auto-hide it slides up when the pointer touches the bottom edge and stays visible on an empty
-// workspace. Right-click an icon for its windows and pin / minimise / restore / quit.
+// Dock: the all-apps button, pinned apps (Config.dock.pinned, drag to reorder), a divider, then
+// every open window as its own live thumbnail with the app's icon on it. With auto-hide it slides up
+// when the pointer touches the bottom edge and stays visible on an empty workspace.
+// Right-click an icon or a window for windows and pin / minimise / restore / quit.
 PanelWindow {
     id: dock
 
@@ -59,15 +60,12 @@ PanelWindow {
         dragId = ""
     }
 
-    readonly property var apps: {
-        const list = pinnedEntries.slice()
-        if (Config.dock.showRunning)
-            for (const t of ToplevelManager.toplevels.values) {
-                const e = entryFor(t.appId)
-                if (e && !list.some(x => x.id === e.id)) list.push(e)
-            }
-        return list
-    }
+    // open windows, one tile each (minimised ones too), in the order they opened
+    readonly property var openWindows: Config.dock.showRunning ? Hyprland.toplevels.values.filter(t => t.wayland) : []
+    readonly property int thumbWidth: Math.round(iconSize * 1.6)
+    // window pictures started while the shell is still starting fail for good; start them a bit later
+    property bool captureReady: false
+    Timer { running: true; interval: 3000; onTriggered: dock.captureReady = true }
 
     // Shared tooltip: appears after a short pause, then follows the pointer between icons at once
     property Item tipItem: null
@@ -129,22 +127,38 @@ PanelWindow {
                 width: dock.slot
                 height: dock.iconSize + 8
 
+                // a tile with a 3 × 3 grid of rounded squares; the grid opens up a little on hover
                 Rectangle {
+                    id: launcherTile
+                    readonly property bool lit: Launcher.open || launcherArea.containsMouse
                     anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
                     width: dock.iconSize
                     height: dock.iconSize
-                    radius: Theme.radius
-                    color: Launcher.open ? Theme.fillActive : launcherArea.containsMouse ? Theme.fillHover : Theme.fill
-                    border { color: Theme.stroke; width: 1 }
+                    radius: Math.round(dock.iconSize * 0.27)
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: Qt.lighter(Theme.accent, launcherTile.lit ? 1.25 : 1.12) }
+                        GradientStop { position: 1; color: Qt.darker(Theme.accent, launcherTile.lit ? 1.05 : 1.2) }
+                    }
+                    border { color: Qt.rgba(1, 1, 1, 0.22); width: 1 }
                     scale: launcherArea.pressed ? 0.92 : 1
                     Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-                    Text {
+                    Grid {
+                        id: dots
+                        readonly property real cell: dock.iconSize * 0.15
                         anchors.centerIn: parent
-                        text: "\u{F003B}"
-                        color: Theme.text
-                        font { family: Theme.iconFont; pixelSize: dock.iconSize / 2 }
+                        columns: 3
+                        spacing: dock.iconSize * (launcherTile.lit ? 0.085 : 0.065)
+                        Behavior on spacing { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+                        Repeater {
+                            model: 9
+                            Rectangle {
+                                width: dots.cell; height: dots.cell
+                                radius: dots.cell * 0.32
+                                color: Theme.accentText
+                                opacity: 0.95
+                            }
+                        }
                     }
                 }
 
@@ -167,16 +181,14 @@ PanelWindow {
 
             Repeater {
                 // ScriptModel keeps existing icons when the list changes (and moves them on reorder)
-                model: ScriptModel { values: dock.apps }
+                model: ScriptModel { values: dock.pinnedEntries }
 
                 Item {
                     id: app
                     required property DesktopEntry modelData
                     required property int index
-                    readonly property bool pinned: index < dock.pinnedEntries.length
+                    readonly property bool pinned: true
                     readonly property bool dragged: dock.dragId !== "" && dock.dragId === modelData?.id
-                    // the first unpinned app gets a divider before it
-                    readonly property bool afterDivider: index === dock.pinnedEntries.length && index > 0
                     readonly property var windows: dock.windowsOf(modelData)
                     readonly property var visibleWindows: windows.filter(t => !dock.isMinimised(t))
                     readonly property bool focused: windows.some(w => w.activated)
@@ -184,18 +196,11 @@ PanelWindow {
                     property bool launching: false
                     onWindowsChanged: if (windows.length) launching = false
 
-                    width: dock.slot + (afterDivider ? 1 + row.spacing * 2 : 0)
+                    width: dock.slot
                     height: dock.iconSize + 8
                     z: dragged ? 1 : 0
                     // neighbours glide aside while an icon is dragged past them
                     Behavior on x { enabled: dock.dragId !== ""; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
-
-                    Rectangle {
-                        visible: app.afterDivider
-                        anchors { left: parent.left; leftMargin: row.spacing - 1; verticalCenter: parent.verticalCenter }
-                        width: 1; height: dock.iconSize * 0.7
-                        color: Theme.stroke
-                    }
 
                     Item {
                         id: cell
@@ -289,6 +294,99 @@ PanelWindow {
                     }
                 }
             }
+
+            Rectangle { // divider before the open windows
+                visible: dock.openWindows.length > 0
+                width: 1
+                height: dock.iconSize * 0.7
+                anchors.verticalCenter: parent.verticalCenter
+                color: Theme.stroke
+            }
+
+            // ---- open windows: a live picture of each, its app's icon in the corner ---------------
+            Repeater {
+                model: ScriptModel { values: dock.openWindows }
+
+                Item {
+                    id: win
+                    required property var modelData           // HyprlandToplevel
+                    readonly property var entry: dock.entryFor(modelData.wayland?.appId ?? "")
+                    readonly property bool minimised: dock.isMinimised(modelData)
+                    readonly property bool focused: modelData.activated
+                    readonly property real mid: width / 2   // tooltip / menu centre
+                    readonly property var windows: [modelData]
+                    // the window's shape (from its picture once there is one), fitted into the tile
+                    readonly property real aspect: shot.hasContent && shot.sourceSize.height > 0
+                        ? Math.max(0.5, Math.min(2.4, shot.sourceSize.width / shot.sourceSize.height)) : 1.6
+                    property bool retrying: false
+
+                    width: dock.thumbWidth
+                    height: dock.iconSize + 8
+
+                    Rectangle {   // hover plate
+                        anchors { fill: parent; topMargin: -2 }
+                        radius: Theme.radius
+                        color: winArea.pressed ? Theme.fillActive : Theme.fillHover
+                        opacity: winArea.containsMouse || menu.item === win ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                    }
+
+                    Rectangle {
+                        id: frame
+                        readonly property real boxH: dock.iconSize - 4
+                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 2 }
+                        height: Math.min(boxH, (win.width - 6) / win.aspect)
+                        width: height * win.aspect
+                        radius: Theme.radiusSmall - 2
+                        color: Theme.fill
+                        border { color: win.focused ? Theme.accent : Theme.stroke; width: win.focused ? 2 : 1 }
+                        opacity: win.minimised ? 0.55 : 1
+                        scale: winArea.pressed ? 0.94 : 1
+                        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                        clip: true
+
+                        ScreencopyView {
+                            id: shot
+                            anchors { fill: parent; margins: frame.border.width }
+                            // only while the dock can be seen: each live picture costs a little GPU
+                            captureSource: dock.shown && dock.captureReady && !win.retrying ? win.modelData.wayland : null
+                            live: dock.shown
+                            // a capture can fail (e.g. right at login); start it again a moment later
+                            onStopped: { win.retrying = true; retry.restart() }
+                        }
+                        Timer { id: retry; interval: 2000; onTriggered: win.retrying = false }
+                    }
+                    IconImage {   // whose window it is
+                        anchors { right: frame.right; bottom: frame.bottom; rightMargin: -4; bottomMargin: -5 }
+                        implicitSize: Math.round(dock.iconSize * 0.42)
+                        source: Quickshell.iconPath(win.entry?.icon ?? "", "application-x-executable")
+                    }
+                    Rectangle {   // focused / asking for attention
+                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 1 }
+                        width: 4; height: 4; radius: 2
+                        color: win.modelData.urgent ? Theme.warning : Theme.text
+                        opacity: win.modelData.urgent || win.focused ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+                    }
+
+                    MouseArea {
+                        id: winArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+                        onContainsMouseChanged: dock.hovering(win, (win.modelData.title || win.entry?.name || "") + (win.minimised ? "  (minimised)" : ""), containsMouse)
+                        // Left: bring it up (or minimise it when it already is the front window).
+                        // Middle: close. Right: menu.
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton) menu.openFor(win, win.entry)
+                            else if (mouse.button === Qt.MiddleButton) dock.close(win.modelData)
+                            else if (win.focused && !win.minimised) dock.minimise(win.modelData)
+                            else dock.focus(win.modelData)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -296,7 +394,7 @@ PanelWindow {
     Rectangle {
         readonly property bool on: dock.tipReady && dock.tipItem !== null && menu.entry === null && dock.dragId === ""
         x: dock.tipItem ? Math.max(8, Math.min(dock.width - width - 8,
-               island.x + row.x + dock.tipItem.x + dock.tipItem.width - dock.slot / 2 - width / 2)) : 0
+               island.x + row.x + dock.tipItem.x + (dock.tipItem.mid ?? dock.tipItem.width - dock.slot / 2) - width / 2)) : 0
         y: island.y - height - 8 + (on ? 0 : 3)
         width: tipLabel.implicitWidth + 16
         height: 24
@@ -321,9 +419,9 @@ PanelWindow {
         id: menu
         property var entry: null      // DesktopEntry
         property var item: null       // the dock icon it belongs to
-        readonly property var windows: item?.windows ?? []
+        readonly property var windows: item?.windows ?? []   // a window tile has just its own window
         readonly property bool pinned: entry ? Config.dock.pinned.includes(entry.id) : false
-        function openFor(icon) { item = icon; entry = icon.modelData; closeTimer.restart() }
+        function openFor(icon, appEntry) { item = icon; entry = appEntry ?? icon.modelData; closeTimer.restart() }
         function done() { entry = null; item = null }
 
         visible: entry !== null
@@ -331,7 +429,7 @@ PanelWindow {
         radius: Theme.radius
         width: 220
         height: actions.implicitHeight + Theme.spaceS * 2
-        x: item ? Math.max(8, Math.min(dock.width - width - 8, item.mapToItem(dock.contentItem, item.width - dock.slot / 2, 0).x - width / 2)) : 0
+        x: item ? Math.max(8, Math.min(dock.width - width - 8, item.mapToItem(dock.contentItem, item.mid ?? item.width - dock.slot / 2, 0).x - width / 2)) : 0
         y: island.y - height - Theme.spaceS
 
         // closes a moment after the pointer leaves it (or never enters it)
@@ -350,11 +448,11 @@ PanelWindow {
                 model: menu.windows.slice(0, 8).map(t => ({
                     label: t.title || menu.entry?.name || "", window: t, run: () => dock.focus(t)
                 })).concat([
-                    { label: "New window", show: true, run: () => menu.entry.execute() },
+                    { label: "New window", show: menu.entry !== null, run: () => menu.entry.execute() },
                     { label: "Minimise", show: menu.windows.some(t => !dock.isMinimised(t)), run: () => menu.windows.forEach(dock.minimise) },
                     { label: "Restore", show: menu.windows.some(dock.isMinimised), run: () => menu.windows.filter(dock.isMinimised).forEach(dock.restore) },
-                    { label: menu.pinned ? "Unpin from dock" : "Pin to dock", show: true, run: () => dock.setPinned(menu.entry, !menu.pinned) },
-                    { label: menu.windows.length > 1 ? `Quit (${menu.windows.length} windows)` : "Quit", show: menu.windows.length > 0, run: () => menu.windows.forEach(dock.close) }
+                    { label: menu.pinned ? "Unpin from dock" : "Pin to dock", show: menu.entry !== null, run: () => dock.setPinned(menu.entry, !menu.pinned) },
+                    { label: menu.item?.mid !== undefined ? "Close window" : menu.windows.length > 1 ? `Quit (${menu.windows.length} windows)` : "Quit", show: menu.windows.length > 0, run: () => menu.windows.forEach(dock.close) }
                 ].filter(a => a.show).map((a, i) => Object.assign(a, { sep: i === 0 && menu.windows.length > 0 })))
                 Item {
                     id: menuRow
