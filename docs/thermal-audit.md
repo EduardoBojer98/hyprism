@@ -144,10 +144,12 @@ The dGPU stays off unless an app asks for it: `nv <app>` runs one app on it (AI,
 
 ## 5. Still open
 
-1. **Battery power limits**: re-run `bash system/hosts/rog-flow-x13/50-power.user.sh` once while unplugged
-   (asusd keeps limits per power source; the AC ones are set). The sudo step (change 5) is done and verified:
-   ppd runs with `--block-driver=amd_pstate`, and switching from `powermode` or `powerprofilesctl` gives
-   Quiet `power`, Balanced `balance_power`, Performance `performance` every time.
+1. **Battery power limits: set by the firmware, not asusd.** On battery this firmware hides the PPT settings
+   (`asusctl armoury get ppt_pl1_spl` says "unavailable"), so `50-power.user.sh` can only set the AC limits.
+   Measured on battery in Quiet (21:12, 1 min): CPU 63.6 °C, package 11.9 W, fans 4,500/3,700 RPM; the whole
+   laptop drew 30.4 W from the battery (external monitor connected, browser open). The sudo step (change 5)
+   is done and verified: ppd runs with `--block-driver=amd_pstate`, and switching from `powermode` or
+   `powerprofilesctl` gives Quiet `power`, Balanced `balance_power`, Performance `performance` every time.
 2. Balanced EPP tested after the fix (2 rounds x 2 min each, normal use): `balance_power` 73.1-73.6 °C, 23.5-24.3 W;
    `power` 72.4-73.6 °C, 25.6-27.9 W. No gain, so Balanced keeps `balance_power`.
 3. **True idle, measured (19:54, Balanced, AC, both screens, Claude app and Chrome closed, 5 min):**

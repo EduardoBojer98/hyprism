@@ -7,7 +7,7 @@
 # Switch modes with `powermode`, Super+F5 (Hyprland) or the Control Center.
 #
 # Runs as you (asusctl talks to asusd over D-Bus); asks for sudo once for the systemd drop-in.
-# Power limits are per power source: run it once on AC and once on battery.
+# Power limits apply on AC; on battery the firmware hides them and uses its own (about 12 W in Quiet).
 set -euo pipefail
 [[ $EUID -ne 0 ]] || { echo "Run as your normal user"; exit 1; }
 step() { printf '\n==> %s\n' "$*"; }
@@ -68,4 +68,4 @@ step "Result"
 asusctl profile get 2>/dev/null
 powerprofilesctl | grep -E 'CpuDriver|PlatformDriver|^\*' | sort -u
 on_ac=$(cat /sys/class/power_supply/AC*/online 2>/dev/null | head -1)
-[[ $on_ac == 1 ]] && echo "On AC: power limits set for AC. Unplug and re-run once to set them for battery too."
+[[ $on_ac == 1 ]] || echo "On battery: the firmware sets its own power limits here; the AC ones apply when plugged in."
