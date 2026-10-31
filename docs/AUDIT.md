@@ -169,7 +169,7 @@ Performance, set the AC profile to Balanced in ROG Control Center or Settings > 
 | Brightness, media, volume keys | ✅ | bound in `binds.lua:85-94`; tools present |
 | Battery, power profiles | ⚠️ | Balanced, charge limit 80 %. asusd's **AC profile is Performance**, which hit 95 °C in 10 s in the load test |
 | Wi-Fi, Bluetooth | ✅ | NetworkManager connected, adapter powered |
-| Advanced network settings | ❌ | `nm-connection-editor` is declared but not installed: `sudo pacman -S nm-connection-editor` |
+| Advanced network settings | ✅ | `nm-connection-editor` was declared but missing; installed 2026-10-31 |
 | Flameshot (Alt+Shift+S), clipboard history | ✅ | flameshot running; `wl-paste --watch clipstore store` running |
 | Default apps | ⚠️ | https → Chrome, **PDF → Chrome** (Okular is installed), text → micro, images → Gwenview, folders → Dolphin. Change in Settings > Default Apps if you want Okular |
 | Portals | ✅/🖐 | xdg-desktop-portal, -hyprland, -gtk active; browser screen share not exercised |
