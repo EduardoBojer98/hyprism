@@ -144,7 +144,10 @@ kde_guard() {
 
 links() {
     kde_guard
-    command -v stow >/dev/null || { warn "GNU Stow is missing: run ./install.sh --only core first."; $DRY || return 1; }
+    if ! command -v stow >/dev/null; then
+        $DRY && { say "GNU Stow isn't installed yet (the packages step installs it), so the links can't be listed."; return 0; }
+        warn "GNU Stow is missing: run ./install.sh --only core first."; return 1
+    fi
     # Older installs linked whole folders (~/.config/hypr -> repo) or used home/ instead of config/:
     # drop those links (dangling ones or folder links into this repo); move_settings_home keeps your files
     local l t
@@ -287,7 +290,7 @@ doctor() {
         [[ -d $HOME/$d ]] || continue
         for f in "$HOME/$d"/*; do
             [[ -f $f && ! -L $f ]] || continue
-            case ${f#"$HOME/"} in .config/quickshell/settings.json|.config/ghostty/theme.conf|.config/fish/conf.d/nvm.fish|.config/hypr/host.lua) continue ;; esac
+            case ${f#"$HOME/"} in .config/quickshell/settings.json|.config/ghostty/theme.conf|.config/fuzzel/theme.ini|.config/fish/conf.d/nvm.fish|.config/hypr/host.lua) continue ;; esac
             bad "untracked file in a managed folder: ~/${f#"$HOME/"}"
         done
     done
