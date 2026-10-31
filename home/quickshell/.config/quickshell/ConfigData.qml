@@ -4,10 +4,11 @@ import Quickshell.Io
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
     property JsonObject appearance: JsonObject {
-        property string mode: "dark"           // "light" or "dark"
-        property string accent: "blue"          // a palette name (Theme.accents) or "custom"
+        property string mode: "dark"           // "light", "dark" or "auto" (light from sunrise to sunset)
+        property string accent: "theme"         // "theme" (the theme's own), a palette name (Theme.accents) or "custom"
         property string customAccent: "#ff7a59" // used when accent is "custom"
-        property string darkTint: "midnight"    // dark glass base: midnight (cool), graphite (neutral), mocha (warm)
+        property string theme: "midnight"       // colour theme (Theme.themes): glass base, text and its own accent
+        property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
         property real glassOpacity: 0.55        // tint over the blur (0.2 clear .. 0.9 solid)
         property real radiusScale: 1            // 0 square .. 1.5 extra round
         property real fontScale: 1

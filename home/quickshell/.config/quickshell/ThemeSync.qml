@@ -4,7 +4,8 @@ import QtQuick
 // Carries the shell's design tokens to the parts of the desktop Quickshell can't draw:
 // Hyprland window borders (accent or rotating rainbow, width) and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
 // the lock screen (hypr/settings/hyprlock-theme.conf, read at next lock), and GTK (gsettings light/dark,
-// accent and icon theme). Qt/KDE apps keep following KDE's own settings, which this never writes.
+// accent and icon theme) and Ghostty (ghostty/theme.conf: the theme's terminal colours, reloaded live).
+// Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
 Scope {
     id: root
@@ -17,6 +18,9 @@ Scope {
     readonly property int borderSize: Config.appearance.borderSize
     readonly property int gaps: Config.appearance.gaps
     readonly property bool light: Theme.light
+    // Ghostty's built-in theme matching the shell theme, on a darker shade of the glass base
+    readonly property string terminal: !Config.appearance.terminal ? ""
+        : "theme = " + Theme.th.term[light ? 1 : 0] + "\nbackground = " + (light ? Theme.base : Theme.tinted(0.7, 1)).toString().slice(1, 7)
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
     readonly property string gtkAccent: {
@@ -36,6 +40,8 @@ Scope {
             "gsettings set org.gnome.desktop.interface color-scheme prefer-" + (light ? "light" : "dark")
             + "; gsettings set org.gnome.desktop.interface accent-color " + gtkAccent
             + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"])
+        Quickshell.execDetached(["sh", "-c", "cat > \"$HOME/.config/ghostty/theme.conf\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from Settings > Appearance (empty: the config's own theme)\n"
+            + terminal + "\nQS_EOF\npkill -USR2 -x ghostty || true"])   // SIGUSR2 = reload config
     }
 
     // Only key names Hyprland understands get through; anything else is dropped
@@ -72,4 +78,5 @@ Scope {
     onBorderSpinChanged: debounce.restart()
     onBorderSizeChanged: debounce.restart()
     onGapsChanged: debounce.restart()
+    onTerminalChanged: debounce.restart()
 }

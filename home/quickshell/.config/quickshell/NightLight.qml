@@ -23,6 +23,12 @@ Singleton {
         }
     }
 
+    // Between sunrise and sunset (07:00-19:00 at the poles): Appearance's "Auto" mode is light then
+    readonly property bool daytime: {
+        const m = now.getHours() * 60 + now.getMinutes()
+        return sun !== null ? within(m, sun.rise, sun.set) : m >= 420 && m < 1140
+    }
+
     function minutes(hhmm) { const p = String(hhmm).split(":"); return parseInt(p[0]) * 60 + parseInt(p[1]) }
     function within(m, from, to) { return from <= to ? m >= from && m < to : m >= from || m < to }   // wraps midnight
     function clock(m) { return `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(Math.round(m) % 60).padStart(2, "0")}` }

@@ -1,4 +1,5 @@
-# Ghostty: Catppuccin Macchiato (built-in theme), JetBrains Mono with ligatures.
+# Ghostty: Catppuccin Macchiato (built-in theme), JetBrains Mono with ligatures. The shell's
+# Settings > Appearance > theme replaces the colours through theme.conf (included at the end).
 theme = Catppuccin Macchiato
 font-family = JetBrainsMono Nerd Font
 font-size = 11.5
@@ -22,3 +23,6 @@ mouse-hide-while-typing = true
 shell-integration = fish
 confirm-close-surface = false
 copy-on-select = clipboard
+
+# Written by the shell (Settings > Appearance); the "?" makes it optional
+config-file = ?theme.conf

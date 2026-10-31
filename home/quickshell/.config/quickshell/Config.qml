@@ -30,9 +30,10 @@ Singleton {
     // Allowed values; set() refuses anything else. Numbers are [min, max].
     readonly property var schema: ({
         appearance: {
-            mode: ["light", "dark"],
-            accent: ["blue", "lavender", "mauve", "pink", "peach", "yellow", "green", "mint", "teal", "sky", "champagne", "silver", "custom"],
-            customAccent: "color", darkTint: ["midnight", "graphite", "mocha"],
+            mode: ["light", "dark", "auto"],
+            accent: ["theme", "blue", "lavender", "mauve", "pink", "red", "peach", "yellow", "green", "mint", "teal", "sky", "champagne", "silver", "custom"],
+            customAccent: "color", theme: ["midnight", "graphite", "cocoa", "catppuccin", "tokyonight", "dracula", "nord", "gruvbox", "rosepine", "everforest", "kanagawa", "onedark", "solarized"],
+            terminal: "bool",
             glassOpacity: [0.2, 0.9], radiusScale: [0, 1.5], fontScale: [0.85, 1.25],
             font: "string", animations: "bool", iconTheme: "string",
             border: ["rainbow", "accent"], borderSpin: [0, 300], borderSize: [1, 4], gaps: [0, 40]
