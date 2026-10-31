@@ -47,3 +47,6 @@ stow
 
 # Shared monitor switch (optional, only used with ~/.config/monswitch.conf)
 ddcutil
+
+# Builds plugins/ (title-bar minimise) with ~/.local/bin/hypr-plugins: g++, pkg-config
+base-devel

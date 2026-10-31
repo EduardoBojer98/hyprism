@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Builds this repo's Hyprland plugins (plugins/<name>/main.cpp) and loads them into the running
+# Hyprland. Rebuilds after a Hyprland update, since a plugin only loads into the exact version it
+# was built against. Run from Hyprland's autostart; a failed build only skips that plugin.
+set -uo pipefail
+repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)   # ~/.local/bin is a link into the repo
+out=${XDG_DATA_HOME:-$HOME/.local/share}/hypr-plugins
+mkdir -p "$out"
+
+for src in "$repo"/plugins/*/main.cpp; do
+    name=$(basename "$(dirname "$src")")
+    so=$out/$name.so
+    if [[ ! -f $so || $src -nt $so || /usr/bin/Hyprland -nt $so ]]; then
+        # shellcheck disable=SC2046  # pkg-config prints several flags
+        if ! g++ -shared -fPIC -O2 -std=c++2b "$src" -o "$so.tmp" \
+                $(pkg-config --cflags hyprland pixman-1 libdrm) 2>"$out/$name.log"; then
+            notify-send -a Hyprland "Plugin $name didn't build" "See $out/$name.log"
+            continue
+        fi
+        mv "$so.tmp" "$so"
+        hyprctl plugin unload "$so" >/dev/null 2>&1
+    fi
+    hyprctl plugin list | grep -q "^Plugin $name " || hyprctl plugin load "$so" >/dev/null
+done
