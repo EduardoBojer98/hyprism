@@ -21,6 +21,7 @@ Singleton {
 
     function toggle() { popup.toggle() }
     function refresh() { reader.running = false; reader.running = true }
+    Timer { id: retry; interval: 1000; onTriggered: root.refresh() }
     function use(i) { Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", String(i)]); active = i }
 
     // the active layout changes with the Alt+Shift toggle too; the list changes when Settings reloads Hyprland
@@ -37,7 +38,9 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: {
                 const [json, names] = text.split("\n--\n")
-                const kb = JSON.parse(json).keyboards.find(k => k.main) ?? JSON.parse(json).keyboards[0]
+                let kb
+                // while Hyprland reloads its config, hyprctl can answer with something that isn't JSON: ask again
+                try { const d = JSON.parse(json); kb = d.keyboards.find(k => k.main) ?? d.keyboards[0] } catch (e) { retry.restart(); return }
                 if (!kb) return
                 const lookup = {}, catalog = []
                 for (const l of (names ?? "").split("\n")) {

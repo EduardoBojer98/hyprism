@@ -21,6 +21,19 @@ Singleton {
     property int unread: 0       // arrived since the notification centre was last opened
     property date now: new Date()
     readonly property bool dnd: Config.notifications.dnd
+    property bool sharing: false   // a screen or window is being shared: no banners for people on the call to read
+
+    // Hyprland sends "screencast>>1,<owner>" when a share starts and "screencast>>0,<owner>" when it stops
+    // (screenshots send both at once, which just clears the banners from the shot).
+    // shortcut: a shell restart during a share forgets it until the next share starts; fine unless that bites.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name !== "screencast") return
+            root.sharing = event.data.startsWith("1")
+            if (root.sharing) root.popups = root.popups.filter(n => n.urgency === NotificationUrgency.Critical)
+        }
+    }
 
     // history by app, the app with the newest notification first
     readonly property var groups: {
@@ -92,8 +105,8 @@ Singleton {
                 if (!NotificationCenter.open) root.unread++
                 for (const old of root.history.slice(Config.notifications.historyMax)) old.dismiss()
             }
-            // muted apps and Do Not Disturb (except critical) only go to the notification centre
-            if (!root.muted(n) && (!root.dnd || n.urgency === NotificationUrgency.Critical)) {
+            // muted apps, Do Not Disturb and screen sharing (except critical) only go to the notification centre
+            if (!root.muted(n) && (!(root.dnd || root.sharing) || n.urgency === NotificationUrgency.Critical)) {
                 root.popups = [n].concat(root.popups.filter(x => x !== n))
                 if (!n.hints?.["suppress-sound"]) root.playSound(Config.notifications.sound)
             } else if (n.transient) n.expire()
