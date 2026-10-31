@@ -2,6 +2,9 @@
 -- graphical-session.target is also reached in KDE, and these must not run there.
 hl.on("hyprland.start", function()
     hl.exec_cmd("/usr/lib/hyprpolkitagent/hyprpolkitagent") -- password prompts for apps
+    -- Unlock the KDE wallet with the login password, so the Secret Service (browsers, Git, apps)
+    -- works here too. Plasma runs this itself through an autostart entry that only shows in KDE.
+    hl.exec_cmd("[ -x /usr/lib/pam_kwallet_init ] && /usr/lib/pam_kwallet_init")
     hl.exec_cmd("qs")                                       -- Quickshell: bar, dock, OSD, notifications
     hl.exec_cmd("hyprpaper")                                -- wallpaper
     hl.exec_cmd("pgrep -x squeekboard || squeekboard")      -- on-screen keyboard, hidden until the bar button
