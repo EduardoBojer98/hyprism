@@ -16,7 +16,7 @@ ColumnLayout {
         id: lister
         running: true
         command: ["sh", "-c", "for d in \"$HOME/.local/share/icons\"/* \"$HOME/.icons\"/* /usr/share/icons/*; do [ -d \"$d/cursors\" ] && basename \"$d\"; done | sort -u"]
-        stdout: StdioCollector { onStreamFinished: page.themes = text.trim().split("\n").filter(t => t && t !== "default") }
+        stdout: StdioCollector { onStreamFinished: page.themes = ["default"].concat(text.trim().split("\n").filter(t => t && t !== "default")) }
     }
     ThemeAdder {
         id: adder
@@ -30,7 +30,7 @@ ColumnLayout {
     SettingGroup {
         SettingRow {
             label: "Cursor theme"
-            hint: page.themes.includes(Config.appearance.cursorTheme) ? "" : Config.appearance.cursorTheme + " isn't installed, so apps use the default cursor"
+            hint: Config.appearance.cursorTheme === "default" ? "default is your system's cursor" : page.themes.includes(Config.appearance.cursorTheme) ? "" : Config.appearance.cursorTheme + " isn't installed, so apps use the default cursor"
             Dropdown {
                 width: 240
                 options: page.themes

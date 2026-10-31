@@ -14,7 +14,7 @@ hl.env("QT_QPA_PLATFORMTHEME", "kde")          -- Qt/KDE apps (Dolphin, ...) kee
 -- Cursor: Settings > Appearance > Cursor saves it in settings/theme.lua (folder name, not the title)
 local tok, theme = pcall(require, "settings.theme")
 theme = tok and type(theme) == "table" and theme or {}
-local cursor = theme.cursor ~= nil and theme.cursor ~= "" and theme.cursor or "oreo_white_cursors"
+local cursor = theme.cursor ~= nil and theme.cursor ~= "" and theme.cursor or "default"  -- the system's cursor (/usr/share/icons/default)
 local size = tostring(theme.cursor_size or 24)
 hl.env("XCURSOR_THEME", cursor)
 hl.env("XCURSOR_SIZE", size)
