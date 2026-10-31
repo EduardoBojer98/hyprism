@@ -134,7 +134,8 @@ PanelWindow {
                 width: dock.slot
                 height: dock.iconSize + 8
 
-                // a tile with a 3 × 3 grid of rounded squares; the grid opens up a little on hover
+                // a frosted tile with a 2 x 2 grid; on hover the grid turns a quarter and one square
+                // becomes an accent dot
                 Rectangle {
                     id: launcherTile
                     readonly property bool lit: Launcher.open || launcherArea.containsMouse
@@ -142,28 +143,39 @@ PanelWindow {
                     width: dock.iconSize
                     height: dock.iconSize
                     radius: Math.round(dock.iconSize * 0.27)
-                    gradient: Gradient {
-                        GradientStop { position: 0; color: Qt.lighter(Theme.accent, launcherTile.lit ? 1.25 : 1.12) }
-                        GradientStop { position: 1; color: Qt.darker(Theme.accent, launcherTile.lit ? 1.05 : 1.2) }
-                    }
-                    border { color: Qt.rgba(1, 1, 1, 0.22); width: 1 }
+                    color: launcherTile.lit ? Theme.fillActive : Theme.fill
+                    border { color: launcherTile.lit ? Theme.strokeStrong : Theme.stroke; width: 1 }
                     scale: launcherArea.pressed ? 0.92 : 1
                     Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: Theme.anim } }
+
+                    Rectangle {   // top sheen, like light on glass
+                        anchors { fill: parent; margins: 1 }
+                        radius: parent.radius - 1
+                        gradient: Gradient {
+                            GradientStop { position: 0; color: Theme.highlight }
+                            GradientStop { position: 0.5; color: "transparent" }
+                        }
+                    }
 
                     Grid {
                         id: dots
-                        readonly property real cell: dock.iconSize * 0.15
+                        readonly property real cell: dock.iconSize * 0.2
                         anchors.centerIn: parent
-                        columns: 3
-                        spacing: dock.iconSize * (launcherTile.lit ? 0.085 : 0.065)
-                        Behavior on spacing { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+                        columns: 2
+                        spacing: dock.iconSize * 0.09
+                        rotation: launcherTile.lit ? 45 : 0
+                        Behavior on rotation { NumberAnimation { duration: Theme.anim * 1.5; easing.type: Easing.OutBack } }
                         Repeater {
-                            model: 9
+                            model: 4
                             Rectangle {
+                                required property int index
+                                readonly property bool dot: index === 1 && launcherTile.lit
                                 width: dots.cell; height: dots.cell
-                                radius: dots.cell * 0.32
-                                color: Theme.accentText
-                                opacity: 0.95
+                                radius: dot ? dots.cell / 2 : dots.cell * 0.3
+                                color: index === 1 ? Theme.accent : Theme.text
+                                opacity: index === 1 ? 1 : 0.88
+                                Behavior on radius { NumberAnimation { duration: Theme.anim } }
                             }
                         }
                     }
