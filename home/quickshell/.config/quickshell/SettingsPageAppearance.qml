@@ -127,6 +127,10 @@ ColumnLayout {
             ConfigChoice { section: "appearance"; key: "radiusScale"; values: [0, 0.6, 1, 1.4]; labels: ["Square", "Subtle", "Round", "Extra"] }
         }
         SettingRow {
+            label: "Space around windows"
+            ConfigChoice { section: "appearance"; key: "gaps"; values: [0, 5, 10, 18]; labels: ["None", "Tight", "Normal", "Roomy"] }
+        }
+        SettingRow {
             label: "Text size"
             ConfigChoice { section: "appearance"; key: "fontScale"; values: [0.92, 1, 1.1]; labels: ["Small", "Default", "Large"] }
         }

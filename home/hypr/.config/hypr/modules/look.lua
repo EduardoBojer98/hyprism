@@ -1,10 +1,10 @@
 -- Smoked glass: white hairline rims, strong blur behind translucent surfaces, soft shadows.
 local c = require("modules.colors")
--- Accent and corner radius come from the shell's Appearance settings (Quickshell ThemeSync
+-- Accent, corner radius and gaps come from the shell's Appearance settings (Quickshell ThemeSync
 -- writes settings/theme.lua and calls apply_theme() live). Defaults until it has run once.
 local ok, saved = pcall(require, "settings.theme")
 THEME = ok and saved or {}
-local defaults = { accent = c.blue, rounding = 12, border = "rainbow", border_spin = 60, border_size = 2 }
+local defaults = { accent = c.blue, rounding = 12, border = "rainbow", border_spin = 60, border_size = 2, gaps = 10 }
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 
 -- Catppuccin colours around the wheel, ending where it starts so the turn has no seam
@@ -17,7 +17,7 @@ function apply_theme()
     local active = THEME.border == "rainbow" and { colors = RAINBOW, angle = 0 }
         or { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. c.lavender .. "99)" }, angle = 135 }
     hl.config({
-        general = { border_size = THEME.border_size, col = { active_border = active } },
+        general = { border_size = THEME.border_size, gaps_in = THEME.gaps // 2, gaps_out = THEME.gaps, col = { active_border = active } },
         decoration = { rounding = THEME.rounding },
     })
     -- borderangle "loop" turns the gradient forever; speed is tenths of a second per turn
@@ -27,8 +27,6 @@ end
 
 hl.config({
     general = {
-        gaps_in     = 4,
-        gaps_out    = 10,
         col = {
             inactive_border = "rgba(ffffff10)",
         },

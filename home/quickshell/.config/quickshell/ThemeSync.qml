@@ -15,6 +15,7 @@ Scope {
     readonly property string border: Config.appearance.border
     readonly property int borderSpin: Theme.animate ? Config.appearance.borderSpin : 0
     readonly property int borderSize: Config.appearance.borderSize
+    readonly property int gaps: Config.appearance.gaps
     readonly property bool light: Theme.light
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
@@ -27,7 +28,7 @@ Scope {
     }
 
     function apply() {
-        const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize} }`
+        const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize}, gaps = ${gaps} }`
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from Settings > Appearance\nreturn " + t)
         SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])
@@ -70,4 +71,5 @@ Scope {
     onBorderChanged: debounce.restart()
     onBorderSpinChanged: debounce.restart()
     onBorderSizeChanged: debounce.restart()
+    onGapsChanged: debounce.restart()
 }
