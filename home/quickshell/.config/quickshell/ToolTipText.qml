@@ -9,10 +9,11 @@ Rectangle {
     width: label.implicitWidth + Theme.spaceM * 2
     height: label.implicitHeight + Theme.spaceS
     radius: Theme.radiusSmall / 1.5
-    color: Theme.glassStrong
+    color: Theme.menu   // solid, so it reads over whatever is under it
     border { color: Theme.stroke; width: 1 }
     opacity: shown ? 1 : 0
     visible: opacity > 0
+    z: 10
     Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
 
     Text {

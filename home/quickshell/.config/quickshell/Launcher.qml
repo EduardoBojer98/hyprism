@@ -118,6 +118,7 @@ Singleton {
             id: pill
             width: parent.width
             height: 48
+            z: 1   // above the panel, so the mode buttons' tooltips show over it
 
             Glass {
                 id: searchBox
@@ -314,6 +315,7 @@ Singleton {
                 Row {
                     id: freq
                     width: parent.width
+                    z: 1   // name tooltips over the labels below
                     Repeater {
                         model: Search.frequentApps
                         Item {
@@ -322,6 +324,7 @@ Singleton {
                             required property int index
                             readonly property bool current: root.homeIndex === index
                             width: freq.width / 8; height: 92
+                            z: appArea.containsMouse ? 1 : 0
                             Rectangle {
                                 anchors { fill: parent; margins: 3 }
                                 radius: Theme.radius
@@ -336,11 +339,13 @@ Singleton {
                             Text {
                                 anchors { left: parent.left; right: parent.right; top: freqIcon.bottom; topMargin: Theme.spaceXs; margins: Theme.spaceXs }
                                 horizontalAlignment: Text.AlignHCenter
+                                id: appName
                                 text: app.modelData.title
                                 elide: Text.ElideRight
                                 color: Theme.text
                                 font { family: Theme.font; pixelSize: Theme.fontLabel }
                             }
+                            ToolTipText { anchors.topMargin: -Theme.spaceS; shown: appArea.containsMouse && appName.truncated; text: app.modelData.title }
                             MouseArea { id: appArea; anchors.fill: parent; hoverEnabled: true; onEntered: root.homeIndex = app.index; onClicked: root.activate(app.modelData) }
                         }
                     }
@@ -412,6 +417,7 @@ Singleton {
                         required property var modelData
                         required property int index
                         width: grid.cellWidth; height: grid.cellHeight
+                        z: cellArea.containsMouse ? 1 : 0
                         Rectangle {
                             anchors { fill: parent; margins: 3 }
                             radius: Theme.radius
@@ -426,11 +432,13 @@ Singleton {
                         Text {
                             anchors { left: parent.left; right: parent.right; top: appIcon.bottom; topMargin: Theme.spaceXs; margins: Theme.spaceXs }
                             horizontalAlignment: Text.AlignHCenter
+                            id: cellName
                             text: cell.modelData.name
                             elide: Text.ElideRight
                             color: Theme.text
                             font { family: Theme.font; pixelSize: Theme.fontLabel }
                         }
+                        ToolTipText { anchors.topMargin: -Theme.spaceS; shown: cellArea.containsMouse && cellName.truncated; text: cell.modelData.name }
                         MouseArea {
                             id: cellArea
                             anchors.fill: parent
