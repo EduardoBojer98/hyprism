@@ -5,17 +5,18 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-// The Settings app: one glass window with a sidebar of sections, like macOS System Settings.
+// The Settings app: one glass window with a sidebar of groups, each opening into its pages (a
+// submenu in the sidebar, or tabs when the window is narrow); one page shows at a time.
 // Open with Super+I, the Control Center's gear, the launcher ("Settings"), or
 // `qs ipc call settings open [group or page]`.
 Singleton {
     id: root
 
     property bool open: false
-    property string section: "appearance"   // the group shown
-    property string focusPage: ""           // page to scroll to inside it (from show())
+    property string section: "appearance"   // the group open in the sidebar
+    property string pageId: "appearance"    // the page shown
 
-    // The sidebar: groups like a normal desktop's settings, each showing one or more pages below.
+    // The sidebar: groups like a normal desktop's settings, each with one or more pages.
     // Page ids still work everywhere (show("sound"), `qs ipc call settings open bluetooth`).
     readonly property var allGroups: [
         { id: "display",    name: "Display",              glyph: "\u{F0379}", pages: ["displays", "monitor"] },
@@ -37,9 +38,9 @@ Singleton {
 
     // Pages: what each SettingsPage<Id>.qml is called (Spotlight searches these too)
     readonly property var allSections: [
-        { id: "appearance",    name: "Appearance & Themes", glyph: "\u{F03D8}" },
+        { id: "appearance",    name: "Themes & Colours",    glyph: "\u{F03D8}" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
-        { id: "dock",          name: "Desktop & Dock",      glyph: "\u{F0379}" },
+        { id: "dock",          name: "Dock",                glyph: "\u{F0379}" },
         { id: "launcher",      name: "Search & Launcher",   glyph: "\u{F0349}" },
         { id: "clipboard",     name: "Clipboard",           glyph: "\u{F014C}" },
         { id: "controlcenter", name: "Control Center",      glyph: "\u{F0493}" },
@@ -63,10 +64,10 @@ Singleton {
         { id: "about",         name: "About",               glyph: "\u{F02FD}" },
     ]
 
-    // s: a group id, a page id (opens its group scrolled to that page), or "" (last group)
+    // s: a group id (its first page), a page id, or "" (where you left off)
     function show(s) {
         const g = sections.find(x => x.id === s) ?? sections.find(x => x.pages.includes(s))
-        if (g) { section = g.id; focusPage = g.id === s ? "" : s }
+        if (g) { section = g.id; pageId = g.pages.includes(s) ? s : g.pages[0] }
         open = true
     }
 
@@ -148,38 +149,70 @@ Singleton {
 
                         Repeater {
                             model: root.sections
-                            Rectangle {
+                            Column {
+                                id: navGroup
                                 required property var modelData
                                 readonly property bool current: root.section === modelData.id
+                                readonly property bool open: current && modelData.pages.length > 1 && !win.compact
                                 width: parent.width
-                                height: 34
-                                radius: Theme.radiusSmall
-                                color: current ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
-                                border { color: current ? Theme.stroke : "transparent"; width: 1 }
-                                Row {
-                                    anchors { left: parent.left; leftMargin: win.compact ? (parent.width - 24) / 2 : 10; verticalCenter: parent.verticalCenter }
-                                    spacing: 10
-                                    Rectangle {
-                                        width: 24; height: 24; radius: 7
-                                        color: current ? Theme.accent : Theme.fill
+                                spacing: 2
+                                Rectangle {
+                                    width: parent.width
+                                    height: 34
+                                    radius: Theme.radiusSmall
+                                    color: current ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
+                                    border { color: current ? Theme.stroke : "transparent"; width: 1 }
+                                    Row {
+                                        anchors { left: parent.left; leftMargin: win.compact ? (parent.width - 24) / 2 : 10; verticalCenter: parent.verticalCenter }
+                                        spacing: 10
+                                        Rectangle {
+                                            width: 24; height: 24; radius: 7
+                                            color: current ? Theme.accent : Theme.fill
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData.glyph
+                                                color: current ? Theme.accentText : Theme.text
+                                                font { family: Theme.iconFont; pixelSize: 14 }
+                                            }
+                                        }
                                         Text {
-                                            anchors.centerIn: parent
-                                            text: modelData.glyph
-                                            color: current ? Theme.accentText : Theme.text
-                                            font { family: Theme.iconFont; pixelSize: 14 }
+                                            visible: !win.compact
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: sidebar.width - 24 - 54
+                                            elide: Text.ElideRight
+                                            text: modelData.name
+                                            color: Theme.text
+                                            font { family: Theme.font; pixelSize: 13; weight: current ? Font.DemiBold : Font.Normal }
                                         }
                                     }
-                                    Text {
-                                        visible: !win.compact
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: sidebar.width - 24 - 54
-                                        elide: Text.ElideRight
-                                        text: modelData.name
-                                        color: Theme.text
-                                        font { family: Theme.font; pixelSize: 13; weight: current ? Font.DemiBold : Font.Normal }
+                                    MouseArea { id: navArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData.id) }
+                                }
+                                // submenu: the open group's pages
+                                Repeater {
+                                    model: navGroup.open ? navGroup.modelData.pages : []
+                                    Rectangle {
+                                        required property string modelData
+                                        readonly property bool current: root.pageId === modelData
+                                        width: parent.width
+                                        height: 30
+                                        radius: Theme.radiusSmall
+                                        color: current ? Theme.accentWash : subArea.containsMouse ? Theme.fillHover : "transparent"
+                                        Rectangle {   // a short accent bar beside the page you're on
+                                            visible: parent.current
+                                            anchors { left: parent.left; leftMargin: 26; verticalCenter: parent.verticalCenter }
+                                            width: 3; height: 14; radius: 1.5
+                                            color: Theme.accent
+                                        }
+                                        Text {
+                                            anchors { left: parent.left; leftMargin: 44; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                                            text: root.pageName(modelData)
+                                            elide: Text.ElideRight
+                                            color: parent.current ? Theme.text : Theme.subtext
+                                            font { family: Theme.font; pixelSize: 13; weight: parent.current ? Font.DemiBold : Font.Normal }
+                                        }
+                                        MouseArea { id: subArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData) }
                                     }
                                 }
-                                MouseArea { id: navArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData.id) }
                             }
                         }
                     }
@@ -203,54 +236,45 @@ Singleton {
                 ScrollBar.vertical: GlassScrollBar {}
                 ScrollBar.horizontal: GlassScrollBar {}
 
-                Connections { target: root; function onSectionChanged() { page.contentY = 0; page.contentX = 0 } }
+                Connections { target: root; function onPageIdChanged() { page.contentY = 0; page.contentX = 0 } }
 
                 ColumnLayout {
                     id: pageColumn
                     x: win.pad; y: win.pad
                     width: Math.max(page.width - win.pad * 2, 340)
-                    spacing: 20
+                    spacing: 16
 
-                    Text {
+                    Column {
                         Layout.fillWidth: true
-                        text: root.currentGroup.name
-                        elide: Text.ElideRight
-                        color: Theme.text
-                        font { family: Theme.font; pixelSize: 22; weight: Font.Bold }
+                        Layout.rightMargin: 100   // clear of the window buttons
+                        spacing: 2
+                        Text {   // the group, small, above the page's own title
+                            visible: root.currentGroup.pages.length > 1
+                            text: root.currentGroup.name
+                            color: Theme.subtext
+                            font { family: Theme.font; pixelSize: 12; weight: Font.Medium }
+                        }
+                        Text {
+                            width: parent.width
+                            text: root.pageName(root.pageId)
+                            elide: Text.ElideRight
+                            color: Theme.text
+                            font { family: Theme.font; pixelSize: 22; weight: Font.Bold }
+                        }
                     }
 
-                    // the group's pages one below the other, each under its own heading
-                    Repeater {
-                        model: root.currentGroup.pages
-                        ColumnLayout {
-                            id: part
-                            required property string modelData
-                            required property int index
-                            Layout.fillWidth: true
-                            Layout.topMargin: index > 0 ? 16 : 0
-                            spacing: 12
+                    // narrow window: the sidebar shows icons only, so the group's pages become tabs
+                    Choice {
+                        visible: win.compact && root.currentGroup.pages.length > 1
+                        options: root.currentGroup.pages.map(p => root.pageName(p))
+                        index: root.currentGroup.pages.indexOf(root.pageId)
+                        onPicked: i => root.show(root.currentGroup.pages[i])
+                    }
 
-                            Text {
-                                visible: root.currentGroup.pages.length > 1
-                                text: root.pageName(part.modelData)
-                                color: Theme.text
-                                font { family: Theme.font; pixelSize: 17; weight: Font.DemiBold }
-                            }
-                            Loader {
-                                Layout.fillWidth: true
-                                active: root.open
-                                source: "SettingsPage" + part.modelData.charAt(0).toUpperCase() + part.modelData.slice(1) + ".qml"
-                            }
-                            // show("bluetooth") lands on Bluetooth inside Network & Bluetooth, once the layout has placed it
-                            Timer {
-                                running: root.open && root.focusPage === part.modelData
-                                interval: 80
-                                onTriggered: {
-                                    page.contentY = Math.max(0, Math.min(part.y + win.pad, page.contentHeight - page.height))
-                                    root.focusPage = ""
-                                }
-                            }
-                        }
+                    Loader {
+                        Layout.fillWidth: true
+                        active: root.open
+                        source: "SettingsPage" + root.pageId.charAt(0).toUpperCase() + root.pageId.slice(1) + ".qml"
                     }
                 }
             }
