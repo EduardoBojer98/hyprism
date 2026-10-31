@@ -9,6 +9,11 @@ Legend: ✅ works / ⚠️ works but messy / ❌ broken / 🖐 needs your hands 
 > **Quickshell** (`home/quickshell`), Hyprland config in **Lua** (`hyprland.lua` + `modules/*.lua`),
 > configs linked with **GNU Stow**. Fish is the login shell, but CachyOS's own fish config is the base.
 
+> **Paths.** Inventory and findings describe the repo *before* Phase 3 (`home/`, `system/`). After the
+> restructure: `home/<app>` → `config/<app>`, `home/hypr/.config/hypr/hosts/*.lua` and
+> `system/hosts/<host>/` → `hosts/<host>/`, `system/0*.sh` + `packages/*.txt` → `packages/` +
+> `distros/` + `install.sh`. See [What changed](#what-changed-phase-3).
+
 ## Inventory
 
 ### Repo tree
@@ -342,3 +347,59 @@ Close the lid / suspend + resume (with the Acer connected and without); unplug a
 `Super+M` input switch and back; MX Master buttons, gestures and haptics; a screen share in Chrome;
 a file picker in Chrome; `Alt+Shift+S` capture; log out and into KDE Plasma; cursor looks the same in
 Ghostty, Chrome and Dolphin; open a `.txt` from Dolphin.
+
+## What changed (Phase 3)
+
+Commits on `audit/2026-10-31`, oldest first. Each one leaves the desktop working.
+
+| Commit | What and why |
+|---|---|
+| `9569694` | Flameshot area capture on `Super+Shift+S` (your request); scratchpad send moved to `Super+Alt+S`. |
+| `d4a35cb` | **Keyring (#1):** `pam_kwallet_init` now runs after the D-Bus environment is exported, so ksecretd gets the login password and claims `org.freedesktop.secrets`. **Layout switch (#2):** `Super+Ctrl+Space`. **Browser (#7):** `Super+B` opens whatever Default Apps says. |
+| `7099a46` | **Startup Apps (#5, your request):** the page lists and edits the real `~/.config/autostart` (on/off with `Hidden=`, remove, add any app); the old private list is moved there once. `startup-apps` runs each `Exec` directly instead of `gtk-launch`, which was what started Flameshot twice. |
+| `45ec45a` | **Cursor (#4, your request):** Appearance → Cursor picks theme and size; Icons and Cursor can add a downloaded theme (`theme-add`, archive or folder, checked before copying). The theme reaches Hyprland, GTK and XWayland from one setting. |
+| `f11d4d6` | **Layout:** `config/<app>/` linked **file by file** (`stow --no-folding`), so Settings files are real files in `~/.config` and moving the clone no longer breaks folders. `hosts/<name>/` holds everything per machine (Hyprland overrides, packages, system steps), with `hosts/default/` for any PC; machine-only binds and squeekboard moved out of the shared modules. `packages/manifest.txt` lists every package once with a reason; real names per distro live in `packages/arch.txt` and `packages/fedora.txt` (each name checked against its source). |
+| `0536bf6` | **One installer (#3):** `install.sh` with `--dry-run` (shows *every* step), `--yes`, `--host`, `--only`, `doctor` and `undo`; packages come first, so a fresh install no longer stops at "Stow is missing". `distros/arch.sh` and `distros/fedora.sh` are the only places with package-manager commands. Each host step that touches the system is shown and asked separately (rule 7). `ROOT_UUID` is read from the running system (#10); JuhRadial MX is pinned to a release (#9). |
+| `2c8cf2b` | Theme in one place: `colors.lua` removed, fuzzel and Hyprland's gradient follow the Appearance theme. **USB auto-mount (#8)** with udiskie. "Run doctor" in Settings → About; the install button no longer assumes pacman (also the task-manager hint). |
+| docs | README rewritten (install per distro, doctor, layout, hosts/distros, keys); user guide and this audit updated; `RECOMMENDATIONS.md`. |
+
+## After (Phase 4)
+
+| # | Before | After | How checked |
+|---|---|---|---|
+| 1 Keyring | ❌ | ✅ / 🖐 | Running `pam_kwallet_init` late claimed `org.freedesktop.secrets`; `secret-tool store`/`lookup` round-trip OK. Confirm after your next login. |
+| 2 Layout key | ❌ | ✅ | `Super+Ctrl+Space` cycles US ↔ Serbian Latin (`hyprctl devices`). |
+| 3 Fresh install | ❌ | ✅ | Container installs below. |
+| 4 Cursor | ❌ | ✅ / 🖐 | gsettings and `hyprctl setcursor` already use `oreo_white_cursors`; `XCURSOR_THEME` (env.lua) takes the corrected name at the next login. Package not installed yet (see below); look by eye. |
+| 5 Flameshot ×2 | ⚠️ | ✅ | Direct start = 1 process; `gtk-launch` = 2. Now one after `startup-apps`. |
+| 6 nvidia-powerd | ⚠️ | ⚠️ | Not changed: masking it is an `/etc` change, waiting for your yes. |
+| 7 Super+B / PDFs | ⚠️ | ✅ / ⚠️ | Super+B opens Chrome (your default). PDFs still open in Chrome: that's your `mimeapps.list` choice, change it in Default Apps. |
+| 8 USB auto-mount | ⚠️ | ✅ / 🖐 | Autostart line in place; needs `udiskie` installed (sudo) and a stick plugged in. |
+| 9 JuhRadial | ⚠️ | ✅ | Pinned to `v0.4.5-beta.6` (URL returns 200). Still a third-party installer that uses sudo; read it before updating. |
+| 10 ROOT_UUID | ⚠️ | ✅ | `findmnt -no UUID /` matches the old hardcoded value on this machine. |
+| Hyprland config | ✅ | ✅ | `hyprctl reload` ok, `hyprctl configerrors` empty after every change. |
+| Shell | ✅ | ✅ | One `qs`; Settings pages open over IPC (`qs ipc call settings open …`), no QML errors in `qs log`. |
+| Links | ⚠️ | ✅ | 126/126 files linked from `config/` + `hosts/flow-x13/home/`; no folder links left. |
+| `./install.sh --dry-run` | partial | ✅ | Lists packages, links, services, session and host steps; changes nothing. |
+| `./install.sh doctor` | — | ✅ | Here: only the packages listed under "Needs your hands" and uncommitted work. |
+| shellcheck | ✅ | ✅ | All scripts, 0 warnings. |
+| Containers | — | ✅ | `archlinux:latest`, `fedora:latest`: clone to `/opt/elsewhere/my-setup` as a normal user, dry run, install twice (both exit 0), doctor. Fedora 44: doctor clean. Arch: doctor lists only the 4 AUR packages (the container has no paru/yay; the installer warns and skips them). The first round found doctor flagging `~/.config/fuzzel/theme.ini`; fixed in `ae2808b`. |
+| KDE fallback | ✅ / 🖐 | ✅ / 🖐 | Nothing Plasma reads was changed; the session drop-in only preselects Hyprland. Log into Plasma once to be sure. |
+
+### Needs your hands (after)
+
+- **Decide:** install `oreo-cursors-git` (AUR) so the cursor comes from a package, not `~/.icons`;
+  `ollama-cuda` (repo) vs the manual `/usr/local/bin/ollama`; remove leftovers `hyprshot`, `satty`,
+  `ydotool`; mask `nvidia-powerd` (writes under `/etc`). None done without your yes.
+- **Install:** `udiskie` (`./install.sh --only desktop`, asks for sudo).
+- **gh token:** `gh auth logout && gh auth login` once the keyring works, so the token moves out of
+  `~/.config/gh/hosts.yml`.
+- **Startup:** ROG Control Center's autostart entry now also runs in Hyprland (switch it off in
+  Settings → Startup Apps if you don't want it).
+- **Test by hand:** next login (keyring), lid close/resume with and without the Acer, Acer replug and
+  `Super+M`, MX Master buttons and haptics, a screen share and file picker in Chrome,
+  `Super+Shift+S`, cursor in Ghostty/Chrome/Dolphin, a USB stick, logging into KDE Plasma.
+- **Git history:** no secrets found in any commit (gitleaks over full history). The commits carry your
+  personal e-mail as author, which is normal for Git; switch to the GitHub `noreply` address for
+  future commits if you'd rather not publish it.
+- Your own `~/.config/fish/config.fish` still adds Lando to PATH; harmless next to the repo's line, left alone.
