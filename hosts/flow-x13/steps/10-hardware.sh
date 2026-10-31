@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
-# ROG Flow X13 (GV301QC) on CachyOS + Limine only: install.sh --system runs it on the computer
-# named rog-flow-x13. A copy for another machine needs its own ROOT_UUID, swap size and packages.
+# ROG Flow X13: asusd, NVIDIA sleep helpers, a btrfs swapfile + hibernation (changes /etc/fstab and
+# the Limine kernel line). install.sh asks before running it. Another machine needs its own swap size.
 # Safe to re-run: every step checks before it changes anything.
 # Run: sudo bash system/hosts/rog-flow-x13/10-hardware.sh
 set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "Run with sudo"; exit 1; }
 
-ROOT_UUID=b4605ab1-d8eb-4b3f-a682-4e2e191d1db9
+ROOT_UUID=$(findmnt -no UUID /)   # the btrfs root of this install
 SWAP_SIZE=20g   # >= RAM (16 GB) so a full hibernation image always fits
 
 step() { printf '\n==> %s\n' "$*"; }
 
-step "asusctl + ROG Control Center (charge limit, power profiles, fans, keyboard LEDs)"
-cd "$(dirname "$0")"
-sed 's/#.*//' packages.txt | xargs pacman -S --needed --noconfirm
+step "asusd (asusctl + ROG Control Center come from hosts/flow-x13/packages.txt)"
 systemctl enable --now asusd 2>/dev/null || systemctl start asusd
 
 step "NVIDIA suspend/hibernate helpers (save GPU memory across sleep)"
@@ -43,12 +41,16 @@ grep -q '^/swap/swapfile' /etc/fstab || echo "/swap/swapfile none swap defaults,
 swapon --show=NAME --noheadings | grep -q '^/swap/swapfile$' || swapon -p 0 /swap/swapfile
 
 step "Kernel resume parameters, applied to every Limine kernel entry"
+if ! command -v limine-update >/dev/null; then
+    echo "No Limine here: add resume=UUID=$ROOT_UUID resume_offset=$(btrfs inspect-internal map-swapfile -r /swap/swapfile) to your bootloader's kernel line yourself."
+else
 offset=$(btrfs inspect-internal map-swapfile -r /swap/swapfile)
 mkdir -p /etc/limine-entry-tool.d
 # Spaces on both ends: += concatenates with the cmdline from /etc/default/limine.
 echo "KERNEL_CMDLINE[default]+=\" resume=UUID=$ROOT_UUID resume_offset=$offset \"" \
   > /etc/limine-entry-tool.d/50-hibernate.conf
 limine-update
+fi
 
 step "Suspend-then-hibernate waits 60 min before hibernating"
 mkdir -p /etc/systemd/sleep.conf.d

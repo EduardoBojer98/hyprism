@@ -19,6 +19,9 @@ step "TEMPORARY: boot the LTS kernel by default"
 # shortcut: RTD3 is broken on kernel 7.3 with driver 615 (CachyOS/linux-cachyos#1053,
 # NVIDIA/open-gpu-kernel-modules#1489). Drop this step and restore BOOT_ORDER="*, *lts, ..." once a
 # 7.3 boot shows `suspended` in /sys/bus/pci/devices/0000:01:00.0/power/runtime_status.
+if ! command -v limine-update >/dev/null || ! pacman -Si linux-cachyos-lts >/dev/null 2>&1; then
+    echo "Skipped: needs CachyOS (linux-cachyos-lts) and Limine."
+else
 pacman -S --needed --noconfirm linux-cachyos-lts linux-cachyos-lts-nvidia-open linux-cachyos-lts-headers
 want='BOOT_ORDER="*lts, *, *fallback, Snapshots"'
 if ! grep -qxF "$want" /etc/default/limine; then
@@ -29,6 +32,7 @@ if ! grep -qxF "$want" /etc/default/limine; then
         echo "$want" >> /etc/default/limine
     fi
     limine-update
+fi
 fi
 
 step "Result (after the next reboot the dGPU should say 'suspended')"

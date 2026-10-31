@@ -1,0 +1,128 @@
+# Fedora Workstation 44: logical name (packages/manifest.txt) -> package(s), source.
+# Sources: repo = official Fedora repos (fedora + updates), copr:OWNER/PROJECT = COPR (dnf copr enable),
+# rpmfusion-free / rpmfusion-nonfree = RPM Fusion, vendor:URL = vendor .repo file, flatpak:APP-ID = Flathub,
+# none = not packaged (comment above says what to do instead). Several packages: comma-separated.
+# Checked with dnf repoquery in a fedora:latest (Fedora 44) container, and the Flathub API, on 2026-10-31.
+#
+# Hyprland is NOT in Fedora's own repos (Fedora 44). The whole ecosystem comes from copr:sdegler/hyprland
+# (solopasha/hyprland is abandoned: rawhide only, last build 0.51.1 in 2025-10). Versions there match Arch.
+# NVIDIA (host extras, hosts/flow-x13): rpmfusion-nonfree akmod-nvidia + xorg-x11-drv-nvidia-cuda
+# (595.58.03 in nonfree, 615.78.08 in nonfree-updates). Not installed by this file; see the host notes.
+#
+# name                   package(s)                         source
+git                      git                                repo
+stow                     stow                               repo
+curl                     curl                               repo
+jq                       jq                                 repo
+bsdtar                   bsdtar                             repo
+# Arch base-devel -> compiler, make, pkg-config and what hyprpm/plugin builds call (cmake, meson, ninja).
+# hyprland-devel (headers for plugins) is listed on the hyprland line.
+build-tools              gcc-c++,make,pkgconf-pkg-config,cmake,meson,ninja-build repo
+fish                     fish                               repo
+socat                    socat                              repo
+# hyprland 0.57.0-2.fc44 (same as Arch 0.57.0, built with Lua; Lua config needs 0.56+). hyprland-devel 0.57.0-2.
+hyprland                 hyprland,hyprland-devel            copr:sdegler/hyprland
+# xdg-desktop-portal-hyprland 1.5.0-1.fc44
+portal-hyprland          xdg-desktop-portal-hyprland        copr:sdegler/hyprland
+portal-gtk               xdg-desktop-portal-gtk             repo
+# hyprpolkitagent 0.2.0-1.fc44
+hyprpolkitagent          hyprpolkitagent                    copr:sdegler/hyprland
+# hyprlock 0.9.6-1.fc44
+hyprlock                 hyprlock                           copr:sdegler/hyprland
+# hypridle 0.1.8-1.fc44
+hypridle                 hypridle                           copr:sdegler/hyprland
+# hyprshutdown 0.1.1-3.fc44 (if it is ever missing, fallback: hyprctl dispatch exit)
+hyprshutdown             hyprshutdown                       copr:sdegler/hyprland
+# hyprpaper 0.8.4-3.fc44
+hyprpaper                hyprpaper                          copr:sdegler/hyprland
+# hyprsunset 0.4.0-2.fc44
+hyprsunset               hyprsunset                         copr:sdegler/hyprland
+# hyprpicker 0.4.7-2.fc44
+hyprpicker               hyprpicker                         copr:sdegler/hyprland
+qt6-wayland              qt6-qtwayland                      repo
+# quickshell 0.3.2-1.fc44 (Arch: 0.3.2). Fedora's own repo only has 0.2.1^git20260209: too old, use the COPR.
+quickshell               quickshell                         copr:errornointernet/quickshell
+pipewire                 pipewire,pipewire-utils            repo
+pipewire-pulse           pipewire-pulseaudio                repo
+wireplumber              wireplumber                        repo
+networkmanager           NetworkManager                     repo
+bluez                    bluez                              repo
+upower                   upower                             repo
+power-profiles           power-profiles-daemon              repo
+udisks2                  udisks2                            repo
+keyring                  kf6-kwallet,pam-kwallet            repo
+gtk3                     gtk3                               repo
+sound-theme              sound-theme-freedesktop            repo
+# Not packaged in Fedora 44 or in any COPR found. Alternative: maliit-keyboard (repo, 2.3.1) or no on-screen keyboard.
+squeekboard              none                               none
+fuzzel                   fuzzel                             repo
+pavucontrol              pavucontrol                        repo
+nm-connection-editor     nm-connection-editor               repo
+flameshot                flameshot                          repo
+grim                     grim                               repo
+slurp                    slurp                              repo
+wl-clipboard             wl-clipboard                       repo
+wtype                    wtype                              repo
+tesseract                tesseract                          repo
+tesseract-eng            tesseract-langpack-eng             repo
+libnotify                libnotify                          repo
+qalculate                libqalculate                       repo
+brightnessctl            brightnessctl                      repo
+playerctl                playerctl                          repo
+ddcutil                  ddcutil                            repo
+xdg-utils                xdg-utils                          repo
+glib2                    glib2                              repo
+kdialog                  kdialog                            repo
+fastfetch                fastfetch                          repo
+adw-gtk-theme            adw-gtk3-theme                     repo
+papirus-icons            papirus-icon-theme                 repo
+font-inter               rsms-inter-fonts                   repo
+font-cantarell           abattis-cantarell-fonts            repo
+font-noto                google-noto-sans-fonts             repo
+font-noto-emoji          google-noto-color-emoji-fonts      repo
+# No JetBrainsMono Nerd Font RPM (copr:che/nerd-fonts 3.5.1 only ships the Symbols Nerd Font).
+# Falls back to plain JetBrains Mono (no icons in the prompt). For icons: that COPR's nerd-fonts, or unpack JetBrainsMono.tar.xz from github.com/ryanoasis/nerd-fonts/releases into ~/.local/share/fonts.
+font-jetbrains-nerd      jetbrains-mono-fonts               repo
+# No Oreo cursor RPM in Fedora or COPR. Alternative: build/unpack from github.com/varlesh/oreo-cursors into ~/.local/share/icons (the repo's theme-add does this).
+oreo-cursors             none                               none
+# ghostty 1.4.0-1.fc44 (no ghostty in Fedora's own repo)
+ghostty                  ghostty                            copr:scottames/ghostty
+dolphin                  dolphin                            repo
+# google-chrome-stable 156.0.8078.79-1
+chrome                   google-chrome-stable               vendor:https://dl.google.com/linux/chrome/rpm/stable/x86_64
+okular                   okular                             repo
+gwenview                 gwenview                           repo
+micro                    micro                              repo
+# Flathub org.onlyoffice.desktopeditors 10.0.0 (ONLYOFFICE's own repo.onlyoffice.com .repo could not be fetched: not verified)
+onlyoffice               org.onlyoffice.desktopeditors      flatpak:org.onlyoffice.desktopeditors
+# Flathub com.bitwarden.desktop 2026.10.2 (no bitwarden RPM in Fedora)
+bitwarden                com.bitwarden.desktop              flatpak:com.bitwarden.desktop
+# Fedora's package is named gh (2.97.0)
+github-cli               gh                                 repo
+# Fedora ships moby-engine 29.8.2 (docker-ce 29.9.2 exists at download.docker.com/linux/fedora/docker-ce.repo if newer is wanted). Service: docker.service.
+docker                   moby-engine,docker-cli             repo
+# docker-compose 5.6.0 (Compose v2 as "docker compose" needs docker-compose; docker-compose-switch only adds a docker-compose shim)
+docker-compose           docker-compose                     repo
+python                   python3                            repo
+uv                       uv                                 repo
+php                      php                                repo
+composer                 composer                           repo
+# code 1.144.0 (packages.microsoft.com/yumrepos/vscode, key https://packages.microsoft.com/keys/microsoft.asc)
+vscode                   code                               vendor:https://packages.microsoft.com/yumrepos/vscode
+# starship 1.24.2-1.fc44 (not in Fedora's own repo)
+starship                 starship                           copr:atim/starship
+zoxide                   zoxide                             repo
+fd                       fd-find                            repo
+ripgrep                  ripgrep                            repo
+fzf                      fzf                                repo
+gitleaks                 gitleaks                           repo
+# Host extras (hosts/*/packages.txt)
+# asusctl 6.3.8-2.fc44 (also in this COPR: supergfxctl 5.2.7)
+asusctl                  asusctl                            copr:lukenukem/asus-linux
+# Same COPR, GUI is the subpackage asusctl-rog-gui 6.3.8-2.fc44
+rog-control-center       asusctl-rog-gui                    copr:lukenukem/asus-linux
+# Fedora's ollama 0.12.11-4 is built for AMD ROCm (requires hipblas/rocblas), not CUDA. Alternative: ollama's install script
+# (ollama.com/install.sh, bundles CUDA) with rpmfusion-nonfree xorg-x11-drv-nvidia-cuda, or the ollama/ollama docker image with the NVIDIA container toolkit.
+ollama-nvidia            none                               none
+# Flathub com.openwebui.open-webui 0.0.8 (exists; whether it is the same app as Arch's open-webui-desktop-bin is not verified)
+open-webui               com.openwebui.open-webui           flatpak:com.openwebui.open-webui
