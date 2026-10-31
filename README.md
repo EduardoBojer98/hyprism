@@ -1,6 +1,6 @@
 # linux-setup
 
-A macOS-style desktop for Arch-based Linux (built on CachyOS): **Hyprland** with a **Quickshell**
+A macOS-style desktop for **Arch/CachyOS and Fedora** (built on CachyOS): **Hyprland** with a **Quickshell**
 shell in frosted Graphite Glass style (dark by default, light in Settings). Everything is free software, and everything a user would
 want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
 install stays untouched and selectable at the login screen.
@@ -26,25 +26,47 @@ install stays untouched and selectable at the login screen.
 - Hardware extras that switch themselves on where the hardware exists: ASUS fan curves and charge
   limit (asusctl), keyboard light, a monitor shared with another computer (DDC/CI)
 
-## Install
+## Install (one command)
 
-Needs an Arch-based system (pacman) with a login screen that lists Wayland sessions.
+Needs Arch Linux, CachyOS (or another Arch-based distro) or Fedora 44+, a normal user with sudo, and
+a login screen that lists Wayland sessions. Clone it anywhere:
 
 ```bash
-git clone <this repo's URL> ~/linux-setup
+git clone https://github.com/EduardoBojer98/linux-setup.git ~/linux-setup
 cd ~/linux-setup
-./install.sh --dry-run     # see what would be linked and backed up
-./install.sh --system      # install packages (asks once, uses sudo), then link the dotfiles
+./install.sh --dry-run     # see everything it would do; changes nothing
+./install.sh               # do it (asks before system changes; safe to run again)
 ```
 
-Log out and pick **Hyprland** at the login screen. To only (re)link the dotfiles later: `./install.sh`.
-To remove everything: `./install.sh --undo` (puts your previous files back).
+Log out and pick **Hyprland** at the login screen. KDE Plasma (or whatever you had) stays selectable.
 
-| Step | What it does |
+| Step (in order) | What it does |
 |---|---|
-| `system/02-desktop.sh` | Hyprland, Quickshell and desktop packages (`packages/desktop.txt`), lid behaviour, Hyprland as default session on Plasma Login |
-| `system/03-apps.sh` | Shell tools and everyday apps (`packages/dev.txt`, `packages/apps.txt`): edit the lists first if you don't want them |
-| `system/hosts/<hostname>/` | Steps for one specific computer, run only on the computer with that hostname |
+| `packages` | installs `packages/manifest.txt` + the host's `packages.txt`, using `packages/<distro>.txt` for the real names (Arch: repos + AUR via paru/yay; Fedora: repos, COPR, RPM Fusion, vendor repos, Flathub) |
+| `nvidia` | offers the NVIDIA driver when there's an NVIDIA GPU without one |
+| `links` | links `config/<app>/` and `hosts/<host>/home/` into your home folder (GNU Stow, file by file); anything in the way is backed up to `~/.local/state/linux-setup/backups/` |
+| `services` | Bluetooth, NetworkManager, Docker; adds you to the `docker` group |
+| `session` | lid behaviour, Hyprland preselected on Plasma Login (asks) |
+| `host` | the host's `steps/NN-*.sh`, each shown and asked separately |
+| `post` | fisher + nvm.fish + Node LTS, `gh auth setup-git` |
+
+Options: `--yes` (no questions), `--host <name>`, `--only <steps or modules>` (e.g. `--only links`,
+`--only dev`), `--dry-run`. `./install.sh undo` removes the links and offers the last backup back.
+
+On Fedora, Hyprland 0.57 comes from the `sdegler/hyprland` COPR and Quickshell 0.3.2 from
+`errornointernet/quickshell` (Fedora's own Quickshell is too old). A few packages have no Fedora
+build (`squeekboard`, Oreo cursors, CUDA Ollama): `packages/fedora.txt` says what to do instead.
+
+## Keep it in sync: doctor
+
+```bash
+./install.sh doctor
+```
+
+Lists missing packages, configs that aren't linked or were changed locally, files in the managed
+folders that the repo doesn't know, services that are off, and uncommitted changes. Also in
+**Settings → System → About → Run doctor**. Fix with `./install.sh` (or `--only links`), or commit
+the change you made on purpose.
 
 First run: open **Settings** (`Super+I`) and set the weather city, wallpaper, keyboard layouts and
 displays. Your choices are saved on your computer only (see [docs/USER-GUIDE.md](docs/USER-GUIDE.md)).
@@ -62,6 +84,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `Super+I` | Settings |
 | `Super+Enter` / `Super+E` / `Super+B` | Terminal / files / browser |
 | `Super+.` | Emoji picker |
+| `Super+Ctrl+Space` | Next keyboard layout (US ↔ Serbian Latin) |
 | `Super+Q` / `Super+H` | Close / minimise window (restore from the dock) |
 | `Super+F` / `Super+Shift+F` / `Super+T` | Fullscreen / maximise / float |
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
@@ -78,19 +101,40 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 
 | Path | What |
 |---|---|
-| `home/<package>/` | GNU Stow packages mirroring `~`: `hypr`, `quickshell`, `ghostty`, `fish`, `starship`, `scripts`, … |
-| `home/quickshell/.config/quickshell/` | The shell; `ConfigData.qml` holds every default |
-| `home/hypr/.config/hypr/` | Hyprland Lua config; `modules/` shared, `hosts/<hostname>.lua` per computer |
-| `packages/*.txt`, `system/` | Package lists and system steps (`system/hosts/<hostname>/` per computer) |
-| `docs/USER-GUIDE.md` | Configuring, other computers, troubleshooting |
-| `docs/thermal-audit.md` | ROG Flow X13 temperatures and power modes: what each mode does, how to switch, how to undo |
-| `DESIGN.md` | Design system: tokens, components, rules |
+| `install.sh` | the one command (install, doctor, undo) |
+| `config/<app>/` | one folder per app, mirroring `~`: `hypr`, `quickshell`, `ghostty`, `fish`, `starship`, `fuzzel`, `scripts` (`~/.local/bin`), … |
+| `config/quickshell/.config/quickshell/` | the shell; `ConfigData.qml` holds every default, `Theme.qml` every colour |
+| `config/hypr/.config/hypr/` | Hyprland Lua config: `hyprland.lua` loads `modules/` (env, monitors, input, look, animations, binds, rules, autostart), then the host's `host.lua` |
+| `hosts/<name>/` | one computer: `host.conf` (hostnames), `packages.txt`, `home/` (linked), `defaults/` (copied once), `steps/` (system steps). `default/` fits any PC; `flow-x13/` is the ROG Flow X13 |
+| `packages/` | `manifest.txt` (logical name, module, why) and `arch.txt` / `fedora.txt` (real names and sources) |
+| `distros/` | `arch.sh`, `fedora.sh`: install packages, enable repos, NVIDIA driver |
+| `plugins/` | Hyprland plugin (title-bar minimise), built by `hypr-plugins` |
+| `docs/` | `USER-GUIDE.md`, `AUDIT.md`, `RECOMMENDATIONS.md`, `thermal-audit.md` |
+| `DESIGN.md` | design system: tokens, components, rules |
+
+### A new computer
+
+`cp -r hosts/default hosts/<name>`, put its hostname (`cat /etc/hostname`) in `hosts/<name>/host.conf`,
+add monitors or workspace rules to `home/.config/hypr/host.lua` and extra packages to `packages.txt`.
+Details: [hosts/README.md](hosts/README.md).
+
+### Another distro
+
+Add `distros/<id>.sh` (four functions) and `packages/<id>.txt` (every logical name mapped).
+Details: [distros/README.md](distros/README.md).
+
+### Changing common settings
+
+Almost everything is in **Settings** (`Super+I`): displays, theme, wallpaper, icons, cursor, gaps
+and borders, keyboard layouts, touchpad, shortcuts, default and startup apps, power and sleep.
+Settings writes to `~/.config` only (list in the user guide). Defaults live in `ConfigData.qml`,
+`config/hypr/.config/hypr/defaults/` and the Hyprland modules.
 
 ## Undo and recovery
 
 | What broke | Do this |
 |---|---|
-| Dotfiles | `./install.sh --undo` removes the links and offers to restore the last backup |
+| Dotfiles | `./install.sh undo` removes the links and offers to restore the last backup |
 | The Hyprland session | Pick another session at the login screen, or Ctrl+Alt+F3 and log in on a text console |
 | The shell (bar, dock) | `pkill -x qs; pkill -x quickshell; qs &` restarts it (exactly one copy); `qs log` shows errors |
 | A Settings choice | Delete its file from the user guide's table to go back to defaults; several pages also have **Reset to defaults** |
@@ -98,4 +142,5 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 ## Secrets
 
 Never in this repo: SSH/GPG keys, API keys, tokens, `.env` files. `.gitignore` blocks the common names
-and a gitleaks pre-commit hook (enabled by `install.sh`) scans every commit.
+and a gitleaks pre-commit hook (enabled by `install.sh`) scans every commit. Settings files never
+land in the repo folder (configs are linked file by file).

@@ -15,39 +15,44 @@ Everything you change in **Settings** (`Super+I`) is saved on your computer only
 | `~/.config/ghostty/theme.conf` | Terminal colours matching the Appearance theme (empty when "Terminal colours" is off) |
 | `~/.config/hypr/settings/hypridle.conf` | Power & Battery > Lock & Sleep |
 | `~/.config/hypr/settings/wallpaper` (a link to the image) | Appearance > Wallpaper |
+| `~/.config/fuzzel/theme.ini` | Emoji picker colours matching the Appearance theme |
+| `~/.config/autostart/*.desktop` | Startup Apps (the standard autostart folder: KDE uses the same entries) |
+| `~/.local/share/icons/` | Icons and Cursor > Add theme |
 
 A missing file means "use the defaults", so deleting one resets that part (`./install.sh` puts back
-the ones Hyprland needs). The defaults are in `home/quickshell/.config/quickshell/ConfigData.qml`,
-`home/hypr/.config/hypr/defaults/` and the Hyprland modules. To keep your
-own settings in your fork, remove the matching lines from `.gitignore`.
+the ones Hyprland needs). The defaults are in `config/quickshell/.config/quickshell/ConfigData.qml`,
+`config/hypr/.config/hypr/defaults/` and the Hyprland modules. Configs are linked file by file, so
+these settings files are real files in `~/.config`, never inside the repo folder.
 
 ## What you can change in Settings
 
 | Group | What's in it |
 |---|---|
 | **Display** | arrange screens, resolution and refresh rate, scale, rotation, adaptive sync, Night Light; Shared Monitor (input switch with the work PC) |
-| **Appearance** | light or dark, accent colour, glass, window border, corners, space around windows, text size, font, animations; Wallpaper (folders, slideshow); Icons |
+| **Appearance** | light or dark, accent colour, glass, window border, corners, space around windows, text size, font, animations; Wallpaper (folders, slideshow); Icons and Cursor (choose, size, add a downloaded theme) |
 | **Desktop** | Dock, Search & Launcher (Spotlight), Control Center, Notifications, Clipboard, Weather, Calendar |
 | **Input** | keyboard layouts, key repeat, touchpad and pointer; MX Master buttons (opens JuhRadial MX) |
 | **Sound** | output and input devices, volumes, per-app volume |
 | **Network & Bluetooth** | Wi-Fi, advanced network editor, Bluetooth devices |
 | **Power & Battery** | battery health, charge limit, power mode, what the lid does (shown only), Lock & Sleep timings, ASUS hardware |
 | **Keyboard Shortcuts** | click a shortcut's keys and press new ones; Esc cancels, taken combinations are refused, each can be turned off or reset |
-| **Default Apps**, **Startup Apps** | which app opens links, files and folders; what starts at login |
-| **System** | About this computer, Update from GitHub, Re-run the full install, Language & Region |
+| **Default Apps**, **Startup Apps** | which app opens links, files and folders; what starts at login (every entry in `~/.config/autostart`: switch on/off, remove, add any app) |
+| **System** | About this computer, Update from GitHub, Re-run the install, Run doctor, Language & Region |
 
-Everything applies right away except language (next login) and lid behaviour (a system file set by
-`system/02-desktop.sh`).
+Everything applies right away except language (next login) and lid behaviour (a system file set by the
+installer's `session` step).
 
 ## Another computer
 
-Things that differ between computers go in files named after the computer's hostname
-(`cat /etc/hostname`):
+Things that differ between computers go in `hosts/<name>/`; the installer picks the folder whose
+`host.conf` lists this computer's hostname (`cat /etc/hostname`), else `hosts/default/`, or the one
+you name with `--host`:
 
-- `home/hypr/.config/hypr/hosts/<hostname>.lua`: Hyprland overrides, loaded last (for example which
-  desktop starts on which screen). See `hosts/rog-flow-x13.lua`.
-- `system/hosts/<hostname>/NN-*.sh` (+ `packages.txt`): system steps for that computer only, run by
-  `./install.sh --system`. See `system/hosts/rog-flow-x13/` (ASUS tools, NVIDIA sleep, hibernation).
+- `home/.config/hypr/host.lua`: Hyprland overrides, loaded last (for example which desktop starts on
+  which screen). Linked like the other configs.
+- `packages.txt`: extra packages for that computer.
+- `steps/NN-*.sh`: system steps for that computer only, each asked before it runs. See
+  `hosts/flow-x13/` (ASUS tools, iGPU rendering, thermals, MX Master, power). Details: `hosts/README.md`.
 
 Hardware features detect themselves at start (`Machine.qml`):
 
