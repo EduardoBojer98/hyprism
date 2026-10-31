@@ -5,13 +5,12 @@ import QtQuick
 import QtQuick.Layouts
 
 // Small utility menu behind the system logo at the left end of the bar (also
-// `qs ipc call utilitymenu toggle`): this computer, quick tools, then power. Log out, Restart and
-// Shut down ask for a second click so a stray click can't end the session.
+// `qs ipc call utilitymenu toggle`): this computer, quick tools, then Power… which opens the
+// power menu (PowerMenu.qml).
 Singleton {
     id: root
 
     readonly property bool open: popup.open
-    property string confirming: ""     // label of the power action waiting for its second click
     property string host: ""
     property string uptime: ""
 
@@ -31,15 +30,6 @@ Singleton {
         { icon: "\u{F014C}", label: "Clipboard history",    act: () => { popup.hide(); Clipboard.toggle() } },
         { icon: "\u{F0785}", label: "Emoji",                act: () => root.run("emojipick", true) },
     ]
-    readonly property var power: [
-        { icon: "\u{F033E}", label: "Lock",      cmd: "loginctl lock-session" },
-        { icon: "\u{F04B2}", label: "Suspend",   cmd: "systemctl suspend" },
-        { icon: "\u{F0717}", label: "Hibernate", cmd: "systemctl hibernate" },
-        { icon: "\u{F0343}", label: "Log out",   cmd: "hyprshutdown", confirm: true },
-        { icon: "\u{F0709}", label: "Restart",   cmd: "systemctl reboot", confirm: true },
-        { icon: "\u{F0425}", label: "Shut down", cmd: "systemctl poweroff", confirm: true, danger: true },
-    ]
-
     IpcHandler {
         target: "utilitymenu"
         function toggle(): void { root.toggle() }
@@ -50,7 +40,6 @@ Singleton {
         command: ["sh", "-c", "uname -n; uptime -p | sed 's/^up //'"]
         stdout: StdioCollector { onStreamFinished: { const l = text.trim().split("\n"); root.host = l[0] ?? ""; root.uptime = l[1] ?? "" } }
     }
-    Timer { id: confirmReset; interval: 4000; onTriggered: root.confirming = "" }
 
     CursorPopup {
         id: popup
@@ -58,7 +47,7 @@ Singleton {
         placement: "topLeft"
         boxWidth: 236
         boxHeight: menu.implicitHeight + Theme.spaceS * 2
-        onOpened: { root.confirming = ""; info.running = true }
+        onOpened: info.running = true
 
         Glass {
             anchors.fill: parent
@@ -83,20 +72,7 @@ Singleton {
                     Row_ { required property var modelData; icon: modelData.icon; label: modelData.label; onClicked: modelData.act() }
                 }
                 Divider {}
-                Repeater {
-                    model: root.power
-                    Row_ {
-                        required property var modelData
-                        readonly property bool asking: root.confirming === modelData.label
-                        icon: modelData.icon
-                        label: asking ? `Click again to ${modelData.label.toLowerCase()}` : modelData.label
-                        danger: modelData.danger === true || asking
-                        onClicked: {
-                            if (modelData.confirm && !asking) { root.confirming = modelData.label; confirmReset.restart(); return }
-                            root.run(modelData.cmd, false)
-                        }
-                    }
-                }
+                Row_ { icon: "\u{F0425}"; label: "Power…"; onClicked: { popup.hide(); PowerMenu.show() } }
             }
         }
     }

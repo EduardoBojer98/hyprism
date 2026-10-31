@@ -558,7 +558,7 @@ Singleton {
             IconButton { glyph: "\u{F0100}"; label: "Screenshot"; onClicked: { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) } }
             IconButton { glyph: "\u{F0493}"; label: "Settings"; onClicked: { cc.hide(); SettingsApp.show("") } }
             IconButton { glyph: "\u{F033E}"; label: "Lock"; onClicked: { cc.hide(); Quickshell.execDetached(["loginctl", "lock-session"]) } }
-            IconButton { glyph: "\u{F0425}"; label: "Power"; onClicked: { cc.hide(); UtilityMenu.toggle() } }
+            IconButton { glyph: "\u{F0425}"; label: "Power"; onClicked: { cc.hide(); PowerMenu.show() } }
         }
 
         // ---- notifications: the history, grouped by app; a group folds into its newest card ----
