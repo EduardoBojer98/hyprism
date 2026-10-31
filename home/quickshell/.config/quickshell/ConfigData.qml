@@ -24,6 +24,8 @@ JsonAdapter {
         property int iconSize: 44
         property bool autoHide: true
         property bool showRunning: true
+        property bool thumbnails: true          // off: open windows show only their app icon
+        property int thumbRefresh: 60           // s between still pictures (live only while hovered)
         property list<string> pinned: ["firefox", "google-chrome", "com.microsoft.VSCode", "com.mitchellh.ghostty", "org.kde.dolphin"]
     }
     property JsonObject launcher: JsonObject {

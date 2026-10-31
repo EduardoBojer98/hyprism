@@ -41,7 +41,7 @@ Singleton {
             font: "string", animations: "bool", iconTheme: "string",
             border: ["rainbow", "accent"], borderSpin: [0, 100], borderSize: [1, 4], gaps: [0, 40]
         },
-        dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", pinned: "list" },
+        dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
                     placement: ["center", "cursor"], startView: ["home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",

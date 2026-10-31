@@ -73,6 +73,15 @@ PanelWindow {
     // window pictures started while the shell is still starting fail for good; start them a bit later
     property bool captureReady: false
     Timer { running: true; interval: 3000; onTriggered: dock.captureReady = true }
+    // live pictures make Hyprland copy every window each frame: only while the pointer is on the dock,
+    // otherwise a fresh still every dock.thumbRefresh seconds (and right away when the pointer leaves)
+    readonly property bool liveShots: shown && hover.hovered
+    signal snapshot()
+    Timer {
+        running: dock.shown && Config.dock.thumbnails && !dock.liveShots
+        interval: Config.dock.thumbRefresh * 1000; repeat: true; triggeredOnStart: true
+        onTriggered: dock.snapshot()
+    }
 
     // Shared tooltip: appears after a short pause, then follows the pointer between icons at once
     property Item tipItem: null
@@ -322,6 +331,14 @@ PanelWindow {
                     property bool retrying: false
                     // the capture breaks when the window changes workspace: start it again once it's back
                     onMinimisedChanged: if (!minimised) { retrying = true; retry.restart() }
+                    // a failed capture (window resized or just opened) is dropped without `stopped`: start it again
+                    Connections {
+                        target: dock
+                        function onSnapshot() {
+                            if (win.minimised) return
+                            if (shot.hasContent) shot.captureFrame(); else { win.retrying = true; retry.restart() }
+                        }
+                    }
 
                     width: dock.thumbWidth
                     height: dock.iconSize + 8
@@ -352,10 +369,12 @@ PanelWindow {
                             id: shot
                             anchors { fill: parent; margins: frame.border.width }
                             // only while the dock can be seen: each live picture costs a little GPU
-                            captureSource: dock.shown && dock.captureReady && !win.retrying ? win.modelData.wayland : null
-                            live: dock.shown && !win.minimised   // a minimised window keeps its last picture
+                            captureSource: dock.shown && Config.dock.thumbnails && dock.captureReady && !win.retrying ? win.modelData.wayland : null
+                            live: dock.liveShots && !win.minimised   // a minimised window keeps its last picture
                             // a capture can fail (e.g. right at login); start it again a moment later
                             onStopped: { win.retrying = true; retry.restart() }
+                            // Quickshell 0.3.2 never sends `stopped`: a lost picture (window resized) is the sign
+                            onHasContentChanged: if (!hasContent && captureSource) { win.retrying = true; retry.restart() }
                         }
                         Timer { id: retry; interval: 600; onTriggered: win.retrying = false }
                         IconImage {   // no picture (yet): the app's icon fills in

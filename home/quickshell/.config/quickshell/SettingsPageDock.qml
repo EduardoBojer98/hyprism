@@ -33,8 +33,41 @@ ColumnLayout {
         }
         SettingRow {
             label: "Show open windows"
-            hint: "Each window as its own live picture (its app icon until the picture is ready), right of the pinned apps"
+            hint: "Each window as its own tile, right of the pinned apps"
             ConfigToggle { section: "dock"; key: "showRunning" }
+        }
+        SettingRow {
+            visible: Config.dock.showRunning
+            label: "Window pictures"
+            hint: "A picture of each window, live while the pointer is on the dock. Off: just the app icon"
+            ConfigToggle { section: "dock"; key: "thumbnails" }
+        }
+        SettingRow {
+            id: refreshRow
+            readonly property var presets: [30, 60, 300, 900]
+            property bool custom: !presets.includes(Config.dock.thumbRefresh)
+            property string error: ""
+            visible: Config.dock.showRunning && Config.dock.thumbnails
+            label: "Refresh pictures"
+            hint: error !== "" ? error : "How often the pictures update while the pointer is elsewhere"
+            Choice {
+                options: ["30 s", "1 min", "5 min", "15 min", "Custom"]
+                index: refreshRow.custom ? 4 : refreshRow.presets.indexOf(Config.dock.thumbRefresh)
+                onPicked: i => {
+                    refreshRow.custom = i === 4
+                    if (i < 4) refreshRow.error = Config.set("dock", "thumbRefresh", refreshRow.presets[i])
+                }
+            }
+        }
+        SettingRow {
+            visible: refreshRow.visible && refreshRow.custom
+            label: "Every (seconds)"
+            hint: "10 to 86400, Enter to save"
+            TextField {
+                width: 96
+                text: Config.dock.thumbRefresh
+                onAccepted: refreshRow.error = Config.set("dock", "thumbRefresh", Math.round(Number(text)))
+            }
         }
     }
 
