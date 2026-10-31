@@ -21,7 +21,7 @@ Singleton {
     readonly property var allGroups: [
         { id: "display",    name: "Display",              glyph: "\u{F0379}", pages: ["displays", "monitor"] },
         { id: "appearance", name: "Appearance",           glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons"] },
-        { id: "desktop",    name: "Desktop",              glyph: "\u{F0349}", pages: ["dock", "launcher", "controlcenter", "notifications", "clipboard", "weather", "calendar"] },
+        { id: "desktop",    name: "Desktop",              glyph: "\u{F0349}", pages: ["bar", "dock", "hotcorners", "launcher", "controlcenter", "notifications", "clipboard", "weather", "calendar"] },
         { id: "input",      name: "Input",                glyph: "\u{F030C}", pages: ["input"] },
         { id: "sound",      name: "Sound",                glyph: "\u{F057E}", pages: ["sound"] },
         { id: "network",    name: "Network & Bluetooth",  glyph: "\u{F05A9}", pages: ["network", "bluetooth"] },
@@ -41,6 +41,8 @@ Singleton {
         { id: "appearance",    name: "Themes & Colours",    glyph: "\u{F03D8}" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
         { id: "dock",          name: "Dock",                glyph: "\u{F0379}" },
+        { id: "bar",           name: "Menu Bar",            glyph: "\u{F0E7F}" },
+        { id: "hotcorners",    name: "Hot Corners",         glyph: "\u{F0A1C}" },
         { id: "launcher",      name: "Search & Launcher",   glyph: "\u{F0349}" },
         { id: "clipboard",     name: "Clipboard",           glyph: "\u{F014C}" },
         { id: "controlcenter", name: "Control Center",      glyph: "\u{F0493}" },

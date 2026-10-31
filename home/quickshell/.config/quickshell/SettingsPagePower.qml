@@ -56,6 +56,25 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Low battery warning"
+        SettingRow {
+            label: "Warn me"
+            hint: "A notification while on battery; the critical one stays until you dismiss it"
+            ConfigToggle { section: "battery"; key: "warn" }
+        }
+        SettingRow {
+            visible: Config.battery.warn
+            label: "Low at"
+            ConfigChoice { section: "battery"; key: "warnAt"; values: [10, 15, 20, 30]; labels: ["10%", "15%", "20%", "30%"] }
+        }
+        SettingRow {
+            visible: Config.battery.warn
+            label: "Critical at"
+            ConfigChoice { section: "battery"; key: "criticalAt"; values: [3, 5, 8]; labels: ["3%", "5%", "8%"] }
+        }
+    }
+
+    SettingGroup {
         title: "Performance"
         SettingRow {
             label: "Power mode"

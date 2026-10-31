@@ -57,7 +57,10 @@ PanelWindow {
         }
     }
 
-    SystemClock { id: clock; precision: SystemClock.Minutes }
+    SystemClock { id: clock; precision: Config.bar.seconds ? SystemClock.Seconds : SystemClock.Minutes }
+    // Settings > Menu Bar: "Fri 30 Oct  14:40", "30 Oct  2:40:05 PM", ...
+    readonly property string clockFormat: ({ full: "ddd d MMM  ", short: "d MMM  ", none: "" })[Config.bar.date]
+        + (Config.bar.clock24 ? "HH:mm" : "h:mm") + (Config.bar.seconds ? ":ss" : "") + (Config.bar.clock24 ? "" : " AP")
 
     // frosted strip: Hyprland blurs what's behind it (layer rule blur-shell), a hairline closes it off
     Rectangle {
@@ -173,7 +176,7 @@ PanelWindow {
                         width: Math.min(implicitWidth, bar.width * 0.3)
                         elide: Text.ElideRight
                         text: app.title
-                        visible: app.title !== "" && app.title !== app.name
+                        visible: app.title !== "" && app.title !== app.name && Config.bar.windowTitle
                         color: Theme.subtext
                         font { family: Theme.font; pixelSize: 13 }
                     }
@@ -187,7 +190,7 @@ PanelWindow {
             spacing: 2
 
             BarItem {   // weather: opens the forecast
-                visible: Weather.ready
+                visible: Weather.ready && Config.bar.weather
                 active: Weather.open
                 onPressed: Weather.toggle()
                 spacing: 5
@@ -204,7 +207,7 @@ PanelWindow {
                 onPressed: Calendar.toggle()
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm")
+                    text: Qt.formatDateTime(clock.date, bar.clockFormat)
                     color: Theme.text
                     font { family: Theme.font; pixelSize: 13; weight: Font.Medium; features: { "tnum": 1 } }
                 }
@@ -240,6 +243,7 @@ PanelWindow {
             }
 
             BarItem { // temperatures (warm amber, hot red); click for the system dropdown
+                visible: Config.bar.temperatures
                 active: Sensors.open
                 onPressed: Sensors.toggle()
                 spacing: Theme.spaceS
@@ -270,7 +274,7 @@ PanelWindow {
             }
 
             BarItem { // keyboard layout as a small keycap; click for the list of layouts
-                visible: Keyboard.layouts.length > 1
+                visible: Keyboard.layouts.length > 1 && Config.bar.keyboard
                 active: Keyboard.open
                 onPressed: Keyboard.toggle()
                 onScrolled: d => Keyboard.use((Keyboard.active + (d > 0 ? 1 : Keyboard.layouts.length - 1)) % Keyboard.layouts.length)
@@ -329,6 +333,7 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 4
                     Text {
+                        visible: Config.bar.batteryPercent
                         anchors.verticalCenter: parent.verticalCenter
                         text: status.pct + "%"
                         color: status.low ? Theme.red : Theme.text

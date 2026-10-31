@@ -14,10 +14,12 @@ ShellRoot {
 
             Bar { screen: modelData }
             Dock { screen: modelData }
+            HotCorners { screen: modelData }
         }
     }
 
     Osd {}
+    BatteryWarning {}
     ThemeSync {}
     // Create the singletons with IPC handlers now, so `qs ipc call …` works before first use
     Component.onCompleted: { Machine.asus; Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = ""; Caffeine.minutes = 0; NightLight.now = new Date(); ControlCenter.expanded = ""; UtilityMenu.host; PowerMenu.open; Notifications.unread = 0; NotificationCenter.unfolded = ({}); MissionControl.selected = -1; Calendar.month = new Date(); Wallpapers.images }

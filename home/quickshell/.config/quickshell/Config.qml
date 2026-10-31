@@ -25,6 +25,9 @@ Singleton {
     readonly property alias startup: adapter.startup
     readonly property alias system: adapter.system
     readonly property alias wallpaper: adapter.wallpaper
+    readonly property alias bar: adapter.bar
+    readonly property alias battery: adapter.battery
+    readonly property alias hotCorners: adapter.hotCorners
     readonly property bool loaded: file.loaded
 
     // Allowed values; set() refuses anything else. Numbers are [min, max].
@@ -56,6 +59,10 @@ Singleton {
         system: { taskManager: "string" },
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"] },
+        bar: { clock24: "bool", seconds: "bool", date: ["full", "short", "none"], weather: "bool", temperatures: "bool",
+               keyboard: "bool", batteryPercent: "bool", windowTitle: "bool" },
+        battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
+        hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],
                    showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] }
     })

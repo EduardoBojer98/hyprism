@@ -105,6 +105,28 @@ JsonAdapter {
     property JsonObject startup: JsonObject {
         property list<string> apps: []           // desktop entry ids opened at login (startup-apps)
     }
+    property JsonObject bar: JsonObject {
+        property bool clock24: true
+        property bool seconds: false
+        property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
+        property bool weather: true
+        property bool temperatures: true
+        property bool keyboard: true             // the layout keycap (only shown with 2+ layouts)
+        property bool batteryPercent: true
+        property bool windowTitle: true          // the focused window's title after the app name
+    }
+    property JsonObject battery: JsonObject {
+        property bool warn: true                 // a notification when the battery runs low
+        property int warnAt: 15                  // %
+        property int criticalAt: 5               // %, a critical notification that stays
+    }
+    // what pushing the pointer into a screen corner does: HotCorners.actions ("" = nothing)
+    property JsonObject hotCorners: JsonObject {
+        property string topLeft: ""
+        property string topRight: ""
+        property string bottomLeft: ""
+        property string bottomRight: ""
+    }
     property JsonObject wallpaper: JsonObject {
         property list<string> folders: ["~/Pictures/Wallpapers"]
         property string current: ""             // full path; empty = whatever hypr/settings/wallpaper points at
