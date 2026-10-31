@@ -131,3 +131,17 @@ Installed (276 explicit, 3 AUR) but **not declared**, that the setup relies on o
 Not installed: `gnome-keyring` (secret service comes from **KWallet** — works for browsers in KDE,
 must be tested in Hyprland), `udiskie`, `cliphist` (clipboard history is the repo's own `clipstore`).
 Groups: user is in `docker`, `input`, `video`; not in `i2c`, but `ddcutil detect` works without it.
+
+## Decisions (2026-10-31)
+
+| Topic | Decision | Done |
+|---|---|---|
+| Terminal | Ghostty stays; Alacritty goes | `sudo pacman -Rns alacritty` (needs your password); `~/.config/alacritty/` can then be deleted |
+| Overheating fix (made earlier today, see `~/thermal-debug/report.md`) | Keep it, put it in the repo | `system/hosts/rog-flow-x13/30-thermal.sh`: firmware fan control in Balanced, `/etc/modprobe.d/nvidia-rtd3.conf` (0x02), **temporary** LTS kernel as default boot entry. Verified live: kernel 6.18.55-lts, dGPU `suspended`, "Runtime D3: Enabled (fine-grained)", both fan curves off. The script itself was not re-run (needs sudo; the system already has these settings). |
+| MX Master 4 | JuhRadial MX from github.com/JuhLabs/juhradial-mx | `system/hosts/rog-flow-x13/40-mx-master.user.sh` runs upstream's installer as your user (skips when installed; tested: skips). `install.sh --system` now runs `*.user.sh` steps without sudo. |
+| Layout switch key | None; the bar widget is enough | no change |
+| VS Code twice | Not a duplicate: `visual-studio-code-bin` *provides* `code`, only one package is installed | nothing to remove; `~/.config/Code - OSS` and `~/.vscode-oss*` are leftovers from an older OSS install |
+
+Watch: asusd's **AC profile is Performance** (`asusctl profile get`). The thermal load test hit 95 °C in
+Performance within 10 s. Right now the active profile is Balanced; if plugging in switches you to
+Performance, set the AC profile to Balanced in ROG Control Center or Settings > Power.
