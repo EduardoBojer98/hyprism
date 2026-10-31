@@ -156,7 +156,8 @@ links() {
     while IFS= read -r l; do
         t=$(readlink -f "$l" || true)
         if [[ ! -e $l ]] || { [[ -d $l && $t == "$REPO"/* ]]; }; then
-            [[ ! -e $l && $(readlink "$l") != *home/* ]] && continue   # someone else's dangling link: leave it
+            # a dangling link is ours if it points into this repo (or the old home/ layout); leave others alone
+            [[ ! -e $l && $(readlink "$l") != *home/* && $(readlink -m "$l") != "$REPO"/* ]] && continue
             say "Old link: ~/${l#"$HOME/"}"; run rm "$l"
         fi
     done < <(find "$HOME/.config" "$HOME/.local/bin" "$HOME/Pictures" -maxdepth 3 -type l 2>/dev/null)
@@ -297,7 +298,7 @@ doctor() {
     done < <(link_sources)
 
     # files in the managed folders that nothing in the repo provides (besides your Settings files)
-    local d
+    local d l
     for d in .config/hypr .config/hypr/modules .config/quickshell .config/ghostty .config/fuzzel; do
         [[ -d $HOME/$d ]] || continue
         for f in "$HOME/$d"/*; do
@@ -307,6 +308,9 @@ doctor() {
         done
     done
     [[ -L $HOME/.config/hypr || -L $HOME/.config/quickshell ]] && bad "old whole-folder links: run ./install.sh --only links"
+    while IFS= read -r l; do
+        [[ $(readlink -m "$l") == "$REPO"/* ]] && bad "dead link into the repo: ~/${l#"$HOME/"} (./install.sh --only links removes it)"
+    done < <(find "$HOME/.config" "$HOME/.local/bin" -maxdepth 4 -xtype l 2>/dev/null)
 
     local s
     if systemctl list-unit-files bluetooth.service >/dev/null 2>&1 && ! systemctl is-enabled -q bluetooth 2>/dev/null; then bad "service not enabled: bluetooth"; fi
