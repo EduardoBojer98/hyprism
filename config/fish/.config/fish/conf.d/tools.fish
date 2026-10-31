@@ -9,5 +9,8 @@ command -q zoxide; and zoxide init fish | source
 command -q fzf; and fzf --fish | source
 
 set -gx FZF_DEFAULT_COMMAND "fd --type f --hidden --exclude .git"
-set -gx FZF_DEFAULT_OPTS "--height 40% --layout reverse --border rounded \
---color=bg+:#363a4f,bg:-1,spinner:#f4dbd6,hl:#ed8796,fg:#cad3f5,header:#ed8796,info:#c6a0f6,pointer:#f4dbd6,marker:#b7bdf8,fg+:#cad3f5,prompt:#c6a0f6,hl+:#ed8796,border:#494d64"
+# Colours from the terminal palette, which follows Settings > Appearance (Ghostty theme.conf)
+set -gx FZF_DEFAULT_OPTS "--height 40% --layout reverse --border rounded --color=16"
+
+# Lando (installed by its own script into ~/.lando)
+test -d $HOME/.lando/bin; and fish_add_path -g $HOME/.lando/bin

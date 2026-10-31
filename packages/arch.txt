@@ -32,6 +32,7 @@ bluez                    bluez,bluez-utils                  repo
 upower                   upower                             repo
 power-profiles           power-profiles-daemon              repo
 udisks2                  udisks2                            repo
+udiskie                  udiskie                            repo
 keyring                  kwallet,kwallet-pam                repo
 gtk3                     gtk3                               repo
 sound-theme              sound-theme-freedesktop            repo

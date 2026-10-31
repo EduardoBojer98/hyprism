@@ -182,6 +182,7 @@ links() {
     run mkdir -p "$settings"
     for f in "$REPO"/config/hypr/.config/hypr/defaults/*.conf; do [[ -e $settings/$(basename "$f") ]] || run cp "$f" "$settings/"; done
     [[ -e $settings/wallpaper ]] || run ln -s "$HOME/Pictures/Wallpapers/glass-night.png" "$settings/wallpaper"
+    [[ -e $HOME/.config/fuzzel/theme.ini ]] || run cp "$REPO/config/fuzzel/.config/fuzzel/theme-default.ini" "$HOME/.config/fuzzel/theme.ini"
     if [[ -d $HOSTDIR/defaults ]]; then
         while IFS= read -r f; do
             rel=${f#"$HOSTDIR/defaults/"}
@@ -252,6 +253,8 @@ post() {
         say "fisher + nvm.fish, then the current Node LTS"
         run fish -c 'curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/4.4.5/functions/fisher.fish | source && fisher install jorgebucaran/fisher jorgebucaran/nvm.fish && nvm install lts'
     fi
+    # Git over HTTPS uses gh's login (the token lives in the keyring once you're signed in with gh)
+    command -v gh >/dev/null && gh auth status >/dev/null 2>&1 && ! git config --global --get-all credential.https://github.com.helper | grep -q gh && run gh auth setup-git
     command -v lando >/dev/null || say "Lando isn't packaged: install it from https://docs.lando.dev/install/linux.html if you need it."
     return 0
 }

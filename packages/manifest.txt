@@ -35,6 +35,7 @@ bluez                    desktop   Bluetooth; the shell's Bluetooth controls tal
 upower                   desktop   battery level and health in the shell
 power-profiles           desktop   power modes on computers without asusctl
 udisks2                  desktop   mounting USB drives from the file manager
+udiskie                  desktop   mounts USB drives as soon as they're plugged in, with a notification
 keyring                  desktop   Secret Service (browser and Git passwords) with KDE Wallet, unlocked at login
 gtk3                     desktop   gtk-launch: Super+B opens your default browser
 sound-theme              desktop   notification sounds to choose from in Settings > Notifications

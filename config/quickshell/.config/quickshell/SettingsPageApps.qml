@@ -63,7 +63,7 @@ ColumnLayout {
         SettingRow {
             label: "Opens from the temperatures in the bar and Ctrl+Shift+Esc"
             hint: Sensors.taskManagers.some(id => DesktopEntries.byId(id)) && !DesktopEntries.byId("io.missioncenter.MissionCenter")
-                  ? "Mission Center looks most like Windows Task Manager: sudo pacman -S mission-center" : ""
+                  ? "Mission Center looks most like Windows Task Manager (install mission-center from your package manager or Flathub)" : ""
             Dropdown {
                 width: 240
                 readonly property var installed: Sensors.taskManagers.map(id => DesktopEntries.byId(id)).filter(e => e)

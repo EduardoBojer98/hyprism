@@ -66,8 +66,13 @@ ColumnLayout {
         }
         SettingRow {
             label: "Re-run the full install"
-            hint: "Packages and system settings too; asks for your password"
-            PillButton { enabled: !!page.info.repo; text: "Run"; onClicked: page.inTerminal("./install.sh --system") }
+            hint: "Packages and system settings too; asks before each change and for your password"
+            PillButton { enabled: !!page.info.repo; text: "Run"; onClicked: page.inTerminal("./install.sh") }
+        }
+        SettingRow {
+            label: "Check this computer"
+            hint: "Lists missing packages, unlinked or changed configs and services that are off; changes nothing"
+            PillButton { enabled: !!page.info.repo; text: "Run doctor"; onClicked: page.inTerminal("./install.sh doctor") }
         }
     }
     function inTerminal(cmd) {

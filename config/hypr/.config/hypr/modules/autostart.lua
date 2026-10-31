@@ -12,6 +12,7 @@ hl.on("hyprland.start", function()
         .. " && gsettings set org.gnome.desktop.interface font-name 'Inter 11'"
         .. " && gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrainsMono Nerd Font 11'")
     hl.exec_cmd("hypridle -c ~/.config/hypr/settings/hypridle.conf") -- lock / screen off / sleep (Settings > Lock & Sleep)
+    hl.exec_cmd("command -v udiskie >/dev/null && udiskie --automount --notify --no-tray")  -- USB drives mount when plugged in
     hl.exec_cmd("wl-paste --watch clipstore store")         -- clipboard history (Super+V), ~/.local/bin/clipstore
     hl.exec_cmd("[ -f ~/.config/monswitch.conf ] && monswitch watch")                          -- follows Acer input switches made on the monitor
     -- Give user services this session's display and Hyprland socket, then restart the ones that

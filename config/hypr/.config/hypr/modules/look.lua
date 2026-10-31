@@ -1,13 +1,16 @@
 -- Smoked glass: white hairline rims, strong blur behind translucent surfaces, soft shadows.
-local c = require("modules.colors")
 -- Accent, corner radius and gaps come from the shell's Appearance settings (Quickshell ThemeSync
 -- writes settings/theme.lua and calls apply_theme() live). Defaults until it has run once.
 local ok, saved = pcall(require, "settings.theme")
 THEME = ok and saved or {}
-local defaults = { accent = c.blue, rounding = 12, border = "rainbow", border_spin = 60, border_size = 2, gaps = 10 }
+local defaults = { accent = "5b9cff",   -- Midnight's accent; Settings > Appearance saves your own
+                   rounding = 12, border = "rainbow", border_spin = 60, border_size = 2, gaps = 10 }
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 
--- Catppuccin colours around the wheel, ending where it starts so the turn has no seam
+-- Catppuccin Macchiato hues around the wheel (the only colours not taken from the shell's theme),
+-- ending where they start so the turn has no seam
+local c = { red = "ed8796", peach = "f5a97f", yellow = "eed49f", green = "a6da95", teal = "8bd5ca",
+            sapphire = "7dc4e4", mauve = "c6a0f6", pink = "f5bde6" }
 local RAINBOW = {}
 for _, name in ipairs({ "red", "peach", "yellow", "green", "teal", "sapphire", "mauve", "pink", "red" }) do
     RAINBOW[#RAINBOW + 1] = "rgba(" .. c[name] .. "ff)"
@@ -15,7 +18,7 @@ end
 
 function apply_theme()
     local active = THEME.border == "rainbow" and { colors = RAINBOW, angle = 0 }
-        or { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. c.lavender .. "99)" }, angle = 135 }
+        or { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. THEME.accent .. "66)" }, angle = 135 }
     hl.config({
         general = { border_size = THEME.border_size, gaps_in = THEME.gaps // 2, gaps_out = THEME.gaps, col = { active_border = active } },
         decoration = { rounding = THEME.rounding },

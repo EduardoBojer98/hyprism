@@ -4,7 +4,7 @@ import QtQuick
 // Carries the shell's design tokens to the parts of the desktop Quickshell can't draw:
 // Hyprland window borders (accent or rotating rainbow, width) and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
 // the lock screen (hypr/settings/hyprlock-theme.conf, read at next lock), and GTK (gsettings light/dark,
-// accent, icon and cursor theme) and Ghostty (ghostty/theme.conf: the theme's terminal colours, reloaded live).
+// accent, icon and cursor theme), fuzzel (fuzzel/theme.ini) and Ghostty (ghostty/theme.conf: the theme's terminal colours, reloaded live).
 // Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
 Scope {
@@ -47,6 +47,10 @@ Scope {
                 + "; gsettings set org.gnome.desktop.interface cursor-size " + cursorSize : "")])
         // live for Hyprland and apps started from now on; env.lua reads theme.lua at the next login
         if (cursorTheme) Quickshell.execDetached(["hyprctl", "setcursor", cursorTheme, String(cursorSize)])
+        const hex = c => c.toString().slice(1, 7)
+        Quickshell.execDetached(["sh", "-c", "mkdir -p \"$HOME/.config/fuzzel\"; cat > \"$HOME/.config/fuzzel/theme.ini\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from Settings > Appearance\n[colors]\n"
+            + `background=${hex(Theme.base)}f2\ntext=${hex(Theme.text)}ff\ninput=${hex(Theme.text)}ff\nprompt=${accentHex}ff\nmatch=${accentHex}ff\n`
+            + `selection=${accentHex}55\nselection-text=${hex(Theme.text)}ff\nselection-match=${hex(Theme.text)}ff\nborder=${accentHex}ff\nQS_EOF`])
         Quickshell.execDetached(["sh", "-c", "cat > \"$HOME/.config/ghostty/theme.conf\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from Settings > Appearance (empty: the config's own theme)\n"
             + terminal + "\nQS_EOF\npkill -USR2 -x ghostty || true"])   // SIGUSR2 = reload config
     }
