@@ -24,6 +24,7 @@ Singleton {
     readonly property bool open: popup.open
     property string expanded: ""     // "", "wifi", "bt", "caffeine", "out", "in"
     property var passwordFor: null   // Wi-Fi network waiting for a password
+    property string wifiFailed: ""   // name of the network that just failed to connect
     property real brightness: 0
     property int kbdLight: 0           // 0-3
     property date now: new Date()
@@ -38,7 +39,25 @@ Singleton {
     readonly property int pad: 10         // panel padding
 
 
-    PwObjectTracker { objects: [cc.sink, cc.source] }
+    readonly property var streams: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream)   // apps playing
+    PwObjectTracker { objects: [cc.sink, cc.source].concat(cc.streams) }
+
+    // icon and kind for an audio device / a Bluetooth device's icon name
+    function audioGlyph(n) {
+        const d = n?.description ?? ""
+        if (/HDMI|DisplayPort|\bDP\b/.test(d)) return "\u{F0379}"
+        if (n?.name?.startsWith("bluez") || /Headphone|Headset/i.test(d)) return "\u{F02CB}"
+        return "\u{F04C3}"
+    }
+    function audioKind(n) {
+        const d = n?.description ?? "", name = n?.name ?? ""
+        return name.startsWith("bluez") ? "Bluetooth" : /HDMI|DisplayPort|\bDP\b/.test(d) ? "Screen (HDMI / DisplayPort)"
+             : name.includes("usb") ? "USB" : /Analog/.test(d) ? "Built-in" : ""
+    }
+    function btGlyph(icon) {
+        return ({ "audio-headset": "\u{F02CE}", "audio-headphones": "\u{F02CB}", "audio-card": "\u{F04C3}", "input-mouse": "\u{F037D}",
+                  "input-keyboard": "\u{F030C}", "input-gaming": "\u{F0297}", "phone": "\u{F011C}", "computer": "\u{F0322}" })[icon] ?? "\u{F00AF}"
+    }
 
     function toggle() { popup.toggle() }
     // the bell / Super+N: open (or close) scrolled down to the notifications
@@ -55,6 +74,8 @@ Singleton {
     IpcHandler {
         target: "controlcenter"
         function toggle(): void { cc.toggle() }
+        // open with a dropdown showing: wifi, bt, caffeine, out (sound), in (microphone)
+        function expand(name: string): void { if (!popup.open) popup.show(); cc.expanded = name }
     }
 
     Connections {
@@ -95,7 +116,7 @@ Singleton {
         if (/Analog/.test(d) && /Controller/.test(d)) return n.type === PwNodeType.AudioSink ? "Built-in speakers" : "Built-in microphone"
         return d || nick || n?.name || ""
     }
-    function toggleExpanded(name) { expanded = expanded === name ? "" : name; passwordFor = null }
+    function toggleExpanded(name) { expanded = expanded === name ? "" : name; passwordFor = null; wifiFailed = "" }
     function setKbd(level) {
         kbdLight = level
         Quickshell.execDetached(["brightnessctl", "-q", "-d", Machine.kbdDevice, "set", String(level)])
@@ -170,86 +191,67 @@ Singleton {
             }
         }
 
-        // ---- Wi-Fi and Bluetooth lists, under their tiles --------------------------------------
-        Module {
+        // ---- Wi-Fi and Bluetooth dropdowns, under their tiles ----------------------------------
+        Drop {
+            id: wifiDrop
             visible: cc.expanded === "wifi"
-            title: "Wi-Fi networks"
-            expandable: true; isExpanded: true
-            onDetailClicked: cc.toggleExpanded("wifi")
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 0
-                Repeater {
-                    model: cc.wifi ? [...cc.wifi.networks.values].sort((a, b) => b.connected - a.connected || b.signalStrength - a.signalStrength).slice(0, 8) : []
-                    ListRow {
-                        required property var modelData
-                        glyph: modelData.signalStrength > 0.66 ? "\u{F0928}" : modelData.signalStrength > 0.33 ? "\u{F0925}" : "\u{F091F}"
-                        title: modelData.name
-                        trailing: modelData.connected ? "\u{F012C}" : (modelData.security !== WifiSecurityType.Open && !modelData.known) ? "\u{F033E}" : ""
-                        selected: modelData.connected
-                        onClicked: {
-                            if (modelData.connected) modelData.disconnect()
-                            else if (modelData.known || modelData.security === WifiSecurityType.Open) modelData.connect()
-                            else cc.passwordFor = modelData
-                        }
-                    }
-                }
-                Rectangle {
-                    visible: cc.passwordFor !== null
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 34
-                    Layout.topMargin: 6
-                    radius: Theme.radiusSmall
-                    color: Theme.fill
-                    border { color: psk.activeFocus ? Theme.accent : Theme.stroke; width: 1 }
-                    TextInput {
-                        id: psk
-                        anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
-                        verticalAlignment: TextInput.AlignVCenter
-                        echoMode: TextInput.Password
-                        color: Theme.text
-                        font { family: Theme.font; pixelSize: Theme.fontSize }
-                        focus: parent.visible
-                        onAccepted: { cc.passwordFor.connectWithPsk(text); text = ""; cc.passwordFor = null }
-                        Keys.onEscapePressed: cc.passwordFor = null
-                        Text {
-                            visible: !psk.text
-                            width: parent.width
-                            elide: Text.ElideRight
-                            text: "Password for " + (cc.passwordFor?.name ?? "") + " — Enter to join"
-                            color: Theme.muted
-                            font: psk.font
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
-                Empty { shown: !cc.wifi || cc.wifi.networks.values.length === 0; text: Networking.wifiEnabled ? "Looking for networks…" : "Wi-Fi is off" }
+            title: "Wi-Fi"
+            switchOn: Networking.wifiEnabled
+            onSwitched: Networking.wifiEnabled = !Networking.wifiEnabled
+            settingsLabel: "Network Settings…"
+            settingsPage: "network"
+
+            // one row per name (the strongest access point), known networks first
+            readonly property var nets: {
+                const best = {}
+                for (const n of cc.wifi?.networks.values ?? []) if (n.name && (!best[n.name] || n.connected || n.signalStrength > best[n.name].signalStrength)) best[n.name] = n
+                return Object.values(best).sort((a, b) => b.connected - a.connected || b.signalStrength - a.signalStrength)
+            }
+            readonly property var known: nets.filter(n => n.known || n.connected)
+            readonly property var others: nets.filter(n => !n.known && !n.connected).slice(0, 6)
+
+            SectionLabel { visible: wifiDrop.known.length > 0 && Networking.wifiEnabled; text: "Known networks" }
+            Repeater { model: Networking.wifiEnabled ? wifiDrop.known : []; WifiRow {} }
+            SectionLabel { visible: wifiDrop.others.length > 0 && Networking.wifiEnabled; text: "Other networks" }
+            Repeater { model: Networking.wifiEnabled ? wifiDrop.others : []; WifiRow {} }
+            Empty {
+                shown: !Networking.wifiEnabled || wifiDrop.nets.length === 0
+                text: !Networking.wifiEnabled ? "Wi-Fi is off." : "Looking for networks…"
             }
         }
 
-        Module {
+        Drop {
+            id: btDrop
             visible: cc.expanded === "bt"
-            title: "Bluetooth devices"
-            expandable: true; isExpanded: true
-            onDetailClicked: cc.toggleExpanded("bt")
-            ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 0
-                Repeater {
-                    model: (cc.adapter?.devices.values ?? []).filter(d => d.paired || d.connected).sort((a, b) => b.connected - a.connected)
-                    ListRow {
-                        required property var modelData
-                        glyph: "\u{F00AF}"
-                        title: modelData.name + (modelData.batteryAvailable ? "  ·  " + Math.round(modelData.battery * 100) + "%" : "")
-                        trailing: modelData.connected ? "\u{F012C}" : ""
-                        selected: modelData.connected
-                        onClicked: modelData.connected ? modelData.disconnect() : modelData.connect()
-                    }
+            title: "Bluetooth"
+            switchOn: cc.adapter?.enabled ?? false
+            onSwitched: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
+            settingsLabel: "Bluetooth Settings…"
+            settingsPage: "bluetooth"
+
+            readonly property var devices: (cc.adapter?.devices.values ?? []).filter(d => d.paired || d.connected)
+                .sort((a, b) => b.connected - a.connected || a.name.localeCompare(b.name))
+
+            SectionLabel { visible: btDrop.devices.length > 0 && (cc.adapter?.enabled ?? false); text: "My devices" }
+            Repeater {
+                model: cc.adapter?.enabled ? btDrop.devices : []
+                DeviceRow {
+                    required property var modelData
+                    readonly property bool busy: modelData.state === BluetoothDeviceState.Connecting || modelData.state === BluetoothDeviceState.Disconnecting
+                    glyph: cc.btGlyph(modelData.icon)
+                    title: modelData.name
+                    subtitle: modelData.state === BluetoothDeviceState.Connecting ? "Connecting…"
+                            : modelData.state === BluetoothDeviceState.Disconnecting ? "Disconnecting…"
+                            : modelData.connected ? "Connected" + (modelData.batteryAvailable ? `  ·  ${Math.round(modelData.battery * 100)}% battery` : "")
+                            : "Not connected"
+                    selected: modelData.connected
+                    action: busy ? "" : modelData.connected ? "Disconnect" : "Connect"
+                    onClicked: if (!busy) modelData.connected ? modelData.disconnect() : modelData.connect()
                 }
-                Empty {
-                    shown: (cc.adapter?.devices.values ?? []).filter(d => d.paired || d.connected).length === 0
-                    text: "No paired devices. Pair new ones in Settings > Bluetooth."
-                }
+            }
+            Empty {
+                shown: !(cc.adapter?.enabled ?? false) || btDrop.devices.length === 0
+                text: !cc.adapter ? "No Bluetooth adapter." : !cc.adapter.enabled ? "Bluetooth is off." : "No paired devices yet. Pair one in Bluetooth Settings."
             }
         }
 
@@ -297,24 +299,31 @@ Singleton {
             }
         }
 
-        Module {
+        Drop {
             visible: cc.expanded === "caffeine"
-            title: "Keep awake for"
-            expandable: true; isExpanded: true
-            onDetailClicked: cc.toggleExpanded("caffeine")
-            Flow {
+            title: "Caffeine"
+            switchOn: Caffeine.active
+            onSwitched: Caffeine.toggle()
+            settingsLabel: "Lock & Sleep Settings…"
+            settingsPage: "idle"
+
+            Text {
                 Layout.fillWidth: true
-                spacing: Theme.spaceS
-                Repeater {
-                    model: Caffeine.choices
-                    Chip {
-                        required property int modelData
-                        label: Caffeine.label(modelData)
-                        active: Caffeine.active && Caffeine.minutes === modelData
-                        onClicked: { Caffeine.start(modelData); cc.now = new Date() }
-                    }
-                }
-                Chip { label: "Turn off"; visible: Caffeine.active; onClicked: Caffeine.stop() }
+                Layout.leftMargin: 6
+                Layout.rightMargin: 6
+                Layout.bottomMargin: 2
+                wrapMode: Text.Wrap
+                text: !Caffeine.active ? "Keeps the screen on and stops sleep. Stays on after a restart until you turn it off."
+                    : Caffeine.endsAt === 0 ? "Keeping the screen on until you turn it off."
+                    : "Keeping the screen on until " + Qt.formatTime(new Date(Caffeine.endsAt), "HH:mm") + "  ·  " + Caffeine.remaining(cc.now.getTime())
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
+            SectionLabel { text: Caffeine.active ? "Change to" : "Turn on for" }
+            Segmented {
+                options: Caffeine.choices.map(m => m === 0 ? "Always" : Caffeine.label(m))
+                current: Caffeine.active ? Caffeine.choices.indexOf(Caffeine.minutes) : -1
+                onPicked: i => { Caffeine.start(Caffeine.choices[i]); cc.now = new Date() }
             }
         }
 
@@ -460,18 +469,47 @@ Singleton {
                 ColumnLayout {
                     visible: cc.expanded === "out"
                     Layout.fillWidth: true
-                    spacing: 0
+                    spacing: 2
+                    SectionLabel { text: "Play sound through" }
                     Repeater {
                         model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
-                        ListRow {
+                        DeviceRow {
                             required property var modelData
-                            glyph: "\u{F04C3}"
+                            glyph: cc.audioGlyph(modelData)
                             title: cc.nodeName(modelData)
+                            subtitle: cc.audioKind(modelData)
                             selected: modelData === cc.sink
-                            trailing: selected ? "\u{F012C}" : ""
                             onClicked: Pipewire.preferredDefaultAudioSink = modelData
                         }
                     }
+                    SectionLabel { visible: cc.streams.length > 0; text: "Apps" }
+                    Repeater {
+                        model: cc.streams
+                        ColumnLayout {
+                            id: app
+                            required property var modelData
+                            Layout.fillWidth: true
+                            Layout.leftMargin: 6
+                            Layout.rightMargin: 6
+                            Layout.bottomMargin: 4
+                            spacing: 4
+                            Text {
+                                Layout.fillWidth: true
+                                text: app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name
+                                elide: Text.ElideRight
+                                color: Theme.subtext
+                                font { family: Theme.font; pixelSize: Theme.fontCaption }
+                            }
+                            Bar {
+                                icon: app.modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
+                                hint: app.modelData.audio?.muted ? "Unmute" : "Mute"
+                                value: app.modelData.audio?.muted ? 0 : (app.modelData.audio?.volume ?? 0)
+                                onMoved: v => { if (app.modelData.audio) { app.modelData.audio.muted = false; app.modelData.audio.volume = v } }
+                                onIconClicked: if (app.modelData.audio) app.modelData.audio.muted = !app.modelData.audio.muted
+                            }
+                        }
+                    }
+                    SettingsLink { label: "Sound Settings…"; page: "sound" }
                 }
 
                 SliderHead {
@@ -490,18 +528,20 @@ Singleton {
                 ColumnLayout {
                     visible: cc.expanded === "in"
                     Layout.fillWidth: true
-                    spacing: 0
+                    spacing: 2
+                    SectionLabel { text: "Record from" }
                     Repeater {
                         model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
-                        ListRow {
+                        DeviceRow {
                             required property var modelData
-                            glyph: "\u{F036C}"
+                            glyph: modelData.name.startsWith("bluez") ? "\u{F02CE}" : "\u{F036C}"
                             title: cc.nodeName(modelData)
+                            subtitle: cc.audioKind(modelData)
                             selected: modelData === cc.source
-                            trailing: selected ? "\u{F012C}" : ""
                             onClicked: Pipewire.preferredDefaultAudioSource = modelData
                         }
                     }
+                    SettingsLink { label: "Sound Settings…"; page: "sound" }
                 }
             }
         }
@@ -651,6 +691,261 @@ Singleton {
     }
 
     // ---- building blocks -----------------------------------------------------------------------
+
+    // A dropdown under its tile: title with an on/off switch, the content, then a link to Settings
+    component Drop: Rectangle {
+        id: drop
+        property string title
+        property bool switchOn: false
+        property bool hasSwitch: true
+        property string settingsLabel
+        property string settingsPage
+        default property alias body: dropBody.data
+        signal switched()
+
+        Layout.fillWidth: true
+        Layout.preferredHeight: dropCol.implicitHeight + 16
+        radius: Theme.radius
+        color: Theme.fill
+        border { color: Theme.stroke; width: 1 }
+
+        ColumnLayout {
+            id: dropCol
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 8 }
+            spacing: 4
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.leftMargin: 6
+                Layout.rightMargin: 4
+                Layout.topMargin: 2
+                Layout.bottomMargin: 2
+                Text {
+                    Layout.fillWidth: true
+                    text: drop.title
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold }
+                }
+                Toggle { visible: drop.hasSwitch; checked: drop.switchOn; onToggled: drop.switched() }
+            }
+            ColumnLayout { id: dropBody; Layout.fillWidth: true; spacing: 2 }
+            SettingsLink { visible: drop.settingsLabel !== ""; label: drop.settingsLabel; page: drop.settingsPage }
+        }
+    }
+
+    // Small heading inside a dropdown ("Known networks", "Apps")
+    component SectionLabel: Text {
+        Layout.fillWidth: true
+        Layout.leftMargin: 6
+        Layout.topMargin: 6
+        Layout.bottomMargin: 2
+        color: Theme.muted
+        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+    }
+
+    // A hairline, then "X Settings…" that opens that Settings page
+    component SettingsLink: ColumnLayout {
+        id: link
+        property string label
+        property string page
+        Layout.fillWidth: true
+        Layout.topMargin: 4
+        spacing: 4
+        Rectangle { Layout.fillWidth: true; Layout.leftMargin: 6; Layout.rightMargin: 6; implicitHeight: 1; color: Theme.stroke }
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 30
+            radius: Theme.radiusSmall
+            color: linkArea.containsMouse ? Theme.fillHover : "transparent"
+            Text {
+                anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
+                text: link.label
+                color: Theme.text
+                font { family: Theme.font; pixelSize: Theme.fontLabel }
+            }
+            MouseArea { id: linkArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { cc.hide(); SettingsApp.show(link.page) } }
+        }
+    }
+
+    // A device or network: round icon (accent when in use), name, status line, and on hover what a
+    // click does ("Connect", "Disconnect"); a check mark marks the one in use
+    component DeviceRow: Rectangle {
+        id: dr
+        property string glyph
+        property string title
+        property string subtitle
+        property string trailingGlyph       // e.g. a lock on secured networks
+        property string action              // shown on hover
+        property bool selected: false
+        property bool warn: false
+        signal clicked()
+
+        Layout.fillWidth: true
+        implicitHeight: subtitle !== "" ? 44 : 36
+        radius: Theme.radiusSmall
+        color: drArea.containsMouse ? Theme.fillHover : "transparent"
+        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+        Rectangle {
+            id: badge
+            anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
+            width: 28; height: 28; radius: 14
+            color: dr.selected ? Theme.accent : Theme.fillHover
+            Behavior on color { ColorAnimation { duration: Theme.anim } }
+            Text {
+                anchors.centerIn: parent
+                text: dr.glyph
+                color: dr.selected ? Theme.accentText : Theme.text
+                font { family: Theme.iconFont; pixelSize: 14 }
+            }
+        }
+        Column {
+            anchors { left: badge.right; leftMargin: 10; right: tail.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            spacing: 1
+            Text {
+                width: parent.width
+                text: dr.title
+                elide: Text.ElideRight
+                color: Theme.text
+                font { family: Theme.font; pixelSize: Theme.fontSize; weight: dr.selected ? Font.DemiBold : Font.Normal }
+            }
+            Text {
+                visible: dr.subtitle !== ""
+                width: parent.width
+                text: dr.subtitle
+                elide: Text.ElideRight
+                color: dr.warn ? Theme.warning : Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
+        }
+        Item {
+            id: tail
+            anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
+            width: Math.max(actionPill.visible ? actionPill.width : 0, tailGlyph.visible ? tailGlyph.implicitWidth : 0)
+            height: 22
+            Rectangle {
+                id: actionPill
+                visible: drArea.containsMouse && dr.action !== ""
+                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                width: actionText.implicitWidth + 16; height: 22; radius: 11
+                color: Theme.fillActive
+                Text { id: actionText; anchors.centerIn: parent; text: dr.action; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
+            }
+            Text {
+                id: tailGlyph
+                visible: !actionPill.visible && text !== ""
+                anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                text: dr.selected ? "\u{F012C}" : dr.trailingGlyph
+                color: dr.selected ? Theme.accent : Theme.muted
+                font { family: Theme.iconFont; pixelSize: 14 }
+            }
+        }
+        MouseArea { id: drArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dr.clicked() }
+    }
+
+    // A Wi-Fi network row; a secured network you haven't joined asks for its password right under it
+    component WifiRow: ColumnLayout {
+        id: wr
+        required property var modelData
+        readonly property bool secured: modelData.security !== WifiSecurityType.Open
+        readonly property bool failed: cc.wifiFailed === modelData.name
+        Layout.fillWidth: true
+        spacing: 2
+
+        DeviceRow {
+            glyph: wr.modelData.signalStrength > 0.66 ? "\u{F0928}" : wr.modelData.signalStrength > 0.33 ? "\u{F0925}" : "\u{F091F}"
+            title: wr.modelData.name
+            subtitle: wr.modelData.stateChanging ? (wr.modelData.connected ? "Disconnecting…" : "Connecting…")
+                    : wr.modelData.connected ? "Connected"
+                    : wr.failed ? "Couldn't connect" + (wr.secured ? ". Check the password." : "")
+                    : wr.modelData.known ? "Saved" : wr.secured ? "Secured" : "Open"
+            warn: wr.failed && !wr.modelData.connected
+            trailingGlyph: wr.secured ? "\u{F033E}" : ""
+            selected: wr.modelData.connected
+            action: wr.modelData.connected ? "Disconnect" : "Join"
+            onClicked: {
+                cc.wifiFailed = ""
+                if (wr.modelData.connected) wr.modelData.disconnect()
+                else if (wr.modelData.known || !wr.secured) wr.modelData.connect()
+                else cc.passwordFor = wr.modelData
+            }
+        }
+        Connections {
+            target: wr.modelData
+            function onConnectionFailed() { cc.wifiFailed = wr.modelData.name; if (wr.secured) cc.passwordFor = wr.modelData }
+        }
+        RowLayout {   // password, under the network it's for
+            visible: cc.passwordFor === wr.modelData
+            Layout.fillWidth: true
+            Layout.leftMargin: 44
+            Layout.rightMargin: 6
+            Layout.bottomMargin: 6
+            spacing: 6
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: 30
+                radius: Theme.radiusSmall
+                color: Theme.fill
+                border { color: psk.activeFocus ? Theme.accent : Theme.stroke; width: 1 }
+                TextInput {
+                    id: psk
+                    anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                    verticalAlignment: TextInput.AlignVCenter
+                    echoMode: TextInput.Password
+                    color: Theme.text
+                    font { family: Theme.font; pixelSize: Theme.fontSize }
+                    focus: parent.parent.visible
+                    onAccepted: join()
+                    Keys.onEscapePressed: cc.passwordFor = null
+                    function join() { if (!text) return; cc.wifiFailed = ""; wr.modelData.connectWithPsk(text); text = ""; cc.passwordFor = null }
+                    Text { visible: !psk.text; anchors.verticalCenter: parent.verticalCenter; text: "Password"; color: Theme.muted; font: psk.font }
+                }
+            }
+            Chip { label: "Join"; active: psk.text !== ""; onClicked: psk.join() }
+        }
+    }
+
+    // Segmented choice (current -1 = none picked)
+    component Segmented: Rectangle {
+        id: seg
+        property var options: []
+        property int current: -1
+        signal picked(int index)
+        Layout.fillWidth: true
+        Layout.leftMargin: 4
+        Layout.rightMargin: 4
+        implicitHeight: Theme.controlHeight + 2
+        radius: Theme.radiusSmall + 1
+        color: Theme.fill
+        Rectangle {
+            visible: seg.current >= 0
+            width: (parent.width - 6) / Math.max(1, seg.options.length)
+            height: parent.height - 6
+            y: 3
+            x: 3 + Math.max(0, seg.current) * width
+            radius: Theme.radiusSmall - 1
+            color: Theme.thumb
+            Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+        }
+        Row {
+            anchors { fill: parent; margins: 3 }
+            Repeater {
+                model: seg.options
+                Item {
+                    required property string modelData
+                    required property int index
+                    width: parent.width / seg.options.length
+                    height: parent.height
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData
+                        color: seg.current === index ? Theme.thumbText : Theme.subtext
+                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                    }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: seg.picked(index) }
+                }
+            }
+        }
+    }
 
     // A grouping tile on the panel: a slightly lighter rounded area, no border
     component Tile: Rectangle {
@@ -948,47 +1243,6 @@ Singleton {
             onPositionChanged: mouse => { if (pressed && !onIcon) set(mouse.x) }
             onReleased: mouse => { if (onIcon && mouse.x < track.height) bar.iconClicked() }
             onWheel: wheel => bar.moved(Math.max(0, Math.min(1, bar.value + (wheel.angleDelta.y > 0 ? 0.05 : -0.05))))
-        }
-    }
-
-    component ListRow: Rectangle {
-        id: row
-        property string glyph
-        property string title
-        property string trailing
-        property bool selected: false
-        signal clicked()
-        Layout.fillWidth: true
-        implicitHeight: Theme.controlHeight + 4
-        radius: Theme.radiusSmall
-        color: rowArea.containsMouse ? Theme.fillHover : "transparent"
-        Text {
-            id: rowGlyph
-            anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
-            text: row.glyph
-            color: row.selected ? Theme.accent : Theme.subtext
-            font { family: Theme.iconFont; pixelSize: 15 }
-        }
-        Text {
-            anchors { left: rowGlyph.right; leftMargin: 10; right: trailingText.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
-            text: row.title
-            elide: Text.ElideRight
-            color: Theme.text
-            font { family: Theme.font; pixelSize: Theme.fontSize; weight: row.selected ? Font.DemiBold : Font.Normal }
-        }
-        Text {
-            id: trailingText
-            anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
-            text: row.trailing
-            color: row.selected ? Theme.accent : Theme.muted
-            font { family: Theme.iconFont; pixelSize: 14 }
-        }
-        MouseArea {
-            id: rowArea
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: row.clicked()
         }
     }
 
