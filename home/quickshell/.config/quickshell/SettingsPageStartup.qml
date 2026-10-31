@@ -1,46 +1,72 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Startup Apps: apps opened when you log in to Hyprland (not KDE). Saved as desktop entry ids in
-// settings.json (startup.apps); ~/.local/bin/startup-apps opens them from Hyprland's autostart.
+// Startup Apps: what really starts at login, straight from ~/.config/autostart (the XDG autostart
+// folder that apps' own "start at login" options and KDE Plasma use too). ~/.local/bin/startup-apps
+// reads and edits it and starts the entries from Hyprland's autostart.
 ColumnLayout {
     id: page
     spacing: 20
 
+    property var entries: []
     property string query: ""
-    readonly property var chosen: Config.startup.apps
     readonly property var matches: {
         const q = query.trim().toLowerCase()
         if (!q) return []
+        const have = entries.map(e => e.id)
         return DesktopEntries.applications.values
-            .filter(e => !e.noDisplay && !chosen.includes(e.id) && (e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q)))
+            .filter(e => !e.noDisplay && !have.includes(e.id) && (e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q)))
             .sort((a, b) => a.name.localeCompare(b.name))
             .slice(0, 8)
     }
-    function add(id) { Config.set("startup", "apps", chosen.concat([id])); query = ""; search.text = "" }
-    function remove(id) { Config.set("startup", "apps", chosen.filter(x => x !== id)) }
+
+    function refresh() { lister.running = true }
+    function run(args) { editor.command = ["startup-apps"].concat(args); editor.running = true }
+    function add(id) { run(["add", id]); query = ""; search.text = "" }
+
+    Process {
+        id: lister
+        running: true
+        command: ["startup-apps", "list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { page.entries = JSON.parse(text) } catch (e) { page.entries = [] }
+                // the old list in settings.json was copied into the folder by startup-apps
+                if (Config.startup.apps.length) Config.set("startup", "apps", [])
+            }
+        }
+    }
+    Process { id: editor; onExited: page.refresh() }
+    // Running state changes on its own; look again every few seconds while the page is open
+    Timer { interval: 4000; repeat: true; running: page.visible; onTriggered: page.refresh() }
 
     SettingGroup {
         title: "Open at login"
         Text {
-            visible: page.chosen.length === 0
+            visible: page.entries.length === 0
             Layout.fillWidth: true
             Layout.margins: 16
-            text: "No apps yet. Search below to add one."
+            text: "Nothing starts at login yet. Search below to add an app."
             color: Theme.muted
             font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
         Repeater {
-            model: page.chosen
-            AppRow {
-                required property string modelData
-                required property int index
-                entry: DesktopEntries.byId(modelData)
-                fallback: modelData
-                first: index === 0
-                action: "Remove"
-                onTriggered: page.remove(modelData)
+            model: page.entries
+            SettingRow {
+                required property var modelData
+                label: modelData.name || modelData.id
+                hint: !modelData.here ? "Only starts in " + modelData.only.replace(/;$/, "").replace(/;/g, ", ")
+                    : modelData.running === true ? "Running now"
+                    : modelData.running === false ? (modelData.on ? "Not running" : "Off")
+                    : (modelData.on ? "On" : "Off")
+                Toggle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    checked: modelData.on
+                    onToggled: c => page.run([c ? "on" : "off", modelData.file])
+                }
+                PillButton { text: "Remove"; onClicked: page.run(["remove", modelData.file]) }
             }
         }
     }
@@ -71,11 +97,10 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: "Apps open in this order a few seconds after login. KDE Plasma keeps its own startup list."
+        text: "This is the same list KDE Plasma uses, so changes here apply there too. Turning an app off keeps it in the list. "
+            + "The desktop's own parts (bar, wallpaper, lock, clipboard) always start and aren't listed."
         color: Theme.muted
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }
-
-    ResetGroup { sections: ["startup"] }
 }

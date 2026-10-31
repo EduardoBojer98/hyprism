@@ -1,10 +1,104 @@
 #!/usr/bin/env bash
-# Opens the apps chosen in Settings > Startup Apps (settings.json: startup.apps, desktop entry ids).
-# Run once from Hyprland's autostart, so KDE's own autostart stays separate.
+# Startup Apps: the XDG autostart folder (~/.config/autostart) is the one list. Apps' own "start at
+# login" options write there, Settings > Startup Apps shows and edits it, and KDE Plasma reads it too.
+#
+#   startup-apps                     start every entry that is on (Hyprland's autostart.lua, once)
+#   startup-apps list                JSON array: file, id, name, icon, exec, on, only, running
+#   startup-apps add ID              copy an app's desktop entry (e.g. org.flameshot.Flameshot) in
+#   startup-apps on|off FILE         switch one on or off (Hidden=, the XDG way; KDE honours it too)
+#   startup-apps remove FILE         delete it from the folder
+#
+# Entries run their Exec line directly: gtk-launch started Flameshot twice (2026-10-31 audit).
+# Old lists in settings.json (startup.apps) are copied into the folder on the first run.
 set -uo pipefail
-conf="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/settings.json"
-[[ -f "$conf" ]] || exit 0
-jq -r '.startup.apps[]? // empty' "$conf" | while IFS= read -r id; do
-    [[ -n "$id" ]] && gtk-launch "${id%.desktop}" >/dev/null 2>&1 &
-done
-wait
+dir=${XDG_CONFIG_HOME:-$HOME/.config}/autostart
+conf=${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/settings.json
+here=${XDG_CURRENT_DESKTOP:-Hyprland}
+
+# A key from the [Desktop Entry] group only (later groups are actions with their own Exec)
+key() { awk -v k="$2" '/^\[/ { s = ($0 == "[Desktop Entry]") } s && index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }' "$1"; }
+
+is_on() { [[ $(key "$1" Hidden) != true && $(key "$1" X-GNOME-Autostart-enabled) != false ]]; }
+
+# OnlyShowIn / NotShowIn / TryExec: does this entry belong in this desktop at all?
+for_here() {
+    local only not try
+    only=$(key "$1" OnlyShowIn); not=$(key "$1" NotShowIn); try=$(key "$1" TryExec)
+    [[ -z $only || ";$only;" == *";$here;"* ]] && [[ ";$not;" != *";$here;"* ]] && { [[ -z $try ]] || command -v "$try" >/dev/null; }
+}
+
+# The Exec line without %f/%u/... field codes
+cmd_of() { key "$1" Exec | sed -E 's/ +%[fFuUdDnNickvm]//g'; }
+
+# Path of a desktop entry by id: applications in the XDG data dirs, then system autostart entries
+find_entry() {
+    local d
+    IFS=: read -ra dirs <<< "${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    for d in "${dirs[@]}"; do [[ -f $d/applications/$1.desktop ]] && { echo "$d/applications/$1.desktop"; return; }; done
+    [[ -f /etc/xdg/autostart/$1.desktop ]] && echo "/etc/xdg/autostart/$1.desktop"
+}
+
+add() {
+    local id=${1%.desktop} src
+    [[ $id =~ ^[A-Za-z0-9._-]+$ ]] || { echo "startup-apps: bad id: $1" >&2; return 1; }
+    [[ -e $dir/$id.desktop ]] && { set_hidden "$dir/$id.desktop" false; return; }
+    src=$(find_entry "$id") || true
+    [[ -n $src ]] || { echo "startup-apps: no desktop entry for $id" >&2; return 1; }
+    mkdir -p "$dir"
+    grep -v '^Hidden=' "$src" > "$dir/$id.desktop"
+}
+
+set_hidden() {
+    if grep -q '^Hidden=' "$1"; then sed -i "s/^Hidden=.*/Hidden=$2/" "$1"
+    else sed -i "0,/^\[Desktop Entry\]/s//[Desktop Entry]\nHidden=$2/" "$1"; fi
+}
+
+# FILE arguments are names inside the folder, never paths elsewhere
+file_arg() { local f; f=$dir/$(basename -- "${1:?file name needed}"); [[ -f $f ]] || { echo "startup-apps: no such entry: $1" >&2; exit 1; }; echo "$f"; }
+
+adopt_old_list() {
+    [[ -f $conf ]] || return 0
+    jq -r '.startup.apps[]? // empty' "$conf" 2>/dev/null | while IFS= read -r id; do
+        [[ -n $id && ! -e $dir/${id%.desktop}.desktop ]] && add "$id" 2>/dev/null
+    done
+    return 0
+}
+
+running() {  # first word of the command, unless it's a shell wrapper we can't see through
+    local bin; bin=$(basename -- "$(awk '{ print $1 }' <<< "$1")")
+    case $bin in sh|bash|env|"") echo null ;; *) pgrep -f -- "(^|/)$bin( |\$)" >/dev/null && echo true || echo false ;; esac
+}
+
+list() {
+    local f
+    shopt -s nullglob
+    for f in "$dir"/*.desktop; do
+        jq -n --arg file "$(basename "$f")" --arg name "$(key "$f" Name)" --arg icon "$(key "$f" Icon)" \
+              --arg exec "$(cmd_of "$f")" --arg only "$(key "$f" OnlyShowIn)" \
+              --argjson on "$(is_on "$f" && echo true || echo false)" \
+              --argjson here "$(for_here "$f" && echo true || echo false)" \
+              --argjson running "$(running "$(cmd_of "$f")")" \
+              '{file: $file, id: ($file | rtrimstr(".desktop")), name: $name, icon: $icon, exec: $exec, on: $on, here: $here, only: $only, running: $running}'
+    done | jq -s 'sort_by(.name | ascii_downcase)'
+}
+
+start_all() {
+    local f c
+    shopt -s nullglob
+    for f in "$dir"/*.desktop; do
+        { is_on "$f" && for_here "$f"; } || continue
+        c=$(cmd_of "$f")
+        [[ -n $c ]] && setsid -f sh -c "$c" >/dev/null 2>&1
+    done
+}
+
+adopt_old_list
+case ${1:-} in
+    "")      start_all ;;
+    list)    list ;;
+    add)     add "${2:?desktop entry id needed}" ;;
+    on)      set_hidden "$(file_arg "${2:-}")" false ;;
+    off)     set_hidden "$(file_arg "${2:-}")" true ;;
+    remove)  rm -f -- "$(file_arg "${2:-}")" ;;
+    *)       sed -n '2,12p' "$0"; exit 2 ;;
+esac
