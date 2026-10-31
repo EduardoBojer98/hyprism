@@ -2,7 +2,7 @@
 # ROG Flow X13: the fixes for the 2026-10-31 overheating (idle Tctl 83 °C -> ~61 °C, measured).
 # Two causes: the CPU fan sat at 0 RPM in Balanced, and the NVIDIA dGPU never powered off (~9 W).
 # Safe to re-run. Runs after 10-hardware.sh (needs asusd).
-# Run: sudo bash system/hosts/rog-flow-x13/30-thermal.sh
+# Run: sudo bash hosts/flow-x13/steps/30-thermal.sh
 set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "Run with sudo"; exit 1; }
 step() { printf '\n==> %s\n' "$*"; }

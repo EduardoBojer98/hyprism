@@ -60,9 +60,9 @@ ColumnLayout {
     SettingGroup {
         title: "Update"
         SettingRow {
-            label: "Update from GitHub"
-            hint: "Pulls the latest setup, then relinks the configs"
-            PillButton { enabled: !!page.info.repo; text: "Update"; onClicked: page.inTerminal("git pull --ff-only && ./install.sh") }
+            label: "Update everything"
+            hint: "Pulls the latest setup, updates the system (snapshot first on Arch), relinks the configs and runs the doctor"
+            PillButton { enabled: !!page.info.repo; text: "Update"; onClicked: page.inTerminal("./install.sh update") }
         }
         SettingRow {
             label: "Re-run the full install"

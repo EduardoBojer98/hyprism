@@ -34,3 +34,9 @@ distro_nvidia() {
     if command -v chwd >/dev/null; then run sudo chwd -a
     else run sudo pacman -S --needed --noconfirm nvidia-open-dkms nvidia-utils egl-wayland linux-headers; fi
 }
+
+# Full system update (AUR too when there's a helper); snap-pac snapshots before and after
+distro_update() {
+    local helper y=(); $YES && y=(--noconfirm)
+    if helper=$(aur_helper); then run "$helper" -Syu "${y[@]}"; else run sudo pacman -Syu "${y[@]}"; fi
+}

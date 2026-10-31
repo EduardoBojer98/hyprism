@@ -42,20 +42,34 @@ Log out and pick **Hyprland** at the login screen. KDE Plasma (or whatever you h
 
 | Step (in order) | What it does |
 |---|---|
-| `packages` | installs `packages/manifest.txt` + the host's `packages.txt`, using `packages/<distro>.txt` for the real names (Arch: repos + AUR via paru/yay; Fedora: repos, COPR, RPM Fusion, vendor repos, Flathub) |
+| `packages` | installs `packages/manifest.txt` + the host's `packages.txt`, using `packages/<distro>.txt` for the real names (Arch: repos + AUR via paru/yay; Fedora: repos, COPR, RPM Fusion) |
 | `nvidia` | offers the NVIDIA driver when there's an NVIDIA GPU without one |
 | `links` | links `config/<app>/` and `hosts/<host>/home/` into your home folder (GNU Stow, file by file); anything in the way is backed up to `~/.local/state/linux-setup/backups/` |
-| `services` | Bluetooth, NetworkManager, Docker; adds you to the `docker` group |
+| `services` | Bluetooth, NetworkManager; Docker, if you have it, starts on first use instead of at boot |
 | `session` | lid behaviour, Hyprland preselected on Plasma Login (asks) |
 | `host` | the host's `steps/NN-*.sh`, each shown and asked separately |
-| `post` | fisher + nvm.fish + Node LTS, `gh auth setup-git` |
 
 Options: `--yes` (no questions), `--host <name>`, `--only <steps or modules>` (e.g. `--only links`,
 `--only dev`), `--dry-run`. `./install.sh undo` removes the links and offers the last backup back.
 
 On Fedora, Hyprland 0.57 comes from the `sdegler/hyprland` COPR and Quickshell 0.3.2 from
 `errornointernet/quickshell` (Fedora's own Quickshell is too old). A few packages have no Fedora
-build (`squeekboard`, Oreo cursors, CUDA Ollama): `packages/fedora.txt` says what to do instead.
+build (`squeekboard`): `packages/fedora.txt` says what to do instead.
+
+This repo is the desktop only: Hyprland, the shell, their tools and look, a terminal and a file
+manager. Your other apps (browser, editors, dev tools, Docker, Ollama, …) are yours to install; the
+desktop works with whatever you pick in **Settings → Default Apps**. The cursor is your system's
+default until you pick or add another in **Settings → Appearance → Cursor**.
+
+## Update
+
+```bash
+./install.sh update
+```
+
+Pulls this repo (only when it has no local changes), updates the whole system (`paru -Syu` or
+`pacman -Syu` / `dnf upgrade`, plus Flatpaks if you use them), installs packages the repo added,
+relinks the configs and runs the doctor. Same as **Settings → System → About → Update**.
 
 ## Keep it in sync: doctor
 
@@ -137,7 +151,24 @@ Settings writes to `~/.config` only (list in the user guide). Defaults live in `
 | Dotfiles | `./install.sh undo` removes the links and offers to restore the last backup |
 | The Hyprland session | Pick another session at the login screen, or Ctrl+Alt+F3 and log in on a text console |
 | The shell (bar, dock) | `pkill -x qs; pkill -x quickshell; qs &` restarts it (exactly one copy); `qs log` shows errors |
+| An update | See "Roll back an update" below |
 | A Settings choice | Delete its file from the user guide's table to go back to defaults; several pages also have **Reset to defaults** |
+
+### Roll back an update
+
+On Arch/CachyOS with btrfs (the CachyOS default), **snap-pac** takes a snapshot of `/` before and
+after every pacman or paru run, and **limine-snapper-sync** lists them in the Limine boot menu. The
+doctor warns when any of this is missing.
+
+1. Reboot. In the Limine menu open **Snapshots** and boot the one taken *before* the update
+   ("pre", with the update's time).
+2. Check everything works, then make it permanent: `sudo limine-snapper-restore` (or
+   `limine-snapper-list` first to see them).
+
+Snapshots cover `/` only, not `/home`, and they sit on the same disk: they undo a bad update, not a
+dead SSD. Your configs are in this repo; for everything else in `/home`, keep a backup on another
+disk (or add `sudo snapper -c home create-config /home` if you want `/home` snapshots too).
+Fedora has no snapshots by default.
 
 ## Secrets
 

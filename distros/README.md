@@ -6,7 +6,8 @@ CachyOS, EndeavourOS and Manjaro use `arch.sh`). A backend only talks to the pac
 | Function | Does |
 |---|---|
 | `distro_installed SOURCE PKG` | exit 0 if installed |
-| `distro_prepare SOURCES...` | enable extra repos the sources need (COPR, RPM Fusion, Flathub, …) |
+| `distro_prepare SOURCES...` | enable extra repos the sources need (COPR, RPM Fusion, …) |
+| `distro_update` | update the whole system (`./install.sh update`) |
 | `distro_install SOURCE PKGS...` | install a batch from one source; wrap commands in `run` (dry run) |
 | `distro_nvidia` | install the NVIDIA driver |
 

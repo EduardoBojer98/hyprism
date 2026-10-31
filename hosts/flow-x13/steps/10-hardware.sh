@@ -2,7 +2,7 @@
 # ROG Flow X13: asusd, NVIDIA sleep helpers, a btrfs swapfile + hibernation (changes /etc/fstab and
 # the Limine kernel line). install.sh asks before running it. Another machine needs its own swap size.
 # Safe to re-run: every step checks before it changes anything.
-# Run: sudo bash system/hosts/rog-flow-x13/10-hardware.sh
+# Run: sudo bash hosts/flow-x13/steps/10-hardware.sh
 set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "Run with sudo"; exit 1; }
 
@@ -21,7 +21,8 @@ step "NVIDIA: drop old power-saving files (runtime power-off now lives in 30-the
 # "Runtime D3: Not supported" turned out to be a kernel 7.3 bug, not this model: it works on LTS.
 rm -f /etc/modprobe.d/nvidia-runtime-pm.conf
 # Dynamic Boost: its own log says the BIOS disables it on battery, and it kept the GPU awake.
-systemctl disable --now nvidia-powerd 2>/dev/null || true
+# Masked, not just disabled: something started it again on every AC plug-in. Undo: systemctl unmask nvidia-powerd
+systemctl list-unit-files nvidia-powerd.service >/dev/null 2>&1 && systemctl mask --now nvidia-powerd
 
 step "Subvolume @swap at top level, so snapshots never include the swapfile"
 mkdir -p /swap

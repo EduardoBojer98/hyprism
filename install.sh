@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # One command to set up this desktop on Arch/CachyOS or Fedora. Safe to run again.
 #
-#   ./install.sh                 everything: packages, NVIDIA driver, configs, services, session,
-#                                this computer's host steps, post-install (asks before system changes)
+#   ./install.sh                 everything: packages, NVIDIA driver, configs, services, session and
+#                                this computer's host steps (asks before system changes)
+#   ./install.sh update          pull this repo, update the system, add new packages, relink, doctor
 #   ./install.sh doctor          check this computer against the repo; changes nothing
 #   ./install.sh undo            remove the links and offer to put the last backup back
 #
@@ -10,7 +11,7 @@
 #   --yes                        answer yes to every question (unattended)
 #   --host NAME                  use hosts/NAME (default: the host whose host.conf lists this hostname)
 #   --only LIST                  comma list of steps (packages, nvidia, links, services, session, host,
-#                                post) and/or package modules (core, desktop, tools, look, apps, dev)
+#                                ) and/or package modules (core, desktop, tools, look, apps, shell)
 #
 # Backups of files in the way: ~/.local/state/linux-setup/backups/<time>/, same layout as ~.
 # KDE Plasma's own config is never linked over (see the KDE guard).
@@ -18,8 +19,9 @@ set -euo pipefail
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 STATE=${XDG_STATE_HOME:-$HOME/.local/state}/linux-setup
-MODULES=(core desktop tools look apps dev)
+MODULES=(core desktop tools look apps shell)
 
+ARGS=("$@")   # kept for update, which re-runs itself after a pull
 DRY=false YES=false HOST="" ONLY="" CMD=install
 while (($#)); do
     case $1 in
@@ -27,8 +29,8 @@ while (($#)); do
         --yes|-y) YES=true ;;
         --host) HOST=${2:?--host needs a name}; shift ;;
         --only) ONLY=${2:?--only needs a list}; shift ;;
-        doctor|undo|install) CMD=$1 ;;
-        -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+        doctor|undo|install|update) CMD=$1 ;;
+        -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
         *) echo "Unknown option: $1 (see ./install.sh --help)" >&2; exit 2 ;;
     esac
     shift
@@ -211,15 +213,20 @@ move_settings_home() {
 services() {
     say "Services"
     local s
-    for s in bluetooth NetworkManager docker; do
+    for s in bluetooth NetworkManager; do
         systemctl list-unit-files "$s.service" >/dev/null 2>&1 || continue
         systemctl is-enabled -q "$s" 2>/dev/null && continue
         run sudo systemctl enable --now "$s"
     done
-    if getent group docker >/dev/null && ! id -nG | grep -qw docker; then
-        say "Adding you to the docker group (Docker without sudo, from the next login)"
-        run sudo usermod -aG docker "$USER"
+    # Docker, if you have it, starts on first use: docker.service at boot waits for the network (~5 s)
+    if systemctl list-unit-files docker.socket >/dev/null 2>&1; then
+        systemctl is-enabled -q docker.socket 2>/dev/null || run sudo systemctl enable docker.socket
+        if systemctl is-enabled -q docker.service 2>/dev/null; then
+            say "Docker: starting on first use instead of at boot"
+            run sudo systemctl disable docker.service
+        fi
     fi
+    return 0
 }
 
 # --- session: lid behaviour and Hyprland as the default login session (system files, asks) -------
@@ -249,17 +256,22 @@ host_steps() {
     done
 }
 
-# --- post-install: per-user tools that aren't packages --------------------------------------------
-post() {
-    # Node through nvm.fish (fisher plugin); fisher bootstrap pinned to a release
-    if command -v fish >/dev/null && ! fish -c 'functions -q nvm' 2>/dev/null; then
-        say "fisher + nvm.fish, then the current Node LTS"
-        run fish -c 'curl -fsSL https://raw.githubusercontent.com/jorgebucaran/fisher/4.4.5/functions/fisher.fish | source && fisher install jorgebucaran/fisher jorgebucaran/nvm.fish && nvm install lts'
+# --- update: repo, system, new packages, links -------------------------------------------------
+update() {
+    if [[ -z ${LINUX_SETUP_PULLED:-} ]] && git -C "$REPO" rev-parse -q --verify '@{u}' >/dev/null; then
+        if [[ -n $(git -C "$REPO" status --porcelain) ]]; then warn "The repo has local changes: not pulling (commit or stash them)"
+        else
+            local before; before=$(git -C "$REPO" rev-parse HEAD)
+            say "Pulling this repo"; run git -C "$REPO" pull --ff-only
+            # a pull can change this script: carry on with the new one
+            [[ $(git -C "$REPO" rev-parse HEAD) == "$before" ]] || exec env LINUX_SETUP_PULLED=1 "$REPO/install.sh" update "${ARGS[@]}"
+        fi
     fi
-    # Git over HTTPS uses gh's login (the token lives in the keyring once you're signed in with gh)
-    command -v gh >/dev/null && gh auth status >/dev/null 2>&1 && ! git config --global --get-all credential.https://github.com.helper | grep -q gh && run gh auth setup-git
-    command -v lando >/dev/null || say "Lando isn't packaged: install it from https://docs.lando.dev/install/linux.html if you need it."
-    return 0
+    say "Updating the system"; distro_update
+    if command -v flatpak >/dev/null; then run flatpak update -y; fi
+    packages
+    links
+    $DRY || doctor
 }
 
 # --- doctor: compare this computer with the repo -------------------------------------------------
@@ -286,22 +298,28 @@ doctor() {
 
     # files in the managed folders that nothing in the repo provides (besides your Settings files)
     local d
-    for d in .config/hypr .config/hypr/modules .config/quickshell .config/ghostty .config/fuzzel .config/fish/conf.d; do
+    for d in .config/hypr .config/hypr/modules .config/quickshell .config/ghostty .config/fuzzel; do
         [[ -d $HOME/$d ]] || continue
         for f in "$HOME/$d"/*; do
             [[ -f $f && ! -L $f ]] || continue
-            case ${f#"$HOME/"} in .config/quickshell/settings.json|.config/ghostty/theme.conf|.config/fuzzel/theme.ini|.config/fish/conf.d/nvm.fish|.config/hypr/host.lua) continue ;; esac
+            case ${f#"$HOME/"} in .config/quickshell/settings.json|.config/ghostty/theme.conf|.config/fuzzel/theme.ini|.config/hypr/host.lua) continue ;; esac
             bad "untracked file in a managed folder: ~/${f#"$HOME/"}"
         done
     done
     [[ -L $HOME/.config/hypr || -L $HOME/.config/quickshell ]] && bad "old whole-folder links: run ./install.sh --only links"
 
     local s
-    for s in bluetooth docker; do
-        systemctl list-unit-files "$s.service" >/dev/null 2>&1 || continue
-        systemctl is-enabled -q "$s" 2>/dev/null || bad "service not enabled: $s"
-    done
-    getent group docker >/dev/null && ! id -nG "$USER" | grep -qw docker && bad "you aren't in the docker group"
+    if systemctl list-unit-files bluetooth.service >/dev/null 2>&1 && ! systemctl is-enabled -q bluetooth 2>/dev/null; then bad "service not enabled: bluetooth"; fi
+    if systemctl is-enabled -q docker.service 2>/dev/null; then bad "docker.service starts at boot (./install.sh --only services: start on first use)"; fi
+
+    # snapshots before updates (README: "Roll back an update"); advice, not a mismatch with the repo
+    if [[ $(findmnt -no FSTYPE / 2>/dev/null) == btrfs ]]; then
+        snapper list-configs 2>/dev/null | grep -qw root || warn "no snapper config for / : updates can't be rolled back"
+        if [[ $DISTRO == arch ]]; then
+            pacman -Qq snap-pac >/dev/null 2>&1 || warn "snap-pac isn't installed: pacman updates aren't snapshotted"
+            if pacman -Qq limine >/dev/null 2>&1 && ! pacman -Qq limine-snapper-sync >/dev/null 2>&1; then warn "limine-snapper-sync isn't installed: snapshots aren't in the boot menu"; fi
+        fi
+    fi
     [[ $(git -C "$REPO" config core.hooksPath) == .githooks ]] || bad "secret-scan hook not enabled (./install.sh --only links)"
     if [[ -n $(git -C "$REPO" status --porcelain) ]]; then bad "repo has uncommitted changes (git -C $REPO status)"; fi
 
@@ -322,6 +340,7 @@ undo() {
 case $CMD in
     doctor) doctor ;;
     undo) undo ;;
+    update) update ;;
     install)
         say "$PRETTY_NAME ($DISTRO backend), host $HOST$($DRY && echo ', dry run')"
         want_step packages && packages
@@ -330,7 +349,6 @@ case $CMD in
         want_step services && services
         want_step session && session
         want_step host && host_steps
-        want_step post && post
         say "Done. Log out and pick Hyprland at the login screen; ./install.sh doctor checks the result."
         ;;
 esac
