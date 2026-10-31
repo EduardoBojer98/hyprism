@@ -5,7 +5,7 @@ import Quickshell.Widgets
 import QtQuick
 
 // Dock: the all-apps button, pinned apps (Config.dock.pinned, drag to reorder), a divider, then
-// every open window as its own live thumbnail with the app's icon on it. With auto-hide it slides up
+// every window on this dock's monitor as its own live thumbnail with the app's icon on it. With auto-hide it slides up
 // when the pointer touches the bottom edge and stays visible on an empty workspace.
 // Right-click an icon or a window for windows and pin / minimise / restore / quit.
 PanelWindow {
@@ -60,8 +60,15 @@ PanelWindow {
         dragId = ""
     }
 
-    // open windows, one tile each (minimised ones too), in the order they opened
-    readonly property var openWindows: Config.dock.showRunning ? Hyprland.toplevels.values.filter(t => t.wayland) : []
+    // this monitor's open windows, one tile each (minimised ones too), in the order they opened.
+    // A minimised window stays on the dock of the monitor it was on (homes: address -> monitor name).
+    // shortcut: after a shell restart a minimised window's home is unknown, it goes by Hyprland's monitor until restored.
+    property var homes: ({})
+    readonly property var openWindows: Config.dock.showRunning ? Hyprland.toplevels.values.filter(t => {
+        if (!t.wayland) return false
+        if (!isMinimised(t)) { if (t.monitor) homes[t.address] = t.monitor.name; return t.monitor === monitor }
+        return (homes[t.address] ?? t.monitor?.name) === monitor?.name
+    }) : []
     readonly property int thumbWidth: Math.round(iconSize * 1.6)
     // window pictures started while the shell is still starting fail for good; start them a bit later
     property bool captureReady: false
@@ -319,6 +326,8 @@ PanelWindow {
                     readonly property real aspect: shot.hasContent && shot.sourceSize.height > 0
                         ? Math.max(0.5, Math.min(2.4, shot.sourceSize.width / shot.sourceSize.height)) : 1.6
                     property bool retrying: false
+                    // the capture breaks when the window changes workspace: start it again once it's back
+                    onMinimisedChanged: if (!minimised) { retrying = true; retry.restart() }
 
                     width: dock.thumbWidth
                     height: dock.iconSize + 8
@@ -350,11 +359,11 @@ PanelWindow {
                             anchors { fill: parent; margins: frame.border.width }
                             // only while the dock can be seen: each live picture costs a little GPU
                             captureSource: dock.shown && dock.captureReady && !win.retrying ? win.modelData.wayland : null
-                            live: dock.shown
+                            live: dock.shown && !win.minimised   // a minimised window keeps its last picture
                             // a capture can fail (e.g. right at login); start it again a moment later
                             onStopped: { win.retrying = true; retry.restart() }
                         }
-                        Timer { id: retry; interval: 2000; onTriggered: win.retrying = false }
+                        Timer { id: retry; interval: 600; onTriggered: win.retrying = false }
                     }
                     IconImage {   // whose window it is
                         anchors { right: frame.right; bottom: frame.bottom; rightMargin: -4; bottomMargin: -5 }
