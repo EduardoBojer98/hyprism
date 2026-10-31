@@ -12,6 +12,7 @@ Everything you change in **Settings** (`Super+I`) is saved on your computer only
 | `~/.config/hypr/settings/language.lua` | System > Language & Region |
 | `~/.config/hypr/settings/keybinds.lua` | Keyboard Shortcuts |
 | `~/.config/hypr/settings/theme.lua`, `hyprlock-theme.conf` | Appearance (accent, corners, borders, gaps; lock screen colours) |
+| `~/.config/ghostty/theme.conf` | Terminal colours matching the Appearance theme (empty when "Terminal colours" is off) |
 | `~/.config/hypr/settings/hypridle.conf` | Power & Battery > Lock & Sleep |
 | `~/.config/hypr/settings/wallpaper` (a link to the image) | Appearance > Wallpaper |
 

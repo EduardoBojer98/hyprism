@@ -3,7 +3,7 @@ name: Graphite Glass
 description: Compact dark frosted-glass Quickshell shell for Hyprland, macOS-inspired, one visual language for every surface.
 source: home/quickshell/.config/quickshell/Theme.qml (tokens), Glass.qml (surface)
 colors:            # dark mode; light mode mirrors these with black alphas on white frost
-  tint: "midnight rgb(0.085, 0.095, 0.13) · graphite rgb(0.11, 0.11, 0.12) · mocha rgb(0.13, 0.11, 0.10)"  # Settings > Dark tint
+  theme: "Theme.themes: [base, text, accent] for dark and light per theme (midnight #161821 default)"  # Settings > Appearance > Theme
   glass: "tint × 1.05, alpha 0.28 + 0.6 × glassOpacity"   # bar items, dock, OSD
   glass-strong: "tint × 0.82, alpha 0.5 + 0.7 × glassOpacity"  # panels with text
   menu: "tint × 0.95, alpha 0.97"                         # lists, menus, tooltips

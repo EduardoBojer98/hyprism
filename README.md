@@ -18,8 +18,10 @@ install stays untouched and selectable at the login screen.
 - **Notification centre** with history, grouping and Do Not Disturb; **Mission Control**
   (`Super+W`, three fingers up); **dock**: all-apps button, pinned apps (drag to reorder), then each open window as its own live picture (click to bring up or minimise, middle-click to close, right-click for more)
 - Keyboard shortcuts, displays, a shared monitor, sound, network, Bluetooth, power, wallpaper folders
-  and slideshow, startup apps, lock and sleep, default apps, weather, appearance (accent palette or
-  any custom colour, dark tint): all editable in Settings
+  and slideshow, startup apps, lock and sleep, default apps, weather, appearance (13 colour themes:
+  Midnight, Graphite, Cocoa, Catppuccin, Tokyo Night, Dracula, Nord, Gruvbox, Rosé Pine, Everforest,
+  Kanagawa, One Dark and Solarized, each light or dark or switching at sunset, and the terminal follows;
+  accent palette or any custom colour, glass, corners, gaps, font and text size): all editable in Settings
 - Hardware extras that switch themselves on where the hardware exists: ASUS fan curves and charge
   limit (asusctl), keyboard light, a monitor shared with another computer (DDC/CI)
 
