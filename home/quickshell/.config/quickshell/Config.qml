@@ -50,7 +50,7 @@ Singleton {
                          position: ["top-right", "top-center", "top-left"], mutedApps: "list" },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
-        controlCenter: { showHardware: "bool", sections: "list", tiles: "list", toggles: "list", shortcuts: "list", hidden: "list" },
+        controlCenter: { showHardware: "bool", slidersOpen: "bool", sections: "list", tiles: "list", toggles: "list", shortcuts: "list", hidden: "list" },
         keybinds: { overrides: "object" },
         calendar: { holidays: "bool", country: "string", localNames: "bool", observances: "bool", moon: "bool",
                     weekNumbers: "bool", firstDay: ["monday", "sunday"] },

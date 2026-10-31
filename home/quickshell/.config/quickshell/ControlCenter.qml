@@ -264,7 +264,7 @@ Singleton {
             // ---- Wi-Fi and Bluetooth dropdowns, under their tiles ----------------------------------
             Drop {
                 id: wifiDrop
-                visible: cc.expanded === "wifi"
+                open: cc.expanded === "wifi"
                 title: "Wi-Fi"
                 switchOn: Networking.wifiEnabled
                 onSwitched: Networking.wifiEnabled = !Networking.wifiEnabled
@@ -292,7 +292,7 @@ Singleton {
 
             Drop {
                 id: btDrop
-                visible: cc.expanded === "bt"
+                open: cc.expanded === "bt"
                 title: "Bluetooth"
                 switchOn: cc.adapter?.enabled ?? false
                 onSwitched: if (cc.adapter) cc.adapter.enabled = !cc.adapter.enabled
@@ -395,7 +395,7 @@ Singleton {
             }
 
             Drop {
-                visible: cc.expanded === "caffeine"
+                open: cc.expanded === "caffeine"
                 title: "Caffeine"
                 switchOn: Caffeine.active
                 onSwitched: Caffeine.toggle()
@@ -501,156 +501,164 @@ Singleton {
                     id: sliders
                     anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
                     spacing: 10
-
-                    SliderHead { title: "Display" }
-                    Text { // names only once there's more than one screen to tell apart
-                        visible: externals.count > 0
-                        Layout.bottomMargin: -6
-                        text: "Built-in"
-                        color: Theme.subtext
-                        font { family: Theme.font; pixelSize: Theme.fontCaption }
-                    }
-                    Bar {
-                        icon: "\u{F00DF}"
-                        value: cc.brightness
-                        onMoved: v => {
-                            cc.brightness = Math.max(0.05, v)
-                            Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
-                        }
-                    }
-                    // external monitors over DDC/CI (VCP 0x10); read each time the panel opens, hidden when
-                    // a monitor doesn't answer (DDC/CI off in its menu)
-                    Repeater {
-                        id: externals
-                        model: popup.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP")) : []
-                        ColumnLayout {
-                            id: ext
-                            required property var modelData
-                            property string bus: ""
-                            property int max: 100
-                            property real value: -1
-                            visible: value >= 0
-                            Layout.fillWidth: true
-                            spacing: 4
-                            Text {
-                                text: ext.modelData.lastIpcObject?.model || ext.modelData.name
-                                color: Theme.subtext
-                                font { family: Theme.font; pixelSize: Theme.fontCaption }
-                            }
-                            Bar {
-                                icon: "\u{F0379}"
-                                value: Math.max(0, ext.value)
-                                onMoved: v => { ext.value = Math.max(0.01, v); ddcSet.restart() }
-                            }
-                            Process {
-                                running: true
-                                command: ["sh", "-c", "b=$(readlink -f /sys/class/drm/card*-\"$1\"/ddc | sed 's/.*i2c-//'); [ -n \"$b\" ] || exit 1; echo \"$b\"; ddcutil --bus \"$b\" getvcp 10 --terse", "sh", ext.modelData.name]
-                                stdout: StdioCollector {
-                                    onStreamFinished: {
-                                        const l = text.trim().split("\n")   // "6", "VCP 10 C 80 100"
-                                        const v = (l[1] ?? "").split(" ")
-                                        if (v[0] !== "VCP" || !(parseInt(v[4]) > 0)) return
-                                        ext.bus = l[0]; ext.max = parseInt(v[4]); ext.value = parseInt(v[3]) / ext.max
-                                    }
-                                }
-                            }
-                            Timer {   // DDC is slow: send once dragging pauses
-                                id: ddcSet
-                                interval: 150
-                                onTriggered: Quickshell.execDetached(["ddcutil", "--bus", ext.bus, "--noverify", "setvcp", "10", String(Math.round(ext.value * ext.max))])
-                            }
-                        }
-                    }
-
+                    // the section's title; click it to fold the section down to this one line
                     SliderHead {
-                        title: "Sound"
-                        detail: cc.nodeName(cc.sink) || "No output"
-                        isExpanded: cc.expanded === "out"
-                        onClicked: cc.toggleExpanded("out")
+                        title: "Display and sound"
+                        detail: Config.controlCenter.slidersOpen ? "Hide"
+                            : `Screen ${Math.round(cc.brightness * 100)}% · Sound ${cc.sink?.audio?.muted ? "muted" : Math.round((cc.sink?.audio?.volume ?? 0) * 100) + "%"}`
+                        isExpanded: Config.controlCenter.slidersOpen
+                        onClicked: Config.set("controlCenter", "slidersOpen", !Config.controlCenter.slidersOpen)
                     }
-                    Bar {
-                        icon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
-                        hint: cc.sink?.audio?.muted ? "Unmute" : "Mute"
-                        value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
-                        onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
-                        onIconClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
-                    }
-                    ColumnLayout {
-                        visible: cc.expanded === "out"
-                        Layout.fillWidth: true
-                        spacing: 2
-                        SectionLabel { text: "Play sound through" }
-                        Repeater {
-                            model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
-                            DeviceRow {
-                                required property var modelData
-                                glyph: cc.audioGlyph(modelData)
-                                title: cc.nodeName(modelData)
-                                subtitle: cc.audioKind(modelData)
-                                selected: modelData === cc.sink
-                                onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                    Reveal {
+                        open: Config.controlCenter.slidersOpen
+                        spacing: 10
+
+                        SliderHead { title: "Display" }
+                        Text { // names only once there's more than one screen to tell apart
+                            visible: externals.count > 0
+                            Layout.bottomMargin: -6
+                            text: "Built-in"
+                            color: Theme.subtext
+                            font { family: Theme.font; pixelSize: Theme.fontCaption }
+                        }
+                        Bar {
+                            icon: "\u{F00DF}"
+                            value: cc.brightness
+                            onMoved: v => {
+                                cc.brightness = Math.max(0.05, v)
+                                Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(cc.brightness * 100) + "%"])
                             }
                         }
-                        SectionLabel { visible: cc.streams.length > 0; text: "Apps" }
+                        // external monitors over DDC/CI (VCP 0x10); read each time the panel opens, hidden when
+                        // a monitor doesn't answer (DDC/CI off in its menu)
                         Repeater {
-                            model: cc.streams
+                            id: externals
+                            model: popup.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP")) : []
                             ColumnLayout {
-                                id: app
+                                id: ext
                                 required property var modelData
+                                property string bus: ""
+                                property int max: 100
+                                property real value: -1
+                                visible: value >= 0
                                 Layout.fillWidth: true
-                                Layout.leftMargin: 6
-                                Layout.rightMargin: 6
-                                Layout.bottomMargin: 4
                                 spacing: 4
                                 Text {
-                                    Layout.fillWidth: true
-                                    text: app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name
-                                    elide: Text.ElideRight
+                                    text: ext.modelData.lastIpcObject?.model || ext.modelData.name
                                     color: Theme.subtext
                                     font { family: Theme.font; pixelSize: Theme.fontCaption }
                                 }
                                 Bar {
-                                    icon: app.modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
-                                    hint: app.modelData.audio?.muted ? "Unmute" : "Mute"
-                                    value: app.modelData.audio?.muted ? 0 : (app.modelData.audio?.volume ?? 0)
-                                    onMoved: v => { if (app.modelData.audio) { app.modelData.audio.muted = false; app.modelData.audio.volume = v } }
-                                    onIconClicked: if (app.modelData.audio) app.modelData.audio.muted = !app.modelData.audio.muted
+                                    icon: "\u{F0379}"
+                                    value: Math.max(0, ext.value)
+                                    onMoved: v => { ext.value = Math.max(0.01, v); ddcSet.restart() }
+                                }
+                                Process {
+                                    running: true
+                                    command: ["sh", "-c", "b=$(readlink -f /sys/class/drm/card*-\"$1\"/ddc | sed 's/.*i2c-//'); [ -n \"$b\" ] || exit 1; echo \"$b\"; ddcutil --bus \"$b\" getvcp 10 --terse", "sh", ext.modelData.name]
+                                    stdout: StdioCollector {
+                                        onStreamFinished: {
+                                            const l = text.trim().split("\n")   // "6", "VCP 10 C 80 100"
+                                            const v = (l[1] ?? "").split(" ")
+                                            if (v[0] !== "VCP" || !(parseInt(v[4]) > 0)) return
+                                            ext.bus = l[0]; ext.max = parseInt(v[4]); ext.value = parseInt(v[3]) / ext.max
+                                        }
+                                    }
+                                }
+                                Timer {   // DDC is slow: send once dragging pauses
+                                    id: ddcSet
+                                    interval: 150
+                                    onTriggered: Quickshell.execDetached(["ddcutil", "--bus", ext.bus, "--noverify", "setvcp", "10", String(Math.round(ext.value * ext.max))])
                                 }
                             }
                         }
-                        SettingsLink { label: "Sound Settings…"; page: "sound" }
-                    }
 
-                    SliderHead {
-                        title: "Microphone"
-                        detail: cc.nodeName(cc.source) || "No input"
-                        isExpanded: cc.expanded === "in"
-                        onClicked: cc.toggleExpanded("in")
-                    }
-                    Bar {
-                        icon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
-                        hint: cc.source?.audio?.muted ? "Unmute" : "Mute"
-                        value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
-                        onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
-                        onIconClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
-                    }
-                    ColumnLayout {
-                        visible: cc.expanded === "in"
-                        Layout.fillWidth: true
-                        spacing: 2
-                        SectionLabel { text: "Record from" }
-                        Repeater {
-                            model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
-                            DeviceRow {
-                                required property var modelData
-                                glyph: modelData.name.startsWith("bluez") ? "\u{F02CE}" : "\u{F036C}"
-                                title: cc.nodeName(modelData)
-                                subtitle: cc.audioKind(modelData)
-                                selected: modelData === cc.source
-                                onClicked: Pipewire.preferredDefaultAudioSource = modelData
-                            }
+                        SliderHead {
+                            title: "Sound"
+                            detail: cc.nodeName(cc.sink) || "No output"
+                            isExpanded: cc.expanded === "out"
+                            onClicked: cc.toggleExpanded("out")
                         }
-                        SettingsLink { label: "Sound Settings…"; page: "sound" }
+                        Bar {
+                            icon: cc.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
+                            hint: cc.sink?.audio?.muted ? "Unmute" : "Mute"
+                            value: cc.sink?.audio?.muted ? 0 : (cc.sink?.audio?.volume ?? 0)
+                            onMoved: v => { if (cc.sink?.audio) { cc.sink.audio.muted = false; cc.sink.audio.volume = v } }
+                            onIconClicked: if (cc.sink?.audio) cc.sink.audio.muted = !cc.sink.audio.muted
+                        }
+                        Reveal {
+                            open: cc.expanded === "out"
+                            SectionLabel { text: "Play sound through" }
+                            Repeater {
+                                model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
+                                DeviceRow {
+                                    required property var modelData
+                                    glyph: cc.audioGlyph(modelData)
+                                    title: cc.nodeName(modelData)
+                                    subtitle: cc.audioKind(modelData)
+                                    selected: modelData === cc.sink
+                                    onClicked: Pipewire.preferredDefaultAudioSink = modelData
+                                }
+                            }
+                            SectionLabel { visible: cc.streams.length > 0; text: "Apps" }
+                            Repeater {
+                                model: cc.streams
+                                ColumnLayout {
+                                    id: app
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    Layout.leftMargin: 6
+                                    Layout.rightMargin: 6
+                                    Layout.bottomMargin: 4
+                                    spacing: 4
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name
+                                        elide: Text.ElideRight
+                                        color: Theme.subtext
+                                        font { family: Theme.font; pixelSize: Theme.fontCaption }
+                                    }
+                                    Bar {
+                                        icon: app.modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
+                                        hint: app.modelData.audio?.muted ? "Unmute" : "Mute"
+                                        value: app.modelData.audio?.muted ? 0 : (app.modelData.audio?.volume ?? 0)
+                                        onMoved: v => { if (app.modelData.audio) { app.modelData.audio.muted = false; app.modelData.audio.volume = v } }
+                                        onIconClicked: if (app.modelData.audio) app.modelData.audio.muted = !app.modelData.audio.muted
+                                    }
+                                }
+                            }
+                            SettingsLink { label: "Sound Settings…"; page: "sound" }
+                        }
+
+                        SliderHead {
+                            title: "Microphone"
+                            detail: cc.nodeName(cc.source) || "No input"
+                            isExpanded: cc.expanded === "in"
+                            onClicked: cc.toggleExpanded("in")
+                        }
+                        Bar {
+                            icon: cc.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
+                            hint: cc.source?.audio?.muted ? "Unmute" : "Mute"
+                            value: cc.source?.audio?.muted ? 0 : (cc.source?.audio?.volume ?? 0)
+                            onMoved: v => { if (cc.source?.audio) { cc.source.audio.muted = false; cc.source.audio.volume = v } }
+                            onIconClicked: if (cc.source?.audio) cc.source.audio.muted = !cc.source.audio.muted
+                        }
+                        Reveal {
+                            open: cc.expanded === "in"
+                            SectionLabel { text: "Record from" }
+                            Repeater {
+                                model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
+                                DeviceRow {
+                                    required property var modelData
+                                    glyph: modelData.name.startsWith("bluez") ? "\u{F02CE}" : "\u{F036C}"
+                                    title: cc.nodeName(modelData)
+                                    subtitle: cc.audioKind(modelData)
+                                    selected: modelData === cc.source
+                                    onClicked: Pipewire.preferredDefaultAudioSource = modelData
+                                }
+                            }
+                            SettingsLink { label: "Sound Settings…"; page: "sound" }
+                        }
                     }
                 }
             }
@@ -840,11 +848,19 @@ Singleton {
         property bool hasSwitch: true
         property string settingsLabel
         property string settingsPage
+        property bool open: false
         default property alias body: dropBody.data
         signal switched()
 
+        // slides open and shut: the height follows the content, so it also grows as networks appear
+        property real shown: open ? dropCol.implicitHeight + 16 : 0
+        Behavior on shown { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
         Layout.fillWidth: true
-        Layout.preferredHeight: dropCol.implicitHeight + 16
+        Layout.preferredHeight: shown
+        visible: shown > 0
+        clip: true
+        opacity: open ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
         radius: Theme.radius
         color: Theme.fill
         border { color: Theme.stroke; width: 1 }
@@ -869,6 +885,27 @@ Singleton {
             }
             ColumnLayout { id: dropBody; Layout.fillWidth: true; spacing: 2 }
             SettingsLink { visible: drop.settingsLabel !== ""; label: drop.settingsLabel; page: drop.settingsPage }
+        }
+    }
+
+    // A column that slides open and shut (the sound and microphone device lists)
+    component Reveal: Item {
+        id: rv
+        property bool open: false
+        property alias spacing: rvCol.spacing
+        default property alias content: rvCol.data
+        property real shown: open ? rvCol.implicitHeight : 0
+        Behavior on shown { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+        Layout.fillWidth: true
+        Layout.preferredHeight: shown
+        visible: shown > 0
+        clip: true
+        opacity: open ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+        ColumnLayout {
+            id: rvCol
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            spacing: 2
         }
     }
 

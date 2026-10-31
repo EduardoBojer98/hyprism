@@ -73,6 +73,7 @@ JsonAdapter {
     // go at the end) and what's hidden; edited in Settings > Control Center
     property JsonObject controlCenter: JsonObject {
         property bool showHardware: true
+        property bool slidersOpen: true
         property list<string> sections: []
         property list<string> tiles: []
         property list<string> toggles: []
