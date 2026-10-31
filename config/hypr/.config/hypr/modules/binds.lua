@@ -69,9 +69,7 @@ add("colour-picker",       "Screen", "Colour picker",                key("SHIFT 
 -- Shared monitor: hand it to the other computer and back (~/.local/bin/monswitch; off without ~/.config/monswitch.conf)
 add("monitor-switch", "Screen", "Hand the shared monitor over and back", key("M"), exec("monswitch toggle"))
 
--- Hinge and lid (~/.local/bin/panel)
-add("tablet-on",  "Hardware", "Tablet mode on",  "switch:on:AMD SFH tablet mode switch",  exec("panel tablet on"),  { locked = true, fixed = true })
-add("tablet-off", "Hardware", "Tablet mode off", "switch:off:AMD SFH tablet mode switch", exec("panel tablet off"), { locked = true, fixed = true })
+-- Lid (~/.local/bin/panel); a convertible's tablet-mode switch goes in its hosts/<host>/.../host.lua
 add("lid-close",  "Hardware", "Lid closed",      "switch:on:Lid Switch",                  exec("panel lid close"),  { locked = true, fixed = true })
 add("lid-open",   "Hardware", "Lid opened",      "switch:off:Lid Switch",                 exec("panel lid open"),   { locked = true, fixed = true })
 add("power-mode", "Hardware", "Next power mode (Quiet, Balanced, Performance)", key("F5"), exec("powermode next"))

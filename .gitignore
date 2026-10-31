@@ -9,7 +9,8 @@ id_*
 # Per-machine overrides that should stay local (not "*.local": that would hide the .local/ stow dirs)
 *.local.lua
 
-# Your own choices from the Settings app: written on first use, kept on this computer only
-home/quickshell/.config/quickshell/settings.json
-home/hypr/.config/hypr/settings/
-home/ghostty/.config/ghostty/theme.conf
+# Your own choices from the Settings app live in ~/.config (config/ is linked file by file with
+# stow --no-folding), so nothing the app writes lands in this folder. Old installs, just in case:
+config/quickshell/.config/quickshell/settings.json
+config/hypr/.config/hypr/settings/
+config/ghostty/.config/ghostty/theme.conf

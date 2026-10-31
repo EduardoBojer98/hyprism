@@ -1,0 +1,5 @@
+# ROG Flow X13 (GV301QC) extras, by logical name (mapped in packages/<distro>.txt).
+asusctl                  hardware  charge limit, power modes, fan curves, keyboard light (asusd)
+rog-control-center       hardware  GUI for asusctl
+ollama-nvidia            ai        local AI models on the RTX 3050
+open-webui               ai        chat window for the local models

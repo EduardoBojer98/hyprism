@@ -1,0 +1,98 @@
+# What this setup installs, by logical name. One line each: name, module, why.
+# Real package names and where they come from: packages/<distro>.txt (arch, fedora).
+# Modules can be installed alone: ./install.sh --only <module>. Host extras: hosts/<host>/packages.txt.
+#
+# name                   module    why
+
+# Basics the installer and scripts need
+git                      core      clone and update this repo
+stow                     core      links config/ into your home folder (install.sh)
+curl                     core      weather and holidays in the shell, downloads in install steps
+jq                       core      JSON in scripts (hyprctl -j, settings.json, startup-apps)
+bsdtar                   core      unpacks downloaded icon/cursor themes (theme-add)
+build-tools              core      compiler + pkg-config to build plugins/ (title-bar minimise) via hypr-plugins
+fish                     core      your login shell
+socat                    core      hands the login password to the keyring (pam_kwallet_init)
+
+# Hyprland session
+hyprland                 desktop   the compositor
+portal-hyprland          desktop   screen sharing and screenshots for apps
+portal-gtk               desktop   file open/save dialogs for apps (the Hyprland portal has none)
+hyprpolkitagent          desktop   password prompts when an app needs admin rights
+hyprlock                 desktop   lock screen
+hypridle                 desktop   lock / screen off / sleep after idle
+hyprshutdown             desktop   clean log out (Super+Shift+E)
+hyprpaper                desktop   wallpaper
+hyprsunset               desktop   Night Light
+hyprpicker               desktop   colour picker (Super+Shift+C)
+qt6-wayland              desktop   Qt apps (Quickshell, Dolphin) run natively on Wayland
+quickshell               desktop   the whole shell: bar, dock, launcher, notifications, Settings
+pipewire                 desktop   sound (pw-play for notification sounds)
+pipewire-pulse           desktop   sound for apps that speak PulseAudio
+wireplumber              desktop   picks audio devices; the shell's sound controls and the volume keys (wpctl)
+networkmanager           desktop   Wi-Fi and network; the shell's network controls talk to it
+bluez                    desktop   Bluetooth; the shell's Bluetooth controls talk to it
+upower                   desktop   battery level and health in the shell
+power-profiles           desktop   power modes on computers without asusctl
+udisks2                  desktop   mounting USB drives from the file manager
+keyring                  desktop   Secret Service (browser and Git passwords) with KDE Wallet, unlocked at login
+gtk3                     desktop   gtk-launch: Super+B opens your default browser
+sound-theme              desktop   notification sounds to choose from in Settings > Notifications
+squeekboard              desktop   on-screen keyboard (shell button; useful on touch screens)
+
+# Small tools the shell and scripts call
+fuzzel                   tools     emoji picker window (emojipick)
+pavucontrol              tools     full sound mixer
+nm-connection-editor     tools     advanced network settings (VPN, static IP) from Settings > Network
+flameshot                tools     screenshots with annotation (Super+Shift+S, Print)
+grim                     tools     screen capture for "copy text from screen"
+slurp                    tools     pick the area for "copy text from screen"
+wl-clipboard             tools     wl-copy / wl-paste, clipboard history (clipstore)
+wtype                    tools     types picked emoji and clipboard entries
+tesseract                tools     OCR for "copy text from screen" (Super+Shift+T)
+tesseract-eng            tools     English OCR data
+libnotify                tools     notify-send from scripts
+qalculate                tools     calculator in Spotlight (qalc)
+brightnessctl            tools     brightness keys
+playerctl                tools     media keys and the media card
+ddcutil                  tools     external monitor control over DDC/CI (monswitch)
+xdg-utils                tools     xdg-open / xdg-mime: default apps, opening files from Spotlight
+glib2                    tools     gsettings: GTK light/dark, accent, icons, cursor
+kdialog                  tools     folder/file picker in Settings (wallpaper folders, add theme)
+fastfetch                tools     system summary in new terminals
+
+# Look
+adw-gtk-theme            look      GTK3 apps match libadwaita, dark and light
+papirus-icons            look      icon theme for the shell, dock and apps
+font-inter               look      UI font
+font-cantarell           look      "Cantarell" choice under Appearance > Font
+font-noto                look      "Noto Sans" choice; fallback for missing glyphs
+font-noto-emoji          look      emoji in the picker, notifications and browser
+font-jetbrains-nerd      look      terminal and code font with icons
+oreo-cursors             look      the default cursor (Appearance > Cursor)
+
+# Everyday apps
+ghostty                  apps      terminal (Super+Return)
+dolphin                  apps      file manager (Super+E)
+chrome                   apps      web browser (default in Default Apps, chrome-flags.conf)
+okular                   apps      PDF reader with annotations
+gwenview                 apps      image viewer
+micro                    apps      small terminal text editor (default for text files)
+onlyoffice               apps      best free Microsoft Office file compatibility
+bitwarden                apps      password manager, syncs with phone and browser
+
+# Development
+github-cli               dev       gh: pull requests and issues, Git credential helper
+docker                   dev       containers (Lando, local services); install adds you to the docker group
+docker-compose           dev       multi-container projects
+python                   dev       scripts, tooling
+uv                       dev       Python versions and virtualenvs
+php                      dev       PHP / WordPress work outside containers
+composer                 dev       PHP dependencies
+vscode                   dev       code editor
+starship                 dev       shell prompt
+zoxide                   dev       `z` jumps to recent folders
+fd                       dev       fast file search
+ripgrep                  dev       fast text search
+fzf                      dev       fuzzy finder in the shell
+gitleaks                 dev       secret scan before commits in this repo (.githooks/pre-commit)

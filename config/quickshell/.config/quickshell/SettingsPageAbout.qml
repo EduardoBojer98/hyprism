@@ -21,8 +21,8 @@ ColumnLayout {
             + "echo \"nvidia=$(cat /sys/class/firmware-attributes/asus-armoury/attributes/dgpu_disable/current_value 2>/dev/null)\"; "
             + "echo \"hypr=$(hyprctl version -j | grep -oP '\\\"tag\\\":\\s*\\\"\\K[^\\\"]+')\"; "
             + "echo \"qs=$(qs --version 2>/dev/null | head -1)\"; "
-            + "echo \"setup=$(git -C \"$(readlink -f \"$HOME/.config/quickshell\")\" describe --tags --always 2>/dev/null)\"; "
-            + "echo \"repo=$(git -C \"$(readlink -f \"$HOME/.config/quickshell\")\" rev-parse --show-toplevel 2>/dev/null)\""]
+            + "echo \"setup=$(git -C \"$(dirname \"$(readlink -f \"$HOME/.config/quickshell/shell.qml\")\")\" describe --tags --always 2>/dev/null)\"; "
+            + "echo \"repo=$(git -C \"$(dirname \"$(readlink -f \"$HOME/.config/quickshell/shell.qml\")\")\" rev-parse --show-toplevel 2>/dev/null)\""]
         stdout: StdioCollector {
             onStreamFinished: {
                 const o = {}
