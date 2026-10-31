@@ -3,7 +3,7 @@ import QtQuick
 
 // Carries the shell's design tokens to the parts of the desktop Quickshell can't draw:
 // Hyprland window borders (accent or rotating rainbow, width) and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
-// the lock screen (hypr/hyprlock-theme.conf, read at next lock), and GTK (gsettings light/dark,
+// the lock screen (hypr/settings/hyprlock-theme.conf, read at next lock), and GTK (gsettings light/dark,
 // accent and icon theme). Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
 Scope {
@@ -29,7 +29,7 @@ Scope {
     function apply() {
         const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize} }`
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from Settings > Appearance\nreturn " + t)
-        SettingsApp.writeHyprFile("hyprlock-theme.conf", "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding)
+        SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])
         Quickshell.execDetached(["sh", "-c",
             "gsettings set org.gnome.desktop.interface color-scheme prefer-" + (light ? "light" : "dark")

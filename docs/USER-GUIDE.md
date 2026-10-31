@@ -10,7 +10,7 @@ Everything you change in **Settings** (`Super+I`) is saved on your computer only
 | `~/.config/hypr/settings/displays.lua` | Displays |
 | `~/.config/hypr/settings/input.lua` | Keyboard & Touchpad |
 | `~/.config/hypr/settings/keybinds.lua` | Keyboard Shortcuts |
-| `~/.config/hypr/settings/theme.lua`, `hyprlock-theme.conf` | Appearance (accent and corners for windows and the lock screen) |
+| `~/.config/hypr/settings/theme.lua`, `settings/hyprlock-theme.conf` | Appearance (accent and corners for windows and the lock screen) |
 
 A missing file means "use the defaults", so deleting one resets that part. The defaults themselves
 are in `home/quickshell/.config/quickshell/ConfigData.qml` and the Hyprland modules. To keep your

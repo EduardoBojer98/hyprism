@@ -102,6 +102,12 @@ fi
 say "Linking: $PACKAGES"
 stow -R -d "$REPO/home" -t "$HOME" $PACKAGES
 
+# Settings app files start from the defaults; existing ones (your choices) are never overwritten
+settings=$HOME/.config/hypr/settings
+mkdir -p "$settings"
+cp -n "$REPO"/home/hypr/.config/hypr/defaults/*.conf "$settings/"
+[[ -e $settings/wallpaper ]] || ln -s "$HOME/Pictures/Wallpapers/glass-night.png" "$settings/wallpaper"
+
 # Secret scan before every commit in this repo (see .githooks/pre-commit)
 git -C "$REPO" config core.hooksPath .githooks
 

@@ -11,4 +11,4 @@ id_*
 
 # Your own choices from the Settings app: written on first use, kept on this computer only
 home/quickshell/.config/quickshell/settings.json
-home/hypr/.config/hypr/settings/*.lua
+home/hypr/.config/hypr/settings/

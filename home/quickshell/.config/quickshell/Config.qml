@@ -6,7 +6,7 @@ import QtQuick
 // The one settings source for the desktop: quickshell/settings.json (in the repo through the
 // stow link). Every component reads Config.<section>.<option>; the Settings app writes through
 // set(), which validates. The file is watched, so a hand edit or a git checkout applies live.
-// Values Hyprland owns (displays, keyboard, idle) stay in hypr/settings/*.lua and hypridle.conf.
+// Values Hyprland owns (displays, keyboard, idle) stay in hypr/settings/ (*.lua, hypridle.conf).
 Singleton {
     id: root
 

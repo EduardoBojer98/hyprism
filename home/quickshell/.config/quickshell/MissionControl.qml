@@ -73,7 +73,7 @@ Singleton {
 
     Process {
         id: reader
-        command: ["sh", "-c", "grep -oP 'path\\s*=\\s*\\K.*' \"$HOME/.config/hypr/hyprpaper.conf\" | head -1 | sed \"s|^~|$HOME|\"; printf '{\"m\":%s,\"c\":%s,\"w\":%s}' \"$(hyprctl -j monitors)\" \"$(hyprctl -j clients)\" \"$(hyprctl -j workspaces)\""]
+        command: ["sh", "-c", "readlink -f \"$HOME/.config/hypr/settings/wallpaper\"; printf '{\"m\":%s,\"c\":%s,\"w\":%s}' \"$(hyprctl -j monitors)\" \"$(hyprctl -j clients)\" \"$(hyprctl -j workspaces)\""]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {

@@ -3,7 +3,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Lock & Sleep: when to lock, turn the screens off and sleep. Writes hypr/hypridle.conf and
+// Lock & Sleep: when to lock, turn the screens off and sleep. Writes hypr/settings/hypridle.conf and
 // restarts hypridle.
 ColumnLayout {
     id: page
@@ -16,7 +16,7 @@ ColumnLayout {
 
     Process {
         running: true
-        command: ["sh", "-c", "cat \"$HOME/.config/hypr/hypridle.conf\""]
+        command: ["sh", "-c", "cat \"$HOME/.config/hypr/settings/hypridle.conf\""]
         stdout: StdioCollector {
             onStreamFinished: {
                 // each listener block: its timeout and what it runs
@@ -46,8 +46,8 @@ ColumnLayout {
         const text = "# Written by the Settings app (Lock & Sleep). hypridle still uses hyprlang.\n"
             + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = loginctl lock-session; " + page.screensOn + "\n"
             + "    after_sleep_cmd  = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'\n}\n\n" + blocks.join("\n\n")
-        SettingsApp.writeHyprFile("hypridle.conf", text)
-        Quickshell.execDetached(["sh", "-c", "sleep 0.3; pkill -x hypridle; hyprctl dispatch 'hl.dsp.exec_cmd(\"hypridle\")'"])
+        SettingsApp.writeHyprFile("settings/hypridle.conf", text)
+        Quickshell.execDetached(["sh", "-c", "sleep 0.3; pkill -x hypridle; hyprctl dispatch 'hl.dsp.exec_cmd(\"hypridle -c ~/.config/hypr/settings/hypridle.conf\")'"])
     }
 
     SettingGroup {

@@ -98,7 +98,7 @@ JsonAdapter {
     }
     property JsonObject wallpaper: JsonObject {
         property list<string> folders: ["~/Pictures/Wallpapers"]
-        property string current: ""             // full path; empty = whatever hyprpaper.conf says
+        property string current: ""             // full path; empty = whatever hypr/settings/wallpaper points at
         property bool slideshow: false
         property int interval: 30                // minutes between slideshow changes
         property string source: "all"            // "all": every image in the folders, "selected": only picked ones

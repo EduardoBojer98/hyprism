@@ -4,7 +4,7 @@ import Quickshell.Io
 import QtQuick
 
 // Wallpaper images from the folders in Settings > Wallpaper, setting one (hyprpaper live, and
-// saved to hyprpaper.conf and the lock screen), and the optional slideshow.
+// saved as hypr/settings/wallpaper for hyprpaper and the lock screen), and the optional slideshow.
 //   Wallpapers.images · Wallpapers.apply(path) · Wallpapers.next() · `qs ipc call wallpaper next`
 Singleton {
     id: root
@@ -24,10 +24,9 @@ Singleton {
         current = path
         Config.set("wallpaper", "current", path)
         const safe = path.replace(/[|'\\\n]/g, "")
-        const saved = safe.startsWith(home + "/") ? "~" + safe.slice(home.length) : safe   // config files stay portable
         Quickshell.execDetached(["hyprctl", "hyprpaper", "wallpaper", "," + safe])
-        // the one `path =` line in each file: the wallpaper block and the lock screen background
-        Quickshell.execDetached(["sh", "-c", "sed -i 's|^\\(\\s*path\\s*=\\s*\\).*|\\1" + saved + "|' \"$HOME/.config/hypr/hyprpaper.conf\" \"$HOME/.config/hypr/hyprlock.conf\""])
+        // hyprpaper.conf and hyprlock.conf both read this link (kept out of git, it's your choice)
+        Quickshell.execDetached(["sh", "-c", "mkdir -p \"$HOME/.config/hypr/settings\" && ln -sfn \"$1\" \"$HOME/.config/hypr/settings/wallpaper\"", "sh", safe])
     }
 
     function next() {
@@ -42,10 +41,10 @@ Singleton {
         apply(list[i])
     }
 
-    // every image in the folders (and one level of subfolders), plus what hyprpaper.conf shows now
+    // every image in the folders (and one level of subfolders), plus the one shown now
     Process {
         id: lister
-        command: ["sh", "-c", "for d in \"$@\"; do [ -d \"$d\" ] && find -L \"$d\" -maxdepth 2 -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \\); done | sort -u; echo '--'; grep -oP '^\\s*path\\s*=\\s*\\K.*' \"$HOME/.config/hypr/hyprpaper.conf\" | head -1",
+        command: ["sh", "-c", "for d in \"$@\"; do [ -d \"$d\" ] && find -L \"$d\" -maxdepth 2 -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \\); done | sort -u; echo '--'; readlink -f \"$HOME/.config/hypr/settings/wallpaper\"",
                   "sh"].concat(root.c.folders.map(root.expand))
         stdout: StdioCollector {
             onStreamFinished: {
