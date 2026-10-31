@@ -55,12 +55,12 @@ add("workspace-previous", "Workspaces", "Previous workspace",        key("Tab"),
 add("workspace-next-wheel", "Workspaces", "Next workspace (wheel)",  key("mouse_down"), hl.dsp.focus({ workspace = "e+1" }), { fixed = true })
 add("workspace-prev-wheel", "Workspaces", "Previous workspace (wheel)", key("mouse_up"), hl.dsp.focus({ workspace = "e-1" }), { fixed = true })
 add("scratchpad",      "Workspaces", "Show / hide scratchpad",       key("S"), hl.dsp.workspace.toggle_special("scratch"))
-add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("SHIFT + S"), hl.dsp.window.move({ workspace = "special:scratch" }))
+add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("ALT + S"), hl.dsp.window.move({ workspace = "special:scratch" }))
 
 -- Screenshots and colour picker
 add("screenshot",          "Screen", "Screenshot an area (annotate, copy, save)", "Print", exec("screenshot"))
 add("screenshot-all",      "Screen", "Screenshot the whole screen (copy and save)", "SHIFT + Print", exec("screenshot all"))
-add("screenshot-alt",      "Screen", "Screenshot an area (second shortcut)", "ALT + SHIFT + S", exec("screenshot"))
+add("screenshot-alt",      "Screen", "Screenshot an area (second shortcut)", key("SHIFT + S"), exec("screenshot"))
 add("task-manager",        "Apps",   "Task manager",                 "CTRL + SHIFT + Escape", exec("qs ipc call system taskmanager"))
 add("ocr",                 "Screen", "Copy text from the screen",    key("SHIFT + T"), exec("screentext"))
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))

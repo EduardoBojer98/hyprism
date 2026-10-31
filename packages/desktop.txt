@@ -35,7 +35,7 @@ ghostty                      # terminal (Super+Return)
 dolphin                      # file manager (Super+E)
 
 # Screenshots, clipboard, colour picker, OCR
-flameshot                    # region screenshots with annotation (Print, Alt+Shift+S)
+flameshot                    # region screenshots with annotation (Super+Shift+S, Print)
 grim                         # screen capture for "copy text from screen" (screentext)
 slurp                        # pick the region for screentext
 wl-clipboard                 # wl-copy / wl-paste, clipboard history (clipstore)

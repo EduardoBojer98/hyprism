@@ -186,8 +186,8 @@ defaults apply). Checked against `hyprctl binds -j`: 81 live binds, all from `bi
 | `Super+1…0` / `Super+Shift+1…0` | Go to / send to workspace | 49–53 |
 | `Super+Tab` | Previous workspace | 54 |
 | `Super+wheel` | Next / previous workspace | 55 / 56 |
-| `Super+S` / `Super+Shift+S` | Scratchpad / send to scratchpad | 57 / 58 |
-| `Print`, `Alt+Shift+S` | Flameshot region (`screenshot`) | 61, 63 |
+| `Super+S` / `Super+Alt+S` | Scratchpad / send to scratchpad | 57 / 58 |
+| `Print`, `Super+Shift+S` | Flameshot region (`screenshot`) (was `Alt+Shift+S` until 2026-10-31, changed at your request) | 61, 63 |
 | `Shift+Print` | Whole screen | 62 |
 | `Ctrl+Shift+Esc` | Task manager | 64 |
 | `Super+Shift+T` | Copy text from screen (OCR) | 65 |

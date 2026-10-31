@@ -66,8 +66,8 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `Super+F` / `Super+Shift+F` / `Super+T` | Fullscreen / maximise / float |
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
 | `Super+1…0` / `Super+Shift+1…0` | Go to / send window to desktop; `Super+Tab` previous |
-| `Super+S` / `Super+Shift+S` | Scratchpad / send window there |
-| `Print` or `Alt+Shift+S` / `Shift+Print` / `Super+Shift+T` | Screenshot an area on the screen under the mouse (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
+| `Super+S` / `Super+Alt+S` | Scratchpad / send window there |
+| `Super+Shift+S` or `Print` / `Shift+Print` / `Super+Shift+T` | Screenshot an area on the screen under the mouse (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
 | `Super+Shift+C` | Colour picker |
 | `Super+L` / `Super+Shift+E` | Lock / log out |
 | `Super+F5` | Next power mode: Quiet → Balanced → Performance (also `powermode` in a terminal) |
