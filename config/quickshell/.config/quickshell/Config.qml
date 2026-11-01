@@ -20,6 +20,8 @@ Singleton {
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
     readonly property alias keybinds: adapter.keybinds
+    readonly property alias windows: adapter.windows
+    readonly property alias lockscreen: adapter.lockscreen
     readonly property alias calendar: adapter.calendar
     readonly property alias language: adapter.language
     readonly property alias startup: adapter.startup
@@ -41,9 +43,11 @@ Singleton {
             font: "string", animations: "bool", iconTheme: "string", cursorTheme: "string", cursorSize: [16, 64],
             border: ["rainbow", "accent"], borderSpin: [0, 100], borderSize: [1, 4], gaps: [0, 40]
         },
-        dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
+        dock: { style: ["glass", "pill", "panel", "shelf", "clear"], tint: ["glass", "solid", "accent"], indicator: ["dot", "line", "none"], hover: ["plate", "grow", "lift"],
+                iconSize: [32, 64], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
-                    placement: ["center", "cursor"], startView: ["home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
+                    placement: ["center", "cursor"], style: ["split", "unified"], width: [560, 960], field: [40, 60], tint: ["glass", "solid", "accent"],
+                    corners: ["round", "soft", "sharp"], columns: [5, 9], selection: ["soft", "accent"], dim: [0, 0.6], startView: ["home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], historyMax: [10, 500], sound: "string", volume: [0, 100],
@@ -52,14 +56,25 @@ Singleton {
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", slidersOpen: "bool", sections: "list", tiles: "list", toggles: "list", shortcuts: "list", hidden: "list" },
         keybinds: { overrides: "object" },
+        lockscreen: { design: ["glass", "center", "minimal", "sidebar", "stacked", "terminal"], wallpaper: "string",
+                      blur: [0, 6], brightness: [0.3, 1] },
+        windows: { layout: ["dwindle", "master", "scrolling"], newSplit: [0, 2], smartSplit: "bool",
+                   masterNew: ["master", "slave"], masterSide: ["left", "right", "top", "center"], columnWidth: [0.3, 1],
+                   followMouse: "bool", focusOnActivate: "bool", warpCursor: "bool", backAndForth: "bool",
+                   inactiveOpacity: [0.6, 1], dimInactive: "bool", dimStrength: [0.05, 0.6], resizeOnBorder: "bool",
+                   snap: "bool", hideCursorTyping: "bool", animations: "bool",
+                   animOpen: ["popin", "slide", "gnomed", "fade", "none"], animClose: ["popin", "slide", "gnomed", "fade", "none"],
+                   animMove: ["smooth", "snappy", "bouncy", "none"], animWorkspace: ["slidefade", "slide", "slidevert", "fade", "none"],
+                   animSpeed: ["slow", "normal", "fast"], titleBars: "bool", apps: "list" },
         calendar: { holidays: "bool", country: "string", localNames: "bool", observances: "bool", moon: "bool",
                     weekNumbers: "bool", firstDay: ["monday", "sunday"] },
         language: { languages: "list", formats: "string" },
         startup: { apps: "list" },
         system: { taskManager: "string" },
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
-                     source: ["all", "selected"], selected: "list", order: ["shuffle", "name"] },
-        bar: { clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
+                     source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
+        bar: { style: ["strip", "floating", "islands", "compact", "tabs", "clear"], position: ["top", "bottom"], size: [24, 40],
+               items: ["plain", "chips"], tint: ["glass", "solid", "accent"], clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
                batteryPercent: "bool", windowTitle: "bool", left: "list", center: "list", right: "list" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },

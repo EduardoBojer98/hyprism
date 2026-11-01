@@ -3,7 +3,8 @@ import QtQuick.Layouts
 
 // Appearance & Themes: the knobs every shell surface derives its tokens from (Theme.qml).
 // Applied live; the accent and corners also reach window borders, the lock screen, GTK apps and
-// (with "Terminal colours") Ghostty. A preview of the desktop sits on top.
+// (with "Terminal colours") Ghostty. A preview of the desktop sits on top. The window border and
+// gaps are on Windows > Window Look, the animations switch on Windows > Animations.
 ColumnLayout {
     id: page
     spacing: 20
@@ -290,34 +291,10 @@ ColumnLayout {
             hint: "Panels, menus, the dock and windows"
             ConfigSlider { section: "appearance"; key: "radiusScale"; from: 0; to: 1.5; step: 0.1; format: v => v === 0 ? "Square" : Theme.radius + " px" }
         }
-        SettingRow {
-            label: "Space around windows"
-            hint: "Between two windows it is half"
-            ConfigSlider { section: "appearance"; key: "gaps"; from: 0; to: 40; step: 1; format: v => v + " px" }
-        }
     }
 
     SettingGroup {
-        title: "Window border"
-        SettingRow {
-            label: "Focused window"
-            hint: "The border around the window you're working in"
-            ConfigChoice { section: "appearance"; key: "border"; values: ["rainbow", "accent"]; labels: ["Rainbow", "Accent colour"] }
-        }
-        SettingRow {
-            visible: page.a.border === "rainbow"
-            label: "Rainbow rotation"
-            hint: Theme.animate ? "How fast the colours go round" : "Still while animations are off"
-            ConfigChoice { section: "appearance"; key: "borderSpin"; values: [0, 100, 60, 25]; labels: ["Still", "Slow", "Medium", "Fast"] }
-        }
-        SettingRow {
-            label: "Thickness"
-            ConfigChoice { section: "appearance"; key: "borderSize"; values: [1, 2, 3, 4]; labels: ["1 px", "2 px", "3 px", "4 px"] }
-        }
-    }
-
-    SettingGroup {
-        title: "Text and motion"
+        title: "Text"
         SettingRow {
             label: "Font"
             hint: "Inter, Cantarell and Noto Sans come with the setup; any installed font works"
@@ -332,12 +309,8 @@ ColumnLayout {
             label: "Text size"
             ConfigSlider { section: "appearance"; key: "fontScale"; from: 0.85; to: 1.25; step: 0.05; format: v => Math.round(v * 100) + "%" }
         }
-        SettingRow {
-            label: "Animations"
-            hint: "Off makes every panel open and move instantly"
-            ConfigToggle { section: "appearance"; key: "animations" }
-        }
     }
 
-    ResetGroup { sections: ["appearance"]; keys: Object.keys(Config.schema.appearance).filter(k => k !== "iconTheme") }   // icons have their own page
+    // icons have their own page; border, gaps and animations are on the Windows pages
+    ResetGroup { sections: ["appearance"]; keys: Object.keys(Config.schema.appearance).filter(k => !["iconTheme", "border", "borderSpin", "borderSize", "gaps", "animations"].includes(k)) }
 }

@@ -64,10 +64,12 @@ Singleton {
     }
 
     readonly property var settingsPages: [
-        { id: "appearance", name: "Appearance & Themes", words: "theme accent colour color dark glass blur radius font animation" },
+        { id: "appearance", name: "Appearance & Themes", words: "theme accent colour color dark glass blur radius corners font" },
+        { id: "windowlook", name: "Window Look", words: "window border rainbow thickness gaps space opacity transparent dim inactive" },
         { id: "icons", name: "Icons", words: "icon theme papirus" },
-        { id: "dock", name: "Desktop & Dock", words: "dock desktop taskbar minimise minimize" },
-        { id: "launcher", name: "Search & Launcher", words: "spotlight search launcher actions snippets shortcuts" },
+        { id: "bar", name: "Menu Bar", words: "menu bar top bar panel design style look floating islands compact tabs chips clock items" },
+        { id: "dock", name: "Dock", words: "dock taskbar minimise minimize design style look glass pill panel shelf magnify pinned" },
+        { id: "launcher", name: "Search & Launcher", words: "spotlight search launcher actions snippets shortcuts design style look card command dim width" },
         { id: "clipboard", name: "Clipboard", words: "clipboard copy paste history" },
         { id: "controlcenter", name: "Control Center", words: "control center quick settings" },
         { id: "notifications", name: "Notifications", words: "notification do not disturb dnd" },
@@ -81,11 +83,16 @@ Singleton {
         { id: "keybinds", name: "Keyboard Shortcuts", words: "keybinds shortcuts hotkeys keys bindings keyboard" },
         { id: "asus", name: "ASUS Hardware", words: "asus rog fan fans curve power mode quiet balanced performance gpu nvidia temperature" },
         { id: "power", name: "Battery & Power", words: "battery power charge limit health" },
+        { id: "lockscreen", name: "Lock Screen", words: "lock screen hyprlock design clock password background blur" },
         { id: "wallpaper", name: "Wallpaper", words: "wallpaper background" },
         { id: "weather", name: "Weather", words: "weather forecast city temperature" },
         { id: "calendar", name: "Calendar", words: "calendar holidays events moon week" },
         { id: "idle", name: "Lock & Sleep", words: "lock sleep suspend idle screen off caffeine" },
-        { id: "apps", name: "Default Applications", words: "default apps browser mime open with" },
+        { id: "windows", name: "Window Behaviour", words: "windows layout tiling split master scrolling focus follow mouse resize snap" },
+        { id: "animations", name: "Animations", words: "animations motion open close move slide fade pop desktops workspace speed" },
+        { id: "apprules", name: "App Rules", words: "app rules window rules float floating always on top pin maximise fullscreen workspace desktop" },
+        { id: "installed", name: "Installed Apps", words: "installed apps applications uninstall remove programs packages flatpak" },
+        { id: "apps", name: "Default Apps", words: "default apps browser mime open with task manager" },
         { id: "startup", name: "Startup Apps", words: "startup autostart login apps" },
         { id: "about", name: "About", words: "about system version" },
     ]

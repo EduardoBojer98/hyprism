@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Control Center: a picture of the panel to rearrange it. Sections go up and down and can be hidden;
-// inside a section, click a tile to show or hide it and use the arrows to move it.
+// Control Center: a picture of the panel to rearrange it. Drag sections up and down and hide them;
+// inside a section, drag a tile to move it and click it to show or hide it.
 // Saved in Config.controlCenter (sections / tiles / toggles / shortcuts orders and a hidden list).
 ColumnLayout {
     id: page
@@ -11,11 +11,13 @@ ColumnLayout {
     readonly property var hidden: Config.controlCenter.hidden
     // a shortcut and a section can share an id ("power"), so the group decides where to look
     function info(id, group) { return (group === "shortcuts" ? ControlCenter.shortcutInfo[id] : ControlCenter.itemInfo[id]) ?? { label: id, glyph: "" } }
-    function move(group, id, by) {
-        const list = ControlCenter.order(group)
-        const i = list.indexOf(id), j = i + by
-        if (j < 0 || j >= list.length) return
-        list.splice(i, 1); list.splice(j, 0, id)
+    // dragging: `id` goes right before or after `target` in the same group
+    function place(group, id, target, after) {
+        if (id === target) return
+        const list = ControlCenter.order(group).filter(x => x !== id)
+        const i = list.indexOf(target)
+        if (i < 0) return
+        list.splice(i + (after ? 1 : 0), 0, id)
         Config.set("controlCenter", group, list)
     }
     function setShown(id, on) { Config.set("controlCenter", "hidden", on ? hidden.filter(x => x !== id) : hidden.concat([id])) }
@@ -44,7 +46,7 @@ ColumnLayout {
 
             Repeater {
                 model: ControlCenter.order("sections")
-                Rectangle {
+                DragItem {
                     id: sec
                     required property string modelData
                     required property int index
@@ -52,10 +54,16 @@ ColumnLayout {
                     readonly property bool on: !page.hidden.includes(modelData)
                     Layout.fillWidth: true
                     implicitHeight: secCol.implicitHeight + 20
+                    key: "sections"
+                    payload: modelData
+                    floatOn: page.parent
                     radius: Theme.radius
-                    color: on ? Theme.fill : "transparent"
-                    border { color: on ? Theme.stroke : Theme.strokeStrong; width: 1 }
-                    opacity: on ? 1 : 0.6
+                  Rectangle {
+                    anchors.fill: parent
+                    radius: Theme.radius
+                    color: sec.on ? Theme.fill : "transparent"
+                    border { color: sec.on ? Theme.stroke : Theme.strokeStrong; width: 1 }
+                    opacity: sec.on ? 1 : 0.6
 
                     ColumnLayout {
                         id: secCol
@@ -65,6 +73,7 @@ ColumnLayout {
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 8
+                            Text { text: "\u{F01DD}"; color: Theme.muted; font { family: Theme.iconFont; pixelSize: 15 } }   // drag handle
                             Text { text: sec.inf.glyph; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: 15 } }
                             Text {
                                 Layout.fillWidth: true
@@ -73,58 +82,53 @@ ColumnLayout {
                                 color: Theme.text
                                 font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold }
                             }
-                            ArrowButton { glyph: "\u{F0143}"; tip: "Move up"; enabled: sec.index > 0; onClicked: page.move("sections", sec.modelData, -1) }
-                            ArrowButton { glyph: "\u{F0140}"; tip: "Move down"; enabled: sec.index < ControlCenter.order("sections").length - 1; onClicked: page.move("sections", sec.modelData, 1) }
                             Toggle { checked: sec.on; onToggled: on => page.setShown(sec.modelData, on) }
                         }
 
-                        // the section's tiles: click to show or hide, arrows to move
+                        // the section's tiles: drag to move, click to show or hide
                         Flow {
                             visible: sec.inf.group !== undefined && sec.on
                             Layout.fillWidth: true
                             spacing: 6
                             Repeater {
                                 model: sec.inf.group ? ControlCenter.order(sec.inf.group) : []
-                                Rectangle {
+                                DragItem {
                                     id: chip
                                     required property string modelData
-                                    required property int index
                                     readonly property var inf: page.info(modelData, sec.inf.group)
                                     readonly property bool on: !page.hidden.includes(modelData)
                                     readonly property bool here: ControlCenter.available(modelData)
-                                    readonly property int count: ControlCenter.order(sec.inf.group).length
                                     width: chipRow.implicitWidth + 16
                                     height: 32
-                                    radius: Theme.radiusSmall + 2
-                                    color: on ? Theme.accentWash : chipArea.containsMouse ? Theme.fillHover : "transparent"
-                                    border { color: on ? Theme.accent : Theme.stroke; width: 1 }
-
-                                    Row {
-                                        id: chipRow
-                                        anchors.centerIn: parent
-                                        spacing: 6
-                                        ArrowButton { small: true; anchors.verticalCenter: parent.verticalCenter; glyph: "\u{F0141}"; tip: "Earlier"; opacity: chipArea.containsMouse || hovered ? (enabled ? 1 : 0.3) : 0; enabled: chip.index > 0; onClicked: page.move(sec.inf.group, chip.modelData, -1) }
-                                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.inf.glyph; color: chip.on ? Theme.text : Theme.muted; font { family: Theme.iconFont; pixelSize: 13 } }
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: chip.inf.label + (chip.here ? "" : " (not here)")
-                                            color: chip.on ? Theme.text : Theme.muted
-                                            font { family: Theme.font; pixelSize: 12; strikeout: !chip.on }
-                                        }
-                                        ArrowButton { small: true; anchors.verticalCenter: parent.verticalCenter; glyph: "\u{F0142}"; tip: "Later"; opacity: chipArea.containsMouse || hovered ? (enabled ? 1 : 0.3) : 0; enabled: chip.index < chip.count - 1; onClicked: page.move(sec.inf.group, chip.modelData, 1) }
-                                    }
-                                    MouseArea {
-                                        id: chipArea
+                                    key: sec.inf.group
+                                    payload: modelData
+                                    floatOn: page.parent
+                                    onClicked: page.setShown(modelData, !on)
+                                    Rectangle {
                                         anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        z: -1   // under the arrows
-                                        onClicked: page.setShown(chip.modelData, !chip.on)
+                                        radius: chip.radius
+                                        color: chip.on ? Theme.accentWash : chip.hovered ? Theme.fillHover : "transparent"
+                                        border { color: chip.on ? Theme.accent : Theme.stroke; width: 1 }
+                                        Row {
+                                            id: chipRow
+                                            anchors.centerIn: parent
+                                            spacing: 6
+                                            Text { anchors.verticalCenter: parent.verticalCenter; text: chip.inf.glyph; color: chip.on ? Theme.text : Theme.muted; font { family: Theme.iconFont; pixelSize: 13 } }
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: chip.inf.label + (chip.here ? "" : " (not here)")
+                                                color: chip.on ? Theme.text : Theme.muted
+                                                font { family: Theme.font; pixelSize: 12; strikeout: !chip.on }
+                                            }
+                                        }
                                     }
+                                    DropSpot { anchors.fill: parent; key: chip.key; owner: chip; onPlaced: (id, after) => page.place(sec.inf.group, id, chip.modelData, after) }
                                 }
                             }
                         }
                     }
+                  }
+                    DropSpot { anchors.fill: parent; key: "sections"; vertical: true; owner: sec; onPlaced: (id, after) => page.place("sections", id, sec.modelData, after) }
                 }
             }
         }
@@ -132,7 +136,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: "Highlighted tiles are shown; click one to hide it. Hover a tile for arrows to move it. \"Not here\" tiles need hardware this computer doesn't have."
+        text: "Drag a section or a tile to move it. Highlighted tiles are shown; click one to hide it. \"Not here\" tiles need hardware this computer doesn't have."
         color: Theme.muted
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }

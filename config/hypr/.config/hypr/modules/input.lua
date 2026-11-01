@@ -15,7 +15,6 @@ function apply_input()
             kb_options   = INPUT.kb_options,
             repeat_rate  = INPUT.repeat_rate,
             repeat_delay = INPUT.repeat_delay,
-            follow_mouse = 1,
             sensitivity  = INPUT.sensitivity,
             touchpad = {
                 natural_scroll = INPUT.natural_scroll,

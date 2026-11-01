@@ -19,6 +19,7 @@ Scope {
     property int boxHeight: 400
     property string placement: "cursor"        // "cursor": under the pointer; "center"; "top" / "topLeft" / "topRight" (under the bar)
     property bool open: false
+    property real dim: 0                       // 0..1: darken the rest of the screen while open
     readonly property bool visible: open || box.opacity > 0
     property var targetScreen: Quickshell.screens[0]
     property real cursorX: 0                   // pointer, in the target monitor's logical pixels
@@ -31,7 +32,10 @@ Scope {
     signal closed()
 
     readonly property int edge: Theme.spaceM
-    readonly property int topReserve: 38        // keep clear of the bar (30) with a small gap
+    readonly property bool barBottom: Config.bar.position === "bottom"
+    readonly property int barReserve: Theme.barHeight + 8       // just past the bar, whatever its height and shape
+    readonly property int topReserve: barBottom ? edge : barReserve
+    readonly property int bottomReserve: barBottom ? barReserve : edge
 
     function show() { locate.running = true }
     function hide() { if (open) { open = false; closed() } }
@@ -78,6 +82,13 @@ Scope {
         WlrLayershell.keyboardFocus: popup.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
         MouseArea { anchors.fill: parent; onClicked: popup.hide() }   // click outside
+        Rectangle {   // optional dimmed screen behind the box
+            anchors.fill: parent
+            visible: popup.dim > 0
+            color: "black"
+            opacity: popup.open ? popup.dim : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+        }
 
         Item {
             id: box
@@ -88,8 +99,10 @@ Scope {
                : popup.placement === "topLeft" ? popup.edge
                : Math.max(popup.edge, Math.min(popup.cursorX - width / 2, win.width - width - popup.edge))
             y: popup.placement === "center" ? win.height * 0.22
-               : popup.placement === "topRight" || popup.placement === "topLeft" || popup.placement === "top" ? popup.topReserve
-               : Math.max(popup.topReserve, Math.min(popup.cursorY - 28, win.height - height - popup.edge))
+               // "top" placements sit next to the bar, so with the bar at the bottom they open above it
+               : popup.placement === "topRight" || popup.placement === "topLeft" || popup.placement === "top"
+                 ? (popup.barBottom ? win.height - height - popup.bottomReserve : popup.topReserve)
+               : Math.max(popup.topReserve, Math.min(popup.cursorY - 28, win.height - height - popup.bottomReserve))
 
             opacity: popup.open ? 1 : 0
             scale: popup.open ? 1 : 0.96

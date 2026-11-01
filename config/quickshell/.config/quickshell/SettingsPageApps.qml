@@ -55,15 +55,9 @@ ColumnLayout {
                 }
             }
         }
-    }
-
-
-    SettingGroup {
-        title: "Task manager"
         SettingRow {
-            label: "Opens from the temperatures in the bar and Ctrl+Shift+Esc"
-            hint: Sensors.taskManagers.some(id => DesktopEntries.byId(id)) && !DesktopEntries.byId("io.missioncenter.MissionCenter")
-                  ? "Mission Center looks most like Windows Task Manager (install mission-center from your package manager or Flathub)" : ""
+            label: "Task manager"
+            hint: "Opens with Ctrl+Shift+Esc or a click on the temperatures in the bar"
             Dropdown {
                 width: 240
                 readonly property var installed: Sensors.taskManagers.map(id => DesktopEntries.byId(id)).filter(e => e)

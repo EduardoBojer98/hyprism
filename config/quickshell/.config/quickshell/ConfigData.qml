@@ -23,6 +23,11 @@ JsonAdapter {
         property int gaps: 10                   // px around windows; between windows it is half
     }
     property JsonObject dock: JsonObject {
+        // look (Appearance > Dock)
+        property string style: "glass"          // glass, pill, panel (edge to edge), shelf, clear
+        property string tint: "glass"           // glass, solid or accent
+        property string indicator: "dot"        // open apps and the focused window: dot, line or none
+        property string hover: "plate"          // plate (a tile behind), grow or lift
         property int iconSize: 44
         property bool autoHide: true
         property bool showRunning: true
@@ -37,6 +42,15 @@ JsonAdapter {
         property list<var> actions: []
         property var usage: ({})                // launch counts, for ranking
         property string placement: "center"     // center | cursor
+        // look (Search & Widgets > Spotlight)
+        property string style: "split"          // split (separate glass pieces) or unified (one card)
+        property int width: 720                 // px
+        property int field: 48                  // search field height, px (the text scales with it)
+        property string tint: "glass"           // glass, solid or accent
+        property string corners: "soft"         // round, soft or sharp
+        property int columns: 7                 // apps per row in the apps grid
+        property string selection: "soft"       // the selected result: soft (grey) or accent
+        property real dim: 0                    // darken the screen behind it, 0..0.6
         property string startView: "home"       // home (suggestions until you type) | apps (grid) | search (empty pill)
         property list<string> recent: []        // result keys, most recent first, for the home view
         // result groups, best first; a group missing from the list is hidden
@@ -84,6 +98,41 @@ JsonAdapter {
         property list<string> shortcuts: []
         property list<string> hidden: ["darkmode", "colorpicker", "mission"]
     }
+    // Lock screen: ThemeSync writes hypr/settings/hyprlock-theme.conf (hypr/lockscreens/<design>.conf)
+    property JsonObject lockscreen: JsonObject {
+        property string design: "glass"         // glass, center, minimal, sidebar, stacked, terminal
+        property string wallpaper: ""           // full path; empty = the desktop wallpaper
+        property int blur: 3                    // blur passes, 0 = sharp
+        property real brightness: 0.72
+    }
+    // Window behaviour, animations and per-app rules: ThemeSync writes them to hypr/settings/windows.lua
+    // (hypr/modules/windows.lua has the same defaults)
+    property JsonObject windows: JsonObject {
+        property string layout: "dwindle"       // "dwindle" (split), "master" (main + stack) or "scrolling"
+        property int newSplit: 0                // dwindle: 0 where the mouse is, 1 left/top, 2 right/bottom
+        property bool smartSplit: false         // dwindle: split by where in the window the mouse is
+        property string masterNew: "slave"      // master: new windows join the stack ("slave") or become main
+        property string masterSide: "left"      // master: where the main window sits
+        property real columnWidth: 0.5          // scrolling: share of the screen per column
+        property bool followMouse: true
+        property bool focusOnActivate: false    // apps may bring themselves to the front
+        property bool warpCursor: true          // pointer jumps to the window focused from the keyboard
+        property bool backAndForth: false       // the current desktop's shortcut goes back to the last one
+        property real inactiveOpacity: 0.96
+        property bool dimInactive: false
+        property real dimStrength: 0.2
+        property bool resizeOnBorder: true
+        property bool snap: false               // floating windows snap to edges and each other
+        property bool hideCursorTyping: false
+        property bool animations: true
+        property string animOpen: "popin"       // popin, slide, gnomed, fade, none
+        property string animClose: "popin"
+        property string animMove: "smooth"      // smooth, snappy, bouncy, none
+        property string animWorkspace: "slidefade"  // slidefade, slide, slidevert, fade, none
+        property string animSpeed: "normal"     // slow, normal, fast
+        property bool titleBars: true           // hyprbars: title bar with buttons on apps that draw none
+        property var apps: []                   // [{ id, name, class (regex), open: normal|float|pin|maximize|fullscreen, workspace: 0 = any }]
+    }
     property JsonObject keybinds: JsonObject {
         // id -> { keys: "SUPER + K" ("" = turned off), label, group, def } (Settings > Keyboard Shortcuts)
         property var overrides: ({})
@@ -117,6 +166,12 @@ JsonAdapter {
         property list<string> apps: []           // desktop entry ids opened at login (startup-apps)
     }
     property JsonObject bar: JsonObject {
+        // look (Appearance > Menu Bar); each option works with every other one and with any layout
+        property string style: "strip"          // strip, floating, islands (a pill per zone), compact (one centred pill), tabs, clear
+        property string position: "top"         // top or bottom
+        property int size: 30                   // px tall
+        property string items: "plain"          // plain, or chips: each item on its own tile
+        property string tint: "glass"           // glass, solid or accent
         property bool clock24: true
         property bool seconds: false
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
@@ -147,5 +202,6 @@ JsonAdapter {
         property string source: "all"            // "all": every image in the folders, "selected": only picked ones
         property list<string> selected: []       // full paths for source "selected"
         property string order: "shuffle"         // "shuffle" or "name"
+        property int blur: 0                     // desktop only (a blurred copy in ~/.cache); 0 = sharp
     }
 }

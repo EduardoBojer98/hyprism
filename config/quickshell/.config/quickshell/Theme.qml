@@ -59,6 +59,12 @@ Singleton {
                                          : tinted(1.05, 0.28 + glassAlpha * 0.6)   // bar, dock, OSD
     readonly property color glassStrong: light ? frosted(0.35, Math.min(0.95, glassAlpha + 0.35))
                                                : tinted(0.82, Math.min(0.9, 0.5 + glassAlpha * 0.7)) // panels with text
+    // the menu bar's real size: its height plus the gap the floating shapes keep from the screen edge
+    // (Bar.qml draws it; popups that open from it sit just past it)
+    readonly property int barInset: ["floating", "islands", "compact"].includes(Config.bar.style) ? 6 : 0
+    readonly property int barHeight: Config.bar.size + barInset
+    // a bar or dock surface: "glass" (frosted), "solid" (opaque) or "accent" (glass washed with the accent)
+    function surface(tint) { return tint === "solid" ? menu : tint === "accent" ? Qt.tint(glass, Qt.rgba(accent.r, accent.g, accent.b, light ? 0.25 : 0.38)) : glass }
     readonly property color menu: light ? frosted(0.7, 0.98) : tinted(0.95, 0.97)  // dropdown lists
     readonly property color sidebar: light ? Qt.rgba(0, 0, 0, 0.035) : Qt.rgba(0, 0, 0, 0.18)
     readonly property color stroke: light ? Qt.rgba(0, 0, 0, 0.09) : Qt.rgba(1, 1, 1, 0.10)    // hairline edge

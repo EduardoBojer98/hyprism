@@ -4,7 +4,9 @@ import Quickshell.Io
 import QtQuick
 
 // Wallpaper images from the folders in Settings > Wallpaper, setting one (hyprpaper live, and
-// saved as hypr/settings/wallpaper for hyprpaper and the lock screen), and the optional slideshow.
+// saved as hypr/settings/wallpaper for hyprpaper and the lock screen), the optional slideshow, and
+// the desktop blur: hyprpaper can't blur, so it is shown a blurred copy kept in ~/.cache/wallpaper-blur
+// (the link keeps the original; the lock screen blurs on its own).
 //   Wallpapers.images · Wallpapers.apply(path) · Wallpapers.next() · `qs ipc call wallpaper next`
 Singleton {
     id: root
@@ -24,10 +26,25 @@ Singleton {
         current = path
         Config.set("wallpaper", "current", path)
         const safe = path.replace(/[|'\\\n]/g, "")
-        Quickshell.execDetached(["hyprctl", "hyprpaper", "wallpaper", "," + safe])
+        show(safe)
         // hyprpaper.conf and hyprlock.conf both read this link (kept out of git, it's your choice)
         Quickshell.execDetached(["sh", "-c", "mkdir -p \"$HOME/.config/hypr/settings\" && ln -sfn \"$1\" \"$HOME/.config/hypr/settings/wallpaper\"", "sh", safe])
     }
+
+    // What hyprpaper displays: the picture, or a blurred copy (made once per picture and strength,
+    // at most 2560 px wide, blurred at half that, so even a big photo takes well under a second;
+    // the newest 10 copies are kept)
+    function show(path) {
+        if (!path) return
+        if (c.blur <= 0) { Quickshell.execDetached(["hyprctl", "hyprpaper", "wallpaper", "," + path]); return }
+        Quickshell.execDetached(["sh", "-c",
+            "d=\"$HOME/.cache/wallpaper-blur\"; out=\"$d/$(printf %s \"$1$2\" | md5sum | cut -c1-16).jpg\"; mkdir -p \"$d\"; "
+            + "[ -f \"$out\" ] || { magick \"$1\" -resize 1280x1280\\> -blur 0x\"$2\" -resize 200% -quality 92 \"$out.tmp.jpg\" && mv \"$out.tmp.jpg\" \"$out\"; }; "
+            + "[ -f \"$out\" ] && hyprctl hyprpaper wallpaper \",$out\"; ls -t \"$d\"/*.jpg | tail -n +11 | xargs -r rm -f",
+            "sh", path, String(c.blur)])
+    }
+    Timer { id: blurDebounce; interval: 400; onTriggered: root.show(root.current) }
+    Connections { target: Config.wallpaper; function onBlurChanged() { blurDebounce.restart() } }
 
     function next() {
         const list = pool
@@ -50,7 +67,11 @@ Singleton {
             onStreamFinished: {
                 const [list, cur] = text.split("--\n")
                 root.images = list.trim().split("\n").filter(x => x)
-                if (!root.current) root.current = root.c.current || root.expand((cur ?? "").trim())
+                if (!root.current) {
+                    root.current = root.c.current || root.expand((cur ?? "").trim())
+                    // shortcut: hyprpaper.conf shows the sharp picture at login until this swaps in the blurred copy
+                    if (root.c.blur > 0) root.show(root.current)
+                }
             }
         }
     }

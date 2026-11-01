@@ -15,9 +15,14 @@ Rectangle {
 
     anchors.verticalCenter: parent.verticalCenter
     implicitWidth: row.implicitWidth + 16
-    implicitHeight: 22
+    implicitHeight: Config.bar.size - 8
     radius: 7
-    color: active ? Theme.fillActive : interactive && area.containsMouse ? Theme.fillHover : "transparent"
+    // "chips" (Settings > Appearance > Menu Bar): every item sits on its own glass tile
+    readonly property bool chip: Config.bar.items === "chips"
+    readonly property color base: chip ? Theme.surface(Config.bar.tint) : "transparent"
+    color: active ? (chip ? Qt.tint(base, Theme.fillActive) : Theme.fillActive)
+         : interactive && area.containsMouse ? (chip ? Qt.tint(base, Theme.fillHover) : Theme.fillHover) : base
+    border { color: Theme.stroke; width: chip ? 1 : 0 }
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
     Row {

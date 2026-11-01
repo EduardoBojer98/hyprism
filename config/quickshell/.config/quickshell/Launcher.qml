@@ -12,8 +12,17 @@ import QtQuick
 //   Files     files and folders only        Actions   system and custom actions only
 //   Clipboard the clipboard history inside this panel (or the Super+V popup, per Settings)
 // Keys: type · ↑↓ (←→ in Apps) move · Enter open · Tab next mode · Esc close
+// Look (Settings > Search & Widgets > Spotlight): separate options, the designs there are sets of them:
+// split (search pill, round buttons and results as separate glass) or unified (one card), width,
+// search size, colour, corners, apps per row, how the selected result is marked, and a dimmed screen.
 Singleton {
     id: root
+
+    readonly property var look: Config.launcher
+    readonly property bool unified: look.style === "unified"
+    readonly property color surface: Theme.surface(look.tint)
+    readonly property real corner: look.corners === "round" ? 26 : look.corners === "sharp" ? Theme.radiusSmall : Theme.radiusLarge
+    readonly property color selection: look.selection === "accent" ? Theme.accentWash : Theme.fillActive
 
     readonly property var modes: [
         { id: "apps",    name: "Applications", glyph: "\u{F003B}", hint: "Search applications" },
@@ -108,23 +117,42 @@ Singleton {
         id: popup
         name: "launcher"
         placement: Config.launcher.placement
-        boxWidth: 720
-        boxHeight: pill.height + (panel.visible ? panel.height + Theme.spaceS : 0)
+        boxWidth: root.look.width
+        boxHeight: pill.height + (panel.visible ? panel.height + panel.anchors.topMargin : 0)
+        dim: root.look.dim
         focusItem: field
         onClosed: { field.text = ""; root.confirmFor = null }
+
+        // unified: one card behind the search field and the results, a hairline between them
+        Glass {
+            visible: root.unified
+            width: parent.width
+            height: popup.boxHeight
+            radius: root.look.corners === "round" ? 26 : root.corner
+            color: root.surface
+            Rectangle {
+                visible: panel.visible
+                anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: pill.height }
+                height: 1
+                color: Theme.stroke
+            }
+        }
 
         // Search pill and round mode buttons ----------------------------------------------------
         Item {
             id: pill
             width: parent.width
-            height: 48
+            height: root.look.field
             z: 1   // above the panel, so the mode buttons' tooltips show over it
 
             Glass {
                 id: searchBox
-                anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: buttons.left; rightMargin: Theme.spaceS }
+                anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: buttons.left; rightMargin: root.unified ? 0 : Theme.spaceS }
                 strong: true
-                radius: Theme.radiusLarge
+                flat: root.unified
+                color: root.unified ? "transparent" : root.surface
+                border.width: root.unified ? 0 : 1
+                radius: root.look.corners === "round" ? height / 2 : root.corner
 
                 Text {
                     id: lens
@@ -138,7 +166,7 @@ Singleton {
                     anchors { left: lens.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
                     color: Theme.text
                     selectionColor: Theme.accent
-                    font { family: Theme.font; pixelSize: Theme.fontHeading - 2 }
+                    font { family: Theme.font; pixelSize: Math.round(root.look.field * 0.38) }
                     onTextChanged: {
                         if (root.mode === "clip") { Clipboard.filter = text; clipView.reset(); return }
                         Search.query = text; results.currentIndex = 0; grid.currentIndex = 0; root.homeIndex = 0; root.confirmFor = null
@@ -202,6 +230,9 @@ Singleton {
                 width: modeRow.implicitWidth + 12
                 radius: height / 2
                 strong: true
+                flat: root.unified
+                color: root.unified ? "transparent" : root.surface
+                border.width: root.unified ? 0 : 1
                 Row {
                     id: modeRow
                     anchors.centerIn: parent
@@ -238,9 +269,12 @@ Singleton {
         // Results / browse panel ------------------------------------------------------------------
         Glass {
             id: panel
-            anchors { top: pill.bottom; topMargin: Theme.spaceS; left: parent.left; right: parent.right }
+            anchors { top: pill.bottom; topMargin: root.unified ? 0 : Theme.spaceS; left: parent.left; right: parent.right }
             strong: true
-            radius: Theme.radiusLarge
+            flat: root.unified
+            color: root.unified ? "transparent" : root.surface
+            border.width: root.unified ? 0 : 1
+            radius: root.corner
             visible: root.view !== "search" || field.text.trim() !== ""
             height: root.view === "home" ? home.implicitHeight + Theme.spaceM * 2
                   : root.view === "apps" || root.view === "clip" ? 460
@@ -328,7 +362,7 @@ Singleton {
                             Rectangle {
                                 anchors { fill: parent; margins: 3 }
                                 radius: Theme.radius
-                                color: app.current ? Theme.fillActive : appArea.containsMouse ? Theme.fillHover : "transparent"
+                                color: app.current ? root.selection : appArea.containsMouse ? Theme.fillHover : "transparent"
                             }
                             IconImage {
                                 id: freqIcon
@@ -407,7 +441,7 @@ Singleton {
                     id: grid
                     anchors { left: parent.left; right: parent.right; top: rule.bottom; bottom: parent.bottom; margins: Theme.spaceS }
                     clip: true
-                    cellWidth: Math.floor(width / 7)
+                    cellWidth: Math.floor(width / root.look.columns)
                     cellHeight: 104
                     model: root.appGrid
                     boundsBehavior: Flickable.StopAtBounds
@@ -421,7 +455,7 @@ Singleton {
                         Rectangle {
                             anchors { fill: parent; margins: 3 }
                             radius: Theme.radius
-                            color: cell.GridView.isCurrentItem ? Theme.fillActive : cellArea.containsMouse ? Theme.fillHover : "transparent"
+                            color: cell.GridView.isCurrentItem ? root.selection : cellArea.containsMouse ? Theme.fillHover : "transparent"
                         }
                         IconImage {
                             id: appIcon
@@ -492,7 +526,7 @@ Singleton {
                         width: parent.width
                         height: row.topHit ? 56 : Theme.rowHeight + 4
                         radius: Theme.radiusSmall
-                        color: row.ListView.isCurrentItem ? Theme.fillActive : rowArea.containsMouse ? Theme.fillHover : "transparent"
+                        color: row.ListView.isCurrentItem ? root.selection : rowArea.containsMouse ? Theme.fillHover : "transparent"
 
                         Item {
                             id: iconBox
@@ -565,7 +599,7 @@ Singleton {
         width: parent ? parent.width : 0
         height: Theme.rowHeight + 4
         radius: Theme.radiusSmall
-        color: current ? Theme.fillActive : hrArea.containsMouse ? Theme.fillHover : "transparent"
+        color: current ? root.selection : hrArea.containsMouse ? Theme.fillHover : "transparent"
         Item {
             id: hrIcon
             anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }

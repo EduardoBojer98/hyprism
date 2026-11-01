@@ -34,14 +34,11 @@ hl.config({
         col = {
             inactive_border = "rgba(ffffff10)",
         },
-        resize_on_border = true,
-        layout = "dwindle",
     },
 
     decoration = {
         rounding_power = 2.4,           -- squircle-like corners
         active_opacity   = 1.0,
-        inactive_opacity = 0.96,
         shadow = {
             enabled      = true,
             range        = 32,          -- wide and soft: floating depth without a dark halo
@@ -60,7 +57,6 @@ hl.config({
             vibrancy   = 0.18,
             popups     = true,
         },
-        dim_inactive = false,
     },
 
     dwindle = {

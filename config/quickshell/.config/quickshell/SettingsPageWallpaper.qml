@@ -63,6 +63,15 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Look"
+        SettingRow {
+            label: "Blur"
+            hint: "The desktop only; the lock screen has its own blur in Lock Screen"
+            ConfigSlider { section: "wallpaper"; key: "blur"; from: 0; to: 30; step: 1; format: v => v === 0 ? "Off" : String(v) }
+        }
+    }
+
+    SettingGroup {
         title: "Slideshow"
         SettingRow {
             label: "Change the wallpaper automatically"

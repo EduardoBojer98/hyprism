@@ -12,7 +12,8 @@ import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 
-// Top bar: one thin frosted strip across the screen, monochrome items that light up on hover.
+// Menu bar: monochrome items that light up on hover. Its look (Appearance > Menu Bar) is a set of separate
+// options: shape (Config.bar.style), top or bottom, height, plain or chip items, and colour.
 // Three zones (left, centre, right), each a list of the items below, arranged in Settings > Menu Bar.
 // Desktops are numbers in a recessed pill; an accent pill slides to the current one.
 // Amber/red appear only when a value leaves its normal range.
@@ -29,8 +30,17 @@ PanelWindow {
     property string appClass: ""   // focused window, from Hyprland's activewindow event
     property string appTitle: ""
 
-    anchors { top: true; left: true; right: true }
-    implicitHeight: 30
+    // Look (Settings > Appearance > Menu Bar): each option on its own, the designs there are sets of them
+    readonly property string style: Config.bar.style      // strip, floating, islands, compact, tabs, clear
+    readonly property bool bottom: Config.bar.position === "bottom"
+    readonly property color surface: Theme.surface(Config.bar.tint)
+    readonly property int inset: Theme.barInset     // gap between screen edge and glass
+    readonly property int pad: ({ islands: 10, tabs: 14, compact: 12 })[style] ?? 0          // glass beyond the items
+    readonly property int side: style === "floating" ? 20 : style === "islands" ? inset + 2 + pad
+                              : style === "tabs" ? 8 + pad : Theme.spaceS + 4                 // screen side to the first item
+
+    anchors { top: !bottom; bottom: bottom; left: true; right: true }
+    implicitHeight: Theme.barHeight
     color: "transparent"
     WlrLayershell.namespace: "qs-bar"
 
@@ -64,12 +74,30 @@ PanelWindow {
 
     // frosted strip: Hyprland blurs what's behind it (layer rule blur-shell), a hairline closes it off
     Rectangle {
+        visible: bar.style === "strip"
         anchors.fill: parent
-        color: Theme.light ? Qt.rgba(1, 1, 1, 0.55) : Theme.tinted(0.75, 0.40)
+        color: Config.bar.tint === "glass" ? (Theme.light ? Qt.rgba(1, 1, 1, 0.55) : Theme.tinted(0.75, 0.40)) : bar.surface
         Rectangle {
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { left: parent.left; right: parent.right; bottom: bar.bottom ? undefined : parent.bottom; top: bar.bottom ? parent.top : undefined }
             height: 1
             color: Theme.light ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.06)
+        }
+    }
+
+    Glass {
+        visible: bar.style === "floating"
+        anchors { fill: parent; topMargin: bar.bottom ? 0 : bar.inset; bottomMargin: bar.bottom ? bar.inset : 0; leftMargin: bar.inset + 2; rightMargin: bar.inset + 2 }
+        radius: height / 2
+        color: bar.surface
+    }
+    // clear: no surface, only a faint shade so light items stay readable on a bright wallpaper
+    Rectangle {
+        visible: bar.style === "clear"
+        anchors { left: parent.left; right: parent.right; top: bar.bottom ? undefined : parent.top; bottom: bar.bottom ? parent.bottom : undefined }
+        height: parent.height + 16
+        gradient: Gradient {
+            GradientStop { position: bar.bottom ? 1 : 0; color: Theme.light ? Qt.rgba(1, 1, 1, 0.35) : Qt.rgba(0, 0, 0, 0.35) }
+            GradientStop { position: bar.bottom ? 0 : 1; color: "transparent" }
         }
     }
 
@@ -79,13 +107,51 @@ PanelWindow {
         keyboard: keyboardW, status: statusW, notifications: notificationsW })
 
     Item {
-        anchors { fill: parent; leftMargin: Theme.spaceS + 4; rightMargin: Theme.spaceS }
-        Zone { id: leftZone; anchors.left: parent.left; items: Config.bar.left }
-        Zone { // centred, but moves aside rather than run into a crowded side
-            items: Config.bar.center
-            x: Math.max(leftZone.width + 12, Math.min((parent.width - width) / 2, rightZone.x - width - 12))
+        id: zones
+        readonly property int gap: 12 + bar.pad * 2
+        readonly property bool compact: bar.style === "compact"
+        // compact: the three zones side by side in one centred pill
+        readonly property real total: leftZone.width + centerZone.width + rightZone.width
+            + (leftZone.width > 0 ? gap : 0) + (rightZone.width > 0 ? gap : 0)
+        anchors { fill: parent; topMargin: bar.bottom ? 0 : bar.inset; bottomMargin: bar.bottom ? bar.inset : 0
+                  leftMargin: bar.side; rightMargin: bar.side - (bar.style === "strip" || bar.style === "clear" ? 4 : 0) }
+        Glass {
+            visible: zones.compact
+            x: leftZone.x - bar.pad
+            width: zones.total + bar.pad * 2
+            height: parent.height
+            radius: height / 2
+            color: bar.surface
         }
-        Zone { id: rightZone; anchors.right: parent.right; items: Config.bar.right }
+        ZonePill { zone: leftZone }
+        ZonePill { zone: centerZone }
+        ZonePill { zone: rightZone }
+        Zone { id: leftZone; x: zones.compact ? (parent.width - zones.total) / 2 : 0; items: Config.bar.left }
+        Zone { // centred, but moves aside rather than run into a crowded side
+            id: centerZone
+            items: Config.bar.center
+            x: zones.compact ? leftZone.x + leftZone.width + (leftZone.width > 0 ? zones.gap : 0)
+                : Math.max(leftZone.width + zones.gap, Math.min((parent.width - width) / 2, rightZone.x - width - zones.gap))
+        }
+        Zone { id: rightZone; x: zones.compact ? leftZone.x + zones.total - width : parent.width - width; items: Config.bar.right }
+    }
+
+    // islands and tabs: a surface behind one zone, gone when the zone shows nothing. Tabs hang from
+    // the screen edge: square there, round away from it.
+    component ZonePill: Rectangle {
+        required property Item zone
+        readonly property bool tab: bar.style === "tabs"
+        visible: (bar.style === "islands" || tab) && zone.width > 0
+        x: zone.x - bar.pad
+        width: zone.width + bar.pad * 2
+        height: parent.height
+        radius: tab ? 0 : height / 2
+        topLeftRadius: tab && !bar.bottom ? 0 : tab ? Theme.radius + 2 : radius
+        topRightRadius: topLeftRadius
+        bottomLeftRadius: tab && bar.bottom ? 0 : tab ? Theme.radius + 2 : radius
+        bottomRightRadius: bottomLeftRadius
+        color: bar.surface
+        border { color: Theme.stroke; width: 1 }
     }
 
     component Zone: Row {

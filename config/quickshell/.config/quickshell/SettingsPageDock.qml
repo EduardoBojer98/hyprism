@@ -2,7 +2,8 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Desktop & Dock: the dock at the bottom of each screen, and its pinned apps (dock.pinned, app ids).
+// Dock: its design (a ready-made set of look options, or each option on its own), how it behaves, and
+// its pinned apps (dock.pinned, app ids). Every design works with any apps and settings below.
 ColumnLayout {
     id: page
     spacing: 20
@@ -19,9 +20,59 @@ ColumnLayout {
     }
     function add(id) { Config.set("dock", "pinned", pinned.concat([id])); query = ""; search.text = "" }
     function remove(id) { Config.set("dock", "pinned", pinned.filter(x => x !== id)) }
+    // dragging: `id` before or after `target` (the dock itself reorders the same way)
+    function place(id, target, after) {
+        if (id === target) return
+        const list = pinned.filter(x => x !== id), i = list.indexOf(target)
+        if (i < 0) return
+        list.splice(i + (after ? 1 : 0), 0, id)
+        Config.set("dock", "pinned", list)
+    }
+
+    readonly property var designs: [
+        { id: "glass",   name: "Glass",   about: "A rounded glass island",
+          set: { style: "glass", tint: "glass", indicator: "dot", hover: "plate" } },
+        { id: "magnify", name: "Magnify", about: "A pill whose icons grow under the pointer",
+          set: { style: "pill", tint: "glass", indicator: "dot", hover: "grow" } },
+        { id: "panel",   name: "Panel",   about: "A solid panel along the bottom edge",
+          set: { style: "panel", tint: "solid", indicator: "line", hover: "plate" } },
+        { id: "shelf",   name: "Shelf",   about: "Icons standing on a glass shelf",
+          set: { style: "shelf", tint: "glass", indicator: "line", hover: "lift" } },
+        { id: "floating", name: "Floating icons", about: "Only the icons, growing on hover",
+          set: { style: "clear", tint: "glass", indicator: "dot", hover: "grow" } },
+        { id: "accent",  name: "Accent",  about: "A pill tinted with the accent colour",
+          set: { style: "pill", tint: "accent", indicator: "line", hover: "lift" } },
+    ]
 
     SettingGroup {
-        title: "Dock"
+        title: "Design"
+        DesignGallery { id: gallery; section: "dock"; designs: page.designs }
+    }
+
+    SettingGroup {
+        title: gallery.match ? "Customise" : "Customise · your own mix"
+        SettingRow {
+            label: "Shape"
+            ConfigChoice { section: "dock"; key: "style"; values: ["glass", "pill", "panel", "shelf", "clear"]
+                           labels: ["Glass", "Pill", "Panel", "Shelf", "Clear"] }
+        }
+        SettingRow {
+            label: "Colour"
+            ConfigChoice { section: "dock"; key: "tint"; values: ["glass", "solid", "accent"]; labels: ["Glass", "Solid", "Accent"] }
+        }
+        SettingRow {
+            label: "Open apps"
+            hint: "The mark under an app with windows open; the focused one is in the accent colour"
+            ConfigChoice { section: "dock"; key: "indicator"; values: ["dot", "line", "none"]; labels: ["Dot", "Line", "None"] }
+        }
+        SettingRow {
+            label: "Pointing at an icon"
+            ConfigChoice { section: "dock"; key: "hover"; values: ["plate", "grow", "lift"]; labels: ["Tile behind", "Grow", "Lift"] }
+        }
+    }
+
+    SettingGroup {
+        title: "Behaviour"
         SettingRow {
             label: "Icon size"
             ConfigChoice { section: "dock"; key: "iconSize"; values: [36, 44, 52, 60]; labels: ["Small", "Medium", "Large", "Huge"] }
@@ -72,7 +123,7 @@ ColumnLayout {
     }
 
     SettingGroup {
-        title: "Pinned apps"
+        title: "Pinned apps · drag to reorder"
         Text {
             visible: page.pinned.length === 0
             Layout.fillWidth: true
@@ -83,14 +134,25 @@ ColumnLayout {
         }
         Repeater {
             model: page.pinned
-            AppRow {
+            DragItem {
+                id: pin
                 required property string modelData
                 required property int index
-                entry: DesktopEntries.byId(modelData)
-                fallback: modelData
-                first: index === 0
-                action: "Unpin"
-                onTriggered: page.remove(modelData)
+                Layout.fillWidth: true
+                implicitHeight: 46
+                key: "pinned"
+                payload: modelData
+                floatOn: page.parent
+                radius: Theme.radius
+                AppRow {
+                    anchors.fill: parent
+                    entry: DesktopEntries.byId(pin.modelData)
+                    fallback: pin.modelData
+                    first: pin.index === 0 || pin.dragging
+                    action: "Unpin"
+                    onTriggered: page.remove(pin.modelData)
+                }
+                DropSpot { anchors.fill: parent; key: "pinned"; vertical: true; owner: pin; onPlaced: (id, after) => page.place(id, pin.modelData, after) }
             }
         }
         SettingRow {

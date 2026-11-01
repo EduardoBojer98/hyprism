@@ -28,16 +28,17 @@ these settings files are real files in `~/.config`, never inside the repo folder
 
 | Group | What's in it |
 |---|---|
-| **Display** | arrange screens, resolution and refresh rate, scale, rotation, adaptive sync, Night Light; Shared Monitor (input switch with the work PC) |
-| **Appearance** | light or dark, accent colour, glass, window border, corners, space around windows, text size, font, animations; Wallpaper (folders, slideshow); Icons and Cursor (choose, size, add a downloaded theme) |
-| **Desktop** | Dock, Search & Launcher (Spotlight), Control Center, Notifications, Clipboard, Weather, Calendar |
-| **Input** | keyboard layouts, key repeat, touchpad and pointer; MX Master buttons (opens JuhRadial MX) |
-| **Sound** | output and input devices, volumes, per-app volume |
 | **Network & Bluetooth** | Wi-Fi, advanced network editor, Bluetooth devices |
+| **Displays** | arrange screens, resolution and refresh rate, scale, rotation, adaptive sync, Night Light; Shared Monitor (input switch with the work PC) |
+| **Sound** | output and input devices, volumes, per-app volume |
 | **Power & Battery** | battery health, charge limit, power mode, what the lid does (shown only), Lock & Sleep timings, ASUS hardware |
-| **Keyboard Shortcuts** | click a shortcut's keys and press new ones; Esc cancels, taken combinations are refused, each can be turned off or reset |
-| **Default Apps**, **Startup Apps** | which app opens links, files and folders; what starts at login (every entry in `~/.config/autostart`: switch on/off, remove, add any app) |
-| **System** | About this computer, Update from GitHub, Re-run the install, Run doctor, Language & Region |
+| **Appearance** | light or dark, accent colour, glass, corners, text size, font; Menu Bar and Dock (a design to pick, or shape, position, height, colour and more one by one, plus the items, clock and pinned apps, all moved by drag and drop); Wallpaper (folders, slideshow); Lock Screen (six designs, its own picture or the desktop wallpaper, blur, brightness); Icons and Cursor (choose, size, add a downloaded theme) |
+| **Desktop** | Control Center (drag sections and tiles to rearrange), Notifications, Hot Corners |
+| **Windows** | Window Behaviour (split, main + stack or scrolling layout, focus, resizing, snapping); Window Look (focused window border, space around windows, inactive window opacity and dimming); Animations (menus and panels on or off, how windows open, close and move, desktop switching, speed); App Rules (open an app floating, on top, maximised, fullscreen or on a chosen desktop) |
+| **Search & Widgets** | Search & Launcher (Spotlight: a design to pick, or layout, width, size, colour, corners, dimmed screen one by one; drag the result groups into order), Clipboard, Weather, Calendar |
+| **Keyboard & Mouse** | keyboard layouts, key repeat, touchpad and pointer, MX Master buttons (opens JuhRadial MX); Keyboard Shortcuts (click a shortcut's keys and press new ones; Esc cancels, taken combinations are refused) |
+| **Apps** | Installed Apps (every app with its source, version and size: open, show in Files, uninstall); Default Apps (links, files, folders, task manager); Startup Apps (every entry in `~/.config/autostart`) |
+| **System** | Language & Region, About this computer, Update from GitHub, Re-run the install, Run doctor |
 
 Everything applies right away except language (next login) and lid behaviour (a system file set by the
 installer's `session` step).

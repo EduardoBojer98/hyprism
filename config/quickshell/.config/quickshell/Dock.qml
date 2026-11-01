@@ -8,10 +8,17 @@ import QtQuick
 // every window on this dock's monitor as its own live thumbnail with the app's icon on it. With auto-hide it slides up
 // when the pointer touches the bottom edge and stays visible on an empty workspace.
 // Right-click an icon or a window for windows and pin / minimise / restore / quit.
+// Its look (Appearance > Dock) is a set of separate options: shape (Config.dock.style), colour (tint),
+// the open-app mark (indicator) and what hovering an icon does (hover).
 PanelWindow {
     id: dock
 
     readonly property int iconSize: Config.dock.iconSize
+    readonly property string style: Config.dock.style
+    readonly property int lift: style === "panel" ? 0 : 10     // gap under the island
+    readonly property bool bare: style === "clear" || style === "shelf"   // no surface around the icons
+    readonly property string indicator: Config.dock.indicator
+    readonly property string hoverStyle: Config.dock.hover
     readonly property int slot: iconSize + 4          // one icon's cell
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
@@ -98,7 +105,7 @@ PanelWindow {
     // a layer surface made the dock jump and flicker); the input mask limits it to the island.
     anchors { bottom: true; left: true; right: true }
     implicitHeight: 340   // island + room above it for tooltips / the app menu
-    exclusiveZone: Config.dock.autoHide ? 0 : island.height + 10
+    exclusiveZone: Config.dock.autoHide ? 0 : island.height + dock.lift
     color: "transparent"
     WlrLayershell.namespace: "qs-dock"
     WlrLayershell.layer: WlrLayer.Top
@@ -122,19 +129,33 @@ PanelWindow {
     Glass {
         id: island
         anchors.horizontalCenter: parent.horizontalCenter
-        y: dock.shown ? parent.height - height - 10 : parent.height + 4
+        y: dock.shown ? parent.height - height - dock.lift : parent.height + 4
         opacity: dock.shown ? 1 : 0
         Behavior on y { NumberAnimation { duration: Theme.animate ? 260 : 0; easing.type: Easing.OutCubic } }
         Behavior on opacity { NumberAnimation { duration: Theme.anim } }
         Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
 
-        width: row.implicitWidth + 16
+        width: dock.style === "panel" ? parent.width : row.implicitWidth + (dock.style === "pill" ? 24 : 16)
         height: dock.iconSize + 16
-        radius: Theme.radiusLarge + 4
+        radius: dock.style === "panel" ? 0 : dock.style === "pill" ? height / 2 : Theme.radiusLarge + 4
+        flat: dock.bare
+        color: dock.bare ? "transparent" : dock.style === "panel" && Config.dock.tint === "glass" ? Theme.glassStrong : Theme.surface(Config.dock.tint)
+        border.width: dock.bare ? 0 : 1
+
+        Rectangle {   // shelf: the icons stand on a glass slab
+            visible: dock.style === "shelf"
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            height: Math.round(parent.height * 0.42)
+            radius: Theme.radiusSmall
+            color: Theme.surface(Config.dock.tint === "glass" ? "solid" : Config.dock.tint)
+            border { color: Theme.strokeStrong; width: 1 }
+        }
 
         Row {
             id: row
-            anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+            anchors { left: dock.style === "panel" ? undefined : parent.left; leftMargin: dock.style === "pill" ? 12 : 8
+                      horizontalCenter: dock.style === "panel" ? parent.horizontalCenter : undefined
+                      verticalCenter: parent.verticalCenter }
             spacing: 6
 
             // App menu / Spotlight-style launcher
@@ -238,22 +259,25 @@ PanelWindow {
                             y: app.dragged ? -4 : 0
                         }
 
-                        // hover plate (instead of growing): a soft tile behind the icon and its dots
+                        // hover plate: a soft tile behind the icon (hover "plate"; always while dragged or in a menu)
                         Rectangle {
                             anchors { fill: parent; topMargin: -2 }
                             radius: Theme.radius
                             color: area.pressed || app.dragged ? Theme.fillActive : Theme.fillHover
-                            opacity: area.containsMouse || app.dragged || menu.item === app ? 1 : 0
+                            opacity: area.containsMouse && dock.hoverStyle === "plate" || app.dragged || menu.item === app ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                         }
 
                         IconImage {
                             id: icon
-                            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
+                            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top
+                                      topMargin: dock.hoverStyle === "lift" && area.containsMouse && !app.dragged ? -8 : 0 }
+                            Behavior on anchors.topMargin { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
                             implicitSize: dock.iconSize
                             source: Quickshell.iconPath(app.modelData?.icon ?? "", "application-x-executable")
-                            scale: area.pressed && !app.dragged ? 0.9 : 1
-                            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                            transformOrigin: Item.Bottom
+                            scale: area.pressed && !app.dragged ? 0.9 : dock.hoverStyle === "grow" && area.containsMouse && !app.dragged ? 1.22 : 1
+                            Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
 
                             // launching: a slow breath until the first window shows up
                             SequentialAnimation on opacity {
@@ -265,6 +289,7 @@ PanelWindow {
                             }
                         }
                         Timer { running: app.launching; interval: 10000; onTriggered: app.launching = false }
+                        Mark { visible: app.windows.length > 0; on: app.windows.some(t => t.activated) }
                     }
 
                     MouseArea {
@@ -347,22 +372,25 @@ PanelWindow {
                         anchors { fill: parent; topMargin: -2 }
                         radius: Theme.radius
                         color: winArea.pressed ? Theme.fillActive : Theme.fillHover
-                        opacity: winArea.containsMouse || menu.item === win ? 1 : 0
+                        opacity: winArea.containsMouse && dock.hoverStyle === "plate" || menu.item === win ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                     }
 
                     Rectangle {
                         id: frame
                         readonly property real boxH: dock.iconSize - 4
-                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 2 }
+                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top
+                                  topMargin: dock.hoverStyle === "lift" && winArea.containsMouse ? -6 : 2 }
+                        Behavior on anchors.topMargin { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
                         height: Math.min(boxH, (win.width - 6) / win.aspect)
                         width: height * win.aspect
                         radius: Theme.radiusSmall - 2
                         color: Theme.fill
                         border { color: win.focused ? Theme.accent : Theme.stroke; width: win.focused ? 2 : 1 }
                         opacity: win.minimised ? 0.55 : 1
-                        scale: winArea.pressed ? 0.94 : 1
-                        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                        transformOrigin: Item.Bottom
+                        scale: winArea.pressed ? 0.94 : dock.hoverStyle === "grow" && winArea.containsMouse ? 1.15 : 1
+                        Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
                         clip: true
 
                         ScreencopyView {
@@ -390,10 +418,9 @@ PanelWindow {
                         implicitSize: Math.round(dock.iconSize * 0.42)
                         source: Quickshell.iconPath(win.entry?.icon ?? "", "application-x-executable")
                     }
-                    Rectangle {   // focused / asking for attention
-                        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 1 }
-                        width: 4; height: 4; radius: 2
-                        color: win.modelData.urgent ? Theme.warning : Theme.text
+                    Mark {   // focused / asking for attention
+                        on: true
+                        urgent: win.modelData.urgent
                         opacity: win.modelData.urgent || win.focused ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: Theme.anim } }
                     }
@@ -525,5 +552,18 @@ PanelWindow {
                 }
             }
         }
+    }
+
+    // the open-app mark under an icon (Config.dock.indicator): a dot or a short line; brighter when focused
+    component Mark: Rectangle {
+        property bool on: false
+        property bool urgent: false
+        visible: dock.indicator !== "none" || urgent
+        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 1 }
+        width: dock.indicator === "line" ? (on ? 16 : 8) : 4
+        height: dock.indicator === "line" ? 3 : 4
+        radius: height / 2
+        color: urgent ? Theme.warning : on ? Theme.accent : Theme.text
+        Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
     }
 }

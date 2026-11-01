@@ -1,24 +1,46 @@
 #!/usr/bin/env bash
-# Builds this repo's Hyprland plugins (plugins/<name>/main.cpp) and loads them into the running
-# Hyprland. Rebuilds after a Hyprland update, since a plugin only loads into the exact version it
-# was built against. Run from Hyprland's autostart; a failed build only skips that plugin.
+# Builds this repo's Hyprland plugins (plugins/<name>/main.cpp) and the official ones listed in
+# UPSTREAM (hyprwm/hyprland-plugins, shallow-cloned at the tag of the running Hyprland), and loads
+# them into the running Hyprland. Rebuilds after a Hyprland update, since a plugin only loads into the
+# exact version it was built against. Run from Hyprland's autostart; a failed build only skips that
+# plugin. Then calls setup_plugins() (hypr/modules/plugins.lua), which configures what got loaded.
 set -uo pipefail
 repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)   # ~/.local/bin is a link into the repo
 out=${XDG_DATA_HOME:-$HOME/.local/share}/hypr-plugins
 mkdir -p "$out"
+UPSTREAM=(hyprbars)   # title bars with buttons for windows that draw none (hypr/modules/plugins.lua)
 
-for src in "$repo"/plugins/*/main.cpp; do
-    name=$(basename "$(dirname "$src")")
-    so=$out/$name.so
-    if [[ ! -f $so || $src -nt $so || /usr/bin/Hyprland -nt $so ]]; then
+# build NAME SOURCES... : g++ into $out/NAME.so when missing or older than its sources or Hyprland
+build() {
+    local name=$1 so=$out/$1.so; shift
+    local f stale=false
+    [[ ! -f $so || /usr/bin/Hyprland -nt $so ]] && stale=true
+    for f in "$@"; do [[ $f -nt $so ]] && stale=true; done
+    if $stale; then
         # shellcheck disable=SC2046  # pkg-config prints several flags
-        if ! g++ -shared -fPIC -O2 -std=c++2b "$src" -o "$so.tmp" \
-                $(pkg-config --cflags hyprland pixman-1 libdrm) 2>"$out/$name.log"; then
+        if ! g++ -shared -fPIC -O2 -std=c++2b -Wno-c++11-narrowing -fno-gnu-unique "$@" -o "$so.tmp" \
+                $(pkg-config --cflags hyprland pixman-1 libdrm libinput libudev wayland-server xkbcommon) 2>"$out/$name.log"; then
             notify-send -a Hyprland "Plugin $name didn't build" "See $out/$name.log"
-            continue
+            return
         fi
         mv "$so.tmp" "$so"
         hyprctl plugin unload "$so" >/dev/null 2>&1
     fi
     hyprctl plugin list | grep -q "^Plugin $name " || hyprctl plugin load "$so" >/dev/null
+}
+
+for src in "$repo"/plugins/*/main.cpp; do
+    build "$(basename "$(dirname "$src")")" "$src"
 done
+
+tag=$(hyprctl version -j | jq -r .tag)
+up=$out/src/hyprland-plugins-$tag
+if [[ ! -d $up ]] && ! git clone -q -c advice.detachedHead=false -b "$tag" --depth 1 \
+        https://github.com/hyprwm/hyprland-plugins "$up" 2>"$out/clone.log"; then
+    notify-send -a Hyprland "Hyprland plugins not downloaded" "No tag $tag yet, or offline; see $out/clone.log"
+fi
+for name in "${UPSTREAM[@]}"; do
+    [[ -d $up/$name ]] && build "$name" "$up/$name"/*.cpp
+done
+
+hyprctl eval "setup_plugins()" >/dev/null

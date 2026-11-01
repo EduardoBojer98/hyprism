@@ -39,6 +39,7 @@ add("maximise",   "Windows", "Maximise",                 key("SHIFT + F"), hl.ds
 add("float",      "Windows", "Float / tile",             key("T"), hl.dsp.window.float({ action = "toggle" }))
 add("split",      "Windows", "Swap split direction",     key("J"), hl.dsp.layout("togglesplit"))
 add("minimise",   "Windows", "Minimise (restore from the dock)", key("H"), hl.dsp.window.move({ workspace = "special:minimized", follow = false }))
+add("window-menu", "Windows", "Window menu: snap, move, opacity", key("Z"), exec("qs ipc call windowmenu open"))
 for _, dir in ipairs({ "left", "right", "up", "down" }) do
     add("focus-" .. dir, "Windows", "Focus " .. dir,     key(dir), hl.dsp.focus({ direction = dir }))
     add("move-" .. dir,  "Windows", "Move window " .. dir, key("SHIFT + " .. dir), hl.dsp.window.move({ direction = dir }))

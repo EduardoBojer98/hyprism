@@ -19,17 +19,17 @@ Singleton {
     // The sidebar: groups like a normal desktop's settings, each with one or more pages.
     // Page ids still work everywhere (show("sound"), `qs ipc call settings open bluetooth`).
     readonly property var allGroups: [
-        { id: "display",    name: "Display",              glyph: "\u{F0379}", pages: ["displays", "monitor"] },
-        { id: "appearance", name: "Appearance",           glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons", "cursor"] },
-        { id: "desktop",    name: "Desktop",              glyph: "\u{F0349}", pages: ["bar", "dock", "hotcorners", "launcher", "controlcenter", "notifications", "clipboard", "weather", "calendar"] },
-        { id: "input",      name: "Input",                glyph: "\u{F030C}", pages: ["input"] },
-        { id: "sound",      name: "Sound",                glyph: "\u{F057E}", pages: ["sound"] },
         { id: "network",    name: "Network & Bluetooth",  glyph: "\u{F05A9}", pages: ["network", "bluetooth"] },
+        { id: "display",    name: "Displays",             glyph: "\u{F0379}", pages: ["displays", "monitor"] },
+        { id: "sound",      name: "Sound",                glyph: "\u{F057E}", pages: ["sound"] },
         { id: "power",      name: "Power & Battery",      glyph: "\u{F0079}", pages: ["power", "idle", "asus"] },
-        { id: "keybinds",   name: "Keyboard Shortcuts",   glyph: "\u{F0313}", pages: ["keybinds"] },
-        { id: "apps",       name: "Default Apps",         glyph: "\u{F003B}", pages: ["apps"] },
-        { id: "startup",    name: "Startup Apps",         glyph: "\u{F040A}", pages: ["startup"] },
-        { id: "system",     name: "System",               glyph: "\u{F02FD}", pages: ["about", "language"] },
+        { id: "appearance", name: "Appearance",           glyph: "\u{F03D8}", pages: ["appearance", "bar", "dock", "wallpaper", "lockscreen", "icons", "cursor"] },
+        { id: "desktop",    name: "Desktop",              glyph: "\u{F056E}", pages: ["controlcenter", "notifications", "hotcorners"] },
+        { id: "windows",    name: "Windows",              glyph: "\u{F05AF}", pages: ["windows", "windowlook", "animations", "apprules"] },
+        { id: "widgets",    name: "Search & Widgets",     glyph: "\u{F0349}", pages: ["launcher", "clipboard", "weather", "calendar"] },
+        { id: "input",      name: "Keyboard & Mouse",     glyph: "\u{F030C}", pages: ["input", "keybinds"] },
+        { id: "applications", name: "Apps",               glyph: "\u{F003B}", pages: ["installed", "apps", "startup"] },
+        { id: "system",     name: "System",               glyph: "\u{F02FD}", pages: ["language", "about"] },
     ]
     // ASUS Hardware only on machines with asusctl
     readonly property var sections: allGroups.map(g => Object.assign({}, g, { pages: g.pages.filter(p => p !== "asus" || Machine.asus) }))
@@ -59,10 +59,16 @@ Singleton {
         { id: "power",         name: "Battery & Power",     glyph: "\u{F0079}" },
         { id: "asus",          name: "ASUS Hardware",       glyph: "\u{F061A}" },
         { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}" },
+        { id: "lockscreen",    name: "Lock Screen",         glyph: "\u{F033E}" },
         { id: "weather",       name: "Weather",             glyph: "\u{F0595}" },
         { id: "calendar",      name: "Calendar",            glyph: "\u{F00ED}" },
         { id: "idle",          name: "Lock & Sleep",        glyph: "\u{F033E}" },
-        { id: "apps",          name: "Default Applications", glyph: "\u{F003B}" },
+        { id: "installed",     name: "Installed Apps",      glyph: "\u{F003B}" },
+        { id: "windows",       name: "Window Behaviour",    glyph: "\u{F05AF}" },
+        { id: "windowlook",    name: "Window Look",         glyph: "\u{F03D8}" },
+        { id: "animations",    name: "Animations",          glyph: "\u{F0D07}" },
+        { id: "apprules",      name: "App Rules",           glyph: "\u{F0493}" },
+        { id: "apps",          name: "Default Apps",        glyph: "\u{F003B}" },
         { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}" },
         { id: "about",         name: "About",               glyph: "\u{F02FD}" },
     ]

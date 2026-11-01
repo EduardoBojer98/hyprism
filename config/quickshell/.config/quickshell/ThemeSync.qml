@@ -3,10 +3,11 @@ import QtQuick
 
 // Carries the shell's design tokens to the parts of the desktop Quickshell can't draw:
 // Hyprland window borders (accent or rotating rainbow, width) and rounding (live, via hyprctl eval, saved to hypr/settings/theme.lua),
-// the lock screen (hypr/settings/hyprlock-theme.conf, read at next lock), and GTK (gsettings light/dark,
+// the lock screen (hypr/settings/hyprlock-theme.conf: colours, design, background; read at next lock), and GTK (gsettings light/dark,
 // accent, icon and cursor theme), fuzzel (fuzzel/theme.ini) and Ghostty (ghostty/theme.conf: the theme's terminal colours, reloaded live).
 // Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and reloads Hyprland.
+// And Config.windows (Settings > Windows) to hypr/settings/windows.lua, applied live.
 Scope {
     id: root
 
@@ -21,6 +22,14 @@ Scope {
     readonly property int borderSize: Config.appearance.borderSize
     readonly property int gaps: Config.appearance.gaps
     readonly property bool light: Theme.light
+    // Lock screen (Settings > Appearance > Lock Screen): design file, background and clock format
+    readonly property var lock: Config.lockscreen
+    readonly property string lockConf: "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding
+        + "\n$wall = " + (/^[^\n#]+$/.test(lock.wallpaper) ? lock.wallpaper : "~/.config/hypr/settings/wallpaper")
+        + "\n$blur = " + lock.blur + "\n$dim = " + lock.brightness + "\n$font = " + Config.appearance.font.replace(/[\n#]/g, "")
+        + "\n$clock = " + (Config.bar.clock24 ? "%H:%M" : "%-I:%M") + "\n$hour = " + (Config.bar.clock24 ? "%H" : "%I")
+        + "\nsource = ~/.config/hypr/lockscreens/" + lock.design + ".conf"
+    onLockConfChanged: debounce.restart()
     // Ghostty's built-in theme matching the shell theme, on a darker shade of the glass base
     readonly property string terminal: !Config.appearance.terminal ? ""
         : "theme = " + Theme.th.term[light ? 1 : 0] + "\nbackground = " + (light ? Theme.base : Theme.tinted(0.7, 1)).toString().slice(1, 7)
@@ -37,7 +46,7 @@ Scope {
     function apply() {
         const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize}, gaps = ${gaps}, cursor = "${cursorTheme}", cursor_size = ${cursorSize} }`
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from Settings > Appearance\nreturn " + t)
-        SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding)
+        SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", lockConf)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])
         Quickshell.execDetached(["sh", "-c",
             "gsettings set org.gnome.desktop.interface color-scheme prefer-" + (light ? "light" : "dark")
@@ -78,6 +87,23 @@ Scope {
     Timer { id: keyDebounce; interval: 300; onTriggered: if (Config.loaded) root.applyKeybinds() }
     Connections { target: Config.keybinds; function onOverridesChanged() { keyDebounce.restart() } }
     Connections { target: Config; function onLoadedChanged() { keyDebounce.restart() } }
+
+    // Window behaviour, animations and app rules: every option the schema allows, apps reduced to
+    // the fields hypr/modules/windows.lua reads
+    readonly property string windowsLua: {
+        const w = Config.windows, t = {}
+        for (const k of Object.keys(Config.schema.windows)) if (k !== "apps") t[k] = w[k]
+        t.apps = (w.apps ?? []).filter(a => typeof a?.class === "string" && a.class !== "")
+            .map(a => ({ class: a.class, open: String(a.open ?? "normal"), workspace: Number(a.workspace) || 0, pin: a.pin === true }))
+        return SettingsApp.lua(t)
+    }
+    function applyWindows() {
+        Quickshell.execDetached(["hyprctl", "eval", "WINDOWS = " + windowsLua.replace(/\n/g, " ") + "; apply_windows()"])
+        SettingsApp.writeHyprFile("settings/windows.lua", "-- Written by Quickshell from Settings > Windows. Safe to edit by hand.\nreturn " + windowsLua)
+    }
+    Timer { id: winDebounce; interval: 300; onTriggered: if (Config.loaded) root.applyWindows() }
+    onWindowsLuaChanged: winDebounce.restart()
+    Connections { target: Config; function onLoadedChanged() { winDebounce.restart() } }
 
     // Debounced, and only once Config has loaded so defaults never overwrite saved values
     Timer { id: debounce; interval: 400; onTriggered: if (Config.loaded) root.apply() }
