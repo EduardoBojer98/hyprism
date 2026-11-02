@@ -22,6 +22,20 @@ ColumnLayout {
     }
     function setShown(id, on) { Config.set("controlCenter", "hidden", on ? hidden.filter(x => x !== id) : hidden.concat([id])) }
 
+    SettingGroup {
+        title: "Style"
+        SettingRow {
+            label: "Panel style"
+            hint: ({ panel: "Rounded tiles with fills and borders", compact: "Smaller tiles, tighter spacing", borderless: "Flat tiles, no outlines — clean and minimal" })[Config.controlCenter.style] ?? ""
+            ConfigChoice { section: "controlCenter"; key: "style"; values: ["panel", "compact", "borderless"]; labels: ["Panel", "Compact", "Borderless"] }
+        }
+        SettingRow {
+            label: "Width"
+            hint: "Panel width in pixels"
+            ConfigSlider { section: "controlCenter"; key: "width"; from: 280; to: 460; step: 10; format: v => v + " px" }
+        }
+    }
+
     Text {
         Layout.fillWidth: true
         text: "Arrange the Control Center the way you use it. Changes show up straight away."

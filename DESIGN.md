@@ -1,6 +1,6 @@
 ---
 name: Graphite Glass
-description: Compact dark frosted-glass Quickshell shell for Hyprland, macOS-inspired, one visual language for every surface.
+description: Compact dark frosted-glass Quickshell shell for Hyprland, one consistent visual language across every surface.
 source: home/quickshell/.config/quickshell/Theme.qml (tokens), Glass.qml (surface)
 colors:            # dark mode; light mode mirrors these with black alphas on white frost
   theme: "Theme.themes: [base, text, accent] for dark and light per theme (midnight #161821 default)"  # Settings > Appearance > Theme

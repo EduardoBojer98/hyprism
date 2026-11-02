@@ -11,7 +11,7 @@ mkdir -p "$UNIT_DIR"
 cat > "$UNIT_DIR/monswitch-resume.service" <<'EOF'
 [Unit]
 Description=Sync monswitch state after resume
-After=sleep.target
+After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
 
 [Service]
 Type=oneshot
@@ -21,7 +21,7 @@ ExecStart=/bin/bash -c '[ -f %h/.config/monswitch.conf ] && monswitch sync'
 Environment=XDG_RUNTIME_DIR=/run/user/%U
 
 [Install]
-WantedBy=sleep.target
+WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
 EOF
 
 systemctl --user daemon-reload

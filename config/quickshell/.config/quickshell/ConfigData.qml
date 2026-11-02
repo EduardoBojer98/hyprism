@@ -72,6 +72,7 @@ JsonAdapter {
         property string sound: "message-new-instant"   // a freedesktop sound name (Notifications.sounds), "" = none
         property int volume: 60                          // %
         property string position: "top-right"            // where popups appear: top-right, top-center, top-left
+        property string style: "card"                   // card (full), pill (compact one-line), minimal (no border)
         property list<string> mutedApps: []              // app names that only go to the notification centre
     }
     property JsonObject caffeine: JsonObject {
@@ -92,6 +93,8 @@ JsonAdapter {
     property JsonObject controlCenter: JsonObject {
         property bool showHardware: true
         property bool slidersOpen: true
+        property string style: "panel"          // panel (current), compact (denser), borderless (flat tiles, no outlines)
+        property int width: 330                 // panel width in px (280..460)
         property list<string> sections: []
         property list<string> tiles: []
         property list<string> toggles: []

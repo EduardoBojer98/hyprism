@@ -1,8 +1,8 @@
 # linux-setup
 
-A macOS-style desktop for **Arch/CachyOS and Fedora** (built on CachyOS): **Hyprland** with a **Quickshell**
-shell in frosted Graphite Glass style (dark by default, light in Settings). Everything is free software, and everything a user would
-want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
+A polished Wayland desktop for **Arch/CachyOS and Fedora** (built on CachyOS): **Hyprland** with a **Quickshell**
+shell in frosted Graphite Glass style — dark by default, light or auto-switching in Settings. Everything is free software,
+and everything you'd want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
 install stays untouched and selectable at the login screen.
 
 - **Menu bar**: desktops and the app name on the left; weather, date and time (calendar) in the
@@ -49,8 +49,7 @@ Log out and pick **Hyprland** at the login screen. KDE Plasma (or whatever you h
 | `session` | lid behaviour, Hyprland preselected on Plasma Login (asks) |
 | `host` | the host's `steps/NN-*.sh`, each shown and asked separately |
 
-Options: `--yes` (no questions), `--host <name>`, `--only <steps or modules>` (e.g. `--only links`,
-`--only shell`), `--dry-run`. `./install.sh undo` removes the links and offers the last backup back.
+Options: `--yes` (no questions), `--host <name>`, `--only <steps or modules>` (e.g. `--only links`, `--only shell`), `--dry-run`. `./install.sh undo` removes the links and offers the last backup back.
 
 On Fedora, Hyprland 0.57 comes from the `sdegler/hyprland` COPR and Quickshell 0.3.2 from
 `errornointernet/quickshell` (Fedora's own Quickshell is too old). A few packages have no Fedora

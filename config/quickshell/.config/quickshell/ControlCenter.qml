@@ -89,8 +89,10 @@ Singleton {
     readonly property var source: Pipewire.defaultAudioSource
     readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
 
-    readonly property int gap: 8          // between tiles
-    readonly property int pad: 10         // panel padding
+    readonly property string style: Config.controlCenter.style || "panel"
+    readonly property int customWidth: Config.controlCenter.width || 330
+    readonly property int gap: style === "compact" ? 4 : 8          // between tiles
+    readonly property int pad: style === "compact" ? 6 : 10         // panel padding
 
 
     readonly property var streams: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream)   // apps playing
@@ -180,14 +182,15 @@ Singleton {
     id: popup
     name: "controlcenter"
     placement: "topRight"
-    boxWidth: 330
+    boxWidth: cc.customWidth
     // capped to the screen; the content scrolls when lists make it taller
     boxHeight: Math.min(content.implicitHeight + cc.pad * 2, (popup.targetScreen?.height ?? 1000) - popup.topReserve - popup.edge * 2)
 
     Glass {   // the backdrop every tile sits on
         anchors.fill: parent
         strong: true
-        radius: Theme.radiusLarge + 4
+        radius: cc.style === "compact" ? Theme.radiusLarge : cc.style === "borderless" ? Theme.radius : Theme.radiusLarge + 4
+        border.width: cc.style === "borderless" ? 0 : 1
 
     Flickable {
         id: scroller
@@ -1125,8 +1128,9 @@ Singleton {
 
     // A grouping tile on the panel: a slightly lighter rounded area, no border
     component Tile: Rectangle {
-        radius: Theme.radius
-        color: Theme.fill
+        radius: cc.style === "borderless" ? Theme.radiusSmall : Theme.radius
+        color: cc.style === "borderless" ? "transparent" : Theme.fill
+        border { color: cc.style === "borderless" ? Theme.stroke : "transparent"; width: cc.style === "borderless" ? 0 : 0 }
     }
 
     // Connection tile: round icon that toggles, then name and status that open its list (chevron)
@@ -1143,10 +1147,11 @@ Singleton {
 
         Layout.fillWidth: true
         Layout.preferredWidth: 1
-        Layout.preferredHeight: 52
-        radius: Theme.radius
-        color: conn.isExpanded || rowHover.containsMouse ? Theme.fillHover : Theme.fill
-        border { color: conn.isExpanded ? Theme.strokeStrong : "transparent"; width: 1 }
+        Layout.preferredHeight: cc.style === "compact" ? 44 : 52
+        radius: cc.style === "borderless" ? Theme.radiusSmall : Theme.radius
+        color: conn.isExpanded || rowHover.containsMouse ? Theme.fillHover
+             : cc.style === "borderless" ? "transparent" : Theme.fill
+        border { color: conn.isExpanded ? Theme.strokeStrong : cc.style === "borderless" ? Theme.stroke : "transparent"; width: 1 }
         Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
         MouseArea {
@@ -1196,10 +1201,12 @@ Singleton {
 
         Layout.fillWidth: true
         Layout.preferredWidth: 1
-        Layout.preferredHeight: 66
-        radius: Theme.radius
-        color: active ? Theme.selected : qtArea.containsMouse ? Theme.fillHover : Theme.fill
-        border { color: isExpanded ? Theme.accent : "transparent"; width: 1 }
+        Layout.preferredHeight: cc.style === "compact" ? 54 : 66
+        radius: cc.style === "borderless" ? Theme.radiusSmall : Theme.radius
+        color: active ? Theme.selected
+             : qtArea.containsMouse ? Theme.fillHover
+             : cc.style === "borderless" ? "transparent" : Theme.fill
+        border { color: isExpanded ? Theme.accent : cc.style === "borderless" ? Theme.stroke : "transparent"; width: 1 }
         scale: qtArea.pressed ? 0.96 : 1
         Behavior on color { ColorAnimation { duration: Theme.anim } }
         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }

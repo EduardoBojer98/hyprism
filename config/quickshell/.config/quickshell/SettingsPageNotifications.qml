@@ -19,6 +19,11 @@ ColumnLayout {
             ConfigToggle { section: "notifications"; key: "dnd" }
         }
         SettingRow {
+            label: "Style"
+            hint: ({ card: "Standard card with icon and summary", pill: "Compact one-line pill", minimal: "Clean minimal card with no border" })[Config.notifications.style] ?? ""
+            ConfigChoice { section: "notifications"; key: "style"; values: ["card", "pill", "minimal"]; labels: ["Card", "Pill", "Minimal"] }
+        }
+        SettingRow {
             label: "Position"
             ConfigChoice { section: "notifications"; key: "position"; values: ["top-left", "top-center", "top-right"]; labels: ["Top left", "Top centre", "Top right"] }
         }

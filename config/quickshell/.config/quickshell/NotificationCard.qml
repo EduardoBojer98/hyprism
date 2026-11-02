@@ -6,6 +6,7 @@ import QtQuick.Layouts
 
 // One notification: app icon, app name and age, title, body and the app's buttons. Used for the
 // banners and in the notification centre. Click to open it in the app, × to dismiss.
+// Style follows Config.notifications.style: card (full), pill (compact one-line), minimal (no border).
 Glass {
     id: card
 
@@ -15,17 +16,20 @@ Glass {
     readonly property bool hovered: area.containsMouse || closeArea.containsMouse
     readonly property bool critical: notification?.urgency === NotificationUrgency.Critical
     readonly property var buttons: (notification?.actions ?? []).filter(a => a.identifier !== "default" && a.text !== "")
+    readonly property string notifStyle: Config.notifications.style ?? "card"
+    readonly property bool isPill: notifStyle === "pill"
+    readonly property bool isMinimal: notifStyle === "minimal"
     signal expandRequested()
 
-    implicitHeight: content.implicitHeight + Theme.spaceM * 2
-    strong: true
-    radius: flat ? Theme.radius : Theme.radiusLarge
-    border.color: critical ? Theme.peach : Theme.stroke
-    border.width: critical || !flat ? 1 : 0
+    implicitHeight: content.implicitHeight + (isPill ? Theme.spaceS : Theme.spaceM) * 2
+    strong: !isMinimal
+    radius: flat ? Theme.radius : isPill ? height / 2 : Theme.radiusLarge
+    border.color: critical ? Theme.peach : (isMinimal ? "transparent" : Theme.stroke)
+    border.width: isMinimal && !critical ? 0 : (critical || !flat ? 1 : 0)
 
-    // folded cards peek out underneath, like the macOS stack
+    // folded cards peek out underneath (card style only)
     Repeater {
-        model: Math.min(card.stacked, 2)
+        model: (!isPill && !isMinimal) ? Math.min(card.stacked, 2) : 0
         Rectangle {
             required property int index
             z: -1 - index
@@ -48,24 +52,36 @@ Glass {
 
     RowLayout {
         id: content
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
-        spacing: Theme.spaceM
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: isPill ? Theme.spaceS : Theme.spaceM }
+        spacing: Theme.spaceS
 
+        // App icon: hidden in pill mode
         IconImage {
             readonly property string src: card.notification ? Notifications.iconOf(card.notification) : ""
             Layout.alignment: Qt.AlignTop
-            visible: src !== ""
+            visible: !card.isPill && src !== ""
             implicitSize: 32
             source: src
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 2
+            spacing: isPill ? 0 : 2
 
             RowLayout {
                 Layout.fillWidth: true
+                // In pill mode: show app · summary on one line
                 Text {
+                    visible: card.isPill
+                    Layout.fillWidth: true
+                    text: [card.notification?.appName, card.notification?.summary].filter(Boolean).join("  ·  ")
+                    color: Theme.text
+                    elide: Text.ElideRight
+                    font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
+                }
+                // Normal mode: app name
+                Text {
+                    visible: !card.isPill
                     Layout.fillWidth: true
                     text: card.notification?.appName ?? ""
                     color: Theme.subtext
@@ -81,6 +97,7 @@ Glass {
             }
             Text {
                 Layout.fillWidth: true
+                visible: !card.isPill && text !== ""
                 text: card.notification?.summary ?? ""
                 color: Theme.text
                 elide: Text.ElideRight
@@ -88,7 +105,7 @@ Glass {
             }
             Text {
                 Layout.fillWidth: true
-                visible: text !== ""
+                visible: !card.isPill && text !== ""
                 text: card.notification?.body ?? ""
                 color: Theme.subtext
                 textFormat: Text.StyledText
@@ -98,7 +115,7 @@ Glass {
                 font { family: Theme.font; pixelSize: Theme.fontLabel }
             }
             RowLayout {
-                visible: card.buttons.length > 0 && card.stacked === 0
+                visible: !card.isPill && card.buttons.length > 0 && card.stacked === 0
                 Layout.topMargin: Theme.spaceXs
                 spacing: Theme.spaceXs
                 Repeater {
