@@ -16,6 +16,9 @@ systemctl enable --now asusd 2>/dev/null || systemctl start asusd
 
 step "NVIDIA suspend/hibernate helpers (save GPU memory across sleep)"
 systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
+# Without this the driver discards VRAM on suspend and the GPU comes back in a broken state (black screen).
+# The three services above are no-ops without it.
+echo 'options nvidia NVreg_PreserveVideoMemoryAllocations=1' > /etc/modprobe.d/nvidia-sleep.conf
 
 step "NVIDIA: drop old power-saving files (runtime power-off now lives in 30-thermal.sh)"
 # "Runtime D3: Not supported" turned out to be a kernel 7.3 bug, not this model: it works on LTS.
