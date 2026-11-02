@@ -14,6 +14,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hypridle -c ~/.config/hypr/settings/hypridle.conf") -- lock / screen off / sleep (Settings > Lock & Sleep)
     hl.exec_cmd("command -v udiskie >/dev/null && udiskie --automount --notify --no-tray")  -- USB drives mount when plugged in
     hl.exec_cmd("wl-paste --watch clipstore store")         -- clipboard history (Super+V), ~/.local/bin/clipstore
+    hl.exec_cmd("[ -f ~/.config/monswitch.conf ] && monswitch sync")                           -- align Hyprland to the actual monitor input on start/resume
     hl.exec_cmd("[ -f ~/.config/monswitch.conf ] && monswitch watch")                          -- follows Acer input switches made on the monitor
     -- Give user services this session's display and Hyprland socket, then restart the ones that
     -- started too early to see it (JuhRadial MX finds the cursor and focused app through them).

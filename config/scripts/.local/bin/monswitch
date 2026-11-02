@@ -100,6 +100,14 @@ case ${1:-toggle} in
         flock 9
         if out_enabled && [[ $(ddc_input) == "$LAPTOP" ]]; then to_pc; else to_laptop; fi
         ;;
+    sync)
+        # Align Hyprland to the actual DDC input on startup/resume without sending a DDC write.
+        flock 9
+        now=$(ddc_input)
+        if   [[ $now == "$PC" ]];     then release || true
+        elif [[ $now == "$LAPTOP" ]]; then reclaim || true
+        fi
+        ;;
     watch)
         last=""
         while sleep "$POLL"; do
