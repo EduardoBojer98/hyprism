@@ -18,7 +18,7 @@ PopupWindow {
     readonly property int away: ({ top: Edges.Bottom, bottom: Edges.Top, left: Edges.Right, right: Edges.Left })[Theme.barEdge] ?? Edges.Bottom
     anchor.edges: away
     anchor.gravity: away
-    anchor.margins.top: 6
+    anchor.margins.top: Theme.barEdge === "top" ? 6 : 0
     grabFocus: true
     visible: open || box.opacity > 0   // stays up while it fades out
     implicitWidth: 236
@@ -34,10 +34,15 @@ PopupWindow {
         radius: Theme.radius
         color: Theme.menu
         opacity: root.open ? 1 : 0
-        // a plain drop: slides 6px down into place while it fades in
-        transform: Translate { y: root.open ? 0 : (Theme.barEdge === "bottom" ? 6 : -6); Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } } }
-        Behavior on opacity { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
-        border { color: Theme.stroke; width: 1 }
+        // out of the bar's side, the theme's way (CursorPopup has the same motion)
+        property real off: root.open ? 0 : Theme.travel
+        transform: Translate {
+            x: Theme.barEdge === "left" ? -box.off : Theme.barEdge === "right" ? box.off : 0
+            y: Theme.barEdge === "top" ? -box.off : Theme.barEdge === "bottom" ? box.off : 0
+        }
+        Behavior on off { NumberAnimation { duration: root.open ? Theme.enter : Theme.exit; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve } }
+        Behavior on opacity { NumberAnimation { duration: root.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+        border { color: Theme.stroke; width: Theme.line }
 
         Flickable {
             anchors { fill: parent; margins: 5 }

@@ -19,7 +19,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         x: toggle.checked ? parent.width - width - 3 : 3
         color: "white"
-        Behavior on x { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+        Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
     }
 
     MouseArea {

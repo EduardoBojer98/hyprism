@@ -301,7 +301,6 @@ Singleton {
             height: root.view === "home" ? home.implicitHeight + Theme.spaceM * 2
                   : root.view === "apps" || root.view === "clip" ? 460
                   : Math.min(440, Math.max(64, results.contentHeight + Theme.spaceS * 2 + (root.confirmFor ? 44 : 0)))
-            Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
             // Confirmation strip for actions marked "ask first"
             Rectangle {

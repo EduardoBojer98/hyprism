@@ -9,8 +9,8 @@ Grid {
     property bool vertical: false
     property int iconSize: 16
     readonly property bool shown: SystemTray.items.values.some(i => i.status !== Status.Passive)
-    rows: vertical ? 99 : 1
-    columns: vertical ? 1 : 99
+    // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
+    columns: vertical ? 1 : Math.max(1, visibleChildren.length)
     spacing: 2
     Repeater {
         model: SystemTray.items

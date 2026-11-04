@@ -167,8 +167,8 @@ PanelWindow {
         Grid {
             id: row
             anchors.centerIn: parent
-            rows: dock.vertical ? 99 : 1
-            columns: dock.vertical ? 1 : 99
+            // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
+            columns: dock.vertical ? 1 : Math.max(1, visibleChildren.length)
             spacing: 6
             horizontalItemAlignment: Grid.AlignHCenter
             verticalItemAlignment: Grid.AlignVCenter

@@ -22,7 +22,8 @@ PanelWindow {
 
     screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
     anchors.bottom: true
-    margins.bottom: Theme.reserveBottom + 90   // above a bottom bar, island or dock
+    // above a bottom bar and the dock (a hiding one too, it shows when the pointer is down there)
+    margins.bottom: Theme.reserveBottom + (Config.dock.enabled && Config.dock.autoHide && Theme.dockEdge === "bottom" ? Theme.dockThickness + Theme.dockLift : 0) + 32
     implicitWidth: 260
     implicitHeight: 48
     exclusiveZone: 0
@@ -51,30 +52,31 @@ PanelWindow {
     Glass {
         id: card
         anchors.fill: parent
-        radius: height / 2
+        radius: Math.min(height / 2, Theme.radiusLarge)
+        strong: true
         opacity: hideTimer.running ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+        Behavior on opacity { NumberAnimation { duration: hideTimer.running ? Theme.enter : Theme.exit } }
 
         Text {
             id: glyph
             anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
             text: osd.icon
             color: Theme.text
-            font { family: Theme.iconFont; pixelSize: 20 }
+            font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 2 }
         }
 
         Rectangle {
             anchors { left: glyph.right; leftMargin: 14; right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
             height: 6
-            radius: 3
+            radius: Math.min(3, Theme.radiusSmall)
             color: Theme.fill
 
-            Rectangle {
-                width: parent.width * Math.max(0, Math.min(1, osd.value))
+            Rectangle {   // the level: a scale from the left, not a width change (no layout per frame)
+                width: parent.width
                 height: parent.height
-                radius: 3
-                color: Theme.text
-                Behavior on width { NumberAnimation { duration: 120 } }
+                radius: parent.radius
+                color: Theme.accent
+                transform: Scale { xScale: Math.max(0, Math.min(1, osd.value)); Behavior on xScale { NumberAnimation { duration: Theme.animFast } } }
             }
         }
     }

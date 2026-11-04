@@ -67,7 +67,7 @@ Singleton {
         id: popup
         name: "clipboard"
         boxWidth: 400
-        boxHeight: 540
+        boxHeight: Math.min(540, popup.maxHeight)
         focusItem: search
         onOpened: { root.filter = ""; search.text = ""; clipView.reset(); root.expandedId = ""; root.reload(); focused.running = true }
 

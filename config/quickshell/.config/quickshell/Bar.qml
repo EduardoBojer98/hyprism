@@ -120,12 +120,13 @@ Scope {
     component Section: Item {
         id: section
         property var ids: []
-        readonly property bool pill: root.segmented && list.count > 0
+        // an empty section (no items, or all of them have nothing to show) takes no room and no pill
+        readonly property bool empty: grid.implicitWidth <= 0
+        readonly property bool pill: root.segmented && !empty
         readonly property int inset: pill ? 10 : 0
-        implicitWidth: root.vertical ? (pill ? root.size : grid.implicitWidth) : grid.implicitWidth + inset * 2
-        implicitHeight: root.vertical ? grid.implicitHeight + inset * 2 : (pill ? root.size : grid.implicitHeight)
+        implicitWidth: empty ? 0 : root.vertical ? (pill ? root.size : grid.implicitWidth) : grid.implicitWidth + inset * 2
+        implicitHeight: empty ? 0 : root.vertical ? grid.implicitHeight + inset * 2 : (pill ? root.size : grid.implicitHeight)
         width: implicitWidth; height: implicitHeight
-        visible: grid.implicitWidth > 0
 
         Glass {
             anchors.fill: parent
@@ -137,8 +138,8 @@ Scope {
         Grid {
             id: grid
             anchors.centerIn: parent
-            rows: root.vertical ? 99 : 1
-            columns: root.vertical ? 1 : 99
+            // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
+            columns: root.vertical ? 1 : Math.max(1, visibleChildren.length)
             spacing: root.st.voice === "icons" ? (root.st.ws === "blocks" ? 18 : 10) : 16
             horizontalItemAlignment: Grid.AlignHCenter
             verticalItemAlignment: Grid.AlignVCenter

@@ -187,7 +187,7 @@ Singleton {
     placement: "topRight"
     boxWidth: cc.customWidth
     // capped to the screen; the content scrolls when lists make it taller
-    boxHeight: Math.min(content.implicitHeight + cc.pad * 2, (popup.targetScreen?.height ?? 1000) - popup.topReserve - popup.edge * 2)
+    boxHeight: Math.min(content.implicitHeight + cc.pad * 2, popup.maxHeight)
 
     Glass {   // the backdrop every tile sits on
         anchors.fill: parent

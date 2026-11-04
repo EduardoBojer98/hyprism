@@ -32,8 +32,8 @@ Rectangle {
     Grid {
         id: grid
         anchors.centerIn: parent
-        rows: item.vertical ? 99 : 1
-        columns: item.vertical ? 1 : 99
+        // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
+        columns: item.vertical ? 1 : Math.max(1, visibleChildren.length)
         spacing: 6
         horizontalItemAlignment: Grid.AlignHCenter
         verticalItemAlignment: Grid.AlignVCenter

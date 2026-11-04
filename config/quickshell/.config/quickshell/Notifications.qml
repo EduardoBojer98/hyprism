@@ -155,11 +155,13 @@ Singleton {
             model: ScriptModel { values: root.popups.slice(0, 5) }
 
             // drop in from the corner's edge with a fade (down at the top, up at the bottom), fade out in place
+            // in from the corner's edge the theme's way (Theme.travel, its curve), out with a quick fade
             add: Transition { ParallelAnimation {
-                NumberAnimation { property: "y"; from: (Theme.current.notify.corner.startsWith("bottom") ? 10 : -10); duration: 180; easing.type: Easing.OutCubic }
-                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "y"; from: (Theme.current.notify.corner.startsWith("bottom") ? 1 : -1) * Theme.travel; duration: Theme.enter
+                                  easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve }
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Easing.OutCubic }
             } }
-            remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 140 } }
+            remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.exit } }
             displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Easing.OutCubic } }
 
             delegate: NotificationCard {

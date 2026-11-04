@@ -166,7 +166,7 @@ Singleton {
         name: "system"
         placement: "topRight"
         boxWidth: 330
-        boxHeight: Math.min(body.implicitHeight + 20, (popup.targetScreen?.height ?? 1000) - popup.topReserve - popup.edge * 2)
+        boxHeight: Math.min(body.implicitHeight + 20, popup.maxHeight)
         onOpened: root.lastStat = null
 
         Glass {

@@ -4,8 +4,11 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
 
-// The one popup framework: a floating glass box that opens at the mouse cursor, on the monitor
-// the cursor is on, pushed back inside that monitor near its edges. It takes the keyboard while
+// The one popup framework: a floating panel that opens right beside the bar or dock item that was
+// clicked (Anchor), or, from a keyboard shortcut, in its usual place on the monitor the pointer is
+// on; always kept inside that monitor and clear of the bar and dock. It moves the theme's way
+// (Theme.enter / exit / curve / travel / startScale) out of the trigger's side, and never blocks
+// input: it takes clicks and keys from the first frame, and lets go of them the moment it closes. It takes the keyboard while
 // open; Esc or a click outside closes it, on any monitor. Used by the launcher, clipboard, and other quick panels.
 //
 //   CursorPopup { id: p; name: "launcher"; boxWidth: 640; boxHeight: content.implicitHeight
@@ -38,6 +41,12 @@ Scope {
     readonly property int leftReserve: Theme.reserveLeft + edge
     readonly property int rightReserve: Theme.reserveRight + edge
     readonly property string barEdge: Theme.barEdge
+    // opened from a bar or dock item: that item, in the screen's logical pixels, and its edge
+    property var anchorRect: null
+    property string anchorEdge: barEdge
+    readonly property string fromEdge: anchorRect ? anchorEdge : barEdge   // the side it moves out of
+    // tallest a panel can be on its screen, between the bar and dock (callers cap boxHeight with it)
+    readonly property int maxHeight: (targetScreen?.height ?? 1000) - Theme.reserveTop - Theme.reserveBottom - edge * 2
     // Where the box goes. "top" / "topLeft" / "topRight" mean "beside the bar": under a top bar,
     // above a bottom bar, next to a side rail (Left = its top end, Right = its bottom end).
     // Launcher placements: "strip" (across the top edge), "corner" (above the Start button),
@@ -46,6 +55,15 @@ Scope {
     function place(w, h, W, H) {
         const p = placement, l = leftReserve, r = W - w - rightReserve, t = topReserve, b = H - h - bottomReserve
         const cx = (W - w) / 2
+        const fit = (v, lo, hi) => Math.max(lo, Math.min(v, Math.max(lo, hi)))
+        // beside the clicked item, centred on it along its edge (large launcher layouts keep their own place)
+        if (anchorRect && !["strip", "half", "column", "fullscreen"].includes(p)) {
+            const a = anchorRect, g = Theme.popupGap
+            if (anchorEdge === "top") return [fit(a.x + a.width / 2 - w / 2, l, r), Math.max(a.y + a.height, Theme.reserveTop) + g]
+            if (anchorEdge === "bottom") return [fit(a.x + a.width / 2 - w / 2, l, r), Math.min(a.y, H - Theme.reserveBottom) - g - h]
+            if (anchorEdge === "left") return [Math.max(a.x + a.width, Theme.reserveLeft) + g, fit(a.y + a.height / 2 - h / 2, t, b)]
+            return [Math.min(a.x, W - Theme.reserveRight) - g - w, fit(a.y + a.height / 2 - h / 2, t, b)]
+        }
         if (p === "center") return [cx, Math.max(t, H * 0.2)]
         if (p === "fullscreen") return [cx, Math.max(t, H * 0.1)]   // a large centred sheet over a dark screen
         if (p === "strip") return [0, Theme.reserveTop]
@@ -64,7 +82,19 @@ Scope {
         return [Math.max(l, Math.min(cursorX - w / 2, r)), Math.max(t, Math.min(cursorY - 28, b))]
     }
 
-    function show() { locate.running = true }
+    function show() {
+        if (Anchor.fresh && Anchor.screen) {   // clicked in the bar or dock: open there, now
+            targetScreen = Anchor.screen
+            anchorRect = Anchor.rect
+            anchorEdge = Anchor.edge
+            Anchor.at = 0
+            open = true
+            opened()
+        } else {
+            anchorRect = null
+            locate.running = true
+        }
+    }
     function hide() { if (open) { open = false; closed() } }
     function toggle() { if (open) hide(); else show() }
 
@@ -108,13 +138,15 @@ Scope {
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: popup.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
-        MouseArea { anchors.fill: parent; onClicked: popup.hide() }   // click outside
+        // while closing, the window still shows the fade but takes no input at all
+        mask: Region { item: popup.open ? catcher : null }
+        MouseArea { id: catcher; anchors.fill: parent; enabled: popup.open; onClicked: popup.hide() }   // click outside
         Rectangle {   // optional dimmed screen behind the box
             anchors.fill: parent
             visible: popup.dim > 0
             color: "black"
-            opacity: popup.open ? popup.dim : 0
-            Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+            opacity: popup.open ? popup.dim * (Theme.light ? 0.6 : 1) : 0
+            Behavior on opacity { NumberAnimation { duration: popup.open ? Theme.enter : Theme.exit } }
         }
 
         Item {
@@ -124,16 +156,26 @@ Scope {
             readonly property var at: popup.place(width, height, win.width, win.height)
             x: at[0]
             y: at[1]
-            // a plain drop-down: slides 8px out of the bar's side while it fades in (up from a bottom bar,
-            // sideways from a rail); the same in every theme, no scaling, no bounce
-            property real drop: popup.open ? 0 : 8
-            opacity: popup.open ? 1 : 0
-            transform: Translate {
-                x: popup.barEdge === "left" ? -box.drop : popup.barEdge === "right" ? box.drop : 0
-                y: popup.barEdge === "bottom" ? box.drop : popup.barEdge === "top" ? -box.drop : 0
-            }
-            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            Behavior on drop { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            // out of the trigger's side: travel + start scale + fade on the theme's curve; out faster than in.
+            // Only transform and opacity move, so it stays on the compositor's fast path at 120 Hz.
+            property real t: popup.open ? 1 : 0
+            Behavior on t { NumberAnimation { duration: popup.open ? Theme.enter : Theme.exit
+                                              easing.type: popup.open ? Easing.BezierSpline : Easing.OutCubic
+                                              easing.bezierCurve: Theme.curve } }
+            opacity: Math.min(1, t * 1.6)
+            readonly property real off: (1 - t) * Theme.travel
+            readonly property real sc: Theme.startScale + (1 - Theme.startScale) * t
+            transform: [
+                Scale {
+                    origin.x: popup.fromEdge === "left" ? 0 : popup.fromEdge === "right" ? box.width : box.width / 2
+                    origin.y: popup.fromEdge === "top" ? 0 : popup.fromEdge === "bottom" ? box.height : box.height / 2
+                    xScale: box.sc; yScale: box.sc
+                },
+                Translate {
+                    x: popup.fromEdge === "left" ? -box.off : popup.fromEdge === "right" ? box.off : 0
+                    y: popup.fromEdge === "top" ? -box.off : popup.fromEdge === "bottom" ? box.off : 0
+                }
+            ]
 
             MouseArea { anchors.fill: parent; z: -1 }   // clicks inside don't close
             Keys.onEscapePressed: popup.hide()

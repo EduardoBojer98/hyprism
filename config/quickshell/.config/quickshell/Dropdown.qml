@@ -53,10 +53,10 @@ Item {
             radius: Theme.radius
             color: Theme.menu
             opacity: dd.open ? 1 : 0
-            // a plain drop: slides 6px down into place while it fades in
-            transform: Translate { y: dd.open ? 0 : -6; Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } } }
-            Behavior on opacity { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
-            border { color: Theme.stroke; width: 1 }
+            // drops out of the field, the theme's way, never more than a few px
+            transform: Translate { y: dd.open ? 0 : -Math.min(6, Theme.travel); Behavior on y { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } } }
+            Behavior on opacity { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+            border { color: Theme.stroke; width: Theme.line }
 
             ListView {
                 id: list

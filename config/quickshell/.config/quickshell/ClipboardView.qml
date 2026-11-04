@@ -45,7 +45,6 @@ Item {
             radius: Theme.radiusSmall
             color: current ? Theme.fillActive : area.containsMouse ? Theme.fillHover : Theme.fill
             border { color: current ? Theme.strokeStrong : "transparent"; width: 1 }
-            Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
             MouseArea {
                 id: area
