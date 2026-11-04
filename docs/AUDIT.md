@@ -419,3 +419,65 @@ recommendations 1-5. Commits `d5e4434`..`a4f9920`:
   personal e-mail as author, which is normal for Git; switch to the GitHub `noreply` address for
   future commits if you'd rather not publish it.
 - Your own `~/.config/fish/config.fish` still adds Lando to PATH; harmless next to the repo's line, left alone.
+
+---
+
+# Audit 2 (2026-11-04, branch `overhaul/ui-audit`)
+
+Hyprland 0.57.1 (Lua), Quickshell, Ghostty, CachyOS 6.18.55-2-cachyos-lts. The brief again named
+Alacritty, Waybar and Flameshot-as-tray-app; the live setup is Ghostty + Quickshell, and Flameshot
+was wrapped by `screenshot`. This audit follows the live setup. Architecture: `docs/ARCHITECTURE.md`.
+
+Severity: **critical** (can't log in / lose data) · **broken** · **annoying** · **polish**.
+Status: ✅ fixed and verified here · 🖐 needs your hands · ⏸ held back (your decision) · ✔ was fine.
+
+## Checks run
+
+| Check | Result |
+|---|---|
+| `hyprctl configerrors` after every reload | ✔ empty |
+| `systemctl --failed`, `systemctl --user --failed` | ✔ none |
+| `journalctl --user -b -p warning` | ✔ only Qt text-input noise and KDE D-Bus names (harmless in Hyprland) |
+| `hyprctl binds`: duplicate key + modifier pairs | ✔ none (before and after the new binds) |
+| `hyprctl monitors` | ✔ eDP-1 1920×1200@120 scale 1.2 below; HDMI-A-1 (Acer) 2560×1440@144 scale 1 |
+| `hyprctl devices` | ✔ every keyboard `us,rs` (`,latin`); the bar shows the layout keycap |
+| shellcheck (all scripts, warning level, via `koalaman/shellcheck` container) | ✅ 2 warnings fixed, now clean |
+| `fish -n` on every fish file | ✔ clean |
+| `./install.sh doctor` | ✔ links and packages match the repo |
+| Portals (`xdg-desktop-portal`, `-hyprland`, `-gtk`), PipeWire, WirePlumber | ✔ active |
+| NetworkManager, Bluetooth, power-profiles-daemon, asusd | ✔ active |
+| NVIDIA runtime power (`/sys/bus/pci/devices/0000:01:00.0/power/runtime_status`) | ✔ `suspended` when idle (D3 fine-grained). Note: running `nvidia-smi` wakes it for a few seconds |
+| NVIDIA sleep services (`nvidia-suspend/resume/hibernate`) | ✔ enabled |
+| Clean install (Arch + Fedora containers, `tests/container-test.sh`) | see "Clean install" below |
+
+## Findings
+
+| # | Severity | Finding | Cause | Fix | Status |
+|---|---|---|---|---|---|
+| 1 | broken | **Flameshot on Hyprland**: picks one monitor only (Flameshot 14's `gui` asks which screen; area can't span both), opens under the bar and has to be forced fullscreen by the script after it appears, XWayland mode crops the wrong part at mixed scaling (1.2 + 1.0), every capture needs the portal permission run under its app id, and it sits in the tray all day. | Flameshot's Wayland support is "experimental" (Qt layer-shell absent on wlroots). The old `screenshot` script had four workarounds for this (see its git history). | Replaced by grim + slurp + Satty (`screenshot`). Selection spans both screens at mixed scale; no overlay window to fix up; nothing resident. | ✅ |
+| 2 | annoying | `Alt+Shift+S` (your habit) wasn't bound; only `Super+Shift+S` / `Print`. | — | `Alt+Shift+S` is now the main area shortcut; `Print` and `Super+Shift+S` still work. | ✅ |
+| 3 | annoying | No window / monitor / delayed / copy-only capture. | — | `Super+Print` window, `Shift+Print` this screen, `Ctrl+Shift+Print` both, `Alt+Print` 5 s, `Ctrl+Print` copy-only. Also in Spotlight. | ✅ |
+| 4 | annoying | No on-screen shortcut list; newcomers had to open Settings. | — | `Super+/` cheatsheet, read live from Hyprland, type to filter. | ✅ |
+| 5 | polish | No bold/neon theme; accents limited to calm palettes. | — | Radioactive, Molten, Cyber themes + neon gradient border with glow; `theme NAME` command. | ✅ |
+| 6 | polish | Window shadow values duplicated between the static block and `apply_theme()` in `look.lua`. | — | One place (`apply_theme`). | ✅ |
+| 7 | polish | `installed-apps`: SC1010 (variable named `fi`), SC2046 (unquoted `$(…)`). | — | Renamed; `xargs`. | ✅ |
+| 8 | polish | shellcheck isn't installed locally (CI has it). | — | Run via container (command in `docs/ARCHITECTURE.md` Checks row); not added to packages: dev-only. | ⏸ |
+| 9 | annoying | Satty's `--resize smart` made the editor larger than the laptop screen (ignores 1.2 scale), hiding the tool bar. | Satty sizes from the image in physical px. | Hyprland rule sizes it to 86% of the monitor, centred. | ✅ |
+| 10 | annoying | The editor takes ~1.3–2.5 s to appear (measured 5×). Region selection itself is instant. | GTK4 + libadwaita start-up (~0.7 s init + first frame); renderer choice made no consistent difference. | Known limit. Use `Ctrl+Print` (copy-only, no editor) when speed matters. | ⏸ |
+| 11 | polish | `screenshot all` makes a 3072×2928 image: grim captures both screens at the sharper 1.2 scale, so the Acer half is upscaled. | grim default. | Left as is (sharper laptop half beats a blurry one). | ⏸ |
+| 12 | polish | Flameshot autostarted from `~/.config/autostart` (shared with KDE). | Startup Apps entry. | Added `NotShowIn=Hyprland;` so it still starts in KDE only; Flameshot package left installed (see Held back). | ✅ |
+| 13 | polish | Brief asked for `docs/DESIGN.md`; it was at the repo root. | — | Moved, plus neon rules. | ✅ |
+
+## Needs your hands (can't be tested from a script without disrupting the session)
+
+These were checked by hand in audit 1 (above) and nothing in this branch touches them; please re-try:
+touchscreen + tablet fold (rotation, on-screen keyboard), three-finger gestures, lid close/open,
+suspend/resume (the Acer comes back on its input), `Super+M` monitor input switch to the work PC
+and back (windows move to the laptop and return), MX Master 4 buttons + haptics (JuhRadial MX),
+browser screen sharing (portal picker), keyboard backlight keys. Screenshot editor tools:
+see the checklist in the final summary.
+
+## Clean install
+
+`tests/container-test.sh` (the CI job: installs twice, then `doctor`) in `archlinux:latest` and
+`fedora:latest`: results below, added after the run.
