@@ -133,13 +133,13 @@ Singleton {
     // Banners
     PanelWindow {
         screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
-        // the rice's corner (Rices.qml notify.corner), kept clear of its bar
-        readonly property string place: Theme.rice.notify.corner
+        // the theme's corner (Themes.qml notify.corner), kept clear of its bar
+        readonly property string place: Theme.current.notify.corner
         readonly property bool atBottom: place.startsWith("bottom")
         exclusionMode: ExclusionMode.Ignore
         anchors { top: !atBottom; bottom: atBottom; right: place.endsWith("right"); left: place.endsWith("left") }
         margins { top: Theme.reserveTop + 10; bottom: Theme.reserveBottom + 10; right: Theme.reserveRight + 12; left: Theme.reserveLeft + 12 }
-        implicitWidth: Theme.rice.notify.kind === "subtitle" ? 900 : 344
+        implicitWidth: Theme.current.notify.kind === "subtitle" ? 900 : 344
         implicitHeight: Math.max(1, list.contentHeight)
         exclusiveZone: 0
         color: "transparent"
@@ -156,7 +156,7 @@ Singleton {
 
             // drop in from the corner's edge with a fade (down at the top, up at the bottom), fade out in place
             add: Transition { ParallelAnimation {
-                NumberAnimation { property: "y"; from: (Theme.rice.notify.corner.startsWith("bottom") ? 10 : -10); duration: 180; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "y"; from: (Theme.current.notify.corner.startsWith("bottom") ? 10 : -10); duration: 180; easing.type: Easing.OutCubic }
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
             } }
             remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 140 } }

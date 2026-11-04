@@ -1,21 +1,21 @@
 import Quickshell
 import QtQuick
 
-// Carries the active rice (Theme / Rices.qml) to the parts of the desktop Quickshell can't draw:
+// Carries the active theme (Theme / Themes.qml) to the parts of the desktop Quickshell can't draw:
 //   Hyprland   gaps, borders, rounding, shadow, blur, motion preset (live via hyprctl eval, saved to
 //              hypr/settings/theme.lua, read by modules/look.lua and modules/animations.lua)
-//   hyprlock   hypr/settings/hyprlock-theme.conf: colours, fonts, the rice's lock design
+//   hyprlock   hypr/settings/hyprlock-theme.conf: colours, fonts, the theme's lock design
 //   GTK        gsettings: light/dark, accent, icons, cursor, UI and mono fonts
-//   Ghostty    ghostty/theme.conf: the rice's terminal palette and font, reloaded live
+//   Ghostty    ghostty/theme.conf: the theme's terminal palette and font, reloaded live
 //   fuzzel     fuzzel/theme.ini (emoji picker)
-//   wallpaper  the rice's own picture (scripts/rice-wallpaper), unless Settings > Rices > Wallpaper is off
+//   wallpaper  the theme's own picture (scripts/theme-wallpaper), unless Settings > Themes > Wallpaper is off
 // Qt/KDE apps keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and Config.windows to hypr/settings/windows.lua.
 Scope {
     id: root
 
-    readonly property var rice: Theme.rice
-    readonly property var h: rice.hypr
+    readonly property var current: Theme.current
+    readonly property var h: current.hypr
     readonly property bool light: Theme.light
     readonly property string iconTheme: Theme.iconTheme === "Papirus-Dark" && light ? "Papirus-Light" : Theme.iconTheme
     // only plain folder names reach the shell commands below
@@ -24,9 +24,9 @@ Scope {
     readonly property bool animate: Theme.animate
     function hex(c) { return c.toString().slice(1, 7) }
 
-    // Lock screen (Settings > Lock Screen): background and clock format; the design comes from the rice
+    // Lock screen (Settings > Lock Screen): background and clock format; the design comes from the theme
     readonly property var lock: Config.lockscreen
-    readonly property string lockConf: "# Written by Quickshell ThemeSync from the active rice (" + rice.name + ")\n"
+    readonly property string lockConf: "# Written by Quickshell ThemeSync from the active theme (" + current.name + ")\n"
         + "$accent = rgb(" + hex(Theme.accent.hslLightness < 0.45 ? "#f5f5f7" : Theme.accent) + ")\n$accent2 = rgb(" + hex(Theme.accent2) + ")\n"
         + "$text = rgb(" + hex(Theme.text) + ")\n$muted = rgb(" + hex(Theme.subtext) + ")\n"
         + "$ground = rgb(" + hex(Theme.base) + ")\n$surface = rgb(" + hex(Theme.surfaceColor) + ")\n"
@@ -35,14 +35,14 @@ Scope {
         + "\n$blur = " + lock.blur + "\n$dim = " + lock.brightness
         + "\n$font = " + Theme.font.replace(/[\n#]/g, "") + "\n$display = " + Theme.displayFont + "\n$mono = " + Theme.monoFont
         + "\n$clock = " + (Config.bar.clock24 ? "%H:%M" : "%-I:%M") + "\n$hour = " + (Config.bar.clock24 ? "%H" : "%I")
-        + "\nsource = ~/.config/hypr/lockscreens/" + rice.lock + ".conf"
+        + "\nsource = ~/.config/hypr/lockscreens/" + current.lock + ".conf"
     onLockConfChanged: debounce.restart()
 
-    // Ghostty: the rice's palette (ghostty/themes/<Rice>) and its mono face
+    // Ghostty: the theme's palette (ghostty/themes/<Theme>) and its mono face
     readonly property string terminal: !Config.appearance.terminal ? ""
-        : "theme = " + rice.term + "\nfont-family = \"\"\nfont-family = " + (rice.font.mono === "Martian Mono" ? "Martian Mono" : "JetBrainsMono Nerd Font")
+        : "theme = " + current.term + "\nfont-family = \"\"\nfont-family = " + (current.font.mono === "Martian Mono" ? "Martian Mono" : "JetBrainsMono Nerd Font")
           + "\nfont-family = JetBrainsMono Nerd Font"   // "" resets the list; Nerd Font stays as the icon fallback
-          + "\nbackground-opacity = " + (Theme.glassy ? "0.86" : "1")   // see-through only in the glass rices
+          + "\nbackground-opacity = " + (Theme.glassy ? "0.86" : "1")   // see-through only in the glass themes
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
     readonly property string gtkAccent: {
@@ -53,14 +53,14 @@ Scope {
              : hue < 195 ? "teal" : hue < 250 ? "blue" : hue < 300 ? "purple" : "pink"
     }
 
-    // The Hyprland side of the rice, as a Lua table (modules/look.lua: apply_theme)
-    readonly property string hyprLua: `{ rice = "${rice.id}", gaps_in = ${h.gapsIn}, gaps_out = ${h.gapsOut}, border_size = ${h.border}, `
+    // The Hyprland side of the theme, as a Lua table (modules/look.lua: apply_theme)
+    readonly property string hyprLua: `{ theme = "${current.id}", gaps_in = ${h.gapsIn}, gaps_out = ${h.gapsOut}, border_size = ${h.border}, `
         + `rounding = ${h.rounding}, active = { ${h.active.map(x => `"${x}"`).join(", ")} }, inactive = "${h.inactive}", `
         + `shadow = "${h.shadow}", blur = ${h.blur}, motion = "${animate ? h.motion : "off"}", accent = "${hex(Theme.accent)}", `
         + `accent2 = "${hex(Theme.accent2)}", cursor = "${cursorTheme}", cursor_size = ${cursorSize} }`
 
     function apply() {
-        SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from the active rice\nreturn " + hyprLua)
+        SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from the active theme\nreturn " + hyprLua)
         SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", lockConf)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + hyprLua + "; apply_theme()"])
         Quickshell.execDetached(["sh", "-c",
@@ -74,22 +74,22 @@ Scope {
         // live for Hyprland and apps started from now on; env.lua reads theme.lua at the next login
         if (cursorTheme) Quickshell.execDetached(["hyprctl", "setcursor", cursorTheme, String(cursorSize)])
         const a = hex(Theme.accent)
-        Quickshell.execDetached(["sh", "-c", "mkdir -p \"$HOME/.config/fuzzel\"; cat > \"$HOME/.config/fuzzel/theme.ini\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from the active rice\n[colors]\n"
+        Quickshell.execDetached(["sh", "-c", "mkdir -p \"$HOME/.config/fuzzel\"; cat > \"$HOME/.config/fuzzel/theme.ini\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from the active theme\n[colors]\n"
             + `background=${hex(Theme.surfaceColor)}f2\ntext=${hex(Theme.text)}ff\ninput=${hex(Theme.text)}ff\nprompt=${a}ff\nmatch=${a}ff\n`
             + `selection=${a}55\nselection-text=${hex(Theme.text)}ff\nselection-match=${hex(Theme.text)}ff\nborder=${a}ff\nQS_EOF`])
-        Quickshell.execDetached(["sh", "-c", "cat > \"$HOME/.config/ghostty/theme.conf\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from the active rice (empty: the config's own theme)\n"
+        Quickshell.execDetached(["sh", "-c", "cat > \"$HOME/.config/ghostty/theme.conf\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from the active theme (empty: the config's own theme)\n"
             + terminal + "\nQS_EOF\npkill -USR2 -x ghostty || true"])   // SIGUSR2 = reload config
     }
 
-    // The rice's own wallpaper, drawn once per rice into ~/.local/share/linux-setup/rices/
+    // The theme's own wallpaper, drawn once per theme into ~/.local/share/linux-setup/themes/
     property string lastWall: ""
     function applyWallpaper() {
-        if (!Config.appearance.wallpaper || rice.wall === lastWall) return
-        lastWall = rice.wall
-        Quickshell.execDetached(["sh", "-c", "p=$(rice-wallpaper \"$1\") && qs ipc call wallpaper set \"$p\"", "sh", rice.wall])
+        if (!Config.appearance.wallpaper || current.wall === lastWall) return
+        lastWall = current.wall
+        Quickshell.execDetached(["sh", "-c", "p=$(theme-wallpaper \"$1\") && qs ipc call wallpaper set \"$p\"", "sh", current.wall])
     }
     Timer { id: wallDebounce; interval: 500; onTriggered: if (Config.loaded) root.applyWallpaper() }
-    Connections { target: Config.appearance; function onRiceChanged() { root.lastWall = ""; wallDebounce.restart() } function onWallpaperChanged() { root.lastWall = ""; wallDebounce.restart() } }
+    Connections { target: Config.appearance; function onThemeChanged() { root.lastWall = ""; wallDebounce.restart() } function onWallpaperChanged() { root.lastWall = ""; wallDebounce.restart() } }
 
     // Only key names Hyprland understands get through; anything else is dropped
     function keybindsLua(o) {

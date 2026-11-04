@@ -5,7 +5,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
-// The bar of one screen, in the active rice's layout (Rices.qml bar.kind). Each kind is its own
+// The bar of one screen, in the active theme's layout (Themes.qml bar.kind). Each kind is its own
 // composition of the shared pieces (BarWs, BarStatus, BarTray, BarKeyboard, BarBell, BarApp, Sys):
 //   text       bottom strip of mono words (Monolith)        line      thin top line, ticks and time (Mist)
 //   menubar    translucent top strip, app name (Glass)        gnome     black top bar, centred clock (Canvas)
@@ -400,7 +400,7 @@ Scope {
                 width: row.implicitWidth + 24
                 radius: Theme.radius + 6
                 color: Theme.accent2
-                readonly property color ink: Rices.textOn(Theme.accent2, Theme.c)   // ink for the capsule's own colour
+                readonly property color ink: Themes.textOn(Theme.accent2, Theme.c)   // ink for the capsule's own colour
                 RowLayout {
                     id: row
                     anchors.centerIn: parent

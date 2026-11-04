@@ -8,18 +8,18 @@ import QtQuick
 // every window on this dock's monitor as its own live thumbnail with the app's icon on it. With auto-hide it slides up
 // when the pointer touches the bottom edge and stays visible on an empty workspace.
 // Right-click an icon or a window for windows and pin / minimise / restore / quit.
-// Its look follows the rice (only Pebble and Glass have a dock); behaviour is Settings > Dock:
+// Its look follows the theme (only Pebble and Glass have a dock); behaviour is Settings > Dock:
 // the open-app mark (indicator) and what hovering an icon does (hover).
 PanelWindow {
     id: dock
 
     readonly property int iconSize: Config.dock.iconSize
-    // the look comes from the rice: Pebble a round pill whose icons lift, Glass a glass island that magnifies
-    readonly property string style: Theme.rice.id === "pebble" ? "pill" : "glass"
+    // the look comes from the theme: Pebble a round pill whose icons lift, Glass a glass island that magnifies
+    readonly property string style: Theme.current.id === "pebble" ? "pill" : "glass"
     readonly property int lift: style === "panel" ? 0 : 10     // gap under the island
     readonly property bool bare: style === "clear" || style === "shelf"   // no surface around the icons
-    readonly property string indicator: Theme.rice.id === "pebble" ? "line" : "dot"
-    readonly property string hoverStyle: Theme.rice.id === "pebble" ? "lift" : "grow"
+    readonly property string indicator: Theme.current.id === "pebble" ? "line" : "dot"
+    readonly property string hoverStyle: Theme.current.id === "pebble" ? "lift" : "grow"
     readonly property int slot: iconSize + 4          // one icon's cell
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0

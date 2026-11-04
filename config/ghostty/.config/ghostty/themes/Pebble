@@ -1,4 +1,4 @@
-# Pebble: terminal palette of the Pebble rice (Quickshell Rices.qml). Generated; edit freely.
+# Pebble: terminal palette of the Pebble theme (Quickshell Themes.qml). Generated; edit freely.
 background = #16141f
 foreground = #ece8f6
 cursor-color = #ff9e7a

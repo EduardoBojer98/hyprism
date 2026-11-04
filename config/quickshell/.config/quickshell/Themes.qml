@@ -2,9 +2,9 @@ pragma Singleton
 import Quickshell
 import QtQuick
 
-// The rices: each one is a whole desktop design, not a colour scheme (docs/DESIGN.md).
-// Data only. Theme.qml turns the active rice into tokens every component reads; ThemeSync.qml carries
-// it to Hyprland, hyprlock, GTK, Ghostty and the wallpaper. Switch: `rice NAME` or Settings > Rices.
+// The themes: each one is a whole desktop design, not a colour scheme (docs/DESIGN.md).
+// Data only. Theme.qml turns the active theme into tokens every component reads; ThemeSync.qml carries
+// it to Hyprland, hyprlock, GTK, Ghostty and the wallpaper. Switch: `theme NAME` or Settings > Themes.
 //
 // colour  ground (desktop/bar), surface (panels), raised (controls, hover), line, text, muted, faint,
 //         accent, onAccent (text on an accent fill), accent2, ok / warn / err
@@ -15,7 +15,7 @@ import QtQuick
 // launcher  placement + view + header (Launcher.qml draws them)
 // notify  corner + kind (bubble, card, toast, paper, line, block, tag, subtitle)
 // hypr    gaps in/out, border px, rounding, active/inactive border colours, shadow, blur, motion preset
-// lock    hypr/lockscreens/<lock>.conf; term: ghostty theme; wall: scripts/rice-wallpaper design id
+// lock    hypr/lockscreens/<lock>.conf; term: ghostty theme; wall: scripts/theme-wallpaper design id
 Singleton {
     readonly property var list: [
         {
@@ -59,19 +59,6 @@ Singleton {
             lock: "console", term: "Console", wall: "console"
         },
         {
-            id: "workstation", name: "Workstation", about: "Familiar: a bottom taskbar with Start, search, running apps and a two-line clock",
-            dark: true,
-            colour: { ground: "#0f1419", surface: "#1a2028", raised: "#222a34", line: "#2a3340", text: "#e6edf3", muted: "#9aa6b2", faint: "#6b7785",
-                      accent: "#3b82f6", onAccent: "#ffffff", accent2: "#60a5fa", ok: "#22c55e", warn: "#f59e0b", err: "#ef4444" },
-            font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Medium },
-            shape: { radius: 8, radiusSmall: 6, line: 1, material: "solid" },
-            bar: { kind: "taskbar", edge: "bottom", size: 46, ws: "small" },
-            launcher: { placement: "corner", view: "start", header: "none", width: 560 },
-            dock: false, notify: { corner: "bottom-right", kind: "toast" },
-            hypr: { gapsIn: 3, gapsOut: 6, border: 1, rounding: 8, active: ["3b82f6ff"], inactive: "2a3340ff", shadow: "soft", blur: false, motion: "ease" },
-            lock: "center", term: "Workstation", wall: "workstation"
-        },
-        {
             id: "poster", name: "Poster", about: "Loud and flat: huge workspace numbers, hard offset shadows, a half-screen launcher",
             dark: false,
             colour: { ground: "#141414", surface: "#f4f1ea", raised: "#e6e1d6", line: "#141414", text: "#141414", muted: "#4a4740", faint: "#7d786d",
@@ -98,19 +85,6 @@ Singleton {
             lock: "glass", term: "Glass", wall: "glass"
         },
         {
-            id: "canvas", name: "Canvas", about: "Classic GNOME manners: black top bar, centred clock, rounded quick settings",
-            dark: true,
-            colour: { ground: "#1d1d20", surface: "#2e2e32", raised: "#3d3d42", line: "#3a3a3e", text: "#ffffff", muted: "#c0c0c4", faint: "#8a8a90",
-                      accent: "#3584e4", onAccent: "#ffffff", accent2: "#9141ac", ok: "#33d17a", warn: "#f6d32d", err: "#e01b24" },
-            font: { ui: "Cantarell", display: "Cantarell", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Bold },
-            shape: { radius: 14, radiusSmall: 10, line: 0, material: "solid" },
-            bar: { kind: "gnome", edge: "top", size: 30, ws: "dots" },
-            launcher: { placement: "fullscreen", view: "grid", header: "none", width: 760 },
-            dock: false, notify: { corner: "top-center", kind: "card" },
-            hypr: { gapsIn: 4, gapsOut: 8, border: 0, rounding: 14, active: ["3584e4ff"], inactive: "00000000", shadow: "soft", blur: false, motion: "ease" },
-            lock: "center", term: "Canvas", wall: "canvas"
-        },
-        {
             id: "atlas", name: "Atlas", about: "Swiss discipline: a black rail on the right, square blocks, heavy numerals, signal red",
             dark: false,
             colour: { ground: "#f2f2f0", surface: "#ffffff", raised: "#e8e8e5", line: "#111111", text: "#111111", muted: "#4b4b4b", faint: "#8a8a8a",
@@ -122,78 +96,13 @@ Singleton {
             dock: false, notify: { corner: "top-right", kind: "block" },
             hypr: { gapsIn: 8, gapsOut: 16, border: 2, rounding: 0, active: ["111111ff"], inactive: "c8c8c4ff", shadow: "none", blur: false, motion: "snappy" },
             lock: "stacked", term: "Atlas", wall: "atlas"
-        },
-        {
-            id: "noir", name: "Noir", about: "The screen as a film: letterbox bands, serif credits, notifications as subtitles",
-            dark: true,
-            colour: { ground: "#0d0d0d", surface: "#121110", raised: "#1c1a18", line: "#2e2a26", text: "#e9e4da", muted: "#b8b0a2", faint: "#77705f",
-                      accent: "#f2d48a", onAccent: "#0d0d0d", accent2: "#c95a3a", ok: "#8fbf8a", warn: "#e07a4a", err: "#e05a5a" },
-            font: { ui: "IBM Plex Sans", display: "Fraunces", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Light },
-            shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
-            bar: { kind: "letterbox", edge: "top", size: 40, ws: "roman" },
-            launcher: { placement: "fullscreen", view: "list", header: "query", width: 640 },
-            dock: false, notify: { corner: "bottom-center", kind: "subtitle" },
-            hypr: { gapsIn: 6, gapsOut: 12, border: 1, rounding: 0, active: ["f2d48a99"], inactive: "2e2a26ff", shadow: "none", blur: false, motion: "fade" },
-            lock: "noir", term: "Noir", wall: "noir"
-        },
-        {
-            id: "garden", name: "Garden", about: "One island does everything: apps, workspaces and the clock in a pale capsule",
-            dark: true,
-            colour: { ground: "#141c16", surface: "#1d2a20", raised: "#263529", line: "#2f4234", text: "#eef2e6", muted: "#b5c2ab", faint: "#7d8b74",
-                      accent: "#9fd18b", onAccent: "#18221a", accent2: "#e8efe0", ok: "#7fd1b0", warn: "#e8b85a", err: "#ff7a6b" },
-            font: { ui: "Outfit", display: "Outfit", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.DemiBold },
-            shape: { radius: 14, radiusSmall: 10, line: 1, material: "solid" },
-            bar: { kind: "island", edge: "bottom", size: 56, ws: "tiles" },
-            launcher: { placement: "island", view: "grid", header: "none", width: 600 },
-            dock: false, notify: { corner: "top-right", kind: "card" },
-            hypr: { gapsIn: 6, gapsOut: 12, border: 1, rounding: 14, active: ["9fd18bff"], inactive: "2f4234ff", shadow: "soft", blur: false, motion: "spring" },
-            lock: "minimal", term: "Garden", wall: "garden"
-        },
-        {
-            id: "zen", name: "Zen", about: "Almost nothing: no bar, a small clock and dots in the corner, wide calm gaps",
-            dark: true,
-            colour: { ground: "#111113", surface: "#19191c", raised: "#232327", line: "#26262a", text: "#e8e8ea", muted: "#a0a0a6", faint: "#68686e",
-                      accent: "#e8e8ea", onAccent: "#111113", accent2: "#a0a0a6", ok: "#7bc89a", warn: "#e0b45e", err: "#e57373" },
-            font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Light },
-            shape: { radius: 10, radiusSmall: 6, line: 0, material: "solid" },
-            bar: { kind: "corner", edge: "bottom", size: 0, ws: "dots" },
-            launcher: { placement: "center", view: "list", header: "none", width: 520 },
-            dock: false, notify: { corner: "top-center", kind: "line" },
-            hypr: { gapsIn: 10, gapsOut: 28, border: 0, rounding: 10, active: ["e8e8ea00"], inactive: "00000000", shadow: "none", blur: false, motion: "ease" },
-            lock: "minimal", term: "Zen", wall: "zen"
-        },
-        {
-            id: "mist", name: "Mist", about: "Light and monochrome: one thin top line with workspace ticks and the time",
-            dark: false,
-            colour: { ground: "#f3f3f1", surface: "#fafaf9", raised: "#ececea", line: "#e2e2df", text: "#1a1a1a", muted: "#5c5c58", faint: "#9a9a95",
-                      accent: "#1a1a1a", onAccent: "#fafaf9", accent2: "#5c5c58", ok: "#2f7a4f", warn: "#97610b", err: "#b3261e" },
-            font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Normal },
-            shape: { radius: 6, radiusSmall: 4, line: 1, material: "solid" },
-            bar: { kind: "line", edge: "top", size: 26, ws: "ticks" },
-            launcher: { placement: "center", view: "list", header: "none", width: 560 },
-            dock: false, notify: { corner: "top-right", kind: "card" },
-            hypr: { gapsIn: 6, gapsOut: 12, border: 1, rounding: 6, active: ["1a1a1aff"], inactive: "e2e2dfff", shadow: "none", blur: false, motion: "ease" },
-            lock: "center", term: "Mist", wall: "mist"
-        },
-        {
-            id: "halo", name: "Halo", about: "One small floating pill at the bottom: workspaces and the time, the rest on demand",
-            dark: true,
-            colour: { ground: "#0e0f12", surface: "#17181c", raised: "#212329", line: "#2a2c33", text: "#eceef2", muted: "#a3a7b1", faint: "#6a6e78",
-                      accent: "#8ab4ff", onAccent: "#0e0f12", accent2: "#c6d6ff", ok: "#7fd1a0", warn: "#e8c06a", err: "#f07a7a" },
-            font: { ui: "Outfit", display: "Outfit", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Light },
-            shape: { radius: 16, radiusSmall: 10, line: 1, material: "solid" },
-            bar: { kind: "halo", edge: "bottom", size: 38, ws: "dots" },
-            launcher: { placement: "center", view: "list", header: "none", width: 560 },
-            dock: false, notify: { corner: "top-center", kind: "card" },
-            hypr: { gapsIn: 6, gapsOut: 14, border: 1, rounding: 16, active: ["8ab4ff99"], inactive: "2a2c3300", shadow: "soft", blur: false, motion: "spring" },
-            lock: "minimal", term: "Halo", wall: "halo"
         }
     ]
     readonly property var ids: list.map(r => r.id)
-    readonly property int wallVersion: 4   // = VERSION in scripts/rice-wallpaper (the picture's file name)
+    readonly property int wallVersion: 4   // = VERSION in scripts/theme-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
 
-    // Your adjustments to a rice (Settings > Rices > Adjust), saved per rice in
+    // Your adjustments to a theme (Settings > Themes > Adjust), saved per theme in
     // Config.appearance.custom[id] and laid over its defaults. Each key and what it changes:
     readonly property var adjustable: ({
         accent:   "colour.accent (and the window border)",   accent2: "colour.accent2",
@@ -204,7 +113,7 @@ Singleton {
     })
     function resolve(id, custom) {
         const r = JSON.parse(JSON.stringify(get(id)))
-        // text on an accent fill must reach WCAG AA (4.5:1); if the rice's own choice doesn't, take the better of dark/light
+        // text on an accent fill must reach WCAG AA (4.5:1); if the theme's own choice doesn't, take the better of dark/light
         if (contrast(r.colour.onAccent, r.colour.accent) < 4.5) r.colour.onAccent = textOn(r.colour.accent, r.colour)
         const o = Object.assign({}, (custom ?? {})[r.id] ?? {})
         const ok = v => v !== undefined && v !== null && v !== ""
@@ -215,7 +124,7 @@ Singleton {
                                  ["size", v => num(v, 9, 24)], ["font", v => typeof v === "string" && /^[^'\n#]+$/.test(v)],
                                  ["motion", v => ["instant", "crisp", "snappy", "slam", "ease", "spring", "fade"].includes(v)],
                                  ["shadow", v => ["none", "soft", "paper", "hard"].includes(v)], ["blur", v => typeof v === "boolean"]])
-            if (ok(o[k]) && !test(o[k])) delete o[k]   // a bad value is ignored, the rice's own stays
+            if (ok(o[k]) && !test(o[k])) delete o[k]   // a bad value is ignored, the theme's own stays
         if (ok(o.accent)) {
             r.colour.accent = o.accent
             r.colour.onAccent = textOn(o.accent, r.colour)
@@ -244,7 +153,7 @@ Singleton {
         return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b)
     }
     function contrast(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) }
-    // dark or light text on a fill, whichever contrasts more: the rice's dark ground if it's dark, else near-black
+    // dark or light text on a fill, whichever contrasts more: the theme's dark ground if it's dark, else near-black
     function textOn(hex, colour) {
         const dark = Qt.color(colour.ground).hslLightness < 0.3 ? colour.ground : "#141414"
         return contrast(dark, hex) >= contrast("#ffffff", hex) ? dark : "#ffffff"

@@ -1,4 +1,4 @@
-# Console: terminal palette of the Console rice (Quickshell Rices.qml). Generated; edit freely.
+# Console: terminal palette of the Console theme (Quickshell Themes.qml). Generated; edit freely.
 background = #05080f
 foreground = #e9dcc0
 cursor-color = #ffb000

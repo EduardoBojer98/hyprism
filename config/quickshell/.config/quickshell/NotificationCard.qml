@@ -6,7 +6,7 @@ import QtQuick.Layouts
 
 // One notification: app icon, app name and age, title, body and the app's buttons. Used for the
 // banners and in the notification centre. Click to open it in the app, × to dismiss.
-// Banners take the rice's kind (Rices.qml notify.kind): bubble, card, toast, paper, line, block, tag, subtitle.
+// Banners take the theme's kind (Themes.qml notify.kind): bubble, card, toast, paper, line, block, tag, subtitle.
 Glass {
     id: card
 
@@ -16,8 +16,8 @@ Glass {
     readonly property bool hovered: area.containsMouse || closeArea.containsMouse
     readonly property bool critical: notification?.urgency === NotificationUrgency.Critical
     readonly property var buttons: (notification?.actions ?? []).filter(a => a.identifier !== "default" && a.text !== "")
-    // banners take the rice's kind (Rices.qml notify.kind); the notification centre keeps cards
-    readonly property string kind: banner ? Theme.rice.notify.kind : "card"
+    // banners take the theme's kind (Themes.qml notify.kind); the notification centre keeps cards
+    readonly property string kind: banner ? Theme.current.notify.kind : "card"
     readonly property string notifStyle: kind === "line" ? "minimal" : kind === "subtitle" ? "subtitle" : "card"
     readonly property bool isPill: notifStyle === "pill"
     readonly property bool isMinimal: notifStyle === "minimal"

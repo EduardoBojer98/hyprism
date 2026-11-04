@@ -1,4 +1,4 @@
-# Monolith: terminal palette of the Monolith rice (Quickshell Rices.qml). Generated; edit freely.
+# Monolith: terminal palette of the Monolith theme (Quickshell Themes.qml). Generated; edit freely.
 background = #0b0c0a
 foreground = #d7ddcc
 cursor-color = #b6ff3b

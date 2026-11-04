@@ -35,13 +35,13 @@ Singleton {
     // Allowed values; set() refuses anything else. Numbers are [min, max].
     readonly property var schema: ({
         appearance: {
-            rice: ["pebble", "monolith", "console", "workstation", "poster", "glass", "canvas", "atlas", "noir", "garden", "zen", "mist", "halo"],
+            theme: Themes.ids,
             custom: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], animations: "bool",
             iconTheme: "string", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
-                    columns: [5, 9], startView: ["rice", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
+                    columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], historyMax: [10, 500], sound: "string", volume: [0, 100],
@@ -72,20 +72,28 @@ Singleton {
                    showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] }
     })
 
+    // Why a value breaks its rule, or "" when it's fine. Lists from settings.json arrive as QML lists, so
+    // anything with a length counts as a list.
+    function problem(rule, value) {
+        if (Array.isArray(rule) && typeof rule[0] === "number")
+            return typeof value !== "number" || isNaN(value) || value < rule[0] || value > rule[1] ? "Must be between " + rule[0] + " and " + rule[1] : ""
+        if (Array.isArray(rule)) return rule.includes(value) ? "" : "Must be one of " + rule.join(", ")
+        if (rule === "bool") return typeof value === "boolean" ? "" : "Must be on or off"
+        if (rule === "list") return value !== null && typeof value === "object" && typeof value.length === "number" ? "" : "Must be a list"
+        if (rule === "object") return value !== null && typeof value === "object" ? "" : "Must be an object"
+        if (rule === "time") return /^([01]\d|2[0-3]):[0-5]\d$/.test(value) ? "" : "Use HH:MM"
+        if (rule === "color") return /^#[0-9a-fA-F]{6}$/.test(value) ? "" : "Use a colour like #ff7a59"
+        if (rule === "string") return typeof value === "string" ? "" : "Must be text"
+        return ""
+    }
+
     // Set one option. Returns "" when saved, or the reason it was refused.
     function set(section, key, value) {
         const rule = schema[section]?.[key]
         if (rule === undefined) return "Unknown setting " + section + "." + key
-        if (Array.isArray(rule) && typeof rule[0] === "number") {
-            value = Number(value)
-            if (isNaN(value) || value < rule[0] || value > rule[1]) return "Must be between " + rule[0] + " and " + rule[1]
-        } else if (Array.isArray(rule)) {
-            if (!rule.includes(value)) return "Must be one of " + rule.join(", ")
-        } else if (rule === "bool" && typeof value !== "boolean") return "Must be on or off"
-        else if (rule === "list" && !Array.isArray(value)) return "Must be a list"
-        else if (rule === "time" && !/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return "Use HH:MM"
-        else if (rule === "color" && !/^#[0-9a-fA-F]{6}$/.test(value)) return "Use a colour like #ff7a59"
-        else if (rule === "string" && typeof value !== "string") return "Must be text"
+        if (Array.isArray(rule) && typeof rule[0] === "number") value = Number(value)
+        const why = problem(rule, value)
+        if (why) return why
         adapter[section][key] = value
         return ""
     }
@@ -93,7 +101,7 @@ Singleton {
     // Put a whole section back to its defaults
     function reset(section, keys) {   // keys: only these (default: the whole section)
         const fresh = defaults.createObject(null)
-        for (const key of keys ?? Object.keys(schema[section])) adapter[section][key] = fresh[section][key]
+        for (const key of keys ?? Object.keys(schema[section])) if (schema[section][key] !== undefined) adapter[section][key] = fresh[section][key]
         fresh.destroy()
     }
 
@@ -116,6 +124,7 @@ Singleton {
         // debounced: a burst of our own writes (reset) must not reload a half-written state
         onFileChanged: reloadLater.restart()
         onAdapterUpdated: writeAdapter()
+        onLoaded: root.repair()
         onLoadFailed: error => { if (error === FileViewError.FileNotFound) writeAdapter() }
 
         adapter: ConfigData { id: adapter }
@@ -123,4 +132,32 @@ Singleton {
     Timer { id: reloadLater; interval: 250; onTriggered: file.reload() }
 
     Component { id: defaults; ConfigData {} }
+
+    // After every load: carry old names forward, then put back the default for anything missing or
+    // out of range, so a hand edit, an old file or a half-written one never breaks the desktop.
+    // A file that isn't JSON at all is kept as settings.json.broken and replaced by the defaults.
+    readonly property var renamedThemes: ({ workstation: "glass", canvas: "glass", noir: "console", garden: "pebble",
+                                            zen: "glass", mist: "atlas", halo: "pebble" })   // themes removed 2026-11
+    function repair() {
+        let raw
+        try { raw = JSON.parse(file.text()) } catch (e) {
+            console.warn("settings.json is not valid JSON; keeping it as settings.json.broken and starting from defaults")
+            Quickshell.execDetached(["cp", "-f", file.path, file.path + ".broken"])
+            reset("appearance"); for (const s of Object.keys(schema)) if (s !== "appearance") reset(s)
+            return
+        }
+        const a = adapter.appearance
+        const oldTheme = raw?.appearance?.rice   // settings from before "rices" were called themes
+        if (typeof oldTheme === "string") a.theme = renamedThemes[oldTheme] ?? oldTheme
+        if (!Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? Themes.ids[0]
+        if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
+        const fresh = defaults.createObject(null)
+        for (const section of Object.keys(schema))
+            for (const key of Object.keys(schema[section]))
+                if (problem(schema[section][key], adapter[section][key])) {
+                    console.warn("settings.json: " + section + "." + key + " was invalid, using the default")
+                    adapter[section][key] = fresh[section][key]
+                }
+        fresh.destroy()
+    }
 }

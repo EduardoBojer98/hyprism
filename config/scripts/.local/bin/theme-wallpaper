@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Draws a rice's wallpaper with ImageMagick (once; later calls reuse it) and prints its path.
-#   rice-wallpaper pebble     -> ~/.local/share/linux-setup/rices/pebble.png
-#   rice-wallpaper --all      draw every one (to look at them)
-# Each design uses the rice's own colours (Rices.qml) and its fonts; nothing is downloaded.
+# Draws a theme's wallpaper with ImageMagick (once; later calls reuse it) and prints its path.
+#   theme-wallpaper pebble     -> ~/.local/share/linux-setup/themes/pebble.png
+#   theme-wallpaper --all      draw every one (to look at them)
+# Each design uses the theme's own colours (Themes.qml) and its fonts; nothing is downloaded.
 # 2560x1600 covers both screens here (16:10 laptop, 16:9 Acer; hyprpaper crops to fill).
 # Bump VERSION after changing a design so the cached pictures are redrawn.
 set -euo pipefail
-command -v magick >/dev/null || { echo "rice-wallpaper: needs ImageMagick (magick)" >&2; exit 1; }
+command -v magick >/dev/null || { echo "theme-wallpaper: needs ImageMagick (magick)" >&2; exit 1; }
 
 VERSION=4
-out_dir="${XDG_DATA_HOME:-$HOME/.local/share}/linux-setup/rices"
+out_dir="${XDG_DATA_HOME:-$HOME/.local/share}/linux-setup/themes"
 mkdir -p "$out_dir"
 W=2560 H=1600
 
@@ -28,45 +28,27 @@ draw() {
             magick -size ${W}x${H} radial-gradient:'#0f1726'-'#05080f' -fill none -stroke '#ffb00030' -strokewidth 2 \
                 -draw 'circle 1820,800 1820,1100' -draw 'circle 1820,800 1820,1400' -draw 'circle 1820,800 1820,1700' \
                 -draw 'line 0,800 2560,800' -stroke '#ffb00060' -draw 'line 1820,760 1820,840' "$out" ;;
-        workstation) # quiet diagonal slate to navy
-            magick -size ${W}x${H} -define gradient:angle=160 gradient:'#1d2a3a'-'#0f1419' "$out" ;;
         poster)   # Bauhaus poster: a red disc and a cobalt bar on charcoal
             magick -size ${W}x${H} xc:'#141414' -fill '#ff3b1f' -draw 'circle 1880,560 1880,1080' \
                 -fill '#2d5bff' -draw 'rectangle 0,1180 1500,1360' -fill '#f4f1ea' -draw 'rectangle 1500,1180 1560,1600' "$out" ;;
         glass)    # deep blue with a soft light from above-left
             magick -size ${W}x${H} xc:'#141821' -fill '#3a4a6b' -draw 'circle 760,320 760,1300' \
                 -fill '#2b2950' -draw 'circle 2100,1300 2100,1900' -resize 25% -blur 0x65 -resize 400% "$out" ;;
-        canvas)   # GNOME-style blue to violet
-            magick -size ${W}x${H} -define gradient:angle=135 gradient:'#1c2a3f'-'#2d1f45' "$out" ;;
         atlas)    # Swiss: off-white, a red square, black bars on a grid
             magick -size ${W}x${H} xc:'#f2f2f0' -fill '#e30613' -draw 'rectangle 160,160 1040,1040' \
                 -fill '#111111' -draw 'rectangle 1200,160 1260,1440' -draw 'rectangle 160,1200 2400,1240' "$out" ;;
-        noir)     # a dark room with one warm light, film grain
-            magick -size ${W}x${H} xc:'#0d0d0d' -fill '#4a3826' -draw 'circle 1560,640 1560,1240' -resize 25% -blur 0x75 -resize 400% \
-                -attenuate 0.3 +noise Gaussian "$out" ;;
-        garden)   # moss with large soft leaves of light
-            magick -size ${W}x${H} xc:'#141c16' -fill '#2f4a35' -draw 'ellipse 700,500 700,300 -20,200' \
-                -fill '#25402c' -draw 'ellipse 1900,1200 600,280 0,360' -resize 25% -blur 0x40 -resize 400% -attenuate 0.08 +noise Gaussian "$out" ;;
-        zen)      # one quiet tone with a barely-there vignette
-            magick -size ${W}x${H} radial-gradient:'#18181b'-'#0e0e10' -attenuate 0.04 +noise Gaussian "$out" ;;
-        mist)     # pale fog: a soft light band across the middle
-            magick -size ${W}x${H} xc:'#ecece9' -fill '#f7f7f5' -draw 'ellipse 1280,760 1500,260 0,360' \
-                -resize 25% -blur 0x60 -resize 400% -attenuate 0.03 +noise Gaussian "$out" ;;
-        halo)     # a dim ring of blue light around the centre
-            magick -size ${W}x${H} xc:'#0e0f12' -fill none -stroke '#2c3b5e' -strokewidth 90 -draw 'circle 1280,800 1280,1340' \
-                -resize 25% -blur 0x40 -resize 400% "$out" ;;
-        *) echo "rice-wallpaper: unknown design '$id'" >&2; return 2 ;;
+        *) echo "theme-wallpaper: unknown design '$id'" >&2; return 2 ;;
     esac
 }
 
 ids=("$@")
-[[ ${1:-} == --all ]] && ids=(pebble monolith console workstation poster glass canvas atlas noir garden zen mist halo)
+[[ ${1:-} == --all ]] && ids=(pebble monolith console poster glass atlas)
 [[ ${#ids[@]} -gt 0 ]] || { sed -n '2,7p' "$0" >&2; exit 2; }
 for id in "${ids[@]}"; do
-    [[ $id =~ ^[a-z]+$ ]] || { echo "rice-wallpaper: bad name '$id'" >&2; exit 2; }
+    [[ $id =~ ^[a-z]+$ ]] || { echo "theme-wallpaper: bad name '$id'" >&2; exit 2; }
     out="$out_dir/$id-v$VERSION.png"
     if [[ ! -s $out ]]; then   # PNG24: never a banded palette PNG
-        draw "$id" "PNG24:$out.tmp.png" || { rm -f "$out.tmp.png"; echo "rice-wallpaper: couldn't draw '$id'" >&2; exit 1; }
+        draw "$id" "PNG24:$out.tmp.png" || { rm -f "$out.tmp.png"; echo "theme-wallpaper: couldn't draw '$id'" >&2; exit 1; }
         mv "$out.tmp.png" "$out"
     fi
     echo "$out"

@@ -1,10 +1,10 @@
--- How windows look, set by the active rice (Quickshell Rices.qml). ThemeSync writes the rice's
+-- How windows look, set by the active theme (Quickshell Themes.qml). ThemeSync writes the theme's
 -- Hyprland values to settings/theme.lua and calls apply_theme() live with hyprctl eval. The
 -- defaults below are Pebble's, for the first login before the shell has run.
 local ok, saved = pcall(require, "settings.theme")
 THEME = ok and type(saved) == "table" and saved or {}
 local defaults = {
-    rice = "pebble", gaps_in = 7, gaps_out = 14, border_size = 2, rounding = 18,
+    theme = "pebble", gaps_in = 7, gaps_out = 14, border_size = 2, rounding = 18,
     active = { "ff9e7acc", "9ad1c0cc" }, inactive = "3a365000",
     shadow = "soft", blur = true, motion = "spring", accent = "ff9e7a", accent2 = "9ad1c0",
 }
@@ -13,7 +13,7 @@ for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 -- Shadows by name:
 --   none   flat (Monolith, Console, Atlas, Noir, Zen, Mist)
 --   soft   wide and soft: floating depth without a dark halo (Pebble, Glass, Canvas, Workstation, Garden, Halo)
---   paper  short and light, like a sheet on a desk (no rice by default; Settings > Rices > Adjust)
+--   paper  short and light, like a sheet on a desk (no theme by default; Settings > Themes > Adjust)
 --   hard   a solid offset block in the accent, no blur (Poster)
 local SHADOWS = {
     none  = { enabled = false },
@@ -43,7 +43,7 @@ end
 
 hl.config({
     decoration = {
-        rounding_power = 2.4,           -- squircle-like corners where a rice rounds them
+        rounding_power = 2.4,           -- squircle-like corners where a theme rounds them
         active_opacity = 1.0,
         blur = {
             size       = 10,

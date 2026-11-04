@@ -1,4 +1,4 @@
--- Motion, by preset: each rice names one (Quickshell Rices.qml, hypr.motion), apply_motion() sets it.
+-- Motion, by preset: each theme names one (Quickshell Themes.qml, hypr.motion), apply_motion() sets it.
 --   instant  barely there: near-immediate, no pop (Monolith)
 --   crisp    fast and linear-ish, a quick fade (Console)
 --   snappy   short slides, no overshoot (Atlas)
@@ -6,7 +6,7 @@
 --   ease     calm, damped, nothing bouncy (Glass, Canvas, Workstation, Zen, Mist)
 --   spring   soft springs with a small pop-in (Pebble, Garden, Halo)
 --   fade     slow cross-fades, workspaces dissolve instead of sliding (Noir)
---   off      animations off (Settings > Rices > Animations)
+--   off      animations off (Settings > Themes > Animations)
 hl.config({ animations = { enabled = true } })
 
 hl.curve("easeOutQuint", { type = "bezier", points = { {0.23, 1},   {0.32, 1} } })
@@ -63,9 +63,9 @@ function apply_motion(name)
     ;(PRESETS[name] or PRESETS.ease)()
     set("fadeIn", 1.73, "almostLinear"); set("fadeOut", 1.46, "almostLinear")
     -- The shell's bar, panels, menus and notifications are layers. The shell animates them itself
-    -- (a short drop from the bar), so Hyprland only fades them, in every rice: no pop, no slide.
+    -- (a short drop from the bar), so Hyprland only fades them, in every theme: no pop, no slide.
     set("layers", 2, "easeOutQuint", "fade"); set("layersIn", 2, "easeOutQuint", "fade"); set("layersOut", 1.5, "linear", "fade")
     set("fadeLayersIn", 2, "easeOutQuint"); set("fadeLayersOut", 1.5, "linear")
 end
 
-apply_theme()   -- modules/look.lua: the rice's frames, gaps, shadow, blur, and this motion
+apply_theme()   -- modules/look.lua: the theme's frames, gaps, shadow, blur, and this motion

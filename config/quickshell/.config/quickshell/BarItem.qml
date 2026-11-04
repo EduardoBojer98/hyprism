@@ -1,7 +1,7 @@
 import QtQuick
 
-// One clickable bar item in any rice: its content in a row (or a column on a vertical rail), a
-// hover highlight in the rice's corner radius, brighter while its panel is open.
+// One clickable bar item in any theme: its content in a row (or a column on a vertical rail), a
+// hover highlight in the theme's corner radius, brighter while its panel is open.
 Rectangle {
     id: item
     default property alias content: grid.data

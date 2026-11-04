@@ -1,6 +1,6 @@
 import QtQuick
 
-// Keyboard layout: a small keycap (or plain text in word rices); click lists the layouts, scroll switches.
+// Keyboard layout: a small keycap (or plain text in word themes); click lists the layouts, scroll switches.
 BarItem {
     id: kb
     property bool plain: false

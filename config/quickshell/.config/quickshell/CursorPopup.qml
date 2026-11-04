@@ -32,7 +32,7 @@ Scope {
     signal closed()
 
     readonly property int edge: Theme.spaceM
-    // room the bar takes on each side (the rice decides the edge), plus a gap
+    // room the bar takes on each side (the theme decides the edge), plus a gap
     readonly property int topReserve: Theme.reserveTop + edge
     readonly property int bottomReserve: Theme.reserveBottom + edge
     readonly property int leftReserve: Theme.reserveLeft + edge
@@ -125,7 +125,7 @@ Scope {
             x: at[0]
             y: at[1]
             // a plain drop-down: slides 8px out of the bar's side while it fades in (up from a bottom bar,
-            // sideways from a rail); the same in every rice, no scaling, no bounce
+            // sideways from a rail); the same in every theme, no scaling, no bounce
             property real drop: popup.open ? 0 : 8
             opacity: popup.open ? 1 : 0
             transform: Translate {

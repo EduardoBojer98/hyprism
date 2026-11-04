@@ -2,18 +2,18 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Rices: pick the whole desktop design, then adjust it. Every rice (Rices.qml) brings its own
+// Themes: pick the whole desktop design, then adjust it. Every theme (Themes.qml) brings its own
 // layout, type, shape, colours, motion, lock screen, terminal and wallpaper; the Adjust group lays
-// your changes over the active one (saved per rice in Config.appearance.custom, so switching away
-// and back keeps them). Same as `rice NAME` in a terminal.
+// your changes over the active one (saved per theme in Config.appearance.custom, so switching away
+// and back keeps them). Same as `theme NAME` in a terminal.
 ColumnLayout {
     id: page
     spacing: 20
 
     readonly property var a: Config.appearance
-    readonly property var base: Rices.get(a.rice)          // the rice as shipped
-    readonly property var r: Theme.rice                     // with your adjustments
-    readonly property var mine: (a.custom ?? {})[a.rice] ?? {}
+    readonly property var base: Themes.get(a.theme)          // the theme as shipped
+    readonly property var r: Theme.current                     // with your adjustments
+    readonly property var mine: (a.custom ?? {})[a.theme] ?? {}
     // bundled fonts first, then every other installed family
     readonly property var fonts: {
         const own = ["Outfit", "IBM Plex Sans", "Archivo", "Martian Mono", "Fraunces", "Cantarell", "JetBrainsMono Nerd Font", "Inter"]
@@ -21,12 +21,12 @@ ColumnLayout {
     }
     readonly property var swatches: ["#ff9e7a", "#ffb000", "#b6ff3b", "#9fd18b", "#5ad1c2", "#5b9cff", "#3584e4", "#8ab4ff", "#c7a3ff", "#ff6b8a", "#ff3b1f", "#e30613", "#f2d48a", "#e8e8ea", "#1a1a1a"]
 
-    // write one adjustment for the active rice (undefined removes it)
+    // write one adjustment for the active theme (undefined removes it)
     function adjust(key, value) {
         const all = JSON.parse(JSON.stringify(a.custom ?? {}))
-        const o = all[a.rice] ?? {}
+        const o = all[a.theme] ?? {}
         if (value === undefined || value === null) delete o[key]; else o[key] = value
-        if (Object.keys(o).length) all[a.rice] = o; else delete all[a.rice]
+        if (Object.keys(o).length) all[a.theme] = o; else delete all[a.theme]
         return Config.set("appearance", "custom", all)
     }
     function hex(t) {
@@ -36,10 +36,10 @@ ColumnLayout {
     }
 
     // ---- the gallery --------------------------------------------------------------------------------
-    // the previews show each rice's wallpaper: draw the missing ones once, in the background
-    Component.onCompleted: Quickshell.execDetached(["rice-wallpaper", "--all"])
+    // the previews show each theme's wallpaper: draw the missing ones once, in the background
+    Component.onCompleted: Quickshell.execDetached(["theme-wallpaper", "--all"])
     SettingGroup {
-        title: "Rice"
+        title: "Theme"
         Text {
             Layout.fillWidth: true
             Layout.margins: 16
@@ -56,19 +56,19 @@ ColumnLayout {
             columnSpacing: 12
             rowSpacing: 12
             Repeater {
-                model: Rices.list
-                RicePreview {
+                model: Themes.list
+                ThemePreview {
                     required property var modelData
-                    rice: modelData
-                    chosen: page.a.rice === modelData.id
+                    theme: modelData
+                    chosen: page.a.theme === modelData.id
                     Layout.fillWidth: true
-                    onPicked: Config.set("appearance", "rice", modelData.id)
+                    onPicked: Config.set("appearance", "theme", modelData.id)
                 }
             }
         }
     }
 
-    // ---- adjust the active rice ---------------------------------------------------------------------
+    // ---- adjust the active theme ---------------------------------------------------------------------
     SettingGroup {
         title: "Adjust " + page.base.name
 
@@ -88,9 +88,9 @@ ColumnLayout {
                         width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall + 4)
                         color: modelData
                         border { color: chosen ? Theme.text : Theme.stroke; width: chosen ? 2 : 1 }
-                        Text { visible: sw.index === 0; anchors.centerIn: parent; text: "\u{F0674}"; color: Rices.textOn(sw.modelData, page.base.colour); font { family: Theme.iconFont; pixelSize: 11 } }
+                        Text { visible: sw.index === 0; anchors.centerIn: parent; text: "\u{F0674}"; color: Themes.textOn(sw.modelData, page.base.colour); font { family: Theme.iconFont; pixelSize: 11 } }
                         MouseArea { id: swArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.adjust("accent", sw.index === 0 ? undefined : sw.modelData) }
-                        ToolTipText { shown: swArea.containsMouse; text: sw.index === 0 ? "The rice's own" : sw.modelData }
+                        ToolTipText { shown: swArea.containsMouse; text: sw.index === 0 ? "The theme's own" : sw.modelData }
                     }
                 }
             }
@@ -122,7 +122,7 @@ ColumnLayout {
         AdjustSlider { label: "Text size"; hint: "Body text in the shell; the rest scales from it"; key: "size"; value: page.r.font.size; from: 11; to: 18; unit: " px" }
         SettingRow {
             label: "Font"
-            hint: "The rice's own is " + page.base.font.ui
+            hint: "The theme's own is " + page.base.font.ui
             Dropdown { width: 200; options: page.fonts; current: page.r.font.ui; onPicked: v => page.adjust("font", v === page.base.font.ui ? undefined : v) }
         }
         SettingRow {
@@ -152,26 +152,26 @@ ColumnLayout {
         SettingRow {
             label: "Reset " + page.base.name
             hint: Object.keys(page.mine).length ? Object.keys(page.mine).length + " change(s) from the original" : "No changes"
-            PillButton { text: "Reset"; enabled: Object.keys(page.mine).length > 0; onClicked: Config.set("appearance", "custom", Object.fromEntries(Object.entries(page.a.custom ?? {}).filter(([k]) => k !== page.a.rice))) }
+            PillButton { text: "Reset"; enabled: Object.keys(page.mine).length > 0; onClicked: Config.set("appearance", "custom", Object.fromEntries(Object.entries(page.a.custom ?? {}).filter(([k]) => k !== page.a.theme))) }
         }
     }
 
-    // ---- personal: kept whatever the rice ---------------------------------------------------------
+    // ---- personal: kept whatever the theme ---------------------------------------------------------
     SettingGroup {
         title: "Everywhere"
         SettingRow {
-            label: "Rice wallpaper"
-            hint: "Each rice brings its own picture; off keeps yours (Wallpaper page)"
+            label: "Theme wallpaper"
+            hint: "Each theme brings its own picture; off keeps yours (Wallpaper page)"
             ConfigToggle { section: "appearance"; key: "wallpaper" }
         }
         SettingRow {
             label: "Terminal colours"
-            hint: "Ghostty switches to the rice's palette and font, live"
+            hint: "Ghostty switches to the theme's palette and font, live"
             ConfigToggle { section: "appearance"; key: "terminal" }
         }
         SettingRow {
             label: "Scale all text"
-            hint: "On top of the rice's text size, for both screens"
+            hint: "On top of the theme's text size, for both screens"
             ConfigSlider { section: "appearance"; key: "fontScale"; from: 0.85; to: 1.25; step: 0.05; format: v => Math.round(v * 100) + "%" }
         }
         SettingRow {
@@ -180,7 +180,7 @@ ColumnLayout {
         }
     }
 
-    // a slider for one numeric adjustment; letting go on the rice's own value removes the override
+    // a slider for one numeric adjustment; letting go on the theme's own value removes the override
     component AdjustSlider: SettingRow {
         id: as
         property string key

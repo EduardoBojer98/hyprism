@@ -38,7 +38,7 @@ Singleton {
 
     // Pages: what each SettingsPage<Id>.qml is called (Spotlight searches these too)
     readonly property var allSections: [
-        { id: "appearance",    name: "Rices",               glyph: "\u{F03D8}" },
+        { id: "appearance",    name: "Themes",               glyph: "\u{F03D8}" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
         { id: "cursor",        name: "Cursor",              glyph: "\u{F01BF}" },
         { id: "dock",          name: "Dock",                glyph: "\u{F0379}" },

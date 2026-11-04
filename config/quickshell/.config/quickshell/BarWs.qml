@@ -1,7 +1,7 @@
 import Quickshell.Hyprland
 import QtQuick
 
-// Workspaces of one monitor, drawn in the rice's own way (Rices.qml bar.ws):
+// Workspaces of one monitor, drawn in the theme's own way (Themes.qml bar.ws):
 //   dots     small dots; the current one stretches into an accent pill (Pebble, Canvas, Zen, Halo)
 //   filled   numbers, the current one on an accent block (Monolith)
 //   text     one readout label, "WS 02" (Console)

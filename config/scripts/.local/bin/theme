@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Switch the whole desktop design in one step: layout, type, shapes, colours, motion, lock screen,
+# terminal and wallpaper. Same as Settings > Themes. The themes live in ~/.config/quickshell/Themes.qml.
+#   theme            list the themes, the current one marked
+#   theme pebble    switch (pebble, monolith, console, poster, glass, atlas)
+set -euo pipefail
+
+qs ipc call config get appearance theme >/dev/null 2>&1 || { echo "theme: the shell (Quickshell) isn't running" >&2; exit 1; }
+themes=$(grep -oE '^\s+id: "[a-z0-9]+", name: "[^"]+", about: "[^"]+"' "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/Themes.qml" \
+    | sed -E 's/^\s+id: "([a-z0-9]+)", name: "([^"]+)", about: "([^"]+)"/\1\t\2\t\3/')
+current=$(qs ipc call config get appearance theme | tr -d '"')
+
+if [[ $# -eq 0 ]]; then
+    while IFS=$'\t' read -r id _name about; do
+        printf '%s %-12s %s\n' "$([[ $id == "$current" ]] && echo '*' || echo ' ')" "$id" "$about"
+    done <<<"$themes"
+    exit 0
+fi
+cut -f1 <<<"$themes" | grep -qx -- "$1" || { echo "theme: unknown theme '$1' (run 'theme' for the list)" >&2; exit 2; }
+
+# Config.set answers "ok" or the reason it refused
+r=$(qs ipc call config set appearance theme "\"$1\"")
+[[ $r == ok ]] || { echo "theme: not switched: $r" >&2; exit 1; }
+echo "theme: $1"

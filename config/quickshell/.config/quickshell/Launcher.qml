@@ -18,9 +18,9 @@ import QtQuick
 Singleton {
     id: root
 
-    // The look comes from the rice (Rices.qml launcher: placement, view, header, width); your
+    // The look comes from the theme (Themes.qml launcher: placement, view, header, width); your
     // behaviour options (web search, files, actions, order, recent, clipboard) from Config.launcher.
-    readonly property var rl: Theme.rice.launcher
+    readonly property var rl: Theme.current.launcher
     readonly property real screenW: popup.targetScreen?.width ?? 1600
     readonly property real screenH: popup.targetScreen?.height ?? 1000
     readonly property var look: Object.assign({}, Config.launcher, {
@@ -49,7 +49,7 @@ Singleton {
     ]
     property string mode: "search"            // search | apps | files | actions | clip
     // What the panel shows: an empty search opens on suggestions or the apps grid (Config.launcher.startView)
-    readonly property string startView: Config.launcher.startView === "rice" ? look.startView : Config.launcher.startView
+    readonly property string startView: Config.launcher.startView === "theme" ? look.startView : Config.launcher.startView
     readonly property string view: mode === "search" && Search.query.trim() === "" && startView !== "search" ? startView : mode
     // home view, in keyboard order: frequent apps, then recent items, then quick actions
     readonly property var homeItems: Search.frequentApps.concat(Search.recentItems, Search.quickActions)

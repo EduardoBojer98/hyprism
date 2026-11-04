@@ -2,10 +2,10 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Lock Screen: the rice's design (hypr/lockscreens/<rice.lock>.conf) and your background: the desktop wallpaper
+// Lock Screen: the theme's design (hypr/lockscreens/<theme.lock>.conf) and your background: the desktop wallpaper
 // or any picture from the wallpaper folders, with blur and brightness. Saved in Config.lockscreen;
 // ThemeSync writes hypr/settings/hyprlock-theme.conf, read the next time the screen locks.
-// The clock follows the menu bar's 24-hour setting; fonts and colours come from the rice.
+// The clock follows the menu bar's 24-hour setting; fonts and colours come from the theme.
 ColumnLayout {
     id: page
     spacing: 20
@@ -25,7 +25,7 @@ ColumnLayout {
         clip: true
         LockPreview {
             anchors { fill: parent; margins: 1 }
-            design: Theme.rice.lock
+            design: Theme.current.lock
             source: page.picture
             blur: page.l.blur
             brightness: page.l.brightness
@@ -35,7 +35,7 @@ ColumnLayout {
     // login, and three of those lock the account for 10 minutes (pam_faillock, seen 2026-11-01).
     Text {
         Layout.fillWidth: true
-        text: "The " + Theme.rice.name + " rice's lock screen. Applies the next time the screen locks (Super+L)."
+        text: "The " + Theme.current.name + " theme's lock screen. Applies the next time the screen locks (Super+L)."
         wrapMode: Text.Wrap
         color: Theme.muted
         font { family: Theme.font; pixelSize: Theme.fontLabel }

@@ -1,5 +1,5 @@
 -- How windows behave: layout, focus, inactive windows, moving and resizing and per-app rules.
--- Motion belongs to the rice (animations.lua presets, Settings > Rices > Motion).
+-- Motion belongs to the theme (animations.lua presets, Settings > Themes > Motion).
 -- Settings > Windows saves them in settings/windows.lua (Quickshell ThemeSync writes it and calls
 -- apply_windows() live with `hyprctl eval`), so WINDOWS and apply_windows() are global.
 

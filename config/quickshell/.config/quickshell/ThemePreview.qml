@@ -1,18 +1,18 @@
 import Quickshell
 import QtQuick
 
-// A small drawing of one rice for the Settings > Rices gallery: its wallpaper, its bar in its own
+// A small drawing of one theme for the Settings > Themes gallery: its wallpaper, its bar in its own
 // shape and place, a window in its frame and corners, all in its colours. Click to switch.
 Item {
     id: card
-    required property var rice
+    required property var theme
     property bool chosen: false
     signal picked()
 
-    readonly property var c: rice.colour
-    readonly property var b: rice.bar
+    readonly property var c: theme.colour
+    readonly property var b: theme.bar
     readonly property real s: width / 200                 // drawing scale
-    readonly property string wall: Quickshell.env("HOME") + "/.local/share/linux-setup/rices/" + rice.wall + "-v" + Rices.wallVersion + ".png"
+    readonly property string wall: Quickshell.env("HOME") + "/.local/share/linux-setup/themes/" + theme.wall + "-v" + Themes.wallVersion + ".png"
 
     implicitHeight: shot.height + name.implicitHeight + 10
 
@@ -27,16 +27,16 @@ Item {
 
         Image { anchors.fill: parent; anchors.margins: 1; source: "file://" + card.wall; fillMode: Image.PreserveAspectCrop; asynchronous: true; sourceSize.width: 400 }
 
-        // a window, in the rice's frame and corners
+        // a window, in the theme's frame and corners
         Rectangle {
             readonly property real pad: 14 * card.s
             x: (card.b.edge === "left" ? 22 : 10) * card.s + (card.b.kind === "rail" && card.b.edge === "left" ? 14 * card.s : 0)
             y: (card.b.edge === "top" || card.b.kind === "letterbox" ? 26 : 12) * card.s
             width: parent.width * 0.62
             height: parent.height * 0.52
-            radius: Math.min(card.rice.hypr.rounding, 18) * card.s * 0.6
+            radius: Math.min(card.theme.hypr.rounding, 18) * card.s * 0.6
             color: card.c.surface
-            border { color: "#" + card.rice.hypr.active[0].slice(0, 6); width: Math.max(1, card.rice.hypr.border * card.s * 0.6) }
+            border { color: "#" + card.theme.hypr.active[0].slice(0, 6); width: Math.max(1, card.theme.hypr.border * card.s * 0.6) }
             Column {
                 x: 8 * card.s; y: 8 * card.s
                 spacing: 4 * card.s
@@ -44,7 +44,7 @@ Item {
             }
         }
 
-        // the bar, in the rice's place and shape
+        // the bar, in the theme's place and shape
         Item {
             anchors.fill: parent
             readonly property real t: Math.max(6, card.b.size * card.s * 0.32)
@@ -87,7 +87,7 @@ Item {
                 visible: card.b.kind === "corner"
                 anchors { right: parent.right; bottom: parent.bottom; margins: 6 * card.s }
                 text: "17:42"; color: card.c.muted
-                font { family: card.rice.font.ui; pixelSize: 9 * card.s }
+                font { family: card.theme.font.ui; pixelSize: 9 * card.s }
             }
             Item {   // console: a readout line and corner brackets
                 visible: card.b.kind === "readout"
@@ -111,8 +111,8 @@ Item {
     Text {
         id: name
         anchors { top: shot.bottom; topMargin: 6; left: parent.left }
-        text: card.rice.name
+        text: card.theme.name
         color: card.chosen ? Theme.accent : Theme.text
-        font { family: card.rice.font.ui; pixelSize: Theme.fontSize; weight: card.chosen ? Font.DemiBold : Font.Medium }
+        font { family: card.theme.font.ui; pixelSize: Theme.fontSize; weight: card.chosen ? Font.DemiBold : Font.Medium }
     }
 }

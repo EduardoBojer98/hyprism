@@ -2,7 +2,7 @@ import Quickshell
 import QtQuick
 
 // Network, Bluetooth, sound and battery in one item that opens the Control Center (scroll: volume).
-//   mode "icons"  drawn glyphs; the battery as a small drawn cell (most rices)
+//   mode "icons"  drawn glyphs; the battery as a small drawn cell (most themes)
 //   mode "text"   lowercase words and numbers: "wifi 82  vol 45  bat 72%" (Monolith, Mist)
 //   mode "caps"   upper-case readout: "NET 82  VOL 45  BAT 72" (Console, Noir)
 BarItem {

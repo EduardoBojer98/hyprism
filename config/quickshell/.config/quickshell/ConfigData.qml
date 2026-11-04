@@ -4,10 +4,10 @@ import Quickshell.Io
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
     property JsonObject appearance: JsonObject {
-        property string rice: "pebble"          // the whole desktop design (Rices.qml): layout, type, shape, colour, motion
-        property var custom: ({})               // your adjustments per rice: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Rices.adjustable)
-        property bool terminal: true            // Ghostty follows the rice (ThemeSync writes ghostty/theme.conf)
-        property bool wallpaper: true           // the rice's own wallpaper; off = keep yours (Settings > Wallpaper)
+        property string theme: "pebble"          // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
+        property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
+        property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
+        property bool wallpaper: true           // the theme's own wallpaper; off = keep yours (Settings > Wallpaper)
         property real fontScale: 1
         property bool animations: true
         property string iconTheme: "Papirus-Dark"
@@ -30,7 +30,7 @@ JsonAdapter {
         property var usage: ({})                // launch counts, for ranking
         // look (Search & Widgets > Spotlight)
         property int columns: 7                 // apps per row in the apps grid
-        property string startView: "rice"       // rice (the rice's own) | home (suggestions until you type) | apps (grid) | search (empty pill)
+        property string startView: "theme"       // theme (the theme's own) | home (suggestions until you type) | apps (grid) | search (empty pill)
         property list<string> recent: []        // result keys, most recent first, for the home view
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
@@ -139,7 +139,7 @@ JsonAdapter {
         property list<string> apps: []           // desktop entry ids opened at login (startup-apps)
     }
     property JsonObject bar: JsonObject {
-        // clock and title (Settings > Menu Bar); the bar's place and shape come from the rice
+        // clock and title (Settings > Menu Bar); the bar's place and shape come from the theme
         property bool clock24: true
         property bool seconds: false
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"

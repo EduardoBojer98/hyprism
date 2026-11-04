@@ -2,14 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 
 // Menu Bar: how the clock and the focused window read. Where the bar sits, its shape and what it
-// holds come from the rice (Settings > Rices); these options apply to every rice's bar.
+// holds come from the theme (Settings > Themes); these options apply to every theme's bar.
 ColumnLayout {
     id: page
     spacing: 20
 
     Text {
         Layout.fillWidth: true
-        text: "The bar's place, shape and items come from the rice (" + Theme.rice.name + "). Change its size in Rices > Adjust."
+        text: "The bar's place, shape and items come from the theme (" + Theme.current.name + "). Change its size in Themes > Adjust."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontLabel }
@@ -28,7 +28,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Date"
-            hint: "Where the rice's bar shows a date"
+            hint: "Where the theme's bar shows a date"
             ConfigChoice { section: "bar"; key: "date"; values: ["full", "short", "none"]; labels: ["Fri 30 Oct", "30 Oct", "None"] }
         }
     }
@@ -37,7 +37,7 @@ ColumnLayout {
         title: "Details"
         SettingRow {
             label: "Window title"
-            hint: "After the app's name, where the rice shows one"
+            hint: "After the app's name, where the theme shows one"
             ConfigToggle { section: "bar"; key: "windowTitle" }
         }
     }
