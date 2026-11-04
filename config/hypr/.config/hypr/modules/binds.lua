@@ -30,6 +30,7 @@ add("control-center", "Apps", "Control Center",          key("C"), exec("qs ipc 
 add("notifications", "Apps", "Notification centre",       key("N"), exec("qs ipc call notifications toggle"))
 add("dnd",           "Apps", "Do Not Disturb on / off",   key("SHIFT + N"), exec("qs ipc call notifications dnd"))
 add("overview",      "Windows", "Mission Control",          key("W"), exec("qs ipc call overview toggle"))
+add("cheatsheet",    "Apps", "Keyboard shortcuts (this list)", key("slash"), exec("qs ipc call cheatsheet toggle"))
 add("layout-next",   "Keyboard", "Next keyboard layout",      key("CTRL + Space"), exec("hyprctl switchxkblayout all next"))
 
 -- Windows
@@ -59,10 +60,16 @@ add("workspace-prev-wheel", "Workspaces", "Previous workspace (wheel)", key("mou
 add("scratchpad",      "Workspaces", "Show / hide scratchpad",       key("S"), hl.dsp.workspace.toggle_special("scratch"))
 add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("ALT + S"), hl.dsp.window.move({ workspace = "special:scratch" }))
 
--- Screenshots and colour picker
-add("screenshot",          "Screen", "Screenshot an area (annotate, copy, save)", "Print", exec("screenshot"))
-add("screenshot-all",      "Screen", "Screenshot the whole screen (copy and save)", "SHIFT + Print", exec("screenshot all"))
-add("screenshot-alt",      "Screen", "Screenshot an area (second shortcut)", key("SHIFT + S"), exec("screenshot"))
+-- Screenshots (~/.local/bin/screenshot: grim + slurp, edited in Satty) and colour picker.
+-- In the editor: Enter copies and saves, Ctrl+S saves, Esc cancels.
+add("screenshot",          "Screen", "Screenshot an area (editor)", "ALT + SHIFT + S", exec("screenshot"))
+add("screenshot-print",    "Screen", "Screenshot an area (second shortcut)", "Print", exec("screenshot"))
+add("screenshot-alt",      "Screen", "Screenshot an area (third shortcut)", key("SHIFT + S"), exec("screenshot"))
+add("screenshot-copy",     "Screen", "Screenshot an area, copy only", "CTRL + Print", exec("screenshot area --copy"))
+add("screenshot-screen",   "Screen", "Screenshot this screen", "SHIFT + Print", exec("screenshot screen"))
+add("screenshot-window",   "Screen", "Screenshot the focused window", key("Print"), exec("screenshot window"))
+add("screenshot-all",      "Screen", "Screenshot both screens", "CTRL + SHIFT + Print", exec("screenshot all"))
+add("screenshot-delay",    "Screen", "Screenshot in 5 seconds", "ALT + Print", exec("screenshot delay 5"))
 add("task-manager",        "Apps",   "Task manager",                 "CTRL + SHIFT + Escape", exec("qs ipc call system taskmanager"))
 add("ocr",                 "Screen", "Copy text from the screen",    key("SHIFT + T"), exec("screentext"))
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))
