@@ -72,10 +72,12 @@ the palette and the window border change. Preview: `docs/palette-preview.html`.
 | **Radioactive** (default) | `#0b0d0a` | `#eef2e6` | `#e4ff1a` radioactive yellow | `#00e5ff` electric cyan | `#4ade80` / `#ff9f1c` / `#ff4d6d` |
 | **Molten** | `#100b0a` | `#f7eee8` | `#ff6b1a` blazing orange | `#ff3dbb` hot magenta | `#34d399` / `#ffd60a` / `#ff4040` |
 | **Cyber** | `#0a0b14` | `#eef0ff` | `#00e5ff` electric cyan | `#ff2bd6` magenta | `#3ee07f` / `#ffc53d` / `#ff4d5e` |
+| **Acid** | `#090c0b` | `#ecf5ee` | `#5dff3a` acid green | `#b56cff` ultraviolet | `#2dd4bf` / `#ffb020` / `#ff4f6d` |
+| **Synthwave** | `#0e0a14` | `#f3ecff` | `#ff2e97` hot pink | `#8f6bff` electric violet | `#3ee07f` / `#ffc53d` / `#ff5a3c` |
 
 Contrast on the base (WCAG 2, measured): body text 17:1 in all three; accents and accent 2 6.1:1 or
 better; status colours 5.6:1 or better; text on an accent fill 5.9:1 or better (Molten's orange is the
-lowest). Everything passes AA (4.5:1); body text passes AAA (7:1). `Theme.accentText` picks dark or
+lowest of the first three; Synthwave's pink is 4.9:1). Everything passes AA (4.5:1); body text passes AAA (7:1). `Theme.accentText` picks dark or
 white text by real WCAG luminance, so a new accent can't end up with unreadable button text.
 
 ### Rules
@@ -94,6 +96,24 @@ white text by real WCAG luminance, so a new accent can't end up with unreadable 
    faint hairline and a plain dark shadow.
 6. **Motion stays fast:** 120 / 200 / 600 ms in the shell, Hyprland springs and `easeOutQuint`
    (`modules/animations.lua`). Nothing bounces; the neon border doesn't spin (the rainbow style still can).
+
+### Neon surfaces (any theme)
+
+`NeonEdge.qml` draws a 1.5px ring from accent to accent 2 at 45° with a soft accent glow. It replaces
+the hairline wherever a surface asks for it:
+
+| Surface | How to turn it on | Ready-made designs |
+|---|---|---|
+| Panels, menus, pop-ups, cheatsheet, Settings window | Settings → Appearance → **Neon edges** (`appearance.neonPanels`, on by default) | — |
+| Menu bar | Colour **Neon** (`bar.tint`): dark surface, glowing edge on floating / islands / tabs / compact, a glowing line under a strip | Neon, Neon line, Neon islands, Neon tabs, Neon bottom |
+| Dock | Colour **Neon** (`dock.tint`) | Neon, Neon island, Neon panel |
+| Spotlight | Colour **Neon** (`launcher.tint`) | Neon, Neon card |
+| Notifications | Style **Neon** (always glowing), or Card with Neon edges on | — |
+| Lock screen | Design **Neon** (`lockscreens/neon.conf`): accent clock with glow, gradient password field | — |
+
+The neon surface colour is the theme base at 93% opacity (`Theme.surface("neon")`), darker than glass,
+so the edge and the text stay crisp over any wallpaper. Every neon option works with every theme,
+calm or neon, light or dark.
 
 ### One source of truth, every app
 

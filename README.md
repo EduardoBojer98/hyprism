@@ -153,7 +153,11 @@ lock screen, terminal (Ghostty), GTK apps and the screenshot selection at once.
 
 - Switch in one step: `theme radioactive` (or `molten`, `cyber`, `midnight`, `nord`, …); `theme` lists them.
 - Neon themes: **Radioactive** (yellow + electric cyan, default), **Molten** (orange + magenta), **Cyber**
-  (cyan + magenta). Their window border is a glowing gradient (Settings → Windows → Focused window → Neon glow).
+  (cyan + magenta), **Acid** (acid green + ultraviolet), **Synthwave** (hot pink + violet). Their window
+  border is a glowing gradient (Settings → Windows → Focused window → Neon glow).
+- Neon looks for the rest of the desktop, with any theme: Settings → Menu Bar / Dock / Search & Launcher →
+  Design (Neon, Neon line, Neon islands, Neon tabs, Neon bottom; Neon dock, island, panel; Neon launcher, card),
+  Notifications → Style → Neon, Lock Screen → Neon, and Appearance → **Neon edges** for every panel and menu.
 - Add a theme: one line in `Theme.themes` (`[base, text, accent, accent2]`) plus, for its own terminal
   colours, a file in `config/ghostty/.config/ghostty/themes/`. Rules: `docs/DESIGN.md`.
 - Fonts: Settings → Appearance → Font (UI); terminal font in `config/ghostty/.config/ghostty/config`.
