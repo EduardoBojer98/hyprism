@@ -14,3 +14,9 @@ id_*
 config/quickshell/.config/quickshell/settings.json
 config/hypr/.config/hypr/settings/
 config/ghostty/.config/ghostty/theme.conf
+
+# Dev tooling: Graphify's code graph is generated (graphify update .), and its Claude skill is
+# installed per machine by `graphify claude install`. Personal Claude permissions stay local.
+graphify-out/
+.claude/skills/
+.claude/settings.local.json
