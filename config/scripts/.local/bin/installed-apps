@@ -56,7 +56,7 @@ describe() {
         while read -r pkg; do foreign[$pkg]=1; done < <(pacman -Qqm)
         if ((${#owner[@]})); then
             while IFS=$'\t' read -r pkg ver size; do pver[$pkg]=$ver; psize[$pkg]=$size; done < <(
-                pacman -Qi -- $(printf '%s\n' "${owner[@]}" | sort -u) |
+                printf '%s\n' "${owner[@]}" | sort -u | xargs pacman -Qi -- |
                 awk -F' *: ' '/^Name/ { n = $2 } /^Version/ { v = $2 } /^Installed Size/ { print n "\t" v "\t" $2 }')
         fi
     elif command -v rpm >/dev/null; then
@@ -131,8 +131,8 @@ info() {
                 printf 'Installed from\t%s\n' "$(rpm -q --qf '%{FROM_REPO}' "$pkg" 2>/dev/null || echo "Fedora package")"
                 rpm -q --qf 'Package\t%{NAME}\nVersion\t%{VERSION}-%{RELEASE}\nPackage description\t%{SUMMARY}\nLicence\t%{LICENSE}\nInstalled on\t%{INSTALLTIME:date}\n' "$pkg" ;;
             flatpak)
-                local fi; fi=$(flatpak info "$pkg" 2>/dev/null)
-                pick 'Origin=Installed from|Installation=Installed for|ID=App ID|Version=Version|Branch=Branch|License=Licence|Installed Size=Size on disk|Runtime=Runs on|Date=Last updated' <<< "$fi" |
+                local info; info=$(flatpak info "$pkg" 2>/dev/null)
+                pick 'Origin=Installed from|Installation=Installed for|ID=App ID|Version=Version|Branch=Branch|License=Licence|Installed Size=Size on disk|Runtime=Runs on|Date=Last updated' <<< "$info" |
                     sed -E 's/^(Installed from\t)flathub$/\1Flathub/; s/^(Installed for\t)system$/\1Everyone on this computer/; s/^(Installed for\t)user$/\1Only you/' ;;
             user)  printf 'Installed from\t%s\n' "A menu entry in your own apps folder (added by the app itself, a browser web app or by hand)" ;;
             *)     printf 'Installed from\t%s\n' "Not from a package: copied in by hand or by its own installer" ;;
