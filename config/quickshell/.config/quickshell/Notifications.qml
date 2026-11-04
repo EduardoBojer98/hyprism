@@ -133,10 +133,13 @@ Singleton {
     // Banners
     PanelWindow {
         screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
-        readonly property string place: Config.notifications.position
-        anchors { top: true; right: place === "top-right"; left: place === "top-left" }
-        margins { top: 8; right: 10; left: 10 }
-        implicitWidth: 344
+        // the rice's corner (Rices.qml notify.corner), kept clear of its bar
+        readonly property string place: Theme.rice.notify.corner
+        readonly property bool atBottom: place.startsWith("bottom")
+        exclusionMode: ExclusionMode.Ignore
+        anchors { top: !atBottom; bottom: atBottom; right: place.endsWith("right"); left: place.endsWith("left") }
+        margins { top: Theme.reserveTop + 10; bottom: Theme.reserveBottom + 10; right: Theme.reserveRight + 12; left: Theme.reserveLeft + 12 }
+        implicitWidth: Theme.rice.notify.kind === "subtitle" ? 900 : 344
         implicitHeight: Math.max(1, list.contentHeight)
         exclusiveZone: 0
         color: "transparent"
@@ -153,12 +156,12 @@ Singleton {
 
             // slide in from the right edge with a fade; leave by fading and drifting right
             add: Transition { ParallelAnimation {
-                NumberAnimation { property: "x"; from: Config.notifications.position === "top-left" ? -60 : 60; to: 0; duration: Theme.anim + 60; easing.type: Easing.OutQuint }
+                NumberAnimation { property: "x"; from: Theme.rice.notify.corner.endsWith("left") ? -60 : Theme.rice.notify.corner.endsWith("center") ? 0 : 60; to: 0; duration: Theme.anim + 60; easing.type: Easing.OutQuint }
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.anim }
             } }
             remove: Transition { ParallelAnimation {
                 NumberAnimation { property: "opacity"; to: 0; duration: Theme.anim }
-                NumberAnimation { property: "x"; to: Config.notifications.position === "top-left" ? -40 : 40; duration: Theme.anim; easing.type: Easing.InCubic }
+                NumberAnimation { property: "x"; to: Theme.rice.notify.corner.endsWith("left") ? -40 : Theme.rice.notify.corner.endsWith("center") ? 0 : 40; duration: Theme.anim; easing.type: Easing.InCubic }
             } }
             displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Easing.OutCubic } }
 

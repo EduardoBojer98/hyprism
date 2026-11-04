@@ -17,7 +17,7 @@ Scope {
     property string name: "popup"              // layer namespace: qs-<name> (blurred by Hyprland)
     property int boxWidth: 600
     property int boxHeight: 400
-    property string placement: "cursor"        // "cursor": under the pointer; "center"; "top" / "topLeft" / "topRight" (under the bar)
+    property string placement: "cursor"        // see place() below
     property bool open: false
     property real dim: 0                       // 0..1: darken the rest of the screen while open
     readonly property bool visible: open || box.opacity > 0
@@ -32,10 +32,37 @@ Scope {
     signal closed()
 
     readonly property int edge: Theme.spaceM
-    readonly property bool barBottom: Config.bar.position === "bottom"
-    readonly property int barReserve: Theme.barHeight + 8       // just past the bar, whatever its height and shape
-    readonly property int topReserve: barBottom ? edge : barReserve
-    readonly property int bottomReserve: barBottom ? barReserve : edge
+    // room the bar takes on each side (the rice decides the edge), plus a gap
+    readonly property int topReserve: Theme.reserveTop + edge
+    readonly property int bottomReserve: Theme.reserveBottom + edge
+    readonly property int leftReserve: Theme.reserveLeft + edge
+    readonly property int rightReserve: Theme.reserveRight + edge
+    readonly property string barEdge: Theme.barEdge
+    // Where the box goes. "top" / "topLeft" / "topRight" mean "beside the bar": under a top bar,
+    // above a bottom bar, next to a side rail (Left = its top end, Right = its bottom end).
+    // Launcher placements: "strip" (across the top edge), "corner" (above the Start button),
+    // "half" (the right half, full height), "column" (a full-height column on the left),
+    // "island" (above the bottom island), "fullscreen", "center", "cursor".
+    function place(w, h, W, H) {
+        const p = placement, l = leftReserve, r = W - w - rightReserve, t = topReserve, b = H - h - bottomReserve
+        const cx = (W - w) / 2
+        if (p === "center") return [cx, Math.max(t, H * 0.2)]
+        if (p === "fullscreen") return [cx, Math.max(t, H * 0.1)]   // a large centred sheet over a dark screen
+        if (p === "strip") return [0, Theme.reserveTop]
+        if (p === "half") return [W - w - Theme.reserveRight, Theme.reserveTop]
+        if (p === "column") return [Theme.reserveLeft, Theme.reserveTop]
+        if (p === "corner") return [l, b]
+        if (p === "island") return [cx, b]
+        if (p === "top" || p === "topLeft" || p === "topRight") {
+            if (barEdge === "left" || barEdge === "right") {
+                const x = barEdge === "left" ? l : r
+                return [x, p === "topLeft" ? t : p === "top" ? (H - h) / 2 : b]
+            }
+            const x = p === "top" ? cx : p === "topLeft" ? l : r
+            return [x, barEdge === "bottom" ? b : t]
+        }
+        return [Math.max(l, Math.min(cursorX - w / 2, r)), Math.max(t, Math.min(cursorY - 28, b))]
+    }
 
     function show() { locate.running = true }
     function hide() { if (open) { open = false; closed() } }
@@ -94,19 +121,12 @@ Scope {
             id: box
             width: popup.boxWidth
             height: popup.boxHeight
-            x: popup.placement === "center" || popup.placement === "top" ? (win.width - width) / 2
-               : popup.placement === "topRight" ? win.width - width - popup.edge
-               : popup.placement === "topLeft" ? popup.edge
-               : Math.max(popup.edge, Math.min(popup.cursorX - width / 2, win.width - width - popup.edge))
-            y: popup.placement === "center" ? win.height * 0.22
-               // "top" placements sit next to the bar, so with the bar at the bottom they open above it
-               : popup.placement === "topRight" || popup.placement === "topLeft" || popup.placement === "top"
-                 ? (popup.barBottom ? win.height - height - popup.bottomReserve : popup.topReserve)
-               : Math.max(popup.topReserve, Math.min(popup.cursorY - 28, win.height - height - popup.bottomReserve))
-
+            readonly property var at: popup.place(width, height, win.width, win.height)
+            x: at[0]
+            y: at[1]
             opacity: popup.open ? 1 : 0
             scale: popup.open ? 1 : 0.96
-            transformOrigin: Item.Top
+            transformOrigin: popup.barEdge === "bottom" ? Item.Bottom : Item.Top
             Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
             Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 

@@ -18,11 +18,28 @@ import QtQuick
 Singleton {
     id: root
 
-    readonly property var look: Config.launcher
+    // The look comes from the rice (Rices.qml launcher: placement, view, header, width); your
+    // behaviour options (web search, files, actions, order, recent, clipboard) from Config.launcher.
+    readonly property var rl: Theme.rice.launcher
+    readonly property real screenW: popup.targetScreen?.width ?? 1600
+    readonly property real screenH: popup.targetScreen?.height ?? 1000
+    readonly property var look: Object.assign({}, Config.launcher, {
+        placement: rl.placement,
+        style: Theme.glassy && rl.placement === "center" ? "split" : "unified",
+        width: rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
+             : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
+             : rl.placement === "fullscreen" ? Math.min(rl.width, screenW - 80) : rl.width,
+        field: rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5),
+        corners: Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
+        selection: "accent",
+        dim: ({ fullscreen: 0.6, half: 0.3, column: 0.25, strip: 0, corner: 0, island: 0 })[rl.placement] ?? 0.15,
+        startView: rl.view === "grid" || rl.view === "start" ? "apps" : rl.view === "inline" ? "search" : "home"
+    })
     readonly property bool unified: look.style === "unified"
-    readonly property color surface: Theme.surface(look.tint)
-    readonly property real corner: look.corners === "round" ? 26 : look.corners === "sharp" ? Theme.radiusSmall : Theme.radiusLarge
-    readonly property color selection: look.selection === "accent" ? Theme.accentWash : Theme.fillActive
+    readonly property bool bigQuery: rl.header === "query"   // Console, Poster, Atlas, Noir: the query set large
+    readonly property color surface: Theme.surface("glass")
+    readonly property real corner: Theme.radius === 0 ? 0 : Theme.radiusLarge
+    readonly property color selection: Theme.accentWash
 
     readonly property var modes: [
         { id: "apps",    name: "Applications", glyph: "\u{F003B}", hint: "Search applications" },
@@ -116,7 +133,7 @@ Singleton {
     CursorPopup {
         id: popup
         name: "launcher"
-        placement: Config.launcher.placement
+        placement: root.look.placement
         boxWidth: root.look.width
         boxHeight: pill.height + (panel.visible ? panel.height + panel.anchors.topMargin : 0)
         dim: root.look.dim
@@ -128,7 +145,7 @@ Singleton {
             visible: root.unified
             width: parent.width
             height: popup.boxHeight
-            radius: root.look.corners === "round" ? 26 : root.corner
+            radius: root.corner
             color: root.surface
             Rectangle {
                 visible: panel.visible
@@ -166,7 +183,11 @@ Singleton {
                     anchors { left: lens.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
                     color: Theme.text
                     selectionColor: Theme.accent
-                    font { family: Theme.font; pixelSize: Math.round(root.look.field * 0.38) }
+                    font {
+                        family: root.bigQuery ? Theme.displayFont : Theme.font
+                        pixelSize: Math.round(root.look.field * (root.bigQuery ? 0.5 : 0.38))
+                        weight: root.bigQuery ? Theme.displayWeight : Font.Normal
+                    }
                     onTextChanged: {
                         if (root.mode === "clip") { Clipboard.filter = text; clipView.reset(); return }
                         Search.query = text; results.currentIndex = 0; grid.currentIndex = 0; root.homeIndex = 0; root.confirmFor = null
@@ -174,7 +195,7 @@ Singleton {
                     Text {
                         visible: !field.text
                         anchors.verticalCenter: parent.verticalCenter
-                        text: root.mode === "search" ? "Search apps, files, settings and more" : root.modes.find(m => m.id === root.mode)?.hint ?? ""
+                        text: root.mode === "search" ? (root.bigQuery ? "Search" : "Search apps, files, settings and more") : root.modes.find(m => m.id === root.mode)?.hint ?? ""
                         color: Theme.muted
                         font: field.font
                     }
