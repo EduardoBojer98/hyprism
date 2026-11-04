@@ -1,0 +1,23 @@
+# Radioactive: neon theme from this repo (docs/DESIGN.md). Background is overridden by the shell's theme sync.
+background = #0b0d0a
+foreground = #eef2e6
+cursor-color = #e4ff1a
+cursor-text = #0b0d0a
+selection-background = #3a4410
+selection-foreground = #eef2e6
+palette = 0=#1a1d17
+palette = 1=#ff4d6d
+palette = 2=#4ade80
+palette = 3=#e4ff1a
+palette = 4=#5cb8ff
+palette = 5=#d38bff
+palette = 6=#00e5ff
+palette = 7=#d4d9cb
+palette = 8=#5d6555
+palette = 9=#ff7a8f
+palette = 10=#9dffb0
+palette = 11=#f2ff7a
+palette = 12=#8fd0ff
+palette = 13=#e5b3ff
+palette = 14=#7af2ff
+palette = 15=#ffffff

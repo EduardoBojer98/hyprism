@@ -14,7 +14,7 @@ ColumnLayout {
         SettingRow {
             label: "Focused window"
             hint: "The border around the window you're working in"
-            ConfigChoice { section: "appearance"; key: "border"; values: ["rainbow", "accent"]; labels: ["Rainbow", "Accent colour"] }
+            ConfigChoice { section: "appearance"; key: "border"; values: ["neon", "rainbow", "accent"]; labels: ["Neon glow", "Rainbow", "Accent colour"] }
         }
         SettingRow {
             visible: Config.appearance.border === "rainbow"

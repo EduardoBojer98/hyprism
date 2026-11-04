@@ -1,0 +1,23 @@
+# Cyber: neon theme from this repo (docs/DESIGN.md). Background is overridden by the shell's theme sync.
+background = #0a0b14
+foreground = #eef0ff
+cursor-color = #00e5ff
+cursor-text = #0a0b14
+selection-background = #15325a
+selection-foreground = #eef0ff
+palette = 0=#161829
+palette = 1=#ff4d5e
+palette = 2=#3ee07f
+palette = 3=#ffc53d
+palette = 4=#5c8dff
+palette = 5=#ff2bd6
+palette = 6=#00e5ff
+palette = 7=#d2d5ef
+palette = 8=#555a80
+palette = 9=#ff808b
+palette = 10=#8af0b2
+palette = 11=#ffd97a
+palette = 12=#8fb0ff
+palette = 13=#ff7ae6
+palette = 14=#7af2ff
+palette = 15=#ffffff

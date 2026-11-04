@@ -12,6 +12,7 @@ Scope {
     id: root
 
     readonly property string accentHex: Theme.accent.toString().slice(1, 7)
+    readonly property string accent2Hex: Theme.accent2.toString().slice(1, 7)
     readonly property int rounding: Theme.radius
     readonly property string iconTheme: Theme.iconTheme
     // only plain folder names reach the shell commands below
@@ -24,7 +25,7 @@ Scope {
     readonly property bool light: Theme.light
     // Lock screen (Settings > Appearance > Lock Screen): design file, background and clock format
     readonly property var lock: Config.lockscreen
-    readonly property string lockConf: "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$rounding = " + rounding
+    readonly property string lockConf: "# Written by Quickshell ThemeSync from Settings > Appearance\n$accent = rgb(" + accentHex + ")\n$accent2 = rgb(" + accent2Hex + ")\n$rounding = " + rounding
         + "\n$wall = " + (/^[^\n#]+$/.test(lock.wallpaper) ? lock.wallpaper : "~/.config/hypr/settings/wallpaper")
         + "\n$blur = " + lock.blur + "\n$dim = " + lock.brightness + "\n$font = " + Config.appearance.font.replace(/[\n#]/g, "")
         + "\n$clock = " + (Config.bar.clock24 ? "%H:%M" : "%-I:%M") + "\n$hour = " + (Config.bar.clock24 ? "%H" : "%I")
@@ -44,7 +45,7 @@ Scope {
     }
 
     function apply() {
-        const t = `{ accent = "${accentHex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize}, gaps = ${gaps}, cursor = "${cursorTheme}", cursor_size = ${cursorSize} }`
+        const t = `{ accent = "${accentHex}", accent2 = "${accent2Hex}", rounding = ${rounding}, border = "${border}", border_spin = ${borderSpin}, border_size = ${borderSize}, gaps = ${gaps}, cursor = "${cursorTheme}", cursor_size = ${cursorSize} }`
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from Settings > Appearance\nreturn " + t)
         SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", lockConf)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + t + "; apply_theme()"])

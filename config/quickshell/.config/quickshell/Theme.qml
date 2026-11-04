@@ -43,7 +43,16 @@ Singleton {
         everforest:  { name: "Everforest", dark: ["#2d353b", "#d3c6aa", "#a7c080"], light: ["#fdf6e3", "#5c6a72", "#8da101"], term: ["Everforest Dark Med", "Everforest Light Med"] },
         kanagawa:    { name: "Kanagawa", dark: ["#1f1f28", "#dcd7ba", "#7e9cd8"], light: ["#f2ecbc", "#545464", "#4d699b"], term: ["Kanagawa Wave", "Kanagawa Lotus"] },
         onedark:     { name: "One Dark", dark: ["#282c34", "#abb2bf", "#61afef"], light: ["#fafafa", "#383a42", "#4078f2"], term: ["Atom One Dark", "Atom One Light"] },
-        solarized:   { name: "Solarized", dark: ["#002b36", "#93a1a1", "#268bd2"], light: ["#fdf6e3", "#586e75", "#268bd2"], term: ["iTerm2 Solarized Dark", "iTerm2 Solarized Light"] }
+        solarized:   { name: "Solarized", dark: ["#002b36", "#93a1a1", "#268bd2"], light: ["#fdf6e3", "#586e75", "#268bd2"], term: ["iTerm2 Solarized Dark", "iTerm2 Solarized Light"] },
+        // Neon themes (docs/DESIGN.md): near-black base, a signature accent plus a second one for the
+        // window-border gradient and glow, [base, text, accent, accent2]. status = [success, warning, error],
+        // chosen so they never read as an accent. Terminal themes ship in ghostty/themes/.
+        radioactive: { name: "Radioactive", dark: ["#0b0d0a", "#eef2e6", "#e4ff1a", "#00e5ff"], light: ["#f6f7f0", "#15170f", "#5f6f00", "#00788a"],
+                       status: ["#4ade80", "#ff9f1c", "#ff4d6d"], term: ["Radioactive", "Atom One Light"] },
+        molten:      { name: "Molten", dark: ["#100b0a", "#f7eee8", "#ff6b1a", "#ff3dbb"], light: ["#fbf6f3", "#1e1410", "#c2410c", "#b0127f"],
+                       status: ["#34d399", "#ffd60a", "#ff4040"], term: ["Molten", "Atom One Light"] },
+        cyber:       { name: "Cyber", dark: ["#0a0b14", "#eef0ff", "#00e5ff", "#ff2bd6"], light: ["#f3f5fb", "#0f1120", "#0077a3", "#b0129a"],
+                       status: ["#3ee07f", "#ffc53d", "#ff4d5e"], term: ["Cyber", "Atom One Light"] }
     })
     readonly property var themeIds: Object.keys(themes)
     readonly property var th: themes[a.theme] ?? themes.midnight
@@ -80,7 +89,7 @@ Singleton {
     readonly property color subtext: Qt.rgba(text.r, text.g, text.b, light ? 0.66 : 0.64)
     readonly property color muted: Qt.rgba(text.r, text.g, text.b, light ? 0.46 : 0.42)
     readonly property color accent: accents[a.accent] ?? accents.blue
-    readonly property color accent2: accents.lavender
+    readonly property color accent2: pal[3] ?? accents.lavender   // second accent: border gradient end, glow
     readonly property color accentWash: Qt.rgba(accent.r, accent.g, accent.b, light ? 0.14 : 0.2)
     // text on an accent fill: dark on light accents (by relative luminance), white otherwise
     readonly property color accentText: 0.2126 * accent.r + 0.7152 * accent.g + 0.0722 * accent.b > 0.62 ? "#1d1d1f" : "#ffffff"
@@ -89,9 +98,11 @@ Singleton {
     readonly property color onSelected: light ? accentText : accent
     readonly property color thumb: light ? "#ffffff" : "#f2f4fa"      // segmented-control knob
     readonly property color thumbText: "#1d1d1f"
-    readonly property color success: accents.green
-    readonly property color warning: light ? "#c27c00" : accents.yellow   // readable on white
-    readonly property color error: accents.red
+    // status colours: the theme's own (neon themes keep them apart from the accents), else the palette's
+    readonly property var status: !light && th.status ? th.status : [accents.green, light ? "#c27c00" : accents.yellow, accents.red]
+    readonly property color success: status[0]
+    readonly property color warning: status[1]   // readable on white in light mode
+    readonly property color error: status[2]
     readonly property color green: success      // older names, kept for existing components
     readonly property color yellow: warning
     readonly property color peach: accents.peach

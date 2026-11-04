@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Switch the whole desktop's colour theme in one step (bar, panels, window borders, lock screen,
+# terminal, GTK, launcher, screenshot editor). Same as Settings > Appearance > Theme.
+#   theme              list the themes, current one marked
+#   theme radioactive  switch (neon themes: radioactive, molten, cyber; plus midnight, nord, ...)
+# The list of themes lives in ~/.config/quickshell/Theme.qml (Theme.themes).
+set -euo pipefail
+
+qs ipc call config get appearance theme >/dev/null 2>&1 || { echo "theme: the shell (Quickshell) isn't running" >&2; exit 1; }
+themes=$(grep -oE '^ +[a-z]+: +\{ name:' "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/Theme.qml" | awk -F: '{gsub(/ /,"",$1); print $1}')
+current=$(qs ipc call config get appearance theme | tr -d '"')
+
+if [[ $# -eq 0 ]]; then
+    for t in $themes; do [[ $t == "$current" ]] && echo "* $t" || echo "  $t"; done
+    exit 0
+fi
+grep -qx -- "$1" <<<"$themes" || { echo "theme: unknown theme '$1' (run 'theme' for the list)" >&2; exit 2; }
+
+qs ipc call config set appearance theme "\"$1\"" >/dev/null
+qs ipc call config set appearance accent '"theme"' >/dev/null   # use the theme's own accent
+case $1 in radioactive|molten|cyber) qs ipc call config set appearance border '"neon"' >/dev/null ;; esac
+echo "theme: $1"

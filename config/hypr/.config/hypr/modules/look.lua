@@ -3,8 +3,8 @@
 -- writes settings/theme.lua and calls apply_theme() live). Defaults until it has run once.
 local ok, saved = pcall(require, "settings.theme")
 THEME = ok and saved or {}
-local defaults = { accent = "5b9cff",   -- Midnight's accent; Settings > Appearance saves your own
-                   rounding = 12, border = "rainbow", border_spin = 60, border_size = 2, gaps = 10 }
+local defaults = { accent = "e4ff1a", accent2 = "00e5ff",   -- Radioactive's accents; Settings > Appearance saves your own
+                   rounding = 12, border = "neon", border_spin = 60, border_size = 2, gaps = 10 }
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 
 -- Catppuccin Macchiato hues around the wheel (the only colours not taken from the shell's theme),
@@ -17,11 +17,16 @@ for _, name in ipairs({ "red", "peach", "yellow", "green", "teal", "sapphire", "
 end
 
 function apply_theme()
+    local neon = THEME.border == "neon"
     local active = THEME.border == "rainbow" and { colors = RAINBOW, angle = 0 }
+        or neon and { colors = { "rgba(" .. THEME.accent .. "ff)", "rgba(" .. THEME.accent2 .. "ff)" }, angle = 45 }
         or { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. THEME.accent .. "66)" }, angle = 135 }
     hl.config({
         general = { border_size = THEME.border_size, gaps_in = THEME.gaps // 2, gaps_out = THEME.gaps, col = { active_border = active } },
-        decoration = { rounding = THEME.rounding },
+        -- neon: the focused window's shadow turns into a soft glow in the accent; others keep a plain dark shadow
+        decoration = { rounding = THEME.rounding,
+                       shadow = { range = neon and 22 or 32, render_power = neon and 2 or 3, offset = neon and "0 0" or "0 8",
+                                  color = neon and ("rgba(" .. THEME.accent .. "55)") or "rgba(0000005a)" } },
     })
     -- borderangle "loop" turns the gradient forever; speed is tenths of a second per turn
     local spin = THEME.border == "rainbow" and THEME.border_spin > 0
@@ -40,11 +45,7 @@ hl.config({
         rounding_power = 2.4,           -- squircle-like corners
         active_opacity   = 1.0,
         shadow = {
-            enabled      = true,
-            range        = 32,          -- wide and soft: floating depth without a dark halo
-            render_power = 3,
-            offset       = "0 8",
-            color        = 0x5a000000,
+            enabled      = true,        -- size, offset and colour: apply_theme() above (glow in "neon")
             color_inactive = 0x26000000,
         },
         blur = {
