@@ -16,7 +16,8 @@ if [[ $# -eq 0 ]]; then
     done <<<"$themes"
     exit 0
 fi
-cut -f1 <<<"$themes" | grep -qx -- "$1" || { echo "theme: unknown theme '$1' (run 'theme' for the list)" >&2; exit 2; }
+# your own themes (Settings > Theme Builder) are custom-<name>; the shell checks every id
+[[ $1 =~ ^[a-z0-9-]+$ ]] || { echo "theme: unknown theme '$1' (run 'theme' for the list)" >&2; exit 2; }
 
 # Config.set answers "ok" or the reason it refused
 r=$(qs ipc call config set appearance theme "\"$1\"")

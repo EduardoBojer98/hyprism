@@ -51,6 +51,7 @@ case $mode in
     area)
         # slurp -d shows the size while dragging; Esc or a right click cancels (exit quietly)
         geo=$(slurp -d -c "${accent}ff" -b 0b0d0a66 -s "${accent}1f" -w 2 -B 00000000) || exit 0
+        sleep 0.15   # one more beat for the picker's layer to leave the screen (Hyprland rule: no fade)
         grim -g "$geo" "$tmp" || fail "grim couldn't capture that area" ;;
     screen) grim -o "$(monitor_under_mouse)" "$tmp" || fail "grim couldn't capture the screen" ;;
     window)

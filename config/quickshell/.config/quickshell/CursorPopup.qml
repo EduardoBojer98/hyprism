@@ -191,6 +191,28 @@ Scope {
                 radius: Theme.radiusLarge
                 color: Qt.rgba(0, 0, 0, Theme.light ? 0.18 : 0.42)
             }
+            RectangularShadow {   // glow: a haze in the accent around the panel (Console's phosphor)
+                visible: Theme.depth === "glow"
+                anchors.fill: parent
+                z: -2
+                blur: 34
+                spread: 2
+                radius: Theme.radiusLarge
+                color: Qt.alpha(Theme.accent, 0.22)
+            }
+            Repeater {   // brackets: accent corner marks over the panel's frame (Console)
+                model: Theme.current.popup.decor === "brackets" ? [[0, 0], [1, 0], [0, 1], [1, 1]] : []
+                Item {
+                    id: mark
+                    required property var modelData
+                    z: 10
+                    width: 14; height: 14
+                    x: modelData[0] ? box.width - width + 2 : -2
+                    y: modelData[1] ? box.height - height + 2 : -2
+                    Rectangle { width: parent.width; height: 2; color: Theme.accent; y: mark.modelData[1] ? parent.height - 2 : 0 }
+                    Rectangle { width: 2; height: parent.height; color: Theme.accent; x: mark.modelData[0] ? parent.width - 2 : 0 }
+                }
+            }
             Rectangle {
                 visible: Theme.depth === "hard"
                 anchors.fill: parent

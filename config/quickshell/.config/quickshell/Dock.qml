@@ -3,6 +3,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Widgets
 import QtQuick
+import QtQuick.Effects
 
 // Dock: the all-apps button, pinned apps (Config.dock.pinned, drag to reorder), a divider, then
 // every window on this dock's monitor as its own live thumbnail with the app's icon on it.
@@ -156,6 +157,17 @@ PanelWindow {
         color: ({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[dock.ds.fill] ?? Theme.glass
         border { width: Theme.line; color: dock.ds.fill === "ink" ? Theme.text : Theme.stroke }
 
+        // the theme's depth: a soft shadow (glass themes) or a hard offset block (Poster), under the island
+        RectangularShadow {
+            visible: Theme.depth === "soft" || Theme.depth === "glow"
+            z: -1
+            anchors.fill: parent
+            offset.y: Theme.depth === "glow" ? 0 : 6
+            blur: Theme.depth === "glow" ? 26 : 22
+            spread: -2
+            radius: parent.radius
+            color: Theme.depth === "glow" ? Qt.alpha(Theme.accent, 0.2) : Qt.rgba(0, 0, 0, Theme.light ? 0.18 : 0.4)
+        }
         // Poster's hard offset shadow: a block of the line colour drawn under the island (z < 0)
         Rectangle {
             visible: Theme.depth === "hard"

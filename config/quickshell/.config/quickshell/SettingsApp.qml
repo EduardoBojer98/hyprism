@@ -22,7 +22,7 @@ Singleton {
     // it in that page's `keys` below, so search finds it. Adding a page: a SettingsPage<Id>.qml, an
     // entry in allSections, and its id in one group here.
     readonly property var allGroups: [
-        { id: "appearance", name: "Appearance",          glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons", "cursor"] },
+        { id: "appearance", name: "Appearance",          glyph: "\u{F03D8}", pages: ["appearance", "builder", "wallpaper", "icons", "cursor"] },
         { id: "barGroup",   name: "Menu Bar",            glyph: "\u{F0E7F}", pages: ["bar"] },
         { id: "dockGroup",  name: "Dock",                glyph: "\u{F0A1F}", pages: ["dock"] },
         { id: "lockGroup",  name: "Lock Screen",         glyph: "\u{F033E}", pages: ["lockscreen"] },
@@ -44,6 +44,7 @@ Singleton {
     // Pages: what each SettingsPage<Id>.qml is called, and the words search finds it by (Spotlight searches these too)
     readonly property var allSections: [
         { id: "appearance",    name: "Themes",              glyph: "\u{F03D8}", keys: "theme look colour accent font text size corners gaps shadow blur animations motion reduce terminal" },
+        { id: "builder",       name: "Theme Builder",       glyph: "\u{F0E1E}", keys: "custom own theme create make editor colours fonts bar dock panels motion design" },
         { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}", keys: "background picture slideshow blur folder" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}", keys: "icon theme papirus" },
         { id: "cursor",        name: "Cursor",              glyph: "\u{F01BF}", keys: "pointer mouse size" },

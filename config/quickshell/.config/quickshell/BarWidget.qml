@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Widgets
+import Quickshell.Hyprland
 import QtQuick
 
 // One bar item, by id. The bar lays these out in its three sections (Theme.barLayout); every item
@@ -17,14 +18,24 @@ Loader {
     property string voice: "icons"
     property string family: Theme.font
     property int thickness: Theme.barSize
+    property bool separated: false           // a thin rule before this item (Bar's sep)
 
 
     readonly property bool words: voice !== "icons"
     function say(s) { return voice === "caps" ? s.toUpperCase() : s }
-    sourceComponent: ({ launcher: launcherC, workspaces: wsC, window: windowC, clock: clockC, date: dateC, media: mediaC, tray: trayC,
+    sourceComponent: ({ apps: appsC, launcher: launcherC, workspaces: wsC, window: windowC, clock: clockC, date: dateC, media: mediaC, tray: trayC,
                         keyboard: keyboardC, notifications: bellC, status: statusC, network: networkC, bluetooth: btC, volume: volumeC,
                         brightness: brightnessC, battery: batteryC, "power-profile": profileC, cpu: cpuC, memory: memC, gpu: gpuC,
                         recording: recC, power: powerC })[kind] ?? null
+    // the separator sits in the gap before the item, outside it (the grid's spacing holds it)
+    Rectangle {
+        visible: w.separated && w.visible
+        color: Qt.alpha(w.tone, 0.28)
+        width: w.vertical ? Math.min(14, w.thickness * 0.45) : 1
+        height: w.vertical ? 1 : Math.min(14, w.thickness * 0.45)
+        x: w.vertical ? (w.width - width) / 2 : -8
+        y: w.vertical ? -8 : (w.height - height) / 2
+    }
     // an item with nothing to show takes no space (e.g. media with no player). Items say so with
     // `shown` (not `visible`, which follows this Loader and would never come back)
     visible: item ? (item.shown ?? true) : false
@@ -54,6 +65,60 @@ Loader {
         }
     }
 
+    // the dock inside the bar: pinned apps, then other running ones; a mark under each open app,
+    // the accent under the focused one. Click: bring it up (again: its next window) or start it;
+    // middle-click: a new window.
+    Component {
+        id: appsC
+        Item {
+            id: apps
+            readonly property int count: DesktopEntries.applications.values.length   // lookups re-run once apps have loaded
+            function entryFor(appId) { return count ? DesktopEntries.heuristicLookup(appId) : null }
+            readonly property var running: Hyprland.toplevels.values.filter(t => t.wayland && t.workspace?.monitor === w.monitor)
+            readonly property var entries: {
+                const out = count ? Array.from(Config.dock.pinned).map(id => DesktopEntries.byId(id)).filter(e => e) : []
+                for (const t of running) { const e = entryFor(t.wayland.appId); if (e && !out.some(x => x.id === e.id)) out.push(e) }
+                return out
+            }
+            readonly property int icon: Math.max(16, Math.min(Math.round(w.thickness * 0.62), 30))
+            implicitWidth: grid.implicitWidth
+            implicitHeight: grid.implicitHeight
+            Grid {
+                id: grid
+                columns: w.vertical ? 1 : Math.max(1, visibleChildren.length)
+                spacing: 2
+                Repeater {
+                    model: apps.entries
+                    BarItem {
+                        id: app
+                        required property var modelData
+                        readonly property var wins: apps.running.filter(t => apps.entryFor(t.wayland.appId)?.id === modelData.id)
+                        vertical: w.vertical
+                        pad: 4
+                        active: wins.some(t => t.activated)
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        onPressed: button => {
+                            if (button === Qt.MiddleButton || wins.length === 0) { modelData.execute(); return }
+                            const i = wins.findIndex(t => t.activated)
+                            wins[(i + 1) % wins.length].wayland.activate()
+                        }
+                        IconImage { implicitSize: apps.icon; source: Quickshell.iconPath(app.modelData?.icon ?? "", "application-x-executable") }
+                        Rectangle {   // open / focused mark, on the screen-edge side
+                            parent: app
+                            visible: app.wins.length > 0
+                            readonly property bool far: Theme.barEdge === "top" || Theme.barEdge === "left"
+                            width: w.vertical ? 3 : (app.active ? 14 : 5)
+                            height: w.vertical ? (app.active ? 14 : 5) : 3
+                            radius: Theme.radius === 0 ? 0 : 1.5
+                            x: w.vertical ? (far ? 0 : parent.width - width) : (parent.width - width) / 2
+                            y: w.vertical ? (parent.height - height) / 2 : (far ? 0 : parent.height - height)
+                            color: app.active ? Theme.accent : Qt.alpha(w.tone, 0.6)
+                        }
+                    }
+                }
+            }
+        }
+    }
     Component {
         id: launcherC
         BarItem {

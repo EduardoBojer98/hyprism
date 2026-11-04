@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
+import QtQuick.Effects
 
 // The bar of one screen. One bar for every theme: the theme gives its look (Theme.barStyle: fill,
 // edge line, voice, workspace and clock style, segmented pills) and its own item layout; Settings >
@@ -49,6 +50,14 @@ Scope {
                 rightMargin: root.edge === "left" ? 0 : root.margin
             }
 
+            // the theme's depth under a floating strip (segmented pills carry their own)
+            RectangularShadow {
+                visible: Theme.depth === "soft" && root.floating && !root.segmented && root.st.fill !== "none"
+                anchors.fill: parent
+                offset.y: 4; blur: 18; spread: -2
+                radius: root.corner
+                color: Qt.rgba(0, 0, 0, Theme.light ? 0.16 : 0.38)
+            }
             // one ground for the whole strip (segmented themes give each section its own instead)
             Glass {
                 anchors.fill: parent
@@ -138,6 +147,13 @@ Scope {
         height: root.vertical ? Math.max(0, Math.min(implicitHeight, room)) : implicitHeight
         clip: root.vertical ? implicitHeight > room : implicitWidth > room
 
+        RectangularShadow {
+            visible: section.pill && Theme.depth === "soft"
+            anchors.fill: parent
+            offset.y: 4; blur: 16; spread: -2
+            radius: root.corner
+            color: Qt.rgba(0, 0, 0, Theme.light ? 0.16 : 0.38)
+        }
         Glass {
             anchors.fill: parent
             visible: section.pill
@@ -158,6 +174,9 @@ Scope {
                 model: section.ids
                 BarWidget {
                     required property string modelData
+                    required property int index
+                    // a thin rule before every item but the first (themes with sep: Monolith, Console)
+                    separated: root.st.sep && index > 0
                     kind: modelData
                     monitor: root.monitor
                     vertical: root.vertical

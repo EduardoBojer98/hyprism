@@ -14,9 +14,11 @@ import QtQuick
 //          edge top|bottom|left|right, size px, floating (away from the edges), segmented (one pill per
 //          section), fill glass|surface|ground|ink|none, line (edge line px), voice icons|words|caps,
 //          mono (status in the mono face), ws (workspace style, BarWs.qml), clock plain|accent|display,
-//          decor (brackets), start / center / end: the items (BarWidget.qml ids)
-// dock     shape pill|tile|block, hover lift|grow|plate, mark line|dot|bar, fill glass|surface|ink
-// popup    depth soft (blurred shadow) | hard (offset block shadow) | none (frame only)
+//          decor (brackets), sep (a rule between items), start / center / end: the items (BarWidget.qml ids)
+// dock     edge (the theme's place for it; the same edge as the bar puts it inside the bar),
+//          shape pill|tile|block, hover lift|grow|plate, mark line|dot|bar, fill glass|surface|ink
+// popup    depth soft (blurred shadow) | hard (offset block shadow) | glow (accent haze) | none (frame only);
+//          decor brackets (accent corner marks on every panel)
 // motion   how panels open: enter / exit ms, curve (cubic bezier), travel px from the trigger side,
 //          scale (start size), press (scale while a button is held). Settings > Themes > Animations
 //          can reduce it (fade only) or turn it off.
@@ -24,7 +26,9 @@ import QtQuick
 // hypr     gaps in/out, border px, rounding, active/inactive border colours, shadow, blur, motion preset
 // lock     clock style + align (ThemeSync writes the hyprlock layout); term: Ghostty theme; wall: theme-wallpaper id
 Singleton {
-    readonly property var list: [
+    // the six shipped themes, then your own (Settings > Appearance > Theme builder)
+    readonly property var list: builtIn.concat(userList)
+    readonly property var builtIn: [
         {
             id: "pebble", name: "Pebble", about: "Soft and round: floating glass pills, stretching dots, a pill dock that lifts its icons",
             dark: true,
@@ -32,10 +36,10 @@ Singleton {
                       accent: "#ff9e7a", onAccent: "#1a1220", accent2: "#9ad1c0", ok: "#7fdc9a", warn: "#ffd27a", err: "#ff6b8a" },
             font: { ui: "Outfit", display: "Outfit", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Medium },
             shape: { radius: 18, radiusSmall: 12, line: 1, material: "glass" },
-            bar: { edge: "top", size: 34, floating: true, segmented: true, fill: "glass", line: 0, voice: "icons", mono: false, ws: "dots", clock: "plain",
+            bar: { edge: "top", size: 36, floating: true, segmented: true, fill: "glass", line: 0, voice: "icons", mono: false, ws: "dots", clock: "plain", decor: "", sep: false,
                    start: ["launcher", "workspaces"], center: ["clock"], end: ["media", "tray", "keyboard", "notifications", "status"] },
-            dock: { shape: "pill", hover: "lift", mark: "line", fill: "glass" },
-            popup: { depth: "soft" },
+            dock: { edge: "bottom", shape: "pill", hover: "lift", mark: "line", fill: "glass" },
+            popup: { depth: "soft", decor: "" },
             motion: { enter: 240, exit: 150, curve: [0.3, 1.25, 0.5, 1], travel: 10, scale: 0.94, press: 0.95 },
             launcher: { placement: "center", view: "grid", header: "none", width: 620 },
             notify: { corner: "top-right", kind: "bubble" },
@@ -44,16 +48,16 @@ Singleton {
             lock: { clock: "big", align: "center" }, term: "Pebble", wall: "pebble"
         },
         {
-            id: "monolith", name: "Monolith", about: "The desktop as a terminal: a text bar, acid-lime marks, hard 2px frames, no motion to wait for",
+            id: "monolith", name: "Monolith", about: "The desktop as a terminal: one status line with the dock in it, acid-lime marks, hard 2px frames, no waiting",
             dark: true,
             colour: { ground: "#0b0c0a", surface: "#121411", raised: "#1c1f1a", line: "#2a2d27", text: "#d7ddcc", muted: "#8b9480", faint: "#5f6858",
                       accent: "#b6ff3b", onAccent: "#0b0c0a", accent2: "#ff5f2e", ok: "#5ad1c2", warn: "#ffb547", err: "#ff5f5f" },
             font: { ui: "JetBrainsMono Nerd Font", display: "JetBrainsMono Nerd Font", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Bold },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
-            bar: { edge: "bottom", size: 26, floating: false, segmented: false, fill: "surface", line: 1, voice: "words", mono: true, ws: "filled", clock: "accent",
-                   start: ["workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "clock"] },
-            dock: { shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "none" },
+            bar: { edge: "bottom", size: 30, floating: false, segmented: false, fill: "surface", line: 1, voice: "words", mono: true, ws: "filled", clock: "accent", decor: "", sep: true,
+                   start: ["workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "cpu", "clock"] },
+            dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
+            popup: { depth: "none", decor: "" },
             motion: { enter: 90, exit: 60, curve: [0.2, 0, 0, 1], travel: 0, scale: 1, press: 1 },
             launcher: { placement: "strip", view: "inline", header: "none", width: 0 },
             notify: { corner: "bottom-right", kind: "line" },
@@ -61,17 +65,17 @@ Singleton {
             lock: { clock: "terminal", align: "left" }, term: "Monolith", wall: "monolith"
         },
         {
-            id: "console", name: "Console", about: "An amber readout: a transparent mono line, corner brackets, panels that snap on like a CRT",
+            id: "console", name: "Console", about: "An amber HUD: a framed caps readout, corner brackets on every panel, a phosphor glow, panels that snap on",
             dark: true,
-            colour: { ground: "#05080f", surface: "#0a101c", raised: "#141c2c", line: "#3a2e12", text: "#e9dcc0", muted: "#c19b52", faint: "#6d5a33",
+            colour: { ground: "#05080f", surface: "#0a0f1a", raised: "#131a28", line: "#5a4418", text: "#e9dcc0", muted: "#c19b52", faint: "#6d5a33",
                       accent: "#ffb000", onAccent: "#05080f", accent2: "#ff6a3d", ok: "#66d19e", warn: "#ff7a45", err: "#ff4d5e" },
             font: { ui: "Martian Mono", display: "Martian Mono", mono: "Martian Mono", size: 12, displayWeight: Font.Light },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
-            bar: { edge: "top", size: 26, floating: false, segmented: false, fill: "none", line: 0, voice: "caps", mono: true, ws: "text", clock: "accent", decor: "brackets",
-                   start: [], center: ["clock", "workspaces", "cpu", "memory", "status", "keyboard", "notifications", "tray"], end: [] },
-            dock: { shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "none" },
-            motion: { enter: 130, exit: 80, curve: [0.15, 0, 0.1, 1], travel: 0, scale: 0.985, press: 1 },
+            bar: { edge: "top", size: 30, floating: false, segmented: false, fill: "ground", line: 1, voice: "caps", mono: true, ws: "text", clock: "accent", decor: "brackets", sep: true,
+                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["cpu", "memory", "status", "keyboard", "notifications", "tray"] },
+            dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
+            popup: { depth: "glow", decor: "brackets" },
+            motion: { enter: 140, exit: 80, curve: [0.15, 0, 0.1, 1], travel: 4, scale: 0.98, press: 0.98 },
             launcher: { placement: "center", view: "list", header: "query", width: 680 },
             notify: { corner: "top-right", kind: "tag" },
             hypr: { gapsIn: 4, gapsOut: 10, border: 1, rounding: 0, active: ["ffb000ff"], inactive: "1d1a12ff", shadow: "none", blur: false, motion: "crisp" },
@@ -84,10 +88,10 @@ Singleton {
                       accent: "#ff3b1f", onAccent: "#f4f1ea", accent2: "#2d5bff", ok: "#1a7f37", warn: "#b35c00", err: "#c4161c" },
             font: { ui: "Archivo", display: "Archivo Black", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Black },
             shape: { radius: 0, radiusSmall: 0, line: 3, material: "solid" },
-            bar: { edge: "top", size: 48, floating: false, segmented: false, fill: "surface", line: 3, voice: "icons", mono: false, ws: "blocks", clock: "display",
+            bar: { edge: "top", size: 52, floating: false, segmented: false, fill: "surface", line: 3, voice: "icons", mono: false, ws: "blocks", clock: "display", decor: "", sep: false,
                    start: ["workspaces", "window"], center: [], end: ["media", "tray", "keyboard", "status", "notifications", "clock"] },
-            dock: { shape: "block", hover: "lift", mark: "bar", fill: "surface" },
-            popup: { depth: "hard" },
+            dock: { edge: "bottom", shape: "block", hover: "lift", mark: "bar", fill: "surface" },
+            popup: { depth: "hard", decor: "" },
             motion: { enter: 200, exit: 110, curve: [0.16, 1, 0.3, 1], travel: 28, scale: 1, press: 0.96 },
             launcher: { placement: "half", view: "list", header: "query", width: 0 },
             notify: { corner: "bottom-left", kind: "block" },
@@ -101,10 +105,10 @@ Singleton {
                       accent: "#5b9cff", onAccent: "#ffffff", accent2: "#8f86ff", ok: "#63d17a", warn: "#f7c85b", err: "#ff5f57" },
             font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Light },
             shape: { radius: 12, radiusSmall: 8, line: 1, material: "glass" },
-            bar: { edge: "top", size: 30, floating: false, segmented: false, fill: "glass", line: 1, voice: "icons", mono: false, ws: "numbers", clock: "plain",
+            bar: { edge: "top", size: 32, floating: false, segmented: false, fill: "glass", line: 1, voice: "icons", mono: false, ws: "numbers", clock: "plain", decor: "", sep: false,
                    start: ["launcher", "window", "workspaces"], center: [], end: ["media", "tray", "keyboard", "status", "notifications", "clock"] },
-            dock: { shape: "tile", hover: "grow", mark: "dot", fill: "glass" },
-            popup: { depth: "soft" },
+            dock: { edge: "bottom", shape: "tile", hover: "grow", mark: "dot", fill: "glass" },
+            popup: { depth: "soft", decor: "" },
             motion: { enter: 220, exit: 140, curve: [0.23, 1, 0.32, 1], travel: 6, scale: 0.97, press: 0.97 },
             launcher: { placement: "center", view: "list", header: "none", width: 680 },
             notify: { corner: "top-right", kind: "card" },
@@ -112,18 +116,18 @@ Singleton {
             lock: { clock: "big", align: "top" }, term: "Glass", wall: "glass"
         },
         {
-            id: "atlas", name: "Atlas", about: "Swiss discipline: a black rail, square blocks, heavy numerals, signal red, everything on the grid",
+            id: "atlas", name: "Atlas", about: "Swiss discipline: a black strip on top, heavy numerals, red squares, a black dock, everything on the grid",
             dark: false,
             colour: { ground: "#f2f2f0", surface: "#ffffff", raised: "#e8e8e5", line: "#111111", text: "#111111", muted: "#4b4b4b", faint: "#8a8a8a",
                       accent: "#e30613", onAccent: "#ffffff", accent2: "#111111", ok: "#0a7d3b", warn: "#a35b00", err: "#a3001b" },
             font: { ui: "Archivo", display: "Archivo", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.ExtraBold },
             shape: { radius: 0, radiusSmall: 0, line: 2, material: "solid" },
-            bar: { edge: "right", size: 72, floating: false, segmented: false, fill: "ink", line: 0, voice: "icons", mono: false, ws: "squares", clock: "display",
-                   start: ["clock", "workspaces"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "date"] },
-            dock: { shape: "block", hover: "plate", mark: "bar", fill: "ink" },
-            popup: { depth: "none" },
+            bar: { edge: "top", size: 44, floating: false, segmented: false, fill: "ink", line: 0, voice: "icons", mono: false, ws: "squares", clock: "display", decor: "", sep: false,
+                   start: ["clock", "workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "date"] },
+            dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "ink" },
+            popup: { depth: "none", decor: "" },
             motion: { enter: 160, exit: 100, curve: [0.23, 1, 0.32, 1], travel: 14, scale: 1, press: 0.97 },
-            launcher: { placement: "column", view: "list", header: "query", width: 520 },
+            launcher: { placement: "center", view: "list", header: "query", width: 620 },
             notify: { corner: "top-right", kind: "block" },
             hypr: { gapsIn: 8, gapsOut: 16, border: 2, rounding: 0, active: ["111111ff"], inactive: "c8c8c4ff", shadow: "none", blur: false, motion: "snappy" },
             lock: { clock: "stacked", align: "left" }, term: "Atlas", wall: "atlas"
@@ -131,8 +135,41 @@ Singleton {
     ]
     readonly property var ids: list.map(r => r.id)
 
+    // Your own themes: Config.appearance.userThemes = { "custom-<name>": { name, base: "<theme id>", <any part of a
+    // theme, e.g. colour: { accent: "#..." }, bar: { edge: "bottom" }> } }. Each is its base theme with your parts laid
+    // over it; a part with the wrong type or a bad colour is ignored, so a hand edit can't break the desktop.
+    readonly property var userList: Object.entries(Config.appearance.userThemes ?? {}).map(([id, u]) => makeUser(id, u)).filter(t => t)
+    function makeUser(id, u) {
+        if (!/^custom-[a-z0-9-]{1,40}$/.test(id) || typeof u !== "object" || !u) return null
+        const base = builtIn.find(b => b.id === u.base) ?? builtIn[0]
+        const t = merge(JSON.parse(JSON.stringify(base)), u)
+        t.id = id
+        t.name = typeof u.name === "string" && u.name.trim() ? u.name.trim().slice(0, 32) : "My theme"
+        t.about = "Your own theme, made from " + base.name
+        t.base = base.id
+        t.user = true
+        return t
+    }
+    function merge(into, over) {
+        for (const k of Object.keys(over ?? {})) {
+            if (["id", "name", "about", "base", "user"].includes(k)) continue
+            const b = into[k], v = over[k]
+            if (b === undefined || v === null || v === undefined) continue
+            if (Array.isArray(b)) {
+                if (Array.isArray(v) && v.every(x => typeof x === typeof (b[0] ?? x))) into[k] = v
+            } else if (typeof b === "object") {
+                if (typeof v === "object" && !Array.isArray(v)) merge(b, v)
+            } else if (typeof v === typeof b) {
+                if (typeof b === "string" && /^#[0-9a-fA-F]{6}$/.test(b) && !/^#[0-9a-fA-F]{6}$/.test(v)) continue   // colours stay colours
+                into[k] = v
+            }
+        }
+        return into
+    }
+
     // every bar item (BarWidget.qml), in the order Settings > Menu Bar offers them
     readonly property var barItems: [
+        { id: "apps",          name: "Apps (dock)",        glyph: "\u{F0A1F}" },
         { id: "launcher",      name: "Apps button",        glyph: "\u{F003B}" },
         { id: "workspaces",    name: "Workspaces",         glyph: "\u{F0570}" },
         { id: "window",        name: "Active window",      glyph: "\u{F05AF}" },
@@ -156,7 +193,7 @@ Singleton {
         { id: "power",         name: "Power menu",         glyph: "\u{F0425}" }
     ]
     function barItem(id) { return barItems.find(i => i.id === id) ?? { id: id, name: id, glyph: "\u{F02D7}" } }
-    readonly property int wallVersion: 4   // = VERSION in scripts/theme-wallpaper (the picture's file name)
+    readonly property int wallVersion: 5   // = VERSION in scripts/theme-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
 
     // Your adjustments to a theme (Settings > Themes > Adjust), saved per theme in

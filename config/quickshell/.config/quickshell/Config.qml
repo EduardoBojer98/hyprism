@@ -36,10 +36,10 @@ Singleton {
     readonly property var schema: ({
         appearance: {
             theme: Themes.ids,
-            custom: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"],
+            custom: "object", userThemes: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"],
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
-        dock: { enabled: "bool", position: ["bottom", "left", "right", "top"], size: ["compact", "regular", "roomy"], hiddenOn: "list",
+        dock: { enabled: "bool", position: ["theme", "bar", "bottom", "left", "right", "top"], size: ["compact", "regular", "roomy"], hiddenOn: "list",
                 iconSize: [24, 72], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
                     columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
@@ -155,6 +155,11 @@ Singleton {
         if (typeof oldTheme === "string") a.theme = renamedThemes[oldTheme] ?? oldTheme
         if (!Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? Themes.ids[0]
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
+        // format 1 (before 2026-11-05) saved the dock's place as "bottom" for everyone: follow the theme now
+        if ((raw?.version ?? 1) < 2) {
+            if (adapter.dock.position === "bottom") adapter.dock.position = "theme"
+            adapter.version = 2
+        }
         if (raw?.appearance?.animations === false && raw?.appearance?.motion === undefined) a.motion = "off"   // the old on/off switch
         const fresh = defaults.createObject(null)
         for (const section of Object.keys(schema))

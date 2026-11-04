@@ -42,8 +42,9 @@ ColumnLayout {
         SettingRow {
             visible: Config.dock.enabled
             label: "Position"
-            hint: Config.dock.position === Theme.barEdge ? "Beside the bar, which is on the same edge" : ""
-            ConfigChoice { section: "dock"; key: "position"; values: ["bottom", "left", "right", "top"]; labels: ["Bottom", "Left", "Right", "Top"] }
+            hint: Theme.dockInBar ? "Inside the menu bar, as its Apps item" + (Config.dock.position === "theme" ? " (the theme puts the dock on the bar's edge)" : "")
+                : Theme.dockEdge === Theme.barEdge ? "Beside the bar, which is on the same edge" : "The " + Theme.current.name + " theme's is " + (Theme.dockStyle.edge === Theme.barEdge ? "inside the bar" : Theme.dockStyle.edge)
+            ConfigChoice { section: "dock"; key: "position"; values: ["theme", "bar", "bottom", "left", "right", "top"]; labels: ["Theme's", "In the bar", "Bottom", "Left", "Right", "Top"] }
         }
         SettingRow {
             visible: Config.dock.enabled

@@ -12,7 +12,8 @@ Item {
     readonly property bool stacked: width > 0 && slot.implicitWidth + 200 > width - 32
 
     Layout.fillWidth: true
-    implicitHeight: stacked ? texts.implicitHeight + slot.implicitHeight + 34 : Math.max(48, texts.implicitHeight + 20)
+    // tall controls (a wrapped swatch grid, a list) make the row taller, never spill over its border
+    implicitHeight: stacked ? texts.implicitHeight + slot.implicitHeight + 34 : Math.max(48, texts.implicitHeight + 20, slot.implicitHeight + 24)
 
     Column {
         id: texts
@@ -23,7 +24,7 @@ Item {
             text: row.label
             color: Theme.text
             elide: Text.ElideRight
-            font { family: Theme.font; pixelSize: 13; weight: Font.Medium }
+            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
         }
         Text {
             visible: row.hint !== ""
@@ -31,7 +32,7 @@ Item {
             text: row.hint
             color: Theme.muted
             wrapMode: Text.Wrap
-            font { family: Theme.font; pixelSize: 11 }
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
         }
     }
 

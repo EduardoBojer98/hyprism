@@ -98,21 +98,32 @@ Singleton {
                                  : barVertical ? Math.max(barStyle.size, 44) : Math.min(barStyle.size, 44)
     readonly property bool barFloating: cb.floating === "theme" ? barStyle.floating : cb.floating === "floating"
     readonly property int barMargin: barFloating ? cb.margin : 0            // gap to the screen edge (and along it)
-    readonly property var barLayout: cb.custom ? { start: cb.start, center: cb.center, end: cb.end }
-                                               : { start: barStyle.start, center: barStyle.center, end: barStyle.end }
+    readonly property var barOwnLayout: cb.custom ? { start: cb.start, center: cb.center, end: cb.end }
+                                                  : { start: barStyle.start, center: barStyle.center, end: barStyle.end }
+    // a dock inside the bar is its "apps" item, in the middle unless you placed it yourself
+    readonly property var barLayout: {
+        const l = { start: Array.from(barOwnLayout.start), center: Array.from(barOwnLayout.center), end: Array.from(barOwnLayout.end) }
+        const all = l.start.concat(l.center, l.end)
+        if (dockInBar && !all.includes("apps")) l.center.unshift("apps")
+        if (!dockInBar && !cb.custom) for (const k of ["start", "center", "end"]) l[k] = l[k].filter(i => i !== "apps")
+        return l
+    }
     readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
     readonly property color barInk: barStyle.fill === "ink" ? base : text    // text on the bar's own ground
     function barShownOn(screen) { return !cb.hiddenOn.includes(screen?.name ?? "") }
 
     // ---- the dock: every theme has one; Settings > Dock places it ----------------------------------------
     readonly property var dockStyle: current.dock
-    readonly property string dockEdge: Config.dock.position
+    // where it goes: the theme's own edge by default, and inside the bar when that is the bar's edge too
+    readonly property string dockMode: Config.dock.position === "theme" ? (dockStyle.edge === barEdge ? "bar" : dockStyle.edge) : Config.dock.position
+    readonly property bool dockInBar: dockMode === "bar" && Config.dock.enabled
+    readonly property string dockEdge: dockInBar ? barEdge : dockMode
     readonly property bool dockVertical: dockEdge === "left" || dockEdge === "right"
     readonly property int dockPad: ({ compact: 5, regular: 8, roomy: 12 })[Config.dock.size] ?? 8
     readonly property int dockLift: dockStyle.shape === "pill" || dockStyle.shape === "tile" ? 8 : 6   // gap to the edge
     readonly property int dockThickness: Config.dock.iconSize + dockPad * 2 + 8                      // icon + padding + marks
-    readonly property bool dockReserves: Config.dock.enabled && !Config.dock.autoHide
-    function dockShownOn(screen) { return Config.dock.enabled && !Config.dock.hiddenOn.includes(screen?.name ?? "") }
+    readonly property bool dockReserves: Config.dock.enabled && !dockInBar && !Config.dock.autoHide
+    function dockShownOn(screen) { return Config.dock.enabled && !dockInBar && !Config.dock.hiddenOn.includes(screen?.name ?? "") }
 
     // room taken on each side by the bar and a dock that doesn't hide (popups and banners keep clear)
     function reserve(side) {

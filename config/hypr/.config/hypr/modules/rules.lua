@@ -27,6 +27,14 @@ hl.layer_rule({
     ignore_alpha = 0.05,  -- blur even behind the very transparent glass
 })
 
+-- slurp's area picker (~/.local/bin/screenshot): no fade-out, so the dimmed veil and the accent
+-- selection are gone the moment grim captures (a fading layer showed up tinted in the screenshot)
+hl.layer_rule({
+    name    = "screenshot-picker",
+    match   = { namespace = "^selection$" },
+    no_anim = true,
+})
+
 -- Satty, the screenshot editor (~/.local/bin/screenshot): floating, centred, sized to the screen
 -- it opens on (its own --resize ignores the laptop's 1.2 scale and overflows), opens instantly.
 hl.window_rule({

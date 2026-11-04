@@ -10,37 +10,6 @@ ColumnLayout {
     spacing: 20
 
     readonly property var b: Config.bar
-    readonly property var layout: Theme.barLayout          // what the bar shows now
-    readonly property var sections: [
-        { key: "start", name: page.vertical ? "Top" : "Left" },
-        { key: "center", name: "Middle" },
-        { key: "end", name: page.vertical ? "Bottom" : "Right" }
-    ]
-    readonly property bool vertical: Theme.barVertical
-
-    // edit the item lists: the first change copies the theme's own layout so there is something to edit
-    function lists() {
-        const l = page.layout
-        return { start: Array.from(l.start), center: Array.from(l.center), end: Array.from(l.end) }
-    }
-    function save(l) {
-        for (const k of ["start", "center", "end"]) Config.set("bar", k, l[k])
-        if (!page.b.custom) Config.set("bar", "custom", true)
-    }
-    function move(section, i, d) {   // d: -1 earlier, +1 later
-        const l = lists(), a = l[section], j = i + d
-        if (j < 0 || j >= a.length) return
-        ;[a[i], a[j]] = [a[j], a[i]]
-        save(l)
-    }
-    function moveTo(section, i, target) {
-        const l = lists(), id = l[section].splice(i, 1)[0]
-        l[target].push(id)
-        save(l)
-    }
-    function remove(section, i) { const l = lists(); l[section].splice(i, 1); save(l) }
-    function add(section, id) { const l = lists(); l[section].push(id); save(l) }
-    readonly property var unused: Themes.barItems.filter(it => ![...page.layout.start, ...page.layout.center, ...page.layout.end].includes(it.id))
 
     SettingGroup {
         title: "Place"
@@ -84,66 +53,18 @@ ColumnLayout {
         }
     }
 
-    // ---- items: three lists, each item can move up / down, to another section, or go -------------------
-    Repeater {
-        model: page.sections
-        SettingGroup {
-            id: group
-            required property var modelData
-            readonly property var ids: Array.from(page.layout[modelData.key])
-            title: modelData.name + (page.b.custom ? "" : " · the theme's")
-
-            Text {
-                visible: group.ids.length === 0
-                Layout.fillWidth: true
-                leftPadding: Theme.spaceM; topPadding: Theme.spaceS; bottomPadding: Theme.spaceS
-                text: "Empty"
-                color: Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontLabel }
-            }
-            Repeater {
-                model: group.ids
-                SettingRow {
-                    id: row
-                    required property string modelData
-                    required property int index
-                    readonly property var info: Themes.barItem(modelData)
-                    label: info.name
-                    Row {
-                        spacing: 4
-                        Text {   // the item's icon, so the list reads like the bar
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: 28
-                            text: row.info.glyph
-                            color: Theme.subtext
-                            font { family: Theme.iconFont; pixelSize: Theme.iconSmall }
-                        }
-                        ArrowButton { glyph: page.vertical ? "\u{F0143}" : "\u{F0141}"; tip: "Earlier"; small: true; opacity: row.index > 0 ? 1 : 0.3
-                                      onClicked: page.move(group.modelData.key, row.index, -1) }
-                        ArrowButton { glyph: page.vertical ? "\u{F0140}" : "\u{F0142}"; tip: "Later"; small: true; opacity: row.index < group.ids.length - 1 ? 1 : 0.3
-                                      onClicked: page.move(group.modelData.key, row.index, 1) }
-                        Repeater {   // to the other two sections
-                            model: page.sections.filter(s => s.key !== group.modelData.key)
-                            PillButton {
-                                required property var modelData
-                                text: "To " + modelData.name.toLowerCase()
-                                onClicked: page.moveTo(group.modelData.key, row.index, modelData.key)
-                            }
-                        }
-                        ArrowButton { glyph: "\u{F0156}"; tip: "Remove"; small: true; onClicked: page.remove(group.modelData.key, row.index) }
-                    }
-                }
-            }
-            SettingRow {
-                visible: page.unused.length > 0
-                label: "Add an item"
-                Dropdown {
-                    width: 220
-                    options: page.unused.map(it => it.name)
-                    current: "Choose an item"
-                    onPicked: name => { const it = page.unused.find(x => x.name === name); if (it) page.add(group.modelData.key, it.id) }
-                }
-            }
+    // ---- items: a copy of the bar to drag them around on ------------------------------------------------
+    SettingGroup {
+        title: "Items"
+        BarEditor {
+            Layout.fillWidth: true
+            Layout.margins: 14
+            floatOn: page.parent
+        }
+        SettingRow {
+            visible: Config.bar.custom
+            label: "Back to the theme's items"
+            PillButton { text: "Use the theme's"; onClicked: Config.set("bar", "custom", false) }
         }
     }
 

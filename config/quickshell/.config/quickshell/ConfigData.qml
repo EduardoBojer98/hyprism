@@ -3,8 +3,10 @@ import Quickshell.Io
 // Defaults for every desktop option (Config.qml). A key missing from settings.json takes the
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
+    property int version: 2                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
         property string theme: "pebble"          // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
+        property var userThemes: ({})           // your own themes (Theme builder): { "custom-name": { name, base, ...parts } }
         property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
         property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
         property bool wallpaper: true           // the theme's own wallpaper; off = keep yours (Settings > Wallpaper)
@@ -17,11 +19,11 @@ JsonAdapter {
     }
     property JsonObject dock: JsonObject {
         property bool enabled: true             // every theme has a dock; off hides it everywhere
-        property string position: "bottom"      // bottom | left | right | top (stacks beside the bar if they share an edge)
+        property string position: "theme"       // theme (the theme's own; joins the bar when they share an edge) | bar (inside the bar) | bottom | left | right | top
         property string size: "regular"         // compact | regular | roomy: the padding around the icons
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a dock
         property int iconSize: 44
-        property bool autoHide: true
+        property bool autoHide: false           // visible by default; true slides it away until the pointer reaches its edge
         property bool showRunning: true
         property bool thumbnails: true          // off: open windows show only their app icon
         property int thumbRefresh: 60           // s between still pictures (live only while hovered)
