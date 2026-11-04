@@ -4,7 +4,7 @@
 #
 #   startup-apps                     start every entry that is on (Hyprland's autostart.lua, once)
 #   startup-apps list                JSON array: file, id, name, icon, exec, on, only, running
-#   startup-apps add ID              copy an app's desktop entry (e.g. org.flameshot.Flameshot) in
+#   startup-apps add ID              copy an app's desktop entry (e.g. org.kde.dolphin) in
 #   startup-apps on|off FILE         switch one on or off (Hidden=, the XDG way; KDE honours it too)
 #   startup-apps remove FILE         delete it from the folder
 #

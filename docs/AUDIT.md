@@ -1,5 +1,8 @@
 # Audit (2026-10-31, branch `audit/2026-10-31`)
 
+> **Historical.** Screenshots here mean Flameshot; it was replaced by grim + slurp + Satty in
+> [Audit 2](#audit-2-2026-11-04-branch-overhaului-audit) (#1). Everything else below still applies unless Audit 2 says otherwise.
+
 Machine: ROG Flow X13 GV301QC, CachyOS, kernel 6.18.55-2-cachyos-lts, Hyprland 0.57.0 (Lua config).
 Legend: ✅ works / ⚠️ works but messy / ❌ broken / 🖐 needs your hands (can't be tested from a script without disrupting the session).
 
@@ -465,7 +468,9 @@ Status: ✅ fixed and verified here · 🖐 needs your hands · ⏸ held back (y
 | 9 | annoying | Satty's `--resize smart` made the editor larger than the laptop screen (ignores 1.2 scale), hiding the tool bar. | Satty sizes from the image in physical px. | Hyprland rule sizes it to 86% of the monitor, centred. | ✅ |
 | 10 | annoying | The editor takes ~1.3–2.5 s to appear (measured 5×). Region selection itself is instant. | GTK4 + libadwaita start-up (~0.7 s init + first frame); renderer choice made no consistent difference. | Known limit. Use `Ctrl+Print` (copy-only, no editor) when speed matters. | ⏸ |
 | 11 | polish | `screenshot all` makes a 3072×2928 image: grim captures both screens at the sharper 1.2 scale, so the Acer half is upscaled. | grim default. | Left as is (sharper laptop half beats a blurry one). | ⏸ |
-| 12 | polish | Flameshot autostarted from `~/.config/autostart` (shared with KDE). | Startup Apps entry. | Added `NotShowIn=Hyprland;` so it still starts in KDE only; Flameshot package left installed (see Held back). | ✅ |
+| 12 | polish | Flameshot autostarted from `~/.config/autostart` (shared with KDE). | Startup Apps entry. | Added `NotShowIn=Hyprland;` to that file on this machine (it lives in `~/.config/autostart`, not the repo), so it still starts in KDE only. The Flameshot package stays installed on this machine; a fresh install no longer gets it (KDE has Spectacle). | ✅ |
+| 14 | annoying | On Molten, buttons filled with the accent had white text at 2.8:1. | `Theme.accentText` used luminance without gamma correction. | WCAG luminance, picks the better of dark/white (now 5.9:1). Found by the independent review. | ✅ |
+| 15 | polish | `theme` printed success even if the shell refused the value; Cheatsheet could merge two binds with the same label; screenshot failures were silent; rotated screens were hit-tested with swapped sizes. | Review findings. | Each fixed (`set_opt` checks the reply; dedupe only folded workspace rows; `fail()` notifies; transform-aware monitor lookup with focused-monitor fallback). | ✅ |
 | 13 | polish | Brief asked for `docs/DESIGN.md`; it was at the repo root. | — | Moved, plus neon rules. | ✅ |
 
 ## Needs your hands (can't be tested from a script without disrupting the session)
@@ -474,10 +479,13 @@ These were checked by hand in audit 1 (above) and nothing in this branch touches
 touchscreen + tablet fold (rotation, on-screen keyboard), three-finger gestures, lid close/open,
 suspend/resume (the Acer comes back on its input), `Super+M` monitor input switch to the work PC
 and back (windows move to the laptop and return), MX Master 4 buttons + haptics (JuhRadial MX),
-browser screen sharing (portal picker), keyboard backlight keys. Screenshot editor tools:
-see the checklist in the final summary.
+browser screen sharing (portal picker), keyboard backlight keys. Screenshot editor: try each tool once on both screens (list in README → Screenshots).
 
 ## Clean install
 
-`tests/container-test.sh` (the CI job: installs twice, then `doctor`) in `archlinux:latest` and
-`fedora:latest`: results below, added after the run.
+`tests/container-test.sh` (the CI job: installs every package, links, installs again, then `doctor`)
+on 2026-11-04: **PASSED on `archlinux:latest` and `fedora:latest` (Fedora 44).** Satty on Fedora comes from
+`copr:sdegler/hyprland` (0.20.0), the COPR already used for Hyprland, checked to install in a fedora:44
+container with every flag the screenshot script uses. Not covered by containers: the NVIDIA driver,
+host steps (`hosts/flow-x13/steps`, asked before running) and a real login; the KDE session is never
+touched by the installer (KDE guard).

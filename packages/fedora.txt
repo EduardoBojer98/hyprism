@@ -59,7 +59,8 @@ squeekboard              none                               none
 fuzzel                   fuzzel                             repo
 pavucontrol              pavucontrol                        repo
 nm-connection-editor     nm-connection-editor               repo
-satty                    satty                              copr:mineiro/hyprland
+# satty: not in Fedora's own repos; sdegler/hyprland has 0.20.0 (every flag the screenshot script uses; checked 2026-11-04)
+satty                    satty                              copr:sdegler/hyprland
 grim                     grim                               repo
 slurp                    slurp                              repo
 wl-clipboard             wl-clipboard                       repo

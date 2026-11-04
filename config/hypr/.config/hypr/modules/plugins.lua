@@ -4,7 +4,7 @@
 -- hypr-plugins right after it loads them, and from apply_windows() when Settings changes.
 
 -- Apps that draw their own minimise / maximise / close buttons, and overlays that must stay bare
-local OWN_BUTTONS = "(?i)^(google-chrome.*|chromium.*|com\\.anthropic\\.claude|firefox|org\\.quickshell|code|com\\.microsoft\\.vscode|org\\.gnome\\..*|flameshot)$"
+local OWN_BUTTONS = "(?i)^(google-chrome.*|chromium.*|com\\.anthropic\\.claude|firefox|org\\.quickshell|code|com\\.microsoft\\.vscode|org\\.gnome\\..*)$"
 local BARE_TITLES = "^(Picture-in-Picture|JuhRadial MX|)$"
 
 -- Buttons and rules are added once per Lua state: a config reload makes a new state and also

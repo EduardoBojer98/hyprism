@@ -47,6 +47,7 @@ Singleton {
         // Neon themes (docs/DESIGN.md): near-black base, a signature accent plus a second one for the
         // window-border gradient and glow, [base, text, accent, accent2]. status = [success, warning, error],
         // chosen so they never read as an accent. Terminal themes ship in ghostty/themes/.
+        // A new theme id must also go in Config.qml's schema (appearance.theme), or saving it is refused.
         radioactive: { name: "Radioactive", dark: ["#0b0d0a", "#eef2e6", "#e4ff1a", "#00e5ff"], light: ["#f6f7f0", "#15170f", "#5f6f00", "#00788a"],
                        status: ["#4ade80", "#ff9f1c", "#ff4d6d"], term: ["Radioactive", "Atom One Light"] },
         molten:      { name: "Molten", dark: ["#100b0a", "#f7eee8", "#ff6b1a", "#ff3dbb"], light: ["#fbf6f3", "#1e1410", "#c2410c", "#b0127f"],
@@ -92,7 +93,9 @@ Singleton {
     readonly property color accent2: pal[3] ?? accents.lavender   // second accent: border gradient end, glow
     readonly property color accentWash: Qt.rgba(accent.r, accent.g, accent.b, light ? 0.14 : 0.2)
     // text on an accent fill: dark on light accents (by relative luminance), white otherwise
-    readonly property color accentText: 0.2126 * accent.r + 0.7152 * accent.g + 0.0722 * accent.b > 0.62 ? "#1d1d1f" : "#ffffff"
+    // WCAG relative luminance; dark text wins when it contrasts more than white ((1.05)/(L+.05) vs (L+.05)/(0.0123+.05))
+    function luminance(c) { const f = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b) }
+    readonly property color accentText: (luminance(accent) + 0.05) / 0.0623 > 1.05 / (luminance(accent) + 0.05) ? "#1d1d1f" : "#ffffff"
     // "on" state of toggles, slider fills: accent in light, bright white in dark (like macOS)
     readonly property color selected: light ? accent : text
     readonly property color onSelected: light ? accentText : accent

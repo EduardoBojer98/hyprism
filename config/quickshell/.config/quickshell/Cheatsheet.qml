@@ -26,9 +26,10 @@ Singleton {
             if (q && !(b.label + " " + b.keys + " " + b.group).toLowerCase().includes(q)) continue
             let g = out.find(x => x.name === b.group)
             if (!g) { g = { name: b.group, items: [] }; out.push(g) }
-            if (!g.items.some(i => i.label === b.label)) g.items.push(b)
+            if (!(b.folded && g.items.some(i => i.label === b.label))) g.items.push(b)
         }
-        return out.sort((a, b) => (order.indexOf(a.name) + 99) % 99 - (order.indexOf(b.name) + 99) % 99)
+        const rank = name => order.includes(name) ? order.indexOf(name) : order.length   // unknown groups last
+        return out.sort((a, b) => rank(a.name) - rank(b.name))
     }
 
     function show() { filter = ""; reader.running = true; open = true }
@@ -63,7 +64,7 @@ Singleton {
                         // "Go to workspace 3" x10 -> one row "Go to workspace 1-10" with "Super + 1…0"
                         const ws = label.match(/^(.*workspace) \d+$/)
                         if (ws) { label = ws[1] + " 1–10"; keys = keys.replace(/\d$/, "1…0") }
-                        list.push({ group: d[1], label: label, keys: keys })
+                        list.push({ group: d[1], label: label, keys: keys, folded: !!ws })
                     }
                 } catch (e) {}
                 root.binds = list

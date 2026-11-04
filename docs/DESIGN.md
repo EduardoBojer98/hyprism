@@ -73,8 +73,10 @@ the palette and the window border change. Preview: `docs/palette-preview.html`.
 | **Molten** | `#100b0a` | `#f7eee8` | `#ff6b1a` blazing orange | `#ff3dbb` hot magenta | `#34d399` / `#ffd60a` / `#ff4040` |
 | **Cyber** | `#0a0b14` | `#eef0ff` | `#00e5ff` electric cyan | `#ff2bd6` magenta | `#3ee07f` / `#ffc53d` / `#ff4d5e` |
 
-Contrast on the base (WCAG, computed in the preview): body text 17:1 or better, accents 7:1 or
-better, dark text on an accent fill 7:1 or better. All pass AA (4.5:1); body text passes AAA.
+Contrast on the base (WCAG 2, measured): body text 17:1 in all three; accents and accent 2 6.1:1 or
+better; status colours 5.6:1 or better; text on an accent fill 5.9:1 or better (Molten's orange is the
+lowest). Everything passes AA (4.5:1); body text passes AAA (7:1). `Theme.accentText` picks dark or
+white text by real WCAG luminance, so a new accent can't end up with unreadable button text.
 
 ### Rules
 

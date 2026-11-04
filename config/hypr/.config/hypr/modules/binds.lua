@@ -63,8 +63,8 @@ add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("ALT + 
 -- Screenshots (~/.local/bin/screenshot: grim + slurp, edited in Satty) and colour picker.
 -- In the editor: Enter copies and saves, Ctrl+S saves, Esc cancels.
 add("screenshot",          "Screen", "Screenshot an area (editor)", "ALT + SHIFT + S", exec("screenshot"))
-add("screenshot-print",    "Screen", "Screenshot an area (second shortcut)", "Print", exec("screenshot"))
-add("screenshot-alt",      "Screen", "Screenshot an area (third shortcut)", key("SHIFT + S"), exec("screenshot"))
+add("screenshot-print",    "Screen", "Screenshot an area (editor)", "Print", exec("screenshot"))
+add("screenshot-alt",      "Screen", "Screenshot an area (editor)", key("SHIFT + S"), exec("screenshot"))
 add("screenshot-copy",     "Screen", "Screenshot an area, copy only", "CTRL + Print", exec("screenshot area --copy"))
 add("screenshot-screen",   "Screen", "Screenshot this screen", "SHIFT + Print", exec("screenshot screen"))
 add("screenshot-window",   "Screen", "Screenshot the focused window", key("Print"), exec("screenshot window"))
