@@ -1,23 +1,67 @@
--- Motion: quick, damped, nothing bouncy. Windows pop in slightly scaled, desktops slide.
+-- Motion, by preset: each rice names one (Quickshell Rices.qml, hypr.motion), apply_motion() sets it.
+--   instant  barely there: near-immediate, no pop (Monolith, Platinum)
+--   crisp    fast and linear-ish, a quick fade (Console)
+--   snappy   short slides, no overshoot (Atlas)
+--   slam     fast in with a hard stop, windows drop in from slightly larger (Poster)
+--   ease     calm, damped, nothing bouncy (Folio, Glass, Canvas, Workstation)
+--   spring   soft springs with a small pop-in (Pebble, Garden)
+--   fade     slow cross-fades, workspaces dissolve instead of sliding (Noir)
+--   off      animations off (Settings > Rices > Animations)
 hl.config({ animations = { enabled = true } })
 
 hl.curve("easeOutQuint", { type = "bezier", points = { {0.23, 1},   {0.32, 1} } })
+hl.curve("easeOutExpo",  { type = "bezier", points = { {0.16, 1},   {0.3, 1}  } })
 hl.curve("linear",       { type = "bezier", points = { {0, 0},      {1, 1}    } })
 hl.curve("almostLinear", { type = "bezier", points = { {0.5, 0.5},  {0.75, 1} } })
 hl.curve("quick",        { type = "bezier", points = { {0.15, 0},   {0.1, 1}  } })
 hl.curve("easy",         { type = "spring", mass = 1, stiffness = 238.1191, dampening = 24.21279333 })
+hl.curve("bouncy",       { type = "spring", mass = 1, stiffness = 260, dampening = 19 })
 
-hl.animation({ leaf = "global",        enabled = true, speed = 10,   bezier = "default" })
-hl.animation({ leaf = "border",        enabled = true, speed = 5.39, bezier = "easeOutQuint" })
-hl.animation({ leaf = "windows",       enabled = true, speed = 4.79, spring = "easy" })
-hl.animation({ leaf = "windowsIn",     enabled = true, speed = 4.1,  spring = "easy",         style = "popin 92%" })
-hl.animation({ leaf = "windowsOut",    enabled = true, speed = 1.6,  bezier = "almostLinear", style = "popin 94%" })
-hl.animation({ leaf = "fadeIn",        enabled = true, speed = 1.73, bezier = "almostLinear" })
-hl.animation({ leaf = "fadeOut",       enabled = true, speed = 1.46, bezier = "almostLinear" })
-hl.animation({ leaf = "fade",          enabled = true, speed = 3.03, bezier = "quick" })
-hl.animation({ leaf = "layers",        enabled = true, speed = 3.81, bezier = "easeOutQuint" })
-hl.animation({ leaf = "layersIn",      enabled = true, speed = 4,    bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut",     enabled = true, speed = 1.5,  bezier = "linear",       style = "fade" })
-hl.animation({ leaf = "workspaces",    enabled = true, speed = 3.2,  bezier = "easeOutQuint", style = "slidefade 12%" })
-hl.animation({ leaf = "workspacesIn",  enabled = true, speed = 3.2,  bezier = "easeOutQuint", style = "slidefade 12%" })
-hl.animation({ leaf = "workspacesOut", enabled = true, speed = 3.2,  bezier = "easeOutQuint", style = "slidefade 12%" })
+local function set(leaf, speed, curve, style)
+    local a = { leaf = leaf, enabled = speed > 0, speed = math.max(speed, 0.1) }
+    if curve == "easy" or curve == "bouncy" then a.spring = curve else a.bezier = curve end
+    if style then a.style = style end
+    hl.animation(a)
+end
+
+local PRESETS = {
+    instant = function()
+        set("windows", 1.5, "quick"); set("windowsIn", 1.2, "quick", "popin 98%"); set("windowsOut", 1, "linear", "popin 98%")
+        set("fade", 1.5, "quick"); set("layers", 1.2, "quick", "fade"); set("workspaces", 1.2, "quick", "fade")
+    end,
+    crisp = function()
+        set("windows", 2.2, "quick"); set("windowsIn", 2, "quick", "popin 96%"); set("windowsOut", 1.4, "linear", "popin 96%")
+        set("fade", 2, "quick"); set("layers", 1.8, "quick", "fade"); set("workspaces", 1.8, "quick", "fade")
+    end,
+    snappy = function()
+        set("windows", 3, "easeOutQuint"); set("windowsIn", 2.6, "easeOutQuint", "slide"); set("windowsOut", 1.6, "linear", "popin 95%")
+        set("fade", 2.4, "quick"); set("layers", 2.4, "easeOutQuint", "slide"); set("workspaces", 2.6, "easeOutQuint", "slide")
+    end,
+    slam = function()
+        set("windows", 2.6, "easeOutExpo"); set("windowsIn", 2.4, "easeOutExpo", "popin 108%"); set("windowsOut", 1.4, "linear", "popin 92%")
+        set("fade", 2, "quick"); set("layers", 2.2, "easeOutExpo", "slide"); set("workspaces", 2.4, "easeOutExpo", "slidevert")
+    end,
+    ease = function()
+        set("windows", 4.79, "easy"); set("windowsIn", 4.1, "easy", "popin 92%"); set("windowsOut", 1.6, "almostLinear", "popin 94%")
+        set("fade", 3.03, "quick"); set("layers", 3.81, "easeOutQuint", "fade"); set("workspaces", 3.2, "easeOutQuint", "slidefade 12%")
+    end,
+    spring = function()
+        set("windows", 5, "bouncy"); set("windowsIn", 4.4, "bouncy", "popin 86%"); set("windowsOut", 1.8, "almostLinear", "popin 90%")
+        set("fade", 3, "quick"); set("layers", 4, "bouncy", "popin 90%"); set("workspaces", 3.6, "easy", "slidefade 18%")
+    end,
+    fade = function()
+        set("windows", 6, "easeOutQuint"); set("windowsIn", 6, "easeOutQuint", "popin 99%"); set("windowsOut", 4, "almostLinear", "popin 99%")
+        set("fade", 6, "almostLinear"); set("layers", 5, "almostLinear", "fade"); set("workspaces", 6, "almostLinear", "fade")
+    end,
+}
+
+function apply_motion(name)
+    hl.config({ animations = { enabled = name ~= "off" } })
+    set("global", 10, "default")
+    set("border", 5.39, "easeOutQuint")
+    hl.animation({ leaf = "borderangle", enabled = false, speed = 1, bezier = "linear" })
+    ;(PRESETS[name] or PRESETS.ease)()
+    set("fadeIn", 1.73, "almostLinear"); set("fadeOut", 1.46, "almostLinear")
+end
+
+apply_theme()   -- modules/look.lua: the rice's frames, gaps, shadow, blur, and this motion

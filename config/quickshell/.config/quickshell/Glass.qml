@@ -1,24 +1,22 @@
 import QtQuick
 
-// A glass surface: translucent graphite (or white) tint, hairline stroke and a faint top-lit rim.
-// Hyprland's layer blur (hypr/modules/rules.lua) provides the frosted background.
-// neon: the hairline becomes a glowing accent gradient (NeonEdge). Panels (strong) turn it on with
-// Settings > Appearance > Neon edges; bar, dock and launcher with their "Neon" colour.
+// A panel surface in the active rice's material (Theme.material):
+//   solid  a flat tone step with the rice's border (most rices)
+//   glass  translucent over Hyprland's blur, with a faint top rim (Pebble, Glass)
+// The name is historical; every surface in the shell is one of these.
 Rectangle {
-    property bool strong: false
-    property bool flat: false      // a tile on another glass panel: plain fill, no rim or edge
-    property bool neon: strong && Config.appearance.neonPanels
+    id: surface
+    property bool strong: false    // panels with text: more opaque glass
+    property bool flat: false      // a tile on another panel: plain fill, no edge
 
     radius: Theme.radius
     color: flat ? Theme.fill : strong ? Theme.glassStrong : Theme.glass
-    border { color: Theme.stroke; width: flat || neon ? 0 : 1 }
+    border { color: Theme.stroke; width: flat ? 0 : Theme.line }
 
-    NeonEdge { visible: parent.neon && !parent.flat; radius: parent.radius }
-
-    Rectangle {
-        visible: !parent.flat
+    Rectangle {   // glass: faint light rim at the top
+        visible: Theme.glassy && !surface.flat
         anchors { fill: parent; margins: 1 }
-        radius: parent.radius - 1
+        radius: Math.max(0, parent.radius - 1)
         gradient: Gradient {
             GradientStop { position: 0.0; color: Theme.highlight }
             GradientStop { position: 0.35; color: "transparent" }

@@ -1,0 +1,23 @@
+# Noir: terminal palette of the Noir rice (Quickshell Rices.qml). Generated; edit freely.
+background = #0d0d0d
+foreground = #e9e4da
+cursor-color = #f2d48a
+cursor-text = #0d0d0d
+selection-background = #4d4530
+selection-foreground = #e9e4da
+palette = 0=#1c1a18
+palette = 1=#e05a5a
+palette = 2=#8fbf8a
+palette = 3=#f2d48a
+palette = 4=#8aa6c9
+palette = 5=#c98ab0
+palette = 6=#8ac2bd
+palette = 7=#b8b0a2
+palette = 8=#77705f
+palette = 9=#e88383
+palette = 10=#abcfa7
+palette = 11=#f5dfa7
+palette = 12=#a7bcd6
+palette = 13=#d6a7c4
+palette = 14=#a7d1ce
+palette = 15=#e9e4da

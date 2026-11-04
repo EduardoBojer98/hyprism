@@ -1,60 +1,56 @@
--- Smoked glass: white hairline rims, strong blur behind translucent surfaces, soft shadows.
--- Accent, corner radius and gaps come from the shell's Appearance settings (Quickshell ThemeSync
--- writes settings/theme.lua and calls apply_theme() live). Defaults until it has run once.
+-- How windows look, set by the active rice (Quickshell Rices.qml). ThemeSync writes the rice's
+-- Hyprland values to settings/theme.lua and calls apply_theme() live with hyprctl eval. The
+-- defaults below are Pebble's, for the first login before the shell has run.
 local ok, saved = pcall(require, "settings.theme")
-THEME = ok and saved or {}
-local defaults = { accent = "e4ff1a", accent2 = "00e5ff",   -- Radioactive's accents; Settings > Appearance saves your own
-                   rounding = 12, border = "neon", border_spin = 60, border_size = 2, gaps = 10 }
+THEME = ok and type(saved) == "table" and saved or {}
+local defaults = {
+    rice = "pebble", gaps_in = 7, gaps_out = 14, border_size = 2, rounding = 18,
+    active = { "ff9e7acc", "9ad1c0cc" }, inactive = "3a365000",
+    shadow = "soft", blur = true, motion = "spring", accent = "ff9e7a", accent2 = "9ad1c0",
+}
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 
--- Catppuccin Macchiato hues around the wheel (the only colours not taken from the shell's theme),
--- ending where they start so the turn has no seam
-local c = { red = "ed8796", peach = "f5a97f", yellow = "eed49f", green = "a6da95", teal = "8bd5ca",
-            sapphire = "7dc4e4", mauve = "c6a0f6", pink = "f5bde6" }
-local RAINBOW = {}
-for _, name in ipairs({ "red", "peach", "yellow", "green", "teal", "sapphire", "mauve", "pink", "red" }) do
-    RAINBOW[#RAINBOW + 1] = "rgba(" .. c[name] .. "ff)"
-end
+-- Shadows by name:
+--   none   flat (Monolith, Console, Platinum, Atlas, Noir)
+--   soft   wide and soft: floating depth without a dark halo (Pebble, Glass, Canvas, Workstation, Garden)
+--   paper  short and light, like a sheet on a desk (Folio)
+--   hard   a solid offset block in the accent, no blur (Poster)
+local SHADOWS = {
+    none  = { enabled = false },
+    soft  = { enabled = true, range = 28, render_power = 3, offset = "0 8", color = 0x55000000, color_inactive = 0x22000000 },
+    paper = { enabled = true, range = 10, render_power = 2, offset = "0 3", color = 0x22000000, color_inactive = 0x14000000 },
+}
 
 function apply_theme()
-    local neon = THEME.border == "neon"
-    local active = THEME.border == "rainbow" and { colors = RAINBOW, angle = 0 }
-        or neon and { colors = { "rgba(" .. THEME.accent .. "ff)", "rgba(" .. THEME.accent2 .. "ff)" }, angle = 45 }
-        or { colors = { "rgba(" .. THEME.accent .. "cc)", "rgba(ffffff33)", "rgba(" .. THEME.accent .. "66)" }, angle = 135 }
+    local colors = {}
+    for _, c in ipairs(THEME.active) do colors[#colors + 1] = "rgba(" .. c .. ")" end
+    local shadow = SHADOWS[THEME.shadow]
+        or { enabled = true, range = 1, render_power = 1, offset = "9 9", sharp = true,
+             color = "rgba(" .. THEME.accent .. "ff)", color_inactive = "rgba(000000aa)" }
     hl.config({
-        general = { border_size = THEME.border_size, gaps_in = THEME.gaps // 2, gaps_out = THEME.gaps, col = { active_border = active } },
-        -- neon: the focused window's shadow turns into a soft glow in the accent; others keep a plain dark shadow
-        decoration = { rounding = THEME.rounding,
-                       shadow = { range = neon and 22 or 32, render_power = neon and 2 or 3, offset = neon and "0 0" or "0 8",
-                                  color = neon and ("rgba(" .. THEME.accent .. "55)") or "rgba(0000005a)" } },
+        general = {
+            gaps_in = THEME.gaps_in, gaps_out = THEME.gaps_out, border_size = THEME.border_size,
+            col = { active_border = { colors = colors, angle = 45 }, inactive_border = "rgba(" .. THEME.inactive .. ")" },
+        },
+        decoration = {
+            rounding = THEME.rounding,
+            shadow = shadow,
+            blur = { enabled = THEME.blur },
+        },
     })
-    -- borderangle "loop" turns the gradient forever; speed is tenths of a second per turn
-    local spin = THEME.border == "rainbow" and THEME.border_spin > 0
-    -- Hyprland refuses speeds above 100, so an older saved 120 ("Slow") is clamped
-    hl.animation({ leaf = "borderangle", enabled = spin, speed = spin and math.min(THEME.border_spin, 100) or 1, bezier = "linear", style = "loop" })
+    apply_motion(THEME.motion)   -- modules/animations.lua
 end
 
 hl.config({
-    general = {
-        col = {
-            inactive_border = "rgba(ffffff10)",
-        },
-    },
-
     decoration = {
-        rounding_power = 2.4,           -- squircle-like corners
-        active_opacity   = 1.0,
-        shadow = {
-            enabled      = true,        -- size, offset and colour: apply_theme() above (glow in "neon")
-            color_inactive = 0x26000000,
-        },
+        rounding_power = 2.4,           -- squircle-like corners where a rice rounds them
+        active_opacity = 1.0,
         blur = {
-            enabled    = true,
             size       = 10,
             passes     = 3,
             noise      = 0.015,
             contrast   = 1.0,
-            brightness = 1.0,   -- lighter smoke, like macOS
+            brightness = 1.0,
             vibrancy   = 0.18,
             popups     = true,
         },
@@ -82,4 +78,3 @@ hl.config({
         send_content_type = false,
     },
 })
-apply_theme()

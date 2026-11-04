@@ -1,0 +1,386 @@
+<title>Rice Concepts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;800&family=Fraunces:opsz,wght@9..144,300;9..144,600&family=Cantarell:wght@400;700&family=Archivo+Black&family=IBM+Plex+Sans:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;700&family=Martian+Mono:wght@300;400;600&family=Outfit:wght@400;500;600&display=swap">
+<style>
+/* Layout: a contact sheet of six whole-desktop concepts, each a 16:10 screen with its own structure, under a short spec. */
+:root {
+  --page: #0c0c0d; --ink: #ededee; --dim: #a1a1a6; --step: #161618;
+  --ui: "IBM Plex Sans", system-ui, sans-serif; --title: "Archivo", "IBM Plex Sans", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0 }
+body { background: var(--page); color: var(--ink); font: 16px/1.5 var(--ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 96px }
+main { max-width: 1240px; margin: 0 auto; display: grid; gap: 112px }
+header { display: grid; gap: 16px; max-width: 760px }
+h1 { font: 800 clamp(40px, 7vw, 84px)/0.95 var(--title); letter-spacing: -0.035em; text-wrap: balance }
+header p { color: var(--ink); font-size: 18px; max-width: 62ch }
+section { display: grid; gap: 24px; min-width: 0 }
+.top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px 48px; align-items: end }
+h2 { font: 800 clamp(34px, 5vw, 56px)/1 var(--title); letter-spacing: -0.03em }
+.top p { font-size: 18px }
+dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px 32px; background: var(--step); padding: 24px; font-size: 15px }
+dt { font-weight: 600 } dd { color: var(--dim) }
+@media (max-width: 760px) { .top { grid-template-columns: 1fr } }
+
+/* every screen: 16:10, sizes in container units so it scales */
+.screen { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 10; overflow: hidden; container-type: inline-size; font-size: 1cqw }
+.abs { position: absolute }
+.code div { white-space: pre }
+
+/* ---------- 1 Monolith ---------- */
+.mono { background: #0b0c0a; color: #cfd6c4; font-family: "JetBrains Mono", monospace }
+.mono .wall { left: 2.4%; bottom: 6%; font: 700 9.5em/0.85 "JetBrains Mono"; color: #151813; letter-spacing: -0.04em }
+.mono .run { inset: 0 0 auto; height: 4.4%; background: #151713; display: flex; align-items: center; gap: 2em; padding: 0 1.2em; font-size: 1.05em; border-bottom: 2px solid #b6ff3b }
+.mono .run b { color: #b6ff3b } .mono .run .sel { background: #b6ff3b; color: #0b0c0a; padding: 0 .5em }
+.mono .win { border: 2px solid #2a2d27; background: #0b0c0a; padding: 1.2em 1.4em; font-size: .95em; line-height: 1.7 }
+.mono .win.on { border-color: #b6ff3b }
+.mono .k { color: #b6ff3b } .mono .s { color: #ffb38a } .mono .c { color: #5f6858 }
+.mono .bar { inset: auto 0 0; height: 3.6%; background: #151713; display: flex; align-items: center; gap: 1.6em; padding: 0 1.2em; font-size: .95em }
+.mono .bar .on { color: #0b0c0a; background: #b6ff3b; padding: 0 .4em } .mono .sp { flex: 1 }
+.mono .note { right: 1%; bottom: 5%; background: #151713; padding: .6em 1em; font-size: .95em; border-left: .3em solid #ff5f2e }
+
+/* ---------- 2 Folio (light, editorial) ---------- */
+.folio { background: #ecebe6; color: #161616; font-family: "IBM Plex Sans" }
+.folio .wall { right: 3%; bottom: -7%; font: 28em/0.8 "Instrument Serif"; color: #e0dfd8 }
+.folio .rail { inset: 0 auto 0 0; width: 6.4%; background: #fbfbf8; display: flex; flex-direction: column; align-items: center; padding: 1.6em 0; gap: 2.2em }
+.folio .clock { font: 3.6em/0.9 "Instrument Serif"; text-align: center }
+.folio .ws { display: grid; gap: .9em; text-align: center; font: 1.7em "Instrument Serif"; color: #8b8b86 }
+.folio .ws .on { color: #2b3fd6 }
+.folio .date { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 1em; letter-spacing: .02em; color: #55554f; margin-top: auto }
+.folio .win { background: #fbfbf8; border: 1px solid #d9d8d1; border-radius: .4em; padding: 1.6em 2em }
+.folio .win h4 { font: 2.6em/1 "Instrument Serif"; font-weight: 400; margin-bottom: .5em }
+.folio .win p { font-size: 1.05em; color: #33332f; max-width: 40em; line-height: 1.6 }
+.folio .launch { left: 30%; top: 16%; width: 46%; background: #fbfbf8; padding: 2.2em 2.4em; border-radius: .4em; box-shadow: 0 2em 4em rgba(0,0,0,.14) }
+.folio .launch .hi { font: 3.6em/1 "Instrument Serif" }
+.folio .launch .q { margin: 1.2em 0 .8em; font-size: 1.3em; border-bottom: 2px solid #2b3fd6; padding-bottom: .3em }
+.folio .launch li { list-style: none; display: flex; justify-content: space-between; padding: .55em 0; font-size: 1.1em }
+.folio .launch li.sel { color: #2b3fd6; font-weight: 500 }
+.folio .launch li small { color: #8b8b86 }
+.folio .note { right: 2%; top: 3%; width: 22%; background: #fbfbf8; padding: 1em 1.2em; border-radius: .4em }
+.folio .note b { font: 1.5em "Instrument Serif"; font-weight: 400; display: block }
+
+/* ---------- 3 Console (amber HUD, no bar) ---------- */
+.hud { background: radial-gradient(120% 90% at 70% 20%, #0f1726, #05080f 60%); color: #ffcf7a; font-family: "Martian Mono", monospace }
+.hud .br { width: 3%; height: 4.8%; border: 0 solid #ffb000 } /* corner brackets */
+.hud .tl { left: 1%; top: 1.6%; border-width: 2px 0 0 2px } .hud .tr { right: 1%; top: 1.6%; border-width: 2px 2px 0 0 }
+.hud .bl { left: 1%; bottom: 1.6%; border-width: 0 0 2px 2px } .hud .brr { right: 1%; bottom: 1.6%; border-width: 0 2px 2px 0 }
+.hud .strip { left: 50%; top: 1.6%; transform: translateX(-50%); font-size: .95em; letter-spacing: .06em; display: flex; gap: 2.2em; color: #ffb000 }
+.hud .dash { left: 2.2%; top: 8%; bottom: 6%; width: 27%; border: 1px solid #5c4410; background: rgba(8,12,20,.9); padding: 1.6em; display: grid; align-content: start; gap: 1.6em }
+.hud .big { font: 300 6em/0.9 "Martian Mono"; color: #ffb000; letter-spacing: -0.04em }
+.hud .meter { display: grid; gap: .5em; font-size: .9em }
+.hud .meter i { display: block; height: .5em; background: #2a2210 } .hud .meter i b { display: block; height: 100%; background: #ffb000 }
+.hud .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: .5em; font-size: .85em; text-align: center; color: #b58a3a }
+.hud .cal .t { background: #ffb000; color: #05080f }
+.hud .win { border: 1px solid #3a2e12; background: rgba(5,8,15,.92); padding: 1.2em 1.4em; font-size: .95em; line-height: 1.7; color: #e9dcc0 }
+.hud .win.on { border-color: #ffb000 }
+.hud .tag { right: 2%; top: 8%; width: 24%; background: #ffb000; color: #05080f; padding: .9em 1.2em; clip-path: polygon(0 0, 94% 0, 100% 30%, 100% 100%, 6% 100%, 0 70%); font-size: .95em }
+
+/* ---------- 4 Pebble (soft, round, glass) ---------- */
+.peb { background: radial-gradient(80% 70% at 20% 10%, #3b2d4f, transparent 60%), radial-gradient(70% 60% at 90% 90%, #24464a, transparent 60%), #16141f; color: #ece8f6; font-family: "Outfit", sans-serif }
+.peb .pill { top: 1.6%; height: 4.6%; background: rgba(34,31,46,.82); border-radius: 99em; display: flex; align-items: center; gap: 1.2em; padding: 0 1.4em; font-size: 1.1em }
+.peb .dots { display: flex; gap: .45em; align-items: center } .peb .dots i { width: .7em; height: .7em; border-radius: 99em; background: #5b5670 }
+.peb .dots i.on { width: 2.4em; background: #ff9e7a }
+.peb .win { border-radius: 1.6em; background: rgba(34,31,46,.94); padding: 1.6em 1.8em; box-shadow: 0 1.6em 3em rgba(0,0,0,.35); font-size: 1em }
+.peb .launch { left: 32%; top: 18%; width: 36%; border-radius: 2em; background: rgba(42,38,57,.97); padding: 1.6em; box-shadow: 0 2em 5em rgba(0,0,0,.45) }
+.peb .launch .q { background: #16141f; border-radius: 99em; padding: .8em 1.2em; font-size: 1.15em; color: #b9b3cc }
+.peb .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2em; margin-top: 1.4em; text-align: center; font-size: .95em }
+.peb .grid i { display: block; width: 3.6em; height: 3.6em; border-radius: 1.1em; margin: 0 auto .4em }
+.peb .dock { left: 50%; bottom: 2%; transform: translateX(-50%); display: flex; gap: 1em; background: rgba(34,31,46,.85); padding: .9em 1.2em; border-radius: 1.8em }
+.peb .dock i { width: 3.4em; height: 3.4em; border-radius: 1em; display: block }
+.peb .bub { right: 1.6%; top: 9%; width: 22%; border-radius: 1.4em; background: rgba(42,38,57,.97); padding: 1em 1.2em; font-size: .95em }
+
+/* ---------- 5 Workstation (bottom taskbar) ---------- */
+.ws5 { background: linear-gradient(160deg, #1d2a3a, #0f1419 70%); color: #e6edf3; font-family: "IBM Plex Sans" }
+.ws5 .win { border-radius: .7em; background: #1a2028; border: 1px solid #2a3340; overflow: hidden; font-size: 1em }
+.ws5 .tb { height: 3em; background: #222a34; display: flex; align-items: center; padding: 0 1em; gap: .6em; font-size: .95em; color: #b8c2cc }
+.ws5 .tb .x { margin-left: auto; letter-spacing: 1em }
+.ws5 .bar { inset: auto 0 0; height: 5.6%; background: #11161c; border-top: 1px solid #26303b; display: flex; align-items: center; gap: .8em; padding: 0 1em }
+.ws5 .start { width: 3em; height: 3em; border-radius: .6em; background: #3b82f6 }
+.ws5 .search { width: 18em; height: 2.8em; border-radius: .5em; background: #1e2630; display: flex; align-items: center; padding: 0 1em; color: #8b97a4; font-size: .95em }
+.ws5 .task { width: 3.2em; height: 3.2em; border-radius: .6em; position: relative; display: grid; place-items: center }
+.ws5 .task i { width: 2em; height: 2em; border-radius: .4em; display: block }
+.ws5 .task.on { background: #1e2630 } .ws5 .task.on::after { content: ""; position: absolute; bottom: .1em; width: 1.4em; height: .25em; border-radius: 1em; background: #3b82f6 }
+.ws5 .clk { margin-left: auto; text-align: right; font-size: .95em; line-height: 1.3 }
+.ws5 .menu { left: .8%; bottom: 7%; width: 30%; background: #1a2028; border: 1px solid #2a3340; border-radius: .9em; padding: 1.6em }
+.ws5 .menu .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.2em; text-align: center; font-size: .9em; margin: 1em 0 1.6em }
+.ws5 .menu .grid i { width: 2.8em; height: 2.8em; border-radius: .6em; display: block; margin: 0 auto .4em }
+.ws5 .toast { right: .8%; bottom: 7%; width: 22%; background: #1a2028; border: 1px solid #2a3340; border-radius: .8em; padding: 1em 1.2em; font-size: .95em }
+
+/* ---------- 6 Poster (loud, flat, hard shadows) ---------- */
+.post { background: #141414; color: #f4f1ea; font-family: "Archivo", sans-serif }
+.post .bar { inset: 0 0 auto; height: 8%; display: flex; align-items: stretch; background: #f4f1ea; color: #141414 }
+.post .bar b { font: 4.6em/1 "Archivo Black"; width: 1.5em; display: grid; place-items: center }
+.post .bar b.on { background: #ff3b1f; color: #f4f1ea }
+.post .bar .t { margin-left: auto; font: 4.6em/1 "Archivo Black"; padding: 0 .3em; display: grid; place-items: center; letter-spacing: -0.03em }
+.post .bar .st { display: grid; place-items: center; padding: 0 1.4em; font: 800 1.2em "Archivo"; text-transform: none }
+.post .win { background: #f4f1ea; color: #141414; border: 3px solid #141414; box-shadow: .8em .8em 0 #ff3b1f; padding: 1.4em 1.6em }
+.post .win h4 { font: 3.4em/0.95 "Archivo Black"; letter-spacing: -0.03em; margin-bottom: .4em }
+.post .win.blue { box-shadow: .8em .8em 0 #2d5bff }
+.post .launch { right: 0; top: 8%; bottom: 0; width: 42%; background: #2d5bff; color: #f4f1ea; padding: 2em 2.4em }
+.post .launch .q { font: 7.4em/0.85 "Archivo Black"; letter-spacing: -0.04em }
+.post .launch li { list-style: none; font: 800 2em/1.25 "Archivo"; }
+.post .launch li.sel { color: #141414; background: #f4f1ea; padding: 0 .3em; display: inline-block }
+.post .note { left: 2%; bottom: 3%; background: #ff3b1f; color: #f4f1ea; padding: 1em 1.4em; font: 800 1.3em "Archivo" }
+
+
+/* ---------- 7 Glass (classic, Mac-style) ---------- */
+.gl { background: radial-gradient(90% 80% at 30% 20%, #3a4a6b, #141821 70%); color: #f3f4f8; font-family: "IBM Plex Sans" }
+.gl .bar { inset: 0 0 auto; height: 3.4%; background: rgba(24,26,33,.55); backdrop-filter: blur(10px); display: flex; align-items: center; gap: 1.8em; padding: 0 1.2em; font-size: 1em }
+.gl .bar b { font-weight: 600 } .gl .bar .sp { flex: 1 }
+.gl .win { border-radius: .9em; background: rgba(30,32,40,.96); border: 1px solid rgba(255,255,255,.1); box-shadow: 0 1.6em 3em rgba(0,0,0,.4); overflow: hidden }
+.gl .tl { height: 2.8em; display: flex; gap: .6em; align-items: center; padding: 0 1em; background: rgba(255,255,255,.04) }
+.gl .tl i { width: .9em; height: .9em; border-radius: 50%; display: block }
+.gl .dock { left: 50%; bottom: 1.4%; transform: translateX(-50%); display: flex; gap: .8em; padding: .8em; border-radius: 1.4em; background: rgba(40,42,52,.6); border: 1px solid rgba(255,255,255,.14) }
+.gl .dock i { width: 3.6em; height: 3.6em; border-radius: .9em; display: block }
+
+/* ---------- 8 Canvas (classic, GNOME-style) ---------- */
+.cv { background: linear-gradient(135deg, #1c2a3f, #241c35); color: #fff; font-family: "Cantarell", sans-serif }
+.cv .bar { inset: 0 0 auto; height: 3.6%; background: #000; display: flex; align-items: center; padding: 0 1em; font-weight: 700; font-size: 1.05em }
+.cv .bar .act { display: flex; gap: .35em } .cv .bar .act i { width: .7em; height: .7em; border-radius: 99em; background: #777 } .cv .bar .act i.on { width: 2em; background: #fff }
+.cv .bar .mid { position: absolute; left: 50%; transform: translateX(-50%) }
+.cv .bar .r { margin-left: auto; display: flex; gap: 1em; padding: .1em .8em; border-radius: 99em; background: #2a2a2a }
+.cv .win { border-radius: 1.2em; background: #242424; overflow: hidden; box-shadow: 0 1em 2.4em rgba(0,0,0,.45) }
+.cv .hb { height: 4em; background: #303030; display: flex; align-items: center; justify-content: center; font-weight: 700; position: relative }
+.cv .hb::after { content: "✕"; position: absolute; right: 1.2em; width: 1.8em; height: 1.8em; border-radius: 50%; background: #444; display: grid; place-items: center; font-size: .8em }
+.cv .qs { right: .6%; top: 4.6%; width: 26%; background: #2e2e32; border-radius: 1.6em; padding: 1.4em; display: grid; grid-template-columns: 1fr 1fr; gap: .8em }
+.cv .qs span { border-radius: 99em; padding: .9em 1.1em; background: #3d3d42; font-weight: 700 } .cv .qs span.on { background: #3584e4 }
+.cv .qs .sl { grid-column: 1 / -1; height: .5em; border-radius: 1em; background: #555; position: relative } .cv .qs .sl b { position: absolute; inset: 0 40% 0 0; border-radius: 1em; background: #3584e4 }
+
+/* ---------- 9 Platinum (classic, retro bevel) ---------- */
+.pl { background: #3a6e8f; color: #000; font-family: "IBM Plex Sans", sans-serif; font-size: 1cqw }
+.pl .bev { background: #c3c3c3; box-shadow: inset 1px 1px #fff, inset -1px -1px #404040, inset 2px 2px #dfdfdf, inset -2px -2px #808080 }
+.pl .win { padding: 3px }
+.pl .cap { height: 2.6em; background: linear-gradient(90deg, #0a246a, #a6caf0); color: #fff; font-weight: 600; display: flex; align-items: center; padding: 0 .6em; gap: .5em }
+.pl .cap.off { background: linear-gradient(90deg, #808080, #c0c0c0) }
+.pl .cap .b { margin-left: auto; display: flex; gap: .2em } .pl .cap .b i { width: 1.8em; height: 1.6em; display: block }
+.pl .body { background: #fff; margin: .4em; height: calc(100% - 3.8em); padding: 1em; box-shadow: inset 1px 1px #808080, inset -1px -1px #fff }
+.pl .bar { inset: auto 0 0; height: 5%; display: flex; align-items: center; gap: .5em; padding: 0 .4em }
+.pl .start { font-weight: 700; padding: .4em 1em }
+.pl .task { padding: .4em 1em; min-width: 14em } .pl .task.on { box-shadow: inset 1px 1px #404040, inset -1px -1px #fff; background: #d8d8d8 }
+.pl .tray { margin-left: auto; padding: .4em 1em; box-shadow: inset 1px 1px #808080, inset -1px -1px #fff }
+.pl .icons { left: 1.4%; top: 3%; display: grid; gap: 2.4em; color: #fff; text-align: center; font-size: .95em }
+.pl .icons i { width: 3.4em; height: 3.4em; display: block; margin: 0 auto .4em; background: #e8d36a; box-shadow: inset -3px -3px #b8a23a }
+
+/* ---------- 10 Atlas (Swiss, right rail) ---------- */
+.at { background: #f2f2f0; color: #111; font-family: "Archivo", sans-serif }
+.at .grid { inset: 0; background: #f2f2f0 }
+.at .wallnum { left: 3%; top: 4%; font: 800 26em/0.8 "Archivo"; letter-spacing: -0.06em; color: #e30613 }
+.at .rail { inset: 0 0 0 auto; width: 7%; background: #111; color: #f2f2f0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 1.6em 0 }
+.at .rail .t { font: 800 3.4em/0.9 "Archivo"; letter-spacing: -0.04em; text-align: center }
+.at .rail .ws { display: grid; gap: .5em } .at .rail .ws b { width: 3.4em; height: 3.4em; display: grid; place-items: center; font: 800 1.3em "Archivo"; border: 2px solid #f2f2f0 } .at .rail .ws b.on { background: #e30613; border-color: #e30613 }
+.at .rail .v { writing-mode: vertical-rl; font: 600 1em "Archivo" }
+.at .win { background: #fff; border: 2px solid #111; padding: 1.4em 1.6em }
+.at .win h4 { font: 800 2.6em/0.95 "Archivo"; letter-spacing: -0.03em; margin-bottom: .4em }
+.at .note { right: 8%; top: 3%; background: #e30613; color: #fff; padding: .9em 1.2em; font: 700 1.1em "Archivo" }
+
+/* ---------- 11 Noir (cinematic letterbox) ---------- */
+.nr { background: #0d0d0d; color: #e9e4da; font-family: "Fraunces", serif }
+.nr .scene { inset: 9% 0; background: radial-gradient(60% 80% at 60% 40%, #2b2622, #0d0d0d 75%) }
+.nr .lb { left: 0; right: 0; height: 9%; background: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 3em; font: 300 1.4em "Fraunces"; letter-spacing: .02em; color: #b8b0a2 }
+.nr .lb.top { top: 0 } .nr .lb.bot { bottom: 0 }
+.nr .lb b { font-weight: 600; color: #e9e4da; font-size: 1.4em }
+.nr .win { background: rgba(18,17,16,.96); border: 1px solid #2e2a26; padding: 1.6em 2em; font-family: "IBM Plex Sans" }
+.nr .win h4 { font: 300 2.8em/1 "Fraunces"; margin-bottom: .4em }
+.nr .sub { left: 50%; bottom: 12%; transform: translateX(-50%); font: italic 300 1.7em "Fraunces"; color: #f2d48a; text-shadow: 0 2px 6px #000 }
+
+/* ---------- 12 Garden (one floating island) ---------- */
+.gd { background: radial-gradient(70% 60% at 30% 30%, #2f4a35, #141c16 70%); color: #eef2e6; font-family: "Outfit", sans-serif }
+.gd .win { border-radius: 1.2em; background: #1d2a20; border: 1px solid #2f4234; padding: 1.4em 1.6em }
+.gd .isl { left: 50%; bottom: 2%; transform: translateX(-50%); display: flex; align-items: center; gap: 1.4em; background: #e8efe0; color: #18221a; border-radius: 1.6em; padding: .7em 1.4em .7em .8em }
+.gd .isl i { width: 3.2em; height: 3.2em; border-radius: .9em; display: block }
+.gd .isl .sep { width: 1px; height: 2.4em; background: #b9c4b0 }
+.gd .isl .ws { display: flex; gap: .4em } .gd .isl .ws b { width: 1.9em; height: 1.9em; border-radius: .6em; display: grid; place-items: center; font-size: .95em; background: #d5dfcb } .gd .isl .ws b.on { background: #2f6b3e; color: #e8efe0 }
+.gd .isl .t { font: 600 1.6em "Outfit" }
+.gd .card { right: 2%; top: 3%; width: 22%; border-radius: 1.2em; background: #e8efe0; color: #18221a; padding: 1em 1.2em }
+
+@media (max-width: 700px) { .screen { font-size: 1.15cqw } }
+</style>
+
+<main>
+  <header>
+    <h1>Twelve rices, twelve desktops</h1>
+    <p>Each one changes where things are, not only what colour they are: the bar's edge and shape, whether there's a dock, how the launcher works, the typefaces, the corners, the window frames and the motion. Every rice also gets its own lock screen, terminal palette and a wallpaper drawn for it. Pick any, switch between them with one command.</p>
+  </header>
+
+  <section>
+    <div class="top"><h2 style="color:#b6ff3b">Monolith</h2><p>The desktop as a terminal. No dock, no glass, no curves: a text bar at the bottom, a command line across the top, windows packed edge to edge with hard 2px frames.</p></div>
+    <div class="screen mono" role="img" aria-label="Monolith: bottom text bar, top command strip, tiled windows with 2px borders">
+      <div class="abs wall">rog-flow-x13</div>
+      <div class="abs run"><b>run ❯</b><span>fire</span><span class="sel">firefox</span><span>firewall-config</span><span>files</span><span>fish</span></div>
+      <div class="abs win on code" style="left:.4%;top:5%;width:59.4%;height:89.6%">
+        <div><span class="k">❯</span> nvim src/cart.ts</div><div class="c">// add an item, then refresh the drawer</div>
+        <div><span class="k">export async function</span> addToCart(id: string, qty = 1) {</div>
+        <div>  <span class="k">const</span> res = <span class="k">await</span> fetch(<span class="s">`/api/cart/${id}`</span>, {</div>
+        <div>    method: <span class="s">"POST"</span>, body: JSON.stringify({ qty }),</div><div>  })</div>
+        <div>  <span class="k">if</span> (!res.ok) <span class="k">throw new</span> Error(<span class="s">"cart failed"</span>)</div><div>}</div>
+      </div>
+      <div class="abs win code" style="left:60.2%;top:5%;width:39.4%;height:44.4%"><div><span class="k">❯</span> npm run dev</div><div>  vite ready in 412 ms</div><div>  ➜ local  http://localhost:5173</div></div>
+      <div class="abs win code" style="left:60.2%;top:50.2%;width:39.4%;height:44.4%"><div><span class="k">❯</span> docker ps</div><div>shop-db    postgres:17   up 3h</div><div>shop-wp    wordpress     up 3h</div></div>
+      <div class="abs note">» screenshot saved  ~/Pictures/Screenshots</div>
+      <div class="abs bar"><span class="on">1</span><span>2</span><span>3</span><span>4</span><span>│ nvim ~/shop</span><span class="sp"></span><span>us</span><span>wifi 82</span><span>vol 45</span><span>bat 72%</span><span style="color:#b6ff3b">wed 04 nov 16:42</span></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Bottom, attached, 24px, text only. Workspaces as numbers, the active one filled.</dd></div>
+      <div><dt>Launcher</dt><dd>A command strip across the top edge, results in one line.</dd></div>
+      <div><dt>Windows</dt><dd>Radius 0, 2px frame, 2px gaps, no shadow, no blur. Motion near-instant.</dd></div>
+      <div><dt>Type and colour</dt><dd>JetBrains Mono only. Near-black #0b0c0a, lime #b6ff3b, orange signals.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#2b3fd6">Folio</h2><p>A light desktop set like a printed page. A white rail on the left carries a serif clock and roman-numeral workspaces; the launcher greets you by name.</p></div>
+    <div class="screen folio" role="img" aria-label="Folio: light desktop, left rail with serif clock, centred launcher with a greeting">
+      <div class="abs wall">Wed</div>
+      <div class="abs rail"><div class="clock">16<br>42</div><div class="ws"><span>i</span><span class="on">ii</span><span>iii</span><span>iv</span></div><div class="date">Wednesday 4 November</div></div>
+      <div class="abs win" style="left:8%;top:4%;width:55%;height:92%"><h4>Shop redesign brief</h4><p>The product pages need one clear price, one picture large and the delivery date in the first screen. Everything else moves below the fold.</p></div>
+      <div class="abs win" style="left:64.4%;top:30%;width:34%;height:66%"><h4>Notes</h4><p>Call the printer about the labels. Ship the menu update before Friday.</p></div>
+      <div class="abs launch"><div class="hi">Good afternoon, Eduardo.</div><div class="q">wri</div>
+        <ul style="padding:0"><li class="sel">LibreOffice Writer <small>Enter</small></li><li>Write a note <small>Notes</small></li><li>wireplumber settings <small>Sound</small></li></ul></div>
+      <div class="abs note"><b>Screenshot saved</b>Pictures/Screenshots, 16:41</div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Left rail, 64px, attached. Serif clock stacked, workspaces i–iv, date set vertically.</dd></div>
+      <div><dt>Launcher</dt><dd>Centred card: a typeset greeting, one search line, plain results.</dd></div>
+      <div><dt>Windows</dt><dd>Radius 4, 1px hairline, 12px gaps, paper-white surfaces, slow ease-out.</dd></div>
+      <div><dt>Type and colour</dt><dd>Instrument Serif + IBM Plex Sans. Stone #ecebe6, ink #161616, ultramarine #2b3fd6.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#ffb000">Console</h2><p>No bar at all. Corner brackets frame the screen, a thin readout runs along the top edge, and a dashboard slides out when you want it. Amber phosphor on deep blue-black.</p></div>
+    <div class="screen hud" role="img" aria-label="Console: no bar, corner brackets, top readout, dashboard panel on the left">
+      <div class="abs br tl"></div><div class="abs br tr"></div><div class="abs br bl"></div><div class="abs br brr"></div>
+      <div class="abs strip"><span>16:42:07</span><span>WS 02</span><span>CPU 23%</span><span>MEM 10.5G</span><span>BAT 72%</span><span>US</span></div>
+      <div class="abs dash"><div class="big">16:42</div><div>WED 04 NOV · ZRENJANIN 10°</div>
+        <div class="meter">CPU 23%<i><b style="width:23%"></b></i>MEMORY 70%<i><b style="width:70%"></b></i>BATTERY 72%<i><b style="width:72%"></b></i></div>
+        <div class="cal"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span><span>2</span><span>3</span><span class="t">4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+        <div style="font-size:.9em;color:#b58a3a">NOW PLAYING · Boards of Canada — Dayvan Cowboy</div></div>
+      <div class="abs win on code" style="left:31%;top:8%;width:42%;height:86%"><div>❯ btop</div><div>cpu ▁▂▃▅▃▂▁▂▃  23%   5800HS  8c/16t</div><div>gpu ▁▁▁▁▁▁▁▁▁   0%   RTX 3050 (asleep)</div><div>mem ███████░░░  10.5 / 15.0 G</div></div>
+      <div class="abs win code" style="left:74%;top:30%;width:24%;height:64%"><div>❯ ping 1.1.1.1</div><div>12 ms</div><div>11 ms</div></div>
+      <div class="abs tag">SCREENSHOT SAVED · 16:41</div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>None. A one-line readout along the top edge, corner brackets, a dashboard on Super+D.</dd></div>
+      <div><dt>Launcher</dt><dd>A centred readout panel, mono, results with key hints.</dd></div>
+      <div><dt>Windows</dt><dd>Radius 0, 1px amber frame on focus, 8px gaps. Works with the scrolling layout.</dd></div>
+      <div><dt>Type and colour</dt><dd>Martian Mono. Blue-black #05080f, amber #ffb000. Notifications as clipped tags.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#ff9e7a">Pebble</h2><p>Soft and friendly. The bar splits into three floating pills, workspaces are dots that stretch, windows have big round corners, and a dock floats at the bottom. The one rice that keeps glass.</p></div>
+    <div class="screen peb" role="img" aria-label="Pebble: three floating pills on top, rounded windows, app-grid launcher, floating dock">
+      <div class="abs pill" style="left:1.4%"><span>◐</span><span class="dots"><i></i><i class="on"></i><i></i><i></i></span></div>
+      <div class="abs pill" style="left:50%;transform:translateX(-50%)">Wed 4 Nov · 16:42</div>
+      <div class="abs pill" style="right:1.4%"><span>US</span><span>Wi-Fi</span><span>45%</span><span>72%</span></div>
+      <div class="abs win" style="left:2%;top:10%;width:46%;height:72%">Files · Pictures/Screenshots</div>
+      <div class="abs win" style="left:50%;top:10%;width:48%;height:72%">Music · Dayvan Cowboy</div>
+      <div class="abs launch"><div class="q">Search apps and files</div><div class="grid">
+        <span><i style="background:#ff9e7a"></i>Firefox</span><span><i style="background:#9ad1c0"></i>Files</span><span><i style="background:#c7b8ff"></i>Ghostty</span><span><i style="background:#ffd27a"></i>Notes</span>
+        <span><i style="background:#7ab8ff"></i>Code</span><span><i style="background:#ff7aa8"></i>Music</span><span><i style="background:#a3e07a"></i>Steam</span><span><i style="background:#e0e0e8"></i>Settings</span></div></div>
+      <div class="abs bub"><b>Screenshot saved</b><br>Tap to open</div>
+      <div class="abs dock"><i style="background:#ff9e7a"></i><i style="background:#9ad1c0"></i><i style="background:#c7b8ff"></i><i style="background:#7ab8ff"></i><i style="background:#ff7aa8"></i><i style="background:#e0e0e8"></i></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Three floating pills (left, centre, right). Workspaces as dots, the active one a stretched pill.</dd></div>
+      <div><dt>Launcher</dt><dd>A rounded panel: search pill over an app grid.</dd></div>
+      <div><dt>Windows</dt><dd>Radius 18, no border, soft shadow, 14px gaps, a springy pop-in.</dd></div>
+      <div><dt>Type and colour</dt><dd>Outfit. Dusk violet #16141f, peach #ff9e7a, sea green #9ad1c0. Glass and blur.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#3b82f6">Workstation</h2><p>The one anyone can sit down at. A full-width taskbar along the bottom with a start button, search, running apps and a two-line clock; the menu opens from the corner; windows have title bars.</p></div>
+    <div class="screen ws5" role="img" aria-label="Workstation: bottom taskbar, start menu, windows with title bars">
+      <div class="abs win" style="left:3%;top:4%;width:58%;height:84%"><div class="tb">Firefox: Shopify admin<span class="x">– ▢ ✕</span></div></div>
+      <div class="abs win" style="left:45%;top:14%;width:52%;height:72%"><div class="tb">Files: Documents<span class="x">– ▢ ✕</span></div></div>
+      <div class="abs menu"><div style="font-weight:600">Pinned</div><div class="grid">
+        <span><i style="background:#ff7139"></i>Firefox</span><span><i style="background:#3b82f6"></i>Files</span><span><i style="background:#9ca3af"></i>Terminal</span><span><i style="background:#22c55e"></i>Sheets</span><span><i style="background:#a855f7"></i>Code</span></div>
+        <div style="font-weight:600">Recent</div><div style="color:#8b97a4;font-size:.95em;margin-top:.6em">brief.odt · 16:20<br>menu-prices.ods · yesterday</div></div>
+      <div class="abs toast"><b>Screenshot saved</b><br><span style="color:#8b97a4">Click to open</span></div>
+      <div class="abs bar"><span class="start"></span><span class="search">Search</span>
+        <span class="task on"><i style="background:#ff7139"></i></span><span class="task on"><i style="background:#3b82f6"></i></span><span class="task"><i style="background:#9ca3af"></i></span><span class="task"><i style="background:#a855f7"></i></span>
+        <span class="clk">16:42<br><span style="color:#8b97a4">04/11/2026</span></span></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Bottom taskbar, full width: start, search, running apps with an underline, tray, clock.</dd></div>
+      <div><dt>Launcher</dt><dd>A start menu from the corner: pinned grid and recent files.</dd></div>
+      <div><dt>Windows</dt><dd>Radius 8, title bars with buttons (hyprbars), 6px gaps, quick ease.</dd></div>
+      <div><dt>Type and colour</dt><dd>IBM Plex Sans. Slate #0f1419, blue #3b82f6. Workspaces live in Mission Control.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#ff3b1f">Poster</h2><p>Loud and flat. A paper-white bar with huge workspace numbers, windows framed in black with hard offset shadows, and a launcher that takes half the screen in a field of cobalt.</p></div>
+    <div class="screen post" role="img" aria-label="Poster: big numeric workspace bar, flat windows with hard shadows, half-screen blue launcher">
+      <div class="abs bar"><b>1</b><b class="on">2</b><b>3</b><b>4</b><span class="st">Ghostty</span><span class="t">16:42</span></div>
+      <div class="abs win" style="left:2.4%;top:12%;width:50%;height:80%"><h4>Spring menu</h4>Twelve dishes, two new. Print by Friday.</div>
+      <div class="abs win blue" style="left:30%;top:46%;width:24%;height:40%"><h4>Notes</h4>Labels: 300 pcs.</div>
+      <div class="abs launch"><div class="q">fire</div><ul style="padding:0;margin-top:1em"><li class="sel">Firefox</li><li>Firewall</li><li>Fire settings</li></ul></div>
+      <div class="abs note">Screenshot saved</div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Top, 48px, paper white. Workspace numbers in heavy type, the active one a red block.</dd></div>
+      <div><dt>Launcher</dt><dd>Half the screen in flat cobalt, the query set huge.</dd></div>
+      <div><dt>Windows</dt><dd>Radius 0, 3px black frame, hard 8px offset shadow, a fast slam-in.</dd></div>
+      <div><dt>Type and colour</dt><dd>Archivo Black + Archivo. Charcoal #141414, paper #f4f1ea, red #ff3b1f, cobalt #2d5bff.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#9ec0ff">Glass</h2><p>The classic. A translucent menu bar with the app name on the left and status on the right, windows with traffic-light buttons, a glass dock. Today's look, cleaned up.</p></div>
+    <div class="screen gl" role="img" aria-label="Glass: Mac-style menu bar, dock, rounded windows">
+      <div class="abs bar"><b></b><b>Files</b><span>File</span><span>Edit</span><span>View</span><span class="sp"></span><span>US</span><span>Wi-Fi</span><span>72%</span><span>Wed 4 Nov 16:42</span></div>
+      <div class="abs win" style="left:6%;top:8%;width:52%;height:72%"><div class="tl"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div></div>
+      <div class="abs win" style="left:44%;top:20%;width:48%;height:62%"><div class="tl"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div></div>
+      <div class="abs dock"><i style="background:#5b9cff"></i><i style="background:#ff7139"></i><i style="background:#8f86ff"></i><i style="background:#5ee0b5"></i><i style="background:#f7c85b"></i><i style="background:#b9c0cc"></i></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Top, attached, translucent. App name and menu-style labels on the left.</dd></div><div><dt>Dock</dt><dd>Glass, bottom, magnifies on hover.</dd></div><div><dt>Windows</dt><dd>Radius 12, soft shadow, blur behind panels.</dd></div><div><dt>Type and colour</dt><dd>IBM Plex Sans. Graphite with a blue accent.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#3584e4">Canvas</h2><p>Classic GNOME manners. A black top bar with workspace dots on the left, the clock dead centre and one status pill on the right that opens rounded quick settings. Windows have header bars.</p></div>
+    <div class="screen cv" role="img" aria-label="Canvas: black top bar with centred clock, quick settings, header-bar windows">
+      <div class="abs bar"><span class="act"><i class="on"></i><i></i><i></i></span><span class="mid">Wed 4 Nov  16:42</span><span class="r"><span>Wi-Fi</span><span>Vol</span><span>72%</span></span></div>
+      <div class="abs win" style="left:5%;top:10%;width:56%;height:80%"><div class="hb">Files</div></div>
+      <div class="abs qs"><span class="sl" style="grid-column:1/-1"><b></b></span><span class="on">Wi-Fi</span><span>Bluetooth</span><span class="on">Power saver</span><span>Dark style</span><span>Night Light</span><span>Do Not Disturb</span></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Top, black, 28px. Dots for workspaces, centred clock, one status pill.</dd></div><div><dt>Launcher</dt><dd>Full-screen overview with search and an app grid.</dd></div><div><dt>Windows</dt><dd>Radius 14, header bars, no border, 8px gaps.</dd></div><div><dt>Type and colour</dt><dd>Cantarell. Dark grey, GNOME blue.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#a6caf0">Platinum</h2><p>A retro desktop with bevelled grey chrome, gradient title bars, desktop icons and a Start button. Square, solid and quick.</p></div>
+    <div class="screen pl" role="img" aria-label="Platinum: retro bevelled windows, desktop icons, Start taskbar">
+      <div class="abs icons"><span><i></i>Home</span><span><i></i>Projects</span><span><i style="background:#9fb5c9;box-shadow:inset -3px -3px #6d8499"></i>Trash</span></div>
+      <div class="abs win bev" style="left:12%;top:6%;width:54%;height:70%"><div class="cap">Notepad: brief.txt<span class="b"><i class="bev"></i><i class="bev"></i><i class="bev"></i></span></div><div class="body">Ship the menu update before Friday.</div></div>
+      <div class="abs win bev" style="left:52%;top:30%;width:40%;height:52%"><div class="cap off">Files<span class="b"><i class="bev"></i><i class="bev"></i><i class="bev"></i></span></div><div class="body"></div></div>
+      <div class="abs bar bev"><span class="start bev">Start</span><span class="task bev on">Notepad</span><span class="task bev">Files</span><span class="tray">US · 72% · 16:42</span></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Bottom taskbar with a Start button, window buttons, a sunken tray.</dd></div><div><dt>Launcher</dt><dd>A Start menu with a side banner and nested lists.</dd></div><div><dt>Windows</dt><dd>Radius 0, title bars with buttons (hyprbars), bevel frames.</dd></div><div><dt>Type and colour</dt><dd>IBM Plex Sans. Platinum grey, navy title bars, teal desktop.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#e30613">Atlas</h2><p>Swiss poster discipline. A black rail on the right edge, square workspace blocks, heavy grotesque numerals, and the wallpaper is the day of the month set enormous in red.</p></div>
+    <div class="screen at" role="img" aria-label="Atlas: Swiss style, right black rail, big red date numeral">
+      <div class="abs wallnum">04</div>
+      <div class="abs win" style="left:30%;top:6%;width:40%;height:88%"><h4>Spring menu</h4>Twelve dishes. Two new. Print by Friday.</div>
+      <div class="abs win" style="left:3%;top:56%;width:25%;height:38%"><h4>Notes</h4>Labels, 300.</div>
+      <div class="abs rail"><div class="t">16<br>42</div><div class="ws"><b>1</b><b class="on">2</b><b>3</b><b>4</b></div><div class="v">Wednesday 4 November</div></div>
+      <div class="abs note">Screenshot saved</div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Right rail, black, 72px: heavy clock, square workspace blocks, vertical date.</dd></div><div><dt>Launcher</dt><dd>A flush-left column over the grid, results in heavy type.</dd></div><div><dt>Windows</dt><dd>Radius 0, 2px black frame, 16px gaps, no shadow.</dd></div><div><dt>Type and colour</dt><dd>Archivo. Off-white #f2f2f0, black, signal red #e30613.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#f2d48a">Noir</h2><p>The screen as a film. Black letterbox bands at top and bottom hold the title and the time like credits; notifications appear as subtitles in the middle of the lower band.</p></div>
+    <div class="screen nr" role="img" aria-label="Noir: letterbox bars top and bottom, serif titles, subtitle notifications">
+      <div class="abs scene"></div>
+      <div class="abs lb top"><b>Files</b><span>ii · iv</span><span>Wednesday, 16:42</span></div>
+      <div class="abs win" style="left:10%;top:13%;width:50%;height:74%"><h4>The brief</h4>One price, one picture, the delivery date.</div>
+      <div class="abs win" style="left:62%;top:13%;width:28%;height:74%"><h4>Notes</h4>Labels.</div>
+      <div class="abs sub">— Screenshot saved to Pictures.</div>
+      <div class="abs lb bot"><span>Wi-Fi · Sound 45 · Battery 72</span><span>ROG FLOW X13</span></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>Two letterbox bands: title and time on top, status at the bottom.</dd></div><div><dt>Notifications</dt><dd>Subtitles: one italic line, centred, fading out.</dd></div><div><dt>Windows</dt><dd>Radius 0, hairline, slow cross-fades.</dd></div><div><dt>Type and colour</dt><dd>Fraunces + IBM Plex Sans. Black, warm grey, subtitle gold.</dd></div></dl>
+  </section>
+
+  <section>
+    <div class="top"><h2 style="color:#9fd18b">Garden</h2><p>One island does everything: a pale floating capsule at the bottom holds the apps, the workspaces and the clock. Nothing on the top edge at all.</p></div>
+    <div class="screen gd" role="img" aria-label="Garden: a single floating capsule at the bottom with apps, workspaces and clock">
+      <div class="abs win" style="left:3%;top:4%;width:56%;height:80%">Notes · Garden plan</div>
+      <div class="abs win" style="left:61%;top:22%;width:36%;height:62%">Music</div>
+      <div class="abs card"><b>Screenshot saved</b><br>Tap to open</div>
+      <div class="abs isl"><i style="background:#2f6b3e"></i><i style="background:#c9813a"></i><i style="background:#5b8fb9"></i><i style="background:#a35a6b"></i><span class="sep"></span><span class="ws"><b>1</b><b class="on">2</b><b>3</b></span><span class="sep"></span><span class="t">16:42</span><span>72%</span></div>
+    </div>
+    <dl><div><dt>Bar</dt><dd>None on top. One bottom capsule: pinned apps, workspaces, clock, status.</dd></div><div><dt>Launcher</dt><dd>Rises out of the island as a rounded sheet.</dd></div><div><dt>Windows</dt><dd>Radius 14, 1px moss border, 12px gaps, gentle spring.</dd></div><div><dt>Type and colour</dt><dd>Outfit. Moss #141c16, sage #e8efe0, forest #2f6b3e.</dd></div></dl>
+  </section>
+</main>

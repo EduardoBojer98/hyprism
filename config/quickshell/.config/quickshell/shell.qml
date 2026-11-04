@@ -13,7 +13,7 @@ ShellRoot {
             required property ShellScreen modelData
 
             Bar { screen: modelData }
-            Dock { screen: modelData }
+            LazyLoader { active: Theme.rice.dock; Dock { screen: modelData } }
             HotCorners { screen: modelData }
         }
     }

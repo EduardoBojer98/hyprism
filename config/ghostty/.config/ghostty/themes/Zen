@@ -1,0 +1,23 @@
+# Zen: terminal palette of the Zen rice (Quickshell Rices.qml). Generated; edit freely.
+background = #111113
+foreground = #e8e8ea
+cursor-color = #e8e8ea
+cursor-text = #111113
+selection-background = #4d4d4f
+selection-foreground = #e8e8ea
+palette = 0=#232327
+palette = 1=#e57373
+palette = 2=#7bc89a
+palette = 3=#e0b45e
+palette = 4=#8fb0d9
+palette = 5=#c29bd6
+palette = 6=#7fc4c4
+palette = 7=#a0a0a6
+palette = 8=#68686e
+palette = 9=#ec9696
+palette = 10=#9cd6b3
+palette = 11=#e8c786
+palette = 12=#abc4e2
+palette = 13=#d1b4e0
+palette = 14=#9fd3d3
+palette = 15=#e8e8ea

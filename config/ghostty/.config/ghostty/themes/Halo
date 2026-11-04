@@ -1,0 +1,23 @@
+# Halo: terminal palette of the Halo rice (Quickshell Rices.qml). Generated; edit freely.
+background = #0e0f12
+foreground = #eceef2
+cursor-color = #8ab4ff
+cursor-text = #0e0f12
+selection-background = #313d54
+selection-foreground = #eceef2
+palette = 0=#212329
+palette = 1=#f07a7a
+palette = 2=#7fd1a0
+palette = 3=#e8c06a
+palette = 4=#8ab4ff
+palette = 5=#c4a0ff
+palette = 6=#7fd4e0
+palette = 7=#a3a7b1
+palette = 8=#6a6e78
+palette = 9=#f49b9b
+palette = 10=#9fdcb8
+palette = 11=#eed08f
+palette = 12=#a7c7ff
+palette = 13=#d3b8ff
+palette = 14=#9fdfe8
+palette = 15=#eceef2

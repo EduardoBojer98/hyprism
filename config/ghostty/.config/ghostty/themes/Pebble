@@ -1,0 +1,23 @@
+# Pebble: terminal palette of the Pebble rice (Quickshell Rices.qml). Generated; edit freely.
+background = #16141f
+foreground = #ece8f6
+cursor-color = #ff9e7a
+cursor-text = #16141f
+selection-background = #573b38
+selection-foreground = #ece8f6
+palette = 0=#221f2e
+palette = 1=#ff6b8a
+palette = 2=#7fdc9a
+palette = 3=#ffd27a
+palette = 4=#8fb4ff
+palette = 5=#c7a3ff
+palette = 6=#9ad1c0
+palette = 7=#b9b3cc
+palette = 8=#7f7895
+palette = 9=#ff90a7
+palette = 10=#9fe5b3
+palette = 11=#ffdd9b
+palette = 12=#abc7ff
+palette = 13=#d5baff
+palette = 14=#b3dcd0
+palette = 15=#ece8f6

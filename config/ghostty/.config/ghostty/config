@@ -8,7 +8,6 @@ font-feature = liga
 adjust-cell-height = 12%
 
 # Frosted glass (Hyprland blurs behind it) and roomy, centred padding
-background = 0f1017
 background-opacity = 0.72
 window-padding-x = 18
 window-padding-y = 14

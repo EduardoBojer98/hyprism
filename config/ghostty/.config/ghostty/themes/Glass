@@ -1,0 +1,23 @@
+# Glass: terminal palette of the Glass rice (Quickshell Rices.qml). Generated; edit freely.
+background = #141821
+foreground = #f3f4f8
+cursor-color = #5b9cff
+cursor-text = #141821
+selection-background = #283d5f
+selection-foreground = #f3f4f8
+palette = 0=#1c1f28
+palette = 1=#ff5f57
+palette = 2=#63d17a
+palette = 3=#f7c85b
+palette = 4=#5b9cff
+palette = 5=#c58af9
+palette = 6=#5ee0b5
+palette = 7=#a7abb8
+palette = 8=#6e7282
+palette = 9=#ff8781
+palette = 10=#8adc9b
+palette = 11=#f9d684
+palette = 12=#84b5ff
+palette = 13=#d4a7fa
+palette = 14=#86e8c8
+palette = 15=#f3f4f8

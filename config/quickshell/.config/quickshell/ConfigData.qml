@@ -4,24 +4,15 @@ import Quickshell.Io
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
     property JsonObject appearance: JsonObject {
-        property string mode: "dark"           // "light", "dark" or "auto" (light from sunrise to sunset)
-        property string accent: "theme"         // "theme" (the theme's own), a palette name (Theme.accents) or "custom"
-        property string customAccent: "#ff7a59" // used when accent is "custom"
-        property string theme: "radioactive"    // colour theme (Theme.themes): glass base, text and its own accent(s)
-        property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
-        property real glassOpacity: 0.55        // tint over the blur (0.2 clear .. 0.9 solid)
-        property real radiusScale: 1            // 0 square .. 1.5 extra round
+        property string rice: "pebble"          // the whole desktop design (Rices.qml): layout, type, shape, colour, motion
+        property var custom: ({})               // your adjustments per rice: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Rices.adjustable)
+        property bool terminal: true            // Ghostty follows the rice (ThemeSync writes ghostty/theme.conf)
+        property bool wallpaper: true           // the rice's own wallpaper; off = keep yours (Settings > Wallpaper)
         property real fontScale: 1
-        property string font: "Inter"
         property bool animations: true
         property string iconTheme: "Papirus-Dark"
         property string cursorTheme: "default"   // a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons; "default" = the system's cursor
         property int cursorSize: 24
-        property bool neonPanels: true           // panels, menus and popups get the glowing accent edge
-        property string border: "neon"          // focused window border: "neon" (theme gradient + glow), "rainbow" or "accent"
-        property int borderSpin: 60             // seconds x10 per rainbow turn (0 = still)
-        property int borderSize: 2              // px
-        property int gaps: 10                   // px around windows; between windows it is half
     }
     property JsonObject dock: JsonObject {
         // look (Appearance > Dock)

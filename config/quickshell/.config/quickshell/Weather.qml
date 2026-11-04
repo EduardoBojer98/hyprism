@@ -222,7 +222,7 @@ Singleton {
                                         Text {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             text: modelData.rain >= 30 ? modelData.rain + "%" : " "
-                                            color: Theme.accents.sky
+                                            color: Theme.accent2
                                             font { family: Theme.font; pixelSize: 9; weight: Font.DemiBold }
                                         }
                                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: Math.round(modelData.temp) + "°"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
@@ -274,7 +274,7 @@ Singleton {
                                         anchors { left: dayIcon.right; verticalCenter: parent.verticalCenter }
                                         width: 34
                                         text: dayRow.modelData.rain >= 20 ? dayRow.modelData.rain + "%" : ""
-                                        color: Theme.accents.sky
+                                        color: Theme.accent2
                                         font { family: Theme.font; pixelSize: 10; weight: Font.DemiBold; features: { "tnum": 1 } }
                                     }
                                     Text {
@@ -298,8 +298,8 @@ Singleton {
                                             height: parent.height; radius: 2
                                             gradient: Gradient {
                                                 orientation: Gradient.Horizontal
-                                                GradientStop { position: 0; color: Theme.accents.sky }
-                                                GradientStop { position: 1; color: Theme.accents.peach }
+                                                GradientStop { position: 0; color: Theme.accent2 }
+                                                GradientStop { position: 1; color: Theme.accent }
                                             }
                                         }
                                     }

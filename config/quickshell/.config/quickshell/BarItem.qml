@@ -1,44 +1,47 @@
 import QtQuick
 
-// One top-bar item: a soft rounded-rect highlight on hover, brighter while its panel is open.
+// One clickable bar item in any rice: its content in a row (or a column on a vertical rail), a
+// hover highlight in the rice's corner radius, brighter while its panel is open.
 Rectangle {
-    id: pill
-    default property alias content: row.data
-    property alias spacing: row.spacing
+    id: item
+    default property alias content: grid.data
+    property alias spacing: grid.spacing
+    property bool vertical: false
     property bool active: false
     property bool interactive: true
-    property bool shown: true     // false: nothing to show, the bar leaves no gap
-    visible: shown
+    property bool shown: true          // false: nothing to show, the bar leaves no gap
+    property int pad: vertical ? 6 : 8
+    property color hover: Theme.fillHover
+    property color pressedColor: Theme.fillActive
     property alias acceptedButtons: area.acceptedButtons
     signal pressed(int button)
     signal scrolled(int delta)
 
-    anchors.verticalCenter: parent.verticalCenter
-    implicitWidth: row.implicitWidth + 16
-    implicitHeight: Config.bar.size - 8
-    radius: 7
-    // "chips" (Settings > Appearance > Menu Bar): every item sits on its own glass tile
-    readonly property bool chip: Config.bar.items === "chips"
-    readonly property color base: chip ? Theme.surface(Config.bar.tint) : "transparent"
-    color: active ? (chip ? Qt.tint(base, Theme.fillActive) : Theme.fillActive)
-         : interactive && area.containsMouse ? (chip ? Qt.tint(base, Theme.fillHover) : Theme.fillHover) : base
-    border { color: Theme.stroke; width: chip ? 1 : 0 }
+    visible: shown
+    implicitWidth: vertical ? Math.max(grid.implicitWidth + pad * 2, 28) : grid.implicitWidth + pad * 2
+    implicitHeight: vertical ? grid.implicitHeight + pad * 2 : Math.max(grid.implicitHeight + 6, 24)
+    radius: Theme.radiusSmall
+    color: active ? pressedColor : interactive && area.containsMouse ? hover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-    Row {
-        id: row
+    Grid {
+        id: grid
         anchors.centerIn: parent
-        height: parent.height
+        rows: item.vertical ? -1 : 1
+        columns: item.vertical ? 1 : -1
         spacing: 6
+        horizontalItemAlignment: Grid.AlignHCenter
+        verticalItemAlignment: Grid.AlignVCenter
     }
     MouseArea {
         id: area
         anchors.fill: parent
         z: -1
-        enabled: pill.interactive
+        enabled: item.interactive
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: mouse => pill.pressed(mouse.button)
-        onWheel: wheel => pill.scrolled(wheel.angleDelta.y > 0 ? 1 : -1)
+        acceptedButtons: Qt.LeftButton
+        onClicked: mouse => item.pressed(mouse.button)
+        onWheel: wheel => item.scrolled(wheel.angleDelta.y > 0 ? 1 : -1)
     }
 }

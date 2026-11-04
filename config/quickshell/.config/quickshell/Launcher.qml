@@ -130,7 +130,6 @@ Singleton {
             height: popup.boxHeight
             radius: root.look.corners === "round" ? 26 : root.corner
             color: root.surface
-            neon: root.look.tint === "neon"
             Rectangle {
                 visible: panel.visible
                 anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: pill.height }
@@ -153,7 +152,6 @@ Singleton {
                 flat: root.unified
                 color: root.unified ? "transparent" : root.surface
                 border.width: root.unified ? 0 : 1
-                neon: !root.unified && root.look.tint === "neon"
                 radius: root.look.corners === "round" ? height / 2 : root.corner
 
                 Text {
@@ -235,7 +233,6 @@ Singleton {
                 flat: root.unified
                 color: root.unified ? "transparent" : root.surface
                 border.width: root.unified ? 0 : 1
-                neon: !root.unified && root.look.tint === "neon"
                 Row {
                     id: modeRow
                     anchors.centerIn: parent
@@ -277,7 +274,6 @@ Singleton {
             flat: root.unified
             color: root.unified ? "transparent" : root.surface
             border.width: root.unified ? 0 : 1
-            neon: !root.unified && root.look.tint === "neon"
             radius: root.corner
             visible: root.view !== "search" || field.text.trim() !== ""
             height: root.view === "home" ? home.implicitHeight + Theme.spaceM * 2

@@ -1,0 +1,23 @@
+# Workstation: terminal palette of the Workstation rice (Quickshell Rices.qml). Generated; edit freely.
+background = #0f1419
+foreground = #e6edf3
+cursor-color = #3b82f6
+cursor-text = #0f1419
+selection-background = #1b3357
+selection-foreground = #e6edf3
+palette = 0=#1a2028
+palette = 1=#ef4444
+palette = 2=#22c55e
+palette = 3=#f59e0b
+palette = 4=#60a5fa
+palette = 5=#c084fc
+palette = 6=#22d3ee
+palette = 7=#9aa6b2
+palette = 8=#6b7785
+palette = 9=#f37373
+palette = 10=#59d486
+palette = 11=#f8b648
+palette = 12=#88bcfb
+palette = 13=#d0a3fd
+palette = 14=#59def2
+palette = 15=#e6edf3

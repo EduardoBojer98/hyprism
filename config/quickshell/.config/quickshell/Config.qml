@@ -35,13 +35,9 @@ Singleton {
     // Allowed values; set() refuses anything else. Numbers are [min, max].
     readonly property var schema: ({
         appearance: {
-            mode: ["light", "dark", "auto"],
-            accent: ["theme", "blue", "lavender", "mauve", "pink", "red", "peach", "yellow", "green", "mint", "teal", "sky", "champagne", "silver", "custom"],
-            customAccent: "color", theme: ["midnight", "graphite", "cocoa", "catppuccin", "tokyonight", "dracula", "nord", "gruvbox", "rosepine", "everforest", "kanagawa", "onedark", "solarized", "radioactive", "molten", "cyber", "acid", "synthwave"],
-            terminal: "bool",
-            glassOpacity: [0.2, 0.9], radiusScale: [0, 1.5], fontScale: [0.85, 1.25],
-            font: "string", animations: "bool", iconTheme: "string", cursorTheme: "string", cursorSize: [16, 64],
-            border: ["rainbow", "accent", "neon"], neonPanels: "bool", borderSpin: [0, 100], borderSize: [1, 4], gaps: [0, 40]
+            rice: ["pebble", "monolith", "console", "workstation", "poster", "glass", "canvas", "atlas", "noir", "garden", "zen", "mist", "halo"],
+            custom: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], animations: "bool",
+            iconTheme: "string", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { style: ["glass", "pill", "panel", "shelf", "clear"], tint: ["glass", "solid", "accent", "neon"], indicator: ["dot", "line", "none"], hover: ["plate", "grow", "lift"],
                 iconSize: [32, 64], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },

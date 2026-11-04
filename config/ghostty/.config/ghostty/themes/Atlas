@@ -1,0 +1,23 @@
+# Atlas: terminal palette of the Atlas rice (Quickshell Rices.qml). Generated; edit freely.
+background = #f2f2f0
+foreground = #111111
+cursor-color = #e30613
+cursor-text = #f2f2f0
+selection-background = #efc8c8
+selection-foreground = #111111
+palette = 0=#111111
+palette = 1=#c4161c
+palette = 2=#0a7d3b
+palette = 3=#a35b00
+palette = 4=#1b4fd1
+palette = 5=#9c1aa8
+palette = 6=#0a7d8c
+palette = 7=#8a8a8a
+palette = 8=#4b4b4b
+palette = 9=#9d1216
+palette = 10=#08642f
+palette = 11=#824900
+palette = 12=#163fa7
+palette = 13=#7d1586
+palette = 14=#086470
+palette = 15=#f2f2f0

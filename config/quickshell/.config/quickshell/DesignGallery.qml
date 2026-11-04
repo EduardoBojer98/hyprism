@@ -84,7 +84,7 @@ GridLayout {
         readonly property real h: (look.size ?? 30) * 0.4 * s
         readonly property real pad: (({ islands: 5, tabs: 6, compact: 6 })[style] ?? 0) * s
         readonly property real side: (({ floating: 12, islands: 9, tabs: 10 })[style] ?? 6) * s
-        readonly property color tone: look.tint === "neon" ? Theme.tinted(0.85, 0.93) : look.tint === "solid" ? Theme.menu : look.tint === "accent"
+        readonly property color tone: look.tint === "solid" ? Theme.menu : look.tint === "accent"
             ? Qt.tint(Theme.tinted(0.75, 0.6), Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.35))
             : Theme.light ? Qt.rgba(1, 1, 1, 0.6) : Theme.tinted(0.75, 0.55)
         readonly property real barY: atBottom ? height - h - margin : margin
@@ -101,7 +101,7 @@ GridLayout {
             height: bm.h
             radius: bm.style === "floating" || bm.style === "compact" ? height / 2 : 0
             color: bm.style === "clear" ? "transparent" : bm.tone
-            border { color: bm.look.tint === "neon" ? Theme.accent : Theme.stroke; width: bm.style === "floating" || bm.style === "compact" ? 1 : 0 }
+            border { color: Theme.stroke; width: bm.style === "floating" || bm.style === "compact" ? 1 : 0 }
             gradient: bm.style === "clear" ? shade : null
             Gradient {
                 id: shade
@@ -131,7 +131,7 @@ GridLayout {
                     bottomLeftRadius: tab && bm.atBottom ? 0 : tab ? 4 * bm.s : radius
                     bottomRightRadius: bottomLeftRadius
                     color: bm.tone
-                    border { color: bm.look.tint === "neon" ? Theme.accent : Theme.stroke; width: 1 }
+                    border { color: Theme.stroke; width: 1 }
                 }
                 Row {
                     id: dots
@@ -166,7 +166,7 @@ GridLayout {
         readonly property string style: look.style ?? "glass"
         readonly property bool panel: style === "panel"
         readonly property bool bare: style === "clear" || style === "shelf"
-        readonly property color tone: look.tint === "neon" ? Theme.tinted(0.85, 0.93) : look.tint === "solid" ? Theme.menu : look.tint === "accent"
+        readonly property color tone: look.tint === "solid" ? Theme.menu : look.tint === "accent"
             ? Qt.tint(Theme.tinted(0.75, 0.6), Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.35))
             : Theme.light ? Qt.rgba(1, 1, 1, 0.6) : Theme.tinted(0.75, panel ? 0.7 : 0.55)
         readonly property int hovered: 2     // which icon the mock shows as hovered
@@ -178,7 +178,7 @@ GridLayout {
             height: 24 * dm.s
             radius: dm.panel ? 0 : dm.style === "pill" ? height / 2 : 7 * dm.s
             color: dm.bare ? "transparent" : dm.tone
-            border { color: dm.look.tint === "neon" ? Theme.accent : Theme.stroke; width: dm.bare ? 0 : 1 }
+            border { color: Theme.stroke; width: dm.bare ? 0 : 1 }
             Rectangle {   // shelf slab
                 visible: dm.style === "shelf"
                 anchors { left: parent.left; right: parent.right; bottom: parent.bottom; leftMargin: -4 * dm.s; rightMargin: -4 * dm.s }
@@ -243,7 +243,7 @@ GridLayout {
         readonly property real w: (look.width ?? 720) / 960 * 200 * s
         readonly property real fh: (look.field ?? 48) * 0.3 * s
         readonly property real r: look.corners === "round" ? 9 * s : look.corners === "sharp" ? 2.5 * s : 5 * s
-        readonly property color tone: look.tint === "neon" ? Theme.tinted(0.85, 0.93) : look.tint === "solid" ? Theme.menu : look.tint === "accent"
+        readonly property color tone: look.tint === "solid" ? Theme.menu : look.tint === "accent"
             ? Qt.tint(Theme.tinted(0.75, 0.75), Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.35))
             : Theme.light ? Qt.rgba(1, 1, 1, 0.7) : Theme.tinted(0.75, 0.72)
         readonly property real gap: unified ? 0 : 3 * s
@@ -261,7 +261,7 @@ GridLayout {
                 anchors.fill: parent
                 radius: lm.r
                 color: lm.tone
-                border { color: lm.look.tint === "neon" ? Theme.accent : Theme.stroke; width: 1 }
+                border { color: Theme.stroke; width: 1 }
                 Rectangle { y: lm.fh; width: parent.width; height: 1; color: Theme.stroke }
             }
             Rectangle {   // search field
@@ -269,7 +269,7 @@ GridLayout {
                 height: lm.fh
                 radius: lm.look.corners === "round" ? height / 2 : lm.r
                 color: lm.unified ? "transparent" : lm.tone
-                border { color: lm.look.tint === "neon" ? Theme.accent : Theme.stroke; width: lm.unified ? 0 : 1 }
+                border { color: Theme.stroke; width: lm.unified ? 0 : 1 }
                 Rectangle { x: 6 * lm.s; anchors.verticalCenter: parent.verticalCenter; width: 4 * lm.s; height: width; radius: width / 2; color: "transparent"; border { color: Theme.subtext; width: 1 } }
                 Rectangle { x: 14 * lm.s; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.4; height: 2.5 * lm.s; radius: height / 2; color: Theme.muted }
             }
@@ -280,7 +280,7 @@ GridLayout {
                 height: lm.fh
                 radius: height / 2
                 color: lm.unified ? "transparent" : lm.tone
-                border { color: lm.look.tint === "neon" ? Theme.accent : Theme.stroke; width: lm.unified ? 0 : 1 }
+                border { color: Theme.stroke; width: lm.unified ? 0 : 1 }
                 Row {
                     anchors.centerIn: parent
                     spacing: 2 * lm.s
@@ -293,7 +293,7 @@ GridLayout {
                 height: lm.listH
                 radius: lm.r
                 color: lm.unified ? "transparent" : lm.tone
-                border { color: lm.look.tint === "neon" ? Theme.accent : Theme.stroke; width: lm.unified ? 0 : 1 }
+                border { color: Theme.stroke; width: lm.unified ? 0 : 1 }
                 Column {
                     anchors { fill: parent; margins: 3 * lm.s }
                     spacing: 0
