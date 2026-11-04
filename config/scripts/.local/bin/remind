@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Reminders as notifications, kept by systemd so they survive closing the terminal.
+#   remind 20m "Stand up"      remind 1h30m "Call the printer"      remind 17:45 "Leave"
+#   remind list                remind clear
+set -euo pipefail
+case ${1:-list} in
+    list)  systemctl --user list-timers 'remind-*' --no-legend 2>/dev/null | awk '{print $1, $2, $3, "  ", $(NF-1)}' || true ;;
+    clear) systemctl --user stop 'remind-*.timer' 2>/dev/null; echo "remind: cleared" ;;
+    *)
+        [[ $# -ge 2 ]] || { sed -n '2,4p' "$0" >&2; exit 2; }
+        when=$1; shift; msg="$*"
+        if [[ $when =~ ^[0-9]{1,2}:[0-9]{2}$ ]]; then on=(--on-calendar="$when")
+        elif [[ $when =~ ^([0-9]+[hms])+$ ]]; then on=(--on-active="$when")
+        else echo "remind: say when as 20m, 1h30m or 17:45" >&2; exit 2; fi
+        systemd-run --user --quiet --unit="remind-$(date +%s%N)" "${on[@]}" --timer-property=AccuracySec=1s \
+            notify-send -a Reminder -u critical -i appointment-soon "Reminder" "$msg"
+        echo "remind: $when — $msg" ;;
+esac

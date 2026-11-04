@@ -16,6 +16,7 @@ local function add(id, group, label, keys, run, opts) binds[#binds + 1] = { id =
 
 -- Apps
 add("terminal",  "Apps", "Terminal",                     key("Return"), exec(terminal))
+add("dropterm",  "Apps", "Drop-down terminal",           key("grave"), exec("dropterm"))
 -- Spotlight at the cursor: tap Super alone (fires on release, only if no other key was pressed)
 add("spotlight-tap", "Apps", "Spotlight (tap Super)",    "SUPER + Super_L", exec("qs ipc call launcher toggle"), { release = true })
 add("spotlight", "Apps", "Spotlight",                    key("Space"), exec("qs ipc call launcher toggle"))
@@ -55,6 +56,7 @@ for i = 1, 10 do
     add("send-" .. i,      "Workspaces", "Send window to workspace " .. i, key("SHIFT + " .. k), hl.dsp.window.move({ workspace = i }))
 end
 add("workspace-previous", "Workspaces", "Previous workspace",        key("Tab"), hl.dsp.focus({ workspace = "previous" }))
+add("workspace-empty",    "Workspaces", "Next empty workspace",      key("CTRL + down"), hl.dsp.focus({ workspace = "empty" }))
 add("workspace-next-wheel", "Workspaces", "Next workspace (wheel)",  key("mouse_down"), hl.dsp.focus({ workspace = "e+1" }), { fixed = true })
 add("workspace-prev-wheel", "Workspaces", "Previous workspace (wheel)", key("mouse_up"), hl.dsp.focus({ workspace = "e-1" }), { fixed = true })
 add("scratchpad",      "Workspaces", "Show / hide scratchpad",       key("S"), hl.dsp.workspace.toggle_special("scratch"))
@@ -72,6 +74,8 @@ add("screenshot-all",      "Screen", "Screenshot both screens", "CTRL + SHIFT + 
 add("screenshot-delay",    "Screen", "Screenshot in 5 seconds", "ALT + Print", exec("screenshot delay 5"))
 add("task-manager",        "Apps",   "Task manager",                 "CTRL + SHIFT + Escape", exec("qs ipc call system taskmanager"))
 add("ocr",                 "Screen", "Copy text from the screen",    key("SHIFT + T"), exec("screentext"))
+add("record",              "Screen", "Record the screen (again: stop)", key("ALT + R"), exec("record screen"))
+add("record-area",         "Screen", "Record an area (again: stop)", key("ALT + SHIFT + R"), exec("record area"))
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))
 
 -- Shared monitor: hand it to the other computer and back (~/.local/bin/monswitch; off without ~/.config/monswitch.conf)

@@ -43,6 +43,7 @@ nm-connection-editor     nm-connection-editor               repo
 satty                    satty                              repo
 grim                     grim                               repo
 slurp                    slurp                              repo
+wf-recorder              wf-recorder                        repo
 wl-clipboard             wl-clipboard                       repo
 wtype                    wtype                              repo
 tesseract                tesseract                          repo

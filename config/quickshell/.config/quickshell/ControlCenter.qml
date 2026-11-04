@@ -25,7 +25,7 @@ Singleton {
     readonly property var defaults: ({
         sections: ["connections", "toggles", "media", "sliders", "power", "shortcuts", "notifications"],
         tiles: ["wifi", "bt", "focus", "nightlight"],
-        toggles: ["caffeine", "monitor", "keylight", "keyboard", "darkmode"],
+        toggles: ["caffeine", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record"],
         shortcuts: ["screenshot", "settings", "lock", "power", "colorpicker", "mission"]
     })
     // the saved order, plus anything newer than the saved list at the end
@@ -64,7 +64,9 @@ Singleton {
         monitor: { label: "Shared monitor", glyph: "\u{F0379}" },
         keylight: { label: "Key light", glyph: "\u{F0E5B}" },
         keyboard: { label: "On-screen keyboard", glyph: "\u{F030C}" },
-        darkmode: { label: "Dark mode", glyph: "\u{F050E}" }
+        touchpad: { label: "Touchpad", glyph: "\u{F0E40}" },
+        touchscreen: { label: "Touchscreen", glyph: "\u{F0741}" },
+        record: { label: "Record screen", glyph: "\u{F044A}" }
     })
     // shortcut buttons: what each one shows and does (the Settings editor lists them too)
     readonly property var shortcutInfo: ({
@@ -385,14 +387,34 @@ Singleton {
                     onToggled: Osk.toggle()
                 }
                 QuickToggle {
-                    visible: cc.shownToggles.includes("darkmode")
-                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("darkmode")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("darkmode")) % 4
-                    glyph: "\u{F050E}"
-                    label: "Dark mode"
-                    status: Theme.light ? "Off" : "On"
-                    hint: "Light or dark glass · Appearance settings for more"
-                    active: !Theme.light
-                    onToggled: Config.set("appearance", "mode", Theme.light ? "dark" : "light")
+                    visible: cc.shownToggles.includes("touchpad") && Inputs.touchpadName !== ""
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("touchpad")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("touchpad")) % 4
+                    glyph: Inputs.touchpad ? "\u{F0E40}" : "\u{F0E41}"
+                    label: "Touchpad"
+                    status: Inputs.touchpad ? "On" : "Off"
+                    hint: "Turn it off while typing on an external keyboard; back on at the next login"
+                    active: Inputs.touchpad
+                    onToggled: Inputs.setTouchpad(!Inputs.touchpad)
+                }
+                QuickToggle {
+                    visible: cc.shownToggles.includes("touchscreen")
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("touchscreen")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("touchscreen")) % 4
+                    glyph: "\u{F0741}"
+                    label: "Touch"
+                    status: Inputs.touchscreen ? "On" : "Off"
+                    hint: "Touchscreen and pen; back on at the next login"
+                    active: Inputs.touchscreen
+                    onToggled: Inputs.setTouchscreen(!Inputs.touchscreen)
+                }
+                QuickToggle {
+                    visible: cc.shownToggles.includes("record")
+                    Layout.row: Math.floor(Math.max(0, cc.shownToggles.indexOf("record")) / 4); Layout.column: Math.max(0, cc.shownToggles.indexOf("record")) % 4
+                    glyph: "\u{F044A}"
+                    label: "Record"
+                    status: Sys.recording ? "Recording" : "Off"
+                    hint: "Record the screen under the mouse (Super+Alt+R) · Super+Alt+Shift+R for an area"
+                    active: Sys.recording
+                    onToggled: { if (!Sys.recording) cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; record " + (Sys.recording ? "stop" : "screen")]) }
                 }
             }
 

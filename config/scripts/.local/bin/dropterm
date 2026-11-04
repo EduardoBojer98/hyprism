@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# A drop-down terminal (Super+`): slides down from the top of the screen, the same key hides it.
+# It lives on Hyprland's special workspace "drop"; the window rule in rules.lua sizes and places it.
+set -euo pipefail
+if hyprctl -j clients | jq -e '.[] | select(.class == "linuxsetup.dropterm")' >/dev/null; then
+    hyprctl dispatch 'hl.dsp.workspace.toggle_special("drop")' >/dev/null
+else
+    setsid ghostty --class=linuxsetup.dropterm >/dev/null 2>&1 &
+fi

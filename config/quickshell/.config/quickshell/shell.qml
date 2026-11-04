@@ -22,5 +22,5 @@ ShellRoot {
     BatteryWarning {}
     ThemeSync {}
     // Create the singletons with IPC handlers now, so `qs ipc call …` works before first use
-    Component.onCompleted: { Machine.asus; Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = ""; Caffeine.minutes = 0; NightLight.now = new Date(); ControlCenter.expanded = ""; UtilityMenu.host; PowerMenu.open; Cheatsheet.open; Notifications.unread = 0; NotificationCenter.unfolded = ({}); MissionControl.selected = -1; Calendar.month = new Date(); Wallpapers.images; WindowMenu.addr }
+    Component.onCompleted: { Machine.asus; Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = ""; Caffeine.minutes = 0; NightLight.now = new Date(); ControlCenter.expanded = ""; UtilityMenu.host; PowerMenu.open; Cheatsheet.open; Inputs.touchpad; Sys.recording; Notifications.unread = 0; NotificationCenter.unfolded = ({}); MissionControl.selected = -1; Calendar.month = new Date(); Wallpapers.images; WindowMenu.addr }
 }

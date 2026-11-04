@@ -1,3 +1,4 @@
+import Quickshell
 import QtQuick
 
 // Network, Bluetooth, sound and battery in one item that opens the Control Center (scroll: volume).
@@ -21,6 +22,17 @@ BarItem {
     readonly property string netText: Sys.wired ? w("eth") : !Sys.wifiOn ? w("wifi off") : Sys.signal < 0 ? w("offline") : w("wifi ") + Sys.signal
     readonly property string volText: Sys.muted ? w("muted") : w("vol ") + Math.round(Sys.volume * 100)
     readonly property string batText: w("bat ") + Sys.batteryPct + "%" + (Sys.charging ? "+" : "")
+
+    // ---- modes that are on: recording (click the dot to stop), Do Not Disturb, Caffeine ----
+    Rectangle {
+        visible: Sys.recording
+        width: 10; height: 10; radius: 5
+        color: Theme.error
+        SequentialAnimation on opacity { running: Sys.recording; loops: Animation.Infinite; NumberAnimation { to: 0.35; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
+        MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["record", "stop"]) }
+    }
+    Text { visible: Notifications.dnd; text: "\u{F009B}"; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
+    Text { visible: Caffeine.active; text: "\u{F0176}"; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
 
     // ---- words ----
     Repeater {

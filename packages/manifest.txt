@@ -47,7 +47,8 @@ pavucontrol              tools     full sound mixer
 nm-connection-editor     tools     advanced network settings (VPN, static IP) from Settings > Network
 satty                    tools     screenshot editor: arrows, shapes, text, numbered steps, blur, crop (screenshot)
 grim                     tools     screen capture (screenshot, screentext)
-slurp                    tools     pick an area on screen (screenshot, screentext)
+slurp                    tools     pick an area on screen (screenshot, screentext, record)
+wf-recorder              tools     screen recording (record, Super+Alt+R)
 wl-clipboard             tools     wl-copy / wl-paste, clipboard history (clipstore)
 wtype                    tools     types picked emoji and clipboard entries
 tesseract                tools     OCR for "copy text from screen" (Super+Shift+T)

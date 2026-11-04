@@ -85,6 +85,13 @@ Singleton {
         + (h24 ? "HH:mm" : "h:mm") + (Config.bar.seconds ? ":ss" : "") + (h24 ? "" : " AP")
     readonly property string clockText: Qt.formatDateTime(now, clockFormat)
 
+    // ---- screen recording (~/.local/bin/record tells us when it starts and stops) ---------------
+    property bool recording: false
+    IpcHandler {
+        target: "recorder"
+        function recording(on: bool): void { root.recording = on }
+    }
+
     // ---- workspaces of one monitor, in order ---------------------------------------------------
     function workspacesOf(monitor) {
         return Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === monitor).sort((a, b) => a.id - b.id)

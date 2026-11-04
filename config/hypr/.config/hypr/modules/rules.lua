@@ -38,6 +38,16 @@ hl.window_rule({
     no_anim = true,
 })
 
+-- Drop-down terminal (~/.local/bin/dropterm, Super+`): its own special workspace, wide and short, at the top
+hl.window_rule({
+    name      = "dropterm",
+    match     = { class = "^linuxsetup\\.dropterm$" },
+    workspace = "special:drop",
+    float     = true,
+    size      = "(monitor_w*0.72) (monitor_h*0.48)",
+    move      = "(monitor_w*0.14) (monitor_h*0.06)",
+})
+
 hl.window_rule({
     name  = "float-picture-in-picture",
     match = { title = "^Picture-in-Picture$" },

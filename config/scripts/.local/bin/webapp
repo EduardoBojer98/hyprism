@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Websites as apps: a launcher entry that opens the site in its own window, without browser chrome
+# (Chrome/Chromium --app). Handy for localhost dev servers, dashboards, mail, admin panels.
+#   webapp add "Shop admin" https://admin.shopify.com     then find it in Spotlight like any app
+#   webapp list                                             webapp remove "Shop admin"
+set -euo pipefail
+apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+slug() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//; s/-$//'; }
+browser=$(command -v google-chrome-stable || command -v chromium || command -v brave || true)
+
+case ${1:-list} in
+    add)
+        [[ $# -eq 3 ]] || { echo 'usage: webapp add "Name" https://example.com' >&2; exit 2; }
+        [[ $3 =~ ^https?:// ]] || { echo "webapp: the address must start with http:// or https://" >&2; exit 2; }
+        [[ -n $browser ]] || { echo "webapp: needs Chrome, Chromium or Brave (Firefox has no app windows)" >&2; exit 1; }
+        s=$(slug "$2"); mkdir -p "$apps"
+        cat >"$apps/webapp-$s.desktop" <<DESK
+[Desktop Entry]
+Type=Application
+Name=$2
+Comment=Web app: $3
+Exec=$browser --app=$3 --class=webapp-$s
+Icon=web-browser
+StartupWMClass=webapp-$s
+Categories=Network;WebBrowser;
+X-LinuxSetup-WebApp=true
+DESK
+        echo "webapp: added $2 (Spotlight finds it now)" ;;
+    remove)
+        [[ $# -eq 2 ]] || { echo 'usage: webapp remove "Name"' >&2; exit 2; }
+        rm -v -- "$apps/webapp-$(slug "$2").desktop" ;;
+    list)
+        grep -l '^X-LinuxSetup-WebApp=true' "$apps"/webapp-*.desktop 2>/dev/null | while read -r f; do
+            printf '%-24s %s\n' "$(sed -n 's/^Name=//p' "$f")" "$(sed -n 's/^Comment=Web app: //p' "$f")"; done ;;
+    *) sed -n '2,6p' "$0" >&2; exit 2 ;;
+esac
