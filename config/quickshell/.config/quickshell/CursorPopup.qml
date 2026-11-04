@@ -160,7 +160,8 @@ Scope {
             // out of the trigger's side: travel + start scale + fade on the theme's curve; out faster than in.
             // Only transform and opacity move, so it stays on the compositor's fast path at 120 Hz.
             property real t: popup.open ? 1 : 0
-            Behavior on t { NumberAnimation { duration: popup.open ? Theme.enter : Theme.exit
+            // opened from a keyboard shortcut (no clicked item): no motion at all, it's used too often to wait for
+            Behavior on t { NumberAnimation { duration: !popup.anchorRect ? 0 : popup.open ? Theme.enter : Theme.exit
                                               easing.type: popup.open ? Easing.BezierSpline : Easing.OutCubic
                                               easing.bezierCurve: Theme.curve } }
             opacity: Math.min(1, t * 1.6)
