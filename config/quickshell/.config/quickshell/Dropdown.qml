@@ -53,10 +53,9 @@ Item {
             radius: Theme.radius
             color: Theme.menu
             opacity: dd.open ? 1 : 0
-            scale: dd.open ? 1 : 0.96
-            transformOrigin: Item.Top
-            Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
-            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+            // a plain drop: slides 6px down into place while it fades in
+            transform: Translate { y: dd.open ? 0 : -6; Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } } }
+            Behavior on opacity { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
             border { color: Theme.stroke; width: 1 }
 
             ListView {

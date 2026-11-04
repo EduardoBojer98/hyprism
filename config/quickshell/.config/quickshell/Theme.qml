@@ -116,5 +116,6 @@ Singleton {
     readonly property int animFast: animate ? Math.round(120 * motionScale) : 0
     readonly property int anim: animate ? Math.round(200 * motionScale) : 0
     readonly property int animSlow: animate ? Math.round(600 * motionScale) : 0
-    readonly property int easing: rice.hypr.motion === "spring" ? Easing.OutBack : rice.hypr.motion === "slam" ? Easing.OutExpo : Easing.OutCubic
+    // menus and panels never overshoot; the rice's character shows in timing only (and in Hyprland's windows)
+    readonly property int easing: Easing.OutCubic
 }

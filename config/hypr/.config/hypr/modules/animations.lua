@@ -62,6 +62,10 @@ function apply_motion(name)
     hl.animation({ leaf = "borderangle", enabled = false, speed = 1, bezier = "linear" })
     ;(PRESETS[name] or PRESETS.ease)()
     set("fadeIn", 1.73, "almostLinear"); set("fadeOut", 1.46, "almostLinear")
+    -- The shell's bar, panels, menus and notifications are layers. The shell animates them itself
+    -- (a short drop from the bar), so Hyprland only fades them, in every rice: no pop, no slide.
+    set("layers", 2, "easeOutQuint", "fade"); set("layersIn", 2, "easeOutQuint", "fade"); set("layersOut", 1.5, "linear", "fade")
+    set("fadeLayersIn", 2, "easeOutQuint"); set("fadeLayersOut", 1.5, "linear")
 end
 
 apply_theme()   -- modules/look.lua: the rice's frames, gaps, shadow, blur, and this motion

@@ -124,11 +124,16 @@ Scope {
             readonly property var at: popup.place(width, height, win.width, win.height)
             x: at[0]
             y: at[1]
+            // a plain drop-down: slides 8px out of the bar's side while it fades in (up from a bottom bar,
+            // sideways from a rail); the same in every rice, no scaling, no bounce
+            property real drop: popup.open ? 0 : 8
             opacity: popup.open ? 1 : 0
-            scale: popup.open ? 1 : 0.96
-            transformOrigin: popup.barEdge === "bottom" ? Item.Bottom : Item.Top
-            Behavior on opacity { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
-            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+            transform: Translate {
+                x: popup.barEdge === "left" ? -box.drop : popup.barEdge === "right" ? box.drop : 0
+                y: popup.barEdge === "bottom" ? box.drop : popup.barEdge === "top" ? -box.drop : 0
+            }
+            Behavior on opacity { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+            Behavior on drop { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
 
             MouseArea { anchors.fill: parent; z: -1 }   // clicks inside don't close
             Keys.onEscapePressed: popup.hide()

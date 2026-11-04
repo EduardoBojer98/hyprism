@@ -154,15 +154,12 @@ Singleton {
             interactive: false
             model: ScriptModel { values: root.popups.slice(0, 5) }
 
-            // slide in from the right edge with a fade; leave by fading and drifting right
+            // drop in from the corner's edge with a fade (down at the top, up at the bottom), fade out in place
             add: Transition { ParallelAnimation {
-                NumberAnimation { property: "x"; from: Theme.rice.notify.corner.endsWith("left") ? -60 : Theme.rice.notify.corner.endsWith("center") ? 0 : 60; to: 0; duration: Theme.anim + 60; easing.type: Easing.OutQuint }
-                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.anim }
+                NumberAnimation { property: "y"; from: (Theme.rice.notify.corner.startsWith("bottom") ? 10 : -10); duration: 180; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160; easing.type: Easing.OutCubic }
             } }
-            remove: Transition { ParallelAnimation {
-                NumberAnimation { property: "opacity"; to: 0; duration: Theme.anim }
-                NumberAnimation { property: "x"; to: Theme.rice.notify.corner.endsWith("left") ? -40 : Theme.rice.notify.corner.endsWith("center") ? 0 : 40; duration: Theme.anim; easing.type: Easing.InCubic }
-            } }
+            remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: 140 } }
             displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Easing.OutCubic } }
 
             delegate: NotificationCard {
