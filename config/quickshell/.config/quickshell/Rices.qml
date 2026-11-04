@@ -203,6 +203,8 @@ Singleton {
     })
     function resolve(id, custom) {
         const r = JSON.parse(JSON.stringify(get(id)))
+        // text on an accent fill must reach WCAG AA (4.5:1); if the rice's own choice doesn't, take the better of dark/light
+        if (contrast(r.colour.onAccent, r.colour.accent) < 4.5) r.colour.onAccent = textOn(r.colour.accent, r.colour)
         const o = (custom ?? {})[r.id] ?? {}
         const ok = v => v !== undefined && v !== null && v !== ""
         if (ok(o.accent)) {
@@ -227,10 +229,15 @@ Singleton {
         if (ok(o.blur)) r.hypr.blur = o.blur
         return r
     }
-    // dark or light text on a fill, whichever contrasts more (WCAG luminance)
-    function textOn(hex, colour) {
+    // WCAG relative luminance and contrast ratio
+    function luminance(hex) {
         const c = Qt.color(hex), f = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
-        const L = 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b)
-        return (L + 0.05) / 0.0623 > 1.05 / (L + 0.05) ? (colour.ground.length && Qt.color(colour.ground).hslLightness < 0.3 ? colour.ground : "#141414") : "#ffffff"
+        return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b)
+    }
+    function contrast(a, b) { const x = luminance(a), y = luminance(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) }
+    // dark or light text on a fill, whichever contrasts more: the rice's dark ground if it's dark, else near-black
+    function textOn(hex, colour) {
+        const dark = Qt.color(colour.ground).hslLightness < 0.3 ? colour.ground : "#141414"
+        return contrast(dark, hex) >= contrast("#ffffff", hex) ? dark : "#ffffff"
     }
 }

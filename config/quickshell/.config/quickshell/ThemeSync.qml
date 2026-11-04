@@ -42,6 +42,7 @@ Scope {
     readonly property string terminal: !Config.appearance.terminal ? ""
         : "theme = " + rice.term + "\nfont-family = \"\"\nfont-family = " + (rice.font.mono === "Martian Mono" ? "Martian Mono" : "JetBrainsMono Nerd Font")
           + "\nfont-family = JetBrainsMono Nerd Font"   // "" resets the list; Nerd Font stays as the icon fallback
+          + "\nbackground-opacity = " + (Theme.glassy ? "0.86" : "1")   // see-through only in the glass rices
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
     readonly property string gtkAccent: {

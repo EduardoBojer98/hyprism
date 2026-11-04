@@ -1,6 +1,12 @@
 # Redesign plan: rices
 
-Status: **proposal, waiting for approval** (2026-11-04). Nothing below is built yet.
+Status: **built** (2026-11-04, branch `overhaul/ui-audit`). Changes from the proposal, all asked for along
+the way: Folio and Platinum dropped; Glass, Canvas (classics), Atlas, Noir, Garden (new) and Zen, Mist,
+Halo (minimal) added, 13 in all; every rice adjustable in Settings; features from Omarchy/HyDE added
+(screen recording, drop-down terminal, web apps, reminders, touch toggles, next empty workspace).
+Rices are QML data (`Rices.qml`) rather than JSON files: one less loader, same separation.
+Plugins: none added. Every Hyprland update can break a plugin until it's rebuilt, and nothing a rice
+needed required one: overview is Mission Control, borders/shadows/motion are Hyprland's own.
 
 ## Why the last pass failed
 

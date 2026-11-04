@@ -489,3 +489,31 @@ on 2026-11-04: **PASSED on `archlinux:latest` and `fedora:latest` (Fedora 44).**
 container with every flag the screenshot script uses. Not covered by containers: the NVIDIA driver,
 host steps (`hosts/flow-x13/steps`, asked before running) and a real login; the KDE session is never
 touched by the installer (KDE guard).
+
+
+---
+
+# Redesign (2026-11-04, same branch)
+
+The neon colour themes were rejected ("the same one with different colours"). Replaced by 13 rices,
+whole-desktop designs (`docs/DESIGN.md`, `docs/REDESIGN-PLAN.md`). What was checked:
+
+| Check | Result |
+|---|---|
+| Every rice applied live, screenshots of both screens (laptop 1.2×, Acer 1×) with a test window | ✔ 13/13 render; bars, frames, wallpapers, terminal palettes switch |
+| Launcher, notifications, Control Center position on each bar edge | ✔ (placements and corners checked on Pebble, Monolith, Console, Poster, Canvas, Workstation, Noir) |
+| `hyprctl configerrors` after every reload; all 7 motion presets × 4 shadows through `hyprctl eval` | ✔ empty / accepted |
+| Quickshell log after a clean restart | ✔ no errors |
+| Duplicate keybinds | ✔ none |
+| shellcheck on the new scripts (rice, rice-wallpaper, record, dropterm, webapp, remind) | ✔ clean |
+| Per-rice adjustments: accent + radius reach Hyprland and back on Reset | ✔ |
+| Text on accent fills ≥ 4.5:1 in every rice | ✔ enforced by `Rices.resolve` (Glass, Poster, Workstation, Canvas were 2.7–3.8 before) |
+| Satty 0.20 (Fedora, sdegler COPR) and wf-recorder (Fedora repo) availability | ✔ checked in a fedora:44 container |
+
+Found and fixed along the way: banded wallpapers (ImageMagick wrote palette PNGs → `PNG24:`), Ghostty's
+fixed background and appended font hid the rice's terminal look, window-animation settings overrode the
+rice's motion (removed), Bar zone property names collided with Item anchors.
+
+Not tested from here (needs you): the new lock designs (Pebble, Console, Noir) — locking and quitting
+without a password counts as a failed login; screen recording (wf-recorder isn't installed yet);
+touchpad off/on and touchscreen off/on (the commands are accepted, the effect needs a finger).
