@@ -67,15 +67,21 @@ Scope {
             }
 
             readonly property int pad: root.segmented ? 0 : root.vertical ? 10 : (root.st.ws === "blocks" ? 0 : 12)
+            readonly property real length: (root.vertical ? height : width) - pad * 2 - 12
+            // too many items: the end (status, clock) keeps its room, the start gets the rest, the middle
+            // what's between them; whatever doesn't fit is cut off rather than drawn over a neighbour
+            readonly property real endLength: Math.min(root.vertical ? endSection.implicitHeight : endSection.implicitWidth, length)
             Section {
                 id: startSection
                 ids: Theme.barLayout.start
+                room: body.length - body.endLength - 12
                 x: root.vertical ? (parent.width - width) / 2 : body.pad
                 y: root.vertical ? body.pad + 6 : (parent.height - height) / 2
             }
             Section {
                 id: endSection
                 ids: Theme.barLayout.end
+                room: body.length
                 x: root.vertical ? (parent.width - width) / 2 : parent.width - width - body.pad
                 y: root.vertical ? parent.height - height - body.pad - 6 : (parent.height - height) / 2
             }
@@ -85,6 +91,7 @@ Scope {
                 readonly property real hi: root.vertical ? endSection.y - 12 : endSection.x - 12
                 readonly property real mid: ((root.vertical ? parent.height : parent.width) - (root.vertical ? height : width)) / 2
                 readonly property real at: Math.max(lo, Math.min(mid, hi - (root.vertical ? height : width)))
+                room: hi - lo
                 x: root.vertical ? (parent.width - width) / 2 : at
                 y: root.vertical ? at : (parent.height - height) / 2
             }
@@ -126,7 +133,10 @@ Scope {
         readonly property int inset: pill ? 10 : 0
         implicitWidth: empty ? 0 : root.vertical ? (pill ? root.size : grid.implicitWidth) : grid.implicitWidth + inset * 2
         implicitHeight: empty ? 0 : root.vertical ? grid.implicitHeight + inset * 2 : (pill ? root.size : grid.implicitHeight)
-        width: implicitWidth; height: implicitHeight
+        property real room: 100000          // the most this section may take along the bar
+        width: root.vertical ? implicitWidth : Math.max(0, Math.min(implicitWidth, room))
+        height: root.vertical ? Math.max(0, Math.min(implicitHeight, room)) : implicitHeight
+        clip: root.vertical ? implicitHeight > room : implicitWidth > room
 
         Glass {
             anchors.fill: parent

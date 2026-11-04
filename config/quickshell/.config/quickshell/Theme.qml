@@ -91,7 +91,11 @@ Singleton {
     readonly property var barStyle: current.bar                             // fill, line, voice, ws, clock, decor …
     readonly property string barEdge: cb.position !== "theme" ? cb.position : barStyle.edge
     readonly property bool barVertical: barEdge === "left" || barEdge === "right"
-    readonly property int barSize: cb.size > 0 ? cb.size : barStyle.size   // thickness of the bar itself
+    // thickness of the bar itself; a theme's own size suits its own edge, so a rail moved to the top
+    // gets a strip's height and a strip moved to the side gets room for stacked items
+    readonly property bool barTurned: barVertical !== (barStyle.edge === "left" || barStyle.edge === "right")
+    readonly property int barSize: cb.size > 0 ? cb.size : !barTurned ? barStyle.size
+                                 : barVertical ? Math.max(barStyle.size, 44) : Math.min(barStyle.size, 44)
     readonly property bool barFloating: cb.floating === "theme" ? barStyle.floating : cb.floating === "floating"
     readonly property int barMargin: barFloating ? cb.margin : 0            // gap to the screen edge (and along it)
     readonly property var barLayout: cb.custom ? { start: cb.start, center: cb.center, end: cb.end }

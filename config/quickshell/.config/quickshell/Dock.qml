@@ -134,14 +134,6 @@ PanelWindow {
     }
     Timer { id: hideTimer; interval: 500 }
 
-    // Poster's hard offset shadow: a block of the line colour behind the island
-    Rectangle {
-        visible: Theme.depth === "hard" && island.opacity > 0
-        x: island.x + 6; y: island.y + 6; width: island.width; height: island.height
-        opacity: island.opacity
-        color: Theme.stroke
-        transform: island.transform
-    }
 
     Glass {
         id: island
@@ -163,6 +155,14 @@ PanelWindow {
         radius: dock.shape === "pill" ? across / 2 : dock.shape === "tile" ? Theme.radiusLarge + 4 : Theme.radius
         color: ({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[dock.ds.fill] ?? Theme.glass
         border { width: Theme.line; color: dock.ds.fill === "ink" ? Theme.text : Theme.stroke }
+
+        // Poster's hard offset shadow: a block of the line colour drawn under the island (z < 0)
+        Rectangle {
+            visible: Theme.depth === "hard"
+            z: -1
+            x: 6; y: 6; width: parent.width; height: parent.height
+            color: Theme.stroke
+        }
 
         Grid {
             id: row
