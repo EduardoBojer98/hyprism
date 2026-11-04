@@ -32,14 +32,21 @@ Singleton {
         field: rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5),
         corners: Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
         selection: "accent",
-        dim: ({ fullscreen: 0.6, half: 0.3, column: 0.25, strip: 0, corner: 0, island: 0 })[rl.placement] ?? 0.15,
+        // a light dim behind it, never a blur (Hyprland skips blur under see-through layers, rules.lua)
+        dim: ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18,
         startView: rl.view === "grid" || rl.view === "start" ? "apps" : rl.view === "inline" ? "search" : "home"
     })
     readonly property bool unified: look.style === "unified"
     readonly property bool bigQuery: rl.header === "query"   // Console, Poster, Atlas, Noir: the query set large
     readonly property color surface: Theme.surface("glass")
     readonly property real corner: Theme.radius === 0 ? 0 : Theme.radiusLarge
-    readonly property color selection: Theme.accentWash
+    // the selected row, the theme's way: a soft accent tint (glass themes) or a solid accent block with
+    // inverted text (the flat and terminal themes)
+    readonly property bool inverse: (rl.select ?? "wash") === "inverse"
+    readonly property color selection: inverse ? Theme.accent : Theme.accentWash
+    readonly property color selText: inverse ? Theme.accentText : Theme.text
+    readonly property color selSub: inverse ? Qt.alpha(Theme.accentText, 0.78) : Theme.subtext
+    readonly property string prompt: rl.prompt ?? ""     // a typed prompt instead of the lens (terminal themes)
 
     readonly property var modes: [
         { id: "apps",    name: "Applications", glyph: "\u{F003B}", hint: "Search applications" },
@@ -175,9 +182,10 @@ Singleton {
                 Text {
                     id: lens
                     anchors { left: parent.left; leftMargin: Theme.spaceL + 2; verticalCenter: parent.verticalCenter }
-                    text: root.mode === "search" ? "\u{F0349}" : root.modes.find(m => m.id === root.mode)?.glyph ?? ""
-                    color: Theme.subtext
-                    font { family: Theme.iconFont; pixelSize: Theme.iconMedium }
+                    readonly property bool typed: root.prompt !== "" && root.mode === "search"
+                    text: typed ? root.prompt : root.mode === "search" ? "\u{F0349}" : root.modes.find(m => m.id === root.mode)?.glyph ?? ""
+                    color: typed ? Theme.accent : Theme.subtext
+                    font { family: typed ? Theme.monoFont : Theme.iconFont; pixelSize: typed ? field.font.pixelSize : Theme.iconMedium; weight: Font.Bold }
                 }
                 TextInput {
                     id: field
@@ -298,9 +306,9 @@ Singleton {
             border.width: root.unified ? 0 : 1
             radius: root.corner
             visible: root.view !== "search" || field.text.trim() !== ""
-            height: root.view === "home" ? home.implicitHeight + Theme.spaceM * 2
+            height: keys.height + (root.view === "home" ? home.implicitHeight + Theme.spaceM * 2
                   : root.view === "apps" || root.view === "clip" ? 460
-                  : Math.min(440, Math.max(64, results.contentHeight + Theme.spaceS * 2 + (root.confirmFor ? 44 : 0)))
+                  : Math.min(440, Math.max(64, results.contentHeight + Theme.spaceS * 2 + (root.confirmFor ? 44 : 0))))
 
             // Confirmation strip for actions marked "ask first"
             Rectangle {
@@ -397,7 +405,7 @@ Singleton {
                                 id: appName
                                 text: app.modelData.title
                                 elide: Text.ElideRight
-                                color: Theme.text
+                                color: app.current ? root.selText : Theme.text
                                 font { family: Theme.font; pixelSize: Theme.fontLabel }
                             }
                             ToolTipText { gap: -Theme.spaceS; shown: appArea.containsMouse && appName.truncated; text: app.modelData.title }
@@ -435,12 +443,12 @@ Singleton {
             ClipboardView {
                 id: clipView
                 visible: root.view === "clip"
-                anchors { fill: parent; margins: Theme.spaceS }
+                anchors { fill: parent; margins: Theme.spaceS; bottomMargin: keys.height }
             }
 
             // Apps: category chips and icon grid
             Item {
-                anchors.fill: parent
+                anchors { fill: parent; bottomMargin: keys.height }
                 visible: root.view === "apps"
                 Flow {
                     id: chips
@@ -490,7 +498,10 @@ Singleton {
                             id: cellName
                             text: cell.modelData.name
                             elide: Text.ElideRight
-                            color: Theme.text
+                            wrapMode: Text.Wrap
+                            maximumLineCount: 2
+                            lineHeight: 0.95
+                            color: cell.GridView.isCurrentItem ? root.selText : Theme.text
                             font { family: Theme.font; pixelSize: Theme.fontLabel }
                         }
                         ToolTipText { gap: -Theme.spaceS; shown: cellArea.containsMouse && cellName.truncated; text: cell.modelData.name }
@@ -509,7 +520,7 @@ Singleton {
             ListView {
                 id: results
                 visible: root.view !== "apps" && root.view !== "clip" && root.view !== "home"
-                anchors { fill: parent; margins: Theme.spaceS; topMargin: confirmBar.visible ? 52 : Theme.spaceS }
+                anchors { fill: parent; margins: Theme.spaceS; topMargin: confirmBar.visible ? 52 : Theme.spaceS; bottomMargin: keys.height }
                 clip: true
                 model: root.listModel
                 boundsBehavior: Flickable.StopAtBounds
@@ -562,7 +573,7 @@ Singleton {
                                 anchors.centerIn: parent
                                 visible: !row.modelData.icon
                                 text: row.modelData.glyph ?? ""
-                                color: Theme.text
+                                color: row.ListView.isCurrentItem ? root.selText : Theme.text
                                 font { family: Theme.iconFont; pixelSize: row.topHit ? Theme.iconLarge - 6 : Theme.iconMedium - 2 }
                             }
                         }
@@ -572,7 +583,7 @@ Singleton {
                                 width: parent.width
                                 text: row.modelData.title
                                 elide: Text.ElideRight
-                                color: Theme.text
+                                color: row.ListView.isCurrentItem ? root.selText : Theme.text
                                 font { family: Theme.font; pixelSize: row.topHit ? Theme.fontTitle : Theme.fontSize; weight: row.topHit ? Font.DemiBold : Font.Medium }
                             }
                             Text {
@@ -580,7 +591,7 @@ Singleton {
                                 visible: !!row.modelData.subtitle
                                 text: row.modelData.subtitle ?? ""
                                 elide: Text.ElideMiddle
-                                color: Theme.subtext
+                                color: row.ListView.isCurrentItem ? root.selSub : Theme.subtext
                                 font { family: Theme.font; pixelSize: Theme.fontCaption }
                             }
                         }
@@ -589,7 +600,7 @@ Singleton {
                             anchors { right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
                             visible: row.ListView.isCurrentItem
                             text: "↵"
-                            color: Theme.subtext
+                            color: root.selSub
                             font { family: Theme.font; pixelSize: Theme.fontSize }
                         }
                         MouseArea {
@@ -603,6 +614,21 @@ Singleton {
                 }
             }
         }
+    }
+
+    // what the keys do, under the results (Tab cycles Search, Apps, Files, Actions, Clipboard)
+    Text {
+        id: keys
+        parent: panel
+        anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+        height: 26
+        verticalAlignment: Text.AlignVCenter
+        horizontalAlignment: Text.AlignHCenter
+        text: root.view === "clip" ? "↑↓ move   ↵ paste   Del remove   Ctrl+P pin   Esc close"
+            : root.view === "apps" ? "←→↑↓ move   ↵ open   Tab next mode   Esc close"
+            : "↑↓ move   ↵ open   Tab apps · files · actions   Esc close"
+        color: Theme.muted
+        font { family: root.prompt !== "" ? Theme.monoFont : Theme.font; pixelSize: Theme.fontCaption }
     }
 
     component HomeLabel: Text {
@@ -626,12 +652,12 @@ Singleton {
             anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
             width: Theme.iconMedium; height: width
             IconImage { anchors.fill: parent; visible: !!hr.item.icon; source: hr.item.icon ? Quickshell.iconPath(hr.item.icon, "application-x-executable") : "" }
-            Text { anchors.centerIn: parent; visible: !hr.item.icon; text: hr.item.glyph ?? ""; color: Theme.text; font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 4 } }
+            Text { anchors.centerIn: parent; visible: !hr.item.icon; text: hr.item.glyph ?? ""; color: hr.current ? root.selText : Theme.text; font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 4 } }
         }
         Column {
             anchors { left: hrIcon.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-            Text { width: parent.width; text: hr.item.title; elide: Text.ElideRight; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium } }
-            Text { width: parent.width; visible: !!hr.item.subtitle; text: hr.item.subtitle ?? ""; elide: Text.ElideMiddle; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+            Text { width: parent.width; text: hr.item.title; elide: Text.ElideRight; color: hr.current ? root.selText : Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium } }
+            Text { width: parent.width; visible: !!hr.item.subtitle; text: hr.item.subtitle ?? ""; elide: Text.ElideMiddle; color: hr.current ? root.selSub : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
         }
         MouseArea { id: hrArea; anchors.fill: parent; hoverEnabled: true; onEntered: root.homeIndex = hr.at; onClicked: root.activate(hr.item) }
     }

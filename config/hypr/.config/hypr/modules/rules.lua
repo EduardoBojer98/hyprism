@@ -24,7 +24,7 @@ hl.layer_rule({
     match = { namespace = "^qs-.*$" },  -- rules must match the whole name
     blur         = true,
     blur_popups  = true,   -- Control Center and menus are popups of the bar
-    ignore_alpha = 0.05,  -- blur even behind the very transparent glass
+    ignore_alpha = 0.5,   -- blur behind glass surfaces only, never behind a panel's see-through dim of the desktop
 })
 
 -- slurp's area picker (~/.local/bin/screenshot): no fade-out, so the dimmed veil and the accent

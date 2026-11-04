@@ -16,7 +16,7 @@ BarItem {
     onScrolled: d => Sys.nudgeVolume(d)
     spacing: mode === "icons" ? (vertical ? 10 : 12) : (vertical ? 4 : 16)
 
-    readonly property bool words: mode !== "icons"
+    readonly property bool words: mode === "words" || mode === "caps"
     readonly property bool caps: mode === "caps"
     function say(s) { return caps ? s.toUpperCase() : s }
     readonly property string netText: Sys.wired ? say("eth") : !Sys.wifiOn ? say("wifi off") : Sys.signal < 0 ? say("offline") : say("wifi ") + Sys.signal

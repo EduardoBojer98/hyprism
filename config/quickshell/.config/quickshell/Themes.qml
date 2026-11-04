@@ -12,17 +12,19 @@ import QtQuick
 // shape    radius / radiusSmall px, line = panel border px; material: solid | glass
 // bar      the theme's own bar; Settings > Menu Bar can override edge, size, floating and the items.
 //          edge top|bottom|left|right, size px, floating (away from the edges), segmented (one pill per
-//          section), fill glass|surface|ground|ink|none, line (edge line px), voice icons|words|caps,
+//          section), fill glass|surface|ground|ink|none, line (edge line px), voice icons|mixed (icon + value)|words|caps,
 //          mono (status in the mono face), ws (workspace style, BarWs.qml), clock plain|accent|display,
 //          decor (brackets), sep (a rule between items), start / center / end: the items (BarWidget.qml ids)
 // dock     edge (the theme's place for it; the same edge as the bar puts it inside the bar),
 //          shape pill|tile|block, hover lift|grow|plate, mark line|dot|bar, fill glass|surface|ink
 // popup    depth soft (blurred shadow) | hard (offset block shadow) | glow (accent haze) | none (frame only);
-//          decor brackets (accent corner marks on every panel)
+//          decor brackets (accent corner marks on every panel) | topline (an accent line along the top);
+//          tiles solid (Control Center toggles that are on: an accent block) | wash (an accent tint)
 // motion   how panels open: enter / exit ms, curve (cubic bezier), travel px from the trigger side,
 //          scale (start size), press (scale while a button is held). Settings > Themes > Animations
 //          can reduce it (fade only) or turn it off.
-// launcher placement + view + header (Launcher.qml); notify corner + kind (NotificationCard.qml)
+// launcher placement + view (home: suggestions first) + header (query: the query set large) + select (wash: a tint,
+//          inverse: a solid accent row) + prompt (a typed prompt instead of the lens); notify corner + kind
 // hypr     gaps in/out, border px, rounding, active/inactive border colours, shadow, blur, motion preset
 // lock     clock style + align (ThemeSync writes the hyprlock layout); term: Ghostty theme; wall: theme-wallpaper id
 Singleton {
@@ -39,27 +41,27 @@ Singleton {
             bar: { edge: "top", size: 36, floating: true, segmented: true, fill: "glass", line: 0, voice: "icons", mono: false, ws: "dots", clock: "plain", decor: "", sep: false,
                    start: ["launcher", "workspaces"], center: ["clock"], end: ["media", "tray", "keyboard", "notifications", "status"] },
             dock: { edge: "bottom", shape: "pill", hover: "lift", mark: "line", fill: "glass" },
-            popup: { depth: "soft", decor: "" },
+            popup: { depth: "soft", decor: "", tiles: "solid" },
             motion: { enter: 240, exit: 150, curve: [0.3, 1.25, 0.5, 1], travel: 10, scale: 0.94, press: 0.95 },
-            launcher: { placement: "center", view: "grid", header: "none", width: 620 },
+            launcher: { placement: "center", view: "home", header: "none", width: 640, select: "wash", prompt: "" },
             notify: { corner: "top-right", kind: "bubble" },
             hypr: { gapsIn: 7, gapsOut: 14, border: 2, rounding: 18, active: ["ff9e7acc", "9ad1c0cc"], inactive: "3a365000",
                     shadow: "soft", blur: true, motion: "spring" },
             lock: { clock: "big", align: "center" }, term: "Pebble", wall: "pebble"
         },
         {
-            id: "monolith", name: "Monolith", about: "The desktop as a terminal: one status line with the dock in it, acid-lime marks, hard 2px frames, no waiting",
+            id: "monolith", name: "Monolith", about: "The desktop as tmux: a status line with your apps as its window list, an inverse lime clock, panels like focused panes",
             dark: true,
-            colour: { ground: "#0b0c0a", surface: "#121411", raised: "#1c1f1a", line: "#2a2d27", text: "#d7ddcc", muted: "#8b9480", faint: "#5f6858",
+            colour: { ground: "#0b0c0a", surface: "#11130f", raised: "#1b1e18", line: "#30352b", text: "#d7ddcc", muted: "#8b9480", faint: "#5f6858",
                       accent: "#b6ff3b", onAccent: "#0b0c0a", accent2: "#ff5f2e", ok: "#5ad1c2", warn: "#ffb547", err: "#ff5f5f" },
             font: { ui: "JetBrainsMono Nerd Font", display: "JetBrainsMono Nerd Font", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Bold },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
-            bar: { edge: "bottom", size: 30, floating: false, segmented: false, fill: "surface", line: 1, voice: "words", mono: true, ws: "filled", clock: "accent", decor: "", sep: true,
-                   start: ["workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "cpu", "clock"] },
+            bar: { edge: "bottom", size: 28, floating: false, segmented: false, fill: "surface", line: 1, voice: "mixed", mono: true, ws: "filled", clock: "block", decor: "", sep: true,
+                   start: ["workspaces", "apps"], center: [], end: ["media", "tray", "notifications", "keyboard", "network", "volume", "battery", "cpu", "memory", "clock"] },
             dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "none", decor: "" },
+            popup: { depth: "none", decor: "topline", tiles: "solid" },
             motion: { enter: 90, exit: 60, curve: [0.2, 0, 0, 1], travel: 0, scale: 1, press: 1 },
-            launcher: { placement: "strip", view: "inline", header: "none", width: 0 },
+            launcher: { placement: "strip", view: "inline", header: "none", width: 0, select: "inverse", prompt: "❯" },
             notify: { corner: "bottom-right", kind: "line" },
             hypr: { gapsIn: 1, gapsOut: 2, border: 2, rounding: 0, active: ["b6ff3bff"], inactive: "2a2d27ff", shadow: "none", blur: false, motion: "instant" },
             lock: { clock: "terminal", align: "left" }, term: "Monolith", wall: "monolith"
@@ -71,12 +73,12 @@ Singleton {
                       accent: "#ffb000", onAccent: "#05080f", accent2: "#ff6a3d", ok: "#66d19e", warn: "#ff7a45", err: "#ff4d5e" },
             font: { ui: "Martian Mono", display: "Martian Mono", mono: "Martian Mono", size: 12, displayWeight: Font.Light },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
-            bar: { edge: "top", size: 30, floating: false, segmented: false, fill: "ground", line: 1, voice: "caps", mono: true, ws: "text", clock: "accent", decor: "brackets", sep: true,
-                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["cpu", "memory", "status", "keyboard", "notifications", "tray"] },
+            bar: { edge: "top", size: 30, floating: false, segmented: false, fill: "ground", line: 1, voice: "mixed", mono: true, ws: "text", clock: "accent", decor: "brackets", sep: true,
+                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["cpu", "memory", "network", "volume", "battery", "keyboard", "notifications", "tray"] },
             dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "glow", decor: "brackets" },
+            popup: { depth: "glow", decor: "brackets", tiles: "solid" },
             motion: { enter: 140, exit: 80, curve: [0.15, 0, 0.1, 1], travel: 4, scale: 0.98, press: 0.98 },
-            launcher: { placement: "center", view: "list", header: "query", width: 680 },
+            launcher: { placement: "center", view: "home", header: "query", width: 700, select: "inverse", prompt: "▸" },
             notify: { corner: "top-right", kind: "tag" },
             hypr: { gapsIn: 4, gapsOut: 10, border: 1, rounding: 0, active: ["ffb000ff"], inactive: "1d1a12ff", shadow: "none", blur: false, motion: "crisp" },
             lock: { clock: "readout", align: "center" }, term: "Console", wall: "console"
@@ -91,28 +93,28 @@ Singleton {
             bar: { edge: "top", size: 52, floating: false, segmented: false, fill: "surface", line: 3, voice: "icons", mono: false, ws: "blocks", clock: "display", decor: "", sep: false,
                    start: ["workspaces", "window"], center: [], end: ["media", "tray", "keyboard", "status", "notifications", "clock"] },
             dock: { edge: "bottom", shape: "block", hover: "lift", mark: "bar", fill: "surface" },
-            popup: { depth: "hard", decor: "" },
+            popup: { depth: "hard", decor: "", tiles: "solid" },
             motion: { enter: 200, exit: 110, curve: [0.16, 1, 0.3, 1], travel: 28, scale: 1, press: 0.96 },
-            launcher: { placement: "half", view: "list", header: "query", width: 0 },
+            launcher: { placement: "half", view: "home", header: "query", width: 0, select: "inverse", prompt: "" },
             notify: { corner: "bottom-left", kind: "block" },
             hypr: { gapsIn: 8, gapsOut: 16, border: 3, rounding: 0, active: ["f4f1eaff"], inactive: "3a3a3aff", shadow: "hard", blur: false, motion: "slam" },
             lock: { clock: "stacked", align: "left" }, term: "Poster", wall: "poster"
         },
         {
-            id: "glass", name: "Glass", about: "The classic, sharpened: a translucent menu bar, a glass dock that magnifies, electric blue",
+            id: "glass", name: "Glass", about: "Liquid glass: a floating glass bar, rimmed panels with soft depth, an electric blue to violet glow on windows",
             dark: true,
-            colour: { ground: "#141821", surface: "#1c1f28", raised: "#272b36", line: "#30343f", text: "#f3f4f8", muted: "#a7abb8", faint: "#6e7282",
+            colour: { ground: "#0f131c", surface: "#1a1f2b", raised: "#262c3a", line: "#323a4c", text: "#f4f6fb", muted: "#a9b0c2", faint: "#6f7891",
                       accent: "#5b9cff", onAccent: "#ffffff", accent2: "#8f86ff", ok: "#63d17a", warn: "#f7c85b", err: "#ff5f57" },
             font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Light },
-            shape: { radius: 12, radiusSmall: 8, line: 1, material: "glass" },
-            bar: { edge: "top", size: 32, floating: false, segmented: false, fill: "glass", line: 1, voice: "icons", mono: false, ws: "numbers", clock: "plain", decor: "", sep: false,
-                   start: ["launcher", "window", "workspaces"], center: [], end: ["media", "tray", "keyboard", "status", "notifications", "clock"] },
+            shape: { radius: 16, radiusSmall: 10, line: 1, material: "glass" },
+            bar: { edge: "top", size: 36, floating: true, segmented: false, fill: "glass", line: 0, voice: "icons", mono: false, ws: "numbers", clock: "plain", decor: "", sep: false,
+                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["media", "tray", "keyboard", "notifications", "status"] },
             dock: { edge: "bottom", shape: "tile", hover: "grow", mark: "dot", fill: "glass" },
-            popup: { depth: "soft", decor: "" },
+            popup: { depth: "soft", decor: "", tiles: "wash" },
             motion: { enter: 220, exit: 140, curve: [0.23, 1, 0.32, 1], travel: 6, scale: 0.97, press: 0.97 },
-            launcher: { placement: "center", view: "list", header: "none", width: 680 },
+            launcher: { placement: "center", view: "home", header: "none", width: 680, select: "wash", prompt: "" },
             notify: { corner: "top-right", kind: "card" },
-            hypr: { gapsIn: 5, gapsOut: 10, border: 1, rounding: 12, active: ["ffffff40"], inactive: "ffffff10", shadow: "soft", blur: true, motion: "ease" },
+            hypr: { gapsIn: 6, gapsOut: 12, border: 2, rounding: 16, active: ["5b9cffdd", "8f86ffdd"], inactive: "ffffff14", shadow: "soft", blur: true, motion: "ease" },
             lock: { clock: "big", align: "top" }, term: "Glass", wall: "glass"
         },
         {
@@ -125,9 +127,9 @@ Singleton {
             bar: { edge: "top", size: 44, floating: false, segmented: false, fill: "ink", line: 0, voice: "icons", mono: false, ws: "squares", clock: "display", decor: "", sep: false,
                    start: ["clock", "workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "date"] },
             dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "ink" },
-            popup: { depth: "none", decor: "" },
+            popup: { depth: "none", decor: "", tiles: "solid" },
             motion: { enter: 160, exit: 100, curve: [0.23, 1, 0.32, 1], travel: 14, scale: 1, press: 0.97 },
-            launcher: { placement: "center", view: "list", header: "query", width: 620 },
+            launcher: { placement: "center", view: "home", header: "query", width: 640, select: "inverse", prompt: "" },
             notify: { corner: "top-right", kind: "block" },
             hypr: { gapsIn: 8, gapsOut: 16, border: 2, rounding: 0, active: ["111111ff"], inactive: "c8c8c4ff", shadow: "none", blur: false, motion: "snappy" },
             lock: { clock: "stacked", align: "left" }, term: "Atlas", wall: "atlas"

@@ -200,6 +200,12 @@ Scope {
                 radius: Theme.radiusLarge
                 color: Qt.alpha(Theme.accent, 0.22)
             }
+            Rectangle {   // topline: the accent along the panel's top edge, like a focused terminal pane (Monolith)
+                visible: Theme.current.popup.decor === "topline"
+                z: 10
+                width: box.width; height: 2
+                color: Theme.accent
+            }
             Repeater {   // brackets: accent corner marks over the panel's frame (Console)
                 model: Theme.current.popup.decor === "brackets" ? [[0, 0], [1, 0], [0, 1], [1, 1]] : []
                 Item {

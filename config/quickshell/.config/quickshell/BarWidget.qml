@@ -6,6 +6,7 @@ import QtQuick
 // One bar item, by id. The bar lays these out in its three sections (Theme.barLayout); every item
 // works across a horizontal bar and down a vertical one, and speaks the theme's voice:
 //   icons  glyphs (Material Design Icons from the Nerd Font) with numbers where they help
+//   mixed  a glyph and its value on every item ("<glyph> 45"), in the bar's face (Monolith, Console)
 //   words  lowercase words and numbers ("vol 45"), caps: the same in capitals ("VOL 45")
 // Adding an item: a Component below, an entry in Themes.barItems (name + glyph for Settings), done.
 Loader {
@@ -21,7 +22,8 @@ Loader {
     property bool separated: false           // a thin rule before this item (Bar's sep)
 
 
-    readonly property bool words: voice !== "icons"
+    readonly property bool words: voice === "words" || voice === "caps"
+    readonly property bool mixed: voice === "mixed"
     function say(s) { return voice === "caps" ? s.toUpperCase() : s }
     sourceComponent: ({ apps: appsC, launcher: launcherC, workspaces: wsC, window: windowC, clock: clockC, date: dateC, media: mediaC, tray: trayC,
                         keyboard: keyboardC, notifications: bellC, status: statusC, network: networkC, bluetooth: btC, volume: volumeC,
@@ -57,7 +59,7 @@ Loader {
             font { family: Theme.iconFont; pixelSize: 16 }
         }
         Text {
-            visible: w.words || (ind.showValue && ind.value !== "")
+            visible: w.words || ((ind.showValue || w.mixed) && ind.value !== "" && !(w.mixed && w.vertical))
             text: w.words ? w.say(ind.word + (ind.value !== "" ? (w.vertical ? "\n" : " ") + ind.value : "")) : ind.value
             horizontalAlignment: Text.AlignHCenter
             color: ind.ink
@@ -92,6 +94,7 @@ Loader {
                     BarItem {
                         id: app
                         required property var modelData
+                        required property int index
                         readonly property var wins: apps.running.filter(t => apps.entryFor(t.wayland.appId)?.id === modelData.id)
                         vertical: w.vertical
                         pad: 4
@@ -102,10 +105,20 @@ Loader {
                             const i = wins.findIndex(t => t.activated)
                             wins[(i + 1) % wins.length].wayland.activate()
                         }
-                        IconImage { implicitSize: apps.icon; source: Quickshell.iconPath(app.modelData?.icon ?? "", "application-x-executable") }
-                        Rectangle {   // open / focused mark, on the screen-edge side
+                        // words voices (terminal themes) name the apps instead, like tmux's window list
+                        readonly property bool asText: w.words && !w.vertical
+                        color: asText && active ? Theme.accent : active ? pressedColor : hovered ? hover : "transparent"
+                        radius: asText ? 0 : Theme.radiusSmall
+                        IconImage { visible: !app.asText; implicitSize: apps.icon; source: Quickshell.iconPath(app.modelData?.icon ?? "", "application-x-executable") }
+                        Text {
+                            visible: app.asText
+                            text: w.say((app.index + 1) + " " + (app.modelData?.name ?? "").toLowerCase().split(/[ .]/)[0] + (app.wins.length > 1 ? "·" + app.wins.length : ""))
+                            color: app.active ? Theme.accentText : app.wins.length ? w.tone : w.dim
+                            font { family: w.family; pixelSize: Theme.fontLabel; weight: app.active ? Font.Bold : Font.Normal }
+                        }
+                        Rectangle {   // open / focused mark, on the screen-edge side (icons only)
                             parent: app
-                            visible: app.wins.length > 0
+                            visible: app.wins.length > 0 && !app.asText
                             readonly property bool far: Theme.barEdge === "top" || Theme.barEdge === "left"
                             width: w.vertical ? 3 : (app.active ? 14 : 5)
                             height: w.vertical ? (app.active ? 14 : 5) : 3
@@ -160,19 +173,25 @@ Loader {
         id: clockC
         BarItem {
             id: clock
-            readonly property string style: Theme.barStyle.clock      // plain | accent | display
+            readonly property string style: Theme.barStyle.clock      // plain | accent | display | block
+            readonly property bool block: style === "block"
             vertical: w.vertical
+            // block: an inverse accent segment the bar's full height, like tmux's status-right
+            minHeight: block && !w.vertical ? w.thickness - 1 : 0
+            radius: block ? 0 : Theme.radiusSmall
+            pad: block ? 12 : 8
+            color: block ? (active ? Qt.darker(Theme.accent, 1.15) : Theme.accent) : active ? pressedColor : hovered ? hover : "transparent"
             active: Calendar.open === true
             onPressed: Calendar.toggle()
             Text {
                 text: w.vertical ? Sys.hours() + "\n" + Sys.minutes() : clock.style === "display" ? Sys.time() : Sys.clockText
                 horizontalAlignment: Text.AlignHCenter
                 lineHeight: w.vertical ? 0.85 : 1
-                color: clock.style === "accent" ? Theme.accent : w.tone
+                color: clock.block ? Theme.accentText : clock.style === "accent" ? Theme.accent : w.tone
                 font {
                     family: clock.style === "display" ? Theme.displayFont : w.family
                     pixelSize: clock.style === "display" ? Math.round(Math.min(w.thickness * (w.vertical ? 0.42 : 0.62), 34)) : Theme.fontLabel + (w.words ? 0 : 1)
-                    weight: clock.style === "display" ? Theme.displayWeight : Font.Medium
+                    weight: clock.style === "display" ? Theme.displayWeight : clock.block ? Font.Bold : Font.Medium
                     letterSpacing: clock.style === "display" ? -1 : 0
                     features: { "tnum": 1 }
                 }

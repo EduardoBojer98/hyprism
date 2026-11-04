@@ -1188,14 +1188,15 @@ Singleton {
             id: disc
             anchors { left: parent.left; leftMargin: 9; verticalCenter: parent.verticalCenter }
             width: 32; height: 32; radius: 16
-            color: conn.active ? Theme.selected : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
+            color: conn.active ? Theme.tileOn : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
+            border { width: conn.active && Theme.washTiles ? 1 : 0; color: Theme.tileOnBorder }
             scale: discArea.pressed ? 0.92 : 1
             Behavior on color { ColorAnimation { duration: Theme.anim } }
             Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
             Text {
                 anchors.centerIn: parent
                 text: conn.glyph
-                color: conn.active ? Theme.onSelected : Theme.text
+                color: conn.active ? Theme.tileOnIcon : Theme.text
                 font { family: Theme.iconFont; pixelSize: 16 }
             }
             MouseArea { id: discArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
@@ -1226,10 +1227,10 @@ Singleton {
         Layout.preferredWidth: 1
         Layout.preferredHeight: cc.style === "compact" ? 54 : 66
         radius: cc.style === "borderless" ? Theme.radiusSmall : Theme.radius
-        color: active ? Theme.selected
+        color: active ? Theme.tileOn
              : qtArea.containsMouse ? Theme.fillHover
              : cc.style === "borderless" ? "transparent" : Theme.fill
-        border { color: isExpanded ? Theme.accent : cc.style === "borderless" ? Theme.stroke : "transparent"; width: 1 }
+        border { color: isExpanded ? Theme.accent : active ? Theme.tileOnBorder : cc.style === "borderless" ? Theme.stroke : "transparent"; width: 1 }
         scale: qtArea.pressed ? 0.96 : 1
         Behavior on color { ColorAnimation { duration: Theme.anim } }
         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
@@ -1241,7 +1242,7 @@ Singleton {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qt.glyph
-                color: qt.active ? Theme.onSelected : Theme.text
+                color: qt.active ? Theme.tileOnIcon : Theme.text
                 font { family: Theme.iconFont; pixelSize: 18 }
             }
             Text {
@@ -1249,7 +1250,7 @@ Singleton {
                 horizontalAlignment: Text.AlignHCenter
                 text: qt.label
                 elide: Text.ElideRight
-                color: qt.active ? Theme.onSelected : Theme.text
+                color: qt.active ? Theme.tileOnText : Theme.text
                 font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
             }
             Text {
@@ -1258,8 +1259,8 @@ Singleton {
                 text: qt.status
                 elide: Text.ElideRight
                 opacity: 0.75
-                color: qt.active ? Theme.onSelected : Theme.subtext
-                font { family: Theme.font; pixelSize: 10; features: { "tnum": 1 } }
+                color: qt.active ? Theme.tileOnText : Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption - 1; features: { "tnum": 1 } }
             }
         }
         MouseArea {
@@ -1283,7 +1284,7 @@ Singleton {
                 anchors.verticalCenterOffset: qt.isExpanded ? -1 : 1
                 open: qt.isExpanded
                 size: 13
-                color: qt.active ? Theme.onSelected : Theme.text
+                color: qt.active ? Theme.tileOnText : Theme.text
             }
             MouseArea { id: chevArea; anchors { fill: parent; margins: -4 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
         }

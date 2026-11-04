@@ -13,13 +13,21 @@ Rectangle {
     color: flat ? Theme.fill : strong ? Theme.glassStrong : Theme.glass
     border { color: Theme.stroke; width: flat ? 0 : Theme.line }
 
-    Rectangle {   // glass: faint light rim at the top
+    // glass: light catches the top edge (a sheen fading down) and the rim (a hairline brighter at the top)
+    Rectangle {
         visible: Theme.glassy && !surface.flat
         anchors { fill: parent; margins: 1 }
         radius: Math.max(0, parent.radius - 1)
         gradient: Gradient {
-            GradientStop { position: 0.0; color: Theme.highlight }
-            GradientStop { position: 0.35; color: "transparent" }
+            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, Theme.light ? 0.30 : 0.075) }
+            GradientStop { position: 0.45; color: "transparent" }
         }
+    }
+    Rectangle {
+        visible: Theme.glassy && !surface.flat
+        anchors.fill: parent
+        radius: parent.radius
+        color: "transparent"
+        border { width: 1; color: Qt.rgba(1, 1, 1, Theme.light ? 0.5 : 0.10) }
     }
 }

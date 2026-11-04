@@ -8,10 +8,10 @@ install stays untouched and selectable at the login screen.
 | Theme | The idea | Bar (its own place; movable) | Motion |
 |---|---|---|---|
 | **Pebble** (default) | soft and round, glass, coral and sea green | three floating glass pills at the top | soft, a touch of spring |
-| **Monolith** | the desktop as a terminal, acid lime | one mono status line at the bottom, the dock inside it | near-instant, nothing to wait for |
+| **Monolith** | the desktop as tmux, acid lime | a mono status line at the bottom: app icons (the dock), icon + value items, an inverse lime clock | near-instant, nothing to wait for |
 | **Console** | amber HUD | a framed caps readout on top, rules between items, corner brackets, glowing panels | crisp snap-on |
 | **Poster** | loud and flat, red and cobalt on paper | a paper bar with huge workspace blocks, hard shadows | slams in from the trigger |
-| **Glass** | the classic, electric blue | a translucent menu bar | smooth ease-out |
+| **Glass** | liquid glass, electric blue to violet | a floating glass bar with a lit rim, glowing window frames | smooth ease-out |
 | **Atlas** | Swiss, signal red on white | a black strip on top, heavy numerals, red squares, a black dock | snappy slide |
 
 Each theme brings its own fonts, corners, window frames, shadows, panel depth, motion, notification style,

@@ -11,6 +11,7 @@ Rectangle {
     property bool active: false
     property bool interactive: true
     property bool shown: true          // false: nothing to show, the bar leaves no gap
+    readonly property bool hovered: area.containsMouse
     property int pad: vertical ? 6 : 8
     property color hover: Qt.alpha(Theme.barInk, Theme.light ? 0.10 : 0.11)
     property color pressedColor: Qt.alpha(Theme.barInk, Theme.light ? 0.16 : 0.17)
@@ -22,7 +23,8 @@ Rectangle {
 
     visible: shown
     implicitWidth: vertical ? Math.max(grid.implicitWidth + pad * 2, 28) : grid.implicitWidth + pad * 2
-    implicitHeight: vertical ? grid.implicitHeight + pad * 2 : Math.max(grid.implicitHeight + 6, 24)
+    property real minHeight: 0          // e.g. a block that fills the bar's height
+    implicitHeight: vertical ? grid.implicitHeight + pad * 2 : Math.max(grid.implicitHeight + 6, 24, minHeight)
     radius: Theme.radiusSmall
     color: active ? pressedColor : interactive && area.containsMouse ? hover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }

@@ -52,6 +52,13 @@ Singleton {
     // toggles and slider fills: the accent
     readonly property color selected: accent
     readonly property color onSelected: accentText
+    // Control Center tiles that are on: a solid accent block, or (popup.tiles "wash") an accent tint
+    // with an accent icon, so glass stays glass
+    readonly property bool washTiles: (current.popup.tiles ?? "solid") === "wash"
+    readonly property color tileOn: washTiles ? Qt.alpha(accent, light ? 0.18 : 0.24) : accent
+    readonly property color tileOnText: washTiles ? text : accentText
+    readonly property color tileOnIcon: washTiles ? accent : accentText
+    readonly property color tileOnBorder: washTiles ? Qt.alpha(accent, 0.55) : "transparent"
     readonly property color thumb: light ? "#ffffff" : c.text
     readonly property color thumbText: c.ground
     function tinted(k, alpha) { return Qt.rgba(base.r * k, base.g * k, base.b * k, alpha) }

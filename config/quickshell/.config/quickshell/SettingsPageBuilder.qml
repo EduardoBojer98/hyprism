@@ -145,11 +145,11 @@ ColumnLayout {
         Toggle2 { label: "Floating"; path: "bar.floating" }
         Toggle2 { label: "A pill per section"; path: "bar.segmented" }
         Num { label: "Edge line"; path: "bar.line"; from: 0; to: 4; unit: " px" }
-        Pick { label: "Status as"; path: "bar.voice"; values: ["icons", "words", "caps"]; labels: ["Icons", "words", "CAPS"] }
+        Pick { label: "Status as"; path: "bar.voice"; values: ["icons", "mixed", "words", "caps"]; labels: ["Icons", "Icons + values", "words", "CAPS"] }
         Toggle2 { label: "Mono text"; path: "bar.mono" }
         Toggle2 { label: "Rules between items"; path: "bar.sep" }
         Pick { label: "Workspaces"; path: "bar.ws"; values: ["dots", "numbers", "filled", "squares", "blocks", "text"]; labels: ["Dots", "Numbers", "Filled", "Squares", "Blocks", "Text"] }
-        Pick { label: "Clock"; path: "bar.clock"; values: ["plain", "accent", "display"]; labels: ["Plain", "Accent", "Big"] }
+        Pick { label: "Clock"; path: "bar.clock"; values: ["plain", "accent", "display", "block"]; labels: ["Plain", "Accent", "Big", "Block"] }
         Pick { label: "Corner brackets"; hint: "Accent marks in the screen corners"; path: "bar.decor"; values: ["", "brackets"]; labels: ["None", "Brackets"] }
     }
 
@@ -167,7 +167,8 @@ ColumnLayout {
         visible: page.editing
         title: "Panels and motion"
         Pick { label: "Depth"; path: "popup.depth"; values: ["soft", "hard", "glow", "none"]; labels: ["Soft shadow", "Hard block", "Glow", "Frame only"] }
-        Pick { label: "Panel corners"; path: "popup.decor"; values: ["", "brackets"]; labels: ["Plain", "Brackets"] }
+        Pick { label: "Panel accent"; path: "popup.decor"; values: ["", "brackets", "topline"]; labels: ["None", "Corner brackets", "Top line"] }
+        Pick { label: "Tiles that are on"; path: "popup.tiles"; values: ["solid", "wash"]; labels: ["Solid accent", "Tinted"] }
         SettingRow {
             label: "Motion like"
             hint: "Copies a theme's timing, curve and travel; fine-tune below"
@@ -212,7 +213,9 @@ ColumnLayout {
         Pick { label: "Notifications corner"; path: "notify.corner"; values: ["top-left", "top-center", "top-right", "bottom-left", "bottom-right"]; labels: ["Top left", "Top", "Top right", "Bottom left", "Bottom right"] }
         Pick { label: "Notification style"; path: "notify.kind"; values: ["bubble", "card", "line", "block", "tag"]; labels: ["Bubble", "Card", "Line", "Block", "Tag"] }
         Pick { label: "Launcher"; path: "launcher.placement"; values: ["center", "strip", "half", "column", "fullscreen"]; labels: ["Centre", "Strip", "Half", "Column", "Full screen"] }
-        Pick { label: "Launcher view"; path: "launcher.view"; values: ["grid", "list"]; labels: ["Grid", "List"] }
+        Pick { label: "Launcher opens on"; path: "launcher.view"; values: ["home", "grid", "inline"]; labels: ["Suggestions", "All apps", "Just the field"] }
+        Pick { label: "Launcher selection"; path: "launcher.select"; values: ["wash", "inverse"]; labels: ["Tint", "Solid block"] }
+        Pick { label: "Launcher prompt"; path: "launcher.prompt"; values: ["", "❯", "▸", "$", ">"]; labels: ["Lens", "❯", "▸", "$", ">"] }
         Pick { label: "Lock clock"; path: "lock.clock"; values: ["big", "stacked", "terminal", "readout", "small"]; labels: ["Big", "Stacked", "Terminal", "Readout", "Small"] }
         Pick { label: "Lock layout"; path: "lock.align"; values: ["center", "top", "bottom", "left"]; labels: ["Centre", "Top", "Bottom", "Left"] }
         Pick { label: "Terminal colours"; path: "term"; values: Themes.builtIn.map(b => b.term); labels: Themes.builtIn.map(b => b.name) }
