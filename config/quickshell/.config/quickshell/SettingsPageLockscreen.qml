@@ -19,6 +19,7 @@ ColumnLayout {
         { id: "sidebar",  name: "Sidebar",  about: "A frosted panel down the left side" },
         { id: "stacked",  name: "Stacked",  about: "Big bold hours over minutes" },
         { id: "terminal", name: "Terminal", about: "A shell prompt asking for your password" },
+        { id: "neon",     name: "Neon",     about: "A glowing accent clock and a gradient password field" },
     ]
 
     // ---- preview ------------------------------------------------------------------------------

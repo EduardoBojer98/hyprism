@@ -36,6 +36,11 @@ Item {
             { type: "text", text: clock, size: 140, weight: Font.Light, x: 0, y: 40, h: "center", v: "center" },
             { type: "field", w: 300, hgt: 46, outline: true, x: 0, y: -110, h: "center", v: "center" },
         ],
+        neon: [
+            { type: "text", text: date.toUpperCase(), size: 15, weight: Font.Bold, accent2: true, x: 0, y: 170, h: "center", v: "center" },
+            { type: "text", text: clock, size: 132, weight: Font.Bold, accent: true, x: 0, y: 50, h: "center", v: "center" },
+            { type: "field", w: 320, hgt: 48, outline: true, pill: true, x: 0, y: -110, h: "center", v: "center" },
+        ],
         minimal: [
             { type: "text", text: clock, size: 64, weight: Font.Light, x: 64, y: 190, h: "left", v: "bottom" },
             { type: "text", text: date, size: 15, opacity: 0.75, x: 68, y: 160, h: "left", v: "bottom" },
@@ -101,7 +106,7 @@ Item {
                 id: label
                 visible: el.e.type === "text"
                 text: el.e.text ?? ""
-                color: el.e.accent ? lp.accent : "#f5f5f7"
+                color: el.e.accent ? lp.accent : el.e.accent2 ? Theme.accent2 : "#f5f5f7"
                 opacity: el.e.opacity ?? 1
                 font { family: el.e.mono ? Theme.iconFont : el.e.size > 60 ? "Inter Display" : Config.appearance.font
                        pixelSize: Math.max(4, Math.round((el.e.size ?? 10) * 1.33 * lp.s)); weight: el.e.weight ?? Font.Normal }
