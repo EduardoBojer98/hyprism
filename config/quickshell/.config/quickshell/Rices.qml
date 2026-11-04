@@ -13,7 +13,7 @@ import QtQuick
 // bar     kind: text | rail | readout | pills | taskbar | poster | menubar | gnome | letterbox | island | corner | line | halo
 //         edge: top | bottom | left | right; size px; ws: workspace indicator style
 // launcher  placement + view + header (Launcher.qml draws them)
-// notify  corner + kind; osd kind
+// notify  corner + kind (bubble, card, toast, paper, line, block, tag, subtitle)
 // hypr    gaps in/out, border px, rounding, active/inactive border colours, shadow, blur, motion preset
 // lock    hypr/lockscreens/<lock>.conf; term: ghostty theme; wall: scripts/rice-wallpaper design id
 Singleton {
@@ -27,7 +27,7 @@ Singleton {
             shape: { radius: 18, radiusSmall: 12, line: 1, material: "glass" },
             bar: { kind: "pills", edge: "top", size: 34, ws: "dots" },
             launcher: { placement: "center", view: "grid", header: "none", width: 620 },
-            dock: true, notify: { corner: "top-right", kind: "bubble" }, osd: "pill",
+            dock: true, notify: { corner: "top-right", kind: "bubble" },
             hypr: { gapsIn: 7, gapsOut: 14, border: 2, rounding: 18, active: ["ff9e7acc", "9ad1c0cc"], inactive: "3a365000",
                     shadow: "soft", blur: true, motion: "spring" },
             lock: "pebble", term: "Pebble", wall: "pebble"
@@ -41,7 +41,7 @@ Singleton {
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
             bar: { kind: "text", edge: "bottom", size: 26, ws: "filled" },
             launcher: { placement: "strip", view: "inline", header: "none", width: 0 },
-            dock: false, notify: { corner: "bottom-right", kind: "line" }, osd: "text",
+            dock: false, notify: { corner: "bottom-right", kind: "line" },
             hypr: { gapsIn: 1, gapsOut: 2, border: 2, rounding: 0, active: ["b6ff3bff"], inactive: "2a2d27ff", shadow: "none", blur: false, motion: "instant" },
             lock: "terminal", term: "Monolith", wall: "monolith"
         },
@@ -54,7 +54,7 @@ Singleton {
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
             bar: { kind: "readout", edge: "top", size: 24, ws: "text" },
             launcher: { placement: "center", view: "list", header: "query", width: 680 },
-            dock: false, notify: { corner: "top-right", kind: "tag" }, osd: "text",
+            dock: false, notify: { corner: "top-right", kind: "tag" },
             hypr: { gapsIn: 4, gapsOut: 10, border: 1, rounding: 0, active: ["ffb000ff"], inactive: "1d1a12ff", shadow: "none", blur: false, motion: "crisp" },
             lock: "console", term: "Console", wall: "console"
         },
@@ -67,7 +67,7 @@ Singleton {
             shape: { radius: 8, radiusSmall: 6, line: 1, material: "solid" },
             bar: { kind: "taskbar", edge: "bottom", size: 46, ws: "small" },
             launcher: { placement: "corner", view: "start", header: "none", width: 560 },
-            dock: false, notify: { corner: "bottom-right", kind: "toast" }, osd: "card",
+            dock: false, notify: { corner: "bottom-right", kind: "toast" },
             hypr: { gapsIn: 3, gapsOut: 6, border: 1, rounding: 8, active: ["3b82f6ff"], inactive: "2a3340ff", shadow: "soft", blur: false, motion: "ease" },
             lock: "center", term: "Workstation", wall: "workstation"
         },
@@ -80,7 +80,7 @@ Singleton {
             shape: { radius: 0, radiusSmall: 0, line: 3, material: "solid" },
             bar: { kind: "poster", edge: "top", size: 48, ws: "blocks" },
             launcher: { placement: "half", view: "list", header: "query", width: 0 },
-            dock: false, notify: { corner: "bottom-left", kind: "block" }, osd: "block",
+            dock: false, notify: { corner: "bottom-left", kind: "block" },
             hypr: { gapsIn: 8, gapsOut: 16, border: 3, rounding: 0, active: ["f4f1eaff"], inactive: "3a3a3aff", shadow: "hard", blur: false, motion: "slam" },
             lock: "stacked", term: "Poster", wall: "poster"
         },
@@ -93,7 +93,7 @@ Singleton {
             shape: { radius: 12, radiusSmall: 8, line: 1, material: "glass" },
             bar: { kind: "menubar", edge: "top", size: 30, ws: "numbers" },
             launcher: { placement: "center", view: "list", header: "none", width: 680 },
-            dock: true, notify: { corner: "top-right", kind: "card" }, osd: "card",
+            dock: true, notify: { corner: "top-right", kind: "card" },
             hypr: { gapsIn: 5, gapsOut: 10, border: 1, rounding: 12, active: ["ffffff40"], inactive: "ffffff10", shadow: "soft", blur: true, motion: "ease" },
             lock: "glass", term: "Glass", wall: "glass"
         },
@@ -106,7 +106,7 @@ Singleton {
             shape: { radius: 14, radiusSmall: 10, line: 0, material: "solid" },
             bar: { kind: "gnome", edge: "top", size: 30, ws: "dots" },
             launcher: { placement: "fullscreen", view: "grid", header: "none", width: 760 },
-            dock: false, notify: { corner: "top-center", kind: "card" }, osd: "pill",
+            dock: false, notify: { corner: "top-center", kind: "card" },
             hypr: { gapsIn: 4, gapsOut: 8, border: 0, rounding: 14, active: ["3584e4ff"], inactive: "00000000", shadow: "soft", blur: false, motion: "ease" },
             lock: "center", term: "Canvas", wall: "canvas"
         },
@@ -119,7 +119,7 @@ Singleton {
             shape: { radius: 0, radiusSmall: 0, line: 2, material: "solid" },
             bar: { kind: "rail", edge: "right", size: 72, ws: "squares" },
             launcher: { placement: "column", view: "list", header: "query", width: 520 },
-            dock: false, notify: { corner: "top-right", kind: "block" }, osd: "block",
+            dock: false, notify: { corner: "top-right", kind: "block" },
             hypr: { gapsIn: 8, gapsOut: 16, border: 2, rounding: 0, active: ["111111ff"], inactive: "c8c8c4ff", shadow: "none", blur: false, motion: "snappy" },
             lock: "stacked", term: "Atlas", wall: "atlas"
         },
@@ -132,7 +132,7 @@ Singleton {
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
             bar: { kind: "letterbox", edge: "top", size: 40, ws: "roman" },
             launcher: { placement: "fullscreen", view: "list", header: "query", width: 640 },
-            dock: false, notify: { corner: "bottom-center", kind: "subtitle" }, osd: "subtitle",
+            dock: false, notify: { corner: "bottom-center", kind: "subtitle" },
             hypr: { gapsIn: 6, gapsOut: 12, border: 1, rounding: 0, active: ["f2d48a99"], inactive: "2e2a26ff", shadow: "none", blur: false, motion: "fade" },
             lock: "noir", term: "Noir", wall: "noir"
         },
@@ -145,7 +145,7 @@ Singleton {
             shape: { radius: 14, radiusSmall: 10, line: 1, material: "solid" },
             bar: { kind: "island", edge: "bottom", size: 56, ws: "tiles" },
             launcher: { placement: "island", view: "grid", header: "none", width: 600 },
-            dock: false, notify: { corner: "top-right", kind: "card" }, osd: "pill",
+            dock: false, notify: { corner: "top-right", kind: "card" },
             hypr: { gapsIn: 6, gapsOut: 12, border: 1, rounding: 14, active: ["9fd18bff"], inactive: "2f4234ff", shadow: "soft", blur: false, motion: "spring" },
             lock: "minimal", term: "Garden", wall: "garden"
         },
@@ -158,7 +158,7 @@ Singleton {
             shape: { radius: 10, radiusSmall: 6, line: 0, material: "solid" },
             bar: { kind: "corner", edge: "bottom", size: 0, ws: "dots" },
             launcher: { placement: "center", view: "list", header: "none", width: 520 },
-            dock: false, notify: { corner: "top-center", kind: "line" }, osd: "pill",
+            dock: false, notify: { corner: "top-center", kind: "line" },
             hypr: { gapsIn: 10, gapsOut: 28, border: 0, rounding: 10, active: ["e8e8ea00"], inactive: "00000000", shadow: "none", blur: false, motion: "ease" },
             lock: "minimal", term: "Zen", wall: "zen"
         },
@@ -171,7 +171,7 @@ Singleton {
             shape: { radius: 6, radiusSmall: 4, line: 1, material: "solid" },
             bar: { kind: "line", edge: "top", size: 26, ws: "ticks" },
             launcher: { placement: "center", view: "list", header: "none", width: 560 },
-            dock: false, notify: { corner: "top-right", kind: "card" }, osd: "pill",
+            dock: false, notify: { corner: "top-right", kind: "card" },
             hypr: { gapsIn: 6, gapsOut: 12, border: 1, rounding: 6, active: ["1a1a1aff"], inactive: "e2e2dfff", shadow: "none", blur: false, motion: "ease" },
             lock: "center", term: "Mist", wall: "mist"
         },
@@ -184,12 +184,13 @@ Singleton {
             shape: { radius: 16, radiusSmall: 10, line: 1, material: "solid" },
             bar: { kind: "halo", edge: "bottom", size: 38, ws: "dots" },
             launcher: { placement: "center", view: "list", header: "none", width: 560 },
-            dock: false, notify: { corner: "top-center", kind: "card" }, osd: "pill",
+            dock: false, notify: { corner: "top-center", kind: "card" },
             hypr: { gapsIn: 6, gapsOut: 14, border: 1, rounding: 16, active: ["8ab4ff99"], inactive: "2a2c3300", shadow: "soft", blur: false, motion: "spring" },
             lock: "minimal", term: "Halo", wall: "halo"
         }
     ]
     readonly property var ids: list.map(r => r.id)
+    readonly property int wallVersion: 4   // = VERSION in scripts/rice-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
 
     // Your adjustments to a rice (Settings > Rices > Adjust), saved per rice in
@@ -205,8 +206,16 @@ Singleton {
         const r = JSON.parse(JSON.stringify(get(id)))
         // text on an accent fill must reach WCAG AA (4.5:1); if the rice's own choice doesn't, take the better of dark/light
         if (contrast(r.colour.onAccent, r.colour.accent) < 4.5) r.colour.onAccent = textOn(r.colour.accent, r.colour)
-        const o = (custom ?? {})[r.id] ?? {}
+        const o = Object.assign({}, (custom ?? {})[r.id] ?? {})
         const ok = v => v !== undefined && v !== null && v !== ""
+        const hexOk = v => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)
+        const num = (v, lo, hi) => typeof v === "number" && v >= lo && v <= hi
+        for (const [k, test] of [["accent", hexOk], ["accent2", hexOk], ["radius", v => num(v, 0, 40)], ["gapsIn", v => num(v, 0, 60)],
+                                 ["gapsOut", v => num(v, 0, 80)], ["border", v => num(v, 0, 10)], ["barSize", v => num(v, 16, 96)],
+                                 ["size", v => num(v, 9, 24)], ["font", v => typeof v === "string" && /^[^'\n#]+$/.test(v)],
+                                 ["motion", v => ["instant", "crisp", "snappy", "slam", "ease", "spring", "fade"].includes(v)],
+                                 ["shadow", v => ["none", "soft", "paper", "hard"].includes(v)], ["blur", v => typeof v === "boolean"]])
+            if (ok(o[k]) && !test(o[k])) delete o[k]   // a bad value is ignored, the rice's own stays
         if (ok(o.accent)) {
             r.colour.accent = o.accent
             r.colour.onAccent = textOn(o.accent, r.colour)

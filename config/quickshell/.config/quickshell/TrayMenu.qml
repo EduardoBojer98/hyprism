@@ -14,8 +14,10 @@ PopupWindow {
     property var stack: []          // submenu entries opened so far, innermost last
 
     anchor.item: anchorItem
-    anchor.edges: Edges.Bottom
-    anchor.gravity: Edges.Bottom
+    // open away from the bar: below a top bar, above a bottom one, beside a rail
+    readonly property int away: ({ top: Edges.Bottom, bottom: Edges.Top, left: Edges.Right, right: Edges.Left })[Theme.barEdge] ?? Edges.Bottom
+    anchor.edges: away
+    anchor.gravity: away
     anchor.margins.top: 6
     grabFocus: true
     visible: open || box.opacity > 0   // stays up while it fades out
@@ -33,7 +35,7 @@ PopupWindow {
         color: Theme.menu
         opacity: root.open ? 1 : 0
         // a plain drop: slides 6px down into place while it fades in
-        transform: Translate { y: root.open ? 0 : -6; Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } } }
+        transform: Translate { y: root.open ? 0 : (Theme.barEdge === "bottom" ? 6 : -6); Behavior on y { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } } }
         Behavior on opacity { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
         border { color: Theme.stroke; width: 1 }
 

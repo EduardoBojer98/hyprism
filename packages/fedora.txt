@@ -76,6 +76,7 @@ ddcutil                  ddcutil                            repo
 xdg-utils                xdg-utils                          repo
 glib2                    glib2                              repo
 kdialog                  kdialog                            repo
+imagemagick              ImageMagick                        repo
 fastfetch                fastfetch                          repo
 adw-gtk-theme            adw-gtk3-theme                     repo
 papirus-icons            papirus-icon-theme                 repo

@@ -12,7 +12,7 @@ Item {
     readonly property var c: rice.colour
     readonly property var b: rice.bar
     readonly property real s: width / 200                 // drawing scale
-    readonly property string wall: Quickshell.env("HOME") + "/.local/share/linux-setup/rices/" + rice.wall + "-v4.png"
+    readonly property string wall: Quickshell.env("HOME") + "/.local/share/linux-setup/rices/" + rice.wall + "-v" + Rices.wallVersion + ".png"
 
     implicitHeight: shot.height + name.implicitHeight + 10
 

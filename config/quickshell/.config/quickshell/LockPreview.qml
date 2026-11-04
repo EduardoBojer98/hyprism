@@ -58,14 +58,6 @@ Item {
             { type: "text", text: date, size: 15, opacity: 0.75, x: 68, y: 160, h: "left", v: "bottom" },
             { type: "field", w: 220, hgt: 34, pill: true, x: 64, y: 90, h: "left", v: "bottom" },
         ],
-        sidebar: [
-            { type: "box", w: 528, hgt: 1000, color: Qt.rgba(0.05, 0.05, 0.06, 0.65), x: 0, y: 0, h: "left", v: "center" },
-            { type: "box", w: 4, hgt: 120, accent: true, radius: 2, x: 70, y: 140, h: "left", v: "center" },
-            { type: "text", text: clock, size: 88, weight: Font.Bold, x: 96, y: 160, h: "left", v: "center" },
-            { type: "text", text: date, size: 18, weight: Font.Medium, opacity: 0.75, x: 100, y: 70, h: "left", v: "center" },
-            { type: "text", text: "Welcome back, Your name", size: 16, weight: Font.DemiBold, opacity: 0.9, x: 100, y: -60, h: "left", v: "center" },
-            { type: "field", w: 320, hgt: 44, x: 100, y: -120, h: "left", v: "center" },
-        ],
         stacked: [
             { type: "text", text: hour, size: 190, weight: Font.Black, x: 0, y: 210, h: "center", v: "center" },
             { type: "text", text: minute, size: 190, weight: Font.Black, accent: true, x: 0, y: -10, h: "center", v: "center" },

@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // Lock Screen: the rice's design (hypr/lockscreens/<rice.lock>.conf) and your background: the desktop wallpaper
 // or any picture from the wallpaper folders, with blur and brightness. Saved in Config.lockscreen;
 // ThemeSync writes hypr/settings/hyprlock-theme.conf, read the next time the screen locks.
-// The clock follows the menu bar's 24-hour setting, the font Appearance > Text.
+// The clock follows the menu bar's 24-hour setting; fonts and colours come from the rice.
 ColumnLayout {
     id: page
     spacing: 20

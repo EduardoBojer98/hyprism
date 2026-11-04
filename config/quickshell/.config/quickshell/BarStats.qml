@@ -4,11 +4,10 @@ import Quickshell.Io
 import QtQuick
 
 // Numbers for the menu bar's CPU, memory and network speed items, read every two seconds while
-// one of them is in the bar (Config.bar.left/center/right).
+// a bar shows them (Console's readout).
 Singleton {
     id: root
 
-    readonly property var placed: Config.bar.left.concat(Config.bar.center, Config.bar.right)
     property real cpu: 0          // 0..1
     property real memUsed: 0      // GiB
     property real memTotal: 0
@@ -48,7 +47,7 @@ Singleton {
         interval: 2000
         repeat: true
         triggeredOnStart: true
-        running: ["cpu", "memory", "netspeed"].some(id => root.placed.includes(id))
+        running: Theme.bar.kind === "readout"   // Console's readout shows CPU and memory
         onTriggered: read.running = true
     }
 }

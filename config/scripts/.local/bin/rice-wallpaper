@@ -6,6 +6,7 @@
 # 2560x1600 covers both screens here (16:10 laptop, 16:9 Acer; hyprpaper crops to fill).
 # Bump VERSION after changing a design so the cached pictures are redrawn.
 set -euo pipefail
+command -v magick >/dev/null || { echo "rice-wallpaper: needs ImageMagick (magick)" >&2; exit 1; }
 
 VERSION=4
 out_dir="${XDG_DATA_HOME:-$HOME/.local/share}/linux-setup/rices"
@@ -64,6 +65,9 @@ ids=("$@")
 for id in "${ids[@]}"; do
     [[ $id =~ ^[a-z]+$ ]] || { echo "rice-wallpaper: bad name '$id'" >&2; exit 2; }
     out="$out_dir/$id-v$VERSION.png"
-    [[ -s $out ]] || { draw "$id" "PNG24:$out.tmp.png" && mv "$out.tmp.png" "$out"; }   # PNG24: never a banded palette PNG
+    if [[ ! -s $out ]]; then   # PNG24: never a banded palette PNG
+        draw "$id" "PNG24:$out.tmp.png" || { rm -f "$out.tmp.png"; echo "rice-wallpaper: couldn't draw '$id'" >&2; exit 1; }
+        mv "$out.tmp.png" "$out"
+    fi
     echo "$out"
 done

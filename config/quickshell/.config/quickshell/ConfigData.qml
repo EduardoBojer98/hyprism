@@ -15,11 +15,6 @@ JsonAdapter {
         property int cursorSize: 24
     }
     property JsonObject dock: JsonObject {
-        // look (Appearance > Dock)
-        property string style: "glass"          // glass, pill, panel (edge to edge), shelf, clear
-        property string tint: "glass"           // glass, solid, accent or neon (dark + glowing edge)
-        property string indicator: "dot"        // open apps and the focused window: dot, line or none
-        property string hover: "plate"          // plate (a tile behind), grow or lift
         property int iconSize: 44
         property bool autoHide: true
         property bool showRunning: true
@@ -33,17 +28,9 @@ JsonAdapter {
         // [{ name, kind: "command"|"terminal"|"open"|"snippet", value, confirm }]
         property list<var> actions: []
         property var usage: ({})                // launch counts, for ranking
-        property string placement: "center"     // center | cursor
         // look (Search & Widgets > Spotlight)
-        property string style: "split"          // split (separate glass pieces) or unified (one card)
-        property int width: 720                 // px
-        property int field: 48                  // search field height, px (the text scales with it)
-        property string tint: "glass"           // glass, solid, accent or neon (dark + glowing edge)
-        property string corners: "soft"         // round, soft or sharp
         property int columns: 7                 // apps per row in the apps grid
-        property string selection: "soft"       // the selected result: soft (grey) or accent
-        property real dim: 0                    // darken the screen behind it, 0..0.6
-        property string startView: "home"       // home (suggestions until you type) | apps (grid) | search (empty pill)
+        property string startView: "rice"       // rice (the rice's own) | home (suggestions until you type) | apps (grid) | search (empty pill)
         property list<string> recent: []        // result keys, most recent first, for the home view
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
@@ -63,8 +50,6 @@ JsonAdapter {
         property int historyMax: 100
         property string sound: "message-new-instant"   // a freedesktop sound name (Notifications.sounds), "" = none
         property int volume: 60                          // %
-        property string position: "top-right"            // where popups appear: top-right, top-center, top-left
-        property string style: "card"                   // card (full), pill (compact one-line), minimal (no border), neon (glowing edge)
         property list<string> mutedApps: []              // app names that only go to the notification centre
     }
     property JsonObject caffeine: JsonObject {
@@ -91,11 +76,10 @@ JsonAdapter {
         property list<string> tiles: []
         property list<string> toggles: []
         property list<string> shortcuts: []
-        property list<string> hidden: ["darkmode", "colorpicker", "mission"]
+        property list<string> hidden: ["colorpicker", "mission"]
     }
     // Lock screen: ThemeSync writes hypr/settings/hyprlock-theme.conf (hypr/lockscreens/<design>.conf)
     property JsonObject lockscreen: JsonObject {
-        property string design: "glass"         // glass, center, minimal, sidebar, stacked, terminal
         property string wallpaper: ""           // full path; empty = the desktop wallpaper
         property int blur: 3                    // blur passes, 0 = sharp
         property real brightness: 0.72
@@ -155,21 +139,11 @@ JsonAdapter {
         property list<string> apps: []           // desktop entry ids opened at login (startup-apps)
     }
     property JsonObject bar: JsonObject {
-        // look (Appearance > Menu Bar); each option works with every other one and with any layout
-        property string style: "strip"          // strip, floating, islands (a pill per zone), compact (one centred pill), tabs, clear
-        property string position: "top"         // top or bottom
-        property int size: 30                   // px tall
-        property string items: "plain"          // plain, or chips: each item on its own tile
-        property string tint: "glass"           // glass, solid, accent or neon (dark + glowing edge)
+        // clock and title (Settings > Menu Bar); the bar's place and shape come from the rice
         property bool clock24: true
         property bool seconds: false
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
-        property bool batteryPercent: true
         property bool windowTitle: true          // the focused window's title after the app name
-        // what each part of the bar shows, in order (all items: Bar.qml's widgets)
-        property list<string> left: ["logo", "desktops", "app"]
-        property list<string> center: ["weather", "clock"]
-        property list<string> right: ["tray", "temperatures", "keyboard", "status", "notifications"]
     }
     property JsonObject battery: JsonObject {
         property bool warn: true                 // a notification when the battery runs low

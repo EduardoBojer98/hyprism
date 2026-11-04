@@ -9,7 +9,10 @@ case ${1:-list} in
     *)
         [[ $# -ge 2 ]] || { sed -n '2,4p' "$0" >&2; exit 2; }
         when=$1; shift; msg="$*"
-        if [[ $when =~ ^[0-9]{1,2}:[0-9]{2}$ ]]; then on=(--on-calendar="$when")
+        if [[ $when =~ ^[0-9]{1,2}:[0-9]{2}$ ]]; then
+            # one shot: today at that time, or tomorrow if it has passed (a bare HH:MM would repeat daily)
+            at=$(date -d "$when" +%s); (( at > $(date +%s) )) || at=$(date -d "tomorrow $when" +%s)
+            on=(--on-calendar="$(date -d "@$at" '+%F %T')")
         elif [[ $when =~ ^([0-9]+[hms])+$ ]]; then on=(--on-active="$when")
         else echo "remind: say when as 20m, 1h30m or 17:45" >&2; exit 2; fi
         systemd-run --user --quiet --unit="remind-$(date +%s%N)" "${on[@]}" --timer-property=AccuracySec=1s \

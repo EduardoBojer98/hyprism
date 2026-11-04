@@ -19,6 +19,8 @@ Item {
     property string style: Theme.bar.ws
     property bool vertical: false
     property int thickness: Theme.bar.size              // the bar's height (or width when vertical)
+    property color tone: Theme.text                     // ink on this bar's ground (Atlas's rail, Garden's capsule)
+    property color dim: Theme.subtext
     readonly property var list: Sys.workspacesOf(monitor)
     readonly property int current: list.findIndex(w => w.active)
     function step(d) { const next = list[current + (d < 0 ? 1 : -1)]; if (next) next.activate() }
@@ -78,9 +80,9 @@ Item {
                     color: cell.on ? (cell.s === "ticks" ? Theme.text : Theme.accent)
                          : cell.s === "dots" ? (cell.busy ? Theme.subtext : Theme.muted)
                          : cell.s === "ticks" ? (cell.busy ? Theme.subtext : Theme.stroke)
-                         : cell.s === "tiles" ? Theme.fill
+                         : cell.s === "tiles" ? Qt.alpha(ws.tone, 0.1)
                          : area.containsMouse && cell.s !== "roman" ? Theme.fillHover : "transparent"
-                    border { color: cell.s === "squares" && !cell.on ? Theme.text : "transparent"; width: cell.s === "squares" ? 2 : 0 }
+                    border { color: cell.s === "squares" && !cell.on ? ws.tone : "transparent"; width: cell.s === "squares" ? 2 : 0 }
                     Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 }
                 Text {
@@ -89,7 +91,7 @@ Item {
                     anchors.centerIn: parent
                     text: ws.label(cell.modelData)
                     color: cell.on ? (cell.s === "roman" ? Theme.accent : Theme.accentText)
-                         : cell.modelData.urgent ? Theme.warning : cell.busy || area.containsMouse ? Theme.text : Theme.subtext
+                         : cell.modelData.urgent ? Theme.warning : cell.busy || area.containsMouse ? ws.tone : ws.dim
                     font {
                         family: cell.s === "blocks" || cell.s === "roman" ? Theme.displayFont : cell.s === "filled" ? Theme.monoFont : Theme.font
                         pixelSize: cell.s === "blocks" ? ws.thickness * 0.72 : cell.s === "roman" ? Theme.fontTitle + 2 : cell.s === "squares" ? Theme.fontTitle : Theme.fontLabel

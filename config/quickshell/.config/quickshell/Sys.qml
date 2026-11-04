@@ -87,6 +87,7 @@ Singleton {
 
     // ---- screen recording (~/.local/bin/record tells us when it starts and stops) ---------------
     property bool recording: false
+    Process { running: true; command: ["record", "status"]; stdout: StdioCollector { onStreamFinished: root.recording = text.trim() === "on" } }
     IpcHandler {
         target: "recorder"
         function recording(on: bool): void { root.recording = on }

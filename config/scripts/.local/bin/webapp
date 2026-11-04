@@ -5,21 +5,24 @@
 #   webapp list                                             webapp remove "Shop admin"
 set -euo pipefail
 apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
-slug() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//; s/-$//'; }
+slug() { local s; s=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//; s/-$//'); printf '%s' "${s:-app$(printf '%s' "$1" | md5sum | cut -c1-8)}"; }
 browser=$(command -v google-chrome-stable || command -v chromium || command -v brave || true)
 
 case ${1:-list} in
     add)
         [[ $# -eq 3 ]] || { echo 'usage: webapp add "Name" https://example.com' >&2; exit 2; }
-        [[ $3 =~ ^https?:// ]] || { echo "webapp: the address must start with http:// or https://" >&2; exit 2; }
+        # what goes into the launcher entry: one line of name, a URL without spaces, quotes or % (field codes)
+        [[ $3 =~ ^https?://[^[:space:]\"\'%\\]+$ ]] || { echo "webapp: the address must start with http(s):// and have no spaces, quotes or %" >&2; exit 2; }
+        [[ $2 != *$'\n'* && -n ${2// /} ]] || { echo "webapp: the name must be one line" >&2; exit 2; }
         [[ -n $browser ]] || { echo "webapp: needs Chrome, Chromium or Brave (Firefox has no app windows)" >&2; exit 1; }
         s=$(slug "$2"); mkdir -p "$apps"
+        [[ -e $apps/webapp-$s.desktop ]] && { echo "webapp: '$2' exists already (webapp remove it first)" >&2; exit 1; }
         cat >"$apps/webapp-$s.desktop" <<DESK
 [Desktop Entry]
 Type=Application
 Name=$2
 Comment=Web app: $3
-Exec=$browser --app=$3 --class=webapp-$s
+Exec=$browser "--app=$3" --class=webapp-$s
 Icon=web-browser
 StartupWMClass=webapp-$s
 Categories=Network;WebBrowser;

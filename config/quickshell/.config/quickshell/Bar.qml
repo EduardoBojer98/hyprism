@@ -265,7 +265,7 @@ Scope {
                     Text { text: Sys.hours() + "\n" + Sys.minutes(); horizontalAlignment: Text.AlignHCenter; lineHeight: 0.85
                            color: Theme.base; font { family: Theme.displayFont; pixelSize: 30; weight: Theme.displayWeight; letterSpacing: -1; features: { "tnum": 1 } } }
                 }
-                BarWs { Layout.alignment: Qt.AlignHCenter; monitor: root.monitor; style: "squares"; vertical: true }
+                BarWs { Layout.alignment: Qt.AlignHCenter; monitor: root.monitor; style: "squares"; vertical: true; tone: Theme.base; dim: Qt.alpha(Theme.base, 0.6) }
             }
             ColumnLayout {
                 anchors { bottom: parent.bottom; bottomMargin: 16; horizontalCenter: parent.horizontalCenter }
@@ -400,7 +400,7 @@ Scope {
                 width: row.implicitWidth + 24
                 radius: Theme.radius + 6
                 color: Theme.accent2
-                readonly property color ink: Theme.accentText
+                readonly property color ink: Rices.textOn(Theme.accent2, Theme.c)   // ink for the capsule's own colour
                 RowLayout {
                     id: row
                     anchors.centerIn: parent
@@ -417,7 +417,7 @@ Scope {
                         }
                     }
                     Rectangle { implicitWidth: 1; implicitHeight: root.size * 0.5; color: Qt.alpha(capsule.ink, 0.25) }
-                    BarWs { monitor: root.monitor; style: "tiles" }
+                    BarWs { monitor: root.monitor; style: "tiles"; tone: capsule.ink; dim: Qt.alpha(capsule.ink, 0.6) }
                     Rectangle { implicitWidth: 1; implicitHeight: root.size * 0.5; color: Qt.alpha(capsule.ink, 0.25) }
                     ClockItem { text: Sys.time(); tone: capsule.ink; family: Theme.displayFont; pixelSize: Theme.fontHeading; weight: Theme.displayWeight; hover: Qt.alpha(capsule.ink, 0.1) }
                     BarStatus { tone: capsule.ink; hover: Qt.alpha(capsule.ink, 0.1) }

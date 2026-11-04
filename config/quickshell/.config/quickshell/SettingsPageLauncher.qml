@@ -56,13 +56,8 @@ ColumnLayout {
     SettingGroup {
         title: "Spotlight"
         SettingRow {
-            label: "Opens"
-            hint: "Super taps open it on the screen under the pointer"
-            ConfigChoice { section: "launcher"; key: "placement"; values: ["center", "cursor"]; labels: ["Centred", "At the pointer"] }
-        }
-        SettingRow {
             label: "Before you type, show"
-            ConfigChoice { section: "launcher"; key: "startView"; values: ["home", "apps", "search"]; labels: ["Suggestions", "All apps", "Just the search field"] }
+            ConfigChoice { section: "launcher"; key: "startView"; values: ["rice", "home", "apps", "search"]; labels: ["The rice's", "Suggestions", "All apps", "Just the search field"] }
         }
         SettingRow {
             label: "Clipboard button"

@@ -27,13 +27,13 @@ Scope {
     // Lock screen (Settings > Lock Screen): background and clock format; the design comes from the rice
     readonly property var lock: Config.lockscreen
     readonly property string lockConf: "# Written by Quickshell ThemeSync from the active rice (" + rice.name + ")\n"
-        + "$accent = rgb(" + hex(Theme.accent) + ")\n$accent2 = rgb(" + hex(Theme.accent2) + ")\n"
+        + "$accent = rgb(" + hex(Theme.accent.hslLightness < 0.45 ? "#f5f5f7" : Theme.accent) + ")\n$accent2 = rgb(" + hex(Theme.accent2) + ")\n"
         + "$text = rgb(" + hex(Theme.text) + ")\n$muted = rgb(" + hex(Theme.subtext) + ")\n"
         + "$ground = rgb(" + hex(Theme.base) + ")\n$surface = rgb(" + hex(Theme.surfaceColor) + ")\n"
         + "$fail = rgb(" + hex(Theme.error) + ")\n$rounding = " + Theme.radius + "\n"
         + "$wall = " + (/^[^\n#]+$/.test(lock.wallpaper) ? lock.wallpaper : "~/.config/hypr/settings/wallpaper")
         + "\n$blur = " + lock.blur + "\n$dim = " + lock.brightness
-        + "\n$font = " + Theme.font + "\n$display = " + Theme.displayFont + "\n$mono = " + Theme.monoFont
+        + "\n$font = " + Theme.font.replace(/[\n#]/g, "") + "\n$display = " + Theme.displayFont + "\n$mono = " + Theme.monoFont
         + "\n$clock = " + (Config.bar.clock24 ? "%H:%M" : "%-I:%M") + "\n$hour = " + (Config.bar.clock24 ? "%H" : "%I")
         + "\nsource = ~/.config/hypr/lockscreens/" + rice.lock + ".conf"
     onLockConfChanged: debounce.restart()
@@ -68,7 +68,7 @@ Scope {
             + "; gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3" + (light ? "" : "-dark")
             + "; gsettings set org.gnome.desktop.interface accent-color " + gtkAccent
             + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"
-            + "; gsettings set org.gnome.desktop.interface font-name '" + Theme.font + " 11'"
+            + "; gsettings set org.gnome.desktop.interface font-name '" + Theme.font.replace(/['\\\n]/g, "") + " 11'"
             + (cursorTheme ? "; gsettings set org.gnome.desktop.interface cursor-theme '" + cursorTheme + "'"
                 + "; gsettings set org.gnome.desktop.interface cursor-size " + cursorSize : "")])
         // live for Hyprland and apps started from now on; env.lua reads theme.lua at the next login

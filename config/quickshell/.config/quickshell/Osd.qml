@@ -22,7 +22,7 @@ PanelWindow {
 
     screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
     anchors.bottom: true
-    margins.bottom: 110
+    margins.bottom: Theme.reserveBottom + 90   // above a bottom bar, island or dock
     implicitWidth: 260
     implicitHeight: 48
     exclusiveZone: 0

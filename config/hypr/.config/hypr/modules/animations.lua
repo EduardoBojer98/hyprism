@@ -1,10 +1,10 @@
 -- Motion, by preset: each rice names one (Quickshell Rices.qml, hypr.motion), apply_motion() sets it.
---   instant  barely there: near-immediate, no pop (Monolith, Platinum)
+--   instant  barely there: near-immediate, no pop (Monolith)
 --   crisp    fast and linear-ish, a quick fade (Console)
 --   snappy   short slides, no overshoot (Atlas)
 --   slam     fast in with a hard stop, windows drop in from slightly larger (Poster)
---   ease     calm, damped, nothing bouncy (Folio, Glass, Canvas, Workstation)
---   spring   soft springs with a small pop-in (Pebble, Garden)
+--   ease     calm, damped, nothing bouncy (Glass, Canvas, Workstation, Zen, Mist)
+--   spring   soft springs with a small pop-in (Pebble, Garden, Halo)
 --   fade     slow cross-fades, workspaces dissolve instead of sliding (Noir)
 --   off      animations off (Settings > Rices > Animations)
 hl.config({ animations = { enabled = true } })

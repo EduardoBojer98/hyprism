@@ -49,7 +49,8 @@ Singleton {
     ]
     property string mode: "search"            // search | apps | files | actions | clip
     // What the panel shows: an empty search opens on suggestions or the apps grid (Config.launcher.startView)
-    readonly property string view: mode === "search" && Search.query.trim() === "" && Config.launcher.startView !== "search" ? Config.launcher.startView : mode
+    readonly property string startView: Config.launcher.startView === "rice" ? look.startView : Config.launcher.startView
+    readonly property string view: mode === "search" && Search.query.trim() === "" && startView !== "search" ? startView : mode
     // home view, in keyboard order: frequent apps, then recent items, then quick actions
     readonly property var homeItems: Search.frequentApps.concat(Search.recentItems, Search.quickActions)
     property int homeIndex: 0

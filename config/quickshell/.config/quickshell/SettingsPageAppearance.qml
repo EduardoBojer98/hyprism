@@ -1,3 +1,4 @@
+import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
@@ -35,6 +36,8 @@ ColumnLayout {
     }
 
     // ---- the gallery --------------------------------------------------------------------------------
+    // the previews show each rice's wallpaper: draw the missing ones once, in the background
+    Component.onCompleted: Quickshell.execDetached(["rice-wallpaper", "--all"])
     SettingGroup {
         title: "Rice"
         Text {

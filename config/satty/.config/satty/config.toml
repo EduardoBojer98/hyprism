@@ -15,7 +15,7 @@ primary-highlighter = "block"      # "block" = translucent marker box, "freehand
 family = "Inter"
 style = "Bold"
 
-# Annotation colours: the neon accents first (Radioactive, Molten, Cyber), then the status red /
-# green and plain white / black for contrast on any background.
+# Annotation colours: bright marks that read on any screenshot (yellow, cyan, magenta, orange),
+# then red / green and plain white / black.
 [color-palette]
 palette = ["#e4ff1a", "#00e5ff", "#ff3dbb", "#ff6b1a", "#ff4d6d", "#4ade80", "#ffffff", "#0b0d0a"]

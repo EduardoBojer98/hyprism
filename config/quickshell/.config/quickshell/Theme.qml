@@ -91,7 +91,7 @@ Singleton {
     readonly property string barEdge: bar.edge
     readonly property bool barVertical: barEdge === "left" || barEdge === "right"
     readonly property int barInset: ["pills", "island"].includes(bar.kind) ? 8 : 0
-    readonly property int barHeight: bar.size + barInset               // thickness, whatever the edge
+    readonly property int barHeight: bar.kind === "corner" ? 40 : bar.size + barInset   // thickness, whatever the edge
     // letterbox has a band at both ends
     readonly property int reserveTop: barEdge === "top" || bar.kind === "letterbox" ? barHeight : 0
     readonly property int reserveBottom: barEdge === "bottom" || bar.kind === "letterbox" ? barHeight : 0

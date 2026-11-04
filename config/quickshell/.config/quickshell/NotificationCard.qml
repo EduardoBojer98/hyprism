@@ -6,7 +6,7 @@ import QtQuick.Layouts
 
 // One notification: app icon, app name and age, title, body and the app's buttons. Used for the
 // banners and in the notification centre. Click to open it in the app, × to dismiss.
-// Style follows Config.notifications.style: card (full), pill (compact one-line), minimal (no border).
+// Banners take the rice's kind (Rices.qml notify.kind): bubble, card, toast, paper, line, block, tag, subtitle.
 Glass {
     id: card
 
@@ -18,7 +18,7 @@ Glass {
     readonly property var buttons: (notification?.actions ?? []).filter(a => a.identifier !== "default" && a.text !== "")
     // banners take the rice's kind (Rices.qml notify.kind); the notification centre keeps cards
     readonly property string kind: banner ? Theme.rice.notify.kind : "card"
-    readonly property string notifStyle: kind === "line" ? "minimal" : kind === "subtitle" ? "subtitle" : Config.notifications.style ?? "card"
+    readonly property string notifStyle: kind === "line" ? "minimal" : kind === "subtitle" ? "subtitle" : "card"
     readonly property bool isPill: notifStyle === "pill"
     readonly property bool isMinimal: notifStyle === "minimal"
     readonly property bool isSubtitle: notifStyle === "subtitle"
@@ -28,8 +28,8 @@ Glass {
     strong: !isMinimal
     radius: flat ? Theme.radius : isPill || kind === "bubble" ? Math.min(height / 2, Theme.radiusLarge + 6) : Theme.radiusLarge
     color: isSubtitle ? "transparent" : flat ? Theme.fill : Theme.glassStrong
-    border.color: critical ? Theme.warning : kind === "block" ? Theme.accent : (isMinimal ? "transparent" : Theme.stroke)
-    border.width: isSubtitle ? 0 : kind === "block" ? 3 : isMinimal && !critical ? 0 : (critical || !flat ? Math.max(1, Theme.line) : 0)
+    border.color: critical ? Theme.warning : kind === "block" || kind === "tag" ? Theme.accent : (isMinimal ? "transparent" : Theme.stroke)
+    border.width: isSubtitle ? 0 : kind === "block" ? 3 : kind === "tag" ? 1 : isMinimal && !critical ? 0 : (critical || !flat ? Math.max(1, Theme.line) : 0)
 
     Rectangle {   // line: an accent rule down the left edge, the rest plain text on the surface
         visible: card.kind === "line"

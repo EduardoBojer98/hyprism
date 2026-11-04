@@ -33,7 +33,7 @@ done
 fail() { notify-send -a Screenshot -u critical "Screenshot failed" "$1"; exit 1; }
 
 # selection colours follow the desktop theme (accent from Settings > Appearance)
-accent=$(grep -oE 'accent = "[0-9a-fA-F]{6}"' "$HOME/.config/hypr/settings/theme.lua" 2>/dev/null | grep -oE '[0-9a-fA-F]{6}' || echo e4ff1a)
+accent=$(grep -oE 'accent = "[0-9a-fA-F]{6}"' "$HOME/.config/hypr/settings/theme.lua" 2>/dev/null | grep -oE '[0-9a-fA-F]{6}' || echo ff9e7a)
 
 # Output name under the mouse, else the focused one. Rotated by 90/270 (tablet mode) = width/height swap.
 monitor_under_mouse() {
