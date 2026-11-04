@@ -9,24 +9,6 @@ ColumnLayout {
     id: page
     spacing: 20
 
-    SettingGroup {
-        title: "Border"
-        SettingRow {
-            label: "Focused window"
-            hint: "The border around the window you're working in"
-            ConfigChoice { section: "appearance"; key: "border"; values: ["neon", "rainbow", "accent"]; labels: ["Neon glow", "Rainbow", "Accent colour"] }
-        }
-        SettingRow {
-            visible: Config.appearance.border === "rainbow"
-            label: "Rainbow rotation"
-            hint: Theme.animate ? "How fast the colours go round" : "Still while animations are off (Windows > Animations)"
-            ConfigChoice { section: "appearance"; key: "borderSpin"; values: [0, 100, 60, 25]; labels: ["Still", "Slow", "Medium", "Fast"] }
-        }
-        SettingRow {
-            label: "Thickness"
-            ConfigChoice { section: "appearance"; key: "borderSize"; values: [1, 2, 3, 4]; labels: ["1 px", "2 px", "3 px", "4 px"] }
-        }
-    }
 
     SettingGroup {
         title: "Title bars"
@@ -37,14 +19,6 @@ ColumnLayout {
         }
     }
 
-    SettingGroup {
-        title: "Spacing"
-        SettingRow {
-            label: "Space around windows"
-            hint: "Between two windows it is half. Corners: Appearance > Glass and shape"
-            ConfigSlider { section: "appearance"; key: "gaps"; from: 0; to: 40; step: 1; format: v => v + " px" }
-        }
-    }
 
     SettingGroup {
         title: "Windows you're not using"

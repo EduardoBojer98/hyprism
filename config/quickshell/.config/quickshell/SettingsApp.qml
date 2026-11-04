@@ -25,7 +25,7 @@ Singleton {
         { id: "power",      name: "Power & Battery",      glyph: "\u{F0079}", pages: ["power", "idle", "asus"] },
         { id: "appearance", name: "Appearance",           glyph: "\u{F03D8}", pages: ["appearance", "bar", "dock", "wallpaper", "lockscreen", "icons", "cursor"] },
         { id: "desktop",    name: "Desktop",              glyph: "\u{F056E}", pages: ["controlcenter", "notifications", "hotcorners"] },
-        { id: "windows",    name: "Windows",              glyph: "\u{F05AF}", pages: ["windows", "windowlook", "animations", "apprules"] },
+        { id: "windows",    name: "Windows",              glyph: "\u{F05AF}", pages: ["windows", "windowlook", "apprules"] },
         { id: "widgets",    name: "Search & Widgets",     glyph: "\u{F0349}", pages: ["launcher", "clipboard", "weather", "calendar"] },
         { id: "input",      name: "Keyboard & Mouse",     glyph: "\u{F030C}", pages: ["input", "keybinds"] },
         { id: "applications", name: "Apps",               glyph: "\u{F003B}", pages: ["installed", "apps", "startup"] },
@@ -38,7 +38,7 @@ Singleton {
 
     // Pages: what each SettingsPage<Id>.qml is called (Spotlight searches these too)
     readonly property var allSections: [
-        { id: "appearance",    name: "Themes & Colours",    glyph: "\u{F03D8}" },
+        { id: "appearance",    name: "Rices",               glyph: "\u{F03D8}" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}" },
         { id: "cursor",        name: "Cursor",              glyph: "\u{F01BF}" },
         { id: "dock",          name: "Dock",                glyph: "\u{F0379}" },
@@ -66,7 +66,6 @@ Singleton {
         { id: "installed",     name: "Installed Apps",      glyph: "\u{F003B}" },
         { id: "windows",       name: "Window Behaviour",    glyph: "\u{F05AF}" },
         { id: "windowlook",    name: "Window Look",         glyph: "\u{F03D8}" },
-        { id: "animations",    name: "Animations",          glyph: "\u{F0D07}" },
         { id: "apprules",      name: "App Rules",           glyph: "\u{F0493}" },
         { id: "apps",          name: "Default Apps",        glyph: "\u{F003B}" },
         { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}" },

@@ -29,53 +29,8 @@ ColumnLayout {
         Config.set("dock", "pinned", list)
     }
 
-    readonly property var designs: [
-        { id: "glass",   name: "Glass",   about: "A rounded glass island",
-          set: { style: "glass", tint: "glass", indicator: "dot", hover: "plate" } },
-        { id: "magnify", name: "Magnify", about: "A pill whose icons grow under the pointer",
-          set: { style: "pill", tint: "glass", indicator: "dot", hover: "grow" } },
-        { id: "panel",   name: "Panel",   about: "A solid panel along the bottom edge",
-          set: { style: "panel", tint: "solid", indicator: "line", hover: "plate" } },
-        { id: "shelf",   name: "Shelf",   about: "Icons standing on a glass shelf",
-          set: { style: "shelf", tint: "glass", indicator: "line", hover: "lift" } },
-        { id: "floating", name: "Floating icons", about: "Only the icons, growing on hover",
-          set: { style: "clear", tint: "glass", indicator: "dot", hover: "grow" } },
-        { id: "accent",  name: "Accent",  about: "A pill tinted with the accent colour",
-          set: { style: "pill", tint: "accent", indicator: "line", hover: "lift" } },
-        { id: "neon",    name: "Neon",    about: "A dark pill with a glowing accent edge",
-          set: { style: "pill", tint: "neon", indicator: "line", hover: "grow" } },
-        { id: "neon-glass", name: "Neon island", about: "A rounded dark island, glowing edge, icons lift",
-          set: { style: "glass", tint: "neon", indicator: "dot", hover: "lift" } },
-        { id: "neon-panel", name: "Neon panel", about: "Edge to edge along the bottom, a glowing top line",
-          set: { style: "panel", tint: "neon", indicator: "line", hover: "plate" } },
-    ]
 
-    SettingGroup {
-        title: "Design"
-        DesignGallery { id: gallery; section: "dock"; designs: page.designs }
-    }
 
-    SettingGroup {
-        title: gallery.match ? "Customise" : "Customise · your own mix"
-        SettingRow {
-            label: "Shape"
-            ConfigChoice { section: "dock"; key: "style"; values: ["glass", "pill", "panel", "shelf", "clear"]
-                           labels: ["Glass", "Pill", "Panel", "Shelf", "Clear"] }
-        }
-        SettingRow {
-            label: "Colour"
-            ConfigChoice { section: "dock"; key: "tint"; values: ["glass", "solid", "accent", "neon"]; labels: ["Glass", "Solid", "Accent", "Neon"] }
-        }
-        SettingRow {
-            label: "Open apps"
-            hint: "The mark under an app with windows open; the focused one is in the accent colour"
-            ConfigChoice { section: "dock"; key: "indicator"; values: ["dot", "line", "none"]; labels: ["Dot", "Line", "None"] }
-        }
-        SettingRow {
-            label: "Pointing at an icon"
-            ConfigChoice { section: "dock"; key: "hover"; values: ["plate", "grow", "lift"]; labels: ["Tile behind", "Grow", "Lift"] }
-        }
-    }
 
     SettingGroup {
         title: "Behaviour"

@@ -36,6 +36,23 @@ Item {
             { type: "text", text: clock, size: 140, weight: Font.Light, x: 0, y: 40, h: "center", v: "center" },
             { type: "field", w: 300, hgt: 46, outline: true, x: 0, y: -110, h: "center", v: "center" },
         ],
+        pebble: [
+            { type: "text", text: clock, size: 120, weight: Font.Light, x: 0, y: 90, h: "center", v: "center" },
+            { type: "text", text: date, size: 18, opacity: 0.75, x: 0, y: -10, h: "center", v: "center" },
+            { type: "field", w: 300, hgt: 52, outline: true, pill: true, x: 0, y: -100, h: "center", v: "center" },
+        ],
+        console: [
+            { type: "text", text: clock, size: 72, weight: Font.Light, accent: true, mono: true, x: 80, y: -80, h: "left", v: "top" },
+            { type: "text", text: date.toUpperCase() + "  ·  LOCKED", size: 13, opacity: 0.7, mono: true, x: 84, y: -190, h: "left", v: "top" },
+            { type: "field", w: 520, hgt: 44, outline: true, x: 80, y: -240, h: "left", v: "top" },
+        ],
+        noir: [
+            { type: "box", w: 1920, hgt: 120, color: "#000000", x: 0, y: 0, h: "center", v: "top" },
+            { type: "box", w: 1920, hgt: 120, color: "#000000", x: 0, y: 0, h: "center", v: "bottom" },
+            { type: "text", text: clock, size: 110, weight: Font.Light, x: 0, y: 70, h: "center", v: "center" },
+            { type: "text", text: date, size: 20, accent: true, x: 0, y: -30, h: "center", v: "center" },
+            { type: "field", w: 320, hgt: 40, outline: true, x: 0, y: 70, h: "center", v: "bottom" },
+        ],
         minimal: [
             { type: "text", text: clock, size: 64, weight: Font.Light, x: 64, y: 190, h: "left", v: "bottom" },
             { type: "text", text: date, size: 15, opacity: 0.75, x: 68, y: 160, h: "left", v: "bottom" },
@@ -103,7 +120,7 @@ Item {
                 text: el.e.text ?? ""
                 color: el.e.accent ? lp.accent : el.e.accent2 ? Theme.accent2 : "#f5f5f7"
                 opacity: el.e.opacity ?? 1
-                font { family: el.e.mono ? Theme.iconFont : el.e.size > 60 ? "Inter Display" : Config.appearance.font
+                font { family: el.e.mono ? Theme.monoFont : el.e.size > 60 ? Theme.displayFont : Theme.font
                        pixelSize: Math.max(4, Math.round((el.e.size ?? 10) * 1.33 * lp.s)); weight: el.e.weight ?? Font.Normal }
             }
             Rectangle {

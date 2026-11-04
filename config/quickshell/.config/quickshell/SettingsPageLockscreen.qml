@@ -2,7 +2,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Lock Screen: pick a design (hypr/lockscreens/*.conf) and the background: the desktop wallpaper
+// Lock Screen: the rice's design (hypr/lockscreens/<rice.lock>.conf) and your background: the desktop wallpaper
 // or any picture from the wallpaper folders, with blur and brightness. Saved in Config.lockscreen;
 // ThemeSync writes hypr/settings/hyprlock-theme.conf, read the next time the screen locks.
 // The clock follows the menu bar's 24-hour setting, the font Appearance > Text.
@@ -12,15 +12,6 @@ ColumnLayout {
 
     readonly property var l: Config.lockscreen
     readonly property string picture: l.wallpaper || Wallpapers.current
-    readonly property var designs: [
-        { id: "glass",    name: "Glass",    about: "Clock at the top, password at the bottom" },
-        { id: "center",   name: "Centre",   about: "Everything in the middle" },
-        { id: "minimal",  name: "Minimal",  about: "A small corner clock, the picture left free" },
-        { id: "sidebar",  name: "Sidebar",  about: "A frosted panel down the left side" },
-        { id: "stacked",  name: "Stacked",  about: "Big bold hours over minutes" },
-        { id: "terminal", name: "Terminal", about: "A shell prompt asking for your password" },
-        { id: "neon",     name: "Neon",     about: "A glowing accent clock and a gradient password field" },
-    ]
 
     // ---- preview ------------------------------------------------------------------------------
     Rectangle {
@@ -34,7 +25,7 @@ ColumnLayout {
         clip: true
         LockPreview {
             anchors { fill: parent; margins: 1 }
-            design: page.l.design
+            design: Theme.rice.lock
             source: page.picture
             blur: page.l.blur
             brightness: page.l.brightness
@@ -44,56 +35,10 @@ ColumnLayout {
     // login, and three of those lock the account for 10 minutes (pam_faillock, seen 2026-11-01).
     Text {
         Layout.fillWidth: true
-        text: (page.designs.find(d => d.id === page.l.design)?.about ?? "") + ". Applies the next time the screen locks (Super+L)."
+        text: "The " + Theme.rice.name + " rice's lock screen. Applies the next time the screen locks (Super+L)."
         wrapMode: Text.Wrap
         color: Theme.muted
         font { family: Theme.font; pixelSize: Theme.fontLabel }
-    }
-
-    // ---- designs ------------------------------------------------------------------------------
-    SettingGroup {
-        title: "Design"
-        GridLayout {
-            id: grid
-            Layout.fillWidth: true
-            Layout.margins: 14
-            columns: width > 600 ? 3 : 2
-            columnSpacing: 12
-            rowSpacing: 12
-            Repeater {
-                model: page.designs
-                ColumnLayout {
-                    id: card
-                    required property var modelData
-                    readonly property bool current: page.l.design === modelData.id
-                    Layout.fillWidth: true
-                    spacing: 6
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: width * 10 / 16
-                        radius: Theme.radiusSmall
-                        color: "transparent"
-                        border { color: card.current ? Theme.accent : cardArea.containsMouse ? Theme.text : Theme.stroke; width: card.current ? 2 : 1 }
-                        clip: true
-                        LockPreview {
-                            anchors { fill: parent; margins: card.current ? 2 : 1 }
-                            design: card.modelData.id
-                            source: page.picture
-                            blur: page.l.blur
-                            brightness: page.l.brightness
-                            live: false
-                        }
-                        MouseArea { id: cardArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Config.set("lockscreen", "design", card.modelData.id) }
-                    }
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: card.modelData.name
-                        color: card.current ? Theme.text : Theme.subtext
-                        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: card.current ? Font.DemiBold : Font.Normal }
-                    }
-                }
-            }
-        }
     }
 
     // ---- background ---------------------------------------------------------------------------

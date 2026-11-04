@@ -8,17 +8,18 @@ import QtQuick
 // every window on this dock's monitor as its own live thumbnail with the app's icon on it. With auto-hide it slides up
 // when the pointer touches the bottom edge and stays visible on an empty workspace.
 // Right-click an icon or a window for windows and pin / minimise / restore / quit.
-// Its look (Appearance > Dock) is a set of separate options: shape (Config.dock.style), colour (tint),
+// Its look follows the rice (only Pebble and Glass have a dock); behaviour is Settings > Dock:
 // the open-app mark (indicator) and what hovering an icon does (hover).
 PanelWindow {
     id: dock
 
     readonly property int iconSize: Config.dock.iconSize
-    readonly property string style: Config.dock.style
+    // the look comes from the rice: Pebble a round pill whose icons lift, Glass a glass island that magnifies
+    readonly property string style: Theme.rice.id === "pebble" ? "pill" : "glass"
     readonly property int lift: style === "panel" ? 0 : 10     // gap under the island
     readonly property bool bare: style === "clear" || style === "shelf"   // no surface around the icons
-    readonly property string indicator: Config.dock.indicator
-    readonly property string hoverStyle: Config.dock.hover
+    readonly property string indicator: Theme.rice.id === "pebble" ? "line" : "dot"
+    readonly property string hoverStyle: Theme.rice.id === "pebble" ? "lift" : "grow"
     readonly property int slot: iconSize + 4          // one icon's cell
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
@@ -139,7 +140,7 @@ PanelWindow {
         height: dock.iconSize + 16
         radius: dock.style === "panel" ? 0 : dock.style === "pill" ? height / 2 : Theme.radiusLarge + 4
         flat: dock.bare
-        color: dock.bare ? "transparent" : dock.style === "panel" && Config.dock.tint === "glass" ? Theme.glassStrong : Theme.surface(Config.dock.tint)
+        color: dock.bare ? "transparent" : Theme.glass
         border.width: dock.bare ? 0 : Theme.line
 
         Rectangle {   // shelf: the icons stand on a glass slab
@@ -147,7 +148,7 @@ PanelWindow {
             anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
             height: Math.round(parent.height * 0.42)
             radius: Theme.radiusSmall
-            color: Theme.surface(Config.dock.tint === "glass" ? "solid" : Config.dock.tint)
+            color: Theme.menu
             border { color: Theme.strokeStrong; width: 1 }
         }
 

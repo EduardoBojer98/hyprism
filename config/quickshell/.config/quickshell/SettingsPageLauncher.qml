@@ -50,67 +50,8 @@ ColumnLayout {
         Config.set("launcher", "actions", list)
     }
 
-    readonly property var designs: [
-        { id: "tahoe",   name: "Tahoe",   about: "A search pill, round buttons and results as separate glass",
-          set: { style: "split", width: 720, field: 48, tint: "glass", corners: "soft", selection: "soft", dim: 0 } },
-        { id: "card",    name: "Card",    about: "Search and results in one solid card",
-          set: { style: "unified", width: 720, field: 48, tint: "solid", corners: "soft", selection: "accent", dim: 0 } },
-        { id: "command", name: "Command", about: "A compact command bar over a dimmed screen",
-          set: { style: "unified", width: 640, field: 44, tint: "solid", corners: "sharp", selection: "accent", dim: 0.35 } },
-        { id: "pill",    name: "Pill",    about: "Round, airy glass pieces",
-          set: { style: "split", width: 660, field: 52, tint: "glass", corners: "round", selection: "soft", dim: 0 } },
-        { id: "focus",   name: "Focus",   about: "Wide and large, the screen dimmed behind it",
-          set: { style: "unified", width: 880, field: 58, tint: "glass", corners: "round", selection: "accent", dim: 0.45 } },
-        { id: "accent",  name: "Accent",  about: "Split glass washed with the accent colour",
-          set: { style: "split", width: 720, field: 48, tint: "accent", corners: "soft", selection: "accent", dim: 0 } },
-        { id: "neon",    name: "Neon",    about: "Dark split pieces, each with a glowing edge",
-          set: { style: "split", width: 720, field: 50, tint: "neon", corners: "round", selection: "accent", dim: 0.25 } },
-        { id: "neon-card", name: "Neon card", about: "One dark glowing card over a dimmed screen",
-          set: { style: "unified", width: 760, field: 52, tint: "neon", corners: "soft", selection: "accent", dim: 0.4 } },
-    ]
 
-    SettingGroup {
-        title: "Design"
-        DesignGallery { id: gallery; section: "launcher"; designs: page.designs }
-    }
 
-    SettingGroup {
-        title: gallery.match ? "Customise" : "Customise · your own mix"
-        SettingRow {
-            label: "Layout"
-            hint: Config.launcher.style === "unified" ? "Search and results in one card" : "Search field, buttons and results as separate pieces"
-            ConfigChoice { section: "launcher"; key: "style"; values: ["split", "unified"]; labels: ["Split", "One card"] }
-        }
-        SettingRow {
-            label: "Width"
-            ConfigChoice { section: "launcher"; key: "width"; values: [600, 720, 880]; labels: ["Narrow", "Normal", "Wide"] }
-        }
-        SettingRow {
-            label: "Search size"
-            ConfigChoice { section: "launcher"; key: "field"; values: [42, 48, 56]; labels: ["Small", "Normal", "Large"] }
-        }
-        SettingRow {
-            label: "Colour"
-            ConfigChoice { section: "launcher"; key: "tint"; values: ["glass", "solid", "accent", "neon"]; labels: ["Glass", "Solid", "Accent", "Neon"] }
-        }
-        SettingRow {
-            label: "Corners"
-            ConfigChoice { section: "launcher"; key: "corners"; values: ["round", "soft", "sharp"]; labels: ["Round", "Soft", "Sharp"] }
-        }
-        SettingRow {
-            label: "Selected result"
-            ConfigChoice { section: "launcher"; key: "selection"; values: ["soft", "accent"]; labels: ["Grey", "Accent"] }
-        }
-        SettingRow {
-            label: "Dim the screen behind it"
-            ConfigSlider { section: "launcher"; key: "dim"; from: 0; to: 0.6; step: 0.05; format: v => v === 0 ? "Off" : Math.round(v * 100) + "%" }
-        }
-        SettingRow {
-            label: "Apps per row"
-            hint: "In the apps grid"
-            ConfigChoice { section: "launcher"; key: "columns"; values: [5, 6, 7, 8]; labels: ["5", "6", "7", "8"] }
-        }
-    }
 
     SettingGroup {
         title: "Spotlight"

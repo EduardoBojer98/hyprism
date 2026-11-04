@@ -119,12 +119,6 @@ JsonAdapter {
         property bool resizeOnBorder: true
         property bool snap: false               // floating windows snap to edges and each other
         property bool hideCursorTyping: false
-        property bool animations: true
-        property string animOpen: "popin"       // popin, slide, gnomed, fade, none
-        property string animClose: "popin"
-        property string animMove: "smooth"      // smooth, snappy, bouncy, none
-        property string animWorkspace: "slidefade"  // slidefade, slide, slidevert, fade, none
-        property string animSpeed: "normal"     // slow, normal, fast
         property bool titleBars: true           // hyprbars: title bar with buttons on apps that draw none
         property var apps: []                   // [{ id, name, class (regex), open: normal|float|pin|maximize|fullscreen, workspace: 0 = any }]
     }

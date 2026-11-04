@@ -75,7 +75,7 @@ Singleton {
         const rotated = m.transform % 2 === 1
         const W = (rotated ? m.height : m.width) / m.scale, H = (rotated ? m.width : m.height) / m.scale
         const [l, t, r, b] = m.reserved ?? [0, 0, 0, 0]
-        const g = Config.appearance.gaps, gi = Math.floor(g / 2)   // look.lua: gaps_in = gaps // 2
+        const g = Theme.rice.hypr.gapsOut, gi = Theme.rice.hypr.gapsIn   // the rice's gaps (look.lua)
         const ax = m.x + l + g, ay = m.y + t + g, aw = W - l - r - 2 * g, ah = H - t - b - 2 * g
         const x0 = ax + p[0] * aw + (p[0] > 0 ? gi : 0), x1 = ax + (p[0] + p[2]) * aw - (p[0] + p[2] < 0.999 ? gi : 0)
         let y0 = ay + p[1] * ah + (p[1] > 0 ? gi : 0)
