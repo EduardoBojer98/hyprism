@@ -31,13 +31,18 @@ ColumnLayout {
     SettingGroup {
         SettingRow {
             label: "Icon theme"
-            hint: "Papirus-Dark matches the dark glass look"
+            hint: "App icons in the dock, launcher and lists (Papirus switches to its light set in light themes)"
             Dropdown {
                 width: 240
                 options: page.themes
                 current: Config.appearance.iconTheme
                 onPicked: v => Config.set("appearance", "iconTheme", v)
             }
+        }
+        SettingRow {
+            label: "Tray icons in the bar's colour"
+            hint: "Matches the bar's own icons; off keeps each app's colours"
+            ConfigToggle { section: "appearance"; key: "monoTray" }
         }
         SettingRow {
             label: "Add a theme"

@@ -11,6 +11,7 @@ JsonAdapter {
         property real fontScale: 1
         property string motion: "full"          // full (the theme's own motion) | reduced (short fades, nothing moves) | off
         property string iconTheme: "Papirus-Dark"
+        property bool monoTray: true            // tray icons in the bar's ink (off: the apps' own colours)
         property string cursorTheme: "default"   // a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons; "default" = the system's cursor
         property int cursorSize: 24
     }

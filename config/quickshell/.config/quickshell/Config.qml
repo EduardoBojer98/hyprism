@@ -37,7 +37,7 @@ Singleton {
         appearance: {
             theme: Themes.ids,
             custom: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"],
-            iconTheme: "string", cursorTheme: "string", cursorSize: [16, 64]
+            iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { enabled: "bool", position: ["bottom", "left", "right", "top"], size: ["compact", "regular", "roomy"], hiddenOn: "list",
                 iconSize: [24, 72], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },

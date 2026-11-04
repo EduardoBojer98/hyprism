@@ -2,12 +2,14 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.SystemTray
 import QtQuick
+import QtQuick.Effects
 
 // App tray icons. Left click: the app's action, right click: its menu, middle: its second action.
 Grid {
     id: tray
     property bool vertical: false
     property int iconSize: 16
+    property color tone: Theme.barInk
     readonly property bool shown: SystemTray.items.values.some(i => i.status !== Status.Passive)
     // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
     columns: vertical ? 1 : Math.max(1, visibleChildren.length)
@@ -27,7 +29,17 @@ Grid {
                 else modelData.activate()
             }
             onScrolled: d => modelData.scroll(d * 120, false)
-            IconImage { implicitSize: tray.iconSize; source: trayItem.modelData.icon }
+            // drawn in the bar's ink, so app icons match the shell's own (one icon language);
+            // Settings > Appearance > Icons can keep their own colours
+            IconImage { id: trayIcon; implicitSize: tray.iconSize; source: trayItem.modelData.icon; visible: !Config.appearance.monoTray }
+            MultiEffect {
+                visible: Config.appearance.monoTray
+                implicitWidth: tray.iconSize; implicitHeight: tray.iconSize
+                source: trayIcon
+                brightness: 1
+                colorization: 1
+                colorizationColor: tray.tone
+            }
             TrayMenu { id: trayMenu; anchorItem: trayItem; menu: trayItem.modelData.menu }
         }
     }

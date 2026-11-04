@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
+import QtQuick.Effects
 
 // The one popup framework: a floating panel that opens right beside the bar or dock item that was
 // clicked (Anchor), or, from a keyboard shortcut, in its usual place on the monitor the pointer is
@@ -178,6 +179,24 @@ Scope {
             ]
 
             MouseArea { anchors.fill: parent; z: -1 }   // clicks inside don't close
+            // depth, the theme's way (Theme.depth): a soft shadow, a hard offset block, or the frame alone
+            RectangularShadow {
+                visible: Theme.depth === "soft"
+                anchors.fill: parent
+                z: -2
+                offset.y: 10
+                blur: 28
+                spread: -4
+                radius: Theme.radiusLarge
+                color: Qt.rgba(0, 0, 0, Theme.light ? 0.18 : 0.42)
+            }
+            Rectangle {
+                visible: Theme.depth === "hard"
+                anchors.fill: parent
+                anchors { leftMargin: 7; topMargin: 7; rightMargin: -7; bottomMargin: -7 }
+                z: -2
+                color: Theme.stroke
+            }
             Keys.onEscapePressed: popup.hide()
         }
 

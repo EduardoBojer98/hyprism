@@ -148,7 +148,7 @@ Loader {
     }
     Component {
         id: trayC
-        BarTray { vertical: w.vertical; iconSize: w.words ? 14 : 16 }
+        BarTray { vertical: w.vertical; iconSize: w.words ? 14 : 16; tone: w.tone }
     }
     Component {
         id: keyboardC
