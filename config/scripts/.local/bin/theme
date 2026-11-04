@@ -2,7 +2,7 @@
 # Switch the whole desktop's colour theme in one step (bar, panels, window borders, lock screen,
 # terminal, GTK, launcher, screenshot selection). Same as Settings > Appearance > Theme.
 #   theme              list the themes, current one marked
-#   theme radioactive  switch (neon themes: radioactive, molten, cyber; plus midnight, nord, ...)
+#   theme radioactive  switch (neon themes: radioactive, molten, cyber, acid, synthwave; plus midnight, nord, ...)
 # The list of themes lives in ~/.config/quickshell/Theme.qml (Theme.themes).
 set -euo pipefail
 
@@ -20,5 +20,5 @@ grep -qx -- "$1" <<<"$themes" || { echo "theme: unknown theme '$1' (run 'theme' 
 set_opt() { local r; r=$(qs ipc call config set appearance "$1" "$2"); [[ $r == ok ]] || { echo "theme: $1 not set: $r" >&2; exit 1; }; }
 set_opt theme "\"$1\""
 set_opt accent '"theme"'   # use the theme's own accent
-case $1 in radioactive|molten|cyber) set_opt border '"neon"' ;; esac
+case $1 in radioactive|molten|cyber|acid|synthwave) set_opt border '"neon"' ;; esac
 echo "theme: $1"

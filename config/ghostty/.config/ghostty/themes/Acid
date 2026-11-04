@@ -1,0 +1,23 @@
+# Acid: neon theme from this repo (docs/DESIGN.md). Background is overridden by the shell's theme sync.
+background = #090c0b
+foreground = #ecf5ee
+cursor-color = #5dff3a
+cursor-text = #090c0b
+selection-background = #1f4a14
+selection-foreground = #ecf5ee
+palette = 0=#141a17
+palette = 1=#ff4f6d
+palette = 2=#5dff3a
+palette = 3=#ffb020
+palette = 4=#5cb8ff
+palette = 5=#b56cff
+palette = 6=#2dd4bf
+palette = 7=#cfd9d1
+palette = 8=#56635b
+palette = 9=#ff8095
+palette = 10=#9dff85
+palette = 11=#ffd06b
+palette = 12=#94d2ff
+palette = 13=#d3a8ff
+palette = 14=#7ae8d8
+palette = 15=#ffffff

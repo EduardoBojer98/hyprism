@@ -53,7 +53,11 @@ Singleton {
         molten:      { name: "Molten", dark: ["#100b0a", "#f7eee8", "#ff6b1a", "#ff3dbb"], light: ["#fbf6f3", "#1e1410", "#c2410c", "#b0127f"],
                        status: ["#34d399", "#ffd60a", "#ff4040"], term: ["Molten", "Atom One Light"] },
         cyber:       { name: "Cyber", dark: ["#0a0b14", "#eef0ff", "#00e5ff", "#ff2bd6"], light: ["#f3f5fb", "#0f1120", "#0077a3", "#b0129a"],
-                       status: ["#3ee07f", "#ffc53d", "#ff4d5e"], term: ["Cyber", "Atom One Light"] }
+                       status: ["#3ee07f", "#ffc53d", "#ff4d5e"], term: ["Cyber", "Atom One Light"] },
+        acid:        { name: "Acid", dark: ["#090c0b", "#ecf5ee", "#5dff3a", "#b56cff"], light: ["#f4f8f4", "#101511", "#2f7d12", "#7a3fc4"],
+                       status: ["#2dd4bf", "#ffb020", "#ff4f6d"], term: ["Acid", "Atom One Light"] },
+        synthwave:   { name: "Synthwave", dark: ["#0e0a14", "#f3ecff", "#ff2e97", "#8f6bff"], light: ["#f8f4fb", "#1a1022", "#c0125f", "#5b3fd0"],
+                       status: ["#3ee07f", "#ffc53d", "#ff5a3c"], term: ["Synthwave", "Atom One Light"] }
     })
     readonly property var themeIds: Object.keys(themes)
     readonly property var th: themes[a.theme] ?? themes.midnight
@@ -74,7 +78,7 @@ Singleton {
     readonly property int barInset: ["floating", "islands", "compact"].includes(Config.bar.style) ? 6 : 0
     readonly property int barHeight: Config.bar.size + barInset
     // a bar or dock surface: "glass" (frosted), "solid" (opaque) or "accent" (glass washed with the accent)
-    function surface(tint) { return tint === "solid" ? menu : tint === "accent" ? Qt.tint(glass, Qt.rgba(accent.r, accent.g, accent.b, light ? 0.25 : 0.38)) : glass }
+    function surface(tint) { return tint === "neon" ? (light ? frosted(0.75, 0.97) : tinted(0.85, 0.93)) : tint === "solid" ? menu : tint === "accent" ? Qt.tint(glass, Qt.rgba(accent.r, accent.g, accent.b, light ? 0.25 : 0.38)) : glass }
     readonly property color menu: light ? frosted(0.7, 0.98) : tinted(0.95, 0.97)  // dropdown lists
     readonly property color sidebar: light ? Qt.rgba(0, 0, 0, 0.035) : Qt.rgba(0, 0, 0, 0.18)
     readonly property color stroke: light ? Qt.rgba(0, 0, 0, 0.09) : Qt.rgba(1, 1, 1, 0.10)    // hairline edge

@@ -1,0 +1,23 @@
+# Synthwave: neon theme from this repo (docs/DESIGN.md). Background is overridden by the shell's theme sync.
+background = #0e0a14
+foreground = #f3ecff
+cursor-color = #ff2e97
+cursor-text = #0e0a14
+selection-background = #4a1438
+selection-foreground = #f3ecff
+palette = 0=#1a1424
+palette = 1=#ff5a3c
+palette = 2=#3ee07f
+palette = 3=#ffc53d
+palette = 4=#8f6bff
+palette = 5=#ff2e97
+palette = 6=#36e2f0
+palette = 7=#ddd3ee
+palette = 8=#5f5373
+palette = 9=#ff8a73
+palette = 10=#8af0b2
+palette = 11=#ffd97a
+palette = 12=#b59fff
+palette = 13=#ff7ac0
+palette = 14=#8af2fa
+palette = 15=#ffffff
