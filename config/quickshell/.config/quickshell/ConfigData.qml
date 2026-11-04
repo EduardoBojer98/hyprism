@@ -17,6 +17,7 @@ JsonAdapter {
         property string iconTheme: "Papirus-Dark"
         property string cursorTheme: "default"   // a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons; "default" = the system's cursor
         property int cursorSize: 24
+        property bool neonPanels: true           // panels, menus and popups get the glowing accent edge
         property string border: "neon"          // focused window border: "neon" (theme gradient + glow), "rainbow" or "accent"
         property int borderSpin: 60             // seconds x10 per rainbow turn (0 = still)
         property int borderSize: 2              // px
@@ -25,7 +26,7 @@ JsonAdapter {
     property JsonObject dock: JsonObject {
         // look (Appearance > Dock)
         property string style: "glass"          // glass, pill, panel (edge to edge), shelf, clear
-        property string tint: "glass"           // glass, solid or accent
+        property string tint: "glass"           // glass, solid, accent or neon (dark + glowing edge)
         property string indicator: "dot"        // open apps and the focused window: dot, line or none
         property string hover: "plate"          // plate (a tile behind), grow or lift
         property int iconSize: 44
@@ -46,7 +47,7 @@ JsonAdapter {
         property string style: "split"          // split (separate glass pieces) or unified (one card)
         property int width: 720                 // px
         property int field: 48                  // search field height, px (the text scales with it)
-        property string tint: "glass"           // glass, solid or accent
+        property string tint: "glass"           // glass, solid, accent or neon (dark + glowing edge)
         property string corners: "soft"         // round, soft or sharp
         property int columns: 7                 // apps per row in the apps grid
         property string selection: "soft"       // the selected result: soft (grey) or accent
@@ -72,7 +73,7 @@ JsonAdapter {
         property string sound: "message-new-instant"   // a freedesktop sound name (Notifications.sounds), "" = none
         property int volume: 60                          // %
         property string position: "top-right"            // where popups appear: top-right, top-center, top-left
-        property string style: "card"                   // card (full), pill (compact one-line), minimal (no border)
+        property string style: "card"                   // card (full), pill (compact one-line), minimal (no border), neon (glowing edge)
         property list<string> mutedApps: []              // app names that only go to the notification centre
     }
     property JsonObject caffeine: JsonObject {
@@ -174,7 +175,7 @@ JsonAdapter {
         property string position: "top"         // top or bottom
         property int size: 30                   // px tall
         property string items: "plain"          // plain, or chips: each item on its own tile
-        property string tint: "glass"           // glass, solid or accent
+        property string tint: "glass"           // glass, solid, accent or neon (dark + glowing edge)
         property bool clock24: true
         property bool seconds: false
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"

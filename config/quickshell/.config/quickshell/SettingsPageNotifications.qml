@@ -21,7 +21,7 @@ ColumnLayout {
         SettingRow {
             label: "Style"
             hint: ({ card: "Standard card with icon and summary", pill: "Compact one-line pill", minimal: "Clean minimal card with no border" })[Config.notifications.style] ?? ""
-            ConfigChoice { section: "notifications"; key: "style"; values: ["card", "pill", "minimal"]; labels: ["Card", "Pill", "Minimal"] }
+            ConfigChoice { section: "notifications"; key: "style"; values: ["card", "pill", "minimal", "neon"]; labels: ["Card", "Pill", "Minimal", "Neon"] }
         }
         SettingRow {
             label: "Position"

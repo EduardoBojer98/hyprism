@@ -63,6 +63,10 @@ ColumnLayout {
           set: { style: "unified", width: 880, field: 58, tint: "glass", corners: "round", selection: "accent", dim: 0.45 } },
         { id: "accent",  name: "Accent",  about: "Split glass washed with the accent colour",
           set: { style: "split", width: 720, field: 48, tint: "accent", corners: "soft", selection: "accent", dim: 0 } },
+        { id: "neon",    name: "Neon",    about: "Dark split pieces, each with a glowing edge",
+          set: { style: "split", width: 720, field: 50, tint: "neon", corners: "round", selection: "accent", dim: 0.25 } },
+        { id: "neon-card", name: "Neon card", about: "One dark glowing card over a dimmed screen",
+          set: { style: "unified", width: 760, field: 52, tint: "neon", corners: "soft", selection: "accent", dim: 0.4 } },
     ]
 
     SettingGroup {
@@ -87,7 +91,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Colour"
-            ConfigChoice { section: "launcher"; key: "tint"; values: ["glass", "solid", "accent"]; labels: ["Glass", "Solid", "Accent"] }
+            ConfigChoice { section: "launcher"; key: "tint"; values: ["glass", "solid", "accent", "neon"]; labels: ["Glass", "Solid", "Accent", "Neon"] }
         }
         SettingRow {
             label: "Corners"

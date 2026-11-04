@@ -42,6 +42,12 @@ ColumnLayout {
           set: { style: "clear", tint: "glass", indicator: "dot", hover: "grow" } },
         { id: "accent",  name: "Accent",  about: "A pill tinted with the accent colour",
           set: { style: "pill", tint: "accent", indicator: "line", hover: "lift" } },
+        { id: "neon",    name: "Neon",    about: "A dark pill with a glowing accent edge",
+          set: { style: "pill", tint: "neon", indicator: "line", hover: "grow" } },
+        { id: "neon-glass", name: "Neon island", about: "A rounded dark island, glowing edge, icons lift",
+          set: { style: "glass", tint: "neon", indicator: "dot", hover: "lift" } },
+        { id: "neon-panel", name: "Neon panel", about: "Edge to edge along the bottom, a glowing top line",
+          set: { style: "panel", tint: "neon", indicator: "line", hover: "plate" } },
     ]
 
     SettingGroup {
@@ -58,7 +64,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Colour"
-            ConfigChoice { section: "dock"; key: "tint"; values: ["glass", "solid", "accent"]; labels: ["Glass", "Solid", "Accent"] }
+            ConfigChoice { section: "dock"; key: "tint"; values: ["glass", "solid", "accent", "neon"]; labels: ["Glass", "Solid", "Accent", "Neon"] }
         }
         SettingRow {
             label: "Open apps"

@@ -62,6 +62,16 @@ ColumnLayout {
           set: { style: "islands", position: "top", size: 34, items: "chips", tint: "accent" } },
         { id: "bottom",   name: "Bottom",   about: "A floating bar at the bottom, the dock above it",
           set: { style: "floating", position: "bottom", size: 34, items: "plain", tint: "glass" } },
+        { id: "neon",     name: "Neon",     about: "A dark pill with a glowing accent edge",
+          set: { style: "floating", position: "top", size: 32, items: "plain", tint: "neon" } },
+        { id: "neon-line", name: "Neon line", about: "A dark strip with a glowing line along its edge",
+          set: { style: "strip", position: "top", size: 30, items: "plain", tint: "neon" } },
+        { id: "neon-islands", name: "Neon islands", about: "Each part in its own glowing pill",
+          set: { style: "islands", position: "top", size: 32, items: "plain", tint: "neon" } },
+        { id: "neon-tabs", name: "Neon tabs", about: "Glowing tabs hanging from the top edge",
+          set: { style: "tabs", position: "top", size: 30, items: "plain", tint: "neon" } },
+        { id: "neon-dock", name: "Neon bottom", about: "One small glowing pill at the bottom, by the dock",
+          set: { style: "compact", position: "bottom", size: 30, items: "plain", tint: "neon" } },
     ]
 
     SettingGroup {
@@ -94,7 +104,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Colour"
-            ConfigChoice { section: "bar"; key: "tint"; values: ["glass", "solid", "accent"]; labels: ["Glass", "Solid", "Accent"] }
+            ConfigChoice { section: "bar"; key: "tint"; values: ["glass", "solid", "accent", "neon"]; labels: ["Glass", "Solid", "Accent", "Neon"] }
         }
     }
 

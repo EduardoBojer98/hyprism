@@ -8,6 +8,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import Quickshell.Services.Mpris
 import Quickshell.Networking
+import QtQuick.Effects
 import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
@@ -34,6 +35,7 @@ PanelWindow {
     readonly property string style: Config.bar.style      // strip, floating, islands, compact, tabs, clear
     readonly property bool bottom: Config.bar.position === "bottom"
     readonly property color surface: Theme.surface(Config.bar.tint)
+    readonly property bool neon: Config.bar.tint === "neon"
     readonly property int inset: Theme.barInset     // gap between screen edge and glass
     readonly property int pad: ({ islands: 10, tabs: 14, compact: 12 })[style] ?? 0          // glass beyond the items
     readonly property int side: style === "floating" ? 20 : style === "islands" ? inset + 2 + pad
@@ -77,10 +79,15 @@ PanelWindow {
         visible: bar.style === "strip"
         anchors.fill: parent
         color: Config.bar.tint === "glass" ? (Theme.light ? Qt.rgba(1, 1, 1, 0.55) : Theme.tinted(0.75, 0.40)) : bar.surface
-        Rectangle {
+        Rectangle {   // the edge toward the screen: a hairline, or in neon a glowing accent gradient
             anchors { left: parent.left; right: parent.right; bottom: bar.bottom ? undefined : parent.bottom; top: bar.bottom ? parent.top : undefined }
-            height: 1
+            height: bar.neon ? 1.5 : 1
             color: Theme.light ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.06)
+            gradient: bar.neon ? neonLine : null
+            Gradient { id: neonLine; orientation: Gradient.Horizontal
+                GradientStop { position: 0; color: Theme.accent } GradientStop { position: 1; color: Theme.accent2 } }
+            layer.enabled: bar.neon
+            layer.effect: MultiEffect { shadowEnabled: true; shadowColor: Theme.accent; shadowBlur: 0.5; shadowOpacity: 0.8; shadowVerticalOffset: 0 }
         }
     }
 
@@ -89,6 +96,7 @@ PanelWindow {
         anchors { fill: parent; topMargin: bar.bottom ? 0 : bar.inset; bottomMargin: bar.bottom ? bar.inset : 0; leftMargin: bar.inset + 2; rightMargin: bar.inset + 2 }
         radius: height / 2
         color: bar.surface
+        neon: bar.neon
     }
     // clear: no surface, only a faint shade so light items stay readable on a bright wallpaper
     Rectangle {
@@ -122,6 +130,7 @@ PanelWindow {
             height: parent.height
             radius: height / 2
             color: bar.surface
+            neon: bar.neon
         }
         ZonePill { zone: leftZone }
         ZonePill { zone: centerZone }
@@ -151,7 +160,9 @@ PanelWindow {
         bottomLeftRadius: tab && bar.bottom ? 0 : tab ? Theme.radius + 2 : radius
         bottomRightRadius: bottomLeftRadius
         color: bar.surface
-        border { color: Theme.stroke; width: 1 }
+        border { color: Theme.stroke; width: bar.neon ? 0 : 1 }
+        NeonEdge { visible: bar.neon; topLeftRadius: parent.topLeftRadius; topRightRadius: parent.topRightRadius
+                   bottomLeftRadius: parent.bottomLeftRadius; bottomRightRadius: parent.bottomRightRadius }
     }
 
     component Zone: Row {

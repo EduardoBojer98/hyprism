@@ -140,7 +140,8 @@ PanelWindow {
         radius: dock.style === "panel" ? 0 : dock.style === "pill" ? height / 2 : Theme.radiusLarge + 4
         flat: dock.bare
         color: dock.bare ? "transparent" : dock.style === "panel" && Config.dock.tint === "glass" ? Theme.glassStrong : Theme.surface(Config.dock.tint)
-        border.width: dock.bare ? 0 : 1
+        border.width: dock.bare || neon ? 0 : 1
+        neon: Config.dock.tint === "neon" && !dock.bare
 
         Rectangle {   // shelf: the icons stand on a glass slab
             visible: dock.style === "shelf"

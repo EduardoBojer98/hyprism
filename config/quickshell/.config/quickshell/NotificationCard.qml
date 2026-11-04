@@ -6,7 +6,7 @@ import QtQuick.Layouts
 
 // One notification: app icon, app name and age, title, body and the app's buttons. Used for the
 // banners and in the notification centre. Click to open it in the app, × to dismiss.
-// Style follows Config.notifications.style: card (full), pill (compact one-line), minimal (no border).
+// Style follows Config.notifications.style: card (full), pill (compact one-line), minimal (no border), neon (card + glowing edge).
 Glass {
     id: card
 
@@ -19,13 +19,15 @@ Glass {
     readonly property string notifStyle: Config.notifications.style ?? "card"
     readonly property bool isPill: notifStyle === "pill"
     readonly property bool isMinimal: notifStyle === "minimal"
+    readonly property bool isNeon: notifStyle === "neon"
     signal expandRequested()
 
     implicitHeight: content.implicitHeight + (isPill ? Theme.spaceS : Theme.spaceM) * 2
     strong: !isMinimal
+    neon: !flat && !critical && (isNeon || (strong && Config.appearance.neonPanels))
     radius: flat ? Theme.radius : isPill ? height / 2 : Theme.radiusLarge
     border.color: critical ? Theme.peach : (isMinimal ? "transparent" : Theme.stroke)
-    border.width: isMinimal && !critical ? 0 : (critical || !flat ? 1 : 0)
+    border.width: (isMinimal || neon) && !critical ? 0 : (critical || !flat ? 1 : 0)
 
     // folded cards peek out underneath (card style only)
     Repeater {

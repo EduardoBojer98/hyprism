@@ -188,6 +188,11 @@ ColumnLayout {
             }
         }
         SettingRow {
+            label: "Neon edges"
+            hint: "Panels, menus, pop-ups and notifications get a glowing accent edge"
+            ConfigToggle { section: "appearance"; key: "neonPanels" }
+        }
+        SettingRow {
             label: "Terminal colours"
             hint: "Ghostty switches to the matching theme, live"
             ConfigToggle { section: "appearance"; key: "terminal" }
