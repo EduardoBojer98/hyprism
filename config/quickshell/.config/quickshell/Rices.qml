@@ -46,7 +46,7 @@ Singleton {
             lock: "terminal", term: "Monolith", wall: "monolith"
         },
         {
-            id: "console", name: "Console", about: "No bar: an amber readout on the top edge, corner brackets, a dashboard",
+            id: "console", name: "Console", about: "No bar: an amber readout along the top edge and corner brackets, all in mono",
             dark: true,
             colour: { ground: "#05080f", surface: "#0a101c", raised: "#141c2c", line: "#3a2e12", text: "#e9dcc0", muted: "#c19b52", faint: "#6d5a33",
                       accent: "#ffb000", onAccent: "#05080f", accent2: "#ff6a3d", ok: "#66d19e", warn: "#ff7a45", err: "#ff4d5e" },

@@ -62,7 +62,7 @@ These get restyled through tokens; their behaviour doesn't change.
 |---|---|---|---|---|---|---|
 | **Monolith** | bottom, attached, text only | command strip on the top edge | none | radius 0, 2px frame, 2px gaps | JetBrains Mono · #0b0c0a / lime #b6ff3b | near-instant |
 | **Folio** (light) | left rail: serif clock, i–iv workspaces | centred card with a typeset greeting | none | radius 4, hairline, 12px gaps | Instrument Serif + IBM Plex Sans · stone / ultramarine | slow ease-out |
-| **Console** | none: top readout + corner brackets, dashboard on Super+D | centred readout panel | none | radius 0, 1px amber on focus | Martian Mono · blue-black / amber | crisp, flicker-in |
+| **Console** | none: top readout + corner brackets (the planned Super+D dashboard was not built; Control Center and the CPU/memory readout cover it) | centred readout panel | none | radius 0, 1px amber on focus | Martian Mono · blue-black / amber | crisp, flicker-in |
 | **Pebble** | three floating pills, stretching dots | rounded panel with app grid | floating | radius 18, soft shadow, glass | Outfit · dusk violet / peach / sea green | springy |
 | **Workstation** | bottom taskbar: start, search, tasks, clock | start menu from the corner | the taskbar | radius 8, title bars (hyprbars) | IBM Plex Sans · slate / blue | quick ease |
 | **Poster** | top, paper white, huge workspace numbers | half-screen cobalt field, huge query | none | radius 0, 3px black frame, hard offset shadow | Archivo Black + Archivo · charcoal / red / cobalt | slam-in |

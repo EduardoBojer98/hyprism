@@ -12,7 +12,7 @@ rices=$(grep -oE '^\s+id: "[a-z0-9]+", name: "[^"]+", about: "[^"]+"' "${XDG_CON
 current=$(qs ipc call config get appearance rice | tr -d '"')
 
 if [[ $# -eq 0 ]]; then
-    while IFS=$'\t' read -r id name about; do
+    while IFS=$'\t' read -r id _name about; do
         printf '%s %-12s %s\n' "$([[ $id == "$current" ]] && echo '*' || echo ' ')" "$id" "$about"
     done <<<"$rices"
     exit 0
