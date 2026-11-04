@@ -50,7 +50,7 @@ Singleton {
             lock: { clock: "big", align: "center" }, term: "Pebble", wall: "pebble"
         },
         {
-            id: "monolith", name: "Monolith", about: "The desktop as tmux: a status line with your apps as its window list, an inverse lime clock, panels like focused panes",
+            id: "monolith", name: "Monolith", about: "The desktop as tmux: one status line with your apps, icon + value readouts, an inverse lime clock, panels like focused panes",
             dark: true,
             colour: { ground: "#0b0c0a", surface: "#11130f", raised: "#1b1e18", line: "#30352b", text: "#d7ddcc", muted: "#8b9480", faint: "#5f6858",
                       accent: "#b6ff3b", onAccent: "#0b0c0a", accent2: "#ff5f2e", ok: "#5ad1c2", warn: "#ffb547", err: "#ff5f5f" },
