@@ -597,3 +597,31 @@ static read of every component and settings page. Status column is filled in as 
 | M4 | Lock screen editor (clock/date style and position, widgets, avatar, layout, preview). |
 | M5 | Settings has no search, no Bar layout editor, no "reduce animations" wording, no per-monitor bar/dock. |
 | M6 | "Theme" naming in ~50 files, the `theme` and `theme-wallpaper` scripts, Ghostty theme names, docs. |
+
+## Outcome (2026-11-04)
+
+| Item | Status |
+|---|---|
+| V1, V2 panels not at their trigger, off-screen with bottom/side bars | ✅ panels open beside the clicked item (Anchor.qml), capped between bar and dock; checked on top, bottom and right bars |
+| V3 tray icons / keyboard cap differ | ✅ tray icons in the bar's ink (Settings → Icons can turn it off); one icon set |
+| V4 bars missing widgets | ✅ removed themes; every theme gets every item via Settings → Menu Bar |
+| V5 lock screens hardcoded | ✅ one generated layout from theme tokens (LockScreen.qml), dark/light ink by background |
+| V6 hardcoded sizes | ◑ Settings app, OSD, dock tooltip, popups fixed; some fixed px remain inside Weather, Sensors, Calendar, Control Center |
+| V7 scrims | ◑ popup scrim light-aware; PowerMenu, Cheatsheet, Mission Control keep their own alphas |
+| V8 notification dismiss overlap | ⏸ not changed |
+| F1, F2 motion ignores the setting, closing panels block input | ✅ Full / Reduced / Off everywhere listed; closing panels take no input |
+| F3, F5 dock bottom-only, OSD assumes a dock | ✅ dock on any edge beside the bar, OSD above bar and dock |
+| F4 tray menu, dropdown edges | ✅ tray menu follows the bar edge; dropdowns stay in the Settings window |
+| F6 layout animations, overshoot | ✅ dock and popups use transforms; typing-driven height animations removed; overshoot only in Pebble's panel curve |
+| F7 bar not configurable | ✅ edge, size, floating, gap, per monitor, items per section |
+| F8 lock screen editor | ✅ clock style, position, date, greeting, picture, widgets, live preview |
+| F9–F16, F19 settings page bugs | ✅ (subagent, reviewed); PowerMode still sets the profile before `powermode` confirms |
+| F17 config load | ✅ migration (rice → theme, removed theme ids, animations → motion), invalid values reset, broken file kept as .broken |
+| F18 search, dead keys | ✅ search in Settings; `launcher.columns` is still read (kept) |
+
+Edge cases run here: all 6 themes × bar top/bottom/left/right × dock bottom/left/top (no overlap, Hyprland
+reserves the right room); dock off + bar hidden (reserved 0); no items; every item in every section (clipped,
+no overlap) on a horizontal and a vertical bar; invalid IPC values refused; corrupt, outdated and missing
+settings.json. **Not verified:** a real monitor unplug (a headless test output crashes Quickshell's Wayland
+connection, also before these changes; see the report), lock screen in hyprlock itself (not started: a
+cancelled hyprlock counts as a failed login), 120 Hz smoothness by eye.
