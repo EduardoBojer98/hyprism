@@ -16,7 +16,7 @@ ColumnLayout {
     readonly property var mine: (a.custom ?? {})[a.theme] ?? {}
     // bundled fonts first, then every other installed family
     readonly property var fonts: {
-        const own = ["Outfit", "IBM Plex Sans", "Archivo", "Martian Mono", "Fraunces", "Cantarell", "JetBrainsMono Nerd Font", "Inter"]
+        const own = ["Outfit", "IBM Plex Sans", "Archivo", "Martian Mono", "Cantarell", "JetBrainsMono Nerd Font", "Inter"]
         return own.concat(Qt.fontFamilies().filter(f => !own.includes(f) && !/Nerd Font|Emoji|Symbols/.test(f)))
     }
     readonly property var swatches: ["#ff9e7a", "#ffb000", "#b6ff3b", "#9fd18b", "#5ad1c2", "#5b9cff", "#3584e4", "#8ab4ff", "#c7a3ff", "#ff6b8a", "#ff3b1f", "#e30613", "#f2d48a", "#e8e8ea", "#1a1a1a"]

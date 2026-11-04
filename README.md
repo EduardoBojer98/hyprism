@@ -1,34 +1,33 @@
 # linux-setup
 
 A Wayland desktop for **Arch/CachyOS and Fedora** (built on CachyOS): **Hyprland** with a **Quickshell** shell
-that comes in **13 rices**, whole desktop designs you switch in one step. Everything is free software,
+that comes in **6 themes**, whole desktop designs you switch in one step. Everything is free software,
 and everything you'd want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
 install stays untouched and selectable at the login screen.
 
-| Rice | The idea | Bar | Launcher |
+| Theme | The idea | Bar (its own place; movable) | Motion |
 |---|---|---|---|
-| **Pebble** (default) | soft and round, glass | three floating pills, stretching dots, a dock | rounded panel, app grid |
-| **Monolith** | the desktop as a terminal | bottom text strip, mono | a command strip across the top |
-| **Console** | amber HUD | no bar: a readout on the top edge, corner brackets | large mono query |
-| **Workstation** | familiar | bottom taskbar: Start, search, running apps, clock | start menu from the corner |
-| **Poster** | loud and flat | paper bar, huge workspace blocks | half the screen, huge query |
-| **Glass** | the classic | translucent menu bar, glass dock | split glass pieces |
-| **Canvas** | GNOME manners | black bar, centred clock, one status pill | a large sheet over a dark screen |
-| **Atlas** | Swiss | black rail on the right, square blocks | heavy type |
-| **Noir** | the screen as a film | letterbox bands, serif credits, subtitle notifications | serif sheet |
-| **Garden** | one island | a pale capsule at the bottom with apps, workspaces, clock | rises from the island |
-| **Zen** | almost nothing | the time and dots in the corner | small centred list |
-| **Mist** | light, monochrome | one thin top line with ticks | small centred list |
-| **Halo** | one pill | a small floating pill at the bottom | small centred list |
+| **Pebble** (default) | soft and round, glass, coral and sea green | three floating glass pills at the top | soft, a touch of spring |
+| **Monolith** | the desktop as a terminal, acid lime | a mono text strip at the bottom | near-instant, nothing to wait for |
+| **Console** | amber CRT readout | a transparent mono line on the top edge, corner brackets | crisp snap-on |
+| **Poster** | loud and flat, red and cobalt on paper | a paper bar with huge workspace blocks, hard shadows | slams in from the trigger |
+| **Glass** | the classic, electric blue | a translucent menu bar | smooth ease-out |
+| **Atlas** | Swiss, signal red on white | a black rail on the right, square blocks | snappy slide from the rail |
 
-Each rice also brings its own fonts, corners, window frames, shadows, motion, notification style, lock
-screen, terminal palette and wallpaper. `rice` lists them, `rice garden` switches; or Settings → Rices,
-where **Adjust** changes any rice's accent colours, corners, gaps, frame, bar size, font, text size, motion,
-shadow and blur (kept per rice; Reset puts it back).
+Each theme brings its own fonts, corners, window frames, shadows, panel depth, motion, notification style,
+lock screen, terminal palette and wallpaper. `theme` lists them, `theme atlas` switches; or Settings →
+Appearance → Themes, where **Adjust** changes any theme's accent colours, corners, gaps, frame, font, text size,
+window motion, shadow and blur (kept per theme; Reset puts it back), and **Animations** is Full, Reduced or Off.
 
-- **The bar** (its place and shape come from the rice): workspaces, the focused app, clock (calendar), tray,
-  keyboard layout, status (Control Center), notifications; marks while recording (click the red dot to stop),
-  in Do Not Disturb and with Caffeine on. The utility menu (system logo, where the rice has one) holds the power menu
+- **The bar**: one engine for every theme. Settings → Menu Bar puts it on any edge, sizes it, floats or attaches it,
+  hides it per monitor and chooses the items of its three sections (move, reorder, add, remove): apps button,
+  workspaces, active window, clock, date, media player, tray, keyboard layout (US / Serbian Latin), notifications,
+  quick settings, network, Bluetooth, volume, brightness, battery, power profile, CPU, memory, GPU, recording,
+  power menu. Every item works across a horizontal bar and down a vertical one. Panels open beside the item you click.
+- **The dock**: in every theme, on by default; Settings → Dock: on/off, edge (beside the bar when they share one),
+  size, icon size, auto-hide, pinned apps, open windows, per monitor
+- **Lock screen**: Settings → Lock Screen with a live preview: clock style and position, date, greeting,
+  your picture, battery / keyboard layout / now playing, background picture, blur and brightness
 - **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, touchpad and touchscreen on/off,
   screen recording, media, power mode, display, sound and microphone; rearrange its sections and tiles in Settings
 - **Spotlight** (tap `Super`): suggestions first (weather, next event, last copied, most used apps, recent items, quick actions), then a Top Hit and results grouped apps → files →
@@ -38,7 +37,8 @@ shadow and blur (kept per rice; Reset puts it back).
 - **Notification centre** with history, grouping and Do Not Disturb; **Mission Control**
   (`Super+W`, three fingers up); **dock**: all-apps button, pinned apps (drag to reorder), then each open window as its own live picture (click to bring up or minimise, middle-click to close, right-click for more)
 - Keyboard shortcuts, displays, a shared monitor, sound, network, Bluetooth, power, wallpaper folders
-  and slideshow, startup apps, lock and sleep, default apps, weather, rices and their adjustments: all editable in Settings
+  and slideshow, startup apps, lock and sleep, default apps, weather, themes and their adjustments: all editable in
+  Settings, which has a search field
 - Small tools: `record` (screen recording, Super+Alt+R), `dropterm` (drop-down terminal, Super+\`),
   `webapp add "Name" URL` (a site as its own app), `remind 20m "Stand up"` (a reminder notification)
 - Hardware extras that switch themselves on where the hardware exists: ASUS fan curves and charge
@@ -146,7 +146,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` 
 | `packages/` | `manifest.txt` (logical name, module, why) and `arch.txt` / `fedora.txt` (real names and sources) |
 | `distros/` | `arch.sh`, `fedora.sh`: install packages, enable repos, NVIDIA driver |
 | `plugins/` | Hyprland plugin (title-bar minimise), built by `hypr-plugins` |
-| `docs/` | `ARCHITECTURE.md` (how it fits together), `DESIGN.md` (rices and design rules), `REDESIGN-PLAN.md`, `rice-concepts.html`, `AUDIT.md`, `RESEARCH.md`, `USER-GUIDE.md`, `RECOMMENDATIONS.md`, `thermal-audit.md` |
+| `docs/` | `ARCHITECTURE.md` (how it fits together), `DESIGN.md` (themes and design rules), `REDESIGN-PLAN.md`, `AUDIT.md`, `RESEARCH.md`, `USER-GUIDE.md`, `RECOMMENDATIONS.md`, `thermal-audit.md` |
 
 ### A new computer
 
@@ -166,19 +166,23 @@ and borders, keyboard layouts, touchpad, shortcuts, default and startup apps, po
 Settings writes to `~/.config` only (list in the user guide). Defaults live in `ConfigData.qml`,
 `config/hypr/.config/hypr/defaults/` and the Hyprland modules.
 
-### Rices, colours and fonts
+### Themes, colours and fonts
 
-All of it is data in `config/quickshell/.config/quickshell/Rices.qml`; `Theme.qml` turns the active rice into
-tokens, `ThemeSync.qml` carries it to Hyprland (frames, gaps, shadow, blur, motion), the lock screen, GTK,
-Ghostty, fuzzel and the wallpaper. Design rules: `docs/DESIGN.md`.
+All of it is data in `config/quickshell/.config/quickshell/Themes.qml`; `Theme.qml` turns the active theme plus
+your Settings into tokens, `ThemeSync.qml` carries it to Hyprland (frames, gaps, shadow, blur, motion), the lock
+screen (`LockScreen.qml`), GTK, Ghostty, fuzzel and the wallpaper. Design rules: `docs/DESIGN.md`.
 
-- Switch: `rice NAME` or Settings → Rices. Adjust a rice there (accent colours, corners, gaps, frame, bar size,
-  font, text size, motion, shadow, blur); `Everywhere` holds what stays the same in every rice (text scale,
-  animations, terminal colours, the rice's wallpaper or yours).
-- Add a rice: one entry in `Rices.list` (copy the closest one), a terminal palette in
-  `config/ghostty/.config/ghostty/themes/<Name>`, a wallpaper design in `config/scripts/.local/bin/rice-wallpaper`,
-  and if it needs a new bar shape, a layout in `Bar.qml`.
-- Fonts the rices use and the distros don't ship are bundled in `config/fonts/` (SIL Open Font License).
+- Switch: `theme NAME` or Settings → Appearance → Themes, and adjust it there.
+- **Add a theme**: copy the closest entry in `Themes.list` and change its data (colour, font, shape, bar style and
+  default items, dock style, popup depth, motion, lock clock and alignment, hypr). Add a terminal palette in
+  `config/ghostty/.config/ghostty/themes/<Name>` and a wallpaper design in `config/scripts/.local/bin/theme-wallpaper`.
+  No component code changes: the bar, dock, panels and lock screen read the tokens, and every layout option works.
+- **Add a setting**: a default in `ConfigData.qml`, its rule in `Config.qml`'s `schema` (values are checked when
+  saved and when the file is loaded; a missing or bad value falls back to the default), a row on its
+  `SettingsPage<Id>.qml` (`ConfigToggle`, `ConfigChoice`, `ConfigSlider` bind to it), and a search word in that
+  page's `keys` in `SettingsApp.qml`. **Add a bar item**: a component in `BarWidget.qml` and an entry in
+  `Themes.barItems`.
+- Fonts the themes use and the distros don't ship are bundled in `config/fonts/` (SIL Open Font License).
 - Monitors: Settings → Displays (arrangement, scale, refresh, mirror); per-computer defaults in `hosts/<name>/home/.config/hypr/host.lua`.
 
 ### Screenshots

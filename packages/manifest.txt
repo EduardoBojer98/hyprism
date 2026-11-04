@@ -61,7 +61,7 @@ ddcutil                  tools     external monitor control over DDC/CI (monswit
 xdg-utils                tools     xdg-open / xdg-mime: default apps, opening files from Spotlight
 glib2                    tools     gsettings: GTK light/dark, accent, icons, cursor
 kdialog                  tools     folder/file picker in Settings (wallpaper folders, add theme)
-imagemagick              tools     draws each rice's wallpaper (rice-wallpaper), blurred wallpaper copies
+imagemagick              tools     draws each theme's wallpaper (theme-wallpaper), blurred wallpaper copies
 fastfetch                tools     system summary in new terminals
 
 # Look

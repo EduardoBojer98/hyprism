@@ -495,24 +495,24 @@ touched by the installer (KDE guard).
 
 # Redesign (2026-11-04, same branch)
 
-The neon colour themes were rejected ("the same one with different colours"). Replaced by 13 rices,
+The neon colour themes were rejected ("the same one with different colours"). Replaced by 13 themes,
 whole-desktop designs (`docs/DESIGN.md`, `docs/REDESIGN-PLAN.md`). What was checked:
 
 | Check | Result |
 |---|---|
-| Every rice applied live, screenshots of both screens (laptop 1.2×, Acer 1×) with a test window | ✔ 13/13 render; bars, frames, wallpapers, terminal palettes switch |
+| Every theme applied live, screenshots of both screens (laptop 1.2×, Acer 1×) with a test window | ✔ 13/13 render; bars, frames, wallpapers, terminal palettes switch |
 | Launcher, notifications, Control Center position on each bar edge | ✔ (placements and corners checked on Pebble, Monolith, Console, Poster, Canvas, Workstation, Noir) |
 | `hyprctl configerrors` after every reload; all 7 motion presets × 4 shadows through `hyprctl eval` | ✔ empty / accepted |
 | Quickshell log after a clean restart | ✔ no errors |
 | Duplicate keybinds | ✔ none |
-| shellcheck on the new scripts (rice, rice-wallpaper, record, dropterm, webapp, remind) | ✔ clean |
-| Per-rice adjustments: accent + radius reach Hyprland and back on Reset | ✔ |
-| Text on accent fills ≥ 4.5:1 in every rice | ✔ enforced by `Rices.resolve` (Glass, Poster, Workstation, Canvas were 2.7–3.8 before) |
+| shellcheck on the new scripts (theme, theme-wallpaper, record, dropterm, webapp, remind) | ✔ clean |
+| Per-theme adjustments: accent + radius reach Hyprland and back on Reset | ✔ |
+| Text on accent fills ≥ 4.5:1 in every theme | ✔ enforced by `Themes.resolve` (Glass, Poster, Workstation, Canvas were 2.7–3.8 before) |
 | Satty 0.20 (Fedora, sdegler COPR) and wf-recorder (Fedora repo) availability | ✔ checked in a fedora:44 container |
 
 Found and fixed along the way: banded wallpapers (ImageMagick wrote palette PNGs → `PNG24:`), Ghostty's
-fixed background and appended font hid the rice's terminal look, window-animation settings overrode the
-rice's motion (removed), Bar zone property names collided with Item anchors.
+fixed background and appended font hid the theme's terminal look, window-animation settings overrode the
+theme's motion (removed), Bar zone property names collided with Item anchors.
 
 Not tested from here (needs you): the new lock designs (Pebble, Console, Noir) — locking and quitting
 without a password counts as a failed login; screen recording (wf-recorder isn't installed yet);
@@ -520,22 +520,22 @@ touchpad off/on and touchscreen off/on (the commands are accepted, the effect ne
 
 # Audit 3: full overhaul checklist (2026-11-04, branch `overhaul/ui-audit`)
 
-Checklist for the shell/theme/settings overhaul (phases 2-7). Method: all 13 rices switched live and
+Checklist for the shell/theme/settings overhaul (phases 2-7). Method: all 13 themes switched live and
 screenshotted on the Acer (bar, Control Center, launcher, calendar), Settings pages screenshotted,
 static read of every component and settings page. Status column is filled in as phases land.
 
 ## Architecture as found
 
 - **Engine**: Quickshell 0.3.2 (QML), one process started by Hyprland autostart. `shell.qml` makes a
-  bar (+ dock if the rice has one) + hot corners per screen; everything else is a singleton panel.
-- **Rices** (`Rices.qml`): 13 designs as data (colour, font, shape, bar kind/edge/size/ws style,
+  bar (+ dock if the theme has one) + hot corners per screen; everything else is a singleton panel.
+- **Themes** (`Themes.qml`): 13 designs as data (colour, font, shape, bar kind/edge/size/ws style,
   launcher placement, notify corner/kind, hypr gaps/border/shadow/motion, lock/term/wall ids).
-  `Theme.qml` turns the active one + per-rice adjustments into tokens. `ThemeSync.qml` pushes it to
-  Hyprland, hyprlock, GTK, Ghostty, wallpaper. CLI: `rice NAME`.
+  `Theme.qml` turns the active one + per-theme adjustments into tokens. `ThemeSync.qml` pushes it to
+  Hyprland, hyprlock, GTK, Ghostty, wallpaper. CLI: `theme NAME`.
 - **Bar** (`Bar.qml`): 13 hand-built layouts, one per `bar.kind`, from shared pieces (`BarWs`,
   `BarStatus`, `BarTray`, `BarKeyboard`, `BarBell`, `BarApp`, `BarItem`). Position, size and widgets
-  are fixed by the rice; the user can't move or reorder anything.
-- **Dock** (`Dock.qml`): only when the rice has `dock: true` (Pebble, Glass); bottom edge only.
+  are fixed by the theme; the user can't move or reorder anything.
+- **Dock** (`Dock.qml`): only when the theme has `dock: true` (Pebble, Glass); bottom edge only.
 - **Popups**: `CursorPopup.qml` places every panel either at the pointer or in a fixed slot beside the
   bar ("top", "topLeft", "topRight"), not at the trigger. `TrayMenu`, `Dropdown`, `ToolTipText` are
   Qt `PopupWindow`s anchored below their item.
@@ -547,20 +547,20 @@ static read of every component and settings page. Status column is filled in as 
   sets picture, blur, brightness.
 - **Icons**: Material Design Icons glyphs from JetBrainsMono Nerd Font (bar, menus, Settings) + app
   icons from the icon theme (Papirus). Tray icons are whatever the app ships (coloured).
-- **Motion**: shell durations from `Theme.anim*` (scaled per rice); Hyprland presets in
+- **Motion**: shell durations from `Theme.anim*` (scaled per theme); Hyprland presets in
   `modules/animations.lua`; `appearance.animations` is the off switch.
 
 ## Visual bugs (screenshots)
 
 | # | Where | Finding |
 |---|---|---|
-| V1 | Calendar, Weather, UtilityMenu, Sensors, CC | Open in a fixed slot or at the pointer, not under the item clicked; from a shortcut the calendar lands mid-screen (every rice). |
+| V1 | Calendar, Weather, UtilityMenu, Sensors, CC | Open in a fixed slot or at the pointer, not under the item clicked; from a shortcut the calendar lands mid-screen (every theme). |
 | V2 | Control Center, Sensors with a bottom bar or rail (Workstation, Garden, Halo, Monolith, Atlas) | Panel floats mid-right; height capped with the top reserve only, so tall content can run off the top. |
-| V3 | Tray (all rices) | Full-colour app icons next to monochrome glyphs; keyboard layout is a boxed "US" in some rices, plain "us" in others. |
+| V3 | Tray (all themes) | Full-colour app icons next to monochrome glyphs; keyboard layout is a boxed "US" in some themes, plain "us" in others. |
 | V4 | Canvas, Halo, Zen, Mist | Bars miss widgets (no keyboard layout, tray or bell in some); not complete. |
-| V5 | Lock screens center/minimal/stacked/noir/terminal/pebble | Hardcoded white text and fonts; ignore the rice palette; light rices (Atlas, Mist) get white-on-light risk. |
+| V5 | Lock screens center/minimal/stacked/noir/terminal/pebble | Hardcoded white text and fonts; ignore the theme palette; light themes (Atlas, Mist) get white-on-light risk. |
 | V6 | Weather, Calendar, Sensors, CC, Dropdown, TrayMenu, Osd, Dock tooltip | ~40 hardcoded pixel sizes/radii instead of tokens; text without elide (Weather city, Clipboard, WindowMenu). |
-| V7 | Scrims (CursorPopup, PowerMenu, Cheatsheet, MissionControl) | Four different hardcoded black alphas, not light-rice aware. |
+| V7 | Scrims (CursorPopup, PowerMenu, Cheatsheet, MissionControl) | Four different hardcoded black alphas, not light-theme aware. |
 | V8 | NotificationCard | Dismiss button overlaps the title on hover; subtitle style hardcodes a dark outline. |
 
 ## Functional bugs
@@ -569,15 +569,15 @@ static read of every component and settings page. Status column is filled in as 
 |---|---|---|
 | F1 | Reduce motion | `appearance.animations = false` does not stop CursorPopup (140/160 ms), TrayMenu, Dropdown, Notifications, Osd, Dock (260/520 ms) motion. |
 | F2 | Popups | The full-screen catcher stays up during the fade-out and swallows clicks (~140 ms) even with animations off. |
-| F3 | Dock | Bottom-only; styles chosen by `rice.id === "pebble"`; would overlap any bottom bar or rail; dead styles (panel/clear/shelf). |
+| F3 | Dock | Bottom-only; styles chosen by `theme.id === "pebble"`; would overlap any bottom bar or rail; dead styles (panel/clear/shelf). |
 | F4 | TrayMenu, Dropdown, ToolTipText | Always open downward / top margin only; wrong for bottom and side bars. |
 | F5 | Osd | Fixed `reserveBottom + 90`, assumes a dock is there. |
 | F6 | Motion | Width/height/anchor margins animated in Dock, Launcher, ClipboardView (layout per frame); Dock uses OutBack overshoot against the "no overshoot" rule. |
-| F7 | Bar | Position, size, floating, margins, per-monitor, widget choice/order: none are settings; all fixed per rice. |
+| F7 | Bar | Position, size, floating, margins, per-monitor, widget choice/order: none are settings; all fixed per theme. |
 | F8 | Lock screen | Settings has picture/blur/brightness only; no clock/date style, position, widgets, avatar, layout, no live preview of those. |
 | F9 | Settings › Window Look Reset | Resets 4 `appearance` keys that no longer exist (`SettingsPageWindowlook.qml:47`); the real reset after it may never run. |
 | F10 | Settings › Displays › Night Light warmth | Slider has no width inside the row (`SettingsPageDisplays.qml:322`); likely 0 px, unusable. |
-| F11 | Settings › Rices › accent fields | An invalid hex + Enter silently deletes the override instead of refusing (`SettingsPageAppearance.qml:102,114`). |
+| F11 | Settings › Themes › accent fields | An invalid hex + Enter silently deletes the override instead of refusing (`SettingsPageAppearance.qml:102,114`). |
 | F12 | Settings › Shared Monitor | Mirror mode is unvalidated free text written into a file `monswitch` sources as shell; edits are lost without Save, no unsaved hint. |
 | F13 | Settings › Keyboard & Touchpad | Starts from hardcoded defaults; if the `hyprctl` read fails, the first change overwrites real values. |
 | F14 | Settings › Lock & Sleep | Throws on a listener without `timeout`; values outside the presets show no selection. |
@@ -591,9 +591,9 @@ static read of every component and settings page. Status column is filled in as 
 
 | # | Gap |
 |---|---|
-| M1 | Dock in 2 of 13 rices; no position, size or per-monitor options. |
-| M2 | Bar widgets missing: brightness, Bluetooth, media player, power profile, GPU, recording indicator, power menu as bar items (some live only in the Control Center); widget set differs by rice. |
-| M3 | Per-rice motion exists only as a time scale + Hyprland preset; menus/dock/notifications share one fade-slide. |
+| M1 | Dock in 2 of 13 themes; no position, size or per-monitor options. |
+| M2 | Bar widgets missing: brightness, Bluetooth, media player, power profile, GPU, recording indicator, power menu as bar items (some live only in the Control Center); widget set differs by theme. |
+| M3 | Per-theme motion exists only as a time scale + Hyprland preset; menus/dock/notifications share one fade-slide. |
 | M4 | Lock screen editor (clock/date style and position, widgets, avatar, layout, preview). |
 | M5 | Settings has no search, no Bar layout editor, no "reduce animations" wording, no per-monitor bar/dock. |
-| M6 | "Rice" naming in ~50 files, the `rice` and `rice-wallpaper` scripts, Ghostty theme names, docs. |
+| M6 | "Theme" naming in ~50 files, the `theme` and `theme-wallpaper` scripts, Ghostty theme names, docs. |

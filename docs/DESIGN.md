@@ -1,95 +1,87 @@
 ---
-name: Rices
-description: Thirteen whole-desktop designs for Hyprland + Quickshell. A rice changes structure, not just colour.
-source: config/quickshell/.config/quickshell/Rices.qml (data), Theme.qml (tokens), ThemeSync.qml (Hyprland, hyprlock, GTK, Ghostty, wallpaper)
+name: Themes
+description: Six whole-desktop designs for Hyprland + Quickshell. A theme sets look and motion; every layout option works in every theme.
+source: config/quickshell/.config/quickshell/Themes.qml (data), Theme.qml (tokens), ThemeSync.qml (Hyprland, hyprlock, GTK, Ghostty, wallpaper), LockScreen.qml (lock layout)
 default: pebble
 ---
 
-# Rices
+# Themes
 
 ## Idea
 
-Most desktop "themes" (Omarchy, HyDE, ML4W) repaint the same layout. A rice here is a whole design:
-where the bar is and what shape it has, whether there's a dock, how the launcher works, the
-typefaces, the corners, the window frames, the shadow, the motion, the notification style, the lock
-screen, the terminal palette and the wallpaper. The 13 rices share one engine and every component,
-so a new rice is mostly data. Concepts as drawn before building: `docs/rice-concepts.html`.
+A theme is a whole design: the bar's look and its own default items, the dock's shape, how panels sit
+and move, the typefaces, corners, window frames, shadows, notification style, lock screen, terminal
+palette and wallpaper. Layout is yours: Settings moves the bar to any edge, floats it, picks its items
+and places the dock, and every option works in every theme. The six themes share one engine and every
+component, so a new theme is data only.
 
-The design rules came from the taste-skill's app-screen study (colour on state not chrome, flat tone
-steps instead of lines and shadows, real type sizes, no ornament for its own sake) and from what the
-Hyprland Hall of Fame entries do well (one idea carried through layout, type and motion).
+The design rules come from the installed design and animation skills (impeccable, emil-design-eng,
+animate, choreograph, animation-performance, taste-skill app screens): colour marks state, tone steps
+over ornament, one icon language, motion that confirms an action and never makes you wait.
 
-## Anatomy of a rice (`Rices.qml`)
+## Anatomy of a theme (`Themes.qml`)
 
 | Part | Values |
 |---|---|
 | `colour` | ground, surface, raised, line, text, muted, faint, accent, onAccent, accent2, ok, warn, err |
-| `font` | ui, display (clocks, big numbers, titles), mono, size (body px), displayWeight |
+| `font` | ui, display (clocks, big numbers), mono, size (body px), displayWeight |
 | `shape` | radius, radiusSmall, line (panel border px), material: `solid` or `glass` |
-| `bar` | kind (13 layouts in `Bar.qml`), edge, size, ws (workspace indicator in `BarWs.qml`) |
-| `launcher` | placement (center, strip, corner, half, column, island, fullscreen), view (list, grid, start, inline), header (none, query) |
-| `notify` | corner, kind (bubble, card, toast, paper, line, block, tag, subtitle) |
-| `hypr` | gapsIn, gapsOut, border, rounding, active/inactive frame colours, shadow (none, soft, paper, hard), blur, motion |
-| `lock`, `term`, `wall` | hyprlock design, Ghostty palette, `rice-wallpaper` design |
+| `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, voice (icons, words, caps), mono, ws (dots, filled, text, numbers, blocks, squares), clock (plain, accent, display), decor (brackets), start / center / end items |
+| `dock` | shape (pill, tile, block), hover (lift, grow, plate), mark (line, dot, bar), fill |
+| `popup` | depth: soft (blurred shadow), hard (offset block), none (frame only) |
+| `motion` | enter / exit ms, curve (cubic bezier), travel px out of the trigger's side, start scale, press scale |
+| `launcher`, `notify` | placement, view, header; corner, kind |
+| `hypr` | gaps, border, rounding, active/inactive frame colours, shadow, blur, window motion preset |
+| `lock`, `term`, `wall` | lock clock style + alignment, Ghostty palette, `theme-wallpaper` design |
 
-`Theme.qml` turns the active rice (plus your adjustments) into the tokens every component reads,
-under the same names as before (`Theme.accent`, `Theme.radius`, `Theme.font`, …), so no component
-knows which rice is on.
+`Theme.qml` turns the active theme plus Settings (bar edge, size, floating, items; dock edge and size;
+animation level) into tokens. No component knows which theme is on.
 
-## The rices
+## The themes
 
-| Rice | Ground / text / accent | Type | Shape | Bar | Motion |
-|---|---|---|---|---|---|
-| Pebble | `#16141f` / `#ece8f6` / `#ff9e7a` (+ `#9ad1c0`) | Outfit | r18, glass | three floating pills, dots | spring |
-| Monolith | `#0b0c0a` / `#d7ddcc` / `#b6ff3b` | JetBrains Mono | r0, 2px frame | bottom text strip, filled numbers | instant |
-| Console | `#05080f` / `#e9dcc0` / `#ffb000` | Martian Mono | r0, 1px | top readout + corner brackets | crisp |
-| Workstation | `#0f1419` / `#e6edf3` / `#3b82f6` | IBM Plex Sans | r8 | bottom taskbar | ease |
-| Poster | `#141414` / paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | Archivo Black + Archivo | r0, 3px, hard shadow | paper bar, huge blocks | slam |
-| Glass | `#141821` / `#f3f4f8` / `#5b9cff` | IBM Plex Sans | r12, glass | translucent menu bar + dock | ease |
-| Canvas | `#1d1d20` / `#ffffff` / `#3584e4` | Cantarell | r14, no frame | black bar, centred clock | ease |
-| Atlas | `#f2f2f0` / `#111111` / `#e30613` | Archivo | r0, 2px black | black rail on the right, squares | snappy |
-| Noir | `#0d0d0d` / `#e9e4da` / `#f2d48a` | Fraunces + IBM Plex Sans | r0, hairline | letterbox bands, roman numerals | fade |
-| Garden | `#141c16` / `#eef2e6` / `#9fd18b` (+ `#e8efe0`) | Outfit | r14 | one pale capsule at the bottom | spring |
-| Zen | `#111113` / `#e8e8ea` / `#e8e8ea` | IBM Plex Sans | r10, no frame, wide gaps | the time and dots in the corner | ease |
-| Mist | `#f3f3f1` / `#1a1a1a` / `#1a1a1a` | IBM Plex Sans | r6, hairline | one thin top line, ticks | ease |
-| Halo | `#0e0f12` / `#eceef2` / `#8ab4ff` | Outfit | r16 | one small pill at the bottom | spring |
+| Theme | Ground / text / accent | Type | Shape · depth | Bar (own edge) | Dock | Motion |
+|---|---|---|---|---|---|---|
+| Pebble | `#16141f` / `#ece8f6` / `#ff9e7a` (+ `#9ad1c0`) | Outfit | r18, glass · soft | top, three floating glass pills, dots | glass pill, icons lift | 240/150 ms, slight overshoot, 10 px, scale 0.94 |
+| Monolith | `#0b0c0a` / `#d7ddcc` / `#b6ff3b` | JetBrains Mono | r0, 1-2 px lines · none | bottom, mono words, filled numbers | square block, plate, bar mark | 90/60 ms fade, no travel |
+| Console | `#05080f` / `#e9dcc0` / `#ffb000` | Martian Mono | r0, 1 px · none | top, transparent caps readout, corner brackets | square block | 130/80 ms snap, scale 0.985 |
+| Poster | `#141414` / paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | Archivo Black + Archivo | r0, 3 px · hard offset | top, paper, huge workspace blocks, big clock | paper block, hard shadow, lift | 200/110 ms expo-out, 28 px slam |
+| Glass | `#141821` / `#f3f4f8` / `#5b9cff` | IBM Plex Sans | r12, glass · soft | top, translucent menu bar | glass tile, magnify | 220/140 ms strong ease-out, 6 px, 0.97 |
+| Atlas | `#f2f2f0` / `#111111` / `#e30613` | Archivo | r0, 2 px · none | right, black rail, squares, stacked clock | ink block | 160/100 ms, 14 px from the rail |
 
-Measured contrast (WCAG 2): body text on surfaces 13.2:1 or more in every rice; secondary text 5.9:1
-or more; text on an accent fill is forced to 4.5:1 or more by the engine (`Rices.resolve`), which
-swaps in dark or light text when a rice's (or your) accent needs it.
+Contrast (WCAG 2): body text on surfaces 13.2:1 or more; secondary text 5.9:1 or more; text on an accent
+fill is forced to 4.5:1 or more by `Themes.resolve`.
 
 ## Rules
 
-1. **Structure first, colour second.** A new rice earns its place by a different layout or behaviour,
-   not a different palette. Palette-only variations go in Adjust, not in the list.
-2. **Colour marks state.** The accent appears on the current workspace, selection, toggles that are
-   on, the focused window's frame and the one thing to press. Panels stay in tone steps.
-3. **Tone steps, not ornament.** Surfaces separate by ground → surface → raised. Lines only where the
-   rice is about lines (Monolith, Atlas, Poster). Glass only in the rices about glass (Pebble, Glass).
-4. **Type does the work.** Each rice has one UI face and at most one display face; numbers use
-   tabular figures. Display faces are for the clock, the launcher query and lock-screen titles.
-5. **Status colours stay apart from the accent** and always come with a word or icon.
-6. **Motion has a character per rice** (instant, crisp, snappy, slam, ease, spring, fade) and stays
-   short; `Scale all text` and `Animations` in Settings → Rices → Everywhere apply to every rice.
-7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0.
-   Bars and panels were checked on both (`rice` cycled with screenshots of each).
+1. **Structure is yours, character is the theme's.** Every theme supports every bar edge, size, float,
+   item set and dock placement. A theme earns its place by its look and motion, not by a fixed layout.
+2. **Colour marks state.** The accent is on the current workspace, selection, toggles that are on, the
+   focused window's frame and the one thing to press. Panels stay in tone steps.
+3. **One icon language.** Material Design Icons from the bundled Nerd Font for every shell glyph; tray
+   icons are drawn in the bar's ink (Settings → Icons can keep app colours); app icons from the icon theme.
+4. **Type does the work.** One UI face, at most one display face; tabular figures for numbers.
+5. **Motion confirms, never delays.** Panels open out of the trigger's side on the theme's curve, exit
+   faster than they enter, animate only transform and opacity, and take input from the first frame; a
+   closing panel takes none. Keyboard-opened panels have no travel worth waiting for. Settings →
+   Animations: Full (the theme's), Reduced (90 ms fades, nothing moves), Off.
+6. **Depth belongs to the world.** Soft shadows only in the glass themes, the hard offset block only in
+   Poster (the one neo-brutalist world), frames alone in the line themes.
+7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0;
+   panels are capped to the room between bar and dock and kept on their monitor.
 
-## Adjusting a rice
+## Adjusting a theme
 
-Settings → Rices → Adjust (or `Config.appearance.custom[rice]`): accent, accent2, radius, gapsIn,
-gapsOut, border, barSize, font, size, motion, shadow, blur. `Rices.resolve` lays them over the rice;
-Reset removes them. Adjustments are kept per rice, so switching away and back keeps them.
+Settings → Appearance → Themes → Adjust (or `Config.appearance.custom[theme]`): accent, accent2, radius,
+gapsIn, gapsOut, border, font, size, window motion, shadow, blur. `Themes.resolve` lays them over the theme;
+Reset removes them. Bar and dock size and placement live in their own Settings pages and apply to every theme.
 
 ## Where the look reaches
 
 | Target | How |
 |---|---|
-| Shell (bar, dock, launcher, panels, notifications, OSD, Settings, cheatsheet) | Theme tokens, live |
-| Hyprland frames, gaps, rounding, shadow, blur, motion | `ThemeSync` → `hyprctl eval` + `hypr/settings/theme.lua` → `look.lua`, `animations.lua` |
-| Lock screen | `hypr/settings/hyprlock-theme.conf` → `lockscreens/<rice.lock>.conf` |
-| Terminal | `ghostty/theme.conf` → `themes/<Rice>`, font, opacity (see-through only in glass rices) |
+| Shell (bar, dock, panels, launcher, notifications, OSD, Settings) | Theme tokens, live |
+| Hyprland frames, gaps, rounding, shadow, blur, motion | `ThemeSync` → `hyprctl eval` + `hypr/settings/theme.lua` |
+| Lock screen | `LockScreen.qml` layout → `hypr/settings/hyprlock-theme.conf`; Settings preview draws the same list |
+| Terminal | `ghostty/theme.conf` → `themes/<Theme>` |
 | GTK apps | gsettings: light/dark, accent, icons, font, cursor |
-| Wallpaper | `rice-wallpaper <design>` (ImageMagick, drawn once) → Wallpapers → hyprpaper |
-| Screenshot selection | `screenshot` reads the accent from `theme.lua` |
-
-Qt/KDE apps keep following KDE's own colour scheme on purpose, so the KDE session stays untouched.
+| Wallpaper | `theme-wallpaper <design>` (ImageMagick, drawn once) → hyprpaper |

@@ -30,11 +30,11 @@ Login ─► Hyprland reads ~/.config/hypr/hyprland.lua
 | Distro backends | `distros/arch.sh`, `distros/fedora.sh` | Package install, repos (COPR / RPM Fusion), NVIDIA driver. Picked from `/etc/os-release` `ID`, then `ID_LIKE`. |
 | Packages | `packages/manifest.txt` (logical name, module, why), `arch.txt`, `fedora.txt` | One line per package with its reason. `--only tools` etc. installs a module. |
 | Hosts | `hosts/default/`, `hosts/flow-x13/` | `host.conf` (hostnames), `packages.txt`, `home/` (linked), `defaults/` (copied once), `steps/` (system changes, asked first). |
-| Hyprland | `config/hypr/.config/hypr/` | Lua config (Hyprland 0.57). `hyprland.lua` loads modules in order. Lock screen `hyprlock.conf` + `lockscreens/*.conf` designs; `defaults/` seeds `settings/`. |
-| Rices | `Rices.qml`, `Theme.qml`, `ThemeSync.qml`, `Bar.qml` + `Bar*.qml`, `Sys.qml` | Rices.qml holds the 13 whole-desktop designs as data and merges your adjustments; Theme turns the active one into tokens; ThemeSync pushes it to Hyprland, hyprlock, GTK, Ghostty, wallpaper; Bar.qml has one layout per bar kind built from shared pieces (BarWs, BarStatus, BarTray, BarKeyboard, BarBell, BarApp); Sys holds live system state for all of them. `docs/DESIGN.md`. |
+| Hyprland | `config/hypr/.config/hypr/` | Lua config (Hyprland 0.57). `hyprland.lua` loads modules in order. Lock screen `hyprlock.conf` + the generated `settings/hyprlock-theme.conf`; `defaults/` seeds `settings/`. |
+| Themes | `Themes.qml`, `Theme.qml`, `ThemeSync.qml`, `LockScreen.qml`, `Bar.qml` + `BarWidget.qml` + `Bar*.qml`, `Dock.qml`, `Anchor.qml`, `CursorPopup.qml`, `Sys.qml` | Themes.qml holds the 6 designs as data (and the bar item catalogue) and merges your adjustments; Theme turns the active one plus Settings into tokens; ThemeSync pushes it to Hyprland, hyprlock, GTK, Ghostty, wallpaper. One Bar engine lays out three sections of BarWidget items on any edge; the Dock works on any edge beside the bar; Anchor records the clicked item so CursorPopup opens panels beside it with the theme's motion; LockScreen builds the lock layout for hyprlock and the Settings preview. `docs/DESIGN.md`. |
 | Shell | `config/quickshell/.config/quickshell/` (~105 QML files) | `shell.qml` root. `ConfigData.qml` = every user default, `Config.qml` = load/save/validate `settings.json` + IPC (`qs ipc call config set …`). `Theme.qml` = design tokens. `ThemeSync.qml` = pushes tokens to Hyprland, hyprlock, GTK, Ghostty, fuzzel. `SettingsApp.qml` + `SettingsPage*.qml` = the Settings app (Super+I). |
-| Scripts | `config/scripts/.local/bin/` | `rice`, `rice-wallpaper`, `screenshot`, `screentext` (OCR), `record`, `dropterm`, `webapp`, `remind`, `monswitch` (DDC/CI input switch), `panel` (lid, tablet mode), `powermode`, `asusfan`, `nv` (run on NVIDIA), `clipstore`, `emojipick`, `startup-apps`, `installed-apps`, `theme-add`, `hypr-plugins`, `thermlog`. |
-| Fonts | `config/fonts/.local/share/fonts/linux-setup/` | OFL fonts the rices use that the distros don't package (licences beside them). |
+| Scripts | `config/scripts/.local/bin/` | `theme`, `theme-wallpaper`, `screenshot`, `screentext` (OCR), `record`, `dropterm`, `webapp`, `remind`, `monswitch` (DDC/CI input switch), `panel` (lid, tablet mode), `powermode`, `asusfan`, `nv` (run on NVIDIA), `clipstore`, `emojipick`, `startup-apps`, `installed-apps`, `theme-add`, `hypr-plugins`, `thermlog`. |
+| Fonts | `config/fonts/.local/share/fonts/linux-setup/` | OFL fonts the themes use that the distros don't package (licences beside them). |
 | Apps | `config/ghostty`, `config/fish`, `config/starship`, `config/fuzzel`, `config/fastfetch`, `config/satty`, `config/chrome`, `config/arch-update`, `config/wallpapers` | Each mirrors `~`. |
 | Plugin | `plugins/minimize/main.cpp` | Title-bar minimise button support; built at login by `hypr-plugins`. |
 | Checks | `.github/workflows/ci.yml`, `tests/container-test.sh`, `.githooks/pre-commit` | CI: shellcheck + install twice + doctor in Arch and Fedora containers. Pre-commit: gitleaks. Local shellcheck without installing it: `docker run --rm -v "$PWD:/mnt" -w /mnt koalaman/shellcheck:stable -S warning install.sh distros/*.sh hosts/*/steps/*.sh config/scripts/.local/bin/*` |
@@ -44,11 +44,12 @@ Login ─► Hyprland reads ~/.config/hypr/hyprland.lua
 
 | What | File |
 |---|---|
-| The whole look: colours, fonts, shapes, bar, launcher, motion | `config/quickshell/.config/quickshell/Rices.qml` (rules: `docs/DESIGN.md`); adjust per rice in Settings → Rices |
+| The whole look: colours, fonts, shapes, bar style and items, dock, motion | `config/quickshell/.config/quickshell/Themes.qml` (rules: `docs/DESIGN.md`); adjust per theme in Settings → Appearance → Themes |
+| Bar place, size and items; dock place | Settings → Menu Bar, Settings → Dock (`Config.bar`, `Config.dock`) |
 | Defaults of every Settings option | `config/quickshell/.config/quickshell/ConfigData.qml` |
 | Keybinds | `config/hypr/.config/hypr/modules/binds.lua` (Super+/ shows them; Settings can override) |
 | Gaps, border, glow, blur, shadows | `modules/look.lua` (border/gap values come from Settings → theme.lua) |
-| Animations | `modules/animations.lua` (presets the rices name) |
+| Animations | `modules/animations.lua` (presets the themes name) |
 | Monitors | Settings → Displays (writes `settings/displays.lua`); per-host fallbacks in `host.lua`, `modules/monitors.lua` |
 | Window rules | `modules/rules.lua` |
 | Startup programs | `modules/autostart.lua` (desktop pieces), Settings → Startup Apps (`~/.config/autostart`) |

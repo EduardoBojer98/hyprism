@@ -7,10 +7,9 @@ Font License 1.1, which allows bundling; each licence sits next to its font). St
 | Font | Theme |
 |---|---|
 | Martian Mono | Console |
-| Outfit | Pebble, Garden, Halo |
+| Outfit | Pebble |
 | Archivo, Archivo Black | Poster, Atlas |
-| Fraunces | Noir |
-| IBM Plex Sans | Workstation, Glass, Noir, Zen, Mist |
+| IBM Plex Sans | Glass |
 
 Packaged fonts (packages/): JetBrains Mono Nerd
-(Monolith, icons everywhere), Cantarell (Canvas), Inter.
+(Monolith, icons everywhere), Cantarell and Inter (font choices in Settings).

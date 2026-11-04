@@ -1,11 +1,11 @@
-# Redesign plan: rices
+# Redesign plan: themes
 
 Status: **built** (2026-11-04, branch `overhaul/ui-audit`). Changes from the proposal, all asked for along
 the way: Folio and Platinum dropped; Glass, Canvas (classics), Atlas, Noir, Garden (new) and Zen, Mist,
-Halo (minimal) added, 13 in all; every rice adjustable in Settings; features from Omarchy/HyDE added
+Halo (minimal) added, 13 in all; every theme adjustable in Settings; features from Omarchy/HyDE added
 (screen recording, drop-down terminal, web apps, reminders, touch toggles, next empty workspace).
-Rices are QML data (`Rices.qml`) rather than JSON files: one less loader, same separation.
-Plugins: none added. Every Hyprland update can break a plugin until it's rebuilt, and nothing a rice
+Themes are QML data (`Themes.qml`) rather than JSON files: one less loader, same separation.
+Plugins: none added. Every Hyprland update can break a plugin until it's rebuilt, and nothing a theme
 needed required one: overview is Mission Control, borders/shadows/motion are Hyprland's own.
 
 ## Why the last pass failed
@@ -16,12 +16,12 @@ Hyprland Hall of Fame) changes the **structure** from look to look: where the ba
 has, whether there's a dock, how the launcher is laid out, the typefaces, the corners, how windows
 sit and how things move.
 
-## The idea: a rice is a whole desktop
+## The idea: a theme is a whole desktop
 
-A **rice** bundles every decision that makes a desktop look like itself. Switching rice (`rice NAME`,
-or Settings → Rices) swaps all of them at once, live:
+A **theme** bundles every decision that makes a desktop look like itself. Switching theme (`theme NAME`,
+or Settings → Themes) swaps all of them at once, live:
 
-| Layer | What a rice decides |
+| Layer | What a theme decides |
 |---|---|
 | Layout | Bar: top / bottom / **left rail** / **none**; attached, floating or islands; which modules where. Dock: none / bottom / side. Dashboard: on or off. |
 | Workspaces | Indicator: numbers, dots, blocks, bars, rail squares |
@@ -29,25 +29,25 @@ or Settings → Rices) swaps all of them at once, live:
 | Notifications | Corner, shape (block, card, pill, text-only) |
 | Type | UI face, display face (clock, greeting, lock), mono face |
 | Shape | Corner radius (0 … 22), border style (none / 1px / thick / double), gaps |
-| Surface | Flat solid, tonal panel, or glass + blur (only where the rice is about glass) |
+| Surface | Flat solid, tonal panel, or glass + blur (only where the theme is about glass) |
 | Colour | Its own palette (ground, surface, raised, text, muted, accent, status), dark or light |
 | Windows | Hyprland gaps, border width and colours, rounding, shadow (none, soft, hard offset), blur on/off |
 | Motion | Hyprland animation preset (instant, snappy slide, gentle spring, poster slam) + shell durations |
 | Lock screen | Its own hyprlock design |
-| Wallpaper | Its own, drawn in code for the rice (ImageMagick/SVG), so nothing is downloaded or borrowed |
+| Wallpaper | Its own, drawn in code for the theme (ImageMagick/SVG), so nothing is downloaded or borrowed |
 | Apps | Ghostty palette + font, GTK light/dark + accent, cursor, icons |
 
-User tweaks (Settings) apply **on top of** the active rice and survive a rice switch only where they
-are personal (keyboard, monitors, power, apps). Look settings reset to the rice's own.
+User tweaks (Settings) apply **on top of** the active theme and survive a theme switch only where they
+are personal (keyboard, monitors, power, apps). Look settings reset to the theme's own.
 
 ## What gets removed
 
 - The 5 neon colour themes, `NeonEdge`, the "Neon" tints/designs, the neon notification and lock
   designs, the palette preview page (all from this branch).
-- The 13 calm colour-only themes and the accent palette picker: colour now belongs to a rice. A rice
+- The 13 calm colour-only themes and the accent palette picker: colour now belongs to a theme. A theme
   can still offer variants (e.g. light/dark) where it makes sense.
 - Per-surface "design galleries" that only recolour (Menu Bar / Dock / Launcher designs): replaced by
-  the rice's own layout, with a few real per-surface options kept (bar position, dock on/off).
+  the theme's own layout, with a few real per-surface options kept (bar position, dock on/off).
 
 ## What stays (function, not look)
 
@@ -56,9 +56,9 @@ input, idle, apps, startup, clipboard, keybinds), Control Center logic, notifica
 clipboard, calendar/weather data, Mission Control, screenshot tool, monswitch, install logic.
 These get restyled through tokens; their behaviour doesn't change.
 
-## The six rices (concepts: docs/rice-concepts.html)
+## The six themes (concepts: docs/(theme concepts, removed))
 
-| Rice | Bar | Launcher | Dock | Windows | Type · colour | Motion |
+| Theme | Bar | Launcher | Dock | Windows | Type · colour | Motion |
 |---|---|---|---|---|---|---|
 | **Monolith** | bottom, attached, text only | command strip on the top edge | none | radius 0, 2px frame, 2px gaps | JetBrains Mono · #0b0c0a / lime #b6ff3b | near-instant |
 | **Folio** (light) | left rail: serif clock, i–iv workspaces | centred card with a typeset greeting | none | radius 4, hairline, 12px gaps | Instrument Serif + IBM Plex Sans · stone / ultramarine | slow ease-out |
@@ -74,13 +74,13 @@ the Hall of Fame winners carry a whole idea through layout, art and motion).
 
 ```
 config/quickshell/.config/quickshell/
-  rices/<id>.json          one file per rice: tokens + layout + hyprland + apps (data, no code)
-  Rice.qml                 singleton: loads the active rice, exposes tokens (replaces Theme's palette part)
-  Theme.qml                derives everything from Rice (kept as the one place components read)
+  themes/<id>.json          one file per theme: tokens + layout + hyprland + apps (data, no code)
+  Theme.qml                 singleton: loads the active theme, exposes tokens (replaces Theme's palette part)
+  Theme.qml                derives everything from Theme (kept as the one place components read)
   layouts/
     TopBar.qml             horizontal bar (attached / floating / islands), from today's Bar.qml
     RailBar.qml            NEW vertical rail (left or right): workspaces, clock, status, pinned apps
-    Corner.qml             NEW minimal corner pill for bar-less rices
+    Corner.qml             NEW minimal corner pill for bar-less themes
     Dashboard.qml          NEW full dashboard panel (clock, calendar, media, system, toggles)
     workspaces/*.qml       indicators: Numbers, Dots, Blocks, RailSquares
   launchers/
@@ -89,38 +89,38 @@ config/quickshell/.config/quickshell/
     Greeting.qml           centred panel with a typeset greeting (Editorial)
     PosterGrid.qml         full-screen grid with huge type (Poster)
 config/hypr/.config/hypr/
-  rices/<id>.lua           Hyprland look + animation preset per rice (sourced by look.lua)
-  lockscreens/<id>.conf    one lock design per rice
-config/ghostty/.config/ghostty/themes/<Rice>   terminal palette per rice
-config/wallpapers/…/rices/<id>.png             generated by scripts/rice-wallpapers (ImageMagick), committed
-config/scripts/.local/bin/rice                 `rice` lists, `rice NAME` switches (like `theme` today)
+  themes/<id>.lua           Hyprland look + animation preset per theme (sourced by look.lua)
+  lockscreens/<id>.conf    one lock design per theme
+config/ghostty/.config/ghostty/themes/<Theme>   terminal palette per theme
+config/wallpapers/…/themes/<id>.png             generated by scripts/theme-wallpapers (ImageMagick), committed
+config/scripts/.local/bin/theme                 `theme` lists, `theme NAME` switches (like `theme` today)
 ```
 
-`ThemeSync.qml` keeps its job: push the active rice to Hyprland (`hyprctl eval` + `settings/rice.lua`),
+`ThemeSync.qml` keeps its job: push the active theme to Hyprland (`hyprctl eval` + `settings/theme.lua`),
 hyprlock, GTK, Ghostty, fuzzel, Satty selection colour, wallpaper.
 
 ## Plugins (hypr.land/plugins)
 
 Only plugins that change how the desktop feels, built with `hyprpm` by `hypr-plugins` (already used
-for the title-bar minimise plugin). Each rice lists the plugins it wants; a missing plugin only means
+for the title-bar minimise plugin). Each theme lists the plugins it wants; a missing plugin only means
 that effect is off, never a broken session. Shortlist pending the research notes; candidates:
-`hyprexpo` (workspace overview grid), `borders-plus-plus` (double borders for the Poster rice),
-`hyprtrails`/`hyprfocus` (motion accents, Orbit only), `hyprbars` (title bars where a rice wants them).
+`hyprexpo` (workspace overview grid), `borders-plus-plus` (double borders for the Poster theme),
+`hyprtrails`/`hyprfocus` (motion accents, Orbit only), `hyprbars` (title bars where a theme wants them).
 
 ## Phases (each ends with a live check, screenshots of both monitors and a commit)
 
-1. **Strip**: remove the neon layer and colour-only themes; Theme reads from a Rice singleton with
-   one rice (today's Graphite Glass, as "Glass"), so nothing visually breaks.
-2. **Rice engine**: rice JSON schema + loader + `rice` command + Settings → Rices gallery with live
-   previews; Hyprland side (`rices/<id>.lua`), Ghostty, GTK, lock, wallpaper sync.
+1. **Strip**: remove the neon layer and colour-only themes; Theme reads from a Theme singleton with
+   one theme (today's Graphite Glass, as "Glass"), so nothing visually breaks.
+2. **Theme engine**: theme JSON schema + loader + `theme` command + Settings → Themes gallery with live
+   previews; Hyprland side (`themes/<id>.lua`), Ghostty, GTK, lock, wallpaper sync.
 3. **New layout pieces**: RailBar, Corner, Dashboard, workspace indicators, four launcher layouts,
    notification corners/shapes.
-4. **The rices**, one at a time, each designed to its direction sheet and checked on screen:
+4. **The themes**, one at a time, each designed to its direction sheet and checked on screen:
    fonts installed and recorded in packages, wallpaper generated, lock design, terminal palette.
-5. **Plugins** chosen per rice, added to `hypr-plugins`, documented.
-6. **Polish and proof**: every rice on both monitors (1.2× laptop, 1× Acer), tablet mode, light/dark
+5. **Plugins** chosen per theme, added to `hypr-plugins`, documented.
+6. **Polish and proof**: every theme on both monitors (1.2× laptop, 1× Acer), tablet mode, light/dark
    where offered, keyboard-only use, cheatsheet, Settings pages restyled; independent review; docs
-   (DESIGN.md rewritten around rices, README rice table, AUDIT update).
+   (DESIGN.md rewritten around themes, README theme table, AUDIT update).
 
 Rules carried over: free/open source only, fonts and plugins recorded in `packages/`, nothing copied
-from other dotfiles, KDE untouched, login never at risk (a broken rice falls back to Glass).
+from other dotfiles, KDE untouched, login never at risk (a broken theme falls back to Glass).
