@@ -40,7 +40,7 @@ squeekboard              squeekboard                        repo
 fuzzel                   fuzzel                             repo
 pavucontrol              pavucontrol                        repo
 nm-connection-editor     nm-connection-editor               repo
-flameshot                flameshot                          repo
+satty                    satty                              repo
 grim                     grim                               repo
 slurp                    slurp                              repo
 wl-clipboard             wl-clipboard                       repo

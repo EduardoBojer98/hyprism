@@ -1,74 +1,86 @@
 #!/usr/bin/env bash
-# Screenshots with Flameshot (Print, Shift+Print, Control Center, Spotlight, utility menu).
-#   screenshot [area]   pick an area on the screen under the mouse, annotate; Enter copies (and saves), Ctrl+S saves, Esc cancels
-#   screenshot all      every screen, copied and saved
-# Files go to ~/Pictures/Screenshots. The first run writes Flameshot's settings if it has none;
-# after that, change them in Flameshot's own settings (flameshot config).
+# Screenshots: grim captures, slurp picks the area, Satty annotates. Wayland-native, works across
+# both monitors at different scales (grim captures at the sharpest scale of the screens it covers).
+#
+#   screenshot [area]     pick an area (drag; touch works too) -> editor
+#   screenshot screen     the monitor under the mouse          -> editor
+#   screenshot window     the focused window                   -> editor
+#   screenshot all        every monitor                        -> editor
+#   screenshot delay [N]  wait N seconds (default 5), then the monitor under the mouse -> editor
+#                         (for menus and tooltips: open them during the countdown, crop in the editor)
+#   add --copy to any of these to skip the editor: copied and saved straight away
+#
+# In the editor (Satty): Enter copies and saves, Ctrl+S saves, Ctrl+C copies, Esc cancels,
+# Ctrl+Z / Ctrl+Y undo / redo. Tools and colours: config/satty/.config/satty/config.toml.
+# Files: ~/Pictures/Screenshots/Screenshot_YYYY-MM-DD_HH-MM-SS.png. A notification with a preview
+# follows; click it to open the picture ("Show folder" opens the folder).
 set -euo pipefail
 
 dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots"
-conf="${XDG_CONFIG_HOME:-$HOME/.config}/flameshot/flameshot.ini"
 mkdir -p "$dir"
+file="$dir/Screenshot_$(date +%F_%H-%M-%S).png"
+tmp=$(mktemp --suffix=.png)
+trap 'rm -f "$tmp"' EXIT
 
-if [[ ! -f "$conf" ]]; then
-    mkdir -p "${conf%/*}"
-    cat >"$conf" <<EOF
-[General]
-savePath=$dir
-savePathFixed=true
-saveAsFileExtension=png
-filenamePattern=Screenshot_%F_%H-%M-%S
-saveAfterCopy=true
-copyOnDoubleClick=true
-showHelp=false
-showStartupLaunchMessage=false
-showDesktopNotification=true
-showAbortNotification=false
-disabledTrayIcon=true
-uiColor=#007aff
-contrastUiColor=#ffffff
-EOF
-fi
+mode=${1:-area}; shift || true
+delay=5; copy=false
+for a in "$@"; do
+    case $a in
+        --copy) copy=true ;;
+        [0-9]*) delay=$a ;;
+        *) echo "screenshot: unknown option '$a'" >&2; exit 2 ;;
+    esac
+done
 
-# Run under Flameshot's own app id so the screenshot permission prompt (once) names Flameshot
-run() {
-    if command -v systemd-run >/dev/null; then
-        systemd-run --user --scope --quiet --collect --unit="app-org.flameshot.Flameshot-$$" flameshot "$@"
-    else
-        flameshot "$@"
-    fi
-}
+# selection colours follow the desktop theme (accent from Settings > Appearance)
+accent=$(grep -oE 'accent = "[0-9a-fA-F]{6}"' "$HOME/.config/hypr/settings/theme.lua" 2>/dev/null | grep -oE '[0-9a-fA-F]{6}' || echo e4ff1a)
 
-# The overlay opens as a screen-sized window under the bar; make it fullscreen once it appears
-cover() {
-    local addr=""
-    for _ in {1..60}; do
-        addr=$(hyprctl -j clients | jq -r '.[] | select(.class == "flameshot" and .title == "flameshot") | .address' | head -1)
-        [[ -n "$addr" ]] && break
-        sleep 0.05
-    done
-    [[ -n "$addr" ]] && hyprctl dispatch "hl.dsp.window.fullscreen({ action = \"set\", window = \"address:$addr\" })" >/dev/null
-    return 0
-}
-
-# The screen under the mouse. Flameshot 14's `gui` asks "which monitor?" when there are two, and
-# under XWayland it crops the wrong part of the desktop, so: Wayland, one screen by number.
-# shortcut: Flameshot numbers screens in Hyprland's monitor id order; fine until ids get reused oddly after hotplug.
-mouse_screen() {
+monitor_under_mouse() {
     local x y
     IFS=', ' read -r x y < <(hyprctl cursorpos)
-    hyprctl -j monitors | jq -r --argjson x "${x%.*}" --argjson y "${y%.*}" '
-        sort_by(.id) | to_entries[] | .value as $m
-        | select($x >= $m.x and $y >= $m.y and $x < $m.x + ($m.width / $m.scale) and $y < $m.y + ($m.height / $m.scale))
-        | "\(.key) \($m.name)"' | head -1
+    hyprctl -j monitors | jq -r --argjson x "${x%.*}" --argjson y "${y%.*}" '.[]
+        | select($x >= .x and $y >= .y and $x < .x + (.width / .scale) and $y < .y + (.height / .scale)) | .name' | head -1
 }
 
-case "${1:-area}" in
+case $mode in
     area)
-        read -r n name < <(mouse_screen) || { n=0; name=""; }
-        # the overlay opens on the focused monitor; make that the one under the mouse
-        [[ -n $name ]] && hyprctl dispatch "hl.dsp.focus({ monitor = \"$name\" })" >/dev/null
-        run screen -n "$n" -e & cover; wait ;;
-    all)    run full --clipboard ;;   # saved too: saveAfterCopy in flameshot.ini
-    *)      echo "usage: screenshot [area|all]" >&2; exit 2 ;;
+        # slurp -d shows the size while dragging; Esc or a right click cancels (exit quietly)
+        geo=$(slurp -d -c "${accent}ff" -b 0b0d0a66 -s "${accent}1f" -w 2 -B 00000000) || exit 0
+        grim -g "$geo" "$tmp" ;;
+    screen) grim -o "$(monitor_under_mouse)" "$tmp" ;;
+    window)
+        geo=$(hyprctl -j activewindow | jq -r 'if .at then "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])" else empty end')
+        [[ -n $geo ]] || { notify-send -a Screenshot "No focused window to capture"; exit 1; }
+        grim -g "$geo" "$tmp" ;;
+    all)    grim "$tmp" ;;
+    delay)
+        for ((i = delay; i > 0; i--)); do
+            notify-send -a Screenshot -t 900 -h string:x-canonical-private-synchronous:screenshot "Screenshot in $i…"
+            sleep 1
+        done
+        grim -o "$(monitor_under_mouse)" "$tmp" ;;
+    *) sed -n '4,12p' "$0" >&2; exit 2 ;;
 esac
+
+if $copy; then
+    cp "$tmp" "$file"
+    wl-copy --type image/png <"$file"
+else
+    # Satty writes $file only if you save (Enter or Ctrl+S); Esc leaves nothing behind
+    satty --filename "$tmp" --output-filename "$file" \
+        --actions-on-enter save-to-clipboard,save-to-file,exit --actions-on-escape exit \
+        --copy-command wl-copy --disable-notifications --no-window-decoration --initial-tool arrow || true
+fi
+
+# A preview notification; clicking it opens the picture. Runs on after this script exits.
+if [[ -f $file ]]; then
+    (
+        action=$(notify-send -a Screenshot -i "$file" -h "string:image-path:$file" \
+            -A default=Open -A folder="Show folder" "Screenshot saved and copied" "${file/#$HOME/\~}" --wait || true)
+        case $action in
+            default) xdg-open "$file" ;;
+            folder)  xdg-open "$dir" ;;
+        esac
+    ) >/dev/null 2>&1 &
+    disown
+fi

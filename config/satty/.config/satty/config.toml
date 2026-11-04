@@ -1,0 +1,21 @@
+# Satty: the screenshot editor (~/.local/bin/screenshot opens it). The script passes the per-shot
+# options (file name, Enter/Esc actions); this file holds the look. Docs: satty --help, github.com/gabm/Satty
+#
+# Keys in the editor: Enter copy + save + close, Ctrl+S save, Ctrl+C copy, Esc close,
+# Ctrl+Z / Ctrl+Y undo / redo. Tools (letter = shortcut): p pointer, c crop, b brush (pen),
+# i line, z arrow, r rectangle, e ellipse, t text, m numbered marker, u blur, g highlighter.
+
+[general]
+corner-roundness = 8               # rounded rectangles, like the desktop's corners
+annotation-size-factor = 1.4       # thicker strokes than the default: readable on the 1440p Acer
+default-fill-shapes = false
+primary-highlighter = "block"      # "block" = translucent marker box, "freehand" = marker pen
+
+[font]
+family = "Inter"
+style = "Bold"
+
+# Annotation colours: the neon accents first (Radioactive, Molten, Cyber), then the status red /
+# green and plain white / black for contrast on any background.
+[color-palette]
+palette = ["#e4ff1a", "#00e5ff", "#ff3dbb", "#ff6b1a", "#ff4d6d", "#4ade80", "#ffffff", "#0b0d0a"]

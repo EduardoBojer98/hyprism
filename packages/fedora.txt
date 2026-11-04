@@ -59,7 +59,7 @@ squeekboard              none                               none
 fuzzel                   fuzzel                             repo
 pavucontrol              pavucontrol                        repo
 nm-connection-editor     nm-connection-editor               repo
-flameshot                flameshot                          repo
+satty                    satty                              copr:mineiro/hyprland
 grim                     grim                               repo
 slurp                    slurp                              repo
 wl-clipboard             wl-clipboard                       repo

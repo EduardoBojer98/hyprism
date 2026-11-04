@@ -14,7 +14,7 @@ hl.window_rule({
 
 hl.window_rule({
     name  = "float-small-tools",
-    match = { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-connection-editor|com.gabm.satty|org.opengamingcollective.rog-control-center)$" },
+    match = { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-connection-editor|org.opengamingcollective.rog-control-center)$" },
     float = true,
 })
 
@@ -27,16 +27,15 @@ hl.layer_rule({
     ignore_alpha = 0.05,  -- blur even behind the very transparent glass
 })
 
--- Flameshot's capture overlay: no frame or open animation, keeps focus. It resizes itself after
--- opening, which undoes a fullscreen rule, so the screenshot script makes it fullscreen instead.
+-- Satty, the screenshot editor (~/.local/bin/screenshot): floating, centred, sized to the screen
+-- it opens on (its own --resize ignores the laptop's 1.2 scale and overflows), opens instantly.
 hl.window_rule({
-    name         = "flameshot-overlay",
-    match        = { class = "^flameshot$", title = "^flameshot$" },
-    stay_focused = true,
-    no_anim      = true,
-    border_size = 0,
-    rounding    = 0,
-    no_shadow   = true,
+    name   = "screenshot-editor",
+    match  = { class = "^com\\.gabm\\.satty$" },
+    float  = true,
+    size   = "(monitor_w*0.86) (monitor_h*0.86)",
+    center = true,
+    no_anim = true,
 })
 
 hl.window_rule({
