@@ -1,7 +1,7 @@
 ---
 name: Graphite Glass
 description: Compact dark frosted-glass Quickshell shell for Hyprland, one consistent visual language across every surface.
-source: home/quickshell/.config/quickshell/Theme.qml (tokens), Glass.qml (surface)
+source: config/quickshell/.config/quickshell/Theme.qml (tokens), Glass.qml (surface), ThemeSync.qml (pushes them to Hyprland, hyprlock, GTK, Ghostty, fuzzel)
 colors:            # dark mode; light mode mirrors these with black alphas on white frost
   theme: "Theme.themes: [base, text, accent] for dark and light per theme (midnight #161821 default)"  # Settings > Appearance > Theme
   glass: "tint × 1.05, alpha 0.28 + 0.6 × glassOpacity"   # bar items, dock, OSD
@@ -61,3 +61,56 @@ Depth comes from Hyprland's blur, a 1px hairline and a soft shadow, never from h
   off makes all shell motion instant.
 - Keep it light on the GPU: no per-item shadows or blur layers inside the shell; Hyprland's one
   blur pass per layer does the frosting.
+
+## Neon themes (2026-11)
+
+Three high-energy themes sit beside the calm ones. Same glass, same tokens, same components; only
+the palette and the window border change. Preview: `docs/palette-preview.html`.
+
+| Theme | Base | Text | Accent (signature) | Accent 2 (support) | Success / warning / error |
+|---|---|---|---|---|---|
+| **Radioactive** (default) | `#0b0d0a` | `#eef2e6` | `#e4ff1a` radioactive yellow | `#00e5ff` electric cyan | `#4ade80` / `#ff9f1c` / `#ff4d6d` |
+| **Molten** | `#100b0a` | `#f7eee8` | `#ff6b1a` blazing orange | `#ff3dbb` hot magenta | `#34d399` / `#ffd60a` / `#ff4040` |
+| **Cyber** | `#0a0b14` | `#eef0ff` | `#00e5ff` electric cyan | `#ff2bd6` magenta | `#3ee07f` / `#ffc53d` / `#ff4d5e` |
+
+Contrast on the base (WCAG, computed in the preview): body text 17:1 or better, accents 7:1 or
+better, dark text on an accent fill 7:1 or better. All pass AA (4.5:1); body text passes AAA.
+
+### Rules
+
+1. **Neon marks state, never area.** The accent shows on the focused workspace, the focused
+   window's border, selections, the launcher field, toggles that are on, progress fills, the lock
+   clock. Panels stay near-black glass. No accent backgrounds bigger than a pill or a selected row.
+2. **Body text is never neon.** Text uses `text` / `subtext` / `muted`. Accent text only for short
+   labels (group headings, a filter, a link), at semibold or larger.
+3. **Accent 2 is a partner, not a second brand.** It only appears in the border gradient, glows,
+   code keywords (terminal) and the lock-screen glow.
+4. **Status colours stay apart from the accents** (different hue in every neon theme) and always
+   come with an icon or word, so they work for colour-blind eyes too.
+5. **Glow is reserved for one thing at a time:** the focused window (Hyprland shadow in the
+   accent at 33% alpha, 22px, no offset) and the focused workspace pill. Unfocused windows keep a
+   faint hairline and a plain dark shadow.
+6. **Motion stays fast:** 120 / 200 / 600 ms in the shell, Hyprland springs and `easeOutQuint`
+   (`modules/animations.lua`). Nothing bounces; the neon border doesn't spin (the rainbow style still can).
+
+### One source of truth, every app
+
+| Value | Defined in | Reaches |
+|---|---|---|
+| Palette (`[base, text, accent, accent2]`, `status`) | `Theme.qml` → `Theme.themes` | Bar, dock, panels, launcher, notifications, OSD, cheatsheet, Settings (direct) |
+| Accent, accent 2, border style, rounding, gaps | `ThemeSync.qml` → `hypr/settings/theme.lua` | Hyprland border gradient + glow (`look.lua`), screenshot selection colour (`screenshot`) |
+| Accent, rounding, font | `ThemeSync.qml` → `hypr/settings/hyprlock-theme.conf` | Lock screen |
+| Terminal theme | `Theme.themes[*].term` → `ghostty/theme.conf` | Ghostty (`config/ghostty/.config/ghostty/themes/`) |
+| Light/dark, accent, icons, cursor | `ThemeSync.qml` → `gsettings` | GTK 3/4 apps, Satty's own buttons |
+| Colours | `ThemeSync.qml` → `fuzzel/theme.ini` | Emoji picker |
+| Annotation colours | `config/satty/.config/satty/config.toml` | Screenshot editor (fixed neon set, readable on any picture) |
+| Type, spacing, radius, motion | `Theme.qml` | Shell surfaces; Hyprland rounding via theme.lua |
+
+Qt/KDE apps keep following KDE's own colour scheme on purpose, so the KDE session stays untouched.
+
+### Screens
+
+Same logical sizes on both screens: the laptop runs at 1.2 scale (1600×1000 logical), the Acer at
+1.0 (2560×1440). Text sizes are logical pixels, so 13px body text is about 15.6 physical px on the
+laptop and 13px on the 32" screen; both read comfortably at their viewing distances. Touch targets
+in panels are at least 34px rows / 28px controls (`rowHeight`, `controlHeight`).

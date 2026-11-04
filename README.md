@@ -86,7 +86,7 @@ displays. Your choices are saved on your computer only (see [docs/USER-GUIDE.md]
 
 ## Keys (Super = Windows key)
 
-All of these can be changed in **Settings → Keyboard Shortcuts**.
+All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` shows every shortcut on screen** (type to filter).
 
 | Keys | Action |
 |---|---|
@@ -103,7 +103,10 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
 | `Super+1…0` / `Super+Shift+1…0` | Go to / send window to desktop; `Super+Tab` previous |
 | `Super+S` / `Super+Alt+S` | Scratchpad / send window there |
-| `Super+Shift+S` or `Print` / `Shift+Print` / `Super+Shift+T` | Screenshot an area on the screen under the mouse (Flameshot: annotate, Enter copies and saves) / whole screen / copy text from screen (OCR) |
+| `Super+/` | Keyboard shortcut cheatsheet |
+| `Alt+Shift+S` (also `Print`, `Super+Shift+S`) | Screenshot an area, then annotate (see Screenshots) |
+| `Ctrl+Print` / `Shift+Print` / `Super+Print` / `Ctrl+Shift+Print` / `Alt+Print` | Area straight to clipboard / this screen / focused window / both screens / in 5 seconds |
+| `Super+Shift+T` | Copy text from the screen (OCR) |
 | `Super+Shift+C` | Colour picker |
 | `Super+L` / `Super+Shift+E` | Lock / log out |
 | `Super+F5` | Next power mode: Quiet → Balanced → Performance (also `powermode` in a terminal) |
@@ -122,8 +125,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**.
 | `packages/` | `manifest.txt` (logical name, module, why) and `arch.txt` / `fedora.txt` (real names and sources) |
 | `distros/` | `arch.sh`, `fedora.sh`: install packages, enable repos, NVIDIA driver |
 | `plugins/` | Hyprland plugin (title-bar minimise), built by `hypr-plugins` |
-| `docs/` | `USER-GUIDE.md`, `AUDIT.md`, `RECOMMENDATIONS.md`, `thermal-audit.md` |
-| `DESIGN.md` | design system: tokens, components, rules |
+| `docs/` | `ARCHITECTURE.md` (how it fits together), `DESIGN.md` (design system), `AUDIT.md`, `RESEARCH.md`, `USER-GUIDE.md`, `RECOMMENDATIONS.md`, `thermal-audit.md`, `palette-preview.html` |
 
 ### A new computer
 
@@ -143,12 +145,39 @@ and borders, keyboard layouts, touchpad, shortcuts, default and startup apps, po
 Settings writes to `~/.config` only (list in the user guide). Defaults live in `ConfigData.qml`,
 `config/hypr/.config/hypr/defaults/` and the Hyprland modules.
 
+### Themes and colours
+
+One source of truth: `config/quickshell/.config/quickshell/Theme.qml`. Changing a theme there or in
+**Settings → Appearance** restyles the bar, panels, launcher, notifications, window borders,
+lock screen, terminal (Ghostty), GTK apps and the screenshot selection at once.
+
+- Switch in one step: `theme radioactive` (or `molten`, `cyber`, `midnight`, `nord`, …); `theme` lists them.
+- Neon themes: **Radioactive** (yellow + electric cyan, default), **Molten** (orange + magenta), **Cyber**
+  (cyan + magenta). Their window border is a glowing gradient (Settings → Windows → Focused window → Neon glow).
+- Add a theme: one line in `Theme.themes` (`[base, text, accent, accent2]`) plus, for its own terminal
+  colours, a file in `config/ghostty/.config/ghostty/themes/`. Rules: `docs/DESIGN.md`.
+- Fonts: Settings → Appearance → Font (UI); terminal font in `config/ghostty/.config/ghostty/config`.
+- Monitors: Settings → Displays (arrangement, scale, refresh); per-computer defaults in `hosts/<name>/home/.config/hypr/host.lua`.
+
+### Screenshots
+
+`screenshot` (`~/.local/bin`) = **grim** (capture) + **slurp** (pick an area) + **Satty** (editor).
+
+1. `Alt+Shift+S`, drag an area (works across both screens, and with touch).
+2. Annotate: arrow, line, rectangle, ellipse, pen, highlighter, text, numbered markers, blur, crop.
+   Colours and stroke size sit in the bottom bar; `Ctrl+Z` / `Ctrl+Y` undo / redo.
+3. **Enter** copies and saves, **Ctrl+S** saves, **Esc** cancels. Files land in
+   `~/Pictures/Screenshots/Screenshot_YYYY-MM-DD_HH-MM-SS.png`; click the notification to open it.
+
+`screenshot area|screen|window|all|delay N`, add `--copy` to skip the editor. Editor look:
+`config/satty/.config/satty/config.toml`.
+
 ## Undo and recovery
 
 | What broke | Do this |
 |---|---|
 | Dotfiles | `./install.sh undo` removes the links and offers to restore the last backup |
-| The Hyprland session | Pick another session at the login screen, or Ctrl+Alt+F3 and log in on a text console |
+| The Hyprland session | **Fall back to KDE:** log out (`Super+Shift+E`), pick **Plasma (Wayland)** at the login screen. This repo never links over KDE's config, so KDE stays as it was. No login screen at all: Ctrl+Alt+F3, log in on the text console, `./install.sh undo` |
 | The shell (bar, dock) | `pkill -x qs; pkill -x quickshell; qs &` restarts it (exactly one copy); `qs log` shows errors |
 | An update | See "Roll back an update" below |
 | A Settings choice | Delete its file from the user guide's table to go back to defaults; several pages also have **Reset to defaults** |
