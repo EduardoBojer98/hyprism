@@ -8,11 +8,11 @@ install stays untouched and selectable at the login screen.
 | Theme | The idea | Bar (its own place; movable) | Motion |
 |---|---|---|---|
 | **Pebble** (default) | soft and round, glass, coral and sea green | three floating glass pills at the top | soft, a touch of spring |
-| **Monolith** | the desktop as a terminal, acid lime | a mono text strip at the bottom | near-instant, nothing to wait for |
-| **Console** | amber CRT readout | a transparent mono line on the top edge, corner brackets | crisp snap-on |
+| **Monolith** | the desktop as a terminal, acid lime | one mono status line at the bottom, the dock inside it | near-instant, nothing to wait for |
+| **Console** | amber HUD | a framed caps readout on top, rules between items, corner brackets, glowing panels | crisp snap-on |
 | **Poster** | loud and flat, red and cobalt on paper | a paper bar with huge workspace blocks, hard shadows | slams in from the trigger |
 | **Glass** | the classic, electric blue | a translucent menu bar | smooth ease-out |
-| **Atlas** | Swiss, signal red on white | a black rail on the right, square blocks | snappy slide from the rail |
+| **Atlas** | Swiss, signal red on white | a black strip on top, heavy numerals, red squares, a black dock | snappy slide |
 
 Each theme brings its own fonts, corners, window frames, shadows, panel depth, motion, notification style,
 lock screen, terminal palette and wallpaper. `theme` lists them, `theme atlas` switches; or Settings →
@@ -20,12 +20,17 @@ Appearance → Themes, where **Adjust** changes any theme's accent colours, corn
 window motion, shadow and blur (kept per theme; Reset puts it back), and **Animations** is Full, Reduced or Off.
 
 - **The bar**: one engine for every theme. Settings → Menu Bar puts it on any edge, sizes it, floats or attaches it,
-  hides it per monitor and chooses the items of its three sections (move, reorder, add, remove): apps button,
+  hides it per monitor and chooses the items of its three sections in a visual editor (drag items between the bar's
+  zones, in from a tray, or out to remove them): apps (the dock), apps button,
   workspaces, active window, clock, date, media player, tray, keyboard layout (US / Serbian Latin), notifications,
   quick settings, network, Bluetooth, volume, brightness, battery, power profile, CPU, memory, GPU, recording,
   power menu. Every item works across a horizontal bar and down a vertical one. Panels open beside the item you click.
-- **The dock**: in every theme, on by default; Settings → Dock: on/off, edge (beside the bar when they share one),
-  size, icon size, auto-hide, pinned apps, open windows, per monitor
+- **The dock**: in every theme, on and always visible by default, on the theme's own edge; when that is the bar's edge
+  the dock joins the bar as its Apps item. Settings → Dock: on/off, theme's / in the bar / any edge, size, icon size,
+  auto-hide, pinned apps, open windows, per monitor
+- **Theme Builder** (Settings → Appearance): make your own theme from any of the six and change every part:
+  colours, fonts, shape, bar look, dock look, panel depth, motion, windows, notifications, launcher, lock screen,
+  terminal colours, wallpaper
 - **Lock screen**: Settings → Lock Screen with a live preview: clock style and position, date, greeting,
   your picture, battery / keyboard layout / now playing, background picture, blur and brightness
 - **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, touchpad and touchscreen on/off,

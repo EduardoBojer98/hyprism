@@ -27,8 +27,8 @@ over ornament, one icon language, motion that confirms an action and never makes
 | `font` | ui, display (clocks, big numbers), mono, size (body px), displayWeight |
 | `shape` | radius, radiusSmall, line (panel border px), material: `solid` or `glass` |
 | `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, voice (icons, words, caps), mono, ws (dots, filled, text, numbers, blocks, squares), clock (plain, accent, display), decor (brackets), start / center / end items |
-| `dock` | shape (pill, tile, block), hover (lift, grow, plate), mark (line, dot, bar), fill |
-| `popup` | depth: soft (blurred shadow), hard (offset block), none (frame only) |
+| `dock` | edge (its own place; the bar's edge puts it inside the bar), shape (pill, tile, block), hover (lift, grow, plate), mark (line, dot, bar), fill |
+| `popup` | depth: soft (blurred shadow), hard (offset block), glow (accent haze), none (frame only); decor: brackets |
 | `motion` | enter / exit ms, curve (cubic bezier), travel px out of the trigger's side, start scale, press scale |
 | `launcher`, `notify` | placement, view, header; corner, kind |
 | `hypr` | gaps, border, rounding, active/inactive frame colours, shadow, blur, window motion preset |
@@ -42,11 +42,11 @@ animation level) into tokens. No component knows which theme is on.
 | Theme | Ground / text / accent | Type | Shape · depth | Bar (own edge) | Dock | Motion |
 |---|---|---|---|---|---|---|
 | Pebble | `#16141f` / `#ece8f6` / `#ff9e7a` (+ `#9ad1c0`) | Outfit | r18, glass · soft | top, three floating glass pills, dots | glass pill, icons lift | 240/150 ms, slight overshoot, 10 px, scale 0.94 |
-| Monolith | `#0b0c0a` / `#d7ddcc` / `#b6ff3b` | JetBrains Mono | r0, 1-2 px lines · none | bottom, mono words, filled numbers | square block, plate, bar mark | 90/60 ms fade, no travel |
-| Console | `#05080f` / `#e9dcc0` / `#ffb000` | Martian Mono | r0, 1 px · none | top, transparent caps readout, corner brackets | square block | 130/80 ms snap, scale 0.985 |
+| Monolith | `#0b0c0a` / `#d7ddcc` / `#b6ff3b` | JetBrains Mono | r0, 1-2 px lines · none | bottom status line, mono words, rules, filled numbers | inside the bar | 90/60 ms fade, no travel |
+| Console | `#05080f` / `#e9dcc0` / `#ffb000` | Martian Mono | r0, 1 px amber · glow + panel brackets | top, framed caps readout, rules, corner brackets | square block, bottom | 140/80 ms snap, 4 px, scale 0.98 |
 | Poster | `#141414` / paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | Archivo Black + Archivo | r0, 3 px · hard offset | top, paper, huge workspace blocks, big clock | paper block, hard shadow, lift | 200/110 ms expo-out, 28 px slam |
 | Glass | `#141821` / `#f3f4f8` / `#5b9cff` | IBM Plex Sans | r12, glass · soft | top, translucent menu bar | glass tile, magnify | 220/140 ms strong ease-out, 6 px, 0.97 |
-| Atlas | `#f2f2f0` / `#111111` / `#e30613` | Archivo | r0, 2 px · none | right, black rail, squares, stacked clock | ink block | 160/100 ms, 14 px from the rail |
+| Atlas | `#f2f2f0` / `#111111` / `#e30613` | Archivo | r0, 2 px · none | top, black strip, heavy clock, red squares | black block, bottom | 160/100 ms, 14 px |
 
 Contrast (WCAG 2): body text on surfaces 13.2:1 or more; secondary text 5.9:1 or more; text on an accent
 fill is forced to 4.5:1 or more by `Themes.resolve`.
@@ -68,6 +68,12 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
    Poster (the one neo-brutalist world), frames alone in the line themes.
 7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0;
    panels are capped to the room between bar and dock and kept on their monitor.
+
+## Your own themes
+
+Settings → Appearance → Theme Builder makes a theme from any shipped one; you can change every part listed
+above. It is saved in `Config.appearance.userThemes` as only the parts you changed (`{ name, base, colour: {…}, … }`)
+and merged over its base by `Themes.makeUser`, which ignores a part of the wrong type or a bad colour.
 
 ## Adjusting a theme
 
