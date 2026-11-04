@@ -6,7 +6,7 @@ import QtQuick
 // works across a horizontal bar and down a vertical one, and speaks the theme's voice:
 //   icons  glyphs (Material Design Icons from the Nerd Font) with numbers where they help
 //   words  lowercase words and numbers ("vol 45"), caps: the same in capitals ("VOL 45")
-// Adding an item: a Component below, an entry in `catalogue` (name + glyph for Settings), done.
+// Adding an item: a Component below, an entry in Themes.barItems (name + glyph for Settings), done.
 Loader {
     id: w
     required property string kind
@@ -18,30 +18,6 @@ Loader {
     property string family: Theme.font
     property int thickness: Theme.barSize
 
-    // what Settings > Menu Bar offers, in its order
-    readonly property var catalogue: [
-        { id: "launcher",      name: "Apps button",        glyph: "\u{F003B}" },
-        { id: "workspaces",    name: "Workspaces",         glyph: "\u{F0570}" },
-        { id: "window",        name: "Active window",      glyph: "\u{F05AF}" },
-        { id: "clock",         name: "Clock",              glyph: "\u{F0954}" },
-        { id: "date",          name: "Date",               glyph: "\u{F00ED}" },
-        { id: "media",         name: "Media player",       glyph: "\u{F075A}" },
-        { id: "tray",          name: "System tray",        glyph: "\u{F0D5E}" },
-        { id: "keyboard",      name: "Keyboard layout",    glyph: "\u{F030C}" },
-        { id: "notifications", name: "Notifications",      glyph: "\u{F009C}" },
-        { id: "status",        name: "Quick settings",     glyph: "\u{F0493}" },
-        { id: "network",       name: "Network",            glyph: "\u{F05A9}" },
-        { id: "bluetooth",     name: "Bluetooth",          glyph: "\u{F00AF}" },
-        { id: "volume",        name: "Volume",             glyph: "\u{F057E}" },
-        { id: "brightness",    name: "Brightness",         glyph: "\u{F00DF}" },
-        { id: "battery",       name: "Battery",            glyph: "\u{F0079}" },
-        { id: "power-profile", name: "Power profile",      glyph: "\u{F0E0E}" },
-        { id: "cpu",           name: "CPU usage",          glyph: "\u{F0EE0}" },
-        { id: "memory",        name: "Memory usage",       glyph: "\u{F035B}" },
-        { id: "gpu",           name: "GPU usage",          glyph: "\u{F08AE}" },
-        { id: "recording",     name: "Recording",          glyph: "\u{F044A}" },
-        { id: "power",         name: "Power menu",         glyph: "\u{F0425}" }
-    ]
 
     readonly property bool words: voice !== "icons"
     function say(s) { return voice === "caps" ? s.toUpperCase() : s }

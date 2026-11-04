@@ -13,12 +13,17 @@ ColumnLayout {
 
     readonly property var bat: UPower.displayDevice
     readonly property var laptopBattery: UPower.devices.values.find(d => d.isLaptopBattery) ?? null
-    property int limit: 0
+    property int limit: -1       // -1: not read (yet)
+    property int pendingLimit: 0
 
-    Process {
+    Process {   // the first battery that has a charge limit (BAT0 or BAT1, depending on the laptop)
         running: true
-        command: ["cat", "/sys/class/power_supply/BAT0/charge_control_end_threshold"]
-        stdout: StdioCollector { onStreamFinished: page.limit = parseInt(text) }
+        command: ["sh", "-c", "for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do [ -r \"$f\" ] && exec cat \"$f\"; done; exit 1"]
+        stdout: StdioCollector { onStreamFinished: { const n = parseInt(text); page.limit = isNaN(n) ? -1 : n } }
+    }
+    Process {   // the UI follows only once asusctl succeeded
+        id: limiter
+        onExited: code => { if (code === 0) page.limit = page.pendingLimit }
     }
 
     SettingGroup {
@@ -43,14 +48,18 @@ ColumnLayout {
         SettingRow {
             visible: Machine.asus
             label: "Charge limit"
-            hint: "Stopping at 80 % keeps the battery healthy when the laptop is mostly plugged in"
+            hint: page.limit < 0 ? "Couldn't read the charge limit from this battery"
+                : "Stopping at 80 % keeps the battery healthy when the laptop is mostly plugged in"
             Choice {
+                enabled: page.limit >= 0
+                opacity: enabled ? 1 : 0.5
                 readonly property var values: [60, 80, 100]
                 options: values.map(v => v + "%")
                 index: values.indexOf(page.limit)
                 onPicked: i => {
-                    page.limit = values[i]
-                    Quickshell.execDetached(["asusctl", "battery", "limit", String(values[i])])
+                    page.pendingLimit = values[i]
+                    limiter.command = ["asusctl", "battery", "limit", String(values[i])]
+                    limiter.running = true
                 }
             }
         }

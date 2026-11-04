@@ -24,7 +24,7 @@ Scope {
     readonly property bool animate: Theme.animate
     function hex(c) { return c.toString().slice(1, 7) }
 
-    // Lock screen (Settings > Lock Screen): background and clock format; the design comes from the theme
+    // Lock screen (Settings > Lock Screen): colours and background, then the layout from LockScreen.qml
     readonly property var lock: Config.lockscreen
     readonly property string lockConf: "# Written by Quickshell ThemeSync from the active theme (" + current.name + ")\n"
         + "$accent = rgb(" + hex(Theme.accent.hslLightness < 0.45 ? "#f5f5f7" : Theme.accent) + ")\n$accent2 = rgb(" + hex(Theme.accent2) + ")\n"
@@ -34,8 +34,7 @@ Scope {
         + "$wall = " + (/^[^\n#]+$/.test(lock.wallpaper) ? lock.wallpaper : "~/.config/hypr/settings/wallpaper")
         + "\n$blur = " + lock.blur + "\n$dim = " + lock.brightness
         + "\n$font = " + Theme.font.replace(/[\n#]/g, "") + "\n$display = " + Theme.displayFont + "\n$mono = " + Theme.monoFont
-        + "\n$clock = " + (Config.bar.clock24 ? "%H:%M" : "%-I:%M") + "\n$hour = " + (Config.bar.clock24 ? "%H" : "%I")
-        + "\nsource = ~/.config/hypr/lockscreens/" + (({ pebble: "pebble", monolith: "terminal", console: "console", poster: "stacked", glass: "glass", atlas: "stacked" })[current.id] ?? "glass") + ".conf"
+        + "\n\n" + LockScreen.conf
     onLockConfChanged: debounce.restart()
 
     // Ghostty: the theme's palette (ghostty/themes/<Theme>) and its mono face

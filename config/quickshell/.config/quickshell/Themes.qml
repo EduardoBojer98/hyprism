@@ -130,6 +130,32 @@ Singleton {
         }
     ]
     readonly property var ids: list.map(r => r.id)
+
+    // every bar item (BarWidget.qml), in the order Settings > Menu Bar offers them
+    readonly property var barItems: [
+        { id: "launcher",      name: "Apps button",        glyph: "\u{F003B}" },
+        { id: "workspaces",    name: "Workspaces",         glyph: "\u{F0570}" },
+        { id: "window",        name: "Active window",      glyph: "\u{F05AF}" },
+        { id: "clock",         name: "Clock",              glyph: "\u{F0954}" },
+        { id: "date",          name: "Date",               glyph: "\u{F00ED}" },
+        { id: "media",         name: "Media player",       glyph: "\u{F075A}" },
+        { id: "tray",          name: "System tray",        glyph: "\u{F0D5E}" },
+        { id: "keyboard",      name: "Keyboard layout",    glyph: "\u{F030C}" },
+        { id: "notifications", name: "Notifications",      glyph: "\u{F009C}" },
+        { id: "status",        name: "Quick settings",     glyph: "\u{F0493}" },
+        { id: "network",       name: "Network",            glyph: "\u{F05A9}" },
+        { id: "bluetooth",     name: "Bluetooth",          glyph: "\u{F00AF}" },
+        { id: "volume",        name: "Volume",             glyph: "\u{F057E}" },
+        { id: "brightness",    name: "Brightness",         glyph: "\u{F00DF}" },
+        { id: "battery",       name: "Battery",            glyph: "\u{F0079}" },
+        { id: "power-profile", name: "Power profile",      glyph: "\u{F0E0E}" },
+        { id: "cpu",           name: "CPU usage",          glyph: "\u{F0EE0}" },
+        { id: "memory",        name: "Memory usage",       glyph: "\u{F035B}" },
+        { id: "gpu",           name: "GPU usage",          glyph: "\u{F08AE}" },
+        { id: "recording",     name: "Recording",          glyph: "\u{F044A}" },
+        { id: "power",         name: "Power menu",         glyph: "\u{F0425}" }
+    ]
+    function barItem(id) { return barItems.find(i => i.id === id) ?? { id: id, name: id, glyph: "\u{F02D7}" } }
     readonly property int wallVersion: 4   // = VERSION in scripts/theme-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
 
@@ -139,7 +165,7 @@ Singleton {
         accent:   "colour.accent (and the window border)",   accent2: "colour.accent2",
         radius:   "shape.radius, radiusSmall and window rounding",
         gapsIn:   "hypr.gapsIn",   gapsOut: "hypr.gapsOut",   border: "hypr.border (window frame px)",
-        barSize:  "bar.size",      font: "font.ui",          size: "font.size (body px)",
+        font: "font.ui",          size: "font.size (body px)",
         motion:   "hypr.motion",   shadow: "hypr.shadow",     blur: "hypr.blur"
     })
     function resolve(id, custom) {
@@ -151,7 +177,7 @@ Singleton {
         const hexOk = v => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v)
         const num = (v, lo, hi) => typeof v === "number" && v >= lo && v <= hi
         for (const [k, test] of [["accent", hexOk], ["accent2", hexOk], ["radius", v => num(v, 0, 40)], ["gapsIn", v => num(v, 0, 60)],
-                                 ["gapsOut", v => num(v, 0, 80)], ["border", v => num(v, 0, 10)], ["barSize", v => num(v, 16, 96)],
+                                 ["gapsOut", v => num(v, 0, 80)], ["border", v => num(v, 0, 10)],
                                  ["size", v => num(v, 9, 24)], ["font", v => typeof v === "string" && /^[^'\n#]+$/.test(v)],
                                  ["motion", v => ["instant", "crisp", "snappy", "slam", "ease", "spring", "fade"].includes(v)],
                                  ["shadow", v => ["none", "soft", "paper", "hard"].includes(v)], ["blur", v => typeof v === "boolean"]])
@@ -170,7 +196,6 @@ Singleton {
         if (ok(o.gapsIn)) r.hypr.gapsIn = o.gapsIn
         if (ok(o.gapsOut)) r.hypr.gapsOut = o.gapsOut
         if (ok(o.border)) r.hypr.border = o.border
-        if (ok(o.barSize)) r.bar.size = o.barSize
         if (ok(o.font)) r.font.ui = o.font
         if (ok(o.size)) r.font.size = o.size
         if (ok(o.motion)) r.hypr.motion = o.motion

@@ -7,6 +7,9 @@ Item {
 
     property var options: []
     property string current
+    // opt-in: a current value outside options is listed too, labelled "(custom)"
+    property bool showCustom: false
+    readonly property bool isCustom: showCustom && current !== "" && options.indexOf(current) < 0
     signal picked(string value)
 
     implicitWidth: 200
@@ -20,7 +23,7 @@ Item {
         border { color: dd.open ? Theme.accent : Theme.stroke; width: 1 }
         Text {
             anchors { left: parent.left; leftMargin: 12; right: chevron.left; verticalCenter: parent.verticalCenter }
-            text: dd.current
+            text: dd.isCustom ? dd.current + " (custom)" : dd.current
             elide: Text.ElideRight
             color: Theme.text
             font { family: Theme.font; pixelSize: 12 }
@@ -62,9 +65,10 @@ Item {
                 id: list
                 anchors { fill: parent; margins: 4 }
                 clip: true
-                model: dd.options
+                model: dd.isCustom ? [dd.current].concat(dd.options) : dd.options
                 delegate: Rectangle {
                     required property string modelData
+                    required property int index
                     width: list.width
                     height: 26
                     radius: 6
@@ -78,7 +82,7 @@ Item {
                     }
                     Text {
                         anchors { left: parent.left; leftMargin: 24; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
-                        text: modelData
+                        text: dd.isCustom && index === 0 ? modelData + " (custom)" : modelData
                         elide: Text.ElideRight
                         color: optArea.containsMouse ? Theme.accentText : Theme.text
                         font { family: Theme.font; pixelSize: 12 }

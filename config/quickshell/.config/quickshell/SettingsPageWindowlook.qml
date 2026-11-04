@@ -44,7 +44,6 @@ ColumnLayout {
             PillButton {
                 text: "Reset"
                 onClicked: {
-                    Config.reset("appearance", ["border", "borderSpin", "borderSize", "gaps"])
                     Config.reset("windows", ["titleBars", "inactiveOpacity", "dimInactive", "dimStrength"])
                 }
             }

@@ -320,7 +320,7 @@ ColumnLayout {
             label: "Warmth"
             hint: `${Config.nightLight.temperature} K` + (NightLight.active ? "" : " (applies when Night Light is on)")
             Slider {
-                Layout.preferredWidth: 220
+                width: 220
                 icon: "\u{F0599}"
                 // 6000 K (neutral) at the left, 2500 K (warmest) at the right
                 value: (6000 - Config.nightLight.temperature) / 3500
@@ -341,6 +341,11 @@ ColumnLayout {
                         text: Config.nightLight[modelData]
                         invalid: !/^([01]?\d|2[0-3]):[0-5]\d$/.test(text)
                         onAccepted: if (!invalid) Config.set("nightLight", modelData, text.length === 4 ? "0" + text : text)
+                        // typing breaks the text binding: show the saved value again after any change
+                        Connections {
+                            target: Config
+                            function onNightLightChanged() { parent.text = Config.nightLight[parent.modelData] }
+                        }
                     }
                 }
             }

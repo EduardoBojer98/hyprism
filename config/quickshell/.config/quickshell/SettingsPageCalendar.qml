@@ -22,10 +22,10 @@ ColumnLayout {
         SettingRow {
             visible: Config.calendar.holidays
             label: "Country"
-            hint: page.countries.length ? "" : "Loading the list (needs internet once)…"
+            hint: page.countries.length ? "" : "Holiday list unavailable offline (it loads once with internet)"
             Dropdown {
                 width: 220
-                options: page.countries.map(c => c.name)
+                options: page.countries.length ? page.countries.map(c => c.name) : [Config.calendar.country]
                 current: page.countryName(Config.calendar.country)
                 onPicked: v => Config.set("calendar", "country", page.countries.find(c => c.name === v)?.countryCode ?? Config.calendar.country)
             }

@@ -21,8 +21,14 @@ ColumnLayout {
     // Mirrors hypr/settings/input.lua; starts from the shipped defaults until read back
     property var s: ({ list: [{ code: "us", variant: "" }], shortcut: 0, repeat_rate: 25, repeat_delay: 600, sensitivity: 0, natural_scroll: true, tap_to_click: true })
 
-    function set(k, v) { const n = Object.assign({}, s); n[k] = v; s = n; saveTimer.restart() }
+    // set only after a successful read-back: until then the controls are off, so a write can't clobber real values
+    property bool loaded: false
+    enabled: loaded
+    opacity: loaded ? 1 : 0.5
+
+    function set(k, v) { if (!loaded) return; const n = Object.assign({}, s); n[k] = v; s = n; saveTimer.restart() }
     Timer { id: saveTimer; interval: 300; onTriggered: page.save() } // sliders: save once dragging pauses
+    Component.onDestruction: if (saveTimer.running) { saveTimer.stop(); save() }
 
     // layouts: add from the search, remove, move one to the top (the default)
     property string query: ""
@@ -43,6 +49,7 @@ ColumnLayout {
     function makeFirst(i) { const l = s.list.slice(); l.unshift(l.splice(i, 1)[0]); set("list", l) }
 
     function save() {
+        if (!loaded) return
         const many = s.list.length > 1
         const t = {
             kb_layout: s.list.map(l => l.code).join(","),
@@ -54,6 +61,15 @@ ColumnLayout {
         const table = SettingsApp.lua(t)
         Quickshell.execDetached(["hyprctl", "eval", "INPUT = " + table.replace(/\n/g, " ") + "; apply_input()"])
         SettingsApp.writeHyprFile("settings/input.lua", "-- Written by the Settings app (Keyboard & Touchpad). Safe to edit by hand.\nreturn " + table)
+    }
+
+    Text {
+        visible: !page.loaded
+        Layout.fillWidth: true
+        text: "Couldn't read the current settings from Hyprland, so the controls are off."
+        color: Theme.subtext
+        wrapMode: Text.Wrap
+        font { family: Theme.font; pixelSize: Theme.fontCaption }
     }
 
     SettingGroup {
@@ -208,7 +224,7 @@ ColumnLayout {
         stdout: StdioCollector {
             onStreamFinished: {
                 const p = text.trim().split("|")
-                if (p.length < 8) return
+                if (p.length < 8 || page.loaded) return
                 const variants = p[1].split(",")
                 page.s = {
                     list: p[0].split(",").filter(c => c).map((c, i) => ({ code: c, variant: variants[i] ?? "" })),
@@ -216,6 +232,7 @@ ColumnLayout {
                     repeat_rate: parseInt(p[3]), repeat_delay: parseInt(p[4]), sensitivity: parseFloat(p[5]),
                     natural_scroll: p[6] === "true", tap_to_click: p[7] === "true",
                 }
+                page.loaded = true
             }
         }
     }

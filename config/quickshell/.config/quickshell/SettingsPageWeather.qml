@@ -10,8 +10,11 @@ ColumnLayout {
     spacing: 20
 
     property var results: []
+    property string status: ""
 
     function search(q) {
+        status = "Searching…"
+        results = []
         geo.running = false
         geo.command = ["curl", "-sf", "--max-time", "8", "https://geocoding-api.open-meteo.com/v1/search?count=6&language=en&name=" + encodeURIComponent(q)]
         geo.running = true
@@ -20,7 +23,12 @@ ColumnLayout {
     Process {
         id: geo
         stdout: StdioCollector {
-            onStreamFinished: { try { page.results = JSON.parse(text).results ?? [] } catch (e) { page.results = [] } }
+            onStreamFinished: {
+                // curl -f prints nothing when the service is unreachable or errors
+                if (!text.trim()) { page.results = []; page.status = "Couldn't reach the weather service"; return }
+                try { page.results = JSON.parse(text).results ?? [] } catch (e) { page.results = [] }
+                page.status = page.results.length ? "" : "No places found"
+            }
         }
     }
 
@@ -40,6 +48,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Change city"
+            hint: page.status
             Rectangle {
                 width: 260; height: 30; radius: 10
                 color: Theme.fill

@@ -2,8 +2,9 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Dock: its design (a ready-made set of look options, or each option on its own), how it behaves, and
-// its pinned apps (dock.pinned, app ids). Every design works with any apps and settings below.
+// Dock: on or off, where it sits and on which monitors, how it behaves, and its pinned apps
+// (dock.pinned, app ids). Its look comes from the theme; every option works in every theme, and a dock
+// on the same edge as the bar sits beside it.
 ColumnLayout {
     id: page
     spacing: 20
@@ -33,6 +34,40 @@ ColumnLayout {
 
 
     SettingGroup {
+        title: "Place"
+        SettingRow {
+            label: "Show the dock"
+            ConfigToggle { section: "dock"; key: "enabled" }
+        }
+        SettingRow {
+            visible: Config.dock.enabled
+            label: "Position"
+            hint: Config.dock.position === Theme.barEdge ? "Beside the bar, which is on the same edge" : ""
+            ConfigChoice { section: "dock"; key: "position"; values: ["bottom", "left", "right", "top"]; labels: ["Bottom", "Left", "Right", "Top"] }
+        }
+        SettingRow {
+            visible: Config.dock.enabled
+            label: "Size"
+            hint: "Room around the icons"
+            ConfigChoice { section: "dock"; key: "size"; values: ["compact", "regular", "roomy"]; labels: ["Compact", "Regular", "Roomy"] }
+        }
+        Repeater {
+            model: Config.dock.enabled ? Quickshell.screens : []
+            SettingRow {
+                required property var modelData
+                label: "On " + modelData.name
+                hint: modelData.width + " × " + modelData.height
+                Toggle {
+                    checked: !Config.dock.hiddenOn.includes(modelData.name)
+                    onToggled: on => Config.set("dock", "hiddenOn", on ? Config.dock.hiddenOn.filter(n => n !== modelData.name)
+                                                                        : Array.from(Config.dock.hiddenOn).concat([modelData.name]))
+                }
+            }
+        }
+    }
+
+    SettingGroup {
+        visible: Config.dock.enabled
         title: "Behaviour"
         SettingRow {
             label: "Icon size"
@@ -40,12 +75,12 @@ ColumnLayout {
         }
         SettingRow {
             label: "Hide automatically"
-            hint: "Slides away until the pointer touches the bottom edge"
+            hint: "Slides away until the pointer touches its edge; stays on an empty desktop"
             ConfigToggle { section: "dock"; key: "autoHide" }
         }
         SettingRow {
             label: "Show open windows"
-            hint: "Each window as its own tile, right of the pinned apps"
+            hint: "Each window as its own tile, after the pinned apps"
             ConfigToggle { section: "dock"; key: "showRunning" }
         }
         SettingRow {
@@ -140,7 +175,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: "In the dock: drag an icon sideways to reorder, right-click it to pin, unpin, minimise or quit."
+        text: "In the dock: drag an icon along it to reorder, right-click it to pin, unpin, minimise or quit."
         color: Theme.muted
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }

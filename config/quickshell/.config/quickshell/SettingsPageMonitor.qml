@@ -23,6 +23,9 @@ ColumnLayout {
     property string mirror: "eDP-1"
     property string mirrorMode: "1920x1080@60"
     property string status: ""
+    readonly property string snapshot: JSON.stringify([enabled, out, mine, other, mirror, mirrorMode.trim()])
+    property string savedState: snapshot   // page state as last loaded or saved
+    readonly property bool dirty: snapshot !== savedState
     readonly property var outputs: {
         const names = Hyprland.monitors.values.map(m => m.name)
         if (out && !names.includes(out)) names.push(out)
@@ -36,7 +39,9 @@ ColumnLayout {
     function save() {
         if (enabled && (!out || !mine || !other)) { status = "Pick the monitor and both inputs first"; return }
         if (enabled && mine === other) { status = "The two inputs must differ"; return }
-        const body = `# Written by Settings > Shared Monitor (see ~/.local/bin/monswitch)\nOUT=${out}\nLAPTOP=${mine}\nPC=${other}\nMIRROR=${mirror}\nMIRROR_MODE=${mirrorMode}\n`
+        // monswitch sources this file as shell: only a plain mode (or nothing) may go in
+        if (!/^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(mirrorMode.trim())) { status = "Mirror mode must look like 1920x1080@60"; return }
+        const body = `# Written by Settings > Shared Monitor (see ~/.local/bin/monswitch)\nOUT=${out}\nLAPTOP=${mine}\nPC=${other}\nMIRROR=${mirror}\nMIRROR_MODE=${mirrorMode.trim()}\n`
         writer.command = ["sh", "-c",
             (enabled ? "printf '%s' \"$2\" > \"$1\" && rm -f \"$1.off\""
                      : "[ -f \"$1\" ] && mv \"$1\" \"$1.off\"; true")
@@ -63,12 +68,13 @@ ColumnLayout {
                     else if (m[1] === "MIRROR_MODE") page.mirrorMode = m[2]
                 }
                 if (!page.out) page.out = Hyprland.monitors.values.find(x => !x.name.startsWith("eDP"))?.name ?? ""
+                page.savedState = page.snapshot
             }
         }
     }
     Process {
         id: writer
-        onExited: code => { page.status = code === 0 ? "Saved" : "Couldn't save"; Machine.refresh() }
+        onExited: code => { page.status = code === 0 ? "Saved" : "Couldn't save"; if (code === 0) page.savedState = page.snapshot; Machine.refresh() }
     }
     Process {   // the input the monitor shows right now
         id: detect
@@ -116,7 +122,7 @@ ColumnLayout {
         SettingRow {
             label: "Mirror mode"
             hint: "Resolution@refresh both screens support"
-            TextField { width: 160; text: page.mirrorMode; onTextChanged: page.mirrorMode = text.trim() }
+            TextField { width: 160; text: page.mirrorMode; invalid: !/^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(text.trim()); onTextChanged: page.mirrorMode = text }
         }
     }
 
@@ -127,6 +133,12 @@ ColumnLayout {
             text: page.status
             color: Theme.subtext
             wrapMode: Text.Wrap
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
+        }
+        Text {
+            visible: page.dirty
+            text: "Unsaved changes"
+            color: Theme.subtext
             font { family: Theme.font; pixelSize: Theme.fontCaption }
         }
         PillButton { text: "Save"; primary: true; onClicked: page.save() }

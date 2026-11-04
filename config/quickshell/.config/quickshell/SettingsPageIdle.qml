@@ -23,7 +23,7 @@ ColumnLayout {
                 const blocks = text.split("listener").slice(1)
                 const lock = blocks.find(b => b.includes("lock-session"))
                 const sleep = blocks.find(b => b.includes("systemctl suspend"))
-                const minutes = b => b ? Math.round(parseInt(b.match(/timeout\s*=\s*(\d+)/)[1]) / 60) : 0
+                const minutes = b => { const m = b?.match(/timeout\s*=\s*(\d+)/); return m ? Math.round(parseInt(m[1]) / 60) : 0 }
                 page.lockMin = minutes(lock)
                 page.sleepMin = minutes(sleep)
             }
@@ -57,6 +57,7 @@ ColumnLayout {
             Choice {
                 options: page.lockOptions.map(page.label)
                 index: page.lockOptions.indexOf(page.lockMin)
+                extra: index < 0 ? page.lockMin + " min (custom)" : ""
                 onPicked: i => { page.lockMin = page.lockOptions[i]; page.save() }
             }
         }
@@ -66,6 +67,7 @@ ColumnLayout {
             Choice {
                 options: page.sleepOptions.map(page.label)
                 index: page.sleepOptions.indexOf(page.sleepMin)
+                extra: index < 0 ? page.sleepMin + " min (custom)" : ""
                 onPicked: i => { page.sleepMin = page.sleepOptions[i]; page.save() }
             }
         }

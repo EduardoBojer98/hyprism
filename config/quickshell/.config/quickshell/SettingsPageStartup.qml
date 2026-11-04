@@ -23,7 +23,16 @@ ColumnLayout {
     }
 
     function refresh() { lister.running = true }
-    function run(args) { editor.command = ["startup-apps"].concat(args); editor.running = true }
+    // actions wait their turn: a running Process can't take a second command
+    property var queue: []
+    function next() {
+        if (editor.running) return
+        if (!queue.length) { refresh(); return }
+        editor.command = ["startup-apps"].concat(queue[0])
+        queue = queue.slice(1)
+        editor.running = true
+    }
+    function run(args) { queue = queue.concat([args]); next() }
     function add(id) { run(["add", id]); query = ""; search.text = "" }
 
     Process {
@@ -38,7 +47,7 @@ ColumnLayout {
             }
         }
     }
-    Process { id: editor; onExited: page.refresh() }
+    Process { id: editor; onExited: page.next() }
     // Running state changes on its own; look again every few seconds while the page is open
     Timer { interval: 4000; repeat: true; running: page.visible; onTriggered: page.refresh() }
 

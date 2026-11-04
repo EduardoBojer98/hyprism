@@ -7,5 +7,6 @@ Choice {
 
     options: labels
     index: values.indexOf(Config[section]?.[key])
+    extra: index < 0 && Config[section]?.[key] !== undefined ? Config[section][key] + " (custom)" : ""
     onPicked: i => Config.set(section, key, values[i])
 }

@@ -34,11 +34,17 @@ ColumnLayout {
         return catalog.filter(c => !chosen.includes(c.id) && (c.name.toLowerCase().includes(q) || c.id.toLowerCase().startsWith(q))).slice(0, 8)
     }
 
-    function setLanguages(list) { Config.set("language", "languages", list); write() }
+    function fail(err) { page.status = "Couldn't save: " + err }
+    function setLanguages(list) { const err = Config.set("language", "languages", list); if (err) fail(err); else write() }
     function add(id) { setLanguages(chosen.concat([id])); query = ""; search.text = "" }
-    function remove(i) { if (chosen.length > 1) setLanguages(chosen.filter((_, j) => j !== i)) }
+    function remove(i) {
+        if (chosen.length < 2) return
+        // formats pointing at the removed language fall back to "" (the first language)
+        if (chosen[i] === Config.language.formats) Config.set("language", "formats", "")
+        setLanguages(chosen.filter((_, j) => j !== i))
+    }
     function makeFirst(i) { const l = chosen.slice(); l.unshift(l.splice(i, 1)[0]); setLanguages(l) }
-    function setFormats(id) { Config.set("language", "formats", id); write() }
+    function setFormats(id) { const err = Config.set("language", "formats", id); if (err) fail(err); else write() }
 
     // hypr/settings/language.lua: only installed languages, so apps never get a locale that isn't there
     function write() {

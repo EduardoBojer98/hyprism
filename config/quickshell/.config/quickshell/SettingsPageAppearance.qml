@@ -99,7 +99,8 @@ ColumnLayout {
                 placeholder: "#hex"
                 text: page.mine.accent ?? ""
                 invalid: text !== "" && page.hex(text) === ""
-                onAccepted: page.adjust("accent", text.trim() === "" ? undefined : page.hex(text) || undefined)
+                // empty: back to the theme's; a bad value is refused (the field stays red), never saved
+                onAccepted: { if (text.trim() === "") page.adjust("accent", undefined); else if (page.hex(text) !== "") page.adjust("accent", page.hex(text)) }
             }
         }
         SettingRow {
@@ -111,14 +112,14 @@ ColumnLayout {
                 placeholder: "#hex"
                 text: page.mine.accent2 ?? ""
                 invalid: text !== "" && page.hex(text) === ""
-                onAccepted: page.adjust("accent2", text.trim() === "" ? undefined : page.hex(text) || undefined)
+                // empty: back to the theme's; a bad value is refused (the field stays red), never saved
+                onAccepted: { if (text.trim() === "") page.adjust("accent2", undefined); else if (page.hex(text) !== "") page.adjust("accent2", page.hex(text)) }
             }
         }
         AdjustSlider { label: "Corners"; hint: "Panels, menus and windows"; key: "radius"; value: page.r.shape.radius; from: 0; to: 28; unit: " px" }
         AdjustSlider { label: "Gaps between windows"; key: "gapsIn"; value: page.r.hypr.gapsIn; from: 0; to: 24; unit: " px" }
         AdjustSlider { label: "Gaps at the screen edge"; key: "gapsOut"; value: page.r.hypr.gapsOut; from: 0; to: 48; unit: " px" }
         AdjustSlider { label: "Window frame"; hint: "0 hides it"; key: "border"; value: page.r.hypr.border; from: 0; to: 6; unit: " px" }
-        AdjustSlider { visible: page.base.bar.size > 0; label: "Bar size"; key: "barSize"; value: page.r.bar.size; from: 20; to: 72; unit: " px" }
         AdjustSlider { label: "Text size"; hint: "Body text in the shell; the rest scales from it"; key: "size"; value: page.r.font.size; from: 11; to: 18; unit: " px" }
         SettingRow {
             label: "Font"
@@ -126,8 +127,8 @@ ColumnLayout {
             Dropdown { width: 200; options: page.fonts; current: page.r.font.ui; onPicked: v => page.adjust("font", v === page.base.font.ui ? undefined : v) }
         }
         SettingRow {
-            label: "Motion"
-            hint: "How windows, workspaces and panels move"
+            label: "Window motion"
+            hint: "How windows and workspaces move (panels follow the theme's own motion)"
             Choice {
                 readonly property var values: ["instant", "crisp", "snappy", "ease", "spring", "slam", "fade"]
                 options: ["Instant", "Crisp", "Snappy", "Ease", "Spring", "Slam", "Fade"]
@@ -176,7 +177,9 @@ ColumnLayout {
         }
         SettingRow {
             label: "Animations"
-            ConfigToggle { section: "appearance"; key: "animations" }
+            hint: Config.appearance.motion === "reduced" ? "Short fades only; nothing slides, scales or bounces"
+                : Config.appearance.motion === "off" ? "Everything appears at once" : "Each theme's own motion"
+            ConfigChoice { section: "appearance"; key: "motion"; values: ["full", "reduced", "off"]; labels: ["Full", "Reduced", "Off"] }
         }
     }
 

@@ -61,9 +61,11 @@ ColumnLayout {
             Dropdown {
                 width: 240
                 readonly property var installed: Sensors.taskManagers.map(id => DesktopEntries.byId(id)).filter(e => e)
-                options: ["Automatic"].concat(installed.map(e => e.name))
-                current: Config.system.taskManager === "auto" ? "Automatic" : (DesktopEntries.byId(Config.system.taskManager)?.name ?? "Automatic")
-                onPicked: v => Config.set("system", "taskManager", v === "Automatic" ? "auto" : installed.find(e => e.name === v).id)
+                readonly property string saved: Config.system.taskManager
+                readonly property string missing: saved !== "auto" && !DesktopEntries.byId(saved) ? saved + " (not installed)" : ""
+                options: ["Automatic"].concat(installed.map(e => e.name), missing ? [missing] : [])
+                current: saved === "auto" ? "Automatic" : (DesktopEntries.byId(saved)?.name ?? missing)
+                onPicked: v => Config.set("system", "taskManager", v === "Automatic" ? "auto" : installed.find(e => e.name === v)?.id ?? saved)
             }
         }
     }
