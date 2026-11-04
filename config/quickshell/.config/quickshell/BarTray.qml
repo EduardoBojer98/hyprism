@@ -8,8 +8,9 @@ Grid {
     id: tray
     property bool vertical: false
     property int iconSize: 16
-    rows: vertical ? -1 : 1
-    columns: vertical ? 1 : -1
+    readonly property bool shown: SystemTray.items.values.some(i => i.status !== Status.Passive)
+    rows: vertical ? 99 : 1
+    columns: vertical ? 1 : 99
     spacing: 2
     Repeater {
         model: SystemTray.items

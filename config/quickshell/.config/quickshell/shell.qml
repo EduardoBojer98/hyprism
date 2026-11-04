@@ -1,6 +1,6 @@
 //@ pragma IconTheme Papirus-Dark
 //@ pragma UseQApplication
-// Desktop shell: top bar + dock on every screen, one OSD and one notification stack.
+// Desktop shell: a bar and a dock on every screen (Settings decides which), one OSD and one notification stack.
 // Started by hypr/modules/autostart.lua; reloads itself when a file here changes.
 import Quickshell
 import QtQuick
@@ -13,7 +13,7 @@ ShellRoot {
             required property ShellScreen modelData
 
             Bar { screen: modelData }
-            LazyLoader { active: Theme.current.dock; Dock { screen: modelData } }
+            LazyLoader { active: Theme.dockShownOn(modelData); Dock { screen: modelData } }
             HotCorners { screen: modelData }
         }
     }

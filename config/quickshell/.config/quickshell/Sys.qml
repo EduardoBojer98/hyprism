@@ -20,7 +20,19 @@ Singleton {
     readonly property bool muted: sink?.audio?.muted ?? false
     readonly property string volumeGlyph: muted || volume === 0 ? "\u{F075F}" : volume < 0.34 ? "\u{F057F}" : volume < 0.67 ? "\u{F0580}" : "\u{F057E}"
     function nudgeVolume(d) { const a = sink?.audio; if (a) a.volume = Math.max(0, Math.min(1, a.volume + d * 0.05)) }
+    function toggleMute() { const a = sink?.audio; if (a) a.muted = !a.muted }
     PwObjectTracker { objects: [root.sink] }
+
+    // ---- screen brightness (brightnessctl; -1 = no backlight, e.g. a desktop) -------------------------
+    property int brightness: -1
+    function readBrightness() { brightnessRead.running = true }
+    function nudgeBrightness(d) { Quickshell.execDetached(["sh", "-c", "brightnessctl -q set " + (d > 0 ? "5%+" : "5%-") + " && qs ipc call osd brightness $(brightnessctl -m | cut -d, -f4 | tr -d %)"]) }
+    Process {
+        id: brightnessRead
+        running: true
+        command: ["sh", "-c", "brightnessctl -l -c backlight -m 2>/dev/null | head -1 | cut -d, -f4 | tr -d %"]
+        stdout: StdioCollector { onStreamFinished: root.brightness = text.trim() === "" ? -1 : Number(text.trim()) }
+    }
 
     // ---- battery -----------------------------------------------------------------------------------
     readonly property var battery: UPower.displayDevice

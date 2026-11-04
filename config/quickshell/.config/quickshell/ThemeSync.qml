@@ -35,7 +35,7 @@ Scope {
         + "\n$blur = " + lock.blur + "\n$dim = " + lock.brightness
         + "\n$font = " + Theme.font.replace(/[\n#]/g, "") + "\n$display = " + Theme.displayFont + "\n$mono = " + Theme.monoFont
         + "\n$clock = " + (Config.bar.clock24 ? "%H:%M" : "%-I:%M") + "\n$hour = " + (Config.bar.clock24 ? "%H" : "%I")
-        + "\nsource = ~/.config/hypr/lockscreens/" + current.lock + ".conf"
+        + "\nsource = ~/.config/hypr/lockscreens/" + (({ pebble: "pebble", monolith: "terminal", console: "console", poster: "stacked", glass: "glass", atlas: "stacked" })[current.id] ?? "glass") + ".conf"
     onLockConfChanged: debounce.restart()
 
     // Ghostty: the theme's palette (ghostty/themes/<Theme>) and its mono face
@@ -56,7 +56,7 @@ Scope {
     // The Hyprland side of the theme, as a Lua table (modules/look.lua: apply_theme)
     readonly property string hyprLua: `{ theme = "${current.id}", gaps_in = ${h.gapsIn}, gaps_out = ${h.gapsOut}, border_size = ${h.border}, `
         + `rounding = ${h.rounding}, active = { ${h.active.map(x => `"${x}"`).join(", ")} }, inactive = "${h.inactive}", `
-        + `shadow = "${h.shadow}", blur = ${h.blur}, motion = "${animate ? h.motion : "off"}", accent = "${hex(Theme.accent)}", `
+        + `shadow = "${h.shadow}", blur = ${h.blur}, motion = "${Theme.motionLevel === "full" ? h.motion : Theme.motionLevel === "reduced" ? "instant" : "off"}", accent = "${hex(Theme.accent)}", `
         + `accent2 = "${hex(Theme.accent2)}", cursor = "${cursorTheme}", cursor_size = ${cursorSize} }`
 
     function apply() {

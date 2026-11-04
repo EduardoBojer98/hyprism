@@ -5,22 +5,26 @@ import Quickshell.Widgets
 import QtQuick
 
 // Dock: the all-apps button, pinned apps (Config.dock.pinned, drag to reorder), a divider, then
-// every window on this dock's monitor as its own live thumbnail with the app's icon on it. With auto-hide it slides up
-// when the pointer touches the bottom edge and stays visible on an empty workspace.
+// every window on this dock's monitor as its own live thumbnail with the app's icon on it.
+// It sits on any edge (Settings > Dock; beside the bar when they share one). With auto-hide it slides
+// in when the pointer touches its edge and stays visible on an empty workspace.
 // Right-click an icon or a window for windows and pin / minimise / restore / quit.
-// Its look follows the theme (only Pebble and Glass have a dock); behaviour is Settings > Dock:
-// the open-app mark (indicator) and what hovering an icon does (hover).
+// Its look follows the theme (Themes.qml dock: shape, hover, mark, fill).
 PanelWindow {
     id: dock
 
     readonly property int iconSize: Config.dock.iconSize
-    // the look comes from the theme: Pebble a round pill whose icons lift, Glass a glass island that magnifies
-    readonly property string style: Theme.current.id === "pebble" ? "pill" : "glass"
-    readonly property int lift: style === "panel" ? 0 : 10     // gap under the island
-    readonly property bool bare: style === "clear" || style === "shelf"   // no surface around the icons
-    readonly property string indicator: Theme.current.id === "pebble" ? "line" : "dot"
-    readonly property string hoverStyle: Theme.current.id === "pebble" ? "lift" : "grow"
-    readonly property int slot: iconSize + 4          // one icon's cell
+    readonly property var ds: Theme.dockStyle
+    readonly property string shape: ds.shape          // pill | tile | block
+    readonly property string indicator: ds.mark       // line | dot | bar
+    readonly property string hoverStyle: ds.hover     // lift | grow | plate
+    readonly property int lift: Theme.dockLift        // gap to the screen edge
+    readonly property string edge: Theme.dockEdge
+    readonly property bool vertical: Theme.dockVertical
+    readonly property int sign: edge === "bottom" || edge === "right" ? 1 : -1   // towards the edge
+    readonly property color ink: ds.fill === "ink" ? Theme.base : Theme.text
+    readonly property int slot: iconSize + 4          // one icon's cell, along the dock
+    readonly property int cellCross: iconSize + 8     // and across it (room for the mark)
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
     readonly property bool shown: !Config.dock.autoHide || hover.hovered || hideTimer.running || emptyWorkspace
@@ -49,12 +53,12 @@ PanelWindow {
     // Reordering: while an icon is dragged the order lives here and is saved on release
     property var dragOrder: null
     property string dragId: ""
-    property real dragX: 0            // pointer, in row coordinates
+    property real dragX: 0            // pointer along the dock, in row coordinates
     readonly property var pinnedIds: dragOrder ?? Config.dock.pinned
     readonly property var pinnedEntries: appCount ? pinnedIds.map(id => DesktopEntries.byId(id)).filter(e => e) : []
     function dragTo(x) {
         dragX = x
-        const first = launcher.width + row.spacing * 2 + 1          // launcher + divider
+        const first = dock.slot + row.spacing * 2 + 1          // launcher + divider
         const i = Math.max(0, Math.min(pinnedEntries.length - 1, Math.floor((x - first) / (slot + row.spacing))))
         const ids = pinnedEntries.map(e => e.id)
         if (ids[i] === dragId) return
@@ -102,23 +106,26 @@ PanelWindow {
     Timer { id: tipDelay; interval: 350; onTriggered: dock.tipReady = dock.tipItem !== null }
     Timer { id: tipGrace; interval: 200; onTriggered: { dock.tipReady = false; tipDelay.stop() } }
 
-    // A fixed full-width strip: the surface never resizes when apps open or the menu shows (resizing
-    // a layer surface made the dock jump and flicker); the input mask limits it to the island.
-    anchors { bottom: true; left: true; right: true }
-    implicitHeight: 340   // island + room above it for tooltips / the app menu
-    exclusiveZone: Config.dock.autoHide ? 0 : island.height + dock.lift
+    // A fixed full-length strip along its edge: the surface never resizes when apps open or the menu
+    // shows (resizing a layer surface made the dock jump and flicker); the input mask limits it to the
+    // island. Created after the bar, so Hyprland places it beside the bar when they share an edge.
+    anchors { bottom: edge !== "top"; top: edge !== "bottom"; left: edge !== "right"; right: edge !== "left" }
+    implicitHeight: vertical ? 0 : 340   // island + room beside it for tooltips / the app menu
+    implicitWidth: vertical ? 340 : 0
+    exclusiveZone: Config.dock.autoHide ? 0 : Theme.dockThickness + dock.lift
     color: "transparent"
     WlrLayershell.namespace: "qs-dock"
     WlrLayershell.layer: WlrLayer.Top
 
     // Only the visible island (or a thin strip at the bottom edge when hidden) takes input
-    mask: Region { item: dock.shown ? island : edge; Region { item: menu.entry ? menu : null } }
+    mask: Region { item: dock.shown ? island : edgeStrip; Region { item: menu.entry ? menu : null } }
 
-    Item {
-        id: edge
-        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
-        width: island.width
-        height: 4
+    Item {   // the hidden dock's trigger: a thin strip along its edge
+        id: edgeStrip
+        x: dock.vertical ? (dock.edge === "left" ? 0 : parent.width - width) : island.x
+        y: dock.vertical ? island.y : (dock.edge === "top" ? 0 : parent.height - height)
+        width: dock.vertical ? 4 : island.width
+        height: dock.vertical ? island.height : 4
     }
 
     HoverHandler {
@@ -127,60 +134,69 @@ PanelWindow {
     }
     Timer { id: hideTimer; interval: 500 }
 
+    // Poster's hard offset shadow: a block of the line colour behind the island
+    Rectangle {
+        visible: Theme.depth === "hard" && island.opacity > 0
+        x: island.x + 6; y: island.y + 6; width: island.width; height: island.height
+        opacity: island.opacity
+        color: Theme.stroke
+        transform: island.transform
+    }
+
     Glass {
         id: island
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: dock.shown ? parent.height - height - dock.lift : parent.height + 4
+        // along the dock: centred; across: at the edge, or just past it while hidden. The hide is a
+        // translate (no layout), out of the way towards the edge, faster out than in.
+        readonly property real across: dock.vertical ? width : height
+        readonly property real restAt: dock.sign > 0 ? (dock.vertical ? parent.width : parent.height) - across - dock.lift : dock.lift
+        x: dock.vertical ? restAt : (parent.width - width) / 2
+        y: dock.vertical ? (parent.height - height) / 2 : restAt
+        property real hide: dock.shown ? 0 : (across + dock.lift + 4) * dock.sign
+        transform: Translate { x: dock.vertical ? island.hide : 0; y: dock.vertical ? 0 : island.hide }
         opacity: dock.shown ? 1 : 0
-        Behavior on y { NumberAnimation { duration: Theme.animate ? 260 : 0; easing.type: Easing.OutCubic } }
-        Behavior on opacity { NumberAnimation { duration: Theme.anim } }
-        Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+        Behavior on hide { NumberAnimation { duration: dock.shown ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: dock.shown ? Theme.anim : Theme.exit } }
 
-        width: dock.style === "panel" ? parent.width : row.implicitWidth + (dock.style === "pill" ? 24 : 16)
-        height: dock.iconSize + 16
-        radius: dock.style === "panel" ? 0 : dock.style === "pill" ? height / 2 : Theme.radiusLarge + 4
-        flat: dock.bare
-        color: dock.bare ? "transparent" : Theme.glass
-        border.width: dock.bare ? 0 : Theme.line
+        readonly property int pad: Theme.dockPad
+        width: dock.vertical ? Theme.dockThickness : row.implicitWidth + pad * 2 + (dock.shape === "pill" ? 8 : 0)
+        height: dock.vertical ? row.implicitHeight + pad * 2 + (dock.shape === "pill" ? 8 : 0) : Theme.dockThickness
+        radius: dock.shape === "pill" ? across / 2 : dock.shape === "tile" ? Theme.radiusLarge + 4 : Theme.radius
+        color: ({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[dock.ds.fill] ?? Theme.glass
+        border { width: Theme.line; color: dock.ds.fill === "ink" ? Theme.text : Theme.stroke }
 
-        Rectangle {   // shelf: the icons stand on a glass slab
-            visible: dock.style === "shelf"
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            height: Math.round(parent.height * 0.42)
-            radius: Theme.radiusSmall
-            color: Theme.menu
-            border { color: Theme.strokeStrong; width: 1 }
-        }
-
-        Row {
+        Grid {
             id: row
-            anchors { left: dock.style === "panel" ? undefined : parent.left; leftMargin: dock.style === "pill" ? 12 : 8
-                      horizontalCenter: dock.style === "panel" ? parent.horizontalCenter : undefined
-                      verticalCenter: parent.verticalCenter }
+            anchors.centerIn: parent
+            rows: dock.vertical ? 99 : 1
+            columns: dock.vertical ? 1 : 99
             spacing: 6
+            horizontalItemAlignment: Grid.AlignHCenter
+            verticalItemAlignment: Grid.AlignVCenter
 
             // App menu / Spotlight-style launcher
             Item {
                 id: launcher
-                width: dock.slot
-                height: dock.iconSize + 8
+                readonly property real mid: (dock.vertical ? height : width) / 2
+                width: dock.vertical ? dock.cellCross : dock.slot
+                height: dock.vertical ? dock.slot : dock.cellCross
 
                 // a frosted tile with a 2 x 2 grid; on hover the grid turns a quarter and one square
                 // becomes an accent dot
                 Rectangle {
                     id: launcherTile
                     readonly property bool lit: Launcher.open || launcherArea.containsMouse
-                    anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
+                    anchors.centerIn: parent
                     width: dock.iconSize
                     height: dock.iconSize
-                    radius: Math.round(dock.iconSize * 0.27)
-                    color: launcherTile.lit ? Theme.fillActive : Theme.fill
-                    border { color: launcherTile.lit ? Theme.strokeStrong : Theme.stroke; width: 1 }
-                    scale: launcherArea.pressed ? 0.92 : 1
+                    radius: dock.shape === "block" ? 0 : Math.round(dock.iconSize * 0.27)
+                    color: launcherTile.lit ? Qt.alpha(dock.ink, 0.17) : Qt.alpha(dock.ink, 0.07)
+                    border { color: Qt.alpha(dock.ink, launcherTile.lit ? 0.3 : 0.15); width: 1 }
+                    scale: launcherArea.pressed ? Theme.pressScale : 1
                     Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                     Behavior on color { ColorAnimation { duration: Theme.anim } }
 
                     Rectangle {   // top sheen, like light on glass
+                        visible: Theme.glassy
                         anchors { fill: parent; margins: 1 }
                         radius: parent.radius - 1
                         gradient: Gradient {
@@ -195,8 +211,8 @@ PanelWindow {
                         anchors.centerIn: parent
                         columns: 2
                         spacing: dock.iconSize * 0.09
-                        rotation: launcherTile.lit ? 45 : 0
-                        Behavior on rotation { NumberAnimation { duration: Theme.anim * 1.5; easing.type: Easing.OutBack } }
+                        rotation: launcherTile.lit && Theme.moves ? 45 : 0
+                        Behavior on rotation { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
                         Repeater {
                             model: 4
                             Rectangle {
@@ -204,7 +220,7 @@ PanelWindow {
                                 readonly property bool dot: index === 1 && launcherTile.lit
                                 width: dots.cell; height: dots.cell
                                 radius: dot ? dots.cell / 2 : dots.cell * 0.3
-                                color: index === 1 ? Theme.accent : Theme.text
+                                color: index === 1 ? Theme.accent : dock.ink
                                 opacity: index === 1 ? 1 : 0.88
                                 Behavior on radius { NumberAnimation { duration: Theme.anim } }
                             }
@@ -218,16 +234,11 @@ PanelWindow {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onContainsMouseChanged: dock.hovering(launcher, "Apps & search", containsMouse)
-                    onClicked: Launcher.toggle()
+                    onClicked: { Anchor.take(launcher, dock.edge, dock.origin()); Launcher.toggle() }
                 }
             }
 
-            Rectangle { // divider
-                width: 1
-                height: dock.iconSize * 0.7
-                anchors.verticalCenter: parent.verticalCenter
-                color: Theme.stroke
-            }
+            Separator {}
 
             Repeater {
                 // ScriptModel keeps existing icons when the list changes (and moves them on reorder)
@@ -244,41 +255,49 @@ PanelWindow {
                     property bool launching: false
                     onWindowsChanged: if (windows.length) launching = false
 
-                    width: dock.slot
-                    height: dock.iconSize + 8
+                    width: dock.vertical ? dock.cellCross : dock.slot
+                    height: dock.vertical ? dock.slot : dock.cellCross
+                    readonly property real along: dock.vertical ? y : x
+                    readonly property real mid: (dock.vertical ? height : width) / 2   // tooltip / menu centre
                     z: dragged ? 1 : 0
                     // neighbours glide aside while an icon is dragged past them
-                    Behavior on x { enabled: dock.dragId !== ""; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+                    Behavior on x { enabled: dock.dragId !== "" && !dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+                    Behavior on y { enabled: dock.dragId !== "" && dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
 
                     Item {
                         id: cell
-                        anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-                        width: dock.slot
-                        // the dragged icon follows the pointer
+                        anchors.fill: parent
+                        // the dragged icon follows the pointer, a little off the edge
+                        readonly property real follow: app.dragged ? dock.dragX - (app.along + app.mid) : 0
                         transform: Translate {
-                            x: app.dragged ? dock.dragX - (app.x + app.width - cell.width / 2) : 0
-                            y: app.dragged ? -4 : 0
+                            x: dock.vertical ? (app.dragged ? -4 * dock.sign : 0) : cell.follow
+                            y: dock.vertical ? cell.follow : (app.dragged ? -4 * dock.sign : 0)
                         }
 
                         // hover plate: a soft tile behind the icon (hover "plate"; always while dragged or in a menu)
                         Rectangle {
-                            anchors { fill: parent; topMargin: -2 }
+                            anchors { fill: parent; margins: -1 }
                             radius: Theme.radius
-                            color: area.pressed || app.dragged ? Theme.fillActive : Theme.fillHover
+                            color: Qt.alpha(dock.ink, area.pressed || app.dragged ? 0.17 : 0.11)
                             opacity: area.containsMouse && dock.hoverStyle === "plate" || app.dragged || menu.item === app ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                         }
 
                         IconImage {
                             id: icon
-                            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top
-                                      topMargin: dock.hoverStyle === "lift" && area.containsMouse && !app.dragged ? -8 : 0 }
-                            Behavior on anchors.topMargin { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
+                            anchors.centerIn: parent
+                            // a little away from the edge, so the open-app mark has room on the edge side
+                            anchors.horizontalCenterOffset: dock.vertical ? -3 * dock.sign : 0
+                            anchors.verticalCenterOffset: dock.vertical ? 0 : -3 * dock.sign
                             implicitSize: dock.iconSize
                             source: Quickshell.iconPath(app.modelData?.icon ?? "", "application-x-executable")
-                            transformOrigin: Item.Bottom
-                            scale: area.pressed && !app.dragged ? 0.9 : dock.hoverStyle === "grow" && area.containsMouse && !app.dragged ? 1.22 : 1
-                            Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
+                            transformOrigin: dock.edgeOrigin
+                            // hover: lift (moves off the edge) or grow (from the edge); press: a small give
+                            property real raise: dock.hoverStyle === "lift" && area.containsMouse && !app.dragged && Theme.moves ? -6 * dock.sign : 0
+                            transform: Translate { x: dock.vertical ? icon.raise : 0; y: dock.vertical ? 0 : icon.raise }
+                            Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+                            scale: area.pressed && !app.dragged ? Theme.pressScale : dock.hoverStyle === "grow" && area.containsMouse && !app.dragged && Theme.moves ? 1.14 : 1
+                            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
 
                             // launching: a slow breath until the first window shows up
                             SequentialAnimation on opacity {
@@ -302,13 +321,15 @@ PanelWindow {
                         property real pressX: 0
                         property bool moved: false
                         onContainsMouseChanged: dock.hovering(app, app.modelData?.name ?? "", containsMouse)
-                        onPressed: mouse => { pressX = mouse.x; moved = false }
-                        // drag a pinned icon sideways to reorder
+                        onPressed: mouse => { pressX = dock.vertical ? mouse.y : mouse.x; moved = false }
+                        // drag a pinned icon along the dock to reorder
                         onPositionChanged: mouse => {
                             if (!pressed || pressedButtons !== Qt.LeftButton || !app.pinned) return
-                            if (!app.dragged && Math.abs(mouse.x - pressX) < 8) return
+                            const at = dock.vertical ? mouse.y : mouse.x
+                            if (!app.dragged && Math.abs(at - pressX) < 8) return
                             if (!app.dragged) { moved = true; dock.dragId = app.modelData.id }
-                            dock.dragTo(mapToItem(row, mouse.x, 0).x)
+                            const p = mapToItem(row, mouse.x, mouse.y)
+                            dock.dragTo(dock.vertical ? p.y : p.x)
                         }
                         onReleased: if (app.dragged) dock.endDrag()
                         onCanceled: if (app.dragged) dock.endDrag()
@@ -331,13 +352,7 @@ PanelWindow {
                 }
             }
 
-            Rectangle { // divider before the open windows
-                visible: dock.openWindows.length > 0
-                width: 1
-                height: dock.iconSize * 0.7
-                anchors.verticalCenter: parent.verticalCenter
-                color: Theme.stroke
-            }
+            Separator { visible: dock.openWindows.length > 0 }   // before the open windows
 
             // ---- open windows: a live picture of each, its app's icon in the corner ---------------
             Repeater {
@@ -349,7 +364,7 @@ PanelWindow {
                     readonly property var entry: dock.entryFor(modelData.wayland?.appId ?? "")
                     readonly property bool minimised: dock.isMinimised(modelData)
                     readonly property bool focused: modelData.activated
-                    readonly property real mid: width / 2   // tooltip / menu centre
+                    readonly property real mid: (dock.vertical ? height : width) / 2   // tooltip / menu centre
                     readonly property var windows: [modelData]
                     // the window's shape (from its picture once there is one), fitted into the tile
                     readonly property real aspect: shot.hasContent && shot.sourceSize.height > 0
@@ -366,13 +381,13 @@ PanelWindow {
                         }
                     }
 
-                    width: dock.thumbWidth
-                    height: dock.iconSize + 8
+                    width: dock.vertical ? dock.cellCross : dock.thumbWidth
+                    height: dock.vertical ? Math.round(dock.iconSize * 0.9) : dock.cellCross
 
                     Rectangle {   // hover plate
-                        anchors { fill: parent; topMargin: -2 }
+                        anchors { fill: parent; margins: -1 }
                         radius: Theme.radius
-                        color: winArea.pressed ? Theme.fillActive : Theme.fillHover
+                        color: Qt.alpha(dock.ink, winArea.pressed ? 0.17 : 0.11)
                         opacity: winArea.containsMouse && dock.hoverStyle === "plate" || menu.item === win ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                     }
@@ -380,18 +395,21 @@ PanelWindow {
                     Rectangle {
                         id: frame
                         readonly property real boxH: dock.iconSize - 4
-                        anchors { horizontalCenter: parent.horizontalCenter; top: parent.top
-                                  topMargin: dock.hoverStyle === "lift" && winArea.containsMouse ? -6 : 2 }
-                        Behavior on anchors.topMargin { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
-                        height: Math.min(boxH, (win.width - 6) / win.aspect)
+                        anchors.centerIn: parent
+                        anchors.horizontalCenterOffset: dock.vertical ? -3 * dock.sign : 0
+                        anchors.verticalCenterOffset: dock.vertical ? 0 : -3 * dock.sign
+                        property real raise: dock.hoverStyle === "lift" && winArea.containsMouse && Theme.moves ? -5 * dock.sign : 0
+                        transform: Translate { x: dock.vertical ? frame.raise : 0; y: dock.vertical ? 0 : frame.raise }
+                        Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+                        height: dock.vertical ? Math.min(win.height - 6, (dock.iconSize - 4) / win.aspect) : Math.min(boxH, (win.width - 6) / win.aspect)
                         width: height * win.aspect
                         radius: Theme.radiusSmall - 2
-                        color: Theme.fill
-                        border { color: win.focused ? Theme.accent : Theme.stroke; width: win.focused ? 2 : 1 }
+                        color: Qt.alpha(dock.ink, 0.07)
+                        border { color: win.focused ? Theme.accent : Qt.alpha(dock.ink, 0.2); width: win.focused ? 2 : 1 }
                         opacity: win.minimised ? 0.55 : 1
-                        transformOrigin: Item.Bottom
-                        scale: winArea.pressed ? 0.94 : dock.hoverStyle === "grow" && winArea.containsMouse ? 1.15 : 1
-                        Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
+                        transformOrigin: dock.edgeOrigin
+                        scale: winArea.pressed ? Theme.pressScale : dock.hoverStyle === "grow" && winArea.containsMouse && Theme.moves ? 1.1 : 1
+                        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                         clip: true
 
                         ScreencopyView {
@@ -447,27 +465,46 @@ PanelWindow {
         }
     }
 
-    // the tooltip, above the island over the hovered icon
+    // where an icon's middle is, along the dock, in window coordinates
+    function middleOf(item) {
+        const p = item.mapToItem(dock.contentItem, 0, 0)
+        return (vertical ? p.y : p.x) + (item.mid ?? (vertical ? item.height : item.width) / 2)
+    }
+    // a box of size w x h beside the island, on the desktop side, centred on `at` along the dock
+    function beside(w, h, at, gap) {
+        const along = Math.max(8, Math.min((vertical ? dock.height - h : dock.width - w) - 8, at - (vertical ? h : w) / 2))
+        const across = sign > 0 ? (vertical ? island.x - w : island.y - h) - gap : (vertical ? island.x + island.width : island.y + island.height) + gap
+        return vertical ? Qt.point(across, along) : Qt.point(along, across)
+    }
+    // the screen side the icons grow and lift from (Item.TransformOrigin)
+    readonly property int edgeOrigin: ({ bottom: Item.Bottom, top: Item.Top, left: Item.Left, right: Item.Right })[edge]
+    // this window's top-left on the screen (Anchor: panels opened from the dock appear beside it)
+    function origin() {   // Hyprland puts this window inside the bar's room on the edges they share
+        const s = dock.screen, bh = Theme.barShownOn(s) ? Theme.barHeight : 0, be = Theme.barEdge
+        return Qt.point(edge === "right" ? s.width - dock.width - (be === "right" ? bh : 0) : (be === "left" ? bh : 0),
+                        edge === "bottom" ? s.height - dock.height - (be === "bottom" ? bh : 0) : (be === "top" ? bh : 0))
+    }
+
+    // the tooltip, beside the island at the hovered icon; hover-to-hover it moves without waiting
     Rectangle {
+        id: tip
         readonly property bool on: dock.tipReady && dock.tipItem !== null && menu.entry === null && dock.dragId === ""
-        x: dock.tipItem ? Math.max(8, Math.min(dock.width - width - 8,
-               island.x + row.x + dock.tipItem.x + (dock.tipItem.mid ?? dock.tipItem.width - dock.slot / 2) - width / 2)) : 0
-        y: island.y - height - 8 + (on ? 0 : 3)
+        readonly property point at: dock.tipItem ? dock.beside(width, height, dock.middleOf(dock.tipItem), 8) : Qt.point(0, 0)
+        x: at.x; y: at.y
         width: tipLabel.implicitWidth + 16
         height: 24
-        radius: 7
+        radius: Theme.radiusSmall
         color: Theme.menu
-        border { color: Theme.stroke; width: 1 }
+        border { color: Theme.stroke; width: Theme.line }
         opacity: on ? 1 : 0
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-        Behavior on y { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
         Text {
             id: tipLabel
             anchors.centerIn: parent
             text: dock.tipText
             color: Theme.text
-            font { family: Theme.font; pixelSize: 12 }
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
         }
     }
 
@@ -486,8 +523,8 @@ PanelWindow {
         radius: Theme.radius
         width: 220
         height: actions.implicitHeight + Theme.spaceS * 2
-        x: item ? Math.max(8, Math.min(dock.width - width - 8, item.mapToItem(dock.contentItem, item.mid ?? item.width - dock.slot / 2, 0).x - width / 2)) : 0
-        y: island.y - height - Theme.spaceS
+        readonly property point at: item ? dock.beside(width, height, dock.middleOf(item), Theme.spaceS) : Qt.point(0, 0)
+        x: at.x; y: at.y
 
         // closes a moment after the pointer leaves it (or never enters it)
         HoverHandler { onHoveredChanged: if (!hovered) closeTimer.restart(); else closeTimer.stop() }
@@ -555,16 +592,25 @@ PanelWindow {
         }
     }
 
-    // the open-app mark under an icon (Config.dock.indicator): a dot or a short line; brighter when focused
+    // the open-app mark on the edge side of an icon (theme dock.mark): a dot, a short line, or a
+    // square bar; longer and in the accent when focused
     component Mark: Rectangle {
         property bool on: false
         property bool urgent: false
-        visible: dock.indicator !== "none" || urgent
-        anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 1 }
-        width: dock.indicator === "line" ? (on ? 16 : 8) : 4
-        height: dock.indicator === "line" ? 3 : 4
-        radius: height / 2
-        color: urgent ? Theme.warning : on ? Theme.accent : Theme.text
-        Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+        readonly property real len: dock.indicator === "line" ? (on ? 16 : 8) : dock.indicator === "bar" ? (on ? 22 : 10) : 4
+        readonly property real thick: dock.indicator === "dot" ? 4 : 3
+        x: dock.vertical ? (dock.sign > 0 ? parent.width - thick - 1 : 1) : (parent.width - width) / 2
+        y: dock.vertical ? (parent.height - height) / 2 : (dock.sign > 0 ? parent.height - thick - 1 : 1)
+        width: dock.vertical ? thick : len
+        height: dock.vertical ? len : thick
+        radius: dock.indicator === "bar" ? 0 : thick / 2
+        color: urgent ? Theme.warning : on ? Theme.accent : dock.ink
+        Behavior on width { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+    }
+    component Separator: Rectangle {
+        width: dock.vertical ? dock.iconSize * 0.7 : 1
+        height: dock.vertical ? 1 : dock.iconSize * 0.7
+        color: Qt.alpha(dock.ink, 0.2)
     }
 }

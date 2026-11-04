@@ -4,7 +4,7 @@ import Quickshell.Io
 import QtQuick
 
 // Numbers for the menu bar's CPU, memory and network speed items, read every two seconds while
-// a bar shows them (Console's readout).
+// a bar item shows them (BarWidget cpu, memory, gpu).
 Singleton {
     id: root
 
@@ -13,6 +13,8 @@ Singleton {
     property real memTotal: 0
     property real down: 0         // bytes per second, all interfaces but loopback
     property real up: 0
+    property int gpu: -1          // %, the integrated GPU (amdgpu's gpu_busy_percent); -1 = can't tell
+    property int users: 0         // bar items showing these numbers; nothing is read while 0
     property var last: null       // previous { idle, all, rx, tx, t }
 
     // "1.2 MB/s", "340 KB/s"
@@ -20,12 +22,15 @@ Singleton {
 
     Process {
         id: read
-        command: ["sh", "-c", "head -1 /proc/stat; grep -E '^(MemTotal|MemAvailable):' /proc/meminfo; tail -n +3 /proc/net/dev"]
+        // the GPU from sysfs only: asking nvidia-smi would wake a sleeping NVIDIA card every 2 s
+        command: ["sh", "-c", "head -1 /proc/stat; grep -E '^(MemTotal|MemAvailable):' /proc/meminfo; tail -n +3 /proc/net/dev; "
+                  + "for f in /sys/class/drm/card*/device/gpu_busy_percent; do [ -r \"$f\" ] && echo \"GPU $(cat \"$f\")\" && break; done"]
         stdout: StdioCollector {
             onStreamFinished: {
                 let idle = 0, all = 0, rx = 0, tx = 0
                 for (const line of text.trim().split("\n")) {
                     const p = line.trim().split(/[\s:]+/)
+                    if (p[0] === "GPU") { root.gpu = Number(p[1]); continue }
                     if (p[0] === "cpu") { const t = p.slice(1).map(Number); idle = t[3] + t[4]; all = t.reduce((a, b) => a + b, 0) }
                     else if (p[0] === "MemTotal") root.memTotal = p[1] / 1048576
                     else if (p[0] === "MemAvailable") root.memUsed = root.memTotal - p[1] / 1048576
@@ -47,7 +52,7 @@ Singleton {
         interval: 2000
         repeat: true
         triggeredOnStart: true
-        running: Theme.bar.kind === "readout"   // Console's readout shows CPU and memory
+        running: root.users > 0
         onTriggered: read.running = true
     }
 }

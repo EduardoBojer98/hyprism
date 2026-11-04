@@ -43,7 +43,7 @@ PanelWindow {
 
     IpcHandler {
         target: "osd"
-        function brightness(percent: int): void { osd.show("\u{F00DF}", percent / 100) }
+        function brightness(percent: int): void { Sys.brightness = percent; osd.show("\u{F00DF}", percent / 100) }
     }
 
     Timer { id: hideTimer; interval: 1400 }

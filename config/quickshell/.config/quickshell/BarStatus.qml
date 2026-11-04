@@ -3,8 +3,8 @@ import QtQuick
 
 // Network, Bluetooth, sound and battery in one item that opens the Control Center (scroll: volume).
 //   mode "icons"  drawn glyphs; the battery as a small drawn cell (most themes)
-//   mode "text"   lowercase words and numbers: "wifi 82  vol 45  bat 72%" (Monolith, Mist)
-//   mode "caps"   upper-case readout: "NET 82  VOL 45  BAT 72" (Console, Noir)
+//   mode "words"  lowercase words and numbers: "wifi 82  vol 45  bat 72%" (Monolith)
+//   mode "caps"   upper-case readout: "NET 82  VOL 45  BAT 72" (Console)
 BarItem {
     id: st
     property string mode: "icons"
@@ -18,10 +18,10 @@ BarItem {
 
     readonly property bool words: mode !== "icons"
     readonly property bool caps: mode === "caps"
-    function w(s) { return caps ? s.toUpperCase() : s }
-    readonly property string netText: Sys.wired ? w("eth") : !Sys.wifiOn ? w("wifi off") : Sys.signal < 0 ? w("offline") : w("wifi ") + Sys.signal
-    readonly property string volText: Sys.muted ? w("muted") : w("vol ") + Math.round(Sys.volume * 100)
-    readonly property string batText: w("bat ") + Sys.batteryPct + "%" + (Sys.charging ? "+" : "")
+    function say(s) { return caps ? s.toUpperCase() : s }
+    readonly property string netText: Sys.wired ? say("eth") : !Sys.wifiOn ? say("wifi off") : Sys.signal < 0 ? say("offline") : say("wifi ") + Sys.signal
+    readonly property string volText: Sys.muted ? say("muted") : say("vol ") + Math.round(Sys.volume * 100)
+    readonly property string batText: say("bat ") + Sys.batteryPct + "%" + (Sys.charging ? "+" : "")
 
     // ---- modes that are on: recording (click the dot to stop), Do Not Disturb, Caffeine ----
     Rectangle {
@@ -36,7 +36,7 @@ BarItem {
 
     // ---- words ----
     Repeater {
-        model: st.words ? [st.netText, Sys.btOn ? (Sys.btLinked ? st.w("bt on") : st.w("bt")) : "", st.volText, Sys.hasBattery ? st.batText : ""].filter(x => x) : []
+        model: st.words ? [st.netText, Sys.btOn ? (Sys.btLinked ? st.say("bt on") : st.say("bt")) : "", st.volText, Sys.hasBattery ? st.batText : ""].filter(x => x) : []
         Text {
             required property string modelData
             text: modelData

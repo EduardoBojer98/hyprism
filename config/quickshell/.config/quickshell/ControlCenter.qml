@@ -118,6 +118,7 @@ Singleton {
     }
 
     function toggle() { popup.toggle() }
+    function showSection(name) { if (!popup.open) popup.show(); cc.expanded = name }   // a bar item opens its own part
     // the bell / Super+N: open (or close) scrolled down to the notifications
     property bool toNotes: false
     function toggleNotifications() { if (popup.open) popup.hide(); else { toNotes = true; popup.show() } }

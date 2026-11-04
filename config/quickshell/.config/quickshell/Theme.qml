@@ -86,17 +86,38 @@ Singleton {
     readonly property int controlHeight: 28
     readonly property int popupGap: 8
 
-    // ---- the bar: which edge it takes, and how much of it (popups keep clear of it) -----------------
-    readonly property var bar: current.bar
-    readonly property string barEdge: bar.edge
+    // ---- the bar: the theme's own, with Settings > Menu Bar on top -------------------------------------
+    readonly property var cb: Config.bar
+    readonly property var barStyle: current.bar                             // fill, line, voice, ws, clock, decor …
+    readonly property string barEdge: cb.position !== "theme" ? cb.position : barStyle.edge
     readonly property bool barVertical: barEdge === "left" || barEdge === "right"
-    readonly property int barInset: ["pills", "island"].includes(bar.kind) ? 8 : 0
-    readonly property int barHeight: bar.kind === "corner" ? 40 : bar.size + barInset   // thickness, whatever the edge
-    // letterbox has a band at both ends
-    readonly property int reserveTop: barEdge === "top" || bar.kind === "letterbox" ? barHeight : 0
-    readonly property int reserveBottom: barEdge === "bottom" || bar.kind === "letterbox" ? barHeight : 0
-    readonly property int reserveLeft: barEdge === "left" ? barHeight : 0
-    readonly property int reserveRight: barEdge === "right" ? barHeight : 0
+    readonly property int barSize: cb.size > 0 ? cb.size : barStyle.size   // thickness of the bar itself
+    readonly property bool barFloating: cb.floating === "theme" ? barStyle.floating : cb.floating === "floating"
+    readonly property int barMargin: barFloating ? cb.margin : 0            // gap to the screen edge (and along it)
+    readonly property var barLayout: cb.custom ? { start: cb.start, center: cb.center, end: cb.end }
+                                               : { start: barStyle.start, center: barStyle.center, end: barStyle.end }
+    readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
+    readonly property color barInk: barStyle.fill === "ink" ? base : text    // text on the bar's own ground
+    function barShownOn(screen) { return !cb.hiddenOn.includes(screen?.name ?? "") }
+
+    // ---- the dock: every theme has one; Settings > Dock places it ----------------------------------------
+    readonly property var dockStyle: current.dock
+    readonly property string dockEdge: Config.dock.position
+    readonly property bool dockVertical: dockEdge === "left" || dockEdge === "right"
+    readonly property int dockPad: ({ compact: 5, regular: 8, roomy: 12 })[Config.dock.size] ?? 8
+    readonly property int dockLift: dockStyle.shape === "pill" || dockStyle.shape === "tile" ? 8 : 6   // gap to the edge
+    readonly property int dockThickness: Config.dock.iconSize + dockPad * 2 + 8                      // icon + padding + marks
+    readonly property bool dockReserves: Config.dock.enabled && !Config.dock.autoHide
+    function dockShownOn(screen) { return Config.dock.enabled && !Config.dock.hiddenOn.includes(screen?.name ?? "") }
+
+    // room taken on each side by the bar and a dock that doesn't hide (popups and banners keep clear)
+    function reserve(side) {
+        return (barEdge === side ? barHeight : 0) + (dockReserves && dockEdge === side ? dockThickness + dockLift : 0)
+    }
+    readonly property int reserveTop: reserve("top")
+    readonly property int reserveBottom: reserve("bottom")
+    readonly property int reserveLeft: reserve("left")
+    readonly property int reserveRight: reserve("right")
 
     // ---- icons ---------------------------------------------------------------------------------------
     readonly property string iconTheme: a.iconTheme
@@ -107,15 +128,27 @@ Singleton {
 
     // ---- depth ---------------------------------------------------------------------------------------
     readonly property color shadow: Qt.rgba(0, 0, 0, light ? 0.16 : 0.38)
-    readonly property real shadowBlur: current.hypr.shadow === "soft" ? 0.6 : 0
+    readonly property string depth: current.popup.depth                   // soft | hard | none (Panel.qml)
+    readonly property real shadowBlur: depth === "soft" ? 0.6 : 0
     readonly property int shadowOffset: 4
 
-    // ---- motion (Hyprland's own presets live in hypr/modules/animations.lua) ---------------------
-    readonly property bool animate: a.animations
-    readonly property real motionScale: ({ instant: 0.45, crisp: 0.7, snappy: 0.8, slam: 0.75, ease: 1, spring: 1.1, fade: 1.6 })[current.hypr.motion] ?? 1
-    readonly property int animFast: animate ? Math.round(120 * motionScale) : 0
-    readonly property int anim: animate ? Math.round(200 * motionScale) : 0
-    readonly property int animSlow: animate ? Math.round(600 * motionScale) : 0
-    // menus and panels never overshoot; the theme's character shows in timing only (and in Hyprland's windows)
+    // ---- motion: the theme's character (Themes.qml motion), or less of it (Settings > Themes) -----------
+    //   full     the theme's own: enter / exit times, its curve, travel from the trigger side, start scale
+    //   reduced  short fades only, nothing travels or scales (Hyprland: quick fades)
+    //   off      instant
+    readonly property string motionLevel: a.motion
+    readonly property bool animate: motionLevel !== "off"
+    readonly property bool moves: motionLevel === "full"
+    readonly property var m: current.motion
+    readonly property int enter: motionLevel === "full" ? m.enter : motionLevel === "reduced" ? 90 : 0
+    readonly property int exit: motionLevel === "full" ? m.exit : motionLevel === "reduced" ? 60 : 0
+    readonly property var curve: m.curve.concat([1, 1])                    // for easing.bezierCurve
+    readonly property int travel: moves ? m.travel : 0
+    readonly property real startScale: moves ? m.scale : 1
+    readonly property real pressScale: moves ? m.press : 1
+    // small state changes (hover, colour, a toggle): short and the same feel everywhere
+    readonly property int animFast: animate ? Math.min(120, Math.max(60, m.enter / 2)) : 0
+    readonly property int anim: animate ? Math.min(220, m.enter) : 0
+    readonly property int animSlow: animate ? m.enter * 2 : 0
     readonly property int easing: Easing.OutCubic
 }

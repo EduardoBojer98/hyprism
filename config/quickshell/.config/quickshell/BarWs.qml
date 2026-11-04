@@ -1,30 +1,27 @@
 import Quickshell.Hyprland
 import QtQuick
 
-// Workspaces of one monitor, drawn in the theme's own way (Themes.qml bar.ws):
-//   dots     small dots; the current one stretches into an accent pill (Pebble, Canvas, Zen, Halo)
+// Workspaces of one monitor, drawn in the theme's own way (Themes.qml bar.ws), across a horizontal
+// bar or down a vertical one:
+//   dots     small dots; the current one stretches into an accent pill (Pebble)
 //   filled   numbers, the current one on an accent block (Monolith)
 //   text     one readout label, "WS 02" (Console)
-//   numbers  numbers in a recessed pill with an accent pill sliding to the current (Glass)
-//   blocks   huge numbers filling the bar height, the current one a solid accent block (Poster)
+//   numbers  numbers in a recessed pill with the current one filled (Glass)
+//   blocks   huge numbers filling the bar, the current one a solid accent block (Poster)
 //   squares  outlined squares, the current one filled (Atlas)
-//   roman    lowercase roman numerals, the current one in the accent (Noir)
-//   ticks    short lines, the current one long and dark (Mist)
-//   tiles    rounded tiles with numbers, the current one in the accent (Garden)
-//   small    small numbers for a taskbar (Workstation)
 // Click goes there, scroll steps through them.
 Item {
     id: ws
     required property var monitor
-    property string style: Theme.bar.ws
+    property string style: Theme.barStyle.ws
     property bool vertical: false
-    property int thickness: Theme.bar.size              // the bar's height (or width when vertical)
-    property color tone: Theme.text                     // ink on this bar's ground (Atlas's rail, Garden's capsule)
+    property int thickness: Theme.barSize               // the bar's height (or width when vertical)
+    property color tone: Theme.text                     // ink on this bar's ground (Atlas's rail)
     property color dim: Theme.subtext
     readonly property var list: Sys.workspacesOf(monitor)
     readonly property int current: list.findIndex(w => w.active)
     function step(d) { const next = list[current + (d < 0 ? 1 : -1)]; if (next) next.activate() }
-    function label(w) { return style === "roman" ? Sys.roman(w.id) : String(w.id) }
+    function label(w) { return String(w.id) }
 
     visible: style !== "none"
     implicitWidth: style === "text" ? textLabel.implicitWidth : flow.implicitWidth
@@ -34,7 +31,7 @@ Item {
         id: textLabel
         visible: ws.style === "text"
         anchors.centerIn: parent
-        text: "WS " + String(ws.list[ws.current]?.id ?? 0).padStart(2, "0")
+        text: (ws.vertical ? "" : "WS ") + String(ws.list[ws.current]?.id ?? 0).padStart(2, "0")
         color: Theme.accent
         font { family: Theme.monoFont; pixelSize: Theme.fontLabel; letterSpacing: 1 }
         MouseArea { anchors.fill: parent; onWheel: w => ws.step(w.angleDelta.y) }
@@ -52,9 +49,9 @@ Item {
         id: flow
         visible: ws.style !== "text"
         anchors.centerIn: parent
-        rows: ws.vertical ? -1 : 1
-        columns: ws.vertical ? 1 : -1
-        spacing: ({ dots: 6, ticks: 6, blocks: 0, squares: 6, tiles: 6, filled: 2, roman: 14, numbers: 0, small: 2 })[ws.style] ?? 4
+        rows: ws.vertical ? 99 : 1
+        columns: ws.vertical ? 1 : 99
+        spacing: ({ dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0 })[ws.style] ?? 4
         verticalItemAlignment: Grid.AlignVCenter
         horizontalItemAlignment: Grid.AlignHCenter
 
@@ -68,33 +65,34 @@ Item {
                 readonly property bool busy: modelData.toplevels.values.length > 0
                 readonly property string s: ws.style
 
-                implicitWidth: s === "dots" ? (on ? 20 : 8) : s === "ticks" ? (on ? 22 : 10) : s === "blocks" ? ws.thickness * 0.95
-                    : s === "squares" ? 34 : s === "tiles" ? 30 : s === "numbers" ? 22 : s === "small" ? 22 : Math.max(label.implicitWidth + 12, 20)
-                implicitHeight: s === "dots" ? 8 : s === "ticks" ? 2 : s === "blocks" ? ws.thickness : s === "squares" ? 34 : s === "tiles" ? 30
-                    : s === "numbers" ? 20 : s === "small" ? 22 : 20
-                Behavior on implicitWidth { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                // along the bar (main) and across it (cross); a dot stretches along the bar when current
+                readonly property real main: s === "dots" ? (on ? 20 : 8) : s === "blocks" ? ws.thickness * 0.95
+                    : s === "squares" ? 34 : s === "numbers" ? 22 : Math.max(label.implicitWidth + 12, 20)
+                readonly property real cross: s === "dots" ? 8 : s === "blocks" ? ws.thickness : s === "squares" ? 34 : s === "numbers" ? 20 : 20
+                implicitWidth: ws.vertical ? cross : main
+                implicitHeight: ws.vertical ? main : cross
+                Behavior on implicitWidth { enabled: !ws.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                Behavior on implicitHeight { enabled: ws.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: cell.s === "dots" || cell.s === "numbers" ? height / 2 : cell.s === "tiles" ? Theme.radiusSmall : cell.s === "small" ? 4 : 0
-                    color: cell.on ? (cell.s === "ticks" ? Theme.text : Theme.accent)
-                         : cell.s === "dots" ? (cell.busy ? Theme.subtext : Theme.muted)
-                         : cell.s === "ticks" ? (cell.busy ? Theme.subtext : Theme.stroke)
-                         : cell.s === "tiles" ? Qt.alpha(ws.tone, 0.1)
-                         : area.containsMouse && cell.s !== "roman" ? Theme.fillHover : "transparent"
+                    radius: cell.s === "dots" || cell.s === "numbers" ? Math.min(width, height) / 2 : 0
+                    color: cell.on ? Theme.accent
+                         : cell.s === "dots" ? (cell.busy ? ws.dim : Qt.alpha(ws.dim, 0.45))
+                         : area.containsMouse ? Qt.alpha(ws.tone, 0.11) : "transparent"
                     border { color: cell.s === "squares" && !cell.on ? ws.tone : "transparent"; width: cell.s === "squares" ? 2 : 0 }
                     Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 }
                 Text {
                     id: label
-                    visible: !["dots", "ticks"].includes(cell.s)
+                    visible: cell.s !== "dots"
                     anchors.centerIn: parent
                     text: ws.label(cell.modelData)
-                    color: cell.on ? (cell.s === "roman" ? Theme.accent : Theme.accentText)
+                    color: cell.on ? Theme.accentText
                          : cell.modelData.urgent ? Theme.warning : cell.busy || area.containsMouse ? ws.tone : ws.dim
                     font {
-                        family: cell.s === "blocks" || cell.s === "roman" ? Theme.displayFont : cell.s === "filled" ? Theme.monoFont : Theme.font
-                        pixelSize: cell.s === "blocks" ? ws.thickness * 0.72 : cell.s === "roman" ? Theme.fontTitle + 2 : cell.s === "squares" ? Theme.fontTitle : Theme.fontLabel
+                        family: cell.s === "blocks" ? Theme.displayFont : cell.s === "filled" ? Theme.monoFont : Theme.font
+                        pixelSize: cell.s === "blocks" ? Math.min(ws.thickness * 0.72, 40) : cell.s === "squares" ? Theme.fontTitle : Theme.fontLabel
                         weight: cell.s === "blocks" ? Theme.displayWeight : cell.s === "squares" ? Font.ExtraBold : cell.on || cell.busy ? Font.DemiBold : Font.Normal
                         features: { "tnum": 1 }
                     }
@@ -102,7 +100,7 @@ Item {
                 MouseArea {
                     id: area
                     anchors.fill: parent
-                    anchors.margins: cell.s === "ticks" || cell.s === "dots" ? -6 : 0
+                    anchors.margins: cell.s === "dots" ? -6 : 0
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: cell.modelData.activate()

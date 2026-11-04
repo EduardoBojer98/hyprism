@@ -36,10 +36,11 @@ Singleton {
     readonly property var schema: ({
         appearance: {
             theme: Themes.ids,
-            custom: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], animations: "bool",
+            custom: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"],
             iconTheme: "string", cursorTheme: "string", cursorSize: [16, 64]
         },
-        dock: { iconSize: [32, 64], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
+        dock: { enabled: "bool", position: ["bottom", "left", "right", "top"], size: ["compact", "regular", "roomy"], hiddenOn: "list",
+                iconSize: [24, 72], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
                     columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
@@ -64,7 +65,9 @@ Singleton {
         system: { taskManager: "string" },
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
-        bar: { clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
+        bar: { position: ["theme", "top", "bottom", "left", "right"], size: [0, 96], floating: ["theme", "floating", "attached"], margin: [0, 40],
+               hiddenOn: "list", custom: "bool", start: "list", center: "list", end: "list",
+               clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
                windowTitle: "bool" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
@@ -151,6 +154,7 @@ Singleton {
         if (typeof oldTheme === "string") a.theme = renamedThemes[oldTheme] ?? oldTheme
         if (!Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? Themes.ids[0]
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
+        if (raw?.appearance?.animations === false && raw?.appearance?.motion === undefined) a.motion = "off"   // the old on/off switch
         const fresh = defaults.createObject(null)
         for (const section of Object.keys(schema))
             for (const key of Object.keys(schema[section]))
