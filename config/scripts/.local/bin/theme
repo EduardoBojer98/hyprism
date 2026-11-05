@@ -2,7 +2,7 @@
 # Switch the whole desktop design in one step: layout, type, shapes, colours, motion, lock screen,
 # terminal and wallpaper. Same as Settings > Themes. The themes live in ~/.config/quickshell/Themes.qml.
 #   theme            list the themes, the current one marked
-#   theme pebble    switch (pebble, monolith, console, poster, glass, atlas)
+#   theme pebble    switch (pebble, monolith, console, poster, glass, atlas, reactor)
 set -euo pipefail
 
 qs ipc call config get appearance theme >/dev/null 2>&1 || { echo "theme: the shell (Quickshell) isn't running" >&2; exit 1; }

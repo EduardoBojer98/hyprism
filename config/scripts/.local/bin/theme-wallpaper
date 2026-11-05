@@ -8,7 +8,7 @@
 set -euo pipefail
 command -v magick >/dev/null || { echo "theme-wallpaper: needs ImageMagick (magick)" >&2; exit 1; }
 
-VERSION=5
+VERSION=7
 out_dir="${XDG_DATA_HOME:-$HOME/.local/share}/linux-setup/themes"
 mkdir -p "$out_dir"
 W=2560 H=1600
@@ -37,7 +37,7 @@ draw() {
                 -stroke '#ffb00070' -strokewidth 2 -draw "$(for x in $(seq 1020 100 2620); do printf 'line %d,790 %d,810 ' "$x" "$x"; done)" \
                 -stroke none -fill '#ffb000' -draw 'circle 2240,610 2240,618' -fill '#ff6a3d' -draw 'circle 1500,1060 1500,1067' "$out" ;;
         poster)   # Bauhaus poster: a red disc and a cobalt bar on charcoal
-            magick -size ${W}x${H} xc:'#141414' -fill '#ff3b1f' -draw 'circle 1880,560 1880,1080' \
+            magick -size ${W}x${H} xc:'#141414' -fill '#ff3b1f' -draw 'circle 1880,700 1880,1160' \
                 -fill '#2d5bff' -draw 'rectangle 0,1180 1500,1360' -fill '#f4f1ea' -draw 'rectangle 1500,1180 1560,1600' "$out" ;;
         glass)    # deep blue with an electric light falling from the top left and a violet glow below
             magick -size ${W}x${H} xc:'#0f131c' -fill '#2f6bff' -draw 'ellipse 700,260 900,420 0,360' \
@@ -73,12 +73,25 @@ draw() {
         atlas-dark)     # Swiss at night: black, the red square, white bars on the grid
             magick -size ${W}x${H} xc:'#121212' -fill '#e30613' -draw 'rectangle 160,160 1040,1040' \
                 -fill '#f2f2f0' -draw 'rectangle 1200,160 1260,1440' -draw 'rectangle 160,1200 2400,1240' "$out" ;;
+        reactor)        # radioactive: an acid disc burning through near-black, an orange core, hazard stripes low left
+            magick -size ${W}x${H} xc:'#0c0d08' \
+                \( -size ${W}x${H} xc:none -fill '#e4ff1a' -draw 'circle 1820,620 1820,1120' -blur 0x120 -channel A -evaluate multiply 0.55 +channel \) -composite \
+                -fill '#e4ff1a' -draw 'circle 1820,620 1820,940' -fill '#ff6b0a' -draw 'circle 1820,620 1820,760' \
+                -fill '#e4ff1a' -draw "$(for i in 0 1 2 3 4 5; do x=$((120 + i * 110)); printf 'polygon %d,1600 %d,1600 %d,1260 %d,1260 ' $x $((x + 50)) $((x + 130)) $((x + 80)); done)" \
+                -attenuate 0.05 +noise Gaussian -colorspace sRGB "$out" ;;
+        reactor-light)  # Reactor by day: the disc in burnt orange on bone, the hazard tape still acid on a dark band
+            magick -size ${W}x${H} xc:'#f5f6ea' \
+                \( -size ${W}x${H} xc:none -fill '#ffb36b' -draw 'circle 1820,620 1820,1120' -blur 0x120 -channel A -evaluate multiply 0.45 +channel \) -composite \
+                -fill '#f0b27a' -draw 'circle 1820,620 1820,940' -fill '#b14800' -draw 'circle 1820,620 1820,760' \
+                -fill '#181a0e' -draw 'rectangle 0,1260 820,1600' \
+                -fill '#e4ff1a' -draw "$(for i in 0 1 2 3 4 5; do x=$((120 + i * 110)); printf 'polygon %d,1600 %d,1600 %d,1260 %d,1260 ' $x $((x + 50)) $((x + 130)) $((x + 80)); done)" \
+                -attenuate 0.03 +noise Gaussian -colorspace sRGB "$out" ;;
         *) echo "theme-wallpaper: unknown design '$id'" >&2; return 2 ;;
     esac
 }
 
 ids=("$@")
-[[ ${1:-} == --all ]] && ids=(pebble monolith console poster glass atlas pebble-light monolith-light console-light glass-light atlas-dark)
+[[ ${1:-} == --all ]] && ids=(pebble monolith console poster glass atlas reactor pebble-light monolith-light console-light glass-light atlas-dark reactor-light)
 [[ ${#ids[@]} -gt 0 ]] || { sed -n '2,7p' "$0" >&2; exit 2; }
 for id in "${ids[@]}"; do
     [[ $id =~ ^[a-z]+(-[a-z]+)?$ ]] || { echo "theme-wallpaper: bad name '$id'" >&2; exit 2; }

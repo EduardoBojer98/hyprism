@@ -3,13 +3,19 @@
 #
 #   powermode                     print the current mode
 #   powermode quiet|balanced|performance
-#   powermode next                cycle quiet -> balanced -> performance -> quiet
+#   powermode next                cycle quiet -> balanced -> performance -> quiet (the ones this machine has)
 #   powermode watch               print the mode now and again after every change (for Quickshell)
 #
 # On ASUS laptops asusd owns the mode (it also applies fan curves, power limits and EPP per mode,
-# see system/hosts/rog-flow-x13/50-power.user.sh); elsewhere power-profiles-daemon does.
+# see hosts/flow-x13/steps/50-power.user.sh); elsewhere power-profiles-daemon does.
 set -euo pipefail
 MODES=(quiet balanced performance)
+# without asusd, only the profiles power-profiles-daemon offers here (many machines have no "performance")
+if ! command -v asusctl >/dev/null && command -v powerprofilesctl >/dev/null; then
+    mapfile -t MODES < <(powerprofilesctl list | sed -n 's/^[ *]*\([a-z-]*\):$/\1/p' | sed 's/power-saver/quiet/' \
+        | awk '{o["quiet"]=1; o["balanced"]=2; o["performance"]=3; print o[$1] ":" $1}' | sort -n | cut -d: -f2)
+    ((${#MODES[@]})) || MODES=(quiet balanced performance)
+fi
 
 get() {
     if command -v asusctl >/dev/null; then
@@ -33,8 +39,9 @@ case ${1:-} in
     quiet|balanced|performance) set_mode "$1" ;;
     next)
         now=$(get)
-        for i in 0 1 2; do [[ ${MODES[i]} == "$now" ]] && break; done
-        set_mode "${MODES[(i + 1) % 3]}"
+        n=${#MODES[@]}
+        for ((i = 0; i < n; i++)); do [[ ${MODES[i]} == "$now" ]] && break; done
+        set_mode "${MODES[(i + 1) % n]}"
         command -v notify-send >/dev/null && notify-send -a "Power mode" -t 1500 "Power mode: $(get)" || true
         ;;
     watch)
@@ -42,8 +49,20 @@ case ${1:-} in
         if command -v asusctl >/dev/null; then dest=xyz.ljones.Asusd path=/xyz/ljones
         else dest=net.hadess.PowerProfiles path=/net/hadess/PowerProfiles; fi
         # re-read the mode on every profile signal (asusd: PlatformProfile, ppd: ActiveProfile)
-        gdbus monitor --system --dest "$dest" --object-path "$path" | while read -r line; do
-            [[ $line == *"Profile'"* ]] && get
+        # pdeathsig: the kernel stops gdbus when this watcher ends, even if it is killed outright (no trap runs then)
+        exec 3< <(exec setpriv --pdeathsig TERM gdbus monitor --system --dest "$dest" --object-path "$path")
+        mon=$!
+        trap 'kill "$mon" 2>/dev/null' EXIT
+        trap 'exit 0' TERM INT HUP   # stopped by the shell (a reload): exit through the EXIT trap, taking gdbus along
+        trap '' PIPE   # a failed write returns an error instead of killing us, so the EXIT trap runs
+        while :; do
+            if read -r -t 30 line <&3; then [[ $line == *"Profile'"* ]] && get
+            elif (( $? <= 128 )); then break   # gdbus ended (the daemon went away)
+            fi
+            # a blank line now and then: once the shell reading us is gone (a reload), the write fails
+            # and this watcher ends instead of piling up; the same if the shell that started it died
+            echo 2>/dev/null || exit 0
+            kill -0 "$PPID" 2>/dev/null || exit 0
         done
         ;;
     *) echo "usage: powermode [quiet|balanced|performance|next|watch]" >&2; exit 2 ;;

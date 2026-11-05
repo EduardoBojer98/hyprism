@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Laptop panel events for the Flow X13, called by the switch binds in hypr/modules/binds.lua.
+# Laptop panel events (lid, 2-in-1 tablet mode), called by the switch binds in hypr/modules/binds.lua.
 #
 #   panel tablet on|off   360° hinge: auto-rotate panel + touch + stylus (the on-screen
 #                         keyboard is only shown from its button in the bar)
@@ -8,14 +8,18 @@
 set -euo pipefail
 
 rotate() { hyprctl eval "laptop_panel($1)" >/dev/null; }  # function from hypr/modules/monitors.lua
-acer_is_ours() { hyprctl -j monitors | jq -e 'any(.[]; .name == "HDMI-A-1")' >/dev/null; }
+# the laptop's own panel (eDP-1, eDP-2…) and whether another screen is showing this desktop
+internal() { hyprctl -j monitors all | jq -r '[.[] | select(.name | startswith("eDP"))][0].name // empty'; }
+other_active() { hyprctl -j monitors | jq -e --arg i "$1" 'any(.[]; .name != $i)' >/dev/null; }
 
 case "${1:-} ${2:-}" in
     "tablet on")
         pkill -f "panel rotate" || true
         setsid -f "$0" rotate
+        qs ipc call tablet set true >/dev/null 2>&1 || true   # finger-sized controls in the shell
         ;;
     "tablet off")
+        qs ipc call tablet set false >/dev/null 2>&1 || true
         pkill -f "panel rotate" || true
         pkill -x monitor-sensor || true
         rotate 0
@@ -31,12 +35,13 @@ case "${1:-} ${2:-}" in
         done
         ;;
     "lid close")
-        # Without the Acer cable logind suspends by itself. With it plugged in logind ignores
-        # the lid, so: keep working on the Acer if it's ours, otherwise sleep.
-        if acer_is_ours; then
-            hyprctl eval 'hl.monitor({ output = "eDP-1", disabled = true })' >/dev/null
-        elif grep -qx connected /sys/class/drm/card*-HDMI-A-1/status; then
-            systemctl suspend-then-hibernate
+        # With no other screen logind suspends by itself. With one plugged in logind ignores the lid
+        # (docked), so: keep working on the other screen if it shows this desktop, otherwise sleep.
+        lap=$(internal)
+        if [[ -n $lap ]] && other_active "$lap"; then
+            hyprctl eval "hl.monitor({ output = \"$lap\", disabled = true })" >/dev/null
+        elif grep -qx connected /sys/class/drm/card*-{HDMI,DP}-*/status 2>/dev/null; then
+            systemctl suspend-then-hibernate 2>/dev/null || systemctl suspend   # plain sleep where hibernation isn't set up
         fi
         ;;
     "lid open")

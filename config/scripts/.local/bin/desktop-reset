@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Back to a working desktop: puts your Settings files aside (nothing is deleted) and restarts the shell and
+# Hyprland on the shipped defaults. For when a setting or a theme leaves the desktop unusable.
+#   desktop-reset            everything Settings writes (theme, bar, dock, keys, displays, input, idle, lock)
+#   desktop-reset shell      only the shell's settings.json (theme, bar, dock, panels)
+# Your files go to ~/.local/state/linux-setup/reset-<time>/; copy one back to undo.
+set -euo pipefail
+cfg=${XDG_CONFIG_HOME:-$HOME/.config}
+keep=${XDG_STATE_HOME:-$HOME/.local/state}/linux-setup/reset-$(date +%Y%m%d-%H%M%S)
+repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
+
+files=("$cfg/quickshell/settings.json")
+case ${1:-all} in
+    shell) ;;
+    all)   files+=("$cfg"/hypr/settings/* "$cfg/ghostty/theme.conf" "$cfg/fuzzel/theme.ini") ;;
+    *)     sed -n '2,6p' "$0" >&2; exit 2 ;;
+esac
+
+mkdir -p "$keep"
+for f in "${files[@]}"; do
+    [[ -e $f || -L $f ]] || continue
+    mkdir -p "$keep/$(dirname "${f#"$cfg/"}")"
+    mv "$f" "$keep/${f#"$cfg/"}"
+done
+# the files Hyprland needs before the shell has written its own (the same seeding ./install.sh does)
+mkdir -p "$cfg/hypr/settings"
+for f in "$repo"/config/hypr/.config/hypr/defaults/*.conf; do [[ -e $cfg/hypr/settings/$(basename "$f") ]] || cp "$f" "$cfg/hypr/settings/"; done
+
+# restart: Hyprland rereads its config, the shell starts on defaults (and writes the theme files again)
+if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+    hyprctl reload >/dev/null || true
+    qs kill >/dev/null 2>&1 || true
+    setsid -f qs >/dev/null 2>&1
+fi
+echo "desktop-reset: done. Your old files are in $keep"
+# a notification only in a running desktop session (not from tests or a text console)
+if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && command -v notify-send >/dev/null; then
+    notify-send -a Settings "Desktop reset" "Your old settings are in ${keep/#$HOME/\~}" || true
+fi

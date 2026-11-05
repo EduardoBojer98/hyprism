@@ -6,12 +6,13 @@
 #   ./install.sh update          pull this repo, update the system, add new packages, relink, doctor
 #   ./install.sh doctor          check this computer against the repo; changes nothing
 #   ./install.sh undo            remove the links and offer to put the last backup back
+#   ./install.sh steps-done      mark this computer's host steps as applied (when they ran before tracking)
 #
 #   --dry-run                    only show what would happen
 #   --yes                        answer yes to every question (unattended)
 #   --host NAME                  use hosts/NAME (default: the host whose host.conf lists this hostname)
-#   --only LIST                  comma list of steps (packages, nvidia, links, services, session, host,
-#                                ) and/or package modules (core, desktop, tools, look, apps, shell)
+#   --only LIST                  comma list of steps (packages, nvidia, links, services, session, host)
+#                                and/or package modules (core, desktop, tools, look, apps, shell)
 #
 # Backups of files in the way: ~/.local/state/linux-setup/backups/<time>/, same layout as ~.
 # KDE Plasma's own config is never linked over (see the KDE guard).
@@ -29,7 +30,7 @@ while (($#)); do
         --yes|-y) YES=true ;;
         --host) HOST=${2:?--host needs a name}; shift ;;
         --only) ONLY=${2:?--only needs a list}; shift ;;
-        doctor|undo|install|update) CMD=$1 ;;
+        doctor|undo|install|update|steps-done) CMD=$1 ;;
         -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
         *) echo "Unknown option: $1 (see ./install.sh --help)" >&2; exit 2 ;;
     esac
@@ -37,13 +38,13 @@ while (($#)); do
 done
 
 say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
-warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
+warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; WARNINGS=$((WARNINGS + 1)); }
 bad()  { printf '\033[1;31mxx\033[0m %s\n' "$*"; PROBLEMS=$((PROBLEMS + 1)); }
 ok()   { printf '\033[1;32mok\033[0m %s\n' "$*"; }
 ask()  { $YES && return 0; $DRY && return 0; local r; read -r -p "$1 [y/N] " r; [[ $r == [yY]* ]]; }
 # Every change goes through run, so --dry-run shows it instead
 run()  { if $DRY; then printf '   would run: %s\n' "$*"; else "$@"; fi; }
-PROBLEMS=0
+PROBLEMS=0 WARNINGS=0
 
 [[ $EUID -ne 0 ]] || { echo "Run as your normal user, not with sudo (it asks for sudo when needed)." >&2; exit 1; }
 
@@ -55,7 +56,8 @@ for id in ${ID:-} ${ID_LIKE:-}; do
     [[ -f $REPO/distros/$id.sh ]] && { DISTRO=$id; break; }
     [[ $id == cachyos || $id == endeavouros || $id == manjaro ]] && { DISTRO=arch; break; }
 done
-[[ -n $DISTRO ]] || { echo "No backend for ${PRETTY_NAME:-this distro}: add distros/${ID:-name}.sh (see distros/README.md)." >&2; exit 1; }
+[[ -n $DISTRO ]] || { echo "This installs on Arch Linux, CachyOS (and other Arch-based distros) or Fedora 44+; ${PRETTY_NAME:-this distro} isn't one of them. (Porting: add distros/${ID:-name}.sh, see distros/README.md.)" >&2; exit 1; }
+if [[ $DISTRO == fedora ]] && (( ${VERSION_ID:-0} < 44 )); then echo "Fedora ${VERSION_ID:-?} is too old: this needs Fedora 44 or newer (its Hyprland and Quickshell)." >&2; exit 1; fi
 # shellcheck source=distros/arch.sh
 . "$REPO/distros/$DISTRO.sh"
 MAP=$REPO/packages/$DISTRO.txt
@@ -185,7 +187,7 @@ links() {
 
     # Settings app files start from the defaults; your own choices are never overwritten
     local settings=$HOME/.config/hypr/settings
-    run mkdir -p "$settings"
+    [[ -d $settings ]] || run mkdir -p "$settings"
     for f in "$REPO"/config/hypr/.config/hypr/defaults/*.conf; do [[ -e $settings/$(basename "$f") ]] || run cp "$f" "$settings/"; done
     [[ -e $settings/wallpaper ]] || run ln -s "$HOME/Pictures/Wallpapers/glass-night.png" "$settings/wallpaper"
     [[ -e $HOME/.config/fuzzel/theme.ini ]] || run cp "$REPO/config/fuzzel/.config/fuzzel/theme-default.ini" "$HOME/.config/fuzzel/theme.ini"
@@ -195,7 +197,7 @@ links() {
             [[ -e $HOME/$rel ]] || { run mkdir -p "$HOME/$(dirname "$rel")"; run cp "$f" "$HOME/$rel"; }
         done < <(find "$HOSTDIR/defaults" -type f)
     fi
-    run git -C "$REPO" config core.hooksPath .githooks   # secret scan before commits (.githooks/pre-commit)
+    [[ $(git -C "$REPO" config core.hooksPath) == .githooks ]] || run git -C "$REPO" config core.hooksPath .githooks   # secret scan before commits (.githooks/pre-commit)
 }
 
 # Settings written into the repo folder by an older install move to ~/.config, where they belong now
@@ -232,10 +234,14 @@ services() {
 
 # --- session: lid behaviour and Hyprland as the default login session (system files, asks) -------
 session() {
-    local lid=/etc/systemd/logind.conf.d/50-lid.conf
-    local want=$'[Login]\nHandleLidSwitch=suspend-then-hibernate\nHandleLidSwitchExternalPower=suspend\nHandleLidSwitchDocked=ignore'
+    local lid=/etc/systemd/logind.conf.d/50-lid.conf sleep=suspend
+    # hibernate only where it can work (swap and resume set up, e.g. the flow-x13 host step); logind
+    # does nothing at all for an action the machine can't do, so the plain sleep is the safe default
+    busctl call org.freedesktop.login1 /org/freedesktop/login1 org.freedesktop.login1.Manager CanSuspendThenHibernate 2>/dev/null \
+        | grep -q '"yes"' && sleep=suspend-then-hibernate
+    local want=$'[Login]\nHandleLidSwitch='"$sleep"$'\nHandleLidSwitchExternalPower=suspend\nHandleLidSwitchDocked=ignore'
     if [[ $(cat "$lid" 2>/dev/null) != "$want" ]]; then
-        say "Lid: suspend (then hibernate on battery), ignored with an external screen. KDE uses its own setting."
+        say "Lid: $sleep, ignored with an external screen. KDE uses its own setting."
         if ask "Write $lid?"; then run sudo mkdir -p "$(dirname "$lid")"; $DRY || printf '%s\n' "$want" | sudo tee "$lid" >/dev/null; fi
     fi
     # Plasma Login: preselect Hyprland (KDE stays one click away). Other login screens remember your pick.
@@ -246,14 +252,21 @@ session() {
 }
 
 # --- host steps: hosts/<host>/steps/NN-*.sh, each asked separately ------------------------------
+# Each step's checksum is kept in $STATE/steps/ once it has run, so a later install or update only offers
+# the steps that are new or changed (and the doctor names them). --only host offers them all again.
+step_sum() { sha256sum "$1" | cut -c1-16; }
+step_done() { [[ $(cat "$STATE/steps/$HOST-${1##*/}" 2>/dev/null) == "$(step_sum "$1")" ]]; }
 host_steps() {
-    local s
+    local s again=false
+    [[ ",$ONLY," == *",host,"* ]] && again=true
     for s in "$HOSTDIR"/steps/[0-9][0-9]-*.sh; do
         [[ -f $s ]] || continue
+        if ! $again && step_done "$s"; then say "Host step ${s##*/}: already applied"; continue; fi
         say "Host step ${s#"$REPO"/}"
         sed -n '2,4p' "$s" | sed 's/^#/  /'
         ask "Run it?" || { warn "Skipped ${s##*/}"; continue; }
-        if [[ $s == *.user.sh ]]; then run bash "$s"; else run sudo --preserve-env=REPO,DISTRO,HOST bash "$s"; fi
+        if [[ $s == *.user.sh ]]; then run bash "$s"; else run sudo --preserve-env=REPO,DISTRO,HOST bash "$s"; fi \
+            && ! $DRY && mkdir -p "$STATE/steps" && step_sum "$s" > "$STATE/steps/$HOST-${s##*/}"
     done
 }
 
@@ -272,6 +285,7 @@ update() {
     if command -v flatpak >/dev/null; then run flatpak update -y; fi
     packages
     links
+    host_steps   # only the new or changed ones (each asks first)
     $DRY || doctor
 }
 
@@ -325,9 +339,44 @@ doctor() {
         fi
     fi
     [[ $(git -C "$REPO" config core.hooksPath) == .githooks ]] || bad "secret-scan hook not enabled (./install.sh --only links)"
-    if [[ -n $(git -C "$REPO" status --porcelain) ]]; then bad "repo has uncommitted changes (git -C $REPO status)"; fi
+    for f in "$HOSTDIR"/steps/[0-9][0-9]-*.sh; do
+        [[ -f $f ]] || continue
+        if [[ ! -f $STATE/steps/$HOST-${f##*/} ]]; then warn "host step not run yet: ${f##*/} (./install.sh --only host; already done before: ./install.sh steps-done)"
+        elif ! step_done "$f"; then bad "host step changed since it was applied: ${f##*/} (./install.sh --only host)"; fi
+    done
+    if [[ -n $(git -C "$REPO" status --porcelain) ]]; then warn "repo has uncommitted changes (yours to commit: git -C $REPO status)"; fi
 
-    if ((PROBLEMS == 0)); then ok "Everything matches the repo."; else echo "$PROBLEMS problem(s). Most are fixed by ./install.sh"; return 1; fi
+    # the running desktop: Hyprland's own errors, the files Settings generates, and stray background helpers
+    if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && command -v hyprctl >/dev/null; then
+        local errs; errs=$(hyprctl configerrors 2>/dev/null | grep -v '^[[:space:]]*$' || true)
+        [[ -z $errs ]] || bad "Hyprland reports config errors (hyprctl configerrors): $(head -1 <<< "$errs")"
+    fi
+    if command -v luac >/dev/null; then
+        for f in "$HOME"/.config/hypr/settings/*.lua; do
+            [[ -f $f ]] && ! luac -p "$f" 2>/dev/null && bad "Settings file doesn't parse: ~/${f#"$HOME/"} (delete it; Settings writes it again)"
+        done
+    fi
+    # the one settings file parses (a broken one is kept as .broken and the shell starts on defaults)
+    local sj=$HOME/.config/quickshell/settings.json
+    if [[ -f $sj ]] && command -v python3 >/dev/null && ! python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$sj" 2>/dev/null; then
+        bad "settings.json isn't valid JSON (the shell runs on defaults; desktop-reset shell starts it fresh)"
+    fi
+    [[ -f $HOME/.config/quickshell/settings.json.broken ]] && warn "a damaged settings.json was kept as settings.json.broken"
+    [[ -f /etc/systemd/logind.conf.d/50-lid.conf ]] || warn "lid behaviour not set (./install.sh --only session)"
+    if pgrep -x hypridle >/dev/null && ! pgrep -af '^hypridle' | grep -q 'settings/hypridle.conf'; then
+        bad "hypridle runs without Settings' file (log out and back in)"
+    fi
+    for p in powermode monswitch; do   # the whole command line, so nothing that merely mentions it counts
+        (( $(pgrep -fc "^[^ ]*bash [^ ]*/bin/$p watch\$" || true) > 1 )) && bad "more than one '$p watch' running (log out and back in)"
+    done
+    (( $(pgrep -fc '^gdbus monitor --system' || true) > 1 )) && bad "stray 'gdbus monitor' processes from old watchers (pkill -f '^gdbus monitor --system', then log out and in)"
+    for p in mako dunst swaync; do
+        pgrep -x "$p" >/dev/null && warn "$p is running: it takes the notifications Quickshell should show"
+    done
+
+    if ((PROBLEMS == 0 && WARNINGS == 0)); then ok "Everything matches the repo."
+    elif ((PROBLEMS == 0)); then ok "No problems; $WARNINGS note(s) above to look at when you like."
+    else echo "$PROBLEMS problem(s)$( ((WARNINGS)) && echo ", $WARNINGS note(s)"). Most are fixed by ./install.sh"; return 1; fi
 }
 
 undo() {
@@ -343,6 +392,11 @@ undo() {
 
 case $CMD in
     doctor) doctor ;;
+    steps-done)   # steps that ran before checksums were kept: record them as applied, after asking
+        for s in "$HOSTDIR"/steps/[0-9][0-9]-*.sh; do
+            [[ -f $s ]] && ! step_done "$s" || continue
+            ask "Was ${s##*/} already applied on this computer?" && mkdir -p "$STATE/steps" && step_sum "$s" > "$STATE/steps/$HOST-${s##*/}"
+        done ;;
     undo) undo ;;
     update) update ;;
     install)

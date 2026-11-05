@@ -4,7 +4,7 @@
 #   asusfan get                          JSON: {profile: {cpu|gpu: {enabled, temp[8], pct[8]}}}
 #   asusfan set PROFILE FAN DATA         DATA = "40c:10%,50c:20%,..." (8 points), validated, enabled
 #   asusfan enable PROFILE FAN true|false   both fans of PROFILE (FAN is kept for compatibility)
-#   asusfan recommended                  re-apply this computer's system/hosts/<host>/50-power.user.sh
+#   asusfan recommended                  re-apply this computer's hosts/<host>/steps/50-power.user.sh
 #   asusfan backup                       copy curves + settings to ~/.local/state/asus-backup/<time>/
 #   asusfan restore DIR                  put back the curves from a backup DIR
 #   asusfan sample                       one line of JSON with temps, power, clocks, load, fans
@@ -129,7 +129,9 @@ case "${1:-}" in
         echo ok ;;
     recommended)
         repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
-        f=$repo/system/hosts/$(cat /etc/hostname)/50-power.user.sh
+        # this computer's host profile, found the way install.sh finds it: its hostname in hosts/*/host.conf
+        conf=$(grep -lw "$(cat /etc/hostname)" "$repo"/hosts/*/host.conf 2>/dev/null | head -1)
+        f=${conf%/host.conf}/steps/50-power.user.sh
         [[ -f $f ]] || die "no recommended setup for this computer"
         bash "$f" </dev/null >/dev/null && echo ok ;;
     validate) msg=$(validate "${2:-}") && echo ok || die "$msg" ;;

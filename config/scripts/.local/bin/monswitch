@@ -21,23 +21,32 @@ set -euo pipefail
 CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
 [[ -f $CONF ]] || { echo "monswitch: no $CONF, nothing to do" >&2; exit 0; }
 POLL=3        # seconds between DDC reads in watch mode
-# shellcheck source=/dev/null
-. "$CONF"
+# read KEY=value lines (never run the file as shell): only the five keys, only plain values
+while IFS='=' read -r key value; do
+    case $key in OUT|LAPTOP|PC|MIRROR|MIRROR_MODE)
+        # plain values only, starting with a letter or digit (a leading "-" would reach ddcutil as an option)
+        if [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then printf -v "$key" '%s' "$value"
+        else echo "monswitch: ignored $key in $CONF (not a plain value)" >&2; fi ;;
+    esac
+done < "$CONF"
 : "${OUT:?set OUT in $CONF}" "${LAPTOP:?set LAPTOP in $CONF}" "${PC:?set PC in $CONF}"
 MIRROR=${MIRROR:-eDP-1}
 MIRROR_MODE=${MIRROR_MODE:-1920x1080@60}
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
+SHARED=${XDG_CONFIG_HOME:-$HOME/.config}/hypr/settings/shared.lua   # the hand-off, for Hyprland (modules/monitors.lua)
 LAYOUT=$STATE_DIR/layout.json
 mkdir -p "$STATE_DIR"
 
-# The i2c bus number can change between boots; the DRM connector always links to the right one.
-BUS=$(readlink -f /sys/class/drm/card*-"$OUT"/ddc | sed 's/.*i2c-//')
+# The i2c bus number can change between boots, after a resume or a replug; the DRM connector always
+# links to the right one, so it is looked up on every call (watch runs for the whole session).
+bus() { readlink -f /sys/class/drm/card*-"$OUT"/ddc 2>/dev/null | sed 's/.*i2c-//' | head -1; }
 
-ddc_input() {  # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch)
-    { ddcutil --bus "$BUS" getvcp 60 --terse 2>/dev/null || true; } | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}'
+ddc_input() {  # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch, or unplugged)
+    local b; b=$(bus); [[ -n $b ]] || return 0
+    { ddcutil --bus "$b" getvcp 60 --terse 2>/dev/null || true; } | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}'
 }
-ddc_set() { ddcutil --bus "$BUS" setvcp 60 "$1"; }
+ddc_set() { local b; b=$(bus); [[ -n $b ]] || { echo "monswitch: $OUT isn't connected" >&2; return 1; }; ddcutil --bus "$b" setvcp 60 "$1"; }
 
 out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o)' >/dev/null; }
 
@@ -65,7 +74,10 @@ restore_layout() {
 release() {
     out_enabled || return 0
     save_layout
-    hyprctl eval "hl.monitor({ output = \"$OUT\", mode = \"$MIRROR_MODE\", position = \"auto\", scale = 1, mirror = \"$MIRROR\" })" >/dev/null
+    # kept in a file Hyprland's monitors.lua reads, so a reload or a theme change keeps the hand-off
+    local table="{ output = \"$OUT\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\" }"
+    printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "$OUT" "$table" > "$SHARED"
+    hyprctl eval "SHARED = $table; apply_displays()" >/dev/null
     local id   # a mirror can keep its workspaces, so move them explicitly
     for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
         hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$MIRROR\" })" >/dev/null
@@ -74,7 +86,8 @@ release() {
 }
 reclaim() {
     out_enabled && return 0
-    hyprctl reload >/dev/null   # re-applies the monitor rule from modules/monitors.lua
+    rm -f "$SHARED"
+    hyprctl eval "SHARED = nil; apply_displays()" >/dev/null   # its own monitor rule again (modules/monitors.lua)
     sleep 1
     restore_layout
     notify-send -a monswitch "Monitor → this computer" "Workspaces restored"

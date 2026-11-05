@@ -56,7 +56,7 @@ step "power-profiles-daemon: stop it writing EPP (asusd does), keep the profile 
 # Undo: sudo rm -r /etc/systemd/system/power-profiles-daemon.service.d; sudo systemctl daemon-reload;
 #       sudo systemctl restart power-profiles-daemon
 dropin=/etc/systemd/system/power-profiles-daemon.service.d/50-asusd-owns-epp.conf
-want=$'# asusd sets EPP per mode (system/hosts/rog-flow-x13/50-power.user.sh)\n[Service]\nExecStart=\nExecStart=/usr/lib/power-profiles-daemon --block-driver=amd_pstate'
+want=$'# asusd sets EPP per mode (hosts/flow-x13/steps/50-power.user.sh)\n[Service]\nExecStart=\nExecStart=/usr/lib/power-profiles-daemon --block-driver=amd_pstate'
 if [[ "$(cat "$dropin" 2>/dev/null)" != "$want" ]]; then
     sudo mkdir -p "${dropin%/*}"
     printf '%s\n' "$want" | sudo tee "$dropin" >/dev/null
