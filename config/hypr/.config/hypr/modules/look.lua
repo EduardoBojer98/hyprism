@@ -11,8 +11,8 @@ local defaults = {
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 
 -- Shadows by name:
---   none   flat (Monolith, Console, Atlas, Noir, Zen, Mist)
---   soft   wide and soft: floating depth without a dark halo (Pebble, Glass, Canvas, Workstation, Garden, Halo)
+--   none   flat (Monolith, Console, Atlas)
+--   soft   wide and soft: floating depth without a dark halo (Pebble, Glass, Reactor)
 --   paper  short and light, like a sheet on a desk (no theme by default; Settings > Themes > Adjust)
 --   hard   a solid offset block in the accent, no blur (Poster)
 local SHADOWS = {

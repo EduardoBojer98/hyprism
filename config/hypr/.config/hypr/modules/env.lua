@@ -1,7 +1,7 @@
 -- Environment for apps started inside Hyprland only (KDE never sees these).
 
 -- Render on the AMD iGPU only, so the NVIDIA dGPU can sleep. The link comes from the host step
--- system/hosts/rog-flow-x13/20-igpu.sh; without it Hyprland picks a GPU itself instead of failing.
+-- hosts/flow-x13/steps/20-igpu.sh; without it Hyprland picks a GPU itself instead of failing.
 -- io.open, not os.execute: os.execute always fails inside Hyprland ("No child processes").
 local gpu = io.open("/dev/dri/amd-igpu", "r")
 if gpu then
@@ -10,7 +10,14 @@ if gpu then
 end
 
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VS Code, Chrome and other Electron apps run natively on Wayland
-hl.env("QT_QPA_PLATFORMTHEME", "kde")          -- Qt/KDE apps (Dolphin, ...) keep Breeze Dark + Papirus, same as in Plasma
+-- Qt apps: KDE's platform theme where Plasma's integration is installed (Dolphin & co. look as in Plasma);
+-- elsewhere Qt's own GTK3 theme, so they follow the light/dark and accent ThemeSync gives GTK (no extra package)
+local kde = false
+for _, d in ipairs({ "/usr/lib/qt6/plugins", "/usr/lib64/qt6/plugins" }) do
+    local f = io.open(d .. "/platformthemes/KDEPlasmaPlatformTheme6.so", "r")
+    if f then f:close(); kde = true end
+end
+hl.env("QT_QPA_PLATFORMTHEME", kde and "kde" or "gtk3")
 -- Cursor: Settings > Appearance > Cursor saves it in settings/theme.lua (folder name, not the title)
 local tok, theme = pcall(require, "settings.theme")
 theme = tok and type(theme) == "table" and theme or {}

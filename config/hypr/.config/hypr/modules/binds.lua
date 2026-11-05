@@ -20,7 +20,7 @@ add("dropterm",  "Apps", "Drop-down terminal",           key("grave"), exec("dro
 -- Spotlight at the cursor: tap Super alone (fires on release, only if no other key was pressed)
 add("spotlight-tap", "Apps", "Spotlight (tap Super)",    "SUPER + Super_L", exec("qs ipc call launcher toggle"), { release = true })
 add("spotlight", "Apps", "Spotlight",                    key("Space"), exec("qs ipc call launcher toggle"))
-add("files-app", "Apps", "File manager",                 key("E"), exec("dolphin"))
+add("files-app", "Apps", "File manager",                 key("E"), exec("gtk-launch \"$(xdg-mime query default inode/directory)\""))  -- Settings > Default Apps
 add("settings",  "Apps", "Settings",                     key("I"), exec("qs ipc call settings toggle"))
 add("browser",   "Apps", "Web browser",                  key("B"), exec("gtk-launch \"$(xdg-settings get default-web-browser)\""))  -- Settings > Default Apps
 add("clipboard", "Apps", "Clipboard history",            key("V"), exec("qs ipc call clipboard toggle"))

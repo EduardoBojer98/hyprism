@@ -6,15 +6,25 @@
 local ok, saved = pcall(require, "settings.displays")
 DISPLAYS = ok and type(saved) == "table" and saved or {}
 
+-- A monitor shared with another computer (~/.local/bin/monswitch): while the other computer has it, it
+-- mirrors a screen here so it keeps a signal. monswitch writes settings/shared.lua at the hand-off and
+-- removes it after; it is read here so the hand-off survives a reload or anything re-applying these rules.
+local sok, shared = pcall(require, "settings.shared")
+SHARED = sok and type(shared) == "table" and shared or nil
+
 local function monitor(name, overrides)
-    local spec = { output = name }
+    local spec = { output = name, mode = "preferred", position = "auto", scale = "auto" }
     for k, v in pairs(DISPLAYS[name] or {}) do spec[k] = v end
     for k, v in pairs(overrides or {}) do spec[k] = v end
+    if SHARED and SHARED.output == name then
+        spec = { output = name, mode = SHARED.mode, position = "auto", scale = 1, mirror = SHARED.mirror }
+    end
     hl.monitor(spec)
 end
 
 function apply_displays()
     for name in pairs(DISPLAYS) do monitor(name) end
+    if SHARED and not DISPLAYS[SHARED.output] then monitor(SHARED.output) end
 end
 
 -- Laptop panel rotation for tablet mode: hyprctl eval 'laptop_panel(1)' (0 normal … 3 = 270°).
@@ -28,4 +38,4 @@ end
 apply_displays()
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" }) -- any other screen
 
--- Workspaces open on the screen you're working on; pin some to a screen in hosts/<hostname>.lua.
+-- Workspaces open on the screen you're working on; pin some to a screen in host.lua (hosts/<host>/home/.config/hypr/host.lua).
