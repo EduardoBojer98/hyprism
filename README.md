@@ -1,7 +1,7 @@
 # linux-setup
 
 A Wayland desktop for **Arch/CachyOS and Fedora** (built on CachyOS): **Hyprland** with a **Quickshell** shell
-that comes in **6 themes**, whole desktop designs you switch in one step. Everything is free software,
+that comes in **7 themes**, whole desktop designs you switch in one step. Everything is free software,
 and everything you'd want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
 install stays untouched and selectable at the login screen.
 
@@ -13,19 +13,20 @@ install stays untouched and selectable at the login screen.
 | **Poster** | loud and flat, red and cobalt on paper | a paper bar with huge workspace blocks, hard shadows | slams in from the trigger |
 | **Glass** | liquid glass, electric blue to violet | a floating glass bar with a lit rim, glowing window frames | smooth ease-out |
 | **Atlas** | Swiss, signal red on white | a black strip on top, heavy numerals, red squares, a black dock | snappy slide |
+| **Reactor** | radioactive: acid yellow on near-black, hot orange | a floating strip with an inverse acid clock block, a glow on panels | quick, decisive |
 
 Each theme brings its own fonts, corners, window frames, shadows, panel depth, motion, notification style,
 lock screen, terminal palette and wallpaper. `theme` lists them, `theme atlas` switches; or Settings →
 Appearance → Themes, where **Adjust** changes any theme's accent colours, corners, gaps, frame, font, text size,
 window motion, shadow and blur (kept per theme; Reset puts it back), and **Animations** is Full, Reduced or Off.
-  Every theme has a light and a dark version: **Light or dark** picks Theme's, Light or Dark for all of them.
+Every theme has a light and a dark version: **Light or dark** picks each theme's default, or Light or Dark for all of them.
 
 - **The bar**: one engine for every theme. Settings → Menu Bar puts it on any edge, sizes it, floats or attaches it,
-  hides it per monitor (place, shape and items are kept per theme; "Save as a theme" keeps them as your own theme)
+  hides it per monitor (place, shape and items are kept per theme; "Save as a theme" keeps them as your own theme),
   shows the battery percentage inside the battery icon, beside it or not at all,
   and chooses the items of its three sections in a visual editor (drag items between the bar's
   zones, in from a tray, or out to remove them): apps (the dock), apps button,
-  workspaces, active window, clock, date, media player, tray, keyboard layout (US / Serbian Latin), notifications,
+  workspaces, active window, clock, date, media player, tray, keyboard layout, notifications,
   quick settings, network, Bluetooth, volume, brightness, battery, power profile, CPU, memory, GPU, recording,
   power menu. Every item works across a horizontal bar and down a vertical one. Panels open beside the item you click.
 - **The dock**: in every theme, on and always visible by default, on the theme's own edge; when that is the bar's edge
@@ -36,7 +37,7 @@ window motion, shadow and blur (kept per theme; Reset puts it back), and **Anima
 - **Control Center** opens from the quick-settings item (network, sound, battery together): the time large, battery,
   Settings / Lock / Power, then toggles and sliders. **Notifications** have their own panel from the bell (always in
   the bar, with the unread count): Do Not Disturb, history grouped by app, Clear all
-- **Theme Builder** (Settings → Appearance): make your own theme from any of the six and change every part:
+- **Theme Builder** (Settings → Appearance): make your own theme from any of the seven and change every part:
   colours, fonts, shape, bar look, dock look, panel depth, motion, windows, notifications, launcher, lock screen,
   terminal colours, wallpaper
 - **Lock screen**: Settings → Lock Screen with a live preview: clock style and position, date, greeting,
@@ -91,6 +92,13 @@ manager. Your other apps (browser, editors, dev tools, Docker, Ollama, …) are 
 desktop works with whatever you pick in **Settings → Default Apps**. The cursor is your system's
 default until you pick or add another in **Settings → Appearance → Cursor**.
 
+## First run
+
+Log out and pick **Hyprland** at the login screen. A welcome note names the three keys you need: **tap Super** to
+search for anything, **Super+I** for Settings, **Super+/** for every shortcut. In Settings, set the weather city,
+wallpaper, keyboard layouts and displays. Your choices are saved on your computer only (see
+[docs/USER-GUIDE.md](docs/USER-GUIDE.md)); if one ever breaks the desktop, `desktop-reset` puts the defaults back.
+
 ## Update
 
 ```bash
@@ -99,7 +107,7 @@ default until you pick or add another in **Settings → Appearance → Cursor**.
 
 Pulls this repo (only when it has no local changes), updates the whole system (`paru -Syu` or
 `pacman -Syu` / `dnf upgrade`, plus Flatpaks if you use them), installs packages the repo added,
-relinks the configs and runs the doctor. Same as **Settings → System → About → Update**.
+relinks the configs and runs the doctor. Same as **Settings → About → Update**.
 
 ## Keep it in sync: doctor
 
@@ -109,11 +117,9 @@ relinks the configs and runs the doctor. Same as **Settings → System → About
 
 Lists missing packages, configs that aren't linked or were changed locally, files in the managed
 folders that the repo doesn't know, services that are off, and uncommitted changes. Also in
-**Settings → System → About → Run doctor**. Fix with `./install.sh` (or `--only links`), or commit
+**Settings → About → Run doctor**. Fix with `./install.sh` (or `--only links`), or commit
 the change you made on purpose.
 
-First run: open **Settings** (`Super+I`) and set the weather city, wallpaper, keyboard layouts and
-displays. Your choices are saved on your computer only (see [docs/USER-GUIDE.md](docs/USER-GUIDE.md)).
 
 ## Keys (Super = Windows key)
 
@@ -128,7 +134,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` 
 | `Super+I` | Settings |
 | `Super+Enter` / `Super+E` / `Super+B` | Terminal / files / browser |
 | `Super+.` | Emoji picker |
-| `Super+Ctrl+Space` | Next keyboard layout (US ↔ Serbian Latin) |
+| `Super+Ctrl+Space` | Next keyboard layout (add layouts in Settings → Keyboard & Touchpad) |
 | `Super+Q` / `Super+H` | Close / minimise window (restore from the dock) |
 | `Super+F` / `Super+Shift+F` / `Super+T` | Fullscreen / maximise / float |
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
@@ -137,6 +143,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` 
 | `Super+/` | Keyboard shortcut cheatsheet |
 | ``Super+` `` | Drop-down terminal (again: hide it) |
 | `Super+Alt+R` / `Super+Alt+Shift+R` | Record the screen / an area (again: stop and save to ~/Videos/Recordings) |
+| `Super+M` | Hand a shared monitor to the other computer and back (once set up in Settings → Displays → Shared Monitor) |
 | `Super+Ctrl+↓` | Next empty workspace |
 | `Alt+Shift+S` (also `Print`, `Super+Shift+S`) | Screenshot an area, then annotate (see Screenshots) |
 | `Ctrl+Print` / `Shift+Print` / `Super+Print` / `Ctrl+Shift+Print` / `Alt+Print` | Area straight to clipboard / this screen / focused window / both screens / in 5 seconds |
@@ -159,7 +166,7 @@ All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` 
 | `packages/` | `manifest.txt` (logical name, module, why) and `arch.txt` / `fedora.txt` (real names and sources) |
 | `distros/` | `arch.sh`, `fedora.sh`: install packages, enable repos, NVIDIA driver |
 | `plugins/` | Hyprland plugin (title-bar minimise), built by `hypr-plugins` |
-| `docs/` | `ARCHITECTURE.md` (how it fits together), `DESIGN.md` (themes and design rules), `REDESIGN-PLAN.md`, `AUDIT.md`, `RESEARCH.md`, `USER-GUIDE.md`, `RECOMMENDATIONS.md`, `thermal-audit.md` |
+| `docs/` | for users: `USER-GUIDE.md` (Settings, recovery, troubleshooting), `THEMES.md` (themes and how to make one). For contributors: `ARCHITECTURE.md`, `DESIGN.md`, `DECISIONS.md`, `INVENTORY.md`, `COUNCIL.md` (review scores), `PROGRESS.md`; working notes: `AUDIT.md`, `REDESIGN-PLAN.md`, `RESEARCH.md`, `RECOMMENDATIONS.md`, `thermal-audit.md` |
 
 ### A new computer
 
@@ -196,7 +203,7 @@ screen (`LockScreen.qml`), GTK, Ghostty, fuzzel and the wallpaper. Design rules:
   page's `keys` in `SettingsApp.qml`. **Add a bar item**: a component in `BarWidget.qml` and an entry in
   `Themes.barItems`.
 - Fonts the themes use and the distros don't ship are bundled in `config/fonts/` (SIL Open Font License).
-- Monitors: Settings → Displays (arrangement, scale, refresh, mirror); per-computer defaults in `hosts/<name>/home/.config/hypr/host.lua`.
+- Monitors: Settings → Displays → Screens (arrangement, scale, refresh, mirror); per-computer defaults in `hosts/<name>/home/.config/hypr/host.lua`.
 
 ### Screenshots
 
@@ -217,9 +224,9 @@ screen (`LockScreen.qml`), GTK, Ghostty, fuzzel and the wallpaper. Design rules:
 |---|---|
 | Dotfiles | `./install.sh undo` removes the links and offers to restore the last backup |
 | The Hyprland session | **Fall back to KDE:** log out (`Super+Shift+E`), pick **Plasma (Wayland)** at the login screen. This repo never links over KDE's config, so KDE stays as it was. No login screen at all: Ctrl+Alt+F3, log in on the text console, `./install.sh undo` |
-| The shell (bar, dock) | `pkill -x qs; pkill -x quickshell; qs &` restarts it (exactly one copy); `qs log` shows errors |
+| The shell (bar, dock) | `qs kill; qs &` restarts it; `qs log` shows errors; `desktop-reset shell` if a setting broke it (see the user guide, Recovery) |
 | An update | See "Roll back an update" below |
-| A Settings choice | Delete its file from the user guide's table to go back to defaults; several pages also have **Reset to defaults** |
+| A Settings choice | `desktop-reset` (everything) or `desktop-reset shell` (theme, bar, dock, panels): your files are kept aside, the defaults come back. One page: its **Reset to defaults** |
 
 ### Roll back an update
 

@@ -606,9 +606,9 @@ static read of every component and settings page. Status column is filled in as 
 | V3 tray icons / keyboard cap differ | ✅ tray icons in the bar's ink (Settings → Icons can turn it off); one icon set |
 | V4 bars missing widgets | ✅ removed themes; every theme gets every item via Settings → Menu Bar |
 | V5 lock screens hardcoded | ✅ one generated layout from theme tokens (LockScreen.qml), dark/light ink by background |
-| V6 hardcoded sizes | ◑ Settings app, OSD, dock tooltip, popups fixed; some fixed px remain inside Weather, Sensors, Calendar, Control Center |
-| V7 scrims | ◑ popup scrim light-aware; PowerMenu, Cheatsheet, Mission Control keep their own alphas |
-| V8 notification dismiss overlap | ⏸ not changed |
+| V6 hardcoded sizes | ✅ every text size is a Theme token (Settings → Text size reaches all panels); big numbers in the display face; only glyphs and tiny bar badges stay fixed (2026-11-05) |
+| V7 scrims | ✅ `Theme.backdrop` behind full-screen modes, `Theme.shadow` for every shadow (2026-11-05) |
+| V8 notification dismiss overlap | ✅ the header row makes room for × on hover; unused subtitle/pill kinds removed (2026-11-05) |
 | F1, F2 motion ignores the setting, closing panels block input | ✅ Full / Reduced / Off everywhere listed; closing panels take no input |
 | F3, F5 dock bottom-only, OSD assumes a dock | ✅ dock on any edge beside the bar, OSD above bar and dock |
 | F4 tray menu, dropdown edges | ✅ tray menu follows the bar edge; dropdowns stay in the Settings window |

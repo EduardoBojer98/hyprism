@@ -1,6 +1,6 @@
 ---
 name: Themes
-description: Six whole-desktop designs for Hyprland + Quickshell. A theme sets look and motion; every layout option works in every theme.
+description: Seven whole-desktop designs for Hyprland + Quickshell. A theme sets look and motion; every layout option works in every theme.
 source: config/quickshell/.config/quickshell/Themes.qml (data), Theme.qml (tokens), ThemeSync.qml (Hyprland, hyprlock, GTK, Ghostty, wallpaper), LockScreen.qml (lock layout)
 default: pebble
 ---
@@ -12,7 +12,7 @@ default: pebble
 A theme is a whole design: the bar's look and its own default items, the dock's shape, how panels sit
 and move, the typefaces, corners, window frames, shadows, notification style, lock screen, terminal
 palette and wallpaper. Layout is yours: Settings moves the bar to any edge, floats it, picks its items
-and places the dock, and every option works in every theme. The six themes share one engine and every
+and places the dock, and every option works in every theme. The seven themes share one engine and every
 component, so a new theme is data only.
 
 The design rules come from the installed design and animation skills (impeccable, emil-design-eng,
@@ -26,9 +26,9 @@ over ornament, one icon language, motion that confirms an action and never makes
 | `colour` | ground, surface, raised, line, text, muted, faint, accent, onAccent, accent2, ok, warn, err |
 | `font` | ui, display (clocks, big numbers), mono, size (body px), displayWeight |
 | `shape` | radius, radiusSmall, line (panel border px), material: `solid` or `glass` |
-| `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, voice (icons, words, caps), mono, ws (dots, filled, text, numbers, blocks, squares), clock (plain, accent, display), decor (brackets), start / center / end items |
+| `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, voice (icons, words, mixed, caps), mono, ws (dots, filled, text, numbers, blocks, squares), clock (plain, accent, display), decor (brackets), start / center / end items |
 | `dock` | edge (its own place; the bar's edge puts it inside the bar), shape (pill, tile, block), hover (lift, grow, plate), mark (line, dot, bar), fill |
-| `popup` | depth: soft (blurred shadow), hard (offset block), glow (accent haze), none (frame only); decor: brackets |
+| `popup` | depth: soft (blurred shadow), hard (offset block), glow (accent haze), none (frame only); decor: brackets, topline; tiles: solid or wash (Control Center tiles that are on) |
 | `motion` | enter / exit ms, curve (cubic bezier), travel px out of the trigger's side, start scale, press scale |
 | `launcher`, `notify` | placement, view (home = suggestions first), header (query set large), select (wash or inverse), prompt; corner, kind |
 | `hypr` | gaps, border, rounding, active/inactive frame colours, shadow, blur, window motion preset |
@@ -47,6 +47,7 @@ animation level) into tokens. No component knows which theme is on.
 | Poster | `#141414` / paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | Archivo Black + Archivo | r0, 3 px · hard offset | top, paper, huge workspace blocks, big clock | paper block, hard shadow, lift | 200/110 ms expo-out, 28 px slam |
 | Glass | `#0f131c` / `#f4f6fb` / `#5b9cff` (+ `#8f86ff`) | IBM Plex Sans | r16, glass with a lit rim · soft, tinted tiles | top, a floating glass bar, centred clock | glass tile, magnify | 220/140 ms strong ease-out, 6 px, 0.97 |
 | Atlas | `#f2f2f0` / `#111111` / `#e30613` | Archivo | r0, 2 px · none | top, black strip, heavy clock, red squares | black block, bottom | 160/100 ms, 14 px |
+| Reactor | `#0c0d08` / `#f3f6df` / `#e4ff1a` (+ `#ff6b0a`) | Archivo + Martian Mono numerals | r10, 1 px · glow + accent top line | top, a floating strip, inverse acid clock block | tile, bottom | 180/110 ms strong ease-out, 8 px, 0.97 |
 
 Contrast (WCAG 2): body text on surfaces 13.2:1 or more; secondary text 5.9:1 or more; text on an accent
 fill is forced to 4.5:1 or more by `Themes.resolve`.
@@ -71,7 +72,7 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
 
 ## Light and dark
 
-Every theme has both halves: the dark themes (Pebble, Monolith, Console, Glass) have a light version and the
+Every theme has both halves: the dark themes (Pebble, Monolith, Console, Glass, Reactor) have a light version and the
 light ones (Poster, Atlas) a dark one, as `alt` in `Themes.qml` (colours, window frame colours, `term`, `wall`).
 Settings → Appearance → Light or dark: Theme's (each theme's own), Light or Dark for all of them; GTK apps,
 the terminal, window frames, the lock screen and the wallpaper follow.
@@ -84,6 +85,7 @@ the terminal, window frames, the lock screen and the wallpaper follow.
 | Poster | dark `#141414` / `#f4f1ea` / `#ff4a2e` | Poster Dark · poster |
 | Glass | light `#e9edf4` / `#141a26` / `#2f6fe0` | Glass Light · glass-light |
 | Atlas | dark `#121212` / `#f2f2f0` / `#ff2a36` | Atlas Dark · atlas-dark |
+| Reactor | light `#f5f6ea` / `#181a0e` / `#b14800` | Reactor Light · reactor-light |
 
 ## Your own themes
 
