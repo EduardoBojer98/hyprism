@@ -133,9 +133,20 @@ Loader {
                             color: Qt.alpha(w.tone, 0.3)
                         }
                         IconImage { visible: !app.rule && !app.asText; implicitSize: apps.icon; source: Quickshell.iconPath(app.entry?.icon ?? "", "application-x-executable") }
+                        // an open window can say what it is (Settings > Dock > Open windows in the bar): its app or its title
+                        readonly property string label: !win || w.vertical ? "" : Config.dock.barLabels === "name" ? (entry?.name ?? win.wayland?.appId ?? "")
+                                                      : Config.dock.barLabels === "title" ? (win.title || entry?.name || "") : ""
+                        Text {
+                            visible: !app.rule && !app.asText && app.label !== ""
+                            width: Math.min(implicitWidth, 160)
+                            elide: Text.ElideRight
+                            text: app.label
+                            color: app.active ? w.tone : w.dim
+                            font { family: w.family; pixelSize: Theme.fontLabel; weight: app.active ? Font.DemiBold : Font.Normal }
+                        }
                         Text {
                             visible: !app.rule && app.asText
-                            text: w.say((app.win ? "" : (app.index + 1) + " ") + (app.entry?.name ?? app.win?.wayland?.appId ?? "").toLowerCase().split(/[ .]/)[0]
+                            text: w.say((app.win ? "" : (app.index + 1) + " ") + (app.label !== "" ? app.label.slice(0, 28) : (app.entry?.name ?? app.win?.wayland?.appId ?? "").toLowerCase().split(/[ .]/)[0])
                                         + (apps.combine && app.wins.length > 1 ? "·" + app.wins.length : ""))
                             color: app.active ? Theme.accentText : app.marked ? w.tone : w.dim
                             font { family: w.family; pixelSize: Theme.fontLabel; weight: app.active ? Font.Bold : Font.Normal }
@@ -317,14 +328,18 @@ Loader {
     }
     Component {
         id: batteryC
-        Indicator {
+        BarItem {
             shown: Sys.hasBattery
-            glyph: Sys.batteryGlyph
-            word: "bat"
-            value: Sys.batteryPct + "%" + (Sys.charging ? "+" : "")
-            showValue: true
-            ink: Sys.batteryLow ? Theme.error : w.tone
+            vertical: w.vertical
             onPressed: SettingsApp.show("power")
+            BarBattery { visible: !w.words; tone: w.tone; family: w.family; vertical: w.vertical }
+            Text {
+                visible: w.words
+                text: w.say("bat" + (Config.bar.batteryPercent === "off" ? "" : (w.vertical ? "\n" : " ") + Sys.batteryPct + "%" + (Sys.charging ? "+" : "")))
+                horizontalAlignment: Text.AlignHCenter
+                color: Sys.batteryLow ? Theme.error : w.tone
+                font { family: w.family; pixelSize: Theme.fontLabel; letterSpacing: w.voice === "caps" ? 1 : 0; features: { "tnum": 1 } }
+            }
         }
     }
     Component {

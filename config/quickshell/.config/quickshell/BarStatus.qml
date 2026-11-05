@@ -39,7 +39,7 @@ BarItem {
 
     // ---- words ----
     Repeater {
-        model: st.words ? [st.netText, Sys.btOn ? (Sys.btLinked ? st.say("bt on") : st.say("bt")) : "", st.volText, Sys.hasBattery ? st.batText : ""].filter(x => x) : []
+        model: st.words ? [st.netText, Sys.btOn ? (Sys.btLinked ? st.say("bt on") : st.say("bt")) : "", st.volText, Sys.hasBattery && Config.bar.batteryPercent !== "off" ? st.batText : ""].filter(x => x) : []
         Text {
             required property string modelData
             text: modelData
@@ -54,27 +54,11 @@ BarItem {
     Text { visible: !st.words && Sys.btOn; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Text { visible: !st.words; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.volumeGlyph; color: Sys.muted ? Theme.subtext : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Num { visible: st.mixed && !st.vertical && !Sys.muted; text: Math.round(Sys.volume * 100) }
-    Item {   // battery cell (a gap before it in mixed mode): outline, fill to the charge, nub; ok colour while charging, error when low
+    BarBattery {   // a gap before it in mixed mode, like the other glyph + value pairs
         visible: !st.words && Sys.hasBattery
-        readonly property int gap: st.mixed && !st.vertical ? 8 : 0
-        implicitWidth: 24 + gap; implicitHeight: 12
-        readonly property color fillTone: Sys.batteryLow ? Theme.error : Sys.charging ? Theme.success : st.tone
-        Rectangle {
-            id: cellBody
-            x: parent.gap
-            width: 21; height: 12; radius: Math.min(3.5, Theme.radiusSmall)
-            color: "transparent"
-            border { color: Qt.alpha(st.tone, 0.5); width: 1 }
-            Rectangle {
-                x: 2; y: 2
-                width: Math.max(2, (parent.width - 4) * Math.min(1, Sys.batteryPct / 100)); height: parent.height - 4
-                radius: Math.max(0, parent.radius - 1.5)
-                color: parent.parent.fillTone
-            }
-        }
-        Rectangle { anchors { left: cellBody.right; leftMargin: 1; verticalCenter: cellBody.verticalCenter } width: 2; height: 4; radius: 1; color: Qt.alpha(st.tone, 0.5) }
+        leftPadding: st.mixed && !st.vertical ? 8 : 0
+        tone: st.tone; family: st.family; vertical: st.vertical
     }
-    Num { visible: st.mixed && !st.vertical && Sys.hasBattery; text: Sys.batteryPct + "%"; color: Sys.batteryLow ? Theme.error : st.tone }
 
     component Num: Text {   // a number beside its glyph (mixed mode)
         color: st.tone

@@ -65,6 +65,12 @@ ColumnLayout {
                 }
             }
         }
+        SettingRow {
+            visible: Config.dock.enabled
+            label: "Open windows in the bar"
+            hint: (Theme.dockInBar ? "" : "When the dock is in the menu bar: ") + "an icon, or with its app name or window title beside it"
+            ConfigChoice { section: "dock"; key: "barLabels"; values: ["icon", "name", "title"]; labels: ["Icon", "App name", "Window title"] }
+        }
         SaveTheme {}
     }
 

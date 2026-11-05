@@ -70,6 +70,15 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Battery"
+        SettingRow {
+            label: "Battery percentage"
+            hint: "In every theme: in the battery icon, beside it, or not shown"
+            ConfigChoice { section: "bar"; key: "batteryPercent"; values: ["inside", "beside", "off"]; labels: ["Inside", "Beside", "Off"] }
+        }
+    }
+
+    SettingGroup {
         title: "Clock"
         SettingRow {
             label: "24-hour time"
