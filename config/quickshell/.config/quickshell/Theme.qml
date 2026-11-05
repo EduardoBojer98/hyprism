@@ -96,23 +96,16 @@ Singleton {
     // ---- the bar: the theme's own, with Settings > Menu Bar on top -------------------------------------
     readonly property var cb: Config.bar
     readonly property var barStyle: current.bar                             // fill, line, voice, ws, clock, decor …
-    readonly property string barEdge: cb.position !== "theme" ? cb.position : barStyle.edge
+    readonly property string barEdge: barStyle.edge                         // per theme: Themes.resolve applies Settings
     readonly property bool barVertical: barEdge === "left" || barEdge === "right"
-    // thickness of the bar itself; a theme's own size suits its own edge, so a rail moved to the top
-    // gets a strip's height and a strip moved to the side gets room for stacked items
-    readonly property bool barTurned: barVertical !== (barStyle.edge === "left" || barStyle.edge === "right")
-    readonly property int barSize: cb.size > 0 ? cb.size : !barTurned ? barStyle.size
-                                 : barVertical ? Math.max(barStyle.size, 44) : Math.min(barStyle.size, 44)
-    readonly property bool barFloating: cb.floating === "theme" ? barStyle.floating : cb.floating === "floating"
+    readonly property int barSize: barStyle.size
+    readonly property bool barFloating: barStyle.floating
     readonly property int barMargin: barFloating ? cb.margin : 0            // gap to the screen edge (and along it)
-    readonly property var barOwnLayout: cb.custom ? { start: cb.start, center: cb.center, end: cb.end }
-                                                  : { start: barStyle.start, center: barStyle.center, end: barStyle.end }
-    // a dock inside the bar is its "apps" item, in the middle unless you placed it yourself
+    // the dock inside the bar is its "apps" item: in the middle unless placed, and only while the dock is there
     readonly property var barLayout: {
-        const l = { start: Array.from(barOwnLayout.start), center: Array.from(barOwnLayout.center), end: Array.from(barOwnLayout.end) }
-        const all = l.start.concat(l.center, l.end)
-        if (dockInBar && !all.includes("apps")) l.center.unshift("apps")
-        if (!dockInBar && !cb.custom) for (const k of ["start", "center", "end"]) l[k] = l[k].filter(i => i !== "apps")
+        const l = { start: Array.from(barStyle.start), center: Array.from(barStyle.center), end: Array.from(barStyle.end) }
+        if (!dockInBar) for (const k of ["start", "center", "end"]) l[k] = l[k].filter(i => i !== "apps")
+        else if (!l.start.concat(l.center, l.end).includes("apps")) l.center.unshift("apps")
         return l
     }
     readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
@@ -122,7 +115,7 @@ Singleton {
     // ---- the dock: every theme has one; Settings > Dock places it ----------------------------------------
     readonly property var dockStyle: current.dock
     // where it goes: the theme's own edge by default, and inside the bar when that is the bar's edge too
-    readonly property string dockMode: Config.dock.position === "theme" ? (dockStyle.edge === barEdge ? "bar" : dockStyle.edge) : Config.dock.position
+    readonly property string dockMode: dockStyle.edge === barEdge ? "bar" : dockStyle.edge
     readonly property bool dockInBar: dockMode === "bar" && Config.dock.enabled
     readonly property string dockEdge: dockInBar ? barEdge : dockMode
     readonly property bool dockVertical: dockEdge === "left" || dockEdge === "right"

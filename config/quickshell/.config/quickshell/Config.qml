@@ -39,7 +39,7 @@ Singleton {
             custom: "object", userThemes: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"],
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
-        dock: { enabled: "bool", position: ["theme", "bar", "bottom", "left", "right", "top"], size: ["compact", "regular", "roomy"], hiddenOn: "list",
+        dock: { enabled: "bool", size: ["compact", "regular", "roomy"], hiddenOn: "list",
                 iconSize: [24, 72], autoHide: "bool", showRunning: "bool", combine: "bool", previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
                     columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
@@ -66,8 +66,7 @@ Singleton {
         system: { taskManager: "string" },
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
-        bar: { position: ["theme", "top", "bottom", "left", "right"], size: [0, 96], floating: ["theme", "floating", "attached"], margin: [0, 40],
-               hiddenOn: "list", custom: "bool", start: "list", center: "list", end: "list",
+        bar: { margin: [0, 40], hiddenOn: "list",
                clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
                windowTitle: "bool" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
@@ -125,15 +124,19 @@ Singleton {
         path: Quickshell.shellDir + "/settings.json"
         watchChanges: true
         atomicWrites: true
-        // debounced: a burst of our own writes (reset) must not reload a half-written state
-        onFileChanged: reloadLater.restart()
-        onAdapterUpdated: writeAdapter()
+        // only someone else's edit is reloaded (a hand edit, a git checkout): reloading our own writes could read an
+        // older one back over a newer change (several settings changed at once, e.g. saving a theme)
+        property real ownWriteAt: 0
+        onFileChanged: if (Date.now() - ownWriteAt > 1000) reloadLater.restart()
+        // one write per burst of changes: overlapping writes can finish out of order and put older values back
+        onAdapterUpdated: { ownWriteAt = Date.now(); writeLater.restart() }
         onLoaded: root.repair()
         onLoadFailed: error => { if (error === FileViewError.FileNotFound) writeAdapter() }
 
         adapter: ConfigData { id: adapter }
     }
     Timer { id: reloadLater; interval: 250; onTriggered: file.reload() }
+    Timer { id: writeLater; interval: 60; onTriggered: { file.ownWriteAt = Date.now(); file.writeAdapter() } }
 
     Component { id: defaults; ConfigData {} }
 
@@ -156,9 +159,23 @@ Singleton {
         if (!Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? Themes.ids[0]
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
         // format 1 (before 2026-11-05) saved the dock's place as "bottom" for everyone: follow the theme now
-        if ((raw?.version ?? 1) < 2) {
-            if (adapter.dock.position === "bottom") adapter.dock.position = "theme"
-            adapter.version = 2
+        // format 2 kept one bar layout and dock place for every theme, so an edit made in one theme broke the
+        // others: it moves into the active theme's own adjustments (Themes.resolve)
+        if ((raw?.version ?? 1) < 3) {
+            const rb = raw?.bar ?? {}, mine = {}
+            const edges = ["top", "bottom", "left", "right"]
+            if (edges.includes(rb.position)) mine.barEdge = rb.position
+            if (typeof rb.size === "number" && rb.size >= 20) mine.barSize = rb.size
+            if (rb.floating === "floating" || rb.floating === "attached") mine.barFloating = rb.floating === "floating"
+            if (rb.custom === true) mine.barItems = { start: rb.start ?? [], center: rb.center ?? [], end: rb.end ?? [] }
+            const dp = raw?.dock?.position   // format 1 saved "bottom" for everyone: that meant the theme's own
+            if (dp === "bar" || (edges.includes(dp) && !(dp === "bottom" && (raw?.version ?? 1) < 2))) mine.dock = dp
+            if (Object.keys(mine).length) {
+                const all = JSON.parse(JSON.stringify(a.custom ?? {}))
+                all[a.theme] = Object.assign(all[a.theme] ?? {}, mine)
+                a.custom = all
+            }
+            adapter.version = 3
         }
         if (raw?.appearance?.animations === false && raw?.appearance?.motion === undefined) a.motion = "off"   // the old on/off switch
         const fresh = defaults.createObject(null)

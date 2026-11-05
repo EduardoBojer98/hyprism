@@ -78,8 +78,12 @@ and merged over its base by `Themes.makeUser`, which ignores a part of the wrong
 ## Adjusting a theme
 
 Settings → Appearance → Themes → Adjust (or `Config.appearance.custom[theme]`): accent, accent2, radius,
-gapsIn, gapsOut, border, font, size, window motion, shadow, blur. `Themes.resolve` lays them over the theme;
-Reset removes them. Bar and dock size and placement live in their own Settings pages and apply to every theme.
+gapsIn, gapsOut, border, font, size, window motion, shadow, blur. Settings → Menu Bar and Dock save into the
+same place, also per theme: `barEdge`, `barSize`, `barFloating`, `barItems` ({ start, center, end }) and `dock`
+(`bar` or an edge; the bar's edge puts the dock in the bar). So an edit made in one theme never changes another.
+`Themes.resolve` lays them over the theme and ignores a bad value; Reset removes them. "Save as a theme" (on the
+Appearance, Menu Bar and Dock pages) turns them into a theme of your own (`Themes.saveAs`: the parts that
+differ from the base) and puts the theme you started from back as it shipped.
 
 ## Where the look reaches
 

@@ -3,8 +3,9 @@ import QtQuick.Layouts
 
 // The menu bar's items, edited by hand: a copy of the bar in the theme's own colours with its three
 // sections side by side. Drag an item to another place in the bar, drag one in from the tray of unused
-// items below, drag one back to the tray (or press its ×) to take it off. Every change saves at once
-// and the real bar follows. The first change copies the theme's own layout so there is something to edit.
+// items below, drag one back to the tray (or press its ×) to take it off. Every change saves at once, for
+// the active theme only (Themes.adjust "barItems"), and the real bar follows. "Apps" is the dock itself:
+// adding it puts the dock in the bar; it leaves the bar only by moving the dock (Settings > Dock).
 ColumnLayout {
     id: ed
     spacing: 14
@@ -22,12 +23,11 @@ ColumnLayout {
     function lists() {
         return { start: Array.from(layout.start), center: Array.from(layout.center), end: Array.from(layout.end) }
     }
-    function save(l) {
-        for (const k of keys) Config.set("bar", k, l[k])
-        if (!Config.bar.custom) Config.set("bar", "custom", true)
-    }
+    readonly property bool edited: ((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).barItems !== undefined
+    function save(l) { Themes.adjust("barItems", l) }
     // payload: { id, from: section key or "tray" }; drop it into `section` at `index` (-1: the end)
     function drop(p, section, index) {
+        if (p.id === "apps" && section === "tray") return   // the dock: moved on the Dock page
         const l = lists()
         if (p.from !== "tray") {
             const at = l[p.from].indexOf(p.id)
@@ -39,6 +39,7 @@ ColumnLayout {
         if (index < 0 || index > l[section].length) index = l[section].length
         l[section].splice(index, 0, p.id)
         save(l)
+        if (p.id === "apps" && !Theme.dockInBar) Themes.adjust("dock", "bar")
     }
 
     // ---- the bar ------------------------------------------------------------------------------------
@@ -67,7 +68,8 @@ ColumnLayout {
     }
     Text {
         Layout.fillWidth: true
-        text: "Drag to move or reorder · drop on the tray to take an item off · " + (Config.bar.custom ? "your own layout" : "the " + Theme.current.name + " theme's layout")
+        text: "Drag to move or reorder · drop on the tray to take an item off · Apps is the dock, placed on the Dock page · "
+              + (ed.edited ? "your layout for " + Theme.current.name : "the layout " + Theme.current.name + " came with")
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
@@ -168,7 +170,7 @@ ColumnLayout {
             }
             ToolTipText { shown: chip.onBar && chip.hovered && !chip.dragging; text: chip.info.name }
             Rectangle {   // take it off the bar without dragging: a small badge in the corner
-                visible: chip.onBar && chip.hovered && !chip.dragging
+                visible: chip.onBar && chip.hovered && !chip.dragging && chip.itemId !== "apps"
                 anchors { right: parent.right; top: parent.top; margins: -5 }
                 width: 16; height: 16; radius: 8
                 color: Theme.error

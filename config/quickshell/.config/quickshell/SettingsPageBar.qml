@@ -3,8 +3,8 @@ import QtQuick
 import QtQuick.Layouts
 
 // Menu Bar: where the bar sits, its size and shape, which monitors have one, and which items each of
-// its three sections holds. "Theme's" keeps the active theme's own (Themes.qml bar); every option
-// works in every theme and on every edge. Changes apply live.
+// its three sections holds. Place, shape and items are saved for the active theme only (each theme keeps
+// its own; "Theme's" puts the theme's own back); every option works in every theme and on every edge.
 ColumnLayout {
     id: page
     spacing: 20
@@ -15,18 +15,18 @@ ColumnLayout {
         title: "Place"
         SettingRow {
             label: "Position"
-            hint: "The " + Theme.current.name + " theme puts it at the " + Theme.barStyle.edge
-            ConfigChoice { section: "bar"; key: "position"; values: ["theme", "top", "bottom", "left", "right"]; labels: ["Theme's", "Top", "Bottom", "Left", "Right"] }
+            hint: "The " + Theme.current.name + " theme puts it at the " + Themes.get(Config.appearance.theme).bar.edge
+            ThemeChoice { key: "barEdge"; values: ["theme", "top", "bottom", "left", "right"]; labels: ["Theme's", "Top", "Bottom", "Left", "Right"] }
         }
         SettingRow {
             label: "Size"
-            hint: Theme.barSize + " px across" + (page.b.size === 0 ? " (the theme's)" : "")
-            ConfigChoice { section: "bar"; key: "size"; values: [0, 26, 34, 44, 56]; labels: ["Theme's", "Slim", "Regular", "Tall", "Huge"] }
+            hint: Theme.barSize + " px across"
+            ThemeChoice { key: "barSize"; values: [0, 26, 34, 44, 56]; labels: ["Theme's", "Slim", "Regular", "Tall", "Huge"] }
         }
         SettingRow {
             label: "Shape"
             hint: "Floating keeps a gap to the screen edges"
-            ConfigChoice { section: "bar"; key: "floating"; values: ["theme", "floating", "attached"]; labels: ["Theme's", "Floating", "Attached"] }
+            ThemeChoice { key: "barFloating"; values: ["theme", true, false]; labels: ["Theme's", "Floating", "Attached"] }
         }
         SettingRow {
             visible: Theme.barFloating
@@ -62,10 +62,11 @@ ColumnLayout {
             floatOn: page.parent
         }
         SettingRow {
-            visible: Config.bar.custom
+            visible: ((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).barItems !== undefined
             label: "Back to the theme's items"
-            PillButton { text: "Use the theme's"; onClicked: Config.set("bar", "custom", false) }
+            PillButton { text: "Use the theme's"; onClicked: Themes.adjust("barItems", undefined) }
         }
+        SaveTheme {}
     }
 
     SettingGroup {

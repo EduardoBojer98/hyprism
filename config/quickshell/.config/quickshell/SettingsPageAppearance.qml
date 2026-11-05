@@ -21,14 +21,7 @@ ColumnLayout {
     }
     readonly property var swatches: ["#ff9e7a", "#ffb000", "#b6ff3b", "#9fd18b", "#5ad1c2", "#5b9cff", "#3584e4", "#8ab4ff", "#c7a3ff", "#ff6b8a", "#ff3b1f", "#e30613", "#f2d48a", "#e8e8ea", "#1a1a1a"]
 
-    // write one adjustment for the active theme (undefined removes it)
-    function adjust(key, value) {
-        const all = JSON.parse(JSON.stringify(a.custom ?? {}))
-        const o = all[a.theme] ?? {}
-        if (value === undefined || value === null) delete o[key]; else o[key] = value
-        if (Object.keys(o).length) all[a.theme] = o; else delete all[a.theme]
-        return Config.set("appearance", "custom", all)
-    }
+    function adjust(key, value) { return Themes.adjust(key, value) }
     function hex(t) {
         let h = String(t).trim().replace(/^#/, "")
         if (/^[0-9a-fA-F]{3}$/.test(h)) h = h.split("").map(ch => ch + ch).join("")
@@ -155,6 +148,7 @@ ColumnLayout {
             hint: Object.keys(page.mine).length ? Object.keys(page.mine).length + " change(s) from the original" : "No changes"
             PillButton { text: "Reset"; enabled: Object.keys(page.mine).length > 0; onClicked: Config.set("appearance", "custom", Object.fromEntries(Object.entries(page.a.custom ?? {}).filter(([k]) => k !== page.a.theme))) }
         }
+        SaveTheme {}
     }
 
     // ---- personal: kept whatever the theme ---------------------------------------------------------

@@ -3,7 +3,7 @@ import Quickshell.Io
 // Defaults for every desktop option (Config.qml). A key missing from settings.json takes the
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
-    property int version: 2                     // settings format; Config.repair() upgrades older files
+    property int version: 3                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
         property string theme: "pebble"          // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property var userThemes: ({})           // your own themes (Theme builder): { "custom-name": { name, base, ...parts } }
@@ -19,7 +19,6 @@ JsonAdapter {
     }
     property JsonObject dock: JsonObject {
         property bool enabled: true             // every theme has a dock; off hides it everywhere
-        property string position: "theme"       // theme (the theme's own; joins the bar when they share an edge) | bar (inside the bar) | bottom | left | right | top
         property string size: "regular"         // compact | regular | roomy: the padding around the icons
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a dock
         property int iconSize: 44
@@ -154,17 +153,9 @@ JsonAdapter {
         property list<string> apps: []           // desktop entry ids opened at login (startup-apps)
     }
     property JsonObject bar: JsonObject {
-        // place and shape: "theme" (or 0) keeps the active theme's own (Themes.qml bar)
-        property string position: "theme"       // theme | top | bottom | left | right
-        property int size: 0                    // px across the bar, 0 = the theme's
-        property string floating: "theme"       // theme | floating (away from the screen edges) | attached
+        // where the bar goes, its size, shape and items are set per theme (Config.appearance.custom, Themes.resolve)
         property int margin: 8                  // gap around a floating bar, px
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a bar
-        // the items (BarWidget.qml ids) in each section; custom = false uses the theme's own
-        property bool custom: false
-        property list<string> start: []
-        property list<string> center: []
-        property list<string> end: []
         // clock and title
         property bool clock24: true
         property bool seconds: false

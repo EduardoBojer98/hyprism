@@ -20,7 +20,8 @@ Appearance → Themes, where **Adjust** changes any theme's accent colours, corn
 window motion, shadow and blur (kept per theme; Reset puts it back), and **Animations** is Full, Reduced or Off.
 
 - **The bar**: one engine for every theme. Settings → Menu Bar puts it on any edge, sizes it, floats or attaches it,
-  hides it per monitor and chooses the items of its three sections in a visual editor (drag items between the bar's
+  hides it per monitor (place, shape and items are kept per theme; "Save as a theme" keeps them as your own theme)
+  and chooses the items of its three sections in a visual editor (drag items between the bar's
   zones, in from a tray, or out to remove them): apps (the dock), apps button,
   workspaces, active window, clock, date, media player, tray, keyboard layout (US / Serbian Latin), notifications,
   quick settings, network, Bluetooth, volume, brightness, battery, power profile, CPU, memory, GPU, recording,

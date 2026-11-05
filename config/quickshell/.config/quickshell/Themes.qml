@@ -205,8 +205,55 @@ Singleton {
         radius:   "shape.radius, radiusSmall and window rounding",
         gapsIn:   "hypr.gapsIn",   gapsOut: "hypr.gapsOut",   border: "hypr.border (window frame px)",
         font: "font.ui",          size: "font.size (body px)",
-        motion:   "hypr.motion",   shadow: "hypr.shadow",     blur: "hypr.blur"
+        motion:   "hypr.motion",   shadow: "hypr.shadow",     blur: "hypr.blur",
+        // Settings > Menu Bar and Dock: where this theme's bar and dock go and what the bar holds
+        barEdge:  "bar.edge",      barSize: "bar.size (px)",   barFloating: "bar.floating",
+        barItems: "bar.start / center / end ({ start: [...], center: [...], end: [...] })",
+        dock:     "dock.edge: bar (inside the bar), bottom, left, right or top"
     })
+    // write one adjustment for the active theme (undefined removes it); "" when saved, else why not
+    function adjust(key, value) {
+        const all = JSON.parse(JSON.stringify(Config.appearance.custom ?? {})), id = Config.appearance.theme
+        const o = all[id] ?? {}
+        if (value === undefined || value === null) delete o[key]; else o[key] = value
+        if (Object.keys(o).length) all[id] = o; else delete all[id]
+        return Config.set("appearance", "custom", all)
+    }
+
+    // Save the active theme with all your adjustments as a theme of your own (Config.appearance.userThemes),
+    // stored as only the parts that differ from its base. `into` = an existing own theme to overwrite.
+    // The adjustments move into it, so the theme you started from goes back to how it was.
+    function saveAs(name, into) {
+        const a = Config.appearance, from = a.theme
+        const r = resolve(from, a.custom), base = r.user ? r.base : r.id
+        const parts = diff(r, resolve(base, {}))
+        for (const k of ["id", "name", "about", "base", "user"]) delete parts[k]
+        const all = JSON.parse(JSON.stringify(a.userThemes ?? {}))
+        let id = into
+        if (!id) {
+            const slug = "custom-" + (String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32) || "theme")
+            id = slug
+            for (let n = 2; all[id] || builtIn.some(b => b.id === id); n++) id = slug + "-" + n
+        }
+        all[id] = Object.assign({ name: String(name).trim() || all[id]?.name || "My theme", base: base }, parts)
+        Config.set("appearance", "userThemes", all)
+        const custom = JSON.parse(JSON.stringify(a.custom ?? {}))
+        delete custom[from]; delete custom[id]
+        Config.set("appearance", "custom", custom)
+        Config.set("appearance", "theme", id)
+        return id
+    }
+    // the parts of `a` that differ from `b` (objects compared key by key, lists and values whole)
+    function diff(a, b) {
+        const out = {}
+        for (const k of Object.keys(a)) {
+            const x = a[k], y = b?.[k]
+            if (JSON.stringify(x) === JSON.stringify(y)) continue
+            if (x && typeof x === "object" && !Array.isArray(x) && y && typeof y === "object") out[k] = diff(x, y)
+            else out[k] = x
+        }
+        return out
+    }
     function resolve(id, custom) {
         const r = JSON.parse(JSON.stringify(get(id)))
         // text on an accent fill must reach WCAG AA (4.5:1); if the theme's own choice doesn't, take the better of dark/light
@@ -240,6 +287,21 @@ Singleton {
         if (ok(o.motion)) r.hypr.motion = o.motion
         if (ok(o.shadow)) r.hypr.shadow = o.shadow
         if (ok(o.blur)) r.hypr.blur = o.blur
+        // the bar and dock (Settings > Menu Bar / Dock), checked the same way
+        const edges = ["top", "bottom", "left", "right"], side = e => e === "left" || e === "right"
+        if (edges.includes(o.barEdge) && o.barEdge !== r.bar.edge) {
+            // a theme's own size suits its own edge: a rail turned into a strip gets a strip's height and back
+            if (side(o.barEdge) !== side(r.bar.edge)) r.bar.size = side(o.barEdge) ? Math.max(r.bar.size, 44) : Math.min(r.bar.size, 44)
+            r.bar.edge = o.barEdge
+        }
+        if (num(o.barSize, 20, 96)) r.bar.size = o.barSize
+        if (typeof o.barFloating === "boolean") r.bar.floating = o.barFloating
+        const items = o.barItems, known = barItems.map(i => i.id)
+        if (items && typeof items === "object")
+            for (const k of ["start", "center", "end"])
+                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => known.includes(i) && l.indexOf(i) === n)
+        if (o.dock === "bar") r.dock.edge = r.bar.edge
+        else if (edges.includes(o.dock)) r.dock.edge = o.dock
         return r
     }
     // WCAG relative luminance and contrast ratio
