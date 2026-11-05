@@ -89,7 +89,7 @@ Loader {
             implicitHeight: grid.implicitHeight
             Grid {
                 id: grid
-                columns: w.vertical ? 1 : Math.max(1, visibleChildren.length)
+                columns: w.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
                 spacing: 2
                 Repeater {
                     model: apps.entries

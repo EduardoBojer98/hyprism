@@ -165,8 +165,8 @@ Scope {
             id: grid
             anchors.centerIn: parent
             // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
-            columns: root.vertical ? 1 : Math.max(1, visibleChildren.length)
-            spacing: root.st.voice === "icons" ? (root.st.ws === "blocks" ? 18 : 10) : 16
+            columns: root.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
+            spacing: root.st.voice === "icons" ? (root.st.ws === "blocks" ? 12 : 10) : 16
             horizontalItemAlignment: Grid.AlignHCenter
             verticalItemAlignment: Grid.AlignVCenter
             Repeater {

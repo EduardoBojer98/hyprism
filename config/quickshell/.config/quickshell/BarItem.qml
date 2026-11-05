@@ -35,7 +35,7 @@ Rectangle {
         id: grid
         anchors.centerIn: parent
         // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
-        columns: item.vertical ? 1 : Math.max(1, visibleChildren.length)
+        columns: item.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)   // a Repeater is a visible child too: it must not add an empty column
         spacing: 6
         horizontalItemAlignment: Grid.AlignHCenter
         verticalItemAlignment: Grid.AlignVCenter

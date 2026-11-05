@@ -12,7 +12,7 @@ Grid {
     property color tone: Theme.barInk
     readonly property bool shown: SystemTray.items.values.some(i => i.status !== Status.Passive)
     // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
-    columns: vertical ? 1 : Math.max(1, visibleChildren.length)
+    columns: vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
     spacing: 2
     Repeater {
         model: SystemTray.items

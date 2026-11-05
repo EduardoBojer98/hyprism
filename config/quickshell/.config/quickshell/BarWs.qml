@@ -50,7 +50,7 @@ Item {
         visible: ws.style !== "text"
         anchors.centerIn: parent
         // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
-        columns: ws.vertical ? 1 : Math.max(1, visibleChildren.length)
+        columns: ws.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
         spacing: ({ dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0 })[ws.style] ?? 4
         verticalItemAlignment: Grid.AlignVCenter
         horizontalItemAlignment: Grid.AlignHCenter
