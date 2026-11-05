@@ -49,8 +49,8 @@ ColumnLayout {
         SettingRow { label: "Hyprland"; Value { text: page.info.hypr ?? "" } }
         SettingRow { label: "Quickshell"; Value { text: page.info.qs ?? "" } }
         SettingRow {
-            label: "linux-setup"
-            hint: "github.com/EduardoBojer98/linux-setup"
+            label: "Hyprism"
+            hint: "github.com/EduardoBojer98/hyprism"
             Value { text: page.info.setup ?? "" }
             PillButton { text: "Open folder"; onClicked: Quickshell.execDetached(["xdg-open", page.info.repo ?? ""]) }   // wherever the repo was cloned
         }

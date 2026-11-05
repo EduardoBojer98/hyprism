@@ -1,4 +1,4 @@
-# linux-setup
+# Hyprism
 
 A Wayland desktop for **Arch/CachyOS and Fedora** (built on CachyOS): **Hyprland** with a **Quickshell** shell
 that comes in **7 themes**, whole desktop designs you switch in one step. Everything is free software,
@@ -64,8 +64,8 @@ Needs Arch Linux, CachyOS (or another Arch-based distro) or Fedora 44+, a normal
 a login screen that lists Wayland sessions. Clone it anywhere:
 
 ```bash
-git clone https://github.com/EduardoBojer98/linux-setup.git ~/linux-setup
-cd ~/linux-setup
+git clone https://github.com/EduardoBojer98/hyprism.git ~/hyprism
+cd ~/hyprism
 ./install.sh --dry-run     # see everything it would do; changes nothing
 ./install.sh               # do it (asks before system changes; safe to run again)
 ```
