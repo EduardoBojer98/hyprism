@@ -79,9 +79,17 @@ Loader {
             readonly property int count: DesktopEntries.applications.values.length   // lookups re-run once apps have loaded
             function entryFor(appId) { return count ? DesktopEntries.heuristicLookup(appId) : null }
             readonly property var running: Hyprland.toplevels.values.filter(t => t.wayland && t.workspace?.monitor === w.monitor)
-            readonly property var entries: {
-                const out = count ? Array.from(Config.dock.pinned).map(id => DesktopEntries.byId(id)).filter(e => e) : []
-                for (const t of running) { const e = entryFor(t.wayland.appId); if (e && !out.some(x => x.id === e.id)) out.push(e) }
+            // like the floating dock: launchers, then (unless Settings > Dock > Combine) each open window after a rule
+            readonly property bool combine: Config.dock.combine
+            readonly property var pinned: count ? Array.from(Config.dock.pinned).map(id => DesktopEntries.byId(id)).filter(e => e) : []
+            readonly property var cells: {
+                const out = pinned.map(e => ({ entry: e, win: null }))
+                if (combine) {
+                    for (const t of running) { const e = entryFor(t.wayland.appId); if (e && !out.some(x => x.entry.id === e.id)) out.push({ entry: e, win: null }) }
+                } else if (Config.dock.showRunning && running.length) {
+                    out.push({ rule: true })
+                    for (const t of running) out.push({ entry: entryFor(t.wayland.appId), win: t })
+                }
                 return out
             }
             readonly property int icon: Math.max(16, Math.min(Math.round(w.thickness * 0.62), 30))
@@ -92,18 +100,25 @@ Loader {
                 columns: w.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
                 spacing: 2
                 Repeater {
-                    model: apps.entries
+                    model: apps.cells
                     BarItem {
                         id: app
                         required property var modelData
                         required property int index
-                        readonly property var wins: apps.running.filter(t => apps.entryFor(t.wayland.appId)?.id === modelData.id)
+                        readonly property bool rule: modelData.rule === true
+                        readonly property var entry: modelData.entry ?? null
+                        readonly property var win: modelData.win ?? null
+                        // a launcher's own windows (it focuses them); a window cell is just its window
+                        readonly property var wins: win ? [win] : apps.running.filter(t => entry && apps.entryFor(t.wayland.appId)?.id === entry.id)
+                        readonly property bool marked: win !== null || (apps.combine && wins.length > 0)
                         vertical: w.vertical
-                        pad: 4
-                        active: wins.some(t => t.activated)
+                        pad: rule ? 3 : 4
+                        interactive: !rule
+                        active: marked && wins.some(t => t.activated)
                         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                         onPressed: button => {
-                            if (button === Qt.MiddleButton || wins.length === 0) { modelData.execute(); return }
+                            if (win) { if (button === Qt.MiddleButton) win.wayland.close(); else win.wayland.activate(); return }
+                            if (button === Qt.MiddleButton || wins.length === 0) { entry?.execute(); return }
                             const i = wins.findIndex(t => t.activated)
                             wins[(i + 1) % wins.length].wayland.activate()
                         }
@@ -111,16 +126,23 @@ Loader {
                         readonly property bool asText: w.words && !w.vertical
                         color: asText && active ? Theme.accent : active ? pressedColor : hovered ? hover : "transparent"
                         radius: asText ? 0 : Theme.radiusSmall
-                        IconImage { visible: !app.asText; implicitSize: apps.icon; source: Quickshell.iconPath(app.modelData?.icon ?? "", "application-x-executable") }
+                        Rectangle {   // the rule between launchers and open windows
+                            visible: app.rule
+                            width: w.vertical ? apps.icon * 0.6 : 1
+                            height: w.vertical ? 1 : apps.icon * 0.6
+                            color: Qt.alpha(w.tone, 0.3)
+                        }
+                        IconImage { visible: !app.rule && !app.asText; implicitSize: apps.icon; source: Quickshell.iconPath(app.entry?.icon ?? "", "application-x-executable") }
                         Text {
-                            visible: app.asText
-                            text: w.say((app.index + 1) + " " + (app.modelData?.name ?? "").toLowerCase().split(/[ .]/)[0] + (app.wins.length > 1 ? "·" + app.wins.length : ""))
-                            color: app.active ? Theme.accentText : app.wins.length ? w.tone : w.dim
+                            visible: !app.rule && app.asText
+                            text: w.say((app.win ? "" : (app.index + 1) + " ") + (app.entry?.name ?? app.win?.wayland?.appId ?? "").toLowerCase().split(/[ .]/)[0]
+                                        + (apps.combine && app.wins.length > 1 ? "·" + app.wins.length : ""))
+                            color: app.active ? Theme.accentText : app.marked ? w.tone : w.dim
                             font { family: w.family; pixelSize: Theme.fontLabel; weight: app.active ? Font.Bold : Font.Normal }
                         }
                         Rectangle {   // open / focused mark, on the screen-edge side (icons only)
                             parent: app
-                            visible: app.wins.length > 0 && !app.asText
+                            visible: app.marked && !app.asText
                             readonly property bool far: Theme.barEdge === "top" || Theme.barEdge === "left"
                             width: w.vertical ? 3 : (app.active ? 14 : 5)
                             height: w.vertical ? (app.active ? 14 : 5) : 3

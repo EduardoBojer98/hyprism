@@ -340,7 +340,7 @@ PanelWindow {
                             }
                         }
                         Timer { running: app.launching; interval: 10000; onTriggered: app.launching = false }
-                        Mark { visible: app.windows.length > 0; on: app.windows.some(t => t.activated) }
+                        Mark { visible: dock.combine && app.windows.length > 0; on: app.windows.some(t => t.activated) }
                     }
 
                     MouseArea {
