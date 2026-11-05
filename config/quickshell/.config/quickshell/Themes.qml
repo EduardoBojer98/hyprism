@@ -8,6 +8,8 @@ import QtQuick
 //
 // colour   ground (desktop/bar), surface (panels), raised (controls, hover), line, text, muted, faint,
 //          accent, onAccent (text on an accent fill), accent2, ok / warn / err
+// alt      the theme's other half: light for a dark theme, dark for a light one (dark, colour, hypr active /
+//          inactive, term, wall). Settings > Appearance > Light or dark picks it (Config.appearance.mode)
 // font     ui, display (clocks, big numbers), mono; size = body px
 // shape    radius / radiusSmall px, line = panel border px; material: solid | glass
 // bar      the theme's own bar; Settings > Menu Bar can override edge, size, floating and the items.
@@ -36,6 +38,10 @@ Singleton {
             dark: true,
             colour: { ground: "#16141f", surface: "#221f2e", raised: "#2d2a3b", line: "#3a3650", text: "#ece8f6", muted: "#b9b3cc", faint: "#7f7895",
                       accent: "#ff9e7a", onAccent: "#1a1220", accent2: "#9ad1c0", ok: "#7fdc9a", warn: "#ffd27a", err: "#ff6b8a" },
+            alt: { dark: false, term: "Pebble Light", wall: "pebble-light",   // daylight: lavender paper, a deeper coral
+                   colour: { ground: "#f3eff8", surface: "#fbf9fd", raised: "#ebe6f2", line: "#d6cfe2", text: "#221d2e", muted: "#5b5370", faint: "#8d86a0",
+                             accent: "#d9572f", onAccent: "#ffffff", accent2: "#2f8f78", ok: "#23864a", warn: "#9a6400", err: "#c8324f" },
+                   hypr: { active: ["d9572fcc", "2f8f78cc"], inactive: "d6cfe200" } },
             font: { ui: "Outfit", display: "Outfit", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Medium },
             shape: { radius: 18, radiusSmall: 12, line: 1, material: "glass" },
             bar: { edge: "top", size: 36, floating: true, segmented: true, fill: "glass", line: 0, voice: "icons", mono: false, ws: "dots", clock: "plain", decor: "", sep: false,
@@ -54,6 +60,10 @@ Singleton {
             dark: true,
             colour: { ground: "#0b0c0a", surface: "#11130f", raised: "#1b1e18", line: "#30352b", text: "#d7ddcc", muted: "#8b9480", faint: "#5f6858",
                       accent: "#b6ff3b", onAccent: "#0b0c0a", accent2: "#ff5f2e", ok: "#5ad1c2", warn: "#ffb547", err: "#ff5f5f" },
+            alt: { dark: false, term: "Monolith Light", wall: "monolith-light",   // tmux on paper: a dark olive for the lime
+                   colour: { ground: "#eceee6", surface: "#f6f7f2", raised: "#e2e5da", line: "#b9beae", text: "#1d2118", muted: "#565d4d", faint: "#848a78",
+                             accent: "#4a7d00", onAccent: "#ffffff", accent2: "#c2410c", ok: "#0f7f72", warn: "#a35f00", err: "#c42b2b" },
+                   hypr: { active: ["4a7d00ff"], inactive: "c9cdbfff" } },
             font: { ui: "JetBrainsMono Nerd Font", display: "JetBrainsMono Nerd Font", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Bold },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
             bar: { edge: "bottom", size: 28, floating: false, segmented: false, fill: "surface", line: 1, voice: "mixed", mono: true, ws: "filled", clock: "block", decor: "", sep: true,
@@ -71,6 +81,10 @@ Singleton {
             dark: true,
             colour: { ground: "#05080f", surface: "#0a0f1a", raised: "#131a28", line: "#5a4418", text: "#e9dcc0", muted: "#c19b52", faint: "#6d5a33",
                       accent: "#ffb000", onAccent: "#05080f", accent2: "#ff6a3d", ok: "#66d19e", warn: "#ff7a45", err: "#ff4d5e" },
+            alt: { dark: false, term: "Console Light", wall: "console-light",   // a daylight HUD: amber ink on warm paper
+                   colour: { ground: "#f4efe3", surface: "#fbf8f0", raised: "#ece5d4", line: "#c9a85a", text: "#2a1f0a", muted: "#6e5218", faint: "#a08a5c",
+                             accent: "#a35f00", onAccent: "#ffffff", accent2: "#c2410c", ok: "#1d7a4f", warn: "#b4410f", err: "#c0263a" },
+                   hypr: { active: ["a35f00ff"], inactive: "e0d6bfff" } },
             font: { ui: "Martian Mono", display: "Martian Mono", mono: "Martian Mono", size: 12, displayWeight: Font.Light },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
             bar: { edge: "top", size: 30, floating: false, segmented: false, fill: "ground", line: 1, voice: "mixed", mono: true, caps: true, ws: "text", clock: "accent", decor: "brackets", sep: true,
@@ -88,6 +102,10 @@ Singleton {
             dark: false,
             colour: { ground: "#141414", surface: "#f4f1ea", raised: "#e6e1d6", line: "#141414", text: "#141414", muted: "#4a4740", faint: "#7d786d",
                       accent: "#ff3b1f", onAccent: "#f4f1ea", accent2: "#2d5bff", ok: "#1a7f37", warn: "#b35c00", err: "#c4161c" },
+            alt: { dark: true, term: "Poster Dark", wall: "poster",   // the poster at night: ink panels, paper type
+                   colour: { ground: "#141414", surface: "#1f1f1f", raised: "#2b2b2b", line: "#f4f1ea", text: "#f4f1ea", muted: "#c9c4b8", faint: "#8f8a7f",
+                             accent: "#ff4a2e", onAccent: "#141414", accent2: "#6f8cff", ok: "#4cc26e", warn: "#ffa23a", err: "#ff5a5f" },
+                   hypr: { active: ["ff4a2eff"], inactive: "3a3a3aff" } },
             font: { ui: "Archivo", display: "Archivo Black", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Black },
             shape: { radius: 0, radiusSmall: 0, line: 3, material: "solid" },
             bar: { edge: "top", size: 52, floating: false, segmented: false, fill: "surface", line: 3, voice: "icons", mono: false, ws: "blocks", clock: "display", decor: "", sep: false,
@@ -105,6 +123,10 @@ Singleton {
             dark: true,
             colour: { ground: "#0f131c", surface: "#1a1f2b", raised: "#262c3a", line: "#323a4c", text: "#f4f6fb", muted: "#a9b0c2", faint: "#6f7891",
                       accent: "#5b9cff", onAccent: "#ffffff", accent2: "#8f86ff", ok: "#63d17a", warn: "#f7c85b", err: "#ff5f57" },
+            alt: { dark: false, term: "Glass Light", wall: "glass-light",   // frosted daylight glass, the same blue to violet
+                   colour: { ground: "#e9edf4", surface: "#f7f9fc", raised: "#e3e8f1", line: "#cfd6e3", text: "#141a26", muted: "#4d5668", faint: "#8790a3",
+                             accent: "#2f6fe0", onAccent: "#ffffff", accent2: "#6a5ff0", ok: "#1f8a3d", warn: "#9a6a00", err: "#d63a32" },
+                   hypr: { active: ["2f6fe0dd", "6a5ff0dd"], inactive: "00000014" } },
             font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Light },
             shape: { radius: 16, radiusSmall: 10, line: 1, material: "glass" },
             bar: { edge: "top", size: 36, floating: true, segmented: false, fill: "glass", line: 0, voice: "icons", mono: false, ws: "numbers", clock: "plain", decor: "", sep: false,
@@ -122,6 +144,10 @@ Singleton {
             dark: false,
             colour: { ground: "#f2f2f0", surface: "#ffffff", raised: "#e8e8e5", line: "#111111", text: "#111111", muted: "#4b4b4b", faint: "#8a8a8a",
                       accent: "#e30613", onAccent: "#ffffff", accent2: "#111111", ok: "#0a7d3b", warn: "#a35b00", err: "#a3001b" },
+            alt: { dark: true, term: "Atlas Dark", wall: "atlas-dark",   // Swiss at night: black ground, a white strip, the same red
+                   colour: { ground: "#121212", surface: "#1b1b1b", raised: "#262626", line: "#f2f2f0", text: "#f2f2f0", muted: "#bdbdbd", faint: "#7a7a7a",
+                             accent: "#ff2a36", onAccent: "#ffffff", accent2: "#f2f2f0", ok: "#3fbf6f", warn: "#f0a43a", err: "#ff4d5e" },
+                   hypr: { active: ["f2f2f0ff"], inactive: "333333ff" } },
             font: { ui: "Archivo", display: "Archivo", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.ExtraBold },
             shape: { radius: 0, radiusSmall: 0, line: 2, material: "solid" },
             bar: { edge: "top", size: 44, floating: false, segmented: false, fill: "ink", line: 0, voice: "icons", mono: false, ws: "squares", clock: "display", decor: "", sep: false,
@@ -225,7 +251,7 @@ Singleton {
     // The adjustments move into it, so the theme you started from goes back to how it was.
     function saveAs(name, into) {
         const a = Config.appearance, from = a.theme
-        const r = resolve(from, a.custom), base = r.user ? r.base : r.id
+        const r = resolve(from, a.custom, a.mode), base = r.user ? r.base : r.id
         const parts = diff(r, resolve(base, {}))
         for (const k of ["id", "name", "about", "base", "user"]) delete parts[k]
         const all = JSON.parse(JSON.stringify(a.userThemes ?? {}))
@@ -254,8 +280,16 @@ Singleton {
         }
         return out
     }
-    function resolve(id, custom) {
+    function resolve(id, custom, mode) {
         const r = JSON.parse(JSON.stringify(get(id)))
+        // light or dark: the other half swaps in, and the half it replaces becomes the alt (so a saved theme keeps both)
+        if (r.alt && (mode === "light" && r.dark || mode === "dark" && !r.dark)) {
+            const was = { dark: r.dark, term: r.term, wall: r.wall, colour: r.colour, hypr: { active: r.hypr.active, inactive: r.hypr.inactive } }
+            r.dark = r.alt.dark; r.term = r.alt.term; r.wall = r.alt.wall
+            r.colour = Object.assign({}, r.colour, r.alt.colour)
+            r.hypr.active = r.alt.hypr.active; r.hypr.inactive = r.alt.hypr.inactive
+            r.alt = was
+        }
         // text on an accent fill must reach WCAG AA (4.5:1); if the theme's own choice doesn't, take the better of dark/light
         if (contrast(r.colour.onAccent, r.colour.accent) < 4.5) r.colour.onAccent = textOn(r.colour.accent, r.colour)
         const o = Object.assign({}, (custom ?? {})[r.id] ?? {})

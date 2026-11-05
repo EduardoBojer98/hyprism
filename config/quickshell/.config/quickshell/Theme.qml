@@ -8,7 +8,7 @@ import QtQuick
 // Ghostty and the wallpaper. Personal knobs on top: Config.appearance.fontScale and .animations.
 Singleton {
     readonly property var a: Config.appearance
-    readonly property var current: Themes.resolve(a.theme, a.custom)   // the theme plus your adjustments
+    readonly property var current: Themes.resolve(a.theme, a.custom, a.mode)   // the theme plus your adjustments
     readonly property var c: current.colour
     readonly property bool light: !current.dark
 
@@ -60,7 +60,7 @@ Singleton {
     readonly property color tileOnIcon: washTiles ? accent : accentText
     readonly property color tileOnBorder: washTiles ? Qt.alpha(accent, 0.55) : "transparent"
     readonly property color thumb: light ? "#ffffff" : c.text
-    readonly property color thumbText: c.ground
+    readonly property color thumbText: light ? c.text : c.ground   // text on a thumb: white thumbs in light themes
     function tinted(k, alpha) { return Qt.rgba(base.r * k, base.g * k, base.b * k, alpha) }
     function frosted(k, alpha) { return Qt.rgba(base.r + (1 - base.r) * k, base.g + (1 - base.g) * k, base.b + (1 - base.b) * k, alpha) }
 

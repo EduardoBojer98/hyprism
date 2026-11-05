@@ -7,6 +7,7 @@ JsonAdapter {
     property JsonObject appearance: JsonObject {
         property string theme: "pebble"          // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property var userThemes: ({})           // your own themes (Theme builder): { "custom-name": { name, base, ...parts } }
+        property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)
         property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
         property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
         property bool wallpaper: true           // the theme's own wallpaper; off = keep yours (Settings > Wallpaper)
@@ -24,6 +25,7 @@ JsonAdapter {
         property int iconSize: 44
         property bool autoHide: false           // visible by default; true slides it away until the pointer reaches its edge
         property bool showRunning: true
+        property string barLabels: "icon"       // open windows in the dock inside the bar: icon | name (app name) | title (window title)
         property bool combine: false            // like Windows' "combine taskbar buttons": open apps share their icon
         property bool previews: true            // combined: hover an open app for a picture of each window
         property bool thumbnails: true          // off: open windows show only their app icon
@@ -160,6 +162,7 @@ JsonAdapter {
         property bool clock24: true
         property bool seconds: false
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
+        property string batteryPercent: "beside"  // the battery's percentage: inside (the icon) | beside | off
         property bool windowTitle: true          // the focused window's title after the app name
     }
     property JsonObject battery: JsonObject {

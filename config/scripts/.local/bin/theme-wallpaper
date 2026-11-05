@@ -46,15 +46,42 @@ draw() {
         atlas)    # Swiss: off-white, a red square, black bars on a grid
             magick -size ${W}x${H} xc:'#f2f2f0' -fill '#e30613' -draw 'rectangle 160,160 1040,1040' \
                 -fill '#111111' -draw 'rectangle 1200,160 1260,1440' -draw 'rectangle 160,1200 2400,1240' "$out" ;;
+        pebble-light)   # Pebble by day: the same pebbles of light, pale on lavender paper
+            magick -size ${W}x${H} xc:'#f3eff8' \
+                -fill '#dcc8f0' -draw 'ellipse 640,520 760,520 0,360' -fill '#bfe6dc' -draw 'ellipse 1960,1180 820,560 0,360' \
+                -fill '#ffc4ad' -draw 'ellipse 1640,420 360,300 0,360' -fill '#f3eff8' -draw 'ellipse 1280,1500 1500,260 0,360' \
+                -resize 25% -blur 0x48 -resize 400% -attenuate 0.08 +noise Gaussian -colorspace sRGB "$out" ;;
+        monolith-light) # the terminal on paper: faint scanlines, the machine's name, an olive prompt and cursor
+            magick -size ${W}x${H} xc:'#eceee6' \
+                -fill '#e5e8de' -draw "$(for y in $(seq 0 6 $H); do printf 'rectangle 0,%d %d,%d ' "$y" "$W" "$((y + 2))"; done)" \
+                -font 'JetBrainsMono-NF-Bold' -pointsize 300 -fill '#dfe2d6' -gravity southwest -annotate +80+60 "$(hostname 2>/dev/null || cat /etc/hostname)" \
+                -font 'JetBrainsMono-NF-Bold' -pointsize 72 -fill '#4a7d00' -gravity southwest -annotate +100+430 '~ $' \
+                -fill '#4a7d00' -draw 'rectangle 330,1100 372,1172' "$out" ;;
+        console-light)  # the radar by day: amber ink rings on warm paper
+            magick -size ${W}x${H} radial-gradient:'#fbf8f0'-'#ece5d4' \
+                \( -size ${W}x${H} xc:none -fill '#a35f0024' -draw 'path "M 1820,800 L 2620,640 A 820,820 0 0,1 2620,960 Z"' -blur 0x40 \) -composite \
+                -fill none -stroke '#a35f0040' -strokewidth 2 \
+                -draw 'circle 1820,800 1820,1000' -draw 'circle 1820,800 1820,1200' -draw 'circle 1820,800 1820,1400' -draw 'circle 1820,800 1820,1600' \
+                -stroke '#a35f002c' -draw 'line 0,800 2560,800' -draw 'line 1820,0 1820,1600' \
+                -stroke '#a35f00a0' -strokewidth 3 -draw 'line 1800,800 1840,800' -draw 'line 1820,780 1820,820' \
+                -stroke '#a35f0070' -strokewidth 2 -draw "$(for x in $(seq 1020 100 2620); do printf 'line %d,790 %d,810 ' "$x" "$x"; done)" \
+                -stroke none -fill '#a35f00' -draw 'circle 2240,610 2240,618' -fill '#c2410c' -draw 'circle 1500,1060 1500,1067' "$out" ;;
+        glass-light)    # frosted daylight: pale blue light from the top left, a lilac glow below
+            magick -size ${W}x${H} xc:'#e9edf4' -fill '#a9c4ff' -draw 'ellipse 700,260 900,420 0,360' \
+                -fill '#cbc6ff' -draw 'ellipse 2050,1380 760,380 0,360' -fill '#bcd4ff' -draw 'ellipse 1250,720 300,180 0,360' \
+                -resize 25% -blur 0x60 -resize 400% -attenuate 0.04 +noise Gaussian -colorspace sRGB "$out" ;;
+        atlas-dark)     # Swiss at night: black, the red square, white bars on the grid
+            magick -size ${W}x${H} xc:'#121212' -fill '#e30613' -draw 'rectangle 160,160 1040,1040' \
+                -fill '#f2f2f0' -draw 'rectangle 1200,160 1260,1440' -draw 'rectangle 160,1200 2400,1240' "$out" ;;
         *) echo "theme-wallpaper: unknown design '$id'" >&2; return 2 ;;
     esac
 }
 
 ids=("$@")
-[[ ${1:-} == --all ]] && ids=(pebble monolith console poster glass atlas)
+[[ ${1:-} == --all ]] && ids=(pebble monolith console poster glass atlas pebble-light monolith-light console-light glass-light atlas-dark)
 [[ ${#ids[@]} -gt 0 ]] || { sed -n '2,7p' "$0" >&2; exit 2; }
 for id in "${ids[@]}"; do
-    [[ $id =~ ^[a-z]+$ ]] || { echo "theme-wallpaper: bad name '$id'" >&2; exit 2; }
+    [[ $id =~ ^[a-z]+(-[a-z]+)?$ ]] || { echo "theme-wallpaper: bad name '$id'" >&2; exit 2; }
     out="$out_dir/$id-v$VERSION.png"
     if [[ ! -s $out ]]; then   # PNG24: never a banded palette PNG
         draw "$id" "PNG24:$out.tmp.png" || { rm -f "$out.tmp.png"; echo "theme-wallpaper: couldn't draw '$id'" >&2; exit 1; }

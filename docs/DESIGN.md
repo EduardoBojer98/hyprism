@@ -69,6 +69,22 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
 7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0;
    panels are capped to the room between bar and dock and kept on their monitor.
 
+## Light and dark
+
+Every theme has both halves: the dark themes (Pebble, Monolith, Console, Glass) have a light version and the
+light ones (Poster, Atlas) a dark one, as `alt` in `Themes.qml` (colours, window frame colours, `term`, `wall`).
+Settings → Appearance → Light or dark: Theme's (each theme's own), Light or Dark for all of them; GTK apps,
+the terminal, window frames, the lock screen and the wallpaper follow.
+
+| Theme | Other half: ground / text / accent | Terminal · wallpaper |
+|---|---|---|
+| Pebble | light `#f3eff8` / `#221d2e` / `#d9572f` | Pebble Light · pebble-light |
+| Monolith | light `#eceee6` / `#1d2118` / `#4a7d00` | Monolith Light · monolith-light |
+| Console | light `#f4efe3` / `#2a1f0a` / `#a35f00` | Console Light · console-light |
+| Poster | dark `#141414` / `#f4f1ea` / `#ff4a2e` | Poster Dark · poster |
+| Glass | light `#e9edf4` / `#141a26` / `#2f6fe0` | Glass Light · glass-light |
+| Atlas | dark `#121212` / `#f2f2f0` / `#ff2a36` | Atlas Dark · atlas-dark |
+
 ## Your own themes
 
 Settings → Appearance → Theme Builder makes a theme from any shipped one; you can change every part listed

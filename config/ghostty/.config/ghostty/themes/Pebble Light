@@ -1,0 +1,23 @@
+# Pebble Light: terminal palette of the Pebble theme's light version (Quickshell Themes.qml alt). Edit freely.
+background = #f3eff8
+foreground = #221d2e
+cursor-color = #d9572f
+cursor-text = #f3eff8
+selection-background = #f2d2c6
+selection-foreground = #221d2e
+palette = 0=#221d2e
+palette = 1=#c8324f
+palette = 2=#23864a
+palette = 3=#9a6400
+palette = 4=#3a5fc8
+palette = 5=#8a3fb0
+palette = 6=#2f8f78
+palette = 7=#8d86a0
+palette = 8=#5b5370
+palette = 9=#a8283f
+palette = 10=#1b6b3b
+palette = 11=#7a4f00
+palette = 12=#2e4ca0
+palette = 13=#6e3290
+palette = 14=#24715f
+palette = 15=#fbf9fd

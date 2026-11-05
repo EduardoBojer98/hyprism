@@ -52,7 +52,7 @@ ColumnLayout {
                 model: Themes.list
                 ThemePreview {
                     required property var modelData
-                    theme: modelData
+                    theme: Themes.resolve(modelData.id, {}, page.a.mode)   // each in the light or dark half you picked
                     chosen: page.a.theme === modelData.id
                     Layout.fillWidth: true
                     onPicked: Config.set("appearance", "theme", modelData.id)
@@ -154,6 +154,12 @@ ColumnLayout {
     // ---- personal: kept whatever the theme ---------------------------------------------------------
     SettingGroup {
         title: "Everywhere"
+        SettingRow {
+            label: "Light or dark"
+            hint: page.a.mode === "theme" ? "Each theme's own (" + page.base.name + " is " + (page.base.dark ? "dark" : "light") + "); every theme has both"
+                : "Every theme in its " + page.a.mode + " version; windows, apps, terminal and wallpaper follow"
+            ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark"]; labels: ["Theme's", "Light", "Dark"] }
+        }
         SettingRow {
             label: "Theme wallpaper"
             hint: "Each theme brings its own picture; off keeps yours (Wallpaper page)"

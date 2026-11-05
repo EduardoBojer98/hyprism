@@ -1,0 +1,23 @@
+# Poster Dark: terminal palette of the Poster theme's dark version (Quickshell Themes.qml alt). Edit freely.
+background = #141414
+foreground = #f4f1ea
+cursor-color = #ff4a2e
+cursor-text = #141414
+selection-background = #561f17
+selection-foreground = #f4f1ea
+palette = 0=#262626
+palette = 1=#ff4a2e
+palette = 2=#4cc26e
+palette = 3=#ffa23a
+palette = 4=#6f8cff
+palette = 5=#ff6fb5
+palette = 6=#4fd1e0
+palette = 7=#c9c4b8
+palette = 8=#8f8a7f
+palette = 9=#ff7a62
+palette = 10=#79d295
+palette = 11=#ffbd6b
+palette = 12=#95a9ff
+palette = 13=#ff93c8
+palette = 14=#7bdce8
+palette = 15=#f4f1ea

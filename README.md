@@ -18,9 +18,11 @@ Each theme brings its own fonts, corners, window frames, shadows, panel depth, m
 lock screen, terminal palette and wallpaper. `theme` lists them, `theme atlas` switches; or Settings →
 Appearance → Themes, where **Adjust** changes any theme's accent colours, corners, gaps, frame, font, text size,
 window motion, shadow and blur (kept per theme; Reset puts it back), and **Animations** is Full, Reduced or Off.
+  Every theme has a light and a dark version: **Light or dark** picks Theme's, Light or Dark for all of them.
 
 - **The bar**: one engine for every theme. Settings → Menu Bar puts it on any edge, sizes it, floats or attaches it,
   hides it per monitor (place, shape and items are kept per theme; "Save as a theme" keeps them as your own theme)
+  shows the battery percentage inside the battery icon, beside it or not at all,
   and chooses the items of its three sections in a visual editor (drag items between the bar's
   zones, in from a tray, or out to remove them): apps (the dock), apps button,
   workspaces, active window, clock, date, media player, tray, keyboard layout (US / Serbian Latin), notifications,
