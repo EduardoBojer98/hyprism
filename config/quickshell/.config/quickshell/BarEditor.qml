@@ -44,12 +44,13 @@ ColumnLayout {
     // ---- the bar ------------------------------------------------------------------------------------
     Rectangle {
         Layout.fillWidth: true
-        implicitHeight: 72
+        implicitHeight: zones.implicitHeight + 16   // grows as a section's items wrap to more rows
         radius: Theme.barFloating ? Math.min(Theme.radiusLarge, 22) : Theme.radiusSmall
         color: ed.ground
         border { color: Theme.stroke; width: Math.max(1, Theme.line) }
 
         RowLayout {
+            id: zones
             anchors { fill: parent; margins: 8 }
             spacing: 8
             Repeater {
@@ -112,7 +113,7 @@ ColumnLayout {
         radius: Math.max(0, Theme.radiusSmall - 2)
         color: zoneDrop.active ? Qt.alpha(Theme.accent, 0.18) : Qt.alpha(ed.ink, 0.05)
         border { color: zoneDrop.active ? Theme.accent : Qt.alpha(ed.ink, 0.16); width: 1 }
-        clip: true
+        implicitHeight: Math.max(56, flow.implicitHeight + 24)
         DropSpot { id: zoneDrop; anchors.fill: parent; key: "baritem"; mode: "fill"; onPlaced: p => ed.drop(p, zone.section, -1) }
         Text {
             anchors { left: parent.left; top: parent.top; leftMargin: 6; topMargin: 2 }
@@ -120,27 +121,18 @@ ColumnLayout {
             color: Qt.alpha(ed.ink, 0.55)
             font { family: Theme.font; pixelSize: Theme.fontCaption - 1 }
         }
-        Flickable {   // many items scroll sideways instead of spilling out
-            anchors { fill: parent; topMargin: 14; leftMargin: 4; rightMargin: 4 }
-            contentWidth: row.implicitWidth
-            flickableDirection: Flickable.HorizontalFlick
-            boundsBehavior: Flickable.StopAtBounds
-            interactive: contentWidth > width
-            Row {
-                id: row
-                height: parent.height
-                spacing: 4
-                x: zone.section === "end" ? Math.max(0, parent.width - implicitWidth) : zone.section === "center" ? Math.max(0, (parent.width - implicitWidth) / 2) : 0
-                Repeater {
-                    model: zone.ids
-                    Chip {
-                        required property string modelData
-                        required property int index
-                        itemId: modelData
-                        from: zone.section
-                        anchors.verticalCenter: parent.verticalCenter
-                        onDroppedHere: (p, after) => ed.drop(p, zone.section, index + (after ? 1 : 0))
-                    }
+        Flow {   // many items wrap to more rows and the zone grows, so every item stays in view
+            id: flow
+            anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 18; leftMargin: 6; rightMargin: 6 }
+            spacing: 4
+            Repeater {
+                model: zone.ids
+                Chip {
+                    required property string modelData
+                    required property int index
+                    itemId: modelData
+                    from: zone.section
+                    onDroppedHere: (p, after) => ed.drop(p, zone.section, index + (after ? 1 : 0))
                 }
             }
         }
