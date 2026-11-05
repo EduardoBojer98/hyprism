@@ -80,12 +80,24 @@ ColumnLayout {
             ConfigToggle { section: "dock"; key: "autoHide" }
         }
         SettingRow {
-            label: "Show open windows"
-            hint: "Each window as its own tile, after the pinned apps"
+            label: "Combine open apps with their icons"
+            hint: Config.dock.combine ? "Like Windows' combined taskbar: an open app shares its icon; hover it for its windows"
+                                      : "Off: pinned apps are launchers, every open window is its own tile after them"
+            ConfigToggle { section: "dock"; key: "combine" }
+        }
+        SettingRow {
+            visible: Config.dock.combine
+            label: "Window previews on hover"
+            hint: "A live picture of each window; click one to bring it up, middle-click to close it"
+            ConfigToggle { section: "dock"; key: "previews" }
+        }
+        SettingRow {
+            label: "Show open apps"
+            hint: Config.dock.combine ? "Open apps that aren't pinned join after the pinned ones" : "Each window as its own tile, after the pinned apps"
             ConfigToggle { section: "dock"; key: "showRunning" }
         }
         SettingRow {
-            visible: Config.dock.showRunning
+            visible: Config.dock.showRunning && !Config.dock.combine
             label: "Window pictures"
             hint: "A picture of each window, live while the pointer is on the dock. Off: just the app icon"
             ConfigToggle { section: "dock"; key: "thumbnails" }
@@ -95,7 +107,7 @@ ColumnLayout {
             readonly property var presets: [30, 60, 300, 900]
             property bool custom: !presets.includes(Config.dock.thumbRefresh)
             property string error: ""
-            visible: Config.dock.showRunning && Config.dock.thumbnails
+            visible: Config.dock.showRunning && Config.dock.thumbnails && !Config.dock.combine
             label: "Refresh pictures"
             hint: error !== "" ? error : "How often the pictures update while the pointer is elsewhere"
             Choice {

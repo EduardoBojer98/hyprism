@@ -25,6 +25,8 @@ JsonAdapter {
         property int iconSize: 44
         property bool autoHide: false           // visible by default; true slides it away until the pointer reaches its edge
         property bool showRunning: true
+        property bool combine: false            // like Windows' "combine taskbar buttons": open apps share their icon
+        property bool previews: true            // combined: hover an open app for a picture of each window
         property bool thumbnails: true          // off: open windows show only their app icon
         property int thumbRefresh: 60           // s between still pictures (live only while hovered)
         property list<string> pinned: ["firefox", "google-chrome", "com.microsoft.VSCode", "com.mitchellh.ghostty", "org.kde.dolphin"]

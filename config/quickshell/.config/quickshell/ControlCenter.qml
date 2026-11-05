@@ -14,7 +14,7 @@ import QtQuick.Layouts
 // `qs ipc call controlcenter toggle`): one glass panel holding grouped tiles.
 //   Wi-Fi / Bluetooth / Focus / Night Light tiles · Caffeine, shared monitor, key light, on-screen keyboard
 //   media (while something plays) · Display, Sound and Microphone sliders · Power mode
-//   shortcuts (screenshot, settings, lock, power) · notifications
+//   shortcuts (screenshot, settings, lock, power). Notifications have their own panel (NotificationCenter.qml).
 // A tile's round icon toggles it; the rest of the tile (or a chevron) opens its list underneath.
 // The battery lives in the bar, so it isn't repeated here.
 Singleton {
@@ -23,7 +23,7 @@ Singleton {
     readonly property bool open: popup.open
     // ---- layout (Settings > Control Center): order of sections and tiles, and what's hidden ----
     readonly property var defaults: ({
-        sections: ["connections", "toggles", "media", "sliders", "power", "shortcuts", "notifications"],
+        sections: ["connections", "toggles", "media", "sliders", "power", "shortcuts"],
         tiles: ["wifi", "bt", "focus", "nightlight"],
         toggles: ["caffeine", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record"],
         shortcuts: ["screenshot", "settings", "lock", "power", "colorpicker", "mission"]
@@ -45,7 +45,8 @@ Singleton {
     readonly property var shownSections: shown("sections")
     readonly property var shownTiles: shown("tiles")
     readonly property var shownToggles: shown("toggles")
-    readonly property var shownShortcuts: shown("shortcuts")
+    // Settings, Lock and Power sit in the header; the shortcuts row keeps the rest
+    readonly property var shownShortcuts: shown("shortcuts").filter(id => !["settings", "lock", "power"].includes(id))
 
     // names and icons of everything the layout editor (Settings > Control Center) can move or hide
     readonly property var itemInfo: ({
@@ -55,7 +56,6 @@ Singleton {
         sliders: { label: "Display and sound", glyph: "\u{F00DF}" },
         power: { label: "Power mode", glyph: "\u{F0079}" },
         shortcuts: { label: "Shortcuts", glyph: "\u{F0100}", group: "shortcuts" },
-        notifications: { label: "Notifications", glyph: "\u{F009A}" },
         wifi: { label: "Wi-Fi", glyph: "\u{F05A9}" },
         bt: { label: "Bluetooth", glyph: "\u{F00AF}" },
         focus: { label: "Focus", glyph: "\u{F0594}" },
@@ -120,8 +120,7 @@ Singleton {
     function toggle() { popup.toggle() }
     function showSection(name) { if (!popup.open) popup.show(); cc.expanded = name }   // a bar item opens its own part
     // the bell / Super+N: open (or close) scrolled down to the notifications
-    property bool toNotes: false
-    function toggleNotifications() { if (popup.open) popup.hide(); else { toNotes = true; popup.show() } }
+    function toggleNotifications() { NotificationCenter.toggle() }   // old entry point; notifications have their own panel
 
     // One tooltip for the whole panel, drawn above the scroll area so it is never clipped
     property Item hintItem: null
@@ -145,10 +144,9 @@ Singleton {
         if (wifi) wifi.scannerEnabled = visible
         if (visible) {
             scroller.contentY = 0; brightnessRead.running = true; Hyprland.refreshMonitors(); kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
-            Notifications.unread = 0; Notifications.now = new Date(); NotificationCenter.unfolded = ({})
-            if (toNotes) scrollToNotes.restart()
+            Notifications.now = new Date()
         }
-        else { expanded = ""; passwordFor = null; hintItem = null; toNotes = false }
+        else { expanded = ""; passwordFor = null; hintItem = null }
     }
 
     Process {
@@ -162,11 +160,6 @@ Singleton {
         stdout: StdioCollector { onStreamFinished: cc.kbdLight = parseInt(text.split(",")[2]) || 0 }
     }
     Timer { interval: 30000; repeat: true; running: popup.open; onTriggered: cc.now = new Date() }
-    Timer {   // after layout settles
-        id: scrollToNotes
-        interval: 30
-        onTriggered: { scroller.contentY = Math.max(0, Math.min(notesSection.y + notesHeader.y - 4, scroller.contentHeight - scroller.height)); cc.toNotes = false }
-    }
 
     // short device names: the monitor's own name for HDMI/DP audio, "Built-in …" for the laptop's codec
     function nodeName(n) {
@@ -187,7 +180,7 @@ Singleton {
     placement: "topRight"
     boxWidth: cc.customWidth
     // capped to the screen; the content scrolls when lists make it taller
-    boxHeight: Math.min(content.implicitHeight + cc.pad * 2, popup.maxHeight)
+    boxHeight: Math.min(header.height + cc.gap + content.implicitHeight + cc.pad * 2, popup.maxHeight)
 
     Glass {   // the backdrop every tile sits on
         anchors.fill: parent
@@ -195,9 +188,62 @@ Singleton {
         radius: cc.style === "compact" ? Theme.radiusLarge : cc.style === "borderless" ? Theme.radius : Theme.radiusLarge + 4
         border.width: cc.style === "borderless" ? 0 : 1
 
+    // ---- header: the time large in the theme's display face, the date, then battery and the three
+    // things you reach for (Settings, Lock, Power) as round buttons ----
+    RowLayout {
+        id: header
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: cc.pad; leftMargin: cc.pad + 4 }
+        height: 52
+        spacing: 6
+        Column {
+            Layout.fillWidth: true
+            Text {
+                text: Sys.time()
+                color: Theme.text
+                font { family: Theme.displayFont; pixelSize: Theme.fontDisplay - 2; weight: Theme.displayWeight; letterSpacing: -0.5; features: { "tnum": 1 } }
+            }
+            Text {
+                text: Qt.formatDateTime(Sys.now, "dddd, d MMMM")
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
+            }
+        }
+        Row {   // battery, as a readout
+            visible: Sys.hasBattery
+            Layout.alignment: Qt.AlignVCenter
+            Layout.rightMargin: 4
+            spacing: 4
+            Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryGlyph; color: Sys.batteryLow ? Theme.error : Sys.charging ? Theme.success : Theme.subtext
+                   font { family: Theme.iconFont; pixelSize: 16 } }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryPct + "%"; color: Theme.subtext
+                   font { family: Theme.font; pixelSize: Theme.fontLabel; features: { "tnum": 1 } } }
+        }
+        Repeater {
+            model: [
+                { glyph: "\u{F0493}", tip: "Settings", run: () => { popup.hide(); SettingsApp.show("") } },
+                { glyph: "\u{F033E}", tip: "Lock", run: () => { popup.hide(); Quickshell.execDetached(["loginctl", "lock-session"]) } },
+                { glyph: "\u{F0425}", tip: "Power", run: () => { popup.hide(); PowerMenu.show() } }
+            ]
+            Rectangle {
+                required property var modelData
+                Layout.alignment: Qt.AlignVCenter
+                implicitWidth: 34; implicitHeight: 34
+                radius: Theme.radius === 0 ? 0 : 17
+                color: hdrArea.pressed ? Theme.fillActive : hdrArea.containsMouse ? Theme.fillHover : Theme.fill
+                scale: hdrArea.pressed ? Theme.pressScale : 1
+                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                Text { anchors.centerIn: parent; text: modelData.glyph; color: modelData.tip === "Power" ? Theme.error : Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
+                MouseArea { id: hdrArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            onContainsMouseChanged: containsMouse ? cc.hint(parent, modelData.tip) : cc.unhint(parent)
+                            onClicked: modelData.run() }
+            }
+        }
+    }
+
     Flickable {
         id: scroller
-        anchors { fill: parent; margins: cc.pad }
+        anchors { fill: parent; margins: cc.pad; topMargin: cc.pad + header.height + cc.gap }
         contentHeight: content.implicitHeight
         boundsBehavior: Flickable.StopAtBounds
         clip: true
@@ -744,7 +790,7 @@ Singleton {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.row: Math.max(0, cc.shownSections.indexOf("shortcuts"))
-            visible: cc.shownSections.includes("shortcuts")
+            visible: cc.shownSections.includes("shortcuts") && cc.shownShortcuts.length > 0
             spacing: cc.gap
 
             // ---- shortcuts ------------------------------------------------------------------------
@@ -766,72 +812,6 @@ Singleton {
             }
         }
 
-        ColumnLayout {
-            id: notesSection
-            Layout.fillWidth: true
-            Layout.row: Math.max(0, cc.shownSections.indexOf("notifications"))
-            visible: cc.shownSections.includes("notifications")
-            spacing: cc.gap
-
-            // ---- notifications: the history, grouped by app; a group folds into its newest card ----
-            RowLayout {
-                id: notesHeader
-                Layout.fillWidth: true
-                Layout.topMargin: 6
-                Layout.leftMargin: 4
-                spacing: 4
-                Text {
-                    Layout.fillWidth: true
-                    text: Notifications.history.length ? "Notifications" : "No notifications"
-                    color: Notifications.history.length ? Theme.text : Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
-                }
-                Text {
-                    visible: Notifications.dnd
-                    text: "\u{F009B}  Silenced"
-                    color: Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontCaption }
-                }
-                Chip { visible: Notifications.history.length > 0; label: "Clear all"; onClicked: Notifications.clearAll() }
-            }
-            Repeater {
-                model: Notifications.groups
-                ColumnLayout {
-                    id: group
-                    required property var modelData
-                    readonly property bool unfolded: modelData.items.length === 1 || NotificationCenter.unfolded[modelData.app] === true
-                    Layout.fillWidth: true
-                    Layout.bottomMargin: unfolded ? 0 : 12        // room for the folded stack
-                    spacing: 6
-
-                    RowLayout {
-                        visible: group.modelData.items.length > 1 && group.unfolded
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 4
-                        Text {
-                            Layout.fillWidth: true
-                            text: group.modelData.app
-                            color: Theme.subtext
-                            elide: Text.ElideRight
-                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
-                        }
-                        Chip { label: "Show less"; onClicked: NotificationCenter.fold(group.modelData.app, true) }
-                        Chip { icon: "\u{F0156}"; onClicked: Notifications.clearApp(group.modelData.app) }
-                    }
-                    Repeater {
-                        model: group.unfolded ? group.modelData.items : group.modelData.items.slice(0, 1)
-                        NotificationCard {
-                            required property var modelData
-                            Layout.fillWidth: true
-                            flat: true
-                            notification: modelData
-                            stacked: group.unfolded ? 0 : group.modelData.items.length - 1
-                            onExpandRequested: NotificationCenter.fold(group.modelData.app, false)
-                        }
-                    }
-                }
-            }
-        }
     }
     }
     }

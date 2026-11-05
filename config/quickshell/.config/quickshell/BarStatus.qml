@@ -4,7 +4,8 @@ import QtQuick
 // Network, Bluetooth, sound and battery in one item that opens the Control Center (scroll: volume).
 //   mode "icons"  drawn glyphs; the battery as a small drawn cell (most themes)
 //   mode "words"  lowercase words and numbers: "wifi 82  vol 45  bat 72%" (Monolith)
-//   mode "caps"   upper-case readout: "NET 82  VOL 45  BAT 72" (Console)
+//   mode "caps"   upper-case readout: "NET 82  VOL 45  BAT 72"
+//   mode "mixed"  glyphs, each with its number: "<wifi> 82  <vol> 45  <bat> 72%" (Monolith, Console)
 BarItem {
     id: st
     property string mode: "icons"
@@ -14,9 +15,11 @@ BarItem {
     active: ControlCenter.open
     onPressed: ControlCenter.toggle()
     onScrolled: d => Sys.nudgeVolume(d)
-    spacing: mode === "icons" ? (vertical ? 10 : 12) : (vertical ? 4 : 16)
+    // mixed: a number sits close to its glyph; the next glyph keeps its distance (leftPadding)
+    spacing: mode === "icons" ? (vertical ? 10 : 12) : mode === "mixed" ? (vertical ? 10 : 4) : (vertical ? 4 : 16)
 
     readonly property bool words: mode === "words" || mode === "caps"
+    readonly property bool mixed: mode === "mixed"
     readonly property bool caps: mode === "caps"
     function say(s) { return caps ? s.toUpperCase() : s }
     readonly property string netText: Sys.wired ? say("eth") : !Sys.wifiOn ? say("wifi off") : Sys.signal < 0 ? say("offline") : say("wifi ") + Sys.signal
@@ -47,14 +50,18 @@ BarItem {
 
     // ---- icons ----
     Text { visible: !st.words; text: Sys.networkGlyph; color: Sys.signal < 0 && !Sys.wired ? Theme.muted : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
-    Text { visible: !st.words && Sys.btOn; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
-    Text { visible: !st.words; text: Sys.volumeGlyph; color: Sys.muted ? Theme.subtext : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
-    Item {   // battery cell: outline, fill to the charge, nub; ok colour while charging, error when low
+    Num { visible: st.mixed && !st.vertical && !Sys.wired && Sys.signal >= 0; text: Sys.signal }
+    Text { visible: !st.words && Sys.btOn; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { visible: !st.words; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.volumeGlyph; color: Sys.muted ? Theme.subtext : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Num { visible: st.mixed && !st.vertical && !Sys.muted; text: Math.round(Sys.volume * 100) }
+    Item {   // battery cell (a gap before it in mixed mode): outline, fill to the charge, nub; ok colour while charging, error when low
         visible: !st.words && Sys.hasBattery
-        implicitWidth: 24; implicitHeight: 12
+        readonly property int gap: st.mixed && !st.vertical ? 8 : 0
+        implicitWidth: 24 + gap; implicitHeight: 12
         readonly property color fillTone: Sys.batteryLow ? Theme.error : Sys.charging ? Theme.success : st.tone
         Rectangle {
             id: cellBody
+            x: parent.gap
             width: 21; height: 12; radius: Math.min(3.5, Theme.radiusSmall)
             color: "transparent"
             border { color: Qt.alpha(st.tone, 0.5); width: 1 }
@@ -66,5 +73,11 @@ BarItem {
             }
         }
         Rectangle { anchors { left: cellBody.right; leftMargin: 1; verticalCenter: cellBody.verticalCenter } width: 2; height: 4; radius: 1; color: Qt.alpha(st.tone, 0.5) }
+    }
+    Num { visible: st.mixed && !st.vertical && Sys.hasBattery; text: Sys.batteryPct + "%"; color: Sys.batteryLow ? Theme.error : st.tone }
+
+    component Num: Text {   // a number beside its glyph (mixed mode)
+        color: st.tone
+        font { family: st.family; pixelSize: Theme.fontLabel; features: { "tnum": 1 } }
     }
 }

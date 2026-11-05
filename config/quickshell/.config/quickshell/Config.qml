@@ -40,7 +40,7 @@ Singleton {
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { enabled: "bool", position: ["theme", "bar", "bottom", "left", "right", "top"], size: ["compact", "regular", "roomy"], hiddenOn: "list",
-                iconSize: [24, 72], autoHide: "bool", showRunning: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
+                iconSize: [24, 72], autoHide: "bool", showRunning: "bool", combine: "bool", previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
                     columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",

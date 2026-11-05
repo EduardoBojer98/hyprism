@@ -24,7 +24,7 @@ Loader {
 
     readonly property bool words: voice === "words" || voice === "caps"
     readonly property bool mixed: voice === "mixed"
-    function say(s) { return voice === "caps" ? s.toUpperCase() : s }
+    function say(s) { return voice === "caps" || Theme.barStyle.caps === true ? s.toUpperCase() : s }
     sourceComponent: ({ apps: appsC, launcher: launcherC, workspaces: wsC, window: windowC, clock: clockC, date: dateC, media: mediaC, tray: trayC,
                         keyboard: keyboardC, notifications: bellC, status: statusC, network: networkC, bluetooth: btC, volume: volumeC,
                         brightness: brightnessC, battery: batteryC, "power-profile": profileC, cpu: cpuC, memory: memC, gpu: gpuC,
@@ -49,18 +49,20 @@ Loader {
         property string word: ""          // words/caps voice: "vol"
         property string value: ""         // "45", "72%"
         property bool showValue: false    // icons voice: the value beside the glyph
+        property bool textual: false      // a readout: in the mixed voice it reads as words ("cpu 5%"), no glyph
+        readonly property bool asWords: w.words || (w.mixed && textual && !w.vertical)
         property color ink: w.tone
         vertical: w.vertical
         spacing: 4
         Text {
-            visible: !w.words && ind.glyph !== ""
+            visible: !ind.asWords && ind.glyph !== ""
             text: ind.glyph
             color: ind.ink
             font { family: Theme.iconFont; pixelSize: 16 }
         }
         Text {
-            visible: w.words || ((ind.showValue || w.mixed) && ind.value !== "" && !(w.mixed && w.vertical))
-            text: w.words ? w.say(ind.word + (ind.value !== "" ? (w.vertical ? "\n" : " ") + ind.value : "")) : ind.value
+            visible: ind.asWords || ((ind.showValue || w.mixed) && ind.value !== "" && !(w.mixed && w.vertical))
+            text: ind.asWords ? w.say(ind.word + (ind.value !== "" ? (w.vertical ? "\n" : " ") + ind.value : "")) : ind.value
             horizontalAlignment: Text.AlignHCenter
             color: ind.ink
             font { family: w.family; pixelSize: Theme.fontLabel; letterSpacing: w.voice === "caps" ? 1 : 0; features: { "tnum": 1 } }
@@ -317,7 +319,7 @@ Loader {
         Indicator {
             Component.onCompleted: BarStats.users++
             Component.onDestruction: BarStats.users--
-            glyph: "\u{F0EE0}"; word: "cpu"; value: Math.round(BarStats.cpu * 100) + "%"; showValue: true
+            textual: true; glyph: "\u{F0EE0}"; word: "cpu"; value: Math.round(BarStats.cpu * 100) + "%"; showValue: true
             active: Sensors.open
             onPressed: Sensors.toggle()
         }
@@ -327,7 +329,7 @@ Loader {
         Indicator {
             Component.onCompleted: BarStats.users++
             Component.onDestruction: BarStats.users--
-            glyph: "\u{F035B}"; word: "mem"; value: BarStats.memUsed.toFixed(1) + "G"; showValue: true
+            textual: true; glyph: "\u{F035B}"; word: "mem"; value: BarStats.memUsed.toFixed(1) + "G"; showValue: true
             active: Sensors.open
             onPressed: Sensors.toggle()
         }
@@ -338,7 +340,7 @@ Loader {
             Component.onCompleted: BarStats.users++
             Component.onDestruction: BarStats.users--
             shown: BarStats.gpu >= 0
-            glyph: "\u{F08AE}"; word: "gpu"; value: BarStats.gpu + "%"; showValue: true
+            textual: true; glyph: "\u{F08AE}"; word: "gpu"; value: BarStats.gpu + "%"; showValue: true
             active: Sensors.open
             onPressed: Sensors.toggle()
         }

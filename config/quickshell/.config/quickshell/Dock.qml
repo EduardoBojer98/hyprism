@@ -57,6 +57,18 @@ PanelWindow {
     property real dragX: 0            // pointer along the dock, in row coordinates
     readonly property var pinnedIds: dragOrder ?? Config.dock.pinned
     readonly property var pinnedEntries: appCount ? pinnedIds.map(id => DesktopEntries.byId(id)).filter(e => e) : []
+    // Two ways to show what's open, like the Windows taskbar (Settings > Dock > Combine):
+    //   separate  pinned apps are launchers; every open window is its own tile after them (default)
+    //   combined  an open app shares its pinned icon (others join after the pinned ones); hovering an
+    //             app with windows shows a preview of each, click one to bring it up
+    readonly property bool combine: Config.dock.combine
+    readonly property var runningEntries: {
+        if (!combine || !Config.dock.showRunning) return []
+        const out = []
+        for (const t of openWindows) { const e = entryFor(t.wayland?.appId ?? ""); if (e && !pinnedIds.includes(e.id) && !out.some(x => x.id === e.id)) out.push(e) }
+        return out
+    }
+    readonly property var appEntries: pinnedEntries.concat(runningEntries)
     function dragTo(x) {
         dragX = x
         const first = dock.slot + row.spacing * 2 + 1          // launcher + divider
@@ -103,7 +115,14 @@ PanelWindow {
     function hovering(item, text, on) {
         if (on) { tipItem = item; tipText = text; tipGrace.stop(); if (!tipReady) tipDelay.restart() }
         else if (tipItem === item) { tipItem = null; tipGrace.restart() }
+        // combined: an app with windows shows their previews instead of a tooltip
+        if (on && combine && Config.dock.previews && (item.windows?.length ?? 0) > 0) { previewFor = item; previewGrace.stop(); previewDelay.restart() }
+        else if (!on && previewFor === item) previewGrace.restart()
     }
+    property Item previewFor: null
+    property bool previewOn: false
+    Timer { id: previewDelay; interval: 300; onTriggered: dock.previewOn = dock.previewFor !== null }
+    Timer { id: previewGrace; interval: 350; onTriggered: { if (!previewHover.hovered) { dock.previewOn = false; dock.previewFor = null } } }
     Timer { id: tipDelay; interval: 350; onTriggered: dock.tipReady = dock.tipItem !== null }
     Timer { id: tipGrace; interval: 200; onTriggered: { dock.tipReady = false; tipDelay.stop() } }
 
@@ -119,7 +138,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
 
     // Only the visible island (or a thin strip at the bottom edge when hidden) takes input
-    mask: Region { item: dock.shown ? island : edgeStrip; Region { item: menu.entry ? menu : null } }
+    mask: Region { item: dock.shown ? island : edgeStrip; Region { item: menu.entry ? menu : null } Region { item: preview.visible ? preview : null } }
 
     Item {   // the hidden dock's trigger: a thin strip along its edge
         id: edgeStrip
@@ -254,13 +273,13 @@ PanelWindow {
 
             Repeater {
                 // ScriptModel keeps existing icons when the list changes (and moves them on reorder)
-                model: ScriptModel { values: dock.pinnedEntries }
+                model: ScriptModel { values: dock.appEntries }
 
                 Item {
                     id: app
                     required property DesktopEntry modelData
                     required property int index
-                    readonly property bool pinned: true
+                    readonly property bool pinned: dock.pinnedIds.includes(modelData?.id ?? "")
                     readonly property bool dragged: dock.dragId !== "" && dock.dragId === modelData?.id
                     readonly property var windows: dock.windowsOf(modelData)
                     readonly property var visibleWindows: windows.filter(t => !dock.isMinimised(t))
@@ -364,11 +383,11 @@ PanelWindow {
                 }
             }
 
-            Separator { visible: dock.openWindows.length > 0 }   // before the open windows
+            Separator { visible: !dock.combine && dock.openWindows.length > 0 }   // before the open windows
 
             // ---- open windows: a live picture of each, its app's icon in the corner ---------------
             Repeater {
-                model: ScriptModel { values: dock.openWindows }
+                model: ScriptModel { values: dock.combine ? [] : dock.openWindows }
 
                 Item {
                     id: win
@@ -500,7 +519,7 @@ PanelWindow {
     // the tooltip, beside the island at the hovered icon; hover-to-hover it moves without waiting
     Rectangle {
         id: tip
-        readonly property bool on: dock.tipReady && dock.tipItem !== null && menu.entry === null && dock.dragId === ""
+        readonly property bool on: dock.tipReady && dock.tipItem !== null && menu.entry === null && dock.dragId === "" && !dock.previewOn
         readonly property point at: dock.tipItem ? dock.beside(width, height, dock.middleOf(dock.tipItem), 8) : Qt.point(0, 0)
         x: at.x; y: at.y
         width: tipLabel.implicitWidth + 16
@@ -517,6 +536,74 @@ PanelWindow {
             text: dock.tipText
             color: Theme.text
             font { family: Theme.font; pixelSize: Theme.fontCaption }
+        }
+    }
+
+    // Window previews for one app (combined mode): a picture of each of its windows, beside the island
+    Glass {
+        id: preview
+        readonly property var wins: dock.previewOn ? (dock.previewFor?.windows ?? []) : []
+        readonly property int tileW: 220
+        readonly property point at: dock.previewFor ? dock.beside(width, height, dock.middleOf(dock.previewFor), Theme.spaceS) : Qt.point(0, 0)
+        visible: wins.length > 0 && menu.entry === null && dock.dragId === ""
+        x: at.x; y: at.y
+        strong: true
+        radius: Theme.radiusLarge
+        width: tiles.implicitWidth + 16
+        height: tiles.implicitHeight + 16
+        HoverHandler { id: previewHover; onHoveredChanged: if (!hovered) previewGrace.restart(); else previewGrace.stop() }
+        Grid {
+            id: tiles
+            anchors.centerIn: parent
+            columns: dock.vertical ? 1 : Math.max(1, Math.min(preview.wins.length, 4))
+            spacing: 8
+            Repeater {
+                model: preview.wins.slice(0, 8)
+                Rectangle {
+                    id: pv
+                    required property var modelData
+                    width: preview.tileW; height: preview.tileW * 0.62 + 26
+                    radius: Theme.radius
+                    color: pvArea.containsMouse ? Theme.fillHover : "transparent"
+                    border { color: pv.modelData.activated ? Theme.accent : "transparent"; width: 2 }
+                    Text {
+                        anchors { left: parent.left; right: closeBtn.left; top: parent.top; margins: 6 }
+                        text: pv.modelData.title || ""
+                        elide: Text.ElideRight
+                        color: Theme.text
+                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
+                    }
+                    Rectangle {
+                        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 6; topMargin: 24 }
+                        height: preview.tileW * 0.62 - 6
+                        radius: Theme.radiusSmall
+                        color: Theme.fill
+                        clip: true
+                        ScreencopyView {
+                            anchors.fill: parent
+                            captureSource: preview.visible && dock.captureReady && !dock.isMinimised(pv.modelData) ? pv.modelData.wayland : null
+                            live: true
+                        }
+                    }
+                    MouseArea {
+                        id: pvArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                        onClicked: mouse => { if (mouse.button === Qt.MiddleButton) dock.close(pv.modelData); else { dock.focus(pv.modelData); dock.previewOn = false } }
+                    }
+                    Rectangle {
+                        id: closeBtn
+                        anchors { right: parent.right; top: parent.top; margins: 4 }
+                        width: 18; height: 18; radius: Theme.radius === 0 ? 0 : 9
+                        visible: pvArea.containsMouse || closeArea.containsMouse
+                        color: closeArea.containsMouse ? Theme.error : Theme.fillActive
+                        Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 11 } }
+                        MouseArea { id: closeArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dock.close(pv.modelData) }
+                    }
+                }
+            }
         }
     }
 

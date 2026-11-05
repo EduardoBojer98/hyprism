@@ -27,13 +27,18 @@ window motion, shadow and blur (kept per theme; Reset puts it back), and **Anima
   power menu. Every item works across a horizontal bar and down a vertical one. Panels open beside the item you click.
 - **The dock**: in every theme, on and always visible by default, on the theme's own edge; when that is the bar's edge
   the dock joins the bar as its Apps item. Settings → Dock: on/off, theme's / in the bar / any edge, size, icon size,
-  auto-hide, pinned apps, open windows, per monitor
+  auto-hide, pinned apps, open windows, per monitor. Like the Windows taskbar, pinned apps are launchers and every open
+  window is its own tile by default; **Combine** merges open apps into their icons, and hovering one shows a live
+  preview of each window (click to bring it up, middle-click to close)
+- **Control Center** opens from the quick-settings item (network, sound, battery together): the time large, battery,
+  Settings / Lock / Power, then toggles and sliders. **Notifications** have their own panel from the bell (always in
+  the bar, with the unread count): Do Not Disturb, history grouped by app, Clear all
 - **Theme Builder** (Settings → Appearance): make your own theme from any of the six and change every part:
   colours, fonts, shape, bar look, dock look, panel depth, motion, windows, notifications, launcher, lock screen,
   terminal colours, wallpaper
 - **Lock screen**: Settings → Lock Screen with a live preview: clock style and position, date, greeting,
   your picture, battery / keyboard layout / now playing, background picture, blur and brightness
-- **Control Center**: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, touchpad and touchscreen on/off,
+- **Control Center** toggles: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, touchpad and touchscreen on/off,
   screen recording, media, power mode, display, sound and microphone; rearrange its sections and tiles in Settings
 - **Spotlight** (tap `Super`): suggestions first (weather, next event, last copied, most used apps, recent items, quick actions), then a Top Hit and results grouped apps → files →
   calculator → settings → actions → web; Files, Actions and clipboard history modes
