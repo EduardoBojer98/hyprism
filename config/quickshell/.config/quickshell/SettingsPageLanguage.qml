@@ -206,7 +206,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: (page.status ? page.status + "  " : "") + "Changes apply to apps after you log out and back in. KDE Plasma keeps its own language; the shell's own menus stay in English."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

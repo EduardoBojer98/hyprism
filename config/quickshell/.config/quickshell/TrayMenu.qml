@@ -111,9 +111,9 @@ PopupWindow {
         Text {
             anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
             visible: row.checked || row.glyph !== ""
-            text: row.checked ? "✓" : row.glyph
+            text: row.checked ? "\u{F012C}" : row.glyph
             color: row.lit ? Theme.accentText : Theme.text
-            font { family: row.checked ? Theme.font : Theme.iconFont; pixelSize: 12; weight: Font.DemiBold }
+            font { family: Theme.iconFont; pixelSize: 12 }
         }
         IconImage {
             anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }

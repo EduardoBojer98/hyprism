@@ -168,6 +168,7 @@ ColumnLayout {
                     required property var modelData
                     readonly property bool changed: page.overrides[modelData.id] !== undefined
                     readonly property bool isRecording: page.recording === modelData.id
+                    HoverHandler { id: rowHover }   // the turn-off × only shows on the row under the pointer
                     label: modelData.label
                     hint: modelData.fixed ? "Can't be changed here"
                         : !changed ? "" : modelData.keys === "" ? `Turned off · default ${page.pretty(modelData.def)}` : `Default ${page.pretty(modelData.def)}`
@@ -206,6 +207,7 @@ ColumnLayout {
                         }
                         Chip {
                             visible: !row.modelData.fixed && row.modelData.keys !== ""
+                            opacity: rowHover.hovered || hovered ? 1 : 0   // keeps its room, so the row doesn't shift
                             icon: "\u{F0156}"
                             onClicked: page.save(row.modelData, "")
                             ToolTipText { shown: parent.hovered; text: "Turn off" }

@@ -9,7 +9,7 @@ SettingRow {
     readonly property int changes: Object.keys((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).length
     label: "Save as a theme"
     hint: changes === 0 ? "Change anything for " + t.name + " first; then keep it as your own theme"
-        : changes + " change(s) to " + t.name + (t.user ? "" : "; " + t.name + " goes back to how it shipped")
+        : changes + (changes === 1 ? " change" : " changes") + " to " + t.name + (t.user ? "" : "; " + t.name + " goes back to how it shipped")
     Row {
         spacing: 8
         TextField { id: name; width: 170; placeholder: st.t.user ? st.t.name + " 2" : "My " + st.t.name; enabled: st.changes > 0; onAccepted: save.clicked() }

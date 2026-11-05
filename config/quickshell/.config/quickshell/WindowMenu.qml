@@ -59,7 +59,7 @@ Singleton {
 
     // Run Hyprland dispatchers (Lua) on this window, one after another
     function run(list) {
-        Quickshell.execDetached(["sh", "-c", list.map(l => "hyprctl dispatch '" + l.replace(/'/g, "") + "' >/dev/null").join("; ")])
+        Quickshell.execDetached(["sh", "-c", 'for l; do hyprctl dispatch "$l" >/dev/null; done', "sh"].concat(list))   // each one an argument
     }
     function act(list) { popup.hide(); run(list) }
 

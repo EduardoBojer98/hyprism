@@ -28,7 +28,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "Works on every screen. Corners next to another screen only fire where the pointer can stop."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

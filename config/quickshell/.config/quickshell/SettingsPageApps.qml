@@ -72,7 +72,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "Saved in ~/.config/mimeapps.list, which KDE Plasma also uses."
-        color: Theme.muted
-        font { family: Theme.font; pixelSize: 12 }
+        color: Theme.subtext
+        font { family: Theme.font; pixelSize: Theme.fontLabel }
     }
 }

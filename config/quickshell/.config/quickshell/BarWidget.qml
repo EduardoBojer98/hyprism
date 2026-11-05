@@ -28,7 +28,7 @@ Loader {
     sourceComponent: ({ apps: appsC, launcher: launcherC, workspaces: wsC, window: windowC, clock: clockC, date: dateC, media: mediaC, tray: trayC,
                         keyboard: keyboardC, notifications: bellC, status: statusC, network: networkC, bluetooth: btC, volume: volumeC,
                         brightness: brightnessC, battery: batteryC, "power-profile": profileC, cpu: cpuC, memory: memC, gpu: gpuC,
-                        recording: recC, power: powerC })[kind] ?? null
+                        recording: recC, power: powerC, weather: weatherC })[kind] ?? null
     // the separator sits in the gap before the item, outside it (the grid's spacing holds it)
     Rectangle {
         visible: w.separated && w.visible
@@ -217,6 +217,7 @@ Loader {
             pad: block ? 12 : 8
             color: block ? (active ? Qt.darker(Theme.accent, 1.15) : Theme.accent) : active ? pressedColor : hovered ? hover : "transparent"
             active: Calendar.open === true
+            opens: "calendar"
             onPressed: Calendar.toggle()
             Text {
                 text: w.vertical ? Sys.hours() + "\n" + Sys.minutes() : clock.style === "display" ? Sys.time() : Sys.clockText
@@ -238,6 +239,7 @@ Loader {
         BarItem {
             vertical: w.vertical
             active: Calendar.open === true
+            opens: "calendar"
             onPressed: Calendar.toggle()
             Item {
                 implicitWidth: w.vertical ? label.implicitHeight : label.implicitWidth
@@ -358,6 +360,7 @@ Loader {
             Component.onDestruction: BarStats.users--
             textual: true; glyph: "\u{F0EE0}"; word: "cpu"; value: Math.round(BarStats.cpu * 100) + "%"; showValue: true
             active: Sensors.open
+            opens: "system"
             onPressed: Sensors.toggle()
         }
     }
@@ -368,7 +371,18 @@ Loader {
             Component.onDestruction: BarStats.users--
             textual: true; glyph: "\u{F035B}"; word: "mem"; value: BarStats.memUsed.toFixed(1) + "G"; showValue: true
             active: Sensors.open
+            opens: "system"
             onPressed: Sensors.toggle()
+        }
+    }
+    Component {   // the sky now and the temperature; opens the forecast beside it
+        id: weatherC
+        Indicator {
+            shown: Weather.ready
+            glyph: Weather.glyph; word: "wx"; value: Math.round(Weather.temperature) + "°"; showValue: true
+            active: Weather.open
+            opens: "weather"
+            onPressed: Weather.toggle()
         }
     }
     Component {
@@ -379,6 +393,7 @@ Loader {
             shown: BarStats.gpu >= 0
             textual: true; glyph: "\u{F08AE}"; word: "gpu"; value: BarStats.gpu + "%"; showValue: true
             active: Sensors.open
+            opens: "system"
             onPressed: Sensors.toggle()
         }
     }

@@ -42,13 +42,12 @@ ColumnLayout {
         SettingRow {
             visible: Config.dock.enabled
             label: "Position"
-            hint: (Theme.dockInBar ? "Inside the menu bar, as its Apps item" : "On the " + Theme.dockEdge + " edge")
-                  + " · saved for " + Theme.current.name + "; the bar's edge puts it in the bar"
-            ThemeChoice { key: "dock"; values: ["theme", "bar", "bottom", "left", "right", "top"]; labels: ["Theme's", "In the bar", "Bottom", "Left", "Right", "Top"] }
+            hint: Theme.current.name + " puts it " + (Theme.dockInBar ? "inside the menu bar" : "at the " + Theme.dockEdge) + "; a choice here is kept for " + Theme.current.name + " only"
+            ThemeChoice { key: "dock"; values: ["theme", "bar", "bottom", "left", "right", "top"]; labels: ["Default", "In the bar", "Bottom", "Left", "Right", "Top"] }
         }
         SettingRow {
             visible: Config.dock.enabled
-            label: "Size"
+            label: "Spacing"
             hint: "Room around the icons"
             ConfigChoice { section: "dock"; key: "size"; values: ["compact", "regular", "roomy"]; labels: ["Compact", "Regular", "Roomy"] }
         }
@@ -68,7 +67,7 @@ ColumnLayout {
         SettingRow {
             visible: Config.dock.enabled
             label: "Open windows in the bar"
-            hint: (Theme.dockInBar ? "" : "When the dock is in the menu bar: ") + "an icon, or with its app name or window title beside it"
+            hint: Theme.dockInBar ? "An icon, or with its name or title beside it" : "When the dock is in the menu bar"
             ConfigChoice { section: "dock"; key: "barLabels"; values: ["icon", "name", "title"]; labels: ["Icon", "App name", "Window title"] }
         }
         SaveTheme {}
@@ -196,7 +195,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "In the dock: drag an icon along it to reorder, right-click it to pin, unpin, minimise or quit."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

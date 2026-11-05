@@ -108,16 +108,16 @@ Singleton {
         name: "weather"
         placement: "top"
         boxWidth: 340
-        boxHeight: Math.min(body.implicitHeight + 24, popup.maxHeight)
+        boxHeight: Math.min(body.implicitHeight + Theme.spaceL * 2, popup.maxHeight)   // the calendar's padding
         onOpened: if (Date.now() - root.updated.getTime() > 10 * 60 * 1000) root.refresh()
 
         Glass {
             anchors.fill: parent
             strong: true
-            radius: Theme.radiusLarge + 4
+            radius: Theme.radiusPanel
 
             Flickable {
-                anchors { fill: parent; margins: 12 }
+                anchors { fill: parent; margins: Theme.spaceL }
                 contentHeight: body.implicitHeight
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
@@ -135,11 +135,11 @@ Singleton {
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 0
-                            Text { text: root.city; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold } }
+                            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: root.city; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold } }
                             Text {
                                 text: root.ready ? Math.round(root.temperature) + "°" : "–"
                                 color: Theme.text
-                                font { family: Theme.font; pixelSize: 44; weight: Font.Light; features: { "tnum": 1 } }
+                                font { family: Theme.displayFont; pixelSize: Theme.fontHero; weight: Theme.displayWeight; features: { "tnum": 1 } }
                             }
                         }
                         ColumnLayout {
@@ -186,7 +186,7 @@ Singleton {
                                     Row {
                                         spacing: 4
                                         Text { text: modelData[0]; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: 11 } }
-                                        Text { text: modelData[1]; color: Theme.subtext; font { family: Theme.font; pixelSize: 10; weight: Font.Medium } }
+                                        Text { text: modelData[1]; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium } }
                                     }
                                     Text { text: modelData[2]; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold; features: { "tnum": 1 } } }
                                 }
@@ -223,7 +223,7 @@ Singleton {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             text: modelData.rain >= 30 ? modelData.rain + "%" : " "
                                             color: Theme.accent2
-                                            font { family: Theme.font; pixelSize: 9; weight: Font.DemiBold }
+                                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                                         }
                                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: Math.round(modelData.temp) + "°"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
                                     }
@@ -275,7 +275,7 @@ Singleton {
                                         width: 34
                                         text: dayRow.modelData.rain >= 20 ? dayRow.modelData.rain + "%" : ""
                                         color: Theme.accent2
-                                        font { family: Theme.font; pixelSize: 10; weight: Font.DemiBold; features: { "tnum": 1 } }
+                                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; features: { "tnum": 1 } }
                                     }
                                     Text {
                                         id: dayMin

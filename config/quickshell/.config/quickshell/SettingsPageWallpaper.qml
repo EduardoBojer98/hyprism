@@ -100,9 +100,9 @@ ColumnLayout {
         Layout.fillWidth: true
         visible: Wallpapers.images.length === 0
         text: "No images found. Add .png, .jpg or .webp files to one of the folders above."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
-        font { family: Theme.font; pixelSize: 12 }
+        font { family: Theme.font; pixelSize: Theme.fontLabel }
     }
 
     Flow {
@@ -135,7 +135,7 @@ ColumnLayout {
                         width: 24; height: 24; radius: 12
                         color: tile.inRotation ? Theme.accent : Qt.rgba(0, 0, 0, 0.45)
                         border { color: Qt.rgba(1, 1, 1, 0.7); width: tile.inRotation ? 0 : 1.5 }
-                        Text { anchors.centerIn: parent; visible: tile.inRotation; text: "✓"; color: Theme.accentText; font { family: Theme.font; pixelSize: 13; weight: Font.Bold } }
+                        Text { anchors.centerIn: parent; visible: tile.inRotation; text: "\u{F012C}"; color: Theme.accentText; font { family: Theme.iconFont; pixelSize: Theme.iconSmall } }
                         MouseArea { anchors { fill: parent; margins: -4 } cursorShape: Qt.PointingHandCursor; onClicked: page.toggleSelected(tile.modelData) }
                     }
                 }
@@ -144,7 +144,7 @@ ColumnLayout {
                     text: tile.modelData.split("/").pop()
                     elide: Text.ElideMiddle
                     color: tile.isCurrent ? Theme.text : Theme.subtext
-                    font { family: Theme.font; pixelSize: 11 }
+                    font { family: Theme.font; pixelSize: Theme.fontCaption }
                 }
             }
         }

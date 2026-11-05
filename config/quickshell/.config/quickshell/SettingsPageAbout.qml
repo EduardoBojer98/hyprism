@@ -39,7 +39,7 @@ ColumnLayout {
         SettingRow { label: "Processor"; Value { text: page.info.cpu ?? "" } }
         SettingRow { label: "Memory"; Value { text: page.info.ram ?? "" } }
         SettingRow { label: "Storage"; Value { text: page.info.disk ?? "" } }
-        SettingRow { label: "NVIDIA GPU"; hint: "Switch it in ROG Control Center"; Value { text: page.info.nvidia === "1" ? "Off (saves battery)" : "On" } }
+        SettingRow { visible: Machine.asus && Machine.nvidia; label: "NVIDIA GPU"; hint: "Switch it in ROG Control Center"; Value { text: page.info.nvidia === "1" ? "Off (saves battery)" : "On" } }
     }
 
     SettingGroup {
@@ -82,6 +82,6 @@ ColumnLayout {
     component Value: Text {
         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
         color: Theme.subtext
-        font { family: Theme.font; pixelSize: 13 }
+        font { family: Theme.font; pixelSize: Theme.fontSize }
     }
 }

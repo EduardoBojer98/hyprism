@@ -16,8 +16,8 @@ Singleton {
     readonly property bool h24: Config.bar.clock24
     // the text colour: the theme's own unless a light theme's dark text would sit on a dark picture
     readonly property bool darkInk: Theme.light && l.brightness >= 0.6
-    readonly property color ink: darkInk ? Theme.text : "#f5f5f7"
-    readonly property color inkMuted: darkInk ? Theme.subtext : Qt.rgba(0.96, 0.96, 0.97, 0.78)
+    readonly property color ink: darkInk ? Theme.text : Theme.onImage
+    readonly property color inkMuted: darkInk ? Theme.subtext : Qt.alpha(Theme.onImage, 0.78)
     readonly property string avatarPath: l.avatar === "" ? "" : l.avatar.replace(/^~/, Quickshell.env("HOME"))
 
     // ---- the stack, top to bottom: avatar, greeting, clock, date, password, then widgets at the edge ----

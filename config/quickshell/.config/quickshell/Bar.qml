@@ -22,7 +22,6 @@ Scope {
     // the bar's ground and the ink on it
     readonly property color ground: ({ glass: Theme.glassStrong, surface: Theme.surfaceColor, ground: Theme.base, ink: Theme.text, none: "transparent" })[st.fill] ?? Theme.surfaceColor
     readonly property color ink: Theme.barInk
-    readonly property color dim: st.fill === "ink" ? Qt.alpha(Theme.base, 0.62) : Theme.subtext
     // a floating strip is rounded like the theme's panels (never more than a capsule)
     readonly property real corner: floating || segmented ? Math.min(Theme.radiusLarge, size / 2) : 0
     // items in the mono face for word voices (Monolith, Console)
@@ -56,7 +55,7 @@ Scope {
                 anchors.fill: parent
                 offset.y: 4; blur: 18; spread: -2
                 radius: root.corner
-                color: Qt.rgba(0, 0, 0, Theme.light ? 0.16 : 0.38)
+                color: Theme.shadow
             }
             // one ground for the whole strip (segmented themes give each section its own instead)
             Glass {
@@ -152,7 +151,7 @@ Scope {
             anchors.fill: parent
             offset.y: 4; blur: 16; spread: -2
             radius: root.corner
-            color: Qt.rgba(0, 0, 0, Theme.light ? 0.16 : 0.38)
+            color: Theme.shadow
         }
         Glass {
             anchors.fill: parent
@@ -181,7 +180,7 @@ Scope {
                     monitor: root.monitor
                     vertical: root.vertical
                     tone: root.ink
-                    dim: root.dim
+                    dim: Theme.barDim
                     voice: root.st.voice
                     family: root.family
                     thickness: root.size

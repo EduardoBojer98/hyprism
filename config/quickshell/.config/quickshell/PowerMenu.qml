@@ -20,7 +20,8 @@ Singleton {
     property string host: ""
     property string uptime: ""
 
-    readonly property var actions: [
+    readonly property var actions: allActions.filter(a => a.id !== "hibernate" || Machine.canHibernate)   // hibernate only where it works
+    readonly property var allActions: [
         { id: "lock",      icon: "\u{F033E}", label: "Lock",      cmd: "loginctl lock-session" },
         { id: "suspend",   icon: "\u{F04B2}", label: "Sleep",     cmd: "systemctl suspend" },
         { id: "hibernate", icon: "\u{F0717}", label: "Hibernate", cmd: "systemctl hibernate" },
@@ -84,7 +85,7 @@ Singleton {
                 event.accepted = true
             }
 
-            Rectangle { anchors.fill: parent; color: Theme.light ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(0, 0, 0, 0.42) }
+            Rectangle { anchors.fill: parent; color: Theme.backdrop }
             MouseArea { anchors.fill: parent; onClicked: root.hide() }
 
             Glass {
@@ -96,7 +97,7 @@ Singleton {
                 readonly property int pad: width < 360 ? Theme.spaceL : Theme.spaceXl
                 anchors.centerIn: parent
                 strong: true
-                radius: Theme.radiusLarge + 4
+                radius: Theme.radiusPanel
                 scale: root.open ? 1 : 0.96
                 Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
                 MouseArea { anchors.fill: parent }   // clicks on the card don't close it
@@ -154,7 +155,7 @@ Singleton {
                                     required property int index
                                     readonly property bool asking: root.confirming === modelData.id
                                     readonly property bool lit: tileArea.containsMouse || root.selected === index
-                                    readonly property color tone: asking || modelData.danger ? Theme.error : Theme.accent
+                                    readonly property color tone: asking || modelData.danger ? Theme.error : Theme.accentLikeError ? Theme.text : Theme.accent
 
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: grid.rows ? 52 : 112
@@ -177,7 +178,7 @@ Singleton {
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: tile.modelData.icon
-                                                color: tile.lit || tile.asking ? Theme.accentText : tile.modelData.danger ? Theme.error : Theme.text
+                                                color: tile.lit || tile.asking ? (tile.tone === Theme.text ? Theme.base : Theme.accentText) : tile.modelData.danger ? Theme.error : Theme.text
                                                 font { family: Theme.iconFont; pixelSize: grid.rows ? 15 : 22 }
                                             }
                                         }

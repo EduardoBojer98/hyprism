@@ -7,10 +7,15 @@ Item {
     id: card
     required property var theme
     property bool chosen: false
+    property string label: ""          // the caption under the picture (default: the theme's name)
     signal picked()
 
     readonly property var c: theme.colour
     readonly property var b: theme.bar
+    readonly property var d: theme.dock
+    function paint(fill) {   // a bar or dock fill (Themes.qml) as a colour
+        return ({ glass: Qt.alpha(c.surface, 0.85), surface: c.surface, ground: c.ground, ink: c.text, none: "transparent" })[fill] ?? c.surface
+    }
     readonly property real s: width / 200                 // drawing scale
     readonly property string wall: Quickshell.env("HOME") + "/.local/share/linux-setup/themes/" + theme.wall + "-v" + Themes.wallVersion + ".png"
 
@@ -27,11 +32,11 @@ Item {
 
         Image { anchors.fill: parent; anchors.margins: 1; source: "file://" + card.wall; fillMode: Image.PreserveAspectCrop; asynchronous: true; sourceSize.width: 400 }
 
-        // a window, in the theme's frame and corners
+        // a window, in the theme's frame and corners, clear of the bar
         Rectangle {
-            readonly property real pad: 14 * card.s
-            x: (card.b.edge === "left" ? 22 : 10) * card.s + (card.b.kind === "rail" && card.b.edge === "left" ? 14 * card.s : 0)
-            y: (card.b.edge === "top" || card.b.kind === "letterbox" ? 26 : 12) * card.s
+            readonly property real inset: bar.t + bar.gap + 6 * card.s
+            x: card.b.edge === "left" ? inset : 10 * card.s
+            y: card.b.edge === "top" ? inset : 10 * card.s
             width: parent.width * 0.62
             height: parent.height * 0.52
             radius: Math.min(card.theme.hypr.rounding, 18) * card.s * 0.6
@@ -44,75 +49,79 @@ Item {
             }
         }
 
-        // the bar, in the theme's place and shape
+        // the dock on its own edge (a dock on the bar's edge lives inside the bar)
+        Rectangle {
+            readonly property bool vertical: card.d.edge === "left" || card.d.edge === "right"
+            visible: card.d.edge !== card.b.edge
+            width: vertical ? 10 * card.s : 60 * card.s
+            height: vertical ? 50 * card.s : 10 * card.s
+            x: card.d.edge === "left" ? 3 * card.s : card.d.edge === "right" ? parent.width - width - 3 * card.s : (parent.width - width) / 2
+            y: card.d.edge === "top" ? 3 * card.s : card.d.edge === "bottom" ? parent.height - height - 3 * card.s : (parent.height - height) / 2
+            radius: card.d.shape === "pill" ? Math.min(width, height) / 2 : card.d.shape === "tile" ? 3 * card.s : 0
+            color: card.paint(card.d.fill)
+        }
+
+        // the bar, in the theme's place, fill and shape: one strip, or a pill per section
         Item {
-            anchors.fill: parent
+            id: bar
+            readonly property bool vertical: card.b.edge === "left" || card.b.edge === "right"
             readonly property real t: Math.max(6, card.b.size * card.s * 0.32)
-            Rectangle {   // full-width strips (text, line, menubar, gnome, poster, taskbar, letterbox top)
-                visible: ["text", "line", "menubar", "gnome", "poster", "taskbar", "letterbox"].includes(card.b.kind)
-                width: parent.width; height: parent.t
-                y: card.b.edge === "bottom" ? parent.height - height : 0
-                color: card.b.kind === "gnome" || card.b.kind === "letterbox" ? "#000000" : card.b.kind === "line" ? card.c.ground : card.c.surface
-                Rectangle { visible: card.b.kind === "poster"; width: parent.height; height: parent.height; x: parent.height; color: card.c.accent }
-                Rectangle { visible: card.b.kind === "taskbar"; width: parent.height * 0.7; height: width; x: 3; anchors.verticalCenter: parent.verticalCenter; radius: 2; color: card.c.accent }
-                Rectangle { visible: ["text", "gnome", "line", "menubar"].includes(card.b.kind); width: 16 * card.s; height: 3 * card.s; x: card.b.kind === "gnome" ? (parent.width - width) / 2 : parent.width - width - 6; anchors.verticalCenter: parent.verticalCenter; color: card.b.kind === "gnome" ? "#ffffff" : card.c.accent }
-            }
-            Rectangle {   // letterbox bottom band
-                visible: card.b.kind === "letterbox"
-                width: parent.width; height: parent.t; y: parent.height - height; color: "#000000"
-            }
-            Rectangle {   // side rail
-                visible: card.b.kind === "rail"
-                width: parent.t * 1.2; height: parent.height
-                x: card.b.edge === "right" ? parent.width - width : 0
-                color: card.c.text
-                Column { anchors.horizontalCenter: parent.horizontalCenter; y: 20 * card.s; spacing: 3 * card.s
-                    Repeater { model: 4; Rectangle { required property int index; width: 8 * card.s; height: width; color: index === 1 ? card.c.accent : "transparent"; border { color: card.c.ground; width: 1 } } } }
-            }
-            Row {   // pebble: three pills
-                visible: card.b.kind === "pills"
-                y: 4 * card.s; x: 4 * card.s
-                width: parent.width - 8 * card.s
-                spacing: (width - 3 * 34 * card.s) / 2
-                Repeater { model: 3; Rectangle { width: 34 * card.s; height: 9 * card.s; radius: height / 2; color: card.c.surface; opacity: 0.92 } }
-            }
-            Rectangle {   // island, halo: one bottom capsule
-                visible: card.b.kind === "island" || card.b.kind === "halo"
-                width: (card.b.kind === "island" ? 110 : 54) * card.s; height: (card.b.kind === "island" ? 13 : 9) * card.s
-                radius: height / 2
-                x: (parent.width - width) / 2; y: parent.height - height - 4 * card.s
-                color: card.b.kind === "island" ? card.c.accent2 : card.c.surface
-            }
-            Text {   // zen: the time in the corner
-                visible: card.b.kind === "corner"
-                anchors { right: parent.right; bottom: parent.bottom; margins: 6 * card.s }
-                text: "17:42"; color: card.c.muted
-                font { family: card.theme.font.ui; pixelSize: 9 * card.s }
-            }
-            Item {   // console: a readout line and corner brackets
-                visible: card.b.kind === "readout"
-                anchors.fill: parent
-                Rectangle { width: 70 * card.s; height: 2 * card.s; x: (parent.width - width) / 2; y: 4 * card.s; color: card.c.accent }
-                Repeater {
-                    model: [[0, 0], [1, 0], [0, 1], [1, 1]]
-                    Item {
-                        required property var modelData
-                        width: 12 * card.s; height: width
-                        x: modelData[0] ? parent.width - width - 4 : 4; y: modelData[1] ? parent.height - height - 4 : 10 * card.s
-                        Rectangle { width: parent.width; height: 1; color: card.c.accent; y: parent.modelData[1] ? parent.height - 1 : 0 }
-                        Rectangle { width: 1; height: parent.height; color: card.c.accent; x: parent.modelData[0] ? parent.width - 1 : 0 }
+            readonly property real gap: card.b.floating ? 4 * card.s : 0
+            readonly property real len: (vertical ? shot.height : shot.width) - gap * 2
+            x: card.b.edge === "right" ? shot.width - t - gap : gap
+            y: card.b.edge === "bottom" ? shot.height - t - gap : gap
+            width: vertical ? t : len
+            height: vertical ? len : t
+            Repeater {   // the whole strip, or a pill per section: start, centre, end
+                model: card.b.segmented ? [0, 0.38, 0.76] : [0]
+                Rectangle {
+                    required property real modelData   // where the piece starts, as a share of the bar
+                    readonly property real part: card.b.segmented ? bar.len * 0.24 : bar.len
+                    readonly property real at: bar.len * modelData
+                    x: bar.vertical ? 0 : at
+                    y: bar.vertical ? at : 0
+                    width: bar.vertical ? bar.t : part
+                    height: bar.vertical ? part : bar.t
+                    radius: card.b.floating && card.theme.shape.radius > 0 ? bar.t / 2 : 0
+                    color: card.paint(card.b.fill)
+                    border { color: card.c.line; width: card.b.line > 0 ? 1 : 0 }
+                    Rectangle {   // the current workspace, in the accent
+                        visible: parent.modelData === 0
+                        width: bar.t * 0.5; height: width
+                        radius: card.b.ws === "dots" ? width / 2 : 0
+                        x: bar.vertical ? (bar.t - width) / 2 : bar.t * 0.4
+                        y: bar.vertical ? bar.t * 0.4 : (bar.t - height) / 2
+                        color: card.c.accent
                     }
+                }
+            }
+            Repeater {   // corner brackets
+                model: card.b.decor === "brackets" ? [[0, 0], [1, 0], [0, 1], [1, 1]] : []
+                Item {
+                    required property var modelData
+                    width: 4 * card.s; height: width
+                    x: modelData[0] ? bar.width - width : 0
+                    y: modelData[1] ? bar.height - height : 0
+                    Rectangle { width: parent.width; height: 1; color: card.c.accent; y: parent.modelData[1] ? parent.height - 1 : 0 }
+                    Rectangle { width: 1; height: parent.height; color: card.c.accent; x: parent.modelData[0] ? parent.width - 1 : 0 }
                 }
             }
         }
 
+        Rectangle {   // the one in use: a check in the corner, besides the accent ring
+            visible: card.chosen && card.label === ""
+            anchors { right: parent.right; top: parent.top; margins: 6 * card.s }
+            width: 22; height: 22; radius: Theme.radius === 0 ? 0 : 11
+            color: Theme.accent
+            Text { anchors.centerIn: parent; text: "\u{F012C}"; color: Theme.accentText; font { family: Theme.iconFont; pixelSize: Theme.iconSmall - 2 } }
+        }
         MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: card.picked() }
     }
     Text {
         id: name
         anchors { top: shot.bottom; topMargin: 6; left: parent.left }
-        text: card.theme.name
-        color: card.chosen ? Theme.accent : Theme.text
+        text: card.label || card.theme.name
+        color: card.chosen ? Theme.accent : card.label ? Theme.subtext : Theme.text
         font { family: card.theme.font.ui; pixelSize: Theme.fontSize; weight: card.chosen ? Font.DemiBold : Font.Medium }
     }
 }

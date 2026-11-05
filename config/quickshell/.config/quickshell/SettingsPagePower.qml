@@ -42,14 +42,15 @@ ColumnLayout {
             Text {
                 text: Math.round(page.laptopBattery?.healthPercentage ?? 0) + "%"
                 color: Theme.text
-                font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold }
+                font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold }
             }
         }
         SettingRow {
             visible: Machine.asus
             label: "Charge limit"
             hint: page.limit < 0 ? "Couldn't read the charge limit from this battery"
-                : "Stopping at 80 % keeps the battery healthy when the laptop is mostly plugged in"
+                : page.limit >= 100 ? "Charges to full; 80% keeps the battery healthier when the laptop is mostly plugged in"
+                : `Stops at ${page.limit}%, which keeps the battery healthy; pick 100% before a day away from a plug`
             Choice {
                 enabled: page.limit >= 0
                 opacity: enabled ? 1 : 0.5
@@ -88,7 +89,7 @@ ColumnLayout {
         title: "Performance"
         SettingRow {
             label: "Power mode"
-            hint: "Quiet: browsing, documents, battery. Balanced: daily work and builds. Performance: short heavy jobs on AC. Plugging in switches to Balanced, battery to Quiet."
+            hint: "Plugging in picks Balanced, unplugging picks Quiet"
             Choice {
                 options: ["Quiet", "Balanced", "Performance"]
                 index: PowerMode.profile
@@ -97,7 +98,7 @@ ColumnLayout {
         }
     }
 
-    // Lid: read only. logind's file is a system file (system/02-desktop.sh writes it)
+    // Lid: read only. logind's file is a system file (./install.sh, its session step, writes it)
     readonly property var lidWords: ({ "suspend": "Sleep", "suspend-then-hibernate": "Sleep, then hibernate", "hibernate": "Hibernate",
                                        "ignore": "Nothing", "lock": "Lock", "poweroff": "Shut down" })
     property var lid: ({})
@@ -116,7 +117,7 @@ ColumnLayout {
         title: "When the lid closes"
         SettingRow {
             label: "On battery"
-            hint: "Set by the install script (system/02-desktop.sh)"
+            hint: "Set when installing (./install.sh --only session changes it)"
             LidValue { text: page.lidWords[page.lid.HandleLidSwitch ?? "suspend"] ?? page.lid.HandleLidSwitch }
         }
         SettingRow {
@@ -141,6 +142,6 @@ ColumnLayout {
     component LidValue: Text {
         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
         color: Theme.subtext
-        font { family: Theme.font; pixelSize: 13 }
+        font { family: Theme.font; pixelSize: Theme.fontSize }
     }
 }

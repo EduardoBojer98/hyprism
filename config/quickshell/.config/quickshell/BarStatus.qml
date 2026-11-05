@@ -13,6 +13,7 @@ BarItem {
     property int glyphSize: 15
     property string family: Theme.font
     active: ControlCenter.open
+    opens: "controlcenter"
     onPressed: ControlCenter.toggle()
     onScrolled: d => Sys.nudgeVolume(d)
     // mixed: a number sits close to its glyph; the next glyph keeps its distance (leftPadding)
@@ -34,8 +35,8 @@ BarItem {
         SequentialAnimation on opacity { running: Sys.recording && Theme.animate; loops: Animation.Infinite; NumberAnimation { to: 0.35; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
         MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["record", "stop"]) }
     }
-    Text { visible: Notifications.dnd; text: "\u{F009B}"; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
-    Text { visible: Caffeine.active; text: "\u{F0176}"; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
+    Text { visible: Notifications.dnd; text: "\u{F009B}"; color: Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
+    Text { visible: Caffeine.active; text: "\u{F0176}"; color: Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
 
     // ---- words ----
     Repeater {
@@ -49,10 +50,10 @@ BarItem {
     }
 
     // ---- icons ----
-    Text { visible: !st.words; text: Sys.networkGlyph; color: Sys.signal < 0 && !Sys.wired ? Theme.muted : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { visible: !st.words; text: Sys.networkGlyph; color: Sys.signal < 0 && !Sys.wired ? Theme.barDim : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Num { visible: st.mixed && !st.vertical && !Sys.wired && Sys.signal >= 0; text: Sys.signal }
-    Text { visible: !st.words && Sys.btOn; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.subtext; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
-    Text { visible: !st.words; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.volumeGlyph; color: Sys.muted ? Theme.subtext : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { visible: !st.words && Sys.btOn; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { visible: !st.words; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.volumeGlyph; color: Sys.muted ? Theme.barDim : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Num { visible: st.mixed && !st.vertical && !Sys.muted; text: Math.round(Sys.volume * 100) }
     BarBattery {   // a gap before it in mixed mode, like the other glyph + value pairs
         visible: !st.words && Sys.hasBattery

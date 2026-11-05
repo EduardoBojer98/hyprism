@@ -108,7 +108,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: "This is the same list KDE Plasma uses, so changes here apply there too. Turning an app off keeps it in the list. "
             + "The desktop's own parts (bar, wallpaper, lock, clipboard) always start and aren't listed."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

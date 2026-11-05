@@ -10,10 +10,16 @@ Singleton {
     id: root
     property bool touchpad: true
     property bool touchscreen: true
+    // tablet mode (a 2-in-1 folded): controls grow to finger size (Theme.hit). Set by ~/.local/bin/panel
+    property bool tablet: false
+    IpcHandler {
+        target: "tablet"
+        function set(on: bool): void { root.tablet = on }
+    }
     property string touchpadName: ""
     function setTouchpad(on) {
         touchpad = on
-        if (touchpadName) Quickshell.execDetached(["hyprctl", "eval", `hl.device({ name = "${touchpadName}", enabled = ${on} })`])
+        if (touchpadName) Quickshell.execDetached(["hyprctl", "eval", `hl.device({ name = ${JSON.stringify(touchpadName)}, enabled = ${on} })`])   // the name quoted as a Lua string, whatever it holds
     }
     function setTouchscreen(on) {
         touchscreen = on

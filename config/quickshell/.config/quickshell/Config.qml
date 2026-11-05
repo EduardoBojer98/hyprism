@@ -3,8 +3,8 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// The one settings source for the desktop: quickshell/settings.json (in the repo through the
-// stow link). Every component reads Config.<section>.<option>; the Settings app writes through
+// The one settings source for the desktop: ~/.config/quickshell/settings.json (yours, never in the
+// repo). Every component reads Config.<section>.<option>; the Settings app writes through
 // set(), which validates. The file is watched, so a hand edit or a git checkout applies live.
 // Values Hyprland owns (displays, keyboard, idle) stay in hypr/settings/ (*.lua, hypridle.conf).
 Singleton {
@@ -28,6 +28,10 @@ Singleton {
     readonly property alias system: adapter.system
     readonly property alias wallpaper: adapter.wallpaper
     readonly property alias bar: adapter.bar
+    readonly property alias idle: adapter.idle
+    readonly property alias input: adapter.input
+    readonly property alias displays: adapter.displays
+    readonly property alias monitorShare: adapter.monitorShare
     readonly property alias battery: adapter.battery
     readonly property alias hotCorners: adapter.hotCorners
     readonly property bool loaded: file.loaded
@@ -63,7 +67,7 @@ Singleton {
                     weekNumbers: "bool", firstDay: ["monday", "sunday"] },
         language: { languages: "list", formats: "string" },
         startup: { apps: "list" },
-        system: { taskManager: "string" },
+        system: { taskManager: "string", welcomed: "bool" },
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
@@ -72,7 +76,12 @@ Singleton {
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],
-                   showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] }
+                   showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] },
+        idle: { lockMin: [0, 240], sleepMin: [0, 480], imported: "bool" },
+        input: { layouts: "layouts", shortcut: [0, 3], repeatRate: [1, 100], repeatDelay: [100, 2000], sensitivity: [-1, 1],
+                 naturalScroll: "bool", tapToClick: "bool", imported: "bool" },
+        displays: { layout: "displays", imported: "bool" },
+        monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", imported: "bool" }
     })
 
     // Why a value breaks its rule, or "" when it's fine. Lists from settings.json arrive as QML lists, so
@@ -87,6 +96,13 @@ Singleton {
         if (rule === "time") return /^([01]\d|2[0-3]):[0-5]\d$/.test(value) ? "" : "Use HH:MM"
         if (rule === "color") return /^#[0-9a-fA-F]{6}$/.test(value) ? "" : "Use a colour like #ff7a59"
         if (rule === "string") return typeof value === "string" ? "" : "Must be text"
+        // values that end up in generated config files: plain characters only
+        if (rule === "name") return typeof value === "string" && /^[A-Za-z0-9._-]*$/.test(value) ? "" : "Letters, digits, . _ - only"
+        if (rule === "ddc") return typeof value === "string" && /^(0x[0-9a-fA-F]{1,2})?$/.test(value) ? "" : "Use an input code like 0x11"
+        if (rule === "mode") return typeof value === "string" && /^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(value) ? "" : "Use a mode like 1920x1080@60"
+        if (rule === "layouts") return value && typeof value.length === "number" && value.length >= 1 && value.length <= 4
+            && Array.from(value).every(l => /^[a-z]{2,8}$/.test(l?.code ?? "") && /^[a-z0-9_-]*$/.test(l?.variant ?? "")) ? "" : "One to four keyboard layouts"
+        if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(n => /^[A-Za-z0-9._-]+$/.test(n)) ? "" : "Unknown display names"
         return ""
     }
 
@@ -149,7 +165,8 @@ Singleton {
         let raw
         try { raw = JSON.parse(file.text()) } catch (e) {
             console.warn("settings.json is not valid JSON; keeping it as settings.json.broken and starting from defaults")
-            Quickshell.execDetached(["cp", "-f", file.path, file.path + ".broken"])
+            // the text as it is now goes in as an argument, so the defaults written next can't race the copy
+            Quickshell.execDetached(["sh", "-c", 'printf "%s" "$2" > "$1"', "sh", file.path + ".broken", file.text()])
             reset("appearance"); for (const s of Object.keys(schema)) if (s !== "appearance") reset(s)
             return
         }

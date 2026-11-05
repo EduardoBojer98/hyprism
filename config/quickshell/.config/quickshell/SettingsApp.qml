@@ -43,14 +43,14 @@ Singleton {
 
     // Pages: what each SettingsPage<Id>.qml is called, and the words search finds it by (Spotlight searches these too)
     readonly property var allSections: [
-        { id: "appearance",    name: "Themes",              glyph: "\u{F03D8}", keys: "theme look colour accent font text size corners gaps shadow blur animations motion reduce terminal" },
-        { id: "builder",       name: "Theme Builder",       glyph: "\u{F0E1E}", keys: "custom own theme create make editor colours fonts bar dock panels motion design" },
+        { id: "appearance",    name: "Themes",              glyph: "\u{F03D8}", keys: "theme look colour accent font text size corners gaps shadow blur animations motion reduce terminal dark light mode night day border frame window gaps rounding color colors gray grey" },
+        { id: "builder",       name: "Theme Builder",       glyph: "\u{F0E1E}", keys: "custom own theme create make editor colours fonts bar dock panels motion design color colors" },
         { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}", keys: "background picture slideshow blur folder" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}", keys: "icon theme papirus" },
         { id: "cursor",        name: "Cursor",              glyph: "\u{F01BF}", keys: "pointer mouse size" },
-        { id: "bar",           name: "Menu Bar",            glyph: "\u{F0E7F}", keys: "panel top bottom left right position size floating items widgets clock seconds date 24-hour window title monitor" },
+        { id: "bar",           name: "Menu Bar",            glyph: "\u{F0E7F}", keys: "panel top bottom left right position size floating items widgets clock seconds date 24-hour window title monitor hide autohide hidden status" },
         { id: "dock",          name: "Dock",                glyph: "\u{F0A1F}", keys: "taskbar pinned apps icon size hide automatically running windows pictures position monitor" },
-        { id: "lockscreen",    name: "Lock Screen",         glyph: "\u{F033E}", keys: "lock clock date avatar user picture blur brightness widgets battery media layout" },
+        { id: "lockscreen",    name: "Lock Screen",         glyph: "\u{F033E}", keys: "lock clock date avatar user picture blur brightness widgets battery media layout lock after password" },
         { id: "controlcenter", name: "Control Center",      glyph: "\u{F0493}", keys: "quick settings tiles toggles sliders shortcuts" },
         { id: "notifications", name: "Notifications",       glyph: "\u{F009A}", keys: "do not disturb dnd sound banners history muted apps" },
         { id: "launcher",      name: "Search & Launcher",   glyph: "\u{F0349}", keys: "spotlight apps files web search actions" },
@@ -58,24 +58,24 @@ Singleton {
         { id: "weather",       name: "Weather",             glyph: "\u{F0595}", keys: "city forecast celsius fahrenheit" },
         { id: "calendar",      name: "Calendar",            glyph: "\u{F00ED}", keys: "holidays week numbers moon first day" },
         { id: "hotcorners",    name: "Hot Corners",         glyph: "\u{F0A1C}", keys: "corner action" },
-        { id: "windows",       name: "Window Behaviour",    glyph: "\u{F05AF}", keys: "layout tiling dwindle master scrolling focus follows mouse split snap" },
-        { id: "windowlook",    name: "Window Look",         glyph: "\u{F03D8}", keys: "title bars opacity dim inactive" },
+        { id: "windows",       name: "Window Behaviour",    glyph: "\u{F05AF}", keys: "layout tiling dwindle master scrolling focus follows mouse split snap gestures swipe" },
+        { id: "windowlook",    name: "Window Look",         glyph: "\u{F03D8}", keys: "title bars opacity dim inactive border frame transparent" },
         { id: "apprules",      name: "App Rules",           glyph: "\u{F0493}", keys: "float pin workspace rule" },
-        { id: "displays",      name: "Displays",            glyph: "\u{F0379}", keys: "monitor resolution scale rotation refresh night light arrangement" },
+        { id: "displays",      name: "Screens",             glyph: "\u{F0379}", keys: "monitor resolution scale rotation refresh night light arrangement display screen hdmi external projector brightness" },
         { id: "monitor",       name: "Shared Monitor",      glyph: "\u{F0E58}", keys: "ddc input switch kvm mirror" },
-        { id: "input",         name: "Keyboard & Touchpad", glyph: "\u{F030C}", keys: "layout serbian latin repeat touchpad mouse sensitivity natural scroll tap" },
-        { id: "keybinds",      name: "Keyboard Shortcuts",  glyph: "\u{F0313}", keys: "keys binds hotkeys" },
-        { id: "sound",         name: "Sound",               glyph: "\u{F057E}", keys: "volume output input microphone speakers" },
+        { id: "input",         name: "Keyboard & Touchpad", glyph: "\u{F030C}", keys: "layout serbian latin repeat touchpad mouse sensitivity natural scroll tap keyboard layout language mouse trackpad gestures swipe fingers" },
+        { id: "keybinds",      name: "Keyboard Shortcuts",  glyph: "\u{F0313}", keys: "keys binds hotkeys shortcuts screenshot print capture record" },
+        { id: "sound",         name: "Sound",               glyph: "\u{F057E}", keys: "volume output input microphone speakers audio mute headphones" },
         { id: "network",       name: "Wi-Fi & Network",     glyph: "\u{F05A9}", keys: "wifi ethernet internet vpn" },
         { id: "bluetooth",     name: "Bluetooth",           glyph: "\u{F00AF}", keys: "devices headphones pair" },
-        { id: "power",         name: "Battery & Power",     glyph: "\u{F0079}", keys: "battery charge limit power profile performance warning" },
-        { id: "idle",          name: "Lock & Sleep",        glyph: "\u{F04B2}", keys: "idle timeout screen off suspend" },
+        { id: "power",         name: "Battery & Power",     glyph: "\u{F0079}", keys: "battery charge limit power profile performance warning laptop energy saver" },
+        { id: "idle",          name: "Lock & Sleep",        glyph: "\u{F04B2}", keys: "idle timeout screen off suspend lock after sleep hibernate screen saver dim" },
         { id: "asus",          name: "ASUS Hardware",       glyph: "\u{F061A}", keys: "fan curve keyboard light" },
         { id: "installed",     name: "Installed Apps",      glyph: "\u{F003B}", keys: "uninstall remove packages" },
-        { id: "apps",          name: "Default Apps",        glyph: "\u{F003B}", keys: "browser mail terminal file manager task manager" },
-        { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}", keys: "autostart login" },
-        { id: "language",      name: "Language & Region",   glyph: "\u{F05CA}", keys: "locale formats date numbers" },
-        { id: "about",         name: "About",               glyph: "\u{F02FD}", keys: "system version hardware" },
+        { id: "apps",          name: "Default Apps",        glyph: "\u{F003B}", keys: "browser mail terminal file manager task manager open with default" },
+        { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}", keys: "autostart login start on login" },
+        { id: "language",      name: "Language & Region",   glyph: "\u{F05CA}", keys: "locale formats date numbers timezone time zone region clock format" },
+        { id: "about",         name: "About",               glyph: "\u{F02FD}", keys: "system version hardware update upgrade doctor reinstall version repo" },
     ]
     // search: pages whose name, group or words match every word typed
     property string query: ""
@@ -98,6 +98,7 @@ Singleton {
         target: "settings"
         function open(section: string): void { root.show(section) }
         function toggle(): void { root.open = !root.open }
+        function close(): void { root.open = false }
     }
 
     // Lua table literal from a plain JS object (strings, numbers, booleans, nested objects)
@@ -110,11 +111,15 @@ Singleton {
             inner + "[" + JSON.stringify(k) + "] = " + lua(value[k], inner) + ",").join("\n") + "\n" + indent + "}"
     }
 
-    // Write a text file in the Hyprland config (the repo, through the stow link)
-    function writeHyprFile(rel, text) {
-        // mkdir: settings/ isn't in git (your own choices), so a fresh install has to create it
-        Quickshell.execDetached(["sh", "-c", "f=\"$HOME/.config/hypr/" + rel + "\"; mkdir -p \"$(dirname \"$f\")\"; cat > \"$f\" <<'QS_EOF'\n" + text + "\nQS_EOF"])
+    // Write a text file under ~/.config (Hyprland's settings/ by default). The path and the text go in as
+    // arguments, never as part of the script, so nothing in them can run as shell. mkdir: settings/ isn't
+    // in git (your own choices), so a fresh install has to create it. Written to a temp file, then moved,
+    // so a reader never sees half a file. then: a command line (argv) run after the write.
+    function writeConfigFile(rel, text, then) {
+        Quickshell.execDetached(["sh", "-c", 'f="$HOME/.config/$1"; mkdir -p "$(dirname "$f")" && printf "%s\\n" "$2" > "$f.tmp" && mv -f "$f.tmp" "$f" && shift 2 && [ $# -gt 0 ] && exec "$@"; true',
+                                 "sh", rel, text].concat(then ?? []))
     }
+    function writeHyprFile(rel, text) { writeConfigFile("hypr/" + rel, text) }
 
     FloatingWindow {
         id: win
@@ -129,7 +134,7 @@ Singleton {
         title: "Settings"
         color: "transparent"
         implicitWidth: 1020
-        implicitHeight: 700
+        implicitHeight: 760
         minimumSize: Qt.size(460, 360)
         onVisibleChanged: if (!visible) root.open = false
 
@@ -145,6 +150,7 @@ Singleton {
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                 width: win.compact ? 64 : 240
                 color: Theme.sidebar
+                MoreBelow { z: 1; flick: nav; ground: Qt.tint(Theme.glassStrong, Theme.sidebar); anchors { left: parent.left; right: parent.right; bottom: parent.bottom } }
 
                 Flickable {
                     id: nav
@@ -176,6 +182,7 @@ Singleton {
                             onTextChanged: root.query = text
                             onAccepted: if (root.results.length) { root.show(root.results[0].id); text = "" }
                             Keys.onEscapePressed: text = ""
+                            Keys.onDownPressed: nextItemInFocusChain(true).forceActiveFocus()   // into the results or the sidebar
                         }
                         Item { width: 1; height: 8; visible: !win.compact }
                         Text {
@@ -190,11 +197,20 @@ Singleton {
                         Repeater {   // search results replace the groups while there is a query
                             model: root.results
                             Rectangle {
+                                id: result
                                 required property var modelData
                                 width: parent.width
-                                height: 44
+                                height: Math.max(44, Theme.hit)
                                 radius: Theme.radiusSmall
-                                color: resArea.containsMouse ? Theme.fillHover : "transparent"
+                                color: resArea.containsMouse || activeFocus ? Theme.fillHover : "transparent"
+                                // keyboard: Tab or Down from the search field, Enter opens
+                                activeFocusOnTab: true
+                                function go() { root.show(modelData.id); searchField.text = "" }
+                                Keys.onReturnPressed: go()
+                                Keys.onSpacePressed: go()
+                                Keys.onDownPressed: nextItemInFocusChain(true).forceActiveFocus()
+                                Keys.onUpPressed: nextItemInFocusChain(false).forceActiveFocus()
+                                FocusRing {}
                                 Column {
                                     anchors { left: parent.left; leftMargin: 10; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
                                     Text { width: parent.width; elide: Text.ElideRight; text: modelData.name; color: Theme.text
@@ -203,7 +219,7 @@ Singleton {
                                            font { family: Theme.font; pixelSize: Theme.fontCaption } }
                                 }
                                 MouseArea { id: resArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                            onClicked: { root.show(modelData.id); searchField.text = "" } }
+                                            onClicked: result.go() }
                             }
                         }
 
@@ -218,10 +234,19 @@ Singleton {
                                 spacing: 2
                                 Rectangle {
                                     width: parent.width
-                                    height: 34
+                                    height: Math.max(34, Theme.hit)
                                     radius: Theme.radiusSmall
-                                    color: current ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
-                                    border { color: current ? Theme.stroke : "transparent"; width: 1 }
+                                    // keyboard: Tab to the sidebar, Up / Down through it, Enter opens
+                                    activeFocusOnTab: true
+                                    Keys.onReturnPressed: root.show(modelData.id)
+                                    Keys.onSpacePressed: root.show(modelData.id)
+                                    Keys.onDownPressed: nextItemInFocusChain(true).forceActiveFocus()
+                                    Keys.onUpPressed: nextItemInFocusChain(false).forceActiveFocus()
+                                    FocusRing {}
+                                    // one mark per place: a group with its pages open shows them instead of a plate
+                                    readonly property bool plate: current && !navGroup.open
+                                    color: plate ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
+                                    border { color: plate ? Theme.stroke : "transparent"; width: 1 }
                                     Row {
                                         anchors { left: parent.left; leftMargin: win.compact ? (parent.width - 24) / 2 : 10; verticalCenter: parent.verticalCenter }
                                         spacing: 10
@@ -254,9 +279,15 @@ Singleton {
                                         required property string modelData
                                         readonly property bool current: root.pageId === modelData
                                         width: parent.width
-                                        height: 30
+                                        height: Math.max(30, Theme.hit)
                                         radius: Theme.radiusSmall
-                                        color: current ? Theme.accentWash : subArea.containsMouse ? Theme.fillHover : "transparent"
+                                        activeFocusOnTab: true
+                                        Keys.onReturnPressed: root.show(modelData)
+                                        Keys.onSpacePressed: root.show(modelData)
+                                        Keys.onDownPressed: nextItemInFocusChain(true).forceActiveFocus()
+                                        Keys.onUpPressed: nextItemInFocusChain(false).forceActiveFocus()
+                                        FocusRing {}
+                                        color: subArea.containsMouse && !current ? Theme.fillHover : "transparent"
                                         Rectangle {   // a short accent bar beside the page you're on
                                             visible: parent.current
                                             anchors { left: parent.left; leftMargin: 26; verticalCenter: parent.verticalCenter }
@@ -304,23 +335,13 @@ Singleton {
                     width: Math.max(page.width - win.pad * 2, 340)
                     spacing: 16
 
-                    Column {
+                    Text {   // the page's title; the sidebar already shows its group
                         Layout.fillWidth: true
                         Layout.rightMargin: 100   // clear of the window buttons
-                        spacing: 2
-                        Text {   // the group, small, above the page's own title
-                            visible: root.currentGroup.pages.length > 1
-                            text: root.currentGroup.name
-                            color: Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
-                        }
-                        Text {
-                            width: parent.width
-                            text: root.pageName(root.pageId)
-                            elide: Text.ElideRight
-                            color: Theme.text
-                            font { family: Theme.displayFont; pixelSize: Theme.fontHeading + 1; weight: Theme.displayWeight > Font.Medium ? Theme.displayWeight : Font.Bold }
-                        }
+                        text: root.pageName(root.pageId)
+                        elide: Text.ElideRight
+                        color: Theme.text
+                        font { family: Theme.displayFont; pixelSize: Theme.fontHeading + 1; weight: Theme.displayWeight > Font.Medium ? Theme.displayWeight : Font.Bold }
                     }
 
                     // narrow window: the sidebar shows icons only, so the group's pages become tabs
@@ -338,6 +359,7 @@ Singleton {
                     }
                 }
             }
+            MoreBelow { flick: page; anchors { left: page.left; right: page.right; bottom: page.bottom; rightMargin: 12 } }   // never a row cut in half
 
             // ---- window buttons: minimise, maximise, close (the shell draws its own, like a GTK app) ----
             Row {

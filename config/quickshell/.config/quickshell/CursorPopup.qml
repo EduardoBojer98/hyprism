@@ -122,6 +122,9 @@ Scope {
                 popup.targetScreen = target ?? Quickshell.screens[0]
                 popup.cursorX = target ? x : popup.targetScreen.width / 2
                 popup.cursorY = target ? y : popup.targetScreen.height / 3
+                // from a shortcut: beside this panel's own bar item on that monitor, as if it were clicked
+                const own = Anchor.find(popup.name, popup.targetScreen)
+                if (own) { popup.anchorRect = own.rect; popup.anchorEdge = own.edge }
                 popup.open = true
                 popup.opened()
             }
@@ -189,7 +192,7 @@ Scope {
                 blur: 28
                 spread: -4
                 radius: Theme.radiusLarge
-                color: Qt.rgba(0, 0, 0, Theme.light ? 0.18 : 0.42)
+                color: Theme.shadow
             }
             RectangularShadow {   // glow: a haze in the accent around the panel (Console's phosphor)
                 visible: Theme.depth === "glow"

@@ -30,7 +30,7 @@ import QtQuick
 // hypr     gaps in/out, border px, rounding, active/inactive border colours, shadow, blur, motion preset
 // lock     clock style + align (ThemeSync writes the hyprlock layout); term: Ghostty theme; wall: theme-wallpaper id
 Singleton {
-    // the six shipped themes, then your own (Settings > Appearance > Theme builder)
+    // the shipped themes, then your own (Settings > Appearance > Theme builder)
     readonly property var list: builtIn.concat(userList)
     readonly property var builtIn: [
         {
@@ -45,7 +45,7 @@ Singleton {
             font: { ui: "Outfit", display: "Outfit", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Medium },
             shape: { radius: 18, radiusSmall: 12, line: 1, material: "glass" },
             bar: { edge: "top", size: 36, floating: true, segmented: true, fill: "glass", line: 0, voice: "icons", mono: false, ws: "dots", clock: "plain", decor: "", sep: false,
-                   start: ["launcher", "workspaces"], center: ["clock"], end: ["media", "tray", "keyboard", "notifications", "status"] },
+                   start: ["launcher", "workspaces"], center: ["clock"], end: ["weather", "media", "tray", "keyboard", "notifications", "status"] },
             dock: { edge: "bottom", shape: "pill", hover: "lift", mark: "line", fill: "glass" },
             popup: { depth: "soft", decor: "", tiles: "solid" },
             motion: { enter: 240, exit: 150, curve: [0.3, 1.25, 0.5, 1], travel: 10, scale: 0.94, press: 0.95 },
@@ -67,9 +67,9 @@ Singleton {
             font: { ui: "JetBrainsMono Nerd Font", display: "JetBrainsMono Nerd Font", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Bold },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
             bar: { edge: "bottom", size: 28, floating: false, segmented: false, fill: "surface", line: 1, voice: "mixed", mono: true, ws: "filled", clock: "block", decor: "", sep: true,
-                   start: ["workspaces", "apps"], center: [], end: ["media", "tray", "keyboard", "cpu", "memory", "status", "notifications", "clock"] },
+                   start: ["workspaces", "apps"], center: [], end: ["media", "tray", "keyboard", "cpu", "memory", "status", "notifications", "weather", "clock"] },
             dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "none", decor: "topline", tiles: "solid" },
+            popup: { depth: "none", decor: "topline", tiles: "wash" },
             motion: { enter: 90, exit: 60, curve: [0.2, 0, 0, 1], travel: 0, scale: 1, press: 1 },
             launcher: { placement: "strip", view: "inline", header: "none", width: 0, select: "inverse", prompt: "❯" },
             notify: { corner: "bottom-right", kind: "line" },
@@ -79,18 +79,18 @@ Singleton {
         {
             id: "console", name: "Console", about: "An amber HUD: a framed caps readout, corner brackets on every panel, a phosphor glow, panels that snap on",
             dark: true,
-            colour: { ground: "#05080f", surface: "#0a0f1a", raised: "#131a28", line: "#5a4418", text: "#e9dcc0", muted: "#c19b52", faint: "#6d5a33",
+            colour: { ground: "#05080f", surface: "#0a0f1a", raised: "#131a28", line: "#5a4418", text: "#e9dcc0", muted: "#c19b52", faint: "#76623a",
                       accent: "#ffb000", onAccent: "#05080f", accent2: "#ff6a3d", ok: "#66d19e", warn: "#ff7a45", err: "#ff4d5e" },
             alt: { dark: false, term: "Console Light", wall: "console-light",   // a daylight HUD: amber ink on warm paper
-                   colour: { ground: "#f4efe3", surface: "#fbf8f0", raised: "#ece5d4", line: "#c9a85a", text: "#2a1f0a", muted: "#6e5218", faint: "#a08a5c",
+                   colour: { ground: "#f4efe3", surface: "#fbf8f0", raised: "#ece5d4", line: "#c9a85a", text: "#2a1f0a", muted: "#6e5218", faint: "#93804f",
                              accent: "#a35f00", onAccent: "#ffffff", accent2: "#c2410c", ok: "#1d7a4f", warn: "#b4410f", err: "#c0263a" },
                    hypr: { active: ["a35f00ff"], inactive: "e0d6bfff" } },
             font: { ui: "Martian Mono", display: "Martian Mono", mono: "Martian Mono", size: 12, displayWeight: Font.Light },
             shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
             bar: { edge: "top", size: 30, floating: false, segmented: false, fill: "ground", line: 1, voice: "mixed", mono: true, caps: true, ws: "text", clock: "accent", decor: "brackets", sep: true,
-                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["cpu", "memory", "status", "keyboard", "tray", "notifications"] },
+                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["weather", "cpu", "memory", "status", "keyboard", "tray", "notifications"] },
             dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "glow", decor: "brackets", tiles: "solid" },
+            popup: { depth: "glow", decor: "brackets", tiles: "wash" },
             motion: { enter: 140, exit: 80, curve: [0.15, 0, 0.1, 1], travel: 4, scale: 0.98, press: 0.98 },
             launcher: { placement: "center", view: "home", header: "query", width: 700, select: "inverse", prompt: "▸" },
             notify: { corner: "top-right", kind: "tag" },
@@ -109,7 +109,7 @@ Singleton {
             font: { ui: "Archivo", display: "Archivo Black", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Black },
             shape: { radius: 0, radiusSmall: 0, line: 3, material: "solid" },
             bar: { edge: "top", size: 52, floating: false, segmented: false, fill: "surface", line: 3, voice: "icons", mono: false, ws: "blocks", clock: "display", decor: "", sep: false,
-                   start: ["workspaces", "window"], center: [], end: ["media", "tray", "keyboard", "status", "notifications", "clock"] },
+                   start: ["workspaces", "window"], center: [], end: ["media", "tray", "keyboard", "status", "notifications", "weather", "clock"] },
             dock: { edge: "bottom", shape: "block", hover: "lift", mark: "bar", fill: "surface" },
             popup: { depth: "hard", decor: "", tiles: "solid" },
             motion: { enter: 200, exit: 110, curve: [0.16, 1, 0.3, 1], travel: 28, scale: 1, press: 0.96 },
@@ -124,13 +124,13 @@ Singleton {
             colour: { ground: "#0f131c", surface: "#1a1f2b", raised: "#262c3a", line: "#323a4c", text: "#f4f6fb", muted: "#a9b0c2", faint: "#6f7891",
                       accent: "#5b9cff", onAccent: "#ffffff", accent2: "#8f86ff", ok: "#63d17a", warn: "#f7c85b", err: "#ff5f57" },
             alt: { dark: false, term: "Glass Light", wall: "glass-light",   // frosted daylight glass, the same blue to violet
-                   colour: { ground: "#e9edf4", surface: "#f7f9fc", raised: "#e3e8f1", line: "#cfd6e3", text: "#141a26", muted: "#4d5668", faint: "#8790a3",
+                   colour: { ground: "#e9edf4", surface: "#f7f9fc", raised: "#e3e8f1", line: "#cfd6e3", text: "#141a26", muted: "#4d5668", faint: "#7a8396",
                              accent: "#2f6fe0", onAccent: "#ffffff", accent2: "#6a5ff0", ok: "#1f8a3d", warn: "#9a6a00", err: "#d63a32" },
                    hypr: { active: ["2f6fe0dd", "6a5ff0dd"], inactive: "00000014" } },
             font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Light },
             shape: { radius: 16, radiusSmall: 10, line: 1, material: "glass" },
             bar: { edge: "top", size: 36, floating: true, segmented: false, fill: "glass", line: 0, voice: "icons", mono: false, ws: "numbers", clock: "plain", decor: "", sep: false,
-                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["media", "tray", "keyboard", "notifications", "status"] },
+                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["weather", "media", "tray", "keyboard", "notifications", "status"] },
             dock: { edge: "bottom", shape: "tile", hover: "grow", mark: "dot", fill: "glass" },
             popup: { depth: "soft", decor: "", tiles: "wash" },
             motion: { enter: 220, exit: 140, curve: [0.23, 1, 0.32, 1], travel: 6, scale: 0.97, press: 0.97 },
@@ -151,7 +151,7 @@ Singleton {
             font: { ui: "Archivo", display: "Archivo", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.ExtraBold },
             shape: { radius: 0, radiusSmall: 0, line: 2, material: "solid" },
             bar: { edge: "top", size: 44, floating: false, segmented: false, fill: "ink", line: 0, voice: "icons", mono: false, ws: "squares", clock: "display", decor: "", sep: false,
-                   start: ["clock", "workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "date"] },
+                   start: ["clock", "workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "weather", "date"] },
             dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "ink" },
             popup: { depth: "none", decor: "", tiles: "solid" },
             motion: { enter: 160, exit: 100, curve: [0.23, 1, 0.32, 1], travel: 14, scale: 1, press: 0.97 },
@@ -159,6 +159,27 @@ Singleton {
             notify: { corner: "top-right", kind: "block" },
             hypr: { gapsIn: 8, gapsOut: 16, border: 2, rounding: 0, active: ["111111ff"], inactive: "c8c8c4ff", shadow: "none", blur: false, motion: "snappy" },
             lock: { clock: "stacked", align: "left" }, term: "Atlas", wall: "atlas"
+        },
+        {
+            id: "reactor", name: "Reactor", about: "Radioactive: acid yellow on near-black, a hot orange second colour, an inverse clock block and a glow on everything that is on",
+            dark: true,
+            colour: { ground: "#0c0d08", surface: "#15170e", raised: "#1f2216", line: "#3b3f22", text: "#f3f6df", muted: "#c2c69c", faint: "#8a8e6a",
+                      accent: "#e4ff1a", onAccent: "#0c0d08", accent2: "#ff6b0a", ok: "#3ddc97", warn: "#ffb547", err: "#ff4f6d" },
+            alt: { dark: false, term: "Reactor Light", wall: "reactor-light",   // by day: burnt orange on bone (acid as text would be unreadable), the acid hazard tape kept in the wallpaper
+                   colour: { ground: "#f5f6ea", surface: "#fdfdf7", raised: "#eaecda", line: "#cfd2b4", text: "#181a0e", muted: "#4f5238", faint: "#767a5c",
+                             accent: "#b14800", onAccent: "#ffffff", accent2: "#5f6e00", ok: "#16794a", warn: "#975b00", err: "#c22745" },
+                   hypr: { active: ["b14800ff", "5f6e00ff"], inactive: "d9dbc6ff" } },
+            font: { ui: "Archivo", display: "Martian Mono", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Medium },
+            shape: { radius: 10, radiusSmall: 6, line: 1, material: "solid" },
+            bar: { edge: "top", size: 34, floating: true, segmented: false, fill: "surface", line: 1, voice: "icons", mono: false, ws: "filled", clock: "block", decor: "", sep: false,
+                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["weather", "media", "tray", "keyboard", "notifications", "status"] },
+            dock: { edge: "bottom", shape: "tile", hover: "lift", mark: "bar", fill: "surface" },
+            popup: { depth: "glow", decor: "topline", tiles: "solid" },
+            motion: { enter: 180, exit: 110, curve: [0.2, 0, 0, 1], travel: 8, scale: 0.97, press: 0.96 },
+            launcher: { placement: "center", view: "home", header: "query", width: 680, select: "inverse", prompt: "" },
+            notify: { corner: "top-right", kind: "card" },
+            hypr: { gapsIn: 6, gapsOut: 12, border: 2, rounding: 10, active: ["e4ff1aff", "ff6b0aff"], inactive: "2a2c1cff", shadow: "soft", blur: false, motion: "snappy" },
+            lock: { clock: "big", align: "left" }, term: "Reactor", wall: "reactor"
         }
     ]
     readonly property var ids: list.map(r => r.id)
@@ -203,6 +224,7 @@ Singleton {
         { id: "window",        name: "Active window",      glyph: "\u{F05AF}" },
         { id: "clock",         name: "Clock",              glyph: "\u{F0954}" },
         { id: "date",          name: "Date",               glyph: "\u{F00ED}" },
+        { id: "weather",       name: "Weather",            glyph: "\u{F0599}" },
         { id: "media",         name: "Media player",       glyph: "\u{F075A}" },
         { id: "tray",          name: "System tray",        glyph: "\u{F0D5E}" },
         { id: "keyboard",      name: "Keyboard layout",    glyph: "\u{F030C}" },
@@ -221,7 +243,7 @@ Singleton {
         { id: "power",         name: "Power menu",         glyph: "\u{F0425}" }
     ]
     function barItem(id) { return barItems.find(i => i.id === id) ?? { id: id, name: id, glyph: "\u{F02D7}" } }
-    readonly property int wallVersion: 5   // = VERSION in scripts/theme-wallpaper (the picture's file name)
+    readonly property int wallVersion: 7   // = VERSION in scripts/theme-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
 
     // Your adjustments to a theme (Settings > Themes > Adjust), saved per theme in

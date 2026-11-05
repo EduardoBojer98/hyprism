@@ -91,10 +91,17 @@ ColumnLayout {
     Text {
         visible: !page.editing
         Layout.fillWidth: true
-        text: "Create a theme above (or pick one of yours) to edit its colours, type, bar, dock, panels, motion and more."
+        text: "Create one to change its colours, type, bar, dock, panels and motion."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontLabel }
+    }
+    ThemePreview {   // what you start from, so the page shows the result before anything is made
+        visible: !page.editing
+        enabled: false   // a picture, not a second Create button
+        Layout.preferredWidth: Math.min(360, page.width)
+        theme: Themes.resolve(Themes.builtIn[baseChoice.index].id, {}, page.a.mode)
+        label: "Starting point: " + theme.name
     }
 
     SettingGroup {

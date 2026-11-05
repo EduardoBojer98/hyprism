@@ -24,6 +24,9 @@ Singleton {
     readonly property color success: c.ok
     readonly property color warning: c.warn
     readonly property color error: c.err
+    readonly property color errorText: Themes.textOn(c.err, c)   // text on an error fill (badges)
+    // an accent that reads as "danger" (red themes): safe things then use ink instead of the accent
+    readonly property bool accentLikeError: Math.min(Math.abs(accent.hslHue - error.hslHue), 1 - Math.abs(accent.hslHue - error.hslHue)) < 0.06
     readonly property color green: success                   // older names, kept for existing components
     readonly property color yellow: warning
     readonly property color red: error
@@ -37,11 +40,11 @@ Singleton {
     readonly property color glassStrong: glassy ? Qt.alpha(c.surface, 0.92) : c.surface   // panels with text
     readonly property color menu: c.surface                                                // menus, lists
     readonly property color raised: c.raised
-    readonly property color sidebar: Qt.alpha(light ? "#000000" : "#000000", light ? 0.035 : 0.18)
+    readonly property color sidebar: Qt.alpha("#000000", light ? 0.035 : 0.18)
     readonly property color stroke: c.line
     readonly property color strokeStrong: light ? Qt.darker(c.line, 1.25) : Qt.lighter(c.line, 1.5)
     readonly property color highlight: glassy ? Qt.rgba(1, 1, 1, 0.06) : "transparent"   // inner top rim on glass
-    readonly property color scrim: Qt.rgba(0, 0, 0, light ? 0.18 : 0.42)
+    readonly property color backdrop: light ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(0, 0, 0, 0.42)   // behind full-screen modes
     readonly property int line: current.shape.line                                           // panel border px
     function surface(tint) { return tint === "solid" ? menu : glass }
 
@@ -55,11 +58,12 @@ Singleton {
     // Control Center tiles that are on: a solid accent block, or (popup.tiles "wash") an accent tint
     // with an accent icon, so glass stays glass
     readonly property bool washTiles: (current.popup.tiles ?? "solid") === "wash"
-    readonly property color tileOn: washTiles ? Qt.alpha(accent, light ? 0.18 : 0.24) : accent
+    readonly property color tileOn: washTiles ? Qt.alpha(accent, light ? 0.26 : 0.40) : accent
     readonly property color tileOnText: washTiles ? text : accentText
     readonly property color tileOnIcon: washTiles ? accent : accentText
-    readonly property color tileOnBorder: washTiles ? Qt.alpha(accent, 0.55) : "transparent"
+    readonly property color tileOnBorder: washTiles ? Qt.alpha(accent, 0.85) : "transparent"
     readonly property color thumb: light ? "#ffffff" : c.text
+    readonly property color onImage: "#f5f5f7"   // text over a photo (lock screen on a picture): light, whatever the theme
     readonly property color thumbText: light ? c.text : c.ground   // text on a thumb: white thumbs in light themes
     function tinted(k, alpha) { return Qt.rgba(base.r * k, base.g * k, base.b * k, alpha) }
     function frosted(k, alpha) { return Qt.rgba(base.r + (1 - base.r) * k, base.g + (1 - base.g) * k, base.b + (1 - base.b) * k, alpha) }
@@ -72,17 +76,19 @@ Singleton {
     readonly property string iconFont: "JetBrainsMono Nerd Font"
     readonly property real fontScale: a.fontScale
     readonly property int body: current.font.size
-    readonly property int fontCaption: Math.round((body - 2) * fontScale)
-    readonly property int fontLabel: Math.round((body - 1) * fontScale)
+    readonly property int fontCaption: Math.max(11, Math.round((body - 2) * fontScale))   // floors: small copy stays readable
+    readonly property int fontLabel: Math.max(12, Math.round((body - 1) * fontScale))
     readonly property int fontSize: Math.round(body * fontScale)
     readonly property int fontTitle: Math.round((body + 2) * fontScale)
     readonly property int fontHeading: Math.round((body + 7) * fontScale)
     readonly property int fontDisplay: Math.round((body + 13) * fontScale)
+    readonly property int fontHero: Math.round((body + 28) * fontScale)   // the one big number in a panel (date, temperature)
 
     // ---- shape and space ---------------------------------------------------------------------------
     readonly property int radiusSmall: current.shape.radiusSmall
     readonly property int radius: current.shape.radius
     readonly property int radiusLarge: current.shape.radius === 0 ? 0 : current.shape.radius + 2
+    readonly property int radiusPanel: current.shape.radius === 0 ? 0 : current.shape.radius + 6   // panels and sheets; square themes stay square
     readonly property real radiusScale: 1
     readonly property int spaceXs: 4
     readonly property int spaceS: 8
@@ -91,6 +97,7 @@ Singleton {
     readonly property int spaceXl: 24
     readonly property int rowHeight: 34
     readonly property int controlHeight: 28
+    readonly property int hit: Inputs.tablet ? 40 : 0   // smallest touch target in tablet mode (0: none, desktop sizes)
     readonly property int popupGap: 8
 
     // ---- the bar: the theme's own, with Settings > Menu Bar on top -------------------------------------
@@ -110,6 +117,7 @@ Singleton {
     }
     readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
     readonly property color barInk: barStyle.fill === "ink" ? base : text    // text on the bar's own ground
+    readonly property color barDim: barStyle.fill === "ink" ? Qt.alpha(base, 0.62) : subtext   // secondary text on it
     function barShownOn(screen) { return !cb.hiddenOn.includes(screen?.name ?? "") }
 
     // ---- the dock: every theme has one; Settings > Dock places it ----------------------------------------
@@ -164,6 +172,5 @@ Singleton {
     // small state changes (hover, colour, a toggle): short and the same feel everywhere
     readonly property int animFast: animate ? Math.min(120, Math.max(60, m.enter / 2)) : 0
     readonly property int anim: animate ? Math.min(220, m.enter) : 0
-    readonly property int animSlow: animate ? m.enter * 2 : 0
     readonly property int easing: Easing.OutCubic
 }

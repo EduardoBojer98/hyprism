@@ -18,7 +18,7 @@ Singleton {
         Quickshell.execDetached(["powermode", names[i]])
     }
 
-    Process {
+    Process {   // `powermode watch` ends by itself once this reader is gone (a reload), so watchers never pile up
         running: Machine.asus
         command: ["powermode", "watch"]
         stdout: SplitParser {

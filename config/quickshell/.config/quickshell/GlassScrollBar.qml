@@ -15,7 +15,7 @@ ScrollBar {
 
     contentItem: Rectangle {
         radius: Math.min(width, height) / 2
-        color: bar.pressed ? Theme.strokeStrong : bar.hovered ? Theme.muted : Theme.stroke
+        color: bar.pressed ? Theme.subtext : bar.hovered ? Theme.subtext : Theme.muted   // visible at rest: it is the only cue that a page scrolls
         Behavior on color { ColorAnimation { duration: Theme.animFast } }
     }
     background: Item {}

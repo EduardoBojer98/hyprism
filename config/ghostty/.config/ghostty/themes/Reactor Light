@@ -1,0 +1,23 @@
+# Reactor Light: terminal palette of Reactor's light half (Quickshell Themes.qml). Generated; edit freely.
+background = #f5f6ea
+foreground = #181a0e
+cursor-color = #b14800
+cursor-text = #ffffff
+selection-background = #f0d2b8
+selection-foreground = #181a0e
+palette = 0=#181a0e
+palette = 1=#c22745
+palette = 2=#16794a
+palette = 3=#975b00
+palette = 4=#1f5fbf
+palette = 5=#8a2fb8
+palette = 6=#0b7a73
+palette = 7=#4f5238
+palette = 8=#767a5c
+palette = 9=#d63c59
+palette = 10=#1f8f5a
+palette = 11=#b14800
+palette = 12=#3274d4
+palette = 13=#9f45cc
+palette = 14=#138d85
+palette = 15=#eaecda

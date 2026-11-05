@@ -106,7 +106,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.margins: 16
             text: "No rules yet: every app opens the normal way. Search below to add one."
-            color: Theme.muted
+            color: Theme.subtext
             wrapMode: Text.Wrap
             font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
@@ -189,7 +189,7 @@ ColumnLayout {
                         width: parent.width
                         text: setupRow.modelData.what
                         wrapMode: Text.Wrap
-                        color: Theme.muted
+                        color: Theme.subtext
                         font { family: Theme.font; pixelSize: Theme.fontCaption }
                     }
                 }
@@ -206,7 +206,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: "Rules apply to windows opened after you change them; close and reopen an app to see it. "
             + "Super+T still floats or tiles any window by hand."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

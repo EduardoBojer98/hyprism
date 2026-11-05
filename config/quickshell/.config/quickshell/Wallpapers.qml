@@ -35,7 +35,7 @@ Singleton {
     // at most 2560 px wide, blurred at half that, so even a big photo takes well under a second;
     // the newest 10 copies are kept)
     function show(path) {
-        if (!path) return
+        if (!path || !path.startsWith("/")) return   // an absolute file path only: nothing ImageMagick could read as an option or a coder
         if (c.blur <= 0) { Quickshell.execDetached(["hyprctl", "hyprpaper", "wallpaper", "," + path]); return }
         Quickshell.execDetached(["sh", "-c",
             "d=\"$HOME/.cache/wallpaper-blur\"; out=\"$d/$(printf %s \"$1$2\" | md5sum | cut -c1-16).jpg\"; mkdir -p \"$d\"; "

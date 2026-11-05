@@ -18,6 +18,9 @@ Rectangle {
     property alias acceptedButtons: area.acceptedButtons
     property string edge: Theme.barEdge     // the screen edge this item sits on (the dock sets its own)
     property var origin: undefined          // its window's top-left on the screen, when not at the edge (Anchor)
+    property string opens: ""               // the panel it opens (CursorPopup name): from a shortcut it opens here too
+    Component.onCompleted: if (opens !== "") Anchor.register(opens, item)
+    Component.onDestruction: if (opens !== "") Anchor.unregister(item)
     signal pressed(int button)
     signal scrolled(int delta)
 

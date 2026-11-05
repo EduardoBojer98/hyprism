@@ -23,17 +23,19 @@ Scope {
     readonly property int cursorSize: Config.appearance.cursorSize
     readonly property bool animate: Theme.animate
     function hex(c) { return c.toString().slice(1, 7) }
+    // a font name as it may go into a config line or a quoted shell word: letters, digits, space . _ + -
+    function safeFont(f) { return /^[A-Za-z0-9 ._+-]+$/.test(f) ? f : "sans-serif" }
 
     // Lock screen (Settings > Lock Screen): colours and background, then the layout from LockScreen.qml
     readonly property var lock: Config.lockscreen
     readonly property string lockConf: "# Written by Quickshell ThemeSync from the active theme (" + current.name + ")\n"
-        + "$accent = rgb(" + hex(Theme.accent.hslLightness < 0.45 ? "#f5f5f7" : Theme.accent) + ")\n$accent2 = rgb(" + hex(Theme.accent2) + ")\n"
+        + "$accent = rgb(" + hex(Theme.accent.hslLightness < 0.45 ? Theme.onImage : Theme.accent) + ")\n$accent2 = rgb(" + hex(Theme.accent2) + ")\n"
         + "$text = rgb(" + hex(Theme.text) + ")\n$muted = rgb(" + hex(Theme.subtext) + ")\n"
         + "$ground = rgb(" + hex(Theme.base) + ")\n$surface = rgb(" + hex(Theme.surfaceColor) + ")\n"
         + "$fail = rgb(" + hex(Theme.error) + ")\n$rounding = " + Theme.radius + "\n"
-        + "$wall = " + (/^[^\n#]+$/.test(lock.wallpaper) ? lock.wallpaper : "~/.config/hypr/settings/wallpaper")
+        + "$wall = " + (/^~?[A-Za-z0-9 ._\/+-]+$/.test(lock.wallpaper) ? lock.wallpaper : "~/.config/hypr/settings/wallpaper")   // a plain path only
         + "\n$blur = " + lock.blur + "\n$dim = " + lock.brightness
-        + "\n$font = " + Theme.font.replace(/[\n#]/g, "") + "\n$display = " + Theme.displayFont + "\n$mono = " + Theme.monoFont
+        + "\n$font = " + safeFont(Theme.font) + "\n$display = " + safeFont(Theme.displayFont) + "\n$mono = " + safeFont(Theme.monoFont)
         + "\n\n" + LockScreen.conf
     onLockConfChanged: debounce.restart()
 
@@ -52,32 +54,48 @@ Scope {
              : hue < 195 ? "teal" : hue < 250 ? "blue" : hue < 300 ? "purple" : "pink"
     }
 
-    // The Hyprland side of the theme, as a Lua table (modules/look.lua: apply_theme)
-    readonly property string hyprLua: `{ theme = "${current.id}", gaps_in = ${h.gapsIn}, gaps_out = ${h.gapsOut}, border_size = ${h.border}, `
-        + `rounding = ${h.rounding}, active = { ${h.active.map(x => `"${x}"`).join(", ")} }, inactive = "${h.inactive}", `
-        + `shadow = "${h.shadow}", blur = ${h.blur}, motion = "${Theme.motionLevel === "full" ? h.motion : Theme.motionLevel === "reduced" ? "instant" : "off"}", accent = "${hex(Theme.accent)}", `
-        + `accent2 = "${hex(Theme.accent2)}", cursor = "${cursorTheme}", cursor_size = ${cursorSize} }`
+    // The Hyprland side of the theme, as a Lua table (modules/look.lua: apply_theme). Every string is quoted by
+    // JSON.stringify (a valid Lua string) and numbers are forced to numbers, so a hand-edited or shared theme
+    // can't put code into Hyprland's config.
+    function q(v) { return JSON.stringify(String(v)) }
+    function n(v) { const x = Number(v); return isFinite(x) ? x : 0 }
+    readonly property string hyprLua: `{ theme = ${q(current.id)}, gaps_in = ${n(h.gapsIn)}, gaps_out = ${n(h.gapsOut)}, border_size = ${n(h.border)}, `
+        + `rounding = ${n(h.rounding)}, active = { ${h.active.map(q).join(", ")} }, inactive = ${q(h.inactive)}, `
+        + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.motionLevel === "full" ? h.motion : Theme.motionLevel === "reduced" ? "instant" : "off")}, accent = ${q(hex(Theme.accent))}, `
+        + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)} }`
 
     function apply() {
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from the active theme\nreturn " + hyprLua)
         SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", lockConf)
         Quickshell.execDetached(["hyprctl", "eval", "THEME = " + hyprLua + "; apply_theme()"])
-        Quickshell.execDetached(["sh", "-c",
-            "gsettings set org.gnome.desktop.interface color-scheme prefer-" + (light ? "light" : "dark")
-            + "; gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3" + (light ? "" : "-dark")
-            + "; gsettings set org.gnome.desktop.interface accent-color " + gtkAccent
-            + "; gsettings set org.gnome.desktop.interface icon-theme '" + iconTheme.replace(/'/g, "") + "'"
-            + "; gsettings set org.gnome.desktop.interface font-name '" + Theme.font.replace(/['\\\n]/g, "") + " 11'"
-            + (cursorTheme ? "; gsettings set org.gnome.desktop.interface cursor-theme '" + cursorTheme + "'"
-                + "; gsettings set org.gnome.desktop.interface cursor-size " + cursorSize : "")])
+        // GTK: one gsettings call per key, each value its own argument (no shell, nothing to quote)
+        const gtk = [["color-scheme", "prefer-" + (light ? "light" : "dark")], ["gtk-theme", "adw-gtk3" + (light ? "" : "-dark")],
+                     ["accent-color", gtkAccent], ["icon-theme", /^[A-Za-z0-9._+ -]+$/.test(iconTheme) ? iconTheme : "Papirus-Dark"],
+                     ["font-name", safeFont(Theme.font) + " 11"], ["monospace-font-name", safeFont(Theme.monoFont) + " 11"]]
+            .concat(cursorTheme ? [["cursor-theme", cursorTheme], ["cursor-size", String(cursorSize)]] : [])
+        Quickshell.execDetached(["sh", "-c", 'while [ $# -gt 1 ]; do gsettings set org.gnome.desktop.interface "$1" "$2"; shift 2; done', "sh"]
+                                .concat(...gtk))
+        // the theme's surfaces, text and exact accent for GTK 3 (adw-gtk3) and GTK 4 apps, in our own file
+        // that gtk.css imports (gtk.css and colors.css belong to KDE, which rewrites them at its login; we only
+        // add the import). Panels' surface, not the desktop ground: Poster's ground is dark under paper panels.
+        const named = { accent_color: Theme.accent, accent_bg_color: Theme.accent, accent_fg_color: Theme.accentText,
+                        window_bg_color: Theme.surfaceColor, window_fg_color: Theme.text, view_bg_color: Theme.surfaceColor,
+                        view_fg_color: Theme.text, headerbar_bg_color: Theme.raised, headerbar_fg_color: Theme.text,
+                        card_bg_color: Theme.raised, card_fg_color: Theme.text, popover_bg_color: Theme.surfaceColor,
+                        popover_fg_color: Theme.text, dialog_bg_color: Theme.surfaceColor, dialog_fg_color: Theme.text }
+        const css = "/* Written by Quickshell ThemeSync from the active theme */\n"
+            + Object.keys(named).map(k => `@define-color ${k} ${named[k]};`).join("\n") + "\n"
+        for (const v of ["gtk-3.0", "gtk-4.0"])
+            SettingsApp.writeConfigFile(v + "/linux-setup.css", css,
+                ["sh", "-c", 'f="$HOME/.config/$1/gtk.css"; grep -qF "@import \'linux-setup.css\';" "$f" 2>/dev/null || printf "\\n%s\\n" "@import \'linux-setup.css\';" >> "$f"', "sh", v])
         // live for Hyprland and apps started from now on; env.lua reads theme.lua at the next login
         if (cursorTheme) Quickshell.execDetached(["hyprctl", "setcursor", cursorTheme, String(cursorSize)])
         const a = hex(Theme.accent)
-        Quickshell.execDetached(["sh", "-c", "mkdir -p \"$HOME/.config/fuzzel\"; cat > \"$HOME/.config/fuzzel/theme.ini\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from the active theme\n[colors]\n"
+        SettingsApp.writeConfigFile("fuzzel/theme.ini", "# Written by Quickshell ThemeSync from the active theme\n[colors]\n"
             + `background=${hex(Theme.surfaceColor)}f2\ntext=${hex(Theme.text)}ff\ninput=${hex(Theme.text)}ff\nprompt=${a}ff\nmatch=${a}ff\n`
-            + `selection=${a}55\nselection-text=${hex(Theme.text)}ff\nselection-match=${hex(Theme.text)}ff\nborder=${a}ff\nQS_EOF`])
-        Quickshell.execDetached(["sh", "-c", "cat > \"$HOME/.config/ghostty/theme.conf\" <<'QS_EOF'\n# Written by Quickshell ThemeSync from the active theme (empty: the config's own theme)\n"
-            + terminal + "\nQS_EOF\npkill -USR2 -x ghostty || true"])   // SIGUSR2 = reload config
+            + `selection=${a}55\nselection-text=${hex(Theme.text)}ff\nselection-match=${hex(Theme.text)}ff\nborder=${a}ff`)
+        SettingsApp.writeConfigFile("ghostty/theme.conf", "# Written by Quickshell ThemeSync from the active theme (empty: the config's own theme)\n" + terminal,
+                                    ["pkill", "-USR2", "-x", "ghostty"])   // SIGUSR2 = reload config
     }
 
     // The theme's own wallpaper, drawn once per theme into ~/.local/share/linux-setup/themes/
@@ -88,7 +106,7 @@ Scope {
         Quickshell.execDetached(["sh", "-c", "p=$(theme-wallpaper \"$1\") && qs ipc call wallpaper set \"$p\"", "sh", current.wall])
     }
     Timer { id: wallDebounce; interval: 500; onTriggered: if (Config.loaded) root.applyWallpaper() }
-    Connections { target: Config.appearance; function onThemeChanged() { root.lastWall = ""; wallDebounce.restart() } function onWallpaperChanged() { root.lastWall = ""; wallDebounce.restart() } }
+    Connections { target: Config.appearance; function onThemeChanged() { root.lastWall = ""; wallDebounce.restart() } function onModeChanged() { wallDebounce.restart() } function onWallpaperChanged() { root.lastWall = ""; wallDebounce.restart() } }
 
     // Only key names Hyprland understands get through; anything else is dropped
     function keybindsLua(o) {
@@ -134,6 +152,7 @@ Scope {
     // Debounced, and only once Config has loaded so defaults never overwrite saved values
     Timer { id: debounce; interval: 300; onTriggered: if (Config.loaded) root.apply() }
     onHyprLuaChanged: debounce.restart()
+    Connections { target: Config; function onLoadedChanged() { debounce.restart() } }   // at login: the whole look once, even if nothing changed
     onLightChanged: debounce.restart()
     onIconThemeChanged: debounce.restart()
     onTerminalChanged: debounce.restart()

@@ -23,21 +23,18 @@ ColumnLayout {
             SettingRow {
                 required property var modelData
                 label: page.name(modelData)
-                Toggle {
-                    checked: modelData === Pipewire.defaultAudioSink
-                    onToggled: Pipewire.preferredDefaultAudioSink = modelData
-                }
+                // pick one: the one in use is marked, the others offer to switch
+                InUse { current: modelData === Pipewire.defaultAudioSink; onPicked: Pipewire.preferredDefaultAudioSink = modelData }
             }
         }
         SettingRow {
             label: "Output volume"
             Slider {
                 width: 300
-                icon: Pipewire.defaultAudioSink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
                 value: Pipewire.defaultAudioSink?.audio?.muted ? 0 : (Pipewire.defaultAudioSink?.audio?.volume ?? 0)
                 onMoved: v => { const a = Pipewire.defaultAudioSink?.audio; if (a) { a.muted = false; a.volume = v } }
-                onIconClicked: { const a = Pipewire.defaultAudioSink?.audio; if (a) a.muted = !a.muted }
             }
+            Readout { audio: Pipewire.defaultAudioSink?.audio }
         }
     }
 
@@ -53,10 +50,8 @@ ColumnLayout {
             SettingRow {
                 required property var modelData
                 label: page.name(modelData)
-                Toggle {
-                    checked: modelData === Pipewire.defaultAudioSource
-                    onToggled: Pipewire.preferredDefaultAudioSource = modelData
-                }
+                // pick one: the one in use is marked, the others offer to switch
+                InUse { current: modelData === Pipewire.defaultAudioSource; onPicked: Pipewire.preferredDefaultAudioSource = modelData }
             }
         }
         SettingRow {
@@ -64,11 +59,10 @@ ColumnLayout {
             label: "Input volume"
             Slider {
                 width: 300
-                icon: Pipewire.defaultAudioSource?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
                 value: Pipewire.defaultAudioSource?.audio?.muted ? 0 : (Pipewire.defaultAudioSource?.audio?.volume ?? 0)
                 onMoved: v => { const a = Pipewire.defaultAudioSource?.audio; if (a) { a.muted = false; a.volume = v } }
-                onIconClicked: { const a = Pipewire.defaultAudioSource?.audio; if (a) a.muted = !a.muted }
             }
+            Readout { audio: Pipewire.defaultAudioSource?.audio }
         }
     }
 
@@ -86,12 +80,41 @@ ColumnLayout {
                 hint: modelData.properties["media.name"] ?? ""
                 Slider {
                     width: 260
-                    icon: modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
                     value: modelData.audio?.muted ? 0 : (modelData.audio?.volume ?? 0)
                     onMoved: v => { if (modelData.audio) { modelData.audio.muted = false; modelData.audio.volume = v } }
-                    onIconClicked: if (modelData.audio) modelData.audio.muted = !modelData.audio.muted
                 }
+                Readout { audio: modelData.audio }
             }
         }
+    }
+
+    // the volume beside a slider, as ConfigSlider writes its value
+    // click it to mute or unmute
+    component Readout: Text {
+        property var audio
+        width: 52
+        anchors.verticalCenter: parent.verticalCenter
+        horizontalAlignment: Text.AlignRight
+        text: audio?.muted ? "Muted" : Math.round((audio?.volume ?? 0) * 100) + "%"
+        color: audio?.muted ? Theme.warning : Theme.subtext
+        font { family: Theme.font; pixelSize: Theme.fontLabel; features: { "tnum": 1 } }
+        MouseArea { anchors { fill: parent; margins: -4 } cursorShape: Qt.PointingHandCursor; onClicked: if (parent.audio) parent.audio.muted = !parent.audio.muted }
+    }
+    // a device row's control: "In use" with a check, or a button to switch to it
+    component InUse: Item {
+        id: iu
+        property bool current
+        signal picked()
+        implicitWidth: current ? used.implicitWidth : use.implicitWidth
+        implicitHeight: use.implicitHeight
+        Row {
+            id: used
+            visible: iu.current
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 6
+            Text { text: "\u{F012C}"; color: Theme.accent; anchors.verticalCenter: parent.verticalCenter; font { family: Theme.iconFont; pixelSize: Theme.iconSmall } }
+            Text { text: "In use"; color: Theme.text; anchors.verticalCenter: parent.verticalCenter; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
+        }
+        PillButton { id: use; visible: !iu.current; text: "Use"; onClicked: iu.picked() }
     }
 }

@@ -16,7 +16,7 @@ ColumnLayout {
         text: group.title
         leftPadding: 4
         color: Theme.subtext
-        font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold }
+        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
     }
 
     Rectangle {

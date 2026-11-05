@@ -59,14 +59,23 @@ PanelWindow {
 
         Text {
             id: glyph
-            anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
             text: osd.icon
             color: Theme.text
             font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 2 }
         }
 
+        Text {   // the level as a number: a bar alone can't say 0 % from muted, or 45 from 50
+            id: level
+            anchors { right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
+            width: Theme.fontLabel * 2.4
+            horizontalAlignment: Text.AlignRight
+            text: Math.round(Math.max(0, Math.min(1, osd.value)) * 100)
+            color: Theme.subtext
+            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } }
+        }
         Rectangle {
-            anchors { left: glyph.right; leftMargin: 14; right: parent.right; rightMargin: 18; verticalCenter: parent.verticalCenter }
+            anchors { left: glyph.right; leftMargin: Theme.spaceM; right: level.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
             height: 6
             radius: Math.min(3, Theme.radiusSmall)
             color: Theme.fill

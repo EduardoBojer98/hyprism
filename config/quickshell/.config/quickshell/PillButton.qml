@@ -8,20 +8,28 @@ Rectangle {
     property bool primary: false
     signal clicked()
 
+    activeFocusOnTab: enabled
+    Keys.onSpacePressed: btn.clicked()
+    Keys.onReturnPressed: btn.clicked()
+    FocusRing {}
+
     implicitWidth: label.implicitWidth + 28
-    implicitHeight: 30
+    implicitHeight: Math.max(30, Theme.hit)
     radius: height / 2
-    color: primary ? (area.containsMouse ? Qt.lighter(Theme.accent, 1.08) : Theme.accent)
-                   : (area.containsMouse ? Theme.fillHover : Theme.fill)
-    border { color: primary ? "transparent" : Theme.stroke; width: 1 }
-    opacity: enabled ? 1 : 0.45
+    // disabled: a plain, quiet button (a faded accent pill reads as a broken one)
+    readonly property bool filled: primary && enabled
+    color: filled ? (area.containsMouse ? Qt.lighter(Theme.accent, 1.08) : Theme.accent)
+                  : (area.containsMouse ? Theme.fillHover : Theme.fill)
+    border { color: filled ? "transparent" : Theme.stroke; width: 1 }
+    scale: area.pressed ? Theme.pressScale : 1
+    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
     Text {
         id: label
         anchors.centerIn: parent
         text: btn.text
-        color: btn.primary ? Theme.accentText : Theme.text
-        font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold }
+        color: btn.filled ? Theme.accentText : btn.enabled ? Theme.text : Theme.muted
+        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
     }
     MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: btn.clicked() }
 }

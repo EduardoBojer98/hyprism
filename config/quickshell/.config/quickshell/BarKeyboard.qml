@@ -8,6 +8,7 @@ BarItem {
     property string family: Theme.font
     shown: Keyboard.layouts.length > 1
     active: Keyboard.open
+    opens: "keyboard"
     onPressed: Keyboard.toggle()
     onScrolled: d => Keyboard.use((Keyboard.active + (d > 0 ? 1 : Keyboard.layouts.length - 1)) % Keyboard.layouts.length)
     Text {

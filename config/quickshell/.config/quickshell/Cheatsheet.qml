@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
+import QtQuick.Controls as QQC
 import QtQuick.Layouts
 
 // Keyboard shortcut cheatsheet (Super+/, `qs ipc call cheatsheet toggle`): every shortcut from
@@ -41,7 +42,7 @@ Singleton {
         const mods = [[64, "Super"], [4, "Ctrl"], [8, "Alt"], [1, "Shift"]].filter(m => modmask & m[0]).map(m => m[1])
         const names = { period: ".", comma: ",", slash: "/", left: "←", right: "→", up: "↑", down: "↓", Return: "Enter",
                         Super_L: "(tap)", Print: "Print", Escape: "Esc", "mouse:272": "Left drag", "mouse:273": "Right drag",
-                        mouse_down: "Wheel down", mouse_up: "Wheel up", Space: "Space" }
+                        mouse_down: "Wheel down", mouse_up: "Wheel up", Space: "Space", grave: "`", backslash: "\\", minus: "-", equal: "=" }
         return mods.concat([names[key] ?? key.replace(/^XF86/, "")]).join(" + ").replace("Super + (tap)", "Super (tap)")
     }
 
@@ -99,7 +100,7 @@ Singleton {
                 event.accepted = true
             }
 
-            Rectangle { anchors.fill: parent; color: Theme.light ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(0, 0, 0, 0.5) }
+            Rectangle { anchors.fill: parent; color: Theme.backdrop }
             MouseArea { anchors.fill: parent; onClicked: root.hide() }
 
             Glass {
@@ -110,13 +111,16 @@ Singleton {
                 height: Math.min(content.implicitHeight + pad * 2, win.height - margin * 2)
                 anchors.centerIn: parent
                 strong: true
-                radius: Theme.radiusLarge + 4
+                radius: Theme.radiusPanel
                 scale: root.open ? 1 : 0.97
                 Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
                 MouseArea { anchors.fill: parent }   // clicks on the card don't close it
 
+                MoreBelow { z: 1; flick: sheet; anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: card.pad } }
                 Flickable {   // scrolls on short screens (the laptop at 1.2 scale, tablet mode)
+                    id: sheet
                     anchors { fill: parent; margins: card.pad }
+                    QQC.ScrollBar.vertical: GlassScrollBar {}
                     contentHeight: content.implicitHeight
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
@@ -167,6 +171,8 @@ Singleton {
                                                 Layout.fillWidth: true
                                                 text: modelData.label
                                                 color: Theme.text
+                                                wrapMode: Text.Wrap   // two lines rather than a word cut off
+                                                maximumLineCount: 2
                                                 elide: Text.ElideRight
                                                 font { family: Theme.font; pixelSize: Theme.fontSize }
                                             }

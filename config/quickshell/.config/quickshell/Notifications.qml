@@ -139,11 +139,13 @@ Singleton {
         exclusionMode: ExclusionMode.Ignore
         anchors { top: !atBottom; bottom: atBottom; right: place.endsWith("right"); left: place.endsWith("left") }
         margins { top: Theme.reserveTop + 10; bottom: Theme.reserveBottom + 10; right: Theme.reserveRight + 12; left: Theme.reserveLeft + 12 }
-        implicitWidth: Theme.current.notify.kind === "subtitle" ? 900 : 344
+        implicitWidth: 344
         implicitHeight: Math.max(1, list.contentHeight)
         exclusiveZone: 0
         color: "transparent"
-        visible: root.popups.length > 0 || list.count > 0
+        // held while the Control Center or the notification centre is open: they'd land on it, and the
+        // notification centre lists them anyway
+        visible: (root.popups.length > 0 || list.count > 0) && !ControlCenter.open && !NotificationCenter.open
         WlrLayershell.namespace: "qs-notifications"
         WlrLayershell.layer: WlrLayer.Overlay
 

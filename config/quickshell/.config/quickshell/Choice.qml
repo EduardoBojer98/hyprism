@@ -1,8 +1,15 @@
 import QtQuick
 
 // Compact segmented choice: options is a list of labels, index the selected one.
+// Keyboard: Tab to it, Left / Right picks the one beside.
 Rectangle {
     id: choice
+
+    activeFocusOnTab: true
+    function step(d) { const i = Math.max(0, Math.min(choice.options.length - 1, (choice.current >= choice.options.length ? 0 : choice.current) + d)); if (i !== choice.current) choice.picked(i) }
+    Keys.onLeftPressed: step(-1)
+    Keys.onRightPressed: step(1)
+    FocusRing {}
 
     property var options: []
     property int index: 0
@@ -12,7 +19,7 @@ Rectangle {
     signal picked(int index)
 
     implicitWidth: row.implicitWidth + 6
-    implicitHeight: 28
+    implicitHeight: Math.max(28, Theme.hit)
     radius: height / 2
     color: Theme.fill
     border { color: Theme.stroke; width: 1 }
@@ -25,9 +32,9 @@ Rectangle {
             Rectangle {
                 required property var modelData
                 required property int index
-                width: label.implicitWidth + 22
-                height: 22
-                radius: 11
+                width: label.implicitWidth + (Theme.hit ? 32 : 22)
+                height: choice.height - 6
+                radius: height / 2
                 color: index === choice.current ? Theme.fillActive : area.containsMouse ? Theme.fillHover : "transparent"
                 border { color: index === choice.current ? Theme.stroke : "transparent"; width: 1 }
                 Text {
@@ -35,7 +42,7 @@ Rectangle {
                     anchors.centerIn: parent
                     text: modelData
                     color: index === choice.current ? Theme.text : Theme.subtext
-                    font { family: Theme.font; pixelSize: 12; weight: Font.Medium }
+                    font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
                 }
                 MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (index < choice.options.length) choice.picked(index) }
             }

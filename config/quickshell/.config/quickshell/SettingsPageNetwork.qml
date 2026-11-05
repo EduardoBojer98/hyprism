@@ -41,8 +41,7 @@ ColumnLayout {
                     onClicked: modelData.forget()
                 }
                 PillButton {
-                    text: modelData.connected ? "Disconnect" : "Join"
-                    primary: !modelData.connected
+                    text: modelData.connected ? "Disconnect" : "Join"   // quiet: a list of equal choices has no one thing to press
                     onClicked: {
                         if (modelData.connected) modelData.disconnect()
                         else if (modelData.known || modelData.security === WifiSecurityType.Open) modelData.connect()
@@ -68,7 +67,7 @@ ColumnLayout {
                     verticalAlignment: TextInput.AlignVCenter
                     echoMode: TextInput.Password
                     color: Theme.text
-                    font { family: Theme.font; pixelSize: 13 }
+                    font { family: Theme.font; pixelSize: Theme.fontSize }
                     focus: page.askFor !== null
                     onAccepted: joinButton.clicked()
                 }

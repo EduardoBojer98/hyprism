@@ -68,8 +68,8 @@ ColumnLayout {
     }
     Text {
         Layout.fillWidth: true
-        text: "Drag to move or reorder · drop on the tray to take an item off · Apps is the dock, placed on the Dock page · "
-              + (ed.edited ? "your layout for " + Theme.current.name : "the layout " + Theme.current.name + " came with")
+        text: "Drag items to move them; drop one on the tray to take it off.\n"
+              + (ed.edited ? "Your layout for " + Theme.current.name + "." : "The layout " + Theme.current.name + " came with.")
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
@@ -174,7 +174,7 @@ ColumnLayout {
                 anchors { right: parent.right; top: parent.top; margins: -5 }
                 width: 16; height: 16; radius: 8
                 color: Theme.error
-                Text { anchors.centerIn: parent; text: "\u{F0156}"; color: "white"; font { family: Theme.iconFont; pixelSize: 10 } }
+                Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.errorText; font { family: Theme.iconFont; pixelSize: 10 } }
                 MouseArea { anchors { fill: parent; margins: -3 } cursorShape: Qt.PointingHandCursor; onClicked: ed.drop({ id: chip.itemId, from: chip.from }, "tray", -1) }
             }
         }

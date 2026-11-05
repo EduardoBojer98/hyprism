@@ -13,8 +13,17 @@ Item {
     signal picked(string value)
 
     implicitWidth: 200
-    implicitHeight: 28
+    implicitHeight: Math.max(28, Theme.hit)
     property bool open: false
+
+    // keyboard: Tab to it, Up / Down picks the one before or after, Space or Enter opens the list
+    activeFocusOnTab: true
+    function step(d) { const i = options.indexOf(current) + d; if (i >= 0 && i < options.length) picked(options[i]) }
+    Keys.onUpPressed: step(-1)
+    Keys.onDownPressed: step(1)
+    Keys.onSpacePressed: dd.open = !dd.open
+    Keys.onReturnPressed: dd.open = !dd.open
+    FocusRing { radius: Theme.radiusSmall + 3 }
 
     Rectangle {
         anchors.fill: parent
@@ -26,7 +35,7 @@ Item {
             text: dd.isCustom ? dd.current + " (custom)" : dd.current
             elide: Text.ElideRight
             color: Theme.text
-            font { family: Theme.font; pixelSize: 12 }
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
         Chevron {
             id: chevron
@@ -70,22 +79,22 @@ Item {
                     required property string modelData
                     required property int index
                     width: list.width
-                    height: 26
-                    radius: 6
+                    height: Math.max(26, Theme.fontLabel + 14)   // grows with Settings > Text size
+                    radius: Theme.radiusSmall
                     color: optArea.containsMouse ? Theme.accent : "transparent"
                     Text {   // checkmark beside the current value
                         anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
                         visible: modelData === dd.current
-                        text: "\u2713"
+                        text: "\u{F012C}"
                         color: optArea.containsMouse ? Theme.accentText : Theme.text
-                        font { family: Theme.font; pixelSize: 12; weight: Font.DemiBold }
+                        font { family: Theme.iconFont; pixelSize: Theme.fontLabel }
                     }
                     Text {
-                        anchors { left: parent.left; leftMargin: 24; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                        anchors { left: parent.left; leftMargin: 8 + Theme.fontLabel + 4; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
                         text: dd.isCustom && index === 0 ? modelData + " (custom)" : modelData
                         elide: Text.ElideRight
                         color: optArea.containsMouse ? Theme.accentText : Theme.text
-                        font { family: Theme.font; pixelSize: 12 }
+                        font { family: Theme.font; pixelSize: Theme.fontLabel }
                     }
                     MouseArea {
                         id: optArea

@@ -12,8 +12,13 @@ Rectangle {
     signal clicked()
     signal scrolled(int delta)
 
+    activeFocusOnTab: true
+    Keys.onSpacePressed: chip.clicked()
+    Keys.onReturnPressed: chip.clicked()
+    FocusRing {}
+
     implicitWidth: row.implicitWidth + 18
-    implicitHeight: 26
+    implicitHeight: Math.max(26, Theme.hit)
     radius: height / 2
     color: active ? Theme.fillActive : mouse.containsMouse ? Theme.fillHover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.anim } }

@@ -24,7 +24,7 @@ Row {
         width: Math.min(implicitWidth, app.maxTitle)
         elide: Text.ElideRight
         text: Sys.appTitle
-        color: Theme.subtext
+        color: Theme.barDim
         font { family: app.family; pixelSize: app.size }
     }
 }

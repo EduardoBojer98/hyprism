@@ -9,7 +9,9 @@ Item {
     property string label
     property string hint
     default property alias control: slot.data
-    readonly property bool stacked: width > 0 && slot.implicitWidth + 200 > width - 32
+    // under the text when they don't fit side by side, or when a long hint would be squeezed into 3+ lines
+    readonly property real textRoom: width - slot.implicitWidth - 48
+    readonly property bool stacked: width > 0 && (textRoom < 200 || (hint.length > 60 && textRoom < 300))
 
     Layout.fillWidth: true
     // tall controls (a wrapped swatch grid, a list) make the row taller, never spill over its border
@@ -30,7 +32,7 @@ Item {
             visible: row.hint !== ""
             width: parent.width
             text: row.hint
-            color: Theme.muted
+            color: Theme.subtext   // readable copy: secondary text (4.5:1+), not the faint tone
             wrapMode: Text.Wrap
             font { family: Theme.font; pixelSize: Theme.fontCaption }
         }

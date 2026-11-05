@@ -5,14 +5,13 @@ import QtQuick
 import QtQuick.Layouts
 
 // Shared Monitor: one monitor used by this computer and another one (a work PC, a console),
-// switched over DDC/CI from the Control Center or the monitor's own buttons. Writes
-// ~/.config/monswitch.conf (read by ~/.local/bin/monswitch); turning it off keeps the values in
-// monswitch.conf.off.
+// switched over DDC/CI from the Control Center or the monitor's own buttons. Edits settings.json
+// (monitorShare) on Save; SettingsSync.qml writes ~/.config/monswitch.conf for ~/.local/bin/monswitch
+// (monswitch.conf.off while it's switched off, so the values are kept).
 ColumnLayout {
     id: page
     spacing: 20
 
-    readonly property string conf: Quickshell.env("HOME") + "/.config/monswitch.conf"
     // VCP 0x60 values most monitors use (MCCS); a value outside this list shows as "Other"
     readonly property var presets: [["0x11", "HDMI 1"], ["0x12", "HDMI 2"], ["0x13", "HDMI 3"],
                                     ["0x0f", "DisplayPort 1"], ["0x10", "DisplayPort 2"], ["0x1b", "USB-C"]]
@@ -39,43 +38,21 @@ ColumnLayout {
     function save() {
         if (enabled && (!out || !mine || !other)) { status = "Pick the monitor and both inputs first"; return }
         if (enabled && mine === other) { status = "The two inputs must differ"; return }
-        // monswitch sources this file as shell: only a plain mode (or nothing) may go in
-        if (!/^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(mirrorMode.trim())) { status = "Mirror mode must look like 1920x1080@60"; return }
-        const body = `# Written by Settings > Shared Monitor (see ~/.local/bin/monswitch)\nOUT=${out}\nLAPTOP=${mine}\nPC=${other}\nMIRROR=${mirror}\nMIRROR_MODE=${mirrorMode.trim()}\n`
-        writer.command = ["sh", "-c",
-            (enabled ? "printf '%s' \"$2\" > \"$1\" && rm -f \"$1.off\""
-                     : "[ -f \"$1\" ] && mv \"$1\" \"$1.off\"; true")
-            // restart the watcher with the new values ([h]: don't match this shell's own command line)
-            + "; pkill -f 'bin/monswitch watc[h]'; [ -f \"$1\" ] && (setsid monswitch watch >/dev/null 2>&1 &); true",
-            "sh", conf, body]
-        writer.running = true
+        // Config.set checks each value (plain names, input codes, a mode like 1920x1080@60) and says why not
+        const c = { enabled: enabled, output: out, thisInput: mine, otherInput: other, mirror: mirror, mirrorMode: mirrorMode.trim() }
+        for (const k of Object.keys(c)) { const err = Config.set("monitorShare", k, c[k]); if (err) { status = "Couldn't save: " + err; return } }
+        status = "Saved"
+        savedState = snapshot
     }
 
-    Process {   // current values: the live file, or the switched-off copy
-        running: true
-        command: ["sh", "-c", "if [ -f \"$1\" ]; then echo on; cat \"$1\"; elif [ -f \"$1.off\" ]; then echo off; cat \"$1.off\"; fi", "sh", page.conf]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const lines = text.split("\n")
-                page.enabled = lines[0] === "on"
-                for (const l of lines) {
-                    const m = l.match(/^\s*(\w+)=([^#\s]*)/)
-                    if (!m) continue
-                    if (m[1] === "OUT") page.out = m[2]
-                    else if (m[1] === "LAPTOP") page.mine = m[2]
-                    else if (m[1] === "PC") page.other = m[2]
-                    else if (m[1] === "MIRROR") page.mirror = m[2]
-                    else if (m[1] === "MIRROR_MODE") page.mirrorMode = m[2]
-                }
-                if (!page.out) page.out = Hyprland.monitors.values.find(x => !x.name.startsWith("eDP"))?.name ?? ""
-                page.savedState = page.snapshot
-            }
-        }
+    function load() {
+        const c = Config.monitorShare
+        enabled = c.enabled; out = c.output || (Hyprland.monitors.values.find(x => !x.name.startsWith("eDP"))?.name ?? "")
+        mine = c.thisInput; other = c.otherInput; mirror = c.mirror; mirrorMode = c.mirrorMode
+        savedState = snapshot
     }
-    Process {
-        id: writer
-        onExited: code => { page.status = code === 0 ? "Saved" : "Couldn't save"; if (code === 0) page.savedState = page.snapshot; Machine.refresh() }
-    }
+    Component.onCompleted: load()
+
     Process {   // the input the monitor shows right now
         id: detect
         command: ["sh", "-c", "b=$(readlink -f /sys/class/drm/card*-\"$1\"/ddc | sed 's/.*i2c-//'); ddcutil --bus \"$b\" getvcp 60 --terse 2>/dev/null | awk '$1 == \"VCP\" {sub(/^x/, \"0x\", $4); print $4}'", "sh", page.out]
@@ -121,7 +98,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Mirror mode"
-            hint: "Resolution@refresh both screens support"
+            hint: "Resolution@refresh both computers' screens support"
             TextField { width: 160; text: page.mirrorMode; invalid: !/^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(text.trim()); onTextChanged: page.mirrorMode = text }
         }
     }
@@ -147,7 +124,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "Needs DDC/CI turned on in the monitor's menu. Input numbers are the monitor's own (VCP 60); the usual ones are listed, and Detect reads the current one."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

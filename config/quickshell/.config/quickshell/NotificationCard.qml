@@ -6,7 +6,7 @@ import QtQuick.Layouts
 
 // One notification: app icon, app name and age, title, body and the app's buttons. Used for the
 // banners and in the notification centre. Click to open it in the app, × to dismiss.
-// Banners take the theme's kind (Themes.qml notify.kind): bubble, card, toast, paper, line, block, tag, subtitle.
+// Banners take the theme's kind (Themes.qml notify.kind): bubble, card, line, block, tag.
 Glass {
     id: card
 
@@ -18,46 +18,32 @@ Glass {
     readonly property var buttons: (notification?.actions ?? []).filter(a => a.identifier !== "default" && a.text !== "")
     // banners take the theme's kind (Themes.qml notify.kind); the notification centre keeps cards
     readonly property string kind: banner ? Theme.current.notify.kind : "card"
-    readonly property string notifStyle: kind === "line" ? "minimal" : kind === "subtitle" ? "subtitle" : "card"
-    readonly property bool isPill: notifStyle === "pill"
-    readonly property bool isMinimal: notifStyle === "minimal"
-    readonly property bool isSubtitle: notifStyle === "subtitle"
+    readonly property bool isMinimal: kind === "line"
     signal expandRequested()
 
-    implicitHeight: isSubtitle ? subtitle.implicitHeight + 12 : content.implicitHeight + (isPill ? Theme.spaceS : Theme.spaceM) * 2
+    implicitHeight: content.implicitHeight + Theme.spaceM * 2
     strong: !isMinimal
-    radius: flat ? Theme.radius : isPill || kind === "bubble" ? Math.min(height / 2, Theme.radiusLarge + 6) : Theme.radiusLarge
-    color: isSubtitle ? "transparent" : flat ? Theme.fill : Theme.glassStrong
+    radius: flat ? Theme.radius : kind === "bubble" ? Math.min(height / 2, Theme.radiusLarge + 6) : Theme.radiusLarge
+    color: flat ? Theme.fill : Theme.glassStrong
     border.color: critical ? Theme.warning : kind === "block" || kind === "tag" ? Theme.accent : (isMinimal ? "transparent" : Theme.stroke)
-    border.width: isSubtitle ? 0 : kind === "block" ? 3 : kind === "tag" ? 1 : isMinimal && !critical ? 0 : (critical || !flat ? Math.max(1, Theme.line) : 0)
+    border.width: kind === "block" ? 3 : kind === "tag" ? 1 : isMinimal && !critical ? 0 : (critical || !flat ? Math.max(1, Theme.line) : 0)
 
-    Rectangle {   // line: an accent rule down the left edge, the rest plain text on the surface
+    Rectangle {   // line: an accent hairline down the left edge, the rest plain text on the surface
         visible: card.kind === "line"
-        width: 3; height: parent.height
+        width: 1; height: parent.height
         color: Theme.accent
-    }
-    Text {   // subtitle (Noir): one italic line, centred, like a film subtitle
-        id: subtitle
-        visible: card.isSubtitle
-        anchors.centerIn: parent
-        width: parent.width
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.WordWrap
-        text: "— " + [card.notification?.summary, card.notification?.body].filter(x => x).join(". ")
-        color: Theme.accent
-        style: Text.Outline; styleColor: Qt.rgba(0, 0, 0, 0.6)
-        font { family: Theme.displayFont; pixelSize: Theme.fontHeading; italic: true; weight: Font.Light }
     }
 
     // folded cards peek out underneath (card style only)
     Repeater {
-        model: (!isPill && !isMinimal) ? Math.min(card.stacked, 2) : 0
+        model: !isMinimal ? Math.min(card.stacked, 2) : 0
         Rectangle {
             required property int index
             z: -1 - index
             x: (index + 1) * 8; width: card.width - x * 2
-            y: card.height - card.radius; height: card.radius + (index + 1) * 6
-            radius: card.radius
+            // below the card, never under it: a see-through (glass) card would show it through as grey bars
+            y: card.height - 1; height: (index + 1) * 6
+            radius: Math.min(card.radius, 6)
             color: card.flat ? Theme.fill : Theme.glassStrong
             border { color: Theme.stroke; width: card.flat ? 0 : 1 }
             opacity: 0.8 - index * 0.25
@@ -74,37 +60,25 @@ Glass {
 
     RowLayout {
         id: content
-        visible: !card.isSubtitle
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: isPill ? Theme.spaceS : Theme.spaceM }
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
         spacing: Theme.spaceS
 
-        // App icon: hidden in pill mode
         IconImage {
             readonly property string src: card.notification ? Notifications.iconOf(card.notification) : ""
             Layout.alignment: Qt.AlignTop
-            visible: !card.isPill && src !== ""
-            implicitSize: 32
+            visible: src !== ""
+            implicitSize: Theme.iconLarge
             source: src
         }
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: isPill ? 0 : 2
+            spacing: 2
 
             RowLayout {
                 Layout.fillWidth: true
-                // In pill mode: show app · summary on one line
+                Layout.rightMargin: closeButton.visible ? closeButton.width : 0   // the × sits over this row
                 Text {
-                    visible: card.isPill
-                    Layout.fillWidth: true
-                    text: [card.notification?.appName, card.notification?.summary].filter(Boolean).join("  ·  ")
-                    color: Theme.text
-                    elide: Text.ElideRight
-                    font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
-                }
-                // Normal mode: app name
-                Text {
-                    visible: !card.isPill
                     Layout.fillWidth: true
                     text: card.notification?.appName ?? ""
                     color: Theme.subtext
@@ -120,7 +94,7 @@ Glass {
             }
             Text {
                 Layout.fillWidth: true
-                visible: !card.isPill && text !== ""
+                visible: text !== ""
                 text: card.notification?.summary ?? ""
                 color: Theme.text
                 elide: Text.ElideRight
@@ -128,7 +102,7 @@ Glass {
             }
             Text {
                 Layout.fillWidth: true
-                visible: !card.isPill && text !== ""
+                visible: text !== ""
                 text: card.notification?.body ?? ""
                 color: Theme.subtext
                 textFormat: Text.StyledText
@@ -138,7 +112,7 @@ Glass {
                 font { family: Theme.font; pixelSize: Theme.fontLabel }
             }
             RowLayout {
-                visible: !card.isPill && card.buttons.length > 0 && card.stacked === 0
+                visible: card.buttons.length > 0 && card.stacked === 0
                 Layout.topMargin: Theme.spaceXs
                 spacing: Theme.spaceXs
                 Repeater {
@@ -151,6 +125,7 @@ Glass {
 
     // dismiss, shown on hover
     Rectangle {
+        id: closeButton
         anchors { top: parent.top; right: parent.right; margins: Theme.spaceS }
         width: 22; height: 22; radius: 11
         visible: card.hovered && card.stacked === 0

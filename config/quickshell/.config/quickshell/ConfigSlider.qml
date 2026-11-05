@@ -16,7 +16,7 @@ Row {
 
     Slider {
         width: 170
-        height: 22
+        height: Math.max(22, Theme.hit)
         anchors.verticalCenter: parent.verticalCenter
         value: (cs.value - cs.from) / (cs.to - cs.from)
         onMoved: v => {
@@ -30,6 +30,6 @@ Row {
         text: cs.format(cs.value)
         color: Theme.subtext
         horizontalAlignment: Text.AlignRight
-        font { family: Theme.font; pixelSize: 12; features: { "tnum": 1 } }
+        font { family: Theme.font; pixelSize: Theme.fontLabel; features: { "tnum": 1 } }
     }
 }

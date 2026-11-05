@@ -3,72 +3,37 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Lock & Sleep: when to lock, turn the screens off and sleep. Writes hypr/settings/hypridle.conf and
-// restarts hypridle.
+// Lock & Sleep: when to dim, lock, turn the screens off and sleep. Edits settings.json (idle); SettingsSync.qml
+// writes hypr/settings/hypridle.conf from it and restarts hypridle.
 ColumnLayout {
     id: page
     spacing: 20
 
     readonly property var lockOptions: [2, 5, 10, 15, 0]     // minutes, 0 = never
     readonly property var sleepOptions: [10, 20, 30, 60, 0]
-    property int lockMin: 5
-    property int sleepMin: 20
-
-    Process {
-        running: true
-        command: ["sh", "-c", "cat \"$HOME/.config/hypr/settings/hypridle.conf\""]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                // each listener block: its timeout and what it runs
-                const blocks = text.split("listener").slice(1)
-                const lock = blocks.find(b => b.includes("lock-session"))
-                const sleep = blocks.find(b => b.includes("systemctl suspend"))
-                const minutes = b => { const m = b?.match(/timeout\s*=\s*(\d+)/); return m ? Math.round(parseInt(m[1]) / 60) : 0 }
-                page.lockMin = minutes(lock)
-                page.sleepMin = minutes(sleep)
-            }
-        }
-    }
-
-    readonly property string screensOn: "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"
-
+    readonly property int lockMin: Config.idle.lockMin
+    readonly property int sleepMin: Config.idle.sleepMin
     function label(m) { return m === 0 ? "Never" : m + " min" }
-
-    function save() {
-        const blocks = []
-        if (lockMin > 0) {
-            blocks.push("# " + lockMin + " min: lock\nlistener {\n    timeout    = " + lockMin * 60 + "\n    on-timeout = loginctl lock-session\n}")
-            blocks.push("# 30 s later: screens off\nlistener {\n    timeout    = " + (lockMin * 60 + 30) + "\n    on-timeout = hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'\n    on-resume  = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'\n}")
-        }
-        if (sleepMin > 0)
-            // screens on first: an output that sleeps while off loses its CRTC and wakes black
-            blocks.push("# " + sleepMin + " min: sleep, then hibernate after 60 more min\nlistener {\n    timeout    = " + sleepMin * 60 + "\n    on-timeout = " + page.screensOn + "; systemctl suspend-then-hibernate\n}")
-        const text = "# Written by the Settings app (Lock & Sleep). hypridle still uses hyprlang.\n"
-            + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = loginctl lock-session; " + page.screensOn + "\n"
-            + "    after_sleep_cmd  = hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'\n}\n\n" + blocks.join("\n\n")
-        SettingsApp.writeHyprFile("settings/hypridle.conf", text)
-        Quickshell.execDetached(["sh", "-c", "sleep 0.3; pkill -x hypridle; hyprctl dispatch 'hl.dsp.exec_cmd(\"hypridle -c ~/.config/hypr/settings/hypridle.conf\")'"])
-    }
 
     SettingGroup {
         SettingRow {
             label: "Lock the screen after"
-            hint: "Screens turn off 30 seconds later"
+            hint: "The screen dims 30 seconds before; screens turn off 30 seconds after"
             Choice {
                 options: page.lockOptions.map(page.label)
                 index: page.lockOptions.indexOf(page.lockMin)
                 extra: index < 0 ? page.lockMin + " min (custom)" : ""
-                onPicked: i => { page.lockMin = page.lockOptions[i]; page.save() }
+                onPicked: i => Config.set("idle", "lockMin", page.lockOptions[i])
             }
         }
         SettingRow {
             label: "Sleep after"
-            hint: "Sleeping laptops hibernate after another hour to save the battery"
+            hint: Machine.canHibernate ? "Sleeping laptops hibernate after another hour to save the battery" : "Turns the screens off and sleeps"
             Choice {
                 options: page.sleepOptions.map(page.label)
                 index: page.sleepOptions.indexOf(page.sleepMin)
                 extra: index < 0 ? page.sleepMin + " min (custom)" : ""
-                onPicked: i => { page.sleepMin = page.sleepOptions[i]; page.save() }
+                onPicked: i => Config.set("idle", "sleepMin", page.sleepOptions[i])
             }
         }
         SettingRow {

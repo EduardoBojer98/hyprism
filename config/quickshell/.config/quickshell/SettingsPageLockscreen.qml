@@ -37,7 +37,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: "Live preview. The real lock screen follows it the next time the screen locks (Super+L)."
         wrapMode: Text.Wrap
-        color: Theme.muted
+        color: Theme.subtext
         font { family: Theme.font; pixelSize: Theme.fontLabel }
     }
 
@@ -48,12 +48,12 @@ ColumnLayout {
             label: "Clock"
             hint: "The " + Theme.current.name + " theme's is " + Theme.current.lock.clock
             ConfigChoice { section: "lockscreen"; key: "clock"; values: ["theme", "big", "stacked", "terminal", "readout", "small"]
-                           labels: ["Theme's", "Big", "Stacked", "Terminal", "Readout", "Small"] }
+                           labels: ["Default", "Big", "Stacked", "Terminal", "Readout", "Small"] }
         }
         SettingRow {
             label: "Position"
             ConfigChoice { section: "lockscreen"; key: "position"; values: ["theme", "center", "top", "bottom", "left"]
-                           labels: ["Theme's", "Centre", "Top", "Bottom", "Left"] }
+                           labels: ["Default", "Centre", "Top", "Bottom", "Left"] }
         }
         SettingRow {
             label: "Date"
@@ -82,7 +82,7 @@ ColumnLayout {
         Repeater {
             model: [
                 { id: "battery", name: "Battery", hint: "At the bottom edge, on machines with a battery" },
-                { id: "layout", name: "Keyboard layout", hint: "In the password field (US / Serbian Latin)" },
+                { id: "layout", name: "Keyboard layout", hint: "In the password field, when you use more than one layout" },
                 { id: "media", name: "Now playing", hint: "Title and artist at the bottom edge (playerctl)" }
             ]
             SettingRow {
@@ -151,7 +151,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Blur"
-            ConfigSlider { section: "lockscreen"; key: "blur"; from: 0; to: 6; step: 1; format: v => v === 0 ? "Sharp" : ["", "Light", "Light", "Medium", "Strong", "Strong", "Frosted"][v] }
+            ConfigSlider { section: "lockscreen"; key: "blur"; from: 0; to: 6; step: 1; format: v => v === 0 ? "Off" : ["", "Light", "Light", "Medium", "Strong", "Strong", "Frosted"][v] }
         }
         SettingRow {
             label: "Brightness"
@@ -165,7 +165,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "The clock follows the menu bar's 24-hour setting; fonts and colours come from the theme."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

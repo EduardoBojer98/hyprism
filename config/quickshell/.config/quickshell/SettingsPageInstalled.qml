@@ -11,7 +11,7 @@ import QtQuick.Layouts
 // removals run in a terminal, which shows what goes and asks before anything is removed.
 ColumnLayout {
     id: page
-    spacing: 16
+    spacing: 20
 
     property var info: null   // desktop id -> {source, package, version, size, path}; null while loading
     property var details: ({})   // desktop id -> installed-apps info, fetched when an app is opened
@@ -150,7 +150,7 @@ ColumnLayout {
                         anchors.verticalCenter: parent.verticalCenter
                         text: chip.modelData.name
                         color: chip.active ? Theme.accentText : Theme.text
-                        font { family: Theme.font; pixelSize: 13; weight: Font.Medium }
+                        font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium }
                     }
                     Rectangle {   // count badge
                         visible: page.info !== null
@@ -158,13 +158,13 @@ ColumnLayout {
                         width: Math.max(22, num.implicitWidth + 12)
                         height: 20
                         radius: 10
-                        color: chip.active ? Qt.rgba(0, 0, 0, 0.18) : Theme.fillActive
+                        color: chip.active ? Qt.alpha(Theme.accentText, 0.18) : Theme.fillActive
                         Text {
                             id: num
                             anchors.centerIn: parent
                             text: page.info ? page.count(chip.modelData) : ""
                             color: chip.active ? Theme.accentText : Theme.subtext
-                            font { family: Theme.font; pixelSize: 11; weight: Font.DemiBold }
+                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                         }
                     }
                 }
@@ -306,7 +306,7 @@ ColumnLayout {
         Layout.fillWidth: true
         text: "Click an app for its details. Uninstall opens a terminal that lists what will be removed and asks first (packages need your password). "
             + "Remove moves an entry from ~/.local/share/applications to the Trash. Apps installed by hand (in /usr/local or /opt) can't be uninstalled from here."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

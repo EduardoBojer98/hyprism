@@ -10,13 +10,15 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// Control Center at the top right of the screen under the pointer (status pill, Super+C,
-// `qs ipc call controlcenter toggle`): one glass panel holding grouped tiles.
+// Control Center, opened beside its bar item (the quick-settings item, Super+C,
+// `qs ipc call controlcenter toggle`): one panel holding grouped tiles.
 //   Wi-Fi / Bluetooth / Focus / Night Light tiles · Caffeine, shared monitor, key light, on-screen keyboard
 //   media (while something plays) · Display, Sound and Microphone sliders · Power mode
 //   shortcuts (screenshot, settings, lock, power). Notifications have their own panel (NotificationCenter.qml).
 // A tile's round icon toggles it; the rest of the tile (or a chevron) opens its list underneath.
 // The battery lives in the bar, so it isn't repeated here.
+// One file on purpose for now: the sections share the panel's expand/fold state and its tile components;
+// splitting them out (a file per section, like the Settings pages) is the next step when it grows again.
 Singleton {
     id: cc
 
@@ -132,6 +134,7 @@ Singleton {
     IpcHandler {
         target: "controlcenter"
         function toggle(): void { cc.toggle() }
+        function close(): void { popup.hide() }
         // open with a dropdown showing: wifi, bt, caffeine, out (sound), in (microphone)
         function expand(name: string): void { if (!popup.open) popup.show(); cc.expanded = name }
     }
@@ -185,7 +188,7 @@ Singleton {
     Glass {   // the backdrop every tile sits on
         anchors.fill: parent
         strong: true
-        radius: cc.style === "compact" ? Theme.radiusLarge : cc.style === "borderless" ? Theme.radius : Theme.radiusLarge + 4
+        radius: cc.style === "compact" ? Theme.radiusLarge : cc.style === "borderless" ? Theme.radius : Theme.radiusPanel
         border.width: cc.style === "borderless" ? 0 : 1
 
     // ---- header: the time large in the theme's display face, the date, then battery and the three
@@ -574,9 +577,9 @@ Singleton {
                     spacing: 10
                     // the section's title; click it to fold the section down to this one line
                     SliderHead {
-                        title: "Display and sound"
+                        title: "Screen · Sound"   // short, so the folded values fit beside it in every face
                         detail: Config.controlCenter.slidersOpen ? "Hide"
-                            : `Screen ${Math.round(cc.brightness * 100)}% · Sound ${cc.sink?.audio?.muted ? "muted" : Math.round((cc.sink?.audio?.volume ?? 0) * 100) + "%"}`
+                            : `${Math.round(cc.brightness * 100)}% · ${cc.sink?.audio?.muted ? "muted" : Math.round((cc.sink?.audio?.volume ?? 0) * 100) + "%"}`
                         isExpanded: Config.controlCenter.slidersOpen
                         onClicked: Config.set("controlCenter", "slidersOpen", !Config.controlCenter.slidersOpen)
                     }
@@ -1148,9 +1151,15 @@ Singleton {
         signal toggled()
         signal expand()
 
+        // keyboard: Tab to it, Space switches it, Enter opens its list
+        activeFocusOnTab: true
+        Keys.onSpacePressed: conn.toggled()
+        Keys.onReturnPressed: if (conn.expandable) conn.expand()
+        FocusRing {}
+
         Layout.fillWidth: true
         Layout.preferredWidth: 1
-        Layout.preferredHeight: cc.style === "compact" ? 44 : 52
+        Layout.preferredHeight: Math.max(cc.style === "compact" ? 44 : 52, Theme.hit)
         radius: cc.style === "borderless" ? Theme.radiusSmall : Theme.radius
         color: conn.isExpanded || rowHover.containsMouse ? Theme.fillHover
              : cc.style === "borderless" ? "transparent" : Theme.fill
@@ -1183,7 +1192,7 @@ Singleton {
         }
         Column {
             anchors { left: disc.right; leftMargin: 9; right: chev.visible ? chev.left : parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
-            Text { width: parent.width; text: conn.title; color: Theme.text; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+            Text { width: parent.width; text: conn.title; color: Theme.text; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
             Text { width: parent.width; text: conn.subtitle; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
         }
         Chevron { id: chev; visible: conn.expandable; open: conn.isExpanded; size: 12; anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter } }
@@ -1202,6 +1211,10 @@ Singleton {
         property bool isExpanded: false
         signal toggled()
         signal expand()
+        activeFocusOnTab: true   // keyboard: Space switches it, Enter opens its list
+        Keys.onSpacePressed: qt.toggled()
+        Keys.onReturnPressed: if (qt.expandable) qt.expand()
+        FocusRing {}
 
         Layout.fillWidth: true
         Layout.preferredWidth: 1
@@ -1230,6 +1243,8 @@ Singleton {
                 horizontalAlignment: Text.AlignHCenter
                 text: qt.label
                 elide: Text.ElideRight
+                fontSizeMode: Text.HorizontalFit   // wide faces (mono) shrink a little before they cut a word
+                minimumPixelSize: Theme.fontCaption - 2
                 color: qt.active ? Theme.tileOnText : Theme.text
                 font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
             }
@@ -1238,9 +1253,10 @@ Singleton {
                 horizontalAlignment: Text.AlignHCenter
                 text: qt.status
                 elide: Text.ElideRight
-                opacity: 0.75
+                fontSizeMode: Text.HorizontalFit
+                minimumPixelSize: Theme.fontCaption - 2
                 color: qt.active ? Theme.tileOnText : Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontCaption - 1; features: { "tnum": 1 } }
+                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
             }
         }
         MouseArea {
@@ -1256,7 +1272,7 @@ Singleton {
             visible: qt.expandable
             anchors { right: parent.right; top: parent.top; margins: 5 }
             width: 20; height: 20; radius: 10
-            color: qt.active ? Qt.rgba(0, 0, 0, chevArea.containsMouse || qt.isExpanded ? 0.16 : 0.09)
+            color: qt.active ? Qt.alpha(Theme.tileOnText, chevArea.containsMouse || qt.isExpanded ? 0.16 : 0.09)
                              : chevArea.containsMouse || qt.isExpanded ? Theme.fillActive : Theme.fillHover
             Behavior on color { ColorAnimation { duration: Theme.animFast } }
             Chevron {
@@ -1277,6 +1293,10 @@ Singleton {
         property string glyph
         property string label
         signal clicked()
+        activeFocusOnTab: true
+        Keys.onSpacePressed: ib.clicked()
+        Keys.onReturnPressed: ib.clicked()
+        FocusRing {}
         Layout.fillWidth: true
         Layout.preferredWidth: 1
         Layout.preferredHeight: 50
@@ -1289,7 +1309,7 @@ Singleton {
             anchors.centerIn: parent
             spacing: 2
             Text { anchors.horizontalCenter: parent.horizontalCenter; text: ib.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
-            Text { anchors.horizontalCenter: parent.horizontalCenter; text: ib.label; color: Theme.subtext; font { family: Theme.font; pixelSize: 10; weight: Font.Medium } }
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: ib.label; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium } }
         }
         MouseArea { id: ibArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ib.clicked() }
     }

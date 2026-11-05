@@ -67,7 +67,7 @@ Singleton {
         if (c.moon) { const m = moonOn(d); if (m) out.push({ title: m.title, kind: "moon", glyph: m.glyph }) }
         return out
     }
-    function tone(kind) { return kind === "holiday" ? Theme.error : kind === "day" ? Theme.accent : Theme.subtext }
+    function tone(kind) { return kind === "holiday" ? Theme.accent : Theme.subtext }   // a day off in the accent; observances and the moon quiet (red is not an error here)
 
     // the first event from today on, for Spotlight's home view
     readonly property var next: {
@@ -162,7 +162,7 @@ Singleton {
         Glass {
             anchors.fill: parent
             strong: true
-            radius: Theme.radiusLarge + 4
+            radius: Theme.radiusPanel
             WheelHandler { onWheel: event => root.shift(event.angleDelta.y > 0 ? -1 : 1) }
 
             Column {
@@ -176,7 +176,7 @@ Singleton {
                     Text {
                         text: root.now.getDate()
                         color: Theme.accent
-                        font { family: Theme.font; pixelSize: 40; weight: Font.DemiBold; features: { "tnum": 1 } }
+                        font { family: Theme.displayFont; pixelSize: Theme.fontHero; weight: Theme.displayWeight; features: { "tnum": 1 } }
                     }
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
@@ -247,7 +247,7 @@ Singleton {
                                 horizontalAlignment: Text.AlignLeft; verticalAlignment: Text.AlignVCenter
                                 text: root.weekOf(root.addDays(week.first, 3))
                                 color: Theme.muted
-                                font { family: Theme.font; pixelSize: 10; features: { "tnum": 1 } }
+                                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
                             }
                             Repeater {
                                 model: 7

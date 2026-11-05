@@ -18,7 +18,7 @@ Item {
 
     clip: true
 
-    Rectangle { anchors.fill: parent; color: "#1c1c1e" }
+    Rectangle { anchors.fill: parent; color: Theme.base }
     Image {
         id: bg
         anchors.fill: parent

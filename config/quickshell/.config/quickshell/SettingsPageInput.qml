@@ -5,7 +5,7 @@ import QtQuick.Layouts
 
 // Keyboard & Touchpad: keyboard layouts (any xkb layout or variant, up to 4, the first is the
 // default), the layout shortcut, key repeat, touchpad and pointer.
-// Applied live (hyprctl eval) and saved to hypr/settings/input.lua.
+// Saved in settings.json (input); SettingsSync.qml writes hypr/settings/input.lua and applies it live.
 ColumnLayout {
     id: page
     spacing: 20
@@ -18,17 +18,17 @@ ColumnLayout {
         { name: "None",       option: "" },        // only the layout widget in the bar switches
     ]
 
-    // Mirrors hypr/settings/input.lua; starts from the shipped defaults until read back
-    property var s: ({ list: [{ code: "us", variant: "" }], shortcut: 0, repeat_rate: 25, repeat_delay: 600, sensitivity: 0, natural_scroll: true, tap_to_click: true })
-
-    // set only after a successful read-back: until then the controls are off, so a write can't clobber real values
-    property bool loaded: false
+    // settings.json input, under the names the controls use (SettingsSync.qml writes input.lua and applies it)
+    readonly property var s: ({ list: Array.from(Config.input.layouts), shortcut: Config.input.shortcut, repeat_rate: Config.input.repeatRate,
+                                repeat_delay: Config.input.repeatDelay, sensitivity: Config.input.sensitivity,
+                                natural_scroll: Config.input.naturalScroll, tap_to_click: Config.input.tapToClick })
+    readonly property var keyOf: ({ list: "layouts", shortcut: "shortcut", repeat_rate: "repeatRate", repeat_delay: "repeatDelay",
+                                    sensitivity: "sensitivity", natural_scroll: "naturalScroll", tap_to_click: "tapToClick" })
+    // until the values written before are imported, the controls are off, so nothing can overwrite them
+    readonly property bool loaded: Config.input.imported
     enabled: loaded
     opacity: loaded ? 1 : 0.5
-
-    function set(k, v) { if (!loaded) return; const n = Object.assign({}, s); n[k] = v; s = n; saveTimer.restart() }
-    Timer { id: saveTimer; interval: 300; onTriggered: page.save() } // sliders: save once dragging pauses
-    Component.onDestruction: if (saveTimer.running) { saveTimer.stop(); save() }
+    function set(k, v) { if (loaded) Config.set("input", keyOf[k], v) }
 
     // layouts: add from the search, remove, move one to the top (the default)
     property string query: ""
@@ -47,21 +47,6 @@ ColumnLayout {
     }
     function removeLayout(i) { if (s.list.length > 1) set("list", s.list.filter((_, j) => j !== i)) }
     function makeFirst(i) { const l = s.list.slice(); l.unshift(l.splice(i, 1)[0]); set("list", l) }
-
-    function save() {
-        if (!loaded) return
-        const many = s.list.length > 1
-        const t = {
-            kb_layout: s.list.map(l => l.code).join(","),
-            kb_variant: many || s.list[0].variant ? s.list.map(l => l.variant).join(",") : "",
-            kb_options: many ? shortcuts[s.shortcut].option : "",
-            repeat_rate: s.repeat_rate, repeat_delay: s.repeat_delay, sensitivity: s.sensitivity,
-            natural_scroll: s.natural_scroll, tap_to_click: s.tap_to_click,
-        }
-        const table = SettingsApp.lua(t)
-        Quickshell.execDetached(["hyprctl", "eval", "INPUT = " + table.replace(/\n/g, " ") + "; apply_input()"])
-        SettingsApp.writeHyprFile("settings/input.lua", "-- Written by the Settings app (Keyboard & Touchpad). Safe to edit by hand.\nreturn " + table)
-    }
 
     Text {
         visible: !page.loaded
@@ -89,7 +74,7 @@ ColumnLayout {
                     width: 30; height: 18; radius: 4
                     color: "transparent"
                     border { color: Qt.alpha(Theme.text, 0.45); width: 1 }
-                    Text { anchors.centerIn: parent; text: lay.modelData.code.toUpperCase(); color: Theme.text; font { family: Theme.font; pixelSize: 10; weight: Font.Bold } }
+                    Text { anchors.centerIn: parent; text: lay.modelData.code.toUpperCase(); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Bold } }
                 }
                 Column {
                     anchors { left: cap.right; leftMargin: 12; right: buttons.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
@@ -108,7 +93,7 @@ ColumnLayout {
         SettingRow {
             visible: page.s.list.length > 1
             label: "Switch layouts with"
-            hint: page.shortcuts[page.s.shortcut].option ? "Or click the layout in the bar" : "Only from the layout in the bar"
+            hint: (page.shortcuts[page.s.shortcut].option ? "Also " : "") + "Super+Ctrl+Space, or click the layout in the bar"
             Choice {
                 options: page.shortcuts.map(x => x.name)
                 index: page.s.shortcut
@@ -213,27 +198,6 @@ ColumnLayout {
             label: "MX Master buttons, gestures and haptics"
             hint: "JuhRadial MX settings"
             PillButton { text: "Open"; onClicked: Quickshell.execDetached(["juhradial-settings"]) }
-        }
-    }
-
-    // Read the current values back from Hyprland
-    Component.onCompleted: reader.running = true
-    Process {
-        id: reader
-        command: ["hyprctl", "repl", "INPUT.kb_layout .. '|' .. INPUT.kb_variant .. '|' .. INPUT.kb_options .. '|' .. INPUT.repeat_rate .. '|' .. INPUT.repeat_delay .. '|' .. INPUT.sensitivity .. '|' .. tostring(INPUT.natural_scroll) .. '|' .. tostring(INPUT.tap_to_click)"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const p = text.trim().split("|")
-                if (p.length < 8 || page.loaded) return
-                const variants = p[1].split(",")
-                page.s = {
-                    list: p[0].split(",").filter(c => c).map((c, i) => ({ code: c, variant: variants[i] ?? "" })),
-                    shortcut: Math.max(0, page.shortcuts.findIndex(x => x.option === p[2])),
-                    repeat_rate: parseInt(p[3]), repeat_delay: parseInt(p[4]), sensitivity: parseFloat(p[5]),
-                    natural_scroll: p[6] === "true", tap_to_click: p[7] === "true",
-                }
-                page.loaded = true
-            }
         }
     }
 }

@@ -1,0 +1,23 @@
+# Reactor: terminal palette of the Reactor theme (Quickshell Themes.qml). Generated; edit freely.
+background = #0c0d08
+foreground = #f3f6df
+cursor-color = #e4ff1a
+cursor-text = #0c0d08
+selection-background = #3d4510
+selection-foreground = #f3f6df
+palette = 0=#1f2216
+palette = 1=#ff4f6d
+palette = 2=#3ddc97
+palette = 3=#e4ff1a
+palette = 4=#6fb3ff
+palette = 5=#d98aff
+palette = 6=#5ee0d6
+palette = 7=#c2c69c
+palette = 8=#8a8e6a
+palette = 9=#ff7a90
+palette = 10=#6ee8b2
+palette = 11=#efff6b
+palette = 12=#99c9ff
+palette = 13=#e5aaff
+palette = 14=#8aeae2
+palette = 15=#f3f6df

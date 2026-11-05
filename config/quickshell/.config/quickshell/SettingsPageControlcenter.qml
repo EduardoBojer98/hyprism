@@ -49,7 +49,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.maximumWidth: 560
         implicitHeight: stack.implicitHeight + 24
-        radius: Theme.radiusLarge + 4
+        radius: Theme.radiusPanel
         color: Theme.glassStrong
         border { color: Theme.stroke; width: 1 }
 
@@ -94,7 +94,7 @@ ColumnLayout {
                                 text: sec.inf.label + (sec.on ? "" : "  ·  hidden")
                                 elide: Text.ElideRight
                                 color: Theme.text
-                                font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold }
+                                font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold }
                             }
                             Toggle { checked: sec.on; onToggled: on => page.setShown(sec.modelData, on) }
                         }
@@ -127,12 +127,12 @@ ColumnLayout {
                                             id: chipRow
                                             anchors.centerIn: parent
                                             spacing: 6
-                                            Text { anchors.verticalCenter: parent.verticalCenter; text: chip.inf.glyph; color: chip.on ? Theme.text : Theme.muted; font { family: Theme.iconFont; pixelSize: 13 } }
+                                            Text { anchors.verticalCenter: parent.verticalCenter; text: chip.inf.glyph; color: chip.on ? Theme.accent : Theme.subtext; font { family: Theme.iconFont; pixelSize: 13 } }
                                             Text {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: chip.inf.label + (chip.here ? "" : " (not here)")
-                                                color: chip.on ? Theme.text : Theme.muted
-                                                font { family: Theme.font; pixelSize: 12; strikeout: !chip.on }
+                                                color: chip.on ? Theme.text : Theme.subtext   // off: a plain chip; on: accent wash and edge
+                                                font { family: Theme.font; pixelSize: Theme.fontLabel }
                                             }
                                         }
                                     }
@@ -151,7 +151,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "Drag a section or a tile to move it. Highlighted tiles are shown; click one to hide it. \"Not here\" tiles need hardware this computer doesn't have."
-        color: Theme.muted
+        color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }

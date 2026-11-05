@@ -44,7 +44,7 @@ ColumnLayout {
         SettingRow {
             label: "Current location"
             hint: Weather.ready ? Math.round(Weather.temperature) + "° · " + Weather.condition : "Loading…"
-            Text { text: Weather.city; color: Theme.text; font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold } }
+            Text { text: Weather.city; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
         }
         SettingRow {
             label: "Change city"
@@ -58,7 +58,7 @@ ColumnLayout {
                     anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
                     verticalAlignment: TextInput.AlignVCenter
                     color: Theme.text
-                    font { family: Theme.font; pixelSize: 13 }
+                    font { family: Theme.font; pixelSize: Theme.fontSize }
                     onAccepted: if (text.trim().length > 1) page.search(text.trim())
                     Text { visible: !field.text; text: "Type a city and press Enter"; color: Theme.muted; font: field.font; anchors.verticalCenter: parent.verticalCenter }
                 }

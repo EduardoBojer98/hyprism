@@ -19,7 +19,9 @@ ColumnLayout {
         const own = ["Outfit", "IBM Plex Sans", "Archivo", "Martian Mono", "Cantarell", "JetBrainsMono Nerd Font", "Inter"]
         return own.concat(Qt.fontFamilies().filter(f => !own.includes(f) && !/Nerd Font|Emoji|Symbols/.test(f)))
     }
-    readonly property var swatches: ["#ff9e7a", "#ffb000", "#b6ff3b", "#9fd18b", "#5ad1c2", "#5b9cff", "#3584e4", "#8ab4ff", "#c7a3ff", "#ff6b8a", "#ff3b1f", "#e30613", "#f2d48a", "#e8e8ea", "#1a1a1a"]
+    // the colours offered as accents
+    readonly property var swatches: [
+        "#ff9e7a", "#ffb000", "#b6ff3b", "#9fd18b", "#5ad1c2", "#5b9cff", "#3584e4", "#8ab4ff", "#c7a3ff", "#ff6b8a", "#ff3b1f", "#e30613", "#f2d48a", "#e8e8ea", "#1a1a1a"]   // palette
 
     function adjust(key, value) { return Themes.adjust(key, value) }
     function hex(t) {
@@ -33,6 +35,12 @@ ColumnLayout {
     Component.onCompleted: Quickshell.execDetached(["theme-wallpaper", "--all"])
     SettingGroup {
         title: "Theme"
+        SettingRow {
+            label: "Light or dark"
+            hint: page.a.mode === "theme" ? "Each theme's own (" + page.base.name + " is " + (page.base.dark ? "dark" : "light") + "); every theme has both"
+                : "Every theme in its " + page.a.mode + " version; windows, apps, terminal and wallpaper follow"
+            ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark"]; labels: ["Default", "Light", "Dark"] }
+        }
         Text {
             Layout.fillWidth: true
             Layout.margins: 16
@@ -145,7 +153,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Reset " + page.base.name
-            hint: Object.keys(page.mine).length ? Object.keys(page.mine).length + " change(s) from the original" : "No changes"
+            hint: Object.keys(page.mine).length ? Object.keys(page.mine).length + (Object.keys(page.mine).length === 1 ? " change" : " changes") + " from the original" : "No changes"
             PillButton { text: "Reset"; enabled: Object.keys(page.mine).length > 0; onClicked: Config.set("appearance", "custom", Object.fromEntries(Object.entries(page.a.custom ?? {}).filter(([k]) => k !== page.a.theme))) }
         }
         SaveTheme {}
@@ -154,12 +162,6 @@ ColumnLayout {
     // ---- personal: kept whatever the theme ---------------------------------------------------------
     SettingGroup {
         title: "Everywhere"
-        SettingRow {
-            label: "Light or dark"
-            hint: page.a.mode === "theme" ? "Each theme's own (" + page.base.name + " is " + (page.base.dark ? "dark" : "light") + "); every theme has both"
-                : "Every theme in its " + page.a.mode + " version; windows, apps, terminal and wallpaper follow"
-            ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark"]; labels: ["Theme's", "Light", "Dark"] }
-        }
         SettingRow {
             label: "Theme wallpaper"
             hint: "Each theme brings its own picture; off keeps yours (Wallpaper page)"
@@ -172,7 +174,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Scale all text"
-            hint: "On top of the theme's text size, for both screens"
+            hint: "On top of the theme's text size, on every screen"
             ConfigSlider { section: "appearance"; key: "fontScale"; from: 0.85; to: 1.25; step: 0.05; format: v => Math.round(v * 100) + "%" }
         }
         SettingRow {

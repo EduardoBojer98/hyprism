@@ -172,7 +172,7 @@ PanelWindow {
         readonly property int pad: Theme.dockPad
         width: dock.vertical ? Theme.dockThickness : row.implicitWidth + pad * 2 + (dock.shape === "pill" ? 8 : 0)
         height: dock.vertical ? row.implicitHeight + pad * 2 + (dock.shape === "pill" ? 8 : 0) : Theme.dockThickness
-        radius: dock.shape === "pill" ? across / 2 : dock.shape === "tile" ? Theme.radiusLarge + 4 : Theme.radius
+        radius: dock.shape === "pill" ? across / 2 : dock.shape === "tile" ? Theme.radiusPanel : Theme.radius
         color: ({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[dock.ds.fill] ?? Theme.glass
         border { width: Theme.line; color: dock.ds.fill === "ink" ? Theme.text : Theme.stroke }
 
@@ -185,7 +185,7 @@ PanelWindow {
             blur: Theme.depth === "glow" ? 26 : 22
             spread: -2
             radius: parent.radius
-            color: Theme.depth === "glow" ? Qt.alpha(Theme.accent, 0.2) : Qt.rgba(0, 0, 0, Theme.light ? 0.18 : 0.4)
+            color: Theme.depth === "glow" ? Qt.alpha(Theme.accent, 0.2) : Theme.shadow
         }
         // Poster's hard offset shadow: a block of the line colour drawn under the island (z < 0)
         Rectangle {
@@ -508,7 +508,7 @@ PanelWindow {
         return vertical ? Qt.point(across, along) : Qt.point(along, across)
     }
     // the screen side the icons grow and lift from (Item.TransformOrigin)
-    readonly property int edgeOrigin: ({ bottom: Item.Bottom, top: Item.Top, left: Item.Left, right: Item.Right })[edge]
+    readonly property int edgeOrigin: ({ bottom: Item.Bottom, top: Item.Top, left: Item.Left, right: Item.Right })[edge] ?? Item.Bottom   // before the edge is known
     // this window's top-left on the screen (Anchor: panels opened from the dock appear beside it)
     function origin() {   // Hyprland puts this window inside the bar's room on the edges they share
         const s = dock.screen, bh = Theme.barShownOn(s) ? Theme.barHeight : 0, be = Theme.barEdge

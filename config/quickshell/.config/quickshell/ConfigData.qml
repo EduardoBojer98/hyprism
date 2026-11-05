@@ -137,6 +137,7 @@ JsonAdapter {
     }
     property JsonObject system: JsonObject {
         property string taskManager: "auto"      // desktop id, or "auto": first installed (Sensors.taskManagers)
+        property bool welcomed: false            // the first-login hint has been shown (shell.qml)
     }
     property JsonObject calendar: JsonObject {
         property bool holidays: true            // public holidays (date.nager.at, cached per year)
@@ -186,5 +187,35 @@ JsonAdapter {
         property list<string> selected: []       // full paths for source "selected"
         property string order: "shuffle"         // "shuffle" or "name"
         property int blur: 0                     // desktop only (a blurred copy in ~/.cache); 0 = sharp
+    }
+    // Hyprland-side settings: Settings edits these; SettingsSync.qml writes the files Hyprland, hypridle and
+    // monswitch read from them. imported: the values were read once from the file written before (no loss).
+    property JsonObject idle: JsonObject {
+        property int lockMin: 5                  // minutes to lock; 0 = never
+        property int sleepMin: 20                // minutes to sleep; 0 = never
+        property bool imported: false
+    }
+    property JsonObject input: JsonObject {
+        property var layouts: [{ code: "us", variant: "" }]   // xkb layouts, the first is the default (max 4)
+        property int shortcut: 0                 // switch layouts with: 0 Alt+Shift, 1 Ctrl+Shift, 2 Caps Lock, 3 none
+        property int repeatRate: 25              // keys per second while held
+        property int repeatDelay: 600            // ms before a held key repeats
+        property real sensitivity: 0             // pointer speed, -1..1
+        property bool naturalScroll: true
+        property bool tapToClick: true
+        property bool imported: false
+    }
+    property JsonObject displays: JsonObject {
+        property var layout: ({})                // output -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled }
+        property bool imported: false
+    }
+    property JsonObject monitorShare: JsonObject {   // a monitor shared with another computer (~/.local/bin/monswitch)
+        property bool enabled: false
+        property string output: ""               // Hyprland output name, e.g. HDMI-A-1
+        property string thisInput: "0x11"        // DDC input (VCP 0x60) this computer is on
+        property string otherInput: "0x12"       // the other computer's input
+        property string mirror: "eDP-1"          // screen it mirrors while away (keeps a signal)
+        property string mirrorMode: "1920x1080@60"
+        property bool imported: false
     }
 }

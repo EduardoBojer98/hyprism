@@ -4,8 +4,8 @@ import QtQuick
 import QtQuick.Layouts
 
 // Displays: drag screens to arrange them; per screen: on/off, mirror, resolution, refresh rate, scale,
-// rotation, adaptive sync and 10-bit colour. Apply changes Hyprland live (hyprctl eval) and saves
-// hypr/settings/displays.lua; unless you keep them, the old settings come back after 15 s.
+// rotation, adaptive sync and 10-bit colour. Apply saves the layout in settings.json (displays); SettingsSync.qml
+// writes hypr/settings/displays.lua and applies it live. Unless you keep it, the old layout comes back after 15 s.
 ColumnLayout {
     id: page
     spacing: 20
@@ -45,19 +45,17 @@ ColumnLayout {
 
     Process {
         id: read
-        // Hyprland reports the live state; adaptive sync's mode (on / fullscreen) only lives in the saved file
-        command: ["sh", "-c", "hyprctl -j monitors all; echo '@@'; cat \"$HOME/.config/hypr/settings/displays.lua\" 2>/dev/null"]
+        // Hyprland reports the live state; adaptive sync's mode (on / fullscreen) only lives in the saved layout
+        command: ["hyprctl", "-j", "monitors", "all"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const [json, lua] = text.split("@@\n")
-                const list = JSON.parse(json)
+                const list = JSON.parse(text)
                 const e = {}
                 for (const m of list) {
-                    const block = (lua ?? "").match(new RegExp('\\["' + m.name + '"\\] = \\{([^}]*)\\}'))?.[1] ?? ""
                     // a screen that's off may report 0x0: its first (preferred) mode then
                     const first = (m.availableModes?.[0] ?? "1920x1080@60").split("@")
                     e[m.name] = { mode: m.width ? m.width + "x" + m.height + "@" + Math.round(m.refreshRate) : first[0] + "@" + Math.round(parseFloat(first[1])), x: m.x, y: m.y,
-                                  scale: m.scale, transform: m.transform, vrr: Number(block.match(/\["vrr"\] = (\d)/)?.[1] ?? 0),
+                                  scale: m.scale, transform: m.transform, vrr: Number(Config.displays.layout[m.name]?.vrr ?? 0),
                                   bitdepth: /2101010/.test(m.currentFormat) ? 10 : 8,
                                   mirror: m.mirrorOf && m.mirrorOf !== "none" ? m.mirrorOf : "", disabled: m.disabled === true }
                 }
@@ -100,10 +98,7 @@ ColumnLayout {
             if (e.mirror) out[n].mirror = e.mirror
         }
         if (confirm) { previous = saved; countdown.left = 15; countdown.start() }
-        const table = SettingsApp.lua(out)
-        Quickshell.execDetached(["hyprctl", "eval", "DISPLAYS = " + table.replace(/\n/g, " ") + "; apply_displays()"])
-        SettingsApp.writeHyprFile("settings/displays.lua",
-            "-- Written by the Settings app (Displays). Safe to edit by hand; positions are in logical pixels.\nreturn " + table)
+        Config.set("displays", "layout", out)   // SettingsSync writes displays.lua and applies it
         reloadTimer.restart()
     }
     Timer { id: reloadTimer; interval: 800; onTriggered: page.load() }
@@ -156,8 +151,8 @@ ColumnLayout {
 
                     Column {
                         anchors.centerIn: parent
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: page.label(page.monitors.find(m => m.name === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: 13; weight: Font.DemiBold } }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.e.mode.replace("@", " · ") + " Hz"; color: Theme.subtext; font { family: Theme.font; pixelSize: 11 } }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: page.label(page.monitors.find(m => m.name === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.e.mode.replace("@", " · ") + " Hz"; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                     }
 
                     MouseArea {
@@ -187,14 +182,14 @@ ColumnLayout {
         Text {
             anchors { left: parent.left; bottom: parent.bottom; margins: 10 }
             text: "Drag the screens to match how they sit on your desk"
-            color: Theme.muted
-            font { family: Theme.font; pixelSize: 11 }
+            color: Theme.subtext
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
         }
     }
 
     // ---- selected screen ---------------------------------------------------------------------
     SettingGroup {
-        title: page.sel ? page.label(page.sel) + " — " + page.sel.description : ""
+        title: page.sel ? page.label(page.sel) + " screen" : ""   // the vendor model code says little; the canvas above shows which one
         visible: page.sel !== null
 
         SettingRow {
@@ -242,7 +237,7 @@ ColumnLayout {
         SettingRow {
             visible: !page.selEdit?.disabled && !page.selEdit?.mirror
             label: "Scale"
-            hint: "Bigger text and controls; 1.2–1.25 suits the 13\" laptop panel"
+            hint: "Bigger text and controls; small sharp screens (a laptop's) usually want 1.25–1.5"
             Choice {
                 readonly property var values: [1, 1.2, 1.25, 1.5, 1.6, 2]
                 options: values.map(v => v + "×")
@@ -280,9 +275,9 @@ ColumnLayout {
         Layout.fillWidth: true
         Text {
             Layout.fillWidth: true
-            text: page.dirty ? "Unsaved changes" : "Saved to hypr/settings/displays.lua"
+            text: page.dirty ? "Unsaved changes" : "Saved"
             color: page.dirty ? Theme.yellow : Theme.muted
-            font { family: Theme.font; pixelSize: 12 }
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
         PillButton { text: "Revert"; enabled: page.dirty; onClicked: page.load() }
         PillButton { text: "Apply"; primary: true; enabled: page.dirty; onClicked: page.apply(true) }
@@ -302,7 +297,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 text: `Keep these display settings? Going back in ${countdown.left} s`
                 color: Theme.text
-                font { family: Theme.font; pixelSize: 13; weight: Font.Medium }
+                font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium }
             }
             PillButton { text: "Go back"; onClicked: page.revert() }
             PillButton { text: "Keep"; primary: true; onClicked: page.keep() }

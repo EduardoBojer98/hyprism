@@ -69,7 +69,8 @@ Singleton {
             }
         }
     }
-    Timer { interval: 3000; running: true; repeat: true; triggeredOnStart: true; onTriggered: read.running = true }
+    // only while something shows them: this panel, or the Control Center's temperature line
+    Timer { interval: 3000; running: root.open || ControlCenter.open; repeat: true; triggeredOnStart: true; onTriggered: read.running = true }
 
     Process {
         id: nvRead
@@ -94,8 +95,8 @@ Singleton {
             }
         }
     }
-    // 10 s, longer than the GPU's ~6 s sleep delay, so these reads never keep it awake
-    Timer { interval: 10000; running: true; repeat: true; triggeredOnStart: true; onTriggered: nvRead.running = true }
+    // 10 s, longer than the GPU's ~6 s sleep delay, so these reads never keep it awake; only while this panel is open
+    Timer { interval: 10000; running: root.open; repeat: true; triggeredOnStart: true; onTriggered: nvRead.running = true }
 
     // Everything else, as "key value…" lines
     Process {
@@ -172,7 +173,7 @@ Singleton {
         Glass {
             anchors.fill: parent
             strong: true
-            radius: Theme.radiusLarge + 4
+            radius: Theme.radiusPanel
 
             Flickable {
                 anchors { fill: parent; margins: 10 }
@@ -210,7 +211,7 @@ Singleton {
                             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
                             spacing: 6
                             // usable is below installed: the built-in GPU's memory (and a little firmware) is carved out of it
-                            Meter { label: root.memTotal > 0 ? `Memory (${Math.ceil(root.memTotal + root.vramTotal)} GB installed)` : "Memory"; used: root.memUsed; total: root.memTotal }
+                            Meter { label: root.memTotal > 0 ? `Memory · ${Math.ceil(root.memTotal + root.vramTotal)} GB` : "Memory"; used: root.memUsed; total: root.memTotal }
                             Meter { visible: root.swapTotal > 0; label: "Swap"; used: root.swapUsed; total: root.swapTotal }
                             Meter { visible: root.vramTotal > 0; label: "Built-in GPU memory"; used: root.vramUsed; total: root.vramTotal }
                             Meter { visible: root.nv !== null; label: root.nvName.replace(/ Laptop GPU$/, "") + " memory"; used: root.nv?.memUsed ?? 0; total: root.nv?.memTotal ?? 1 }
@@ -255,16 +256,16 @@ Singleton {
                             Item {
                                 width: parent.width; height: 26
                                 Text { anchors.verticalCenter: parent.verticalCenter; text: "Top processes"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
-                                Text { anchors { right: parent.right; rightMargin: 48; verticalCenter: parent.verticalCenter } text: "CPU"; color: Theme.muted; font { family: Theme.font; pixelSize: 10; weight: Font.DemiBold } }
-                                Text { anchors { right: parent.right; verticalCenter: parent.verticalCenter } text: "Memory"; color: Theme.muted; font { family: Theme.font; pixelSize: 10; weight: Font.DemiBold } }
+                                Text { anchors { right: parent.right; rightMargin: 64; verticalCenter: parent.verticalCenter } text: "CPU"; color: Theme.muted; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
+                                Text { anchors { right: parent.right; verticalCenter: parent.verticalCenter } text: "Memory"; color: Theme.muted; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
                             }
                             Repeater {
                                 model: root.procs
                                 Item {
                                     required property var modelData
                                     width: procList.width; height: 22
-                                    Text { anchors { left: parent.left; right: parent.right; rightMargin: 100; verticalCenter: parent.verticalCenter } text: modelData.name; elide: Text.ElideRight; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
-                                    Text { anchors { right: parent.right; rightMargin: 48; verticalCenter: parent.verticalCenter } text: modelData.cpu.toFixed(1) + "%"; color: modelData.cpu >= 50 ? Theme.warning : Theme.text; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
+                                    Text { anchors { left: parent.left; right: parent.right; rightMargin: 116; verticalCenter: parent.verticalCenter } text: modelData.name; elide: Text.ElideRight; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                                    Text { anchors { right: parent.right; rightMargin: 64; verticalCenter: parent.verticalCenter } text: modelData.cpu.toFixed(1) + "%"; color: modelData.cpu >= 50 ? Theme.warning : Theme.text; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
                                     Text { anchors { right: parent.right; verticalCenter: parent.verticalCenter } text: modelData.mem.toFixed(1) + "%"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
                                 }
                             }
@@ -298,6 +299,9 @@ Singleton {
 
     // ---- building blocks -------------------------------------------------------------------------
     component Tile_: Rectangle { radius: Theme.radius; color: Theme.fill }
+    // a usage level: quiet ink while there is room, full ink when it is getting full, the warning near the top
+    // (no accent: it marks state, and in the red themes it would read as an alarm)
+    function levelColour(f) { return f >= 0.9 ? Theme.warning : f >= 0.75 ? Theme.text : Theme.subtext }
 
     // CPU / GPU tile: name and temperature, load bar, detail
     component Chip_: Rectangle {
@@ -320,20 +324,28 @@ Singleton {
             Text {
                 text: isNaN(chip.temp) ? "–" : Math.round(chip.temp) + "°"
                 color: chip.temp >= 90 ? Theme.error : chip.temp >= 80 ? Theme.warning : Theme.text
-                font { family: Theme.font; pixelSize: 24; weight: Font.DemiBold; features: { "tnum": 1 } }
+                font { family: Theme.displayFont; pixelSize: Theme.fontDisplay; weight: Theme.displayWeight; features: { "tnum": 1 } }
             }
             Rectangle {
                 visible: !chip.note
                 width: parent.width; height: 4; radius: 2
                 color: Theme.fill
-                Rectangle { width: Math.max(4, parent.width * chip.load); height: parent.height; radius: 2; color: chip.load >= 0.85 ? Theme.warning : Theme.selected; Behavior on width { NumberAnimation { duration: Theme.anim } } }
+                Rectangle { width: Math.max(4, parent.width * chip.load); height: parent.height; radius: 2; color: root.levelColour(chip.load); Behavior on width { NumberAnimation { duration: Theme.anim } } }
             }
-            Text {
+            Text {   // load, then the detail on its own line so neither is cut in a narrow tile
                 width: parent.width
-                text: chip.note || Math.round(chip.load * 100) + "% load" + (chip.detail ? "  ·  " + chip.detail : "")
+                text: chip.note || Math.round(chip.load * 100) + "% load"
                 elide: Text.ElideRight
                 color: Theme.subtext
-                font { family: Theme.font; pixelSize: 10; features: { "tnum": 1 } }
+                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
+            }
+            Text {
+                visible: !chip.note && chip.detail !== ""
+                width: parent.width
+                text: chip.detail
+                elide: Text.ElideRight
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
             }
         }
     }
@@ -348,8 +360,8 @@ Singleton {
         spacing: 4
         RowLayout {
             Layout.fillWidth: true
-            Text { Layout.fillWidth: true; text: meter.label; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
-            Text { text: `${meter.used.toFixed(1)} / ${meter.total.toFixed(1)} GB`; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
+            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: meter.label; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+            Text { Layout.minimumWidth: implicitWidth; text: `${meter.used.toFixed(1)} / ${meter.total.toFixed(1)} GB`; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
         }
         Rectangle {
             Layout.fillWidth: true
@@ -358,7 +370,7 @@ Singleton {
             Rectangle {
                 readonly property real f: meter.total > 0 ? Math.min(1, meter.used / meter.total) : 0
                 width: Math.max(6, parent.width * f); height: parent.height; radius: 3
-                color: f >= 0.9 ? Theme.warning : Theme.selected
+                color: root.levelColour(f)
                 Behavior on width { NumberAnimation { duration: Theme.anim } }
             }
         }

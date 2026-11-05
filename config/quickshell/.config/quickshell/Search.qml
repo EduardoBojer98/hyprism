@@ -116,9 +116,9 @@ Singleton {
         { id: "logout", title: "Log out", words: "logout log out exit", glyph: "\u{F0343}", cmd: ["hyprshutdown"] },
         { id: "reboot", title: "Restart", words: "restart reboot", glyph: "\u{F0709}", cmd: ["systemctl", "reboot"] },
         { id: "poweroff", title: "Shut down", words: "shutdown shut down power off", glyph: "\u{F0425}", cmd: ["systemctl", "poweroff"] },
-        { id: "monswitch", title: "Hand the shared monitor over / back", words: "monitor acer switch pc input shared", glyph: "\u{F0379}", cmd: ["monswitch", "toggle"] },
+        { id: "monswitch", title: "Hand the shared monitor over / back", words: "monitor switch pc input shared kvm", glyph: "\u{F0379}", cmd: ["monswitch", "toggle"] },
         { id: "shot", title: "Screenshot an area", words: "screenshot capture annotate satty", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot"] },
-        { id: "shot-all", title: "Screenshot both screens", words: "screenshot capture full screen all monitors", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot all"] },
+        { id: "shot-all", title: "Screenshot all screens", words: "screenshot capture full screen all monitors", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot all"] },
         { id: "shot-window", title: "Screenshot the focused window", words: "screenshot capture window", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot window"] },
         { id: "shot-delay", title: "Screenshot in 5 seconds", words: "screenshot capture delay timer menu tooltip", glyph: "\u{F0104}", cmd: ["screenshot", "delay", "5"] },
         { id: "ocr", title: "Copy text from screen (OCR)", words: "ocr text recognise recognize screenshot", glyph: "\u{F0A3B}", cmd: ["sh", "-c", "sleep 0.3; screentext"] },
@@ -131,7 +131,7 @@ Singleton {
     function actions(q, all) {
         const out = []
         // hardware-only actions appear where the hardware is
-        const has = { monswitch: Machine.monitorSwitch, rog: Machine.asus }
+        const has = { monswitch: Machine.monitorSwitch, rog: Machine.asus, hibernate: Machine.canHibernate }
         for (const a of systemActions.filter(a => has[a.id] ?? true)) {
             const s = all ? 0.5 : Math.max(match(a.title, q), ...a.words.split(" ").map(w => match(w, q) * 0.9))
             if (s > 0.5 || all) out.push({ key: "action:" + a.id, kind: "Actions", title: a.title, glyph: a.glyph,
