@@ -1,67 +1,153 @@
+<div align="center">
+
 # Hyprism
 
-A Wayland desktop for **Arch/CachyOS and Fedora** (built on CachyOS): **Hyprland** with a **Quickshell** shell
-that comes in **7 themes**, whole desktop designs you switch in one step. Everything is free software,
-and everything you'd want to change is in the **Settings app** (`Super+I`), not in config files. An existing KDE Plasma
-install stays untouched and selectable at the login screen.
+**One Wayland desktop, seven complete designs.**
+Hyprland + a Quickshell shell for Arch, CachyOS and Fedora, switched in one step and set up from a Settings app instead of config files.
 
-| Theme | The idea | Bar (its own place; movable) | Motion |
+[![CI](https://github.com/EduardoBojer98/hyprism/actions/workflows/ci.yml/badge.svg)](https://github.com/EduardoBojer98/hyprism/actions/workflows/ci.yml)
+![Hyprland 0.57](https://img.shields.io/badge/Hyprland-0.57-58E1FF?logo=hyprland&logoColor=white)
+![Quickshell 0.3](https://img.shields.io/badge/Quickshell-0.3-7E57C2)
+![Arch / CachyOS](https://img.shields.io/badge/Arch%20%2F%20CachyOS-supported-1793D1?logo=archlinux&logoColor=white)
+![Fedora 44+](https://img.shields.io/badge/Fedora%2044%2B-supported-51A2DA?logo=fedora&logoColor=white)
+
+[Themes](#themes) · [Features](#features) · [Install](#install) · [Keys](#keys) · [Customise](#customise) · [Recovery](#undo-and-recovery) · [User guide](docs/USER-GUIDE.md)
+
+<img src="docs/screenshots/themes/pebble-dark.webp" alt="Hyprism desktop with the Pebble theme: floating glass pills at the top, a pill dock at the bottom, a soft purple, coral and sea-green wallpaper" width="100%">
+
+</div>
+
+## Why Hyprism
+
+- **7 themes, each a whole desktop design**: fonts, corners, window frames, shadows, bar and dock layout, panel depth,
+  motion, notifications, lock screen, terminal palette and wallpaper. Every one has a light and a dark version.
+- **Everything in Settings** (`Super+I`): bar, dock, displays, keyboard, shortcuts, wallpaper, power, lock screen,
+  default apps. Your choices live in `~/.config`, never in the repo.
+- **One command** installs, updates, checks (`doctor`) and undoes it. Your existing KDE Plasma stays selectable at login.
+- **Free software only.** Hardware extras (ASUS fan curves, keyboard light, a shared monitor over DDC/CI) switch on
+  only where the hardware exists.
+
+## Themes
+
+`theme` lists them, `theme atlas` switches, or **Settings → Appearance → Themes**. Each theme's own default half is on the left.
+
+| Theme | The idea | Bar | Motion |
 |---|---|---|---|
 | **Pebble** (default) | soft and round, glass, coral and sea green | three floating glass pills at the top | soft, a touch of spring |
-| **Monolith** | the desktop as tmux, acid lime | a mono status line at the bottom: app icons (the dock), icon + value items, an inverse lime clock | near-instant, nothing to wait for |
-| **Console** | amber HUD | a framed caps readout on top, rules between items, corner brackets, glowing panels | crisp snap-on |
-| **Poster** | loud and flat, red and cobalt on paper | a paper bar with huge workspace blocks, hard shadows | slams in from the trigger |
+| **Monolith** | the desktop as tmux, acid lime | a mono status line at the bottom with your apps and an inverse lime clock | near-instant |
+| **Console** | amber HUD | a framed caps readout, rules between items, corner brackets, glowing panels | crisp snap-on |
+| **Poster** | loud and flat, red and cobalt on paper | a paper bar with huge workspace blocks, hard shadows | slams in |
 | **Glass** | liquid glass, electric blue to violet | a floating glass bar with a lit rim, glowing window frames | smooth ease-out |
 | **Atlas** | Swiss, signal red on white | a black strip on top, heavy numerals, red squares, a black dock | snappy slide |
-| **Reactor** | radioactive: acid yellow on near-black, hot orange | a floating strip with an inverse acid clock block, a glow on panels | quick, decisive |
+| **Reactor** | radioactive: acid yellow on near-black, hot orange | a floating strip with an inverse acid clock block | quick, decisive |
 
-Each theme brings its own fonts, corners, window frames, shadows, panel depth, motion, notification style,
-lock screen, terminal palette and wallpaper. `theme` lists them, `theme atlas` switches; or Settings →
-Appearance → Themes, where **Adjust** changes any theme's accent colours, corners, gaps, frame, font, text size,
-window motion, shadow and blur (kept per theme; Reset puts it back), and **Animations** is Full, Reduced or Off.
-Every theme has a light and a dark version: **Light or dark** picks each theme's default, or Light or Dark for all of them.
+<table>
+  <tr>
+    <th>Pebble</th>
+    <th>Monolith</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/themes/pebble-dark.webp" alt="Pebble, dark"><br><img src="docs/screenshots/themes/pebble-light.webp" alt="Pebble, light"></td>
+    <td><img src="docs/screenshots/themes/monolith-dark.webp" alt="Monolith, dark"><br><img src="docs/screenshots/themes/monolith-light.webp" alt="Monolith, light"></td>
+  </tr>
+  <tr>
+    <th>Console</th>
+    <th>Poster</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/themes/console-dark.webp" alt="Console, dark"><br><img src="docs/screenshots/themes/console-light.webp" alt="Console, light"></td>
+    <td><img src="docs/screenshots/themes/poster-light.webp" alt="Poster, light"><br><img src="docs/screenshots/themes/poster-dark.webp" alt="Poster, dark"></td>
+  </tr>
+  <tr>
+    <th>Glass</th>
+    <th>Atlas</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/themes/glass-dark.webp" alt="Glass, dark"><br><img src="docs/screenshots/themes/glass-light.webp" alt="Glass, light"></td>
+    <td><img src="docs/screenshots/themes/atlas-light.webp" alt="Atlas, light"><br><img src="docs/screenshots/themes/atlas-dark.webp" alt="Atlas, dark"></td>
+  </tr>
+  <tr>
+    <th colspan="2">Reactor</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/themes/reactor-dark.webp" alt="Reactor, dark"></td>
+    <td><img src="docs/screenshots/themes/reactor-light.webp" alt="Reactor, light"></td>
+  </tr>
+</table>
 
-- **The bar**: one engine for every theme. Settings → Menu Bar puts it on any edge, sizes it, floats or attaches it,
-  hides it per monitor (place, shape and items are kept per theme; "Save as a theme" keeps them as your own theme),
-  shows the battery percentage inside the battery icon, beside it or not at all,
-  and chooses the items of its three sections in a visual editor (drag items between the bar's
-  zones, in from a tray, or out to remove them): apps (the dock), apps button,
-  workspaces, active window, clock, date, media player, tray, keyboard layout, notifications,
-  quick settings, network, Bluetooth, volume, brightness, battery, power profile, CPU, memory, GPU, recording,
-  power menu. Every item works across a horizontal bar and down a vertical one. Panels open beside the item you click.
-- **The dock**: in every theme, on and always visible by default, on the theme's own edge; when that is the bar's edge
-  the dock joins the bar as its Apps item. Settings → Dock: on/off, theme's / in the bar / any edge, size, icon size,
-  auto-hide, pinned apps, open windows, per monitor. Like the Windows taskbar, pinned apps are launchers and every open
-  window is its own tile by default; **Combine** merges open apps into their icons, and hovering one shows a live
-  preview of each window (click to bring it up, middle-click to close)
-- **Control Center** opens from the quick-settings item (network, sound, battery together): the time large, battery,
-  Settings / Lock / Power, then toggles and sliders. **Notifications** have their own panel from the bell (always in
-  the bar, with the unread count): Do Not Disturb, history grouped by app, Clear all
-- **Theme Builder** (Settings → Appearance): make your own theme from any of the seven and change every part:
-  colours, fonts, shape, bar look, dock look, panel depth, motion, windows, notifications, launcher, lock screen,
-  terminal colours, wallpaper
-- **Lock screen**: Settings → Lock Screen with a live preview: clock style and position, date, greeting,
-  your picture, battery / keyboard layout / now playing, background picture, blur and brightness
-- **Control Center** toggles: Wi-Fi, Bluetooth, Focus (Do Not Disturb), Night Light, Caffeine, touchpad and touchscreen on/off,
-  screen recording, media, power mode, display, sound and microphone; rearrange its sections and tiles in Settings
-- **Spotlight** (tap `Super`): suggestions first (weather, next event, last copied, most used apps, recent items, quick actions), then a Top Hit and results grouped apps → files →
-  calculator → settings → actions → web; Files, Actions and clipboard history modes
-- **Calendar** (click the clock): month grid with public holidays for your country, worldwide
-  observances and moon phases (each switchable in Settings > Calendar), the selected day and what's coming up
-- **Notification centre** with history, grouping and Do Not Disturb; **Mission Control**
-  (`Super+W`, three fingers up); **dock**: all-apps button, pinned apps (drag to reorder), then each open window as its own live picture (click to bring up or minimise, middle-click to close, right-click for more)
-- Keyboard shortcuts, displays, a shared monitor, sound, network, Bluetooth, power, wallpaper folders
-  and slideshow, startup apps, lock and sleep, default apps, weather, themes and their adjustments: all editable in
-  Settings, which has a search field
-- Small tools: `record` (screen recording, Super+Alt+R), `dropterm` (drop-down terminal, Super+\`),
-  `webapp add "Name" URL` (a site as its own app), `remind 20m "Stand up"` (a reminder notification)
-- Hardware extras that switch themselves on where the hardware exists: ASUS fan curves and charge
-  limit (asusctl), keyboard light, a monitor shared with another computer (DDC/CI)
+**Adjust** (Settings → Appearance) changes any theme's accent colours, corners, gaps, frame, font, text size, window
+motion, shadow and blur, kept per theme; Reset puts it back. **Animations** is Full, Reduced or Off.
+**Light or dark** picks each theme's default, or Light or Dark for all of them.
 
-## Install (one command)
+## Features
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/features/settings-themes.webp" alt="Settings app, Themes page with a gallery of the seven themes"></td>
+    <td width="50%"><img src="docs/screenshots/features/theme-builder.webp" alt="Settings app, Theme Builder page"></td>
+  </tr>
+  <tr>
+    <td><b>Settings</b> (<code>Super+I</code>): every page searchable, live, with Reset to defaults.</td>
+    <td><b>Theme Builder</b>: start from any theme and change colours, fonts, shape, bar, dock, motion, lock screen, terminal, wallpaper.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/features/settings-bar.webp" alt="Settings app, Menu Bar page with position, size, shape and a drag-and-drop item editor"></td>
+    <td><img src="docs/screenshots/features/lock-screen.webp" alt="Settings app, Lock Screen page with a live preview"></td>
+  </tr>
+  <tr>
+    <td><b>Menu bar</b>: any edge, any size, floating or attached, per monitor; drag items between its three zones.</td>
+    <td><b>Lock screen</b>: clock style and position, greeting, picture, widgets, background, blur, with a live preview.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/features/launcher.webp" alt="Spotlight launcher showing all apps by category"></td>
+    <td><img src="docs/screenshots/features/calendar.webp" alt="Calendar panel with a month grid and upcoming holidays"></td>
+  </tr>
+  <tr>
+    <td><b>Spotlight</b> (tap <code>Super</code>): suggestions, then apps, files, calculator, settings, actions and web; all apps by category.</td>
+    <td><b>Calendar</b> (click the clock): public holidays for your country, observances, moon phases, what's coming up.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/features/control-center.webp" alt="Control Center with Wi-Fi, Bluetooth, toggles, brightness, sound and power mode"></td>
+    <td><img src="docs/screenshots/features/power.webp" alt="Power menu with lock, sleep, hibernate, log out, restart and shut down"></td>
+  </tr>
+  <tr>
+    <td><b>Control Center</b> (<code>Super+C</code>): Wi-Fi, Bluetooth, Focus, Night Light, Caffeine, touch, recording, sliders, power mode; sections rearrangeable.</td>
+    <td><b>Power menu</b>: lock, sleep, hibernate, log out, restart, shut down.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/screenshots/features/cheatsheet.webp" alt="Keyboard shortcut cheatsheet grouped by apps, windows, workspaces, screen, media and session"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>Shortcut cheatsheet</b> (<code>Super+/</code>): every binding on screen, type to filter, all rebindable in Settings.</td>
+  </tr>
+</table>
+
+<details>
+<summary><b>Everything else</b></summary>
+
+- **The bar**: one engine for every theme. Items: apps (the dock), apps button, workspaces, active window, clock,
+  date, media player, tray, keyboard layout, notifications, quick settings, network, Bluetooth, volume, brightness,
+  battery (percentage inside, beside or off), power profile, CPU, memory, GPU, recording, power menu. Every item works
+  on a horizontal bar and down a vertical one. Place, shape and items are kept per theme; "Save as a theme" keeps them
+  as your own theme.
+- **The dock**: on the theme's own edge, or in the bar as its Apps item. Size, icon size, auto-hide, pinned apps, open
+  windows, per monitor. Like the Windows taskbar, each open window is its own tile; **Combine** merges them into the
+  app icon, with a live preview of each window on hover (click to bring up, middle-click to close).
+- **Notifications** have their own panel from the bell (with the unread count): Do Not Disturb, history grouped by app, Clear all.
+- **Mission Control** (`Super+W`, three fingers up).
+- Keyboard shortcuts, displays, a shared monitor, sound, network, Bluetooth, power, wallpaper folders and slideshow,
+  startup apps, lock and sleep, default apps, weather: all in Settings.
+- Small tools: `record` (screen recording, `Super+Alt+R`), `dropterm` (drop-down terminal, ``Super+` ``),
+  `webapp add "Name" URL` (a site as its own app), `remind 20m "Stand up"` (a reminder notification).
+- Hardware extras that switch themselves on where the hardware exists: ASUS fan curves and charge limit (asusctl),
+  keyboard light, a monitor shared with another computer (DDC/CI).
+
+</details>
+
+## Install
 
 Needs Arch Linux, CachyOS (or another Arch-based distro) or Fedora 44+, a normal user with sudo, and
-a login screen that lists Wayland sessions. Clone it anywhere:
+a login screen that lists Wayland sessions.
 
 ```bash
 git clone https://github.com/EduardoBojer98/hyprism.git ~/hyprism
@@ -88,42 +174,36 @@ On Fedora, Hyprland 0.57 comes from the `sdegler/hyprland` COPR and Quickshell 0
 build (`squeekboard`): `packages/fedora.txt` says what to do instead.
 
 This repo is the desktop only: Hyprland, the shell, their tools and look, a terminal and a file
-manager. Your other apps (browser, editors, dev tools, Docker, Ollama, …) are yours to install; the
-desktop works with whatever you pick in **Settings → Default Apps**. The cursor is your system's
-default until you pick or add another in **Settings → Appearance → Cursor**.
+manager. Your other apps (browser, editors, dev tools, …) are yours to install; the desktop works with
+whatever you pick in **Settings → Default Apps**. The cursor is your system's default until you pick or
+add another in **Settings → Appearance → Cursor**.
 
-## First run
+### First run
 
-Log out and pick **Hyprland** at the login screen. A welcome note names the three keys you need: **tap Super** to
-search for anything, **Super+I** for Settings, **Super+/** for every shortcut. In Settings, set the weather city,
-wallpaper, keyboard layouts and displays. Your choices are saved on your computer only (see
-[docs/USER-GUIDE.md](docs/USER-GUIDE.md)); if one ever breaks the desktop, `desktop-reset` puts the defaults back.
+A welcome note names the three keys you need: **tap Super** to search for anything, **Super+I** for Settings,
+**Super+/** for every shortcut. In Settings, set the weather city, wallpaper, keyboard layouts and displays. If a
+choice ever breaks the desktop, `desktop-reset` puts the defaults back (see [docs/USER-GUIDE.md](docs/USER-GUIDE.md)).
 
-## Update
+### Update and doctor
 
 ```bash
 ./install.sh update
 ```
 
 Pulls this repo (only when it has no local changes), updates the whole system (`paru -Syu` or
-`pacman -Syu` / `dnf upgrade`, plus Flatpaks if you use them), installs packages the repo added,
-relinks the configs and runs the doctor. Same as **Settings → About → Update**.
-
-## Keep it in sync: doctor
+`pacman -Syu` / `dnf upgrade`, plus Flatpaks), installs packages the repo added, relinks the configs and
+runs the doctor. Same as **Settings → About → Update**.
 
 ```bash
 ./install.sh doctor
 ```
 
-Lists missing packages, configs that aren't linked or were changed locally, files in the managed
-folders that the repo doesn't know, services that are off, and uncommitted changes. Also in
-**Settings → About → Run doctor**. Fix with `./install.sh` (or `--only links`), or commit
-the change you made on purpose.
+Lists missing packages, configs that aren't linked or were changed locally, unknown files in the managed
+folders, services that are off, and uncommitted changes. Also in **Settings → About → Run doctor**.
 
+## Keys
 
-## Keys (Super = Windows key)
-
-All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` shows every shortcut on screen** (type to filter).
+`Super` = Windows key. All of these can be changed in **Settings → Keyboard Shortcuts**; **`Super+/` shows every one on screen**.
 
 | Keys | Action |
 |---|---|
@@ -140,12 +220,11 @@ All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` 
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
 | `Super+1…0` / `Super+Shift+1…0` | Go to / send window to desktop; `Super+Tab` previous |
 | `Super+S` / `Super+Alt+S` | Scratchpad / send window there |
-| `Super+/` | Keyboard shortcut cheatsheet |
 | ``Super+` `` | Drop-down terminal (again: hide it) |
 | `Super+Alt+R` / `Super+Alt+Shift+R` | Record the screen / an area (again: stop and save to ~/Videos/Recordings) |
-| `Super+M` | Hand a shared monitor to the other computer and back (once set up in Settings → Displays → Shared Monitor) |
+| `Super+M` | Hand a shared monitor to the other computer and back (Settings → Displays → Shared Monitor) |
 | `Super+Ctrl+↓` | Next empty workspace |
-| `Alt+Shift+S` (also `Print`, `Super+Shift+S`) | Screenshot an area, then annotate (see Screenshots) |
+| `Alt+Shift+S` (also `Print`, `Super+Shift+S`) | Screenshot an area, then annotate |
 | `Ctrl+Print` / `Shift+Print` / `Super+Print` / `Ctrl+Shift+Print` / `Alt+Print` | Area straight to clipboard / this screen / focused window / both screens / in 5 seconds |
 | `Super+Shift+T` | Copy text from the screen (OCR) |
 | `Super+Shift+C` | Colour picker |
@@ -154,95 +233,51 @@ All of these can be changed in **Settings → Keyboard Shortcuts**. **`Super+/` 
 | `Super+drag` / `Super+right-drag` | Move / resize window |
 | Three-finger swipe sideways | Switch desktop |
 
-## Layout
+### Screenshots
+
+`screenshot` (`~/.local/bin`) = **grim** (capture) + **slurp** (pick an area) + **Satty** (editor).
+`Alt+Shift+S`, drag an area (works across both screens, and with touch), annotate (arrow, shapes, pen, highlighter,
+text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** saves, **Esc** cancels. Files land in
+`~/Pictures/Screenshots/`. `screenshot area|screen|window|all|delay N`, add `--copy` to skip the editor.
+
+## Customise
 
 | Path | What |
 |---|---|
-| `install.sh` | the one command (install, doctor, undo) |
+| `install.sh` | the one command (install, update, doctor, undo) |
 | `config/<app>/` | one folder per app, mirroring `~`: `hypr`, `quickshell`, `ghostty`, `fish`, `starship`, `fuzzel`, `scripts` (`~/.local/bin`), … |
-| `config/quickshell/.config/quickshell/` | the shell; `ConfigData.qml` holds every default, `Theme.qml` every colour |
+| `config/quickshell/.config/quickshell/` | the shell; `ConfigData.qml` holds every default, `Themes.qml` every theme, `Theme.qml` the tokens |
 | `config/hypr/.config/hypr/` | Hyprland Lua config: `hyprland.lua` loads `modules/` (env, monitors, input, look, animations, binds, rules, autostart), then the host's `host.lua` |
 | `hosts/<name>/` | one computer: `host.conf` (hostnames), `packages.txt`, `home/` (linked), `defaults/` (copied once), `steps/` (system steps). `default/` fits any PC; `flow-x13/` is the ROG Flow X13 |
 | `packages/` | `manifest.txt` (logical name, module, why) and `arch.txt` / `fedora.txt` (real names and sources) |
 | `distros/` | `arch.sh`, `fedora.sh`: install packages, enable repos, NVIDIA driver |
 | `plugins/` | Hyprland plugin (title-bar minimise), built by `hypr-plugins` |
-| `docs/` | for users: `USER-GUIDE.md` (Settings, recovery, troubleshooting), `THEMES.md` (themes and how to make one). For contributors: `ARCHITECTURE.md`, `DESIGN.md`, `DECISIONS.md`, `INVENTORY.md`, `COUNCIL.md` (review scores), `PROGRESS.md`; working notes: `AUDIT.md`, `REDESIGN-PLAN.md`, `RESEARCH.md`, `RECOMMENDATIONS.md`, `thermal-audit.md` |
+| `docs/` | users: [USER-GUIDE.md](docs/USER-GUIDE.md), [THEMES.md](docs/THEMES.md). Contributors: [ARCHITECTURE.md](docs/ARCHITECTURE.md), [DESIGN.md](docs/DESIGN.md), [DECISIONS.md](docs/DECISIONS.md), [INVENTORY.md](docs/INVENTORY.md), [COUNCIL.md](docs/COUNCIL.md), [PROGRESS.md](docs/PROGRESS.md) |
 
-### A new computer
-
-`cp -r hosts/default hosts/<name>`, put its hostname (`cat /etc/hostname`) in `hosts/<name>/host.conf`,
-add monitors or workspace rules to `home/.config/hypr/host.lua` and extra packages to `packages.txt`.
-Details: [hosts/README.md](hosts/README.md).
-
-### Another distro
-
-Add `distros/<id>.sh` (four functions) and `packages/<id>.txt` (every logical name mapped).
-Details: [distros/README.md](distros/README.md).
-
-### Changing common settings
-
-Almost everything is in **Settings** (`Super+I`): displays, theme, wallpaper, icons, cursor, gaps
-and borders, keyboard layouts, touchpad, shortcuts, default and startup apps, power and sleep.
-Settings writes to `~/.config` only (list in the user guide). Defaults live in `ConfigData.qml`,
-`config/hypr/.config/hypr/defaults/` and the Hyprland modules.
-
-### Themes, colours and fonts
-
-All of it is data in `config/quickshell/.config/quickshell/Themes.qml`; `Theme.qml` turns the active theme plus
-your Settings into tokens, `ThemeSync.qml` carries it to Hyprland (frames, gaps, shadow, blur, motion), the lock
-screen (`LockScreen.qml`), GTK, Ghostty, fuzzel and the wallpaper. Design rules: `docs/DESIGN.md`.
-
-- Switch: `theme NAME` or Settings → Appearance → Themes, and adjust it there.
-- **Add a theme**: copy the closest entry in `Themes.list` and change its data (colour, font, shape, bar style and
-  default items, dock style, popup depth, motion, lock clock and alignment, hypr). Add a terminal palette in
-  `config/ghostty/.config/ghostty/themes/<Name>` and a wallpaper design in `config/scripts/.local/bin/theme-wallpaper`.
-  No component code changes: the bar, dock, panels and lock screen read the tokens, and every layout option works.
-- **Add a setting**: a default in `ConfigData.qml`, its rule in `Config.qml`'s `schema` (values are checked when
-  saved and when the file is loaded; a missing or bad value falls back to the default), a row on its
-  `SettingsPage<Id>.qml` (`ConfigToggle`, `ConfigChoice`, `ConfigSlider` bind to it), and a search word in that
-  page's `keys` in `SettingsApp.qml`. **Add a bar item**: a component in `BarWidget.qml` and an entry in
-  `Themes.barItems`.
-- Fonts the themes use and the distros don't ship are bundled in `config/fonts/` (SIL Open Font License).
-- Monitors: Settings → Displays → Screens (arrangement, scale, refresh, mirror); per-computer defaults in `hosts/<name>/home/.config/hypr/host.lua`.
-
-### Screenshots
-
-`screenshot` (`~/.local/bin`) = **grim** (capture) + **slurp** (pick an area) + **Satty** (editor).
-
-1. `Alt+Shift+S`, drag an area (works across both screens, and with touch).
-2. Annotate: arrow, line, rectangle, ellipse, pen, highlighter, text, numbered markers, blur, crop.
-   Colours and stroke size sit in the bottom bar; `Ctrl+Z` / `Ctrl+Y` undo / redo.
-3. **Enter** copies and saves, **Ctrl+S** saves, **Esc** cancels. Files land in
-   `~/Pictures/Screenshots/Screenshot_YYYY-MM-DD_HH-MM-SS.png`; click the notification to open it.
-
-`screenshot area|screen|window|all|delay N`, add `--copy` to skip the editor. Editor look:
-`config/satty/.config/satty/config.toml`.
+- **A new computer**: `cp -r hosts/default hosts/<name>`, put its hostname in `hosts/<name>/host.conf`, add monitors
+  or workspace rules to `home/.config/hypr/host.lua` and extra packages to `packages.txt`. See [hosts/README.md](hosts/README.md).
+- **Another distro**: add `distros/<id>.sh` (four functions) and `packages/<id>.txt`. See [distros/README.md](distros/README.md).
+- **A new theme**: in Settings → Appearance → Theme Builder (no files), or by hand: copy an entry in `Themes.qml`,
+  add a Ghostty palette and a wallpaper design. No component code changes. Full guide: [docs/THEMES.md](docs/THEMES.md).
+- **A new setting**: a default in `ConfigData.qml`, its rule in `Config.qml`'s `schema`, a row on its
+  `SettingsPage<Id>.qml`, and a search word in `SettingsApp.qml`. **A new bar item**: a component in
+  `BarWidget.qml` and an entry in `Themes.barItems`.
+- Fonts the themes use that distros don't ship are bundled in `config/fonts/` (SIL Open Font License).
 
 ## Undo and recovery
 
 | What broke | Do this |
 |---|---|
 | Dotfiles | `./install.sh undo` removes the links and offers to restore the last backup |
-| The Hyprland session | **Fall back to KDE:** log out (`Super+Shift+E`), pick **Plasma (Wayland)** at the login screen. This repo never links over KDE's config, so KDE stays as it was. No login screen at all: Ctrl+Alt+F3, log in on the text console, `./install.sh undo` |
-| The shell (bar, dock) | `qs kill; qs &` restarts it; `qs log` shows errors; `desktop-reset shell` if a setting broke it (see the user guide, Recovery) |
-| An update | See "Roll back an update" below |
-| A Settings choice | `desktop-reset` (everything) or `desktop-reset shell` (theme, bar, dock, panels): your files are kept aside, the defaults come back. One page: its **Reset to defaults** |
+| The Hyprland session | Log out (`Super+Shift+E`), pick **Plasma (Wayland)** at the login screen; KDE's config is never touched. No login screen: Ctrl+Alt+F3, log in on the console, `./install.sh undo` |
+| The shell (bar, dock) | `qs kill; qs &` restarts it; `qs log` shows errors; `desktop-reset shell` if a setting broke it |
+| A Settings choice | `desktop-reset` (everything) or `desktop-reset shell` (theme, bar, dock, panels): your files are kept aside. One page: its **Reset to defaults** |
+| An update | See below |
 
-### Roll back an update
-
-On Arch/CachyOS with btrfs (the CachyOS default), **snap-pac** takes a snapshot of `/` before and
-after every pacman or paru run, and **limine-snapper-sync** lists them in the Limine boot menu. The
-doctor warns when any of this is missing.
-
-1. Reboot. In the Limine menu open **Snapshots** and boot the one taken *before* the update
-   ("pre", with the update's time).
-2. Check everything works, then make it permanent: `sudo limine-snapper-restore` (or
-   `limine-snapper-list` first to see them).
-
-Snapshots cover `/` only, not `/home`, and they sit on the same disk: they undo a bad update, not a
-dead SSD. Your configs are in this repo; for everything else in `/home`, keep a backup on another
-disk (or add `sudo snapper -c home create-config /home` if you want `/home` snapshots too).
-Fedora has no snapshots by default.
+**Roll back an update** (Arch/CachyOS on btrfs): **snap-pac** snapshots `/` before and after every pacman or paru
+run, and **limine-snapper-sync** lists them in the Limine boot menu. Reboot, open **Snapshots**, boot the "pre"
+one, check it works, then `sudo limine-snapper-restore`. Snapshots cover `/` only, not `/home`, and sit on the same
+disk. Fedora has no snapshots by default. The doctor warns when any of this is missing.
 
 ## Secrets
 
