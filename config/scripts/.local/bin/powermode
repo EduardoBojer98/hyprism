@@ -9,6 +9,9 @@
 # On ASUS laptops asusd owns the mode (it also applies fan curves, power limits and EPP per mode,
 # see hosts/flow-x13/steps/50-power.user.sh); elsewhere power-profiles-daemon does.
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 MODES=(quiet balanced performance)
 # without asusd, only the profiles power-profiles-daemon offers here (many machines have no "performance")
 if ! command -v asusctl >/dev/null && command -v powerprofilesctl >/dev/null; then
@@ -69,7 +72,6 @@ case ${1:-} in
         done
         ;;
     *)
-        echo "usage: powermode [quiet|balanced|performance|next|watch]" >&2
-        exit 2
+        usage 2 >&2
         ;;
 esac

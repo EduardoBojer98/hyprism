@@ -6,6 +6,9 @@
 #   panel lid close|open  lid: hand everything to the Acer, or suspend if the Acer isn't ours
 #   panel rotate          (internal) follow the accelerometer until killed
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
 rotate() { hyprctl eval "laptop_panel($1)" >/dev/null; } # function from hypr/modules/monitors.lua
 # the laptop's own panel (eDP-1, eDP-2…) and whether another screen is showing this desktop
@@ -48,7 +51,6 @@ case "${1:-} ${2:-}" in
         rotate 0
         ;;
     *)
-        echo "usage: panel tablet on|off | panel lid close|open" >&2
-        exit 2
+        usage 2 >&2
         ;;
 esac

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Behaviour checks for the scripts that hold logic, in throwaway folders (nothing on this computer changes).
 # Run by tests/lint.sh (CI) or by hand: tests/scripts.sh
+# shellcheck disable=SC2016  # check takes its condition as a single-quoted string on purpose (eval runs it later)
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 bin=$PWD/config/scripts/.local/bin
@@ -31,6 +32,30 @@ kept=$(find "$t/state/linux-setup" -name settings.json 2>/dev/null | head -1)
 check "desktop-reset keeps the old settings.json" '[[ -n $kept && $(cat "$kept") == "{\"x\":1}" ]]'
 check "desktop-reset removes it from ~/.config" '[[ ! -e $t/home/quickshell/settings.json ]]'
 check "desktop-reset seeds hypridle.conf" '[[ -f $t/home/hypr/settings/hypridle.conf ]]'
+
+# every script (nv is plain sh and has no help) answers --help: exit 0, at least 2 lines, no raw "#" comment marks
+for f in "$bin"/*; do
+    n=${f##*/}
+    [[ $n == nv ]] && continue
+    # shellcheck disable=SC2034  # read inside check's condition
+    help=$(env -u HYPRLAND_INSTANCE_SIGNATURE XDG_CONFIG_HOME="$t/cfg" XDG_STATE_HOME="$t/state" bash "$f" --help 2>&1)
+    # shellcheck disable=SC2034  # read inside check's condition
+    rc=$?
+    check "$n --help prints help and exits 0" '((rc == 0)) && [[ $(wc -l <<<"$help") -ge 2 ]] && ! grep -q "^#" <<<"$help"'
+done
+
+# usage prints the header comment: the same lines as the file, minus the leading "# "
+# shellcheck disable=SC2034  # read inside check's condition
+hdr=$(awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$bin/remind")
+check "usage output equals the script's header block" '[[ $(bash "$bin/remind" --help) == "$hdr" ]]'
+
+# log writes under XDG_STATE_HOME, and a name that doesn't exist never fails hwmon
+lib=$PWD/config/scripts/.local/lib/hyprism/common.sh
+XDG_STATE_HOME="$t/logstate" bash -c '. "$1"; log hello' logtest "$lib"
+check "log writes a timestamped line to its own file" 'grep -qE "^[0-9-]+ [0-9:]+ hello$" "$t/logstate/hyprism/logs/logtest.log"'
+# shellcheck disable=SC2034  # read inside check's condition
+none=$(bash -c 'set -e; . "$1"; hwmon nosuchname; echo end' x "$lib")
+check "hwmon of an unknown name prints nothing and succeeds under set -e" '[[ $none == end ]]'
 
 # the Hyprland Lua the installer seeds parses
 luac=$(command -v luac || command -v luac5.4 || true)

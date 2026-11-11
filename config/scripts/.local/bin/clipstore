@@ -12,6 +12,9 @@
 # Each entry is a folder <ms-timestamp>-<hash>/ holding `data`, `mime` and, when pinned, `pinned`.
 # Limits come from Config.clipboard in ~/.config/quickshell/settings.json.
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
 STORE="${XDG_DATA_HOME:-$HOME/.local/share}/clipboard"
 SETTINGS="$HOME/.config/quickshell/settings.json"
@@ -20,10 +23,7 @@ mkdir -p "$STORE"
 setting() { jq -r ".clipboard.$1 // empty" "$SETTINGS" 2>/dev/null || true; }
 
 entry() { # resolve and validate an id (folder name) inside the store
-    [[ "${1:-}" =~ ^[0-9]+-[0-9a-f]+$ && -d "$STORE/$1" ]] || {
-        echo "no such entry: ${1:-}" >&2
-        exit 1
-    }
+    [[ "${1:-}" =~ ^[0-9]+-[0-9a-f]+$ && -d "$STORE/$1" ]] || die "no such entry: ${1:-}"
     echo "$STORE/$1"
 }
 
@@ -34,7 +34,7 @@ prune() {
     age=$(setting maxAgeDays)
     age=${age:-30}
     local cutoff=$((($(date +%s) - age * 86400) * 1000))
-    for d in $(ls -1 "$STORE" | sort -r); do
+    for d in $(find "$STORE" -mindepth 1 -maxdepth 1 ! -name '.*' -printf '%f\n' | sort -r); do
         [[ -f "$STORE/$d/pinned" ]] && continue
         n=$((n + 1))
         if ((n > max)) || { ((age > 0)) && ((${d%%-*} < cutoff)); }; then rm -rf -- "${STORE:?}/$d"; fi
@@ -86,7 +86,7 @@ store() {
 list() {
     local first=1
     printf '['
-    for d in $(ls -1 "$STORE" | sort -r); do
+    for d in $(find "$STORE" -mindepth 1 -maxdepth 1 ! -name '.*' -printf '%f\n' | sort -r); do
         [[ -f "$STORE/$d/mime" ]] || continue
         local mime preview kind
         mime=$(<"$STORE/$d/mime")
@@ -153,7 +153,6 @@ case "${1:-}" in
         press_paste "${3:-0}"
         ;;
     *)
-        sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//'
-        exit 2
+        usage 2 >&2
         ;;
 esac

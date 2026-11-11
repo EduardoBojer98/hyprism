@@ -136,7 +136,7 @@ expect laptop-hybrid-nvidia gpu.discrete nvidia
 expect laptop-hybrid-nvidia gpu.hybrid true
 expect laptop-hybrid-nvidia display.external HDMI-A-1
 expect laptop-hybrid-nvidia input.touchscreen true
-expect laptop-hybrid-nvidia input.tablet_switch true
+expect laptop-hybrid-nvidia input.tablet_switch Tablet Mode Switch
 expect laptop-hybrid-nvidia input.rotation_sensor true
 expect laptop-hybrid-nvidia power.kbd_backlight asus::kbd_backlight
 expect laptop-hybrid-nvidia machine.tools asus
@@ -144,7 +144,7 @@ expect laptop-hybrid-nvidia peripherals.logitech true
 
 expect hidpi-single machine.tools framework
 expect hidpi-single gpu.hybrid false
-expect hidpi-single input.tablet_switch false
+expect hidpi-single input.tablet_switch ""
 
 expect multi-monitor display.external DP-1 DP-2 HDMI-A-1
 expect multi-monitor machine.form desktop
@@ -155,7 +155,11 @@ expect vm gpu.hybrid false
 expect vm power.battery ""
 
 # your [override] wins and survives a re-detect
-printf 'display.internal = "eDP-2"\n' >>"$t/laptop-intel.toml"
-expect laptop-intel display.internal eDP-2
+HYPRISM_HARDWARE=$t/laptop-intel.toml bash -c '. lib/detect.sh; hw_override display.internal "\"eDP-2\""; hw_override display.internal "\"eDP-3\""'
+expect laptop-intel display.internal eDP-3
+[[ $(grep -c '^display.internal' "$t/laptop-intel.toml") == 1 ]] || {
+    echo "xx hw_override left a duplicate line"
+    fail=1
+}
 
 exit "$fail"

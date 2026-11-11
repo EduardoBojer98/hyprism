@@ -4,6 +4,7 @@
 #   asusfan get                          JSON: {profile: {cpu|gpu: {enabled, temp[8], pct[8]}}}
 #   asusfan set PROFILE FAN DATA         DATA = "40c:10%,50c:20%,..." (8 points), validated, enabled
 #   asusfan enable PROFILE FAN true|false   both fans of PROFILE (FAN is kept for compatibility)
+#   asusfan validate DATA                check DATA only, change nothing (prints ok or the reason)
 #   asusfan recommended                  re-apply this computer's hosts/<host>/steps/50-power.user.sh
 #   asusfan backup                       copy curves + settings to ~/.local/state/asus-backup/<time>/
 #   asusfan restore DIR                  put back the curves from a backup DIR
@@ -13,14 +14,13 @@
 # Both fans of a mode are always on or off together: with only one curve on, this BIOS (415) left
 # the other fan stuck (CPU fan at 0 RPM). asusd also needs the curves on for a mode's power limit.
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
 BACKUPS="${XDG_STATE_HOME:-$HOME/.local/state}/asus-backup"
 PROFILES=(Quiet Balanced Performance)
 
-die() {
-    echo "asusfan: $*" >&2
-    exit 1
-}
 valid_profile() { [[ " ${PROFILES[*]} " == *" $1 "* ]] || die "unknown profile: $1"; }
 valid_fan() { [[ "$1" == cpu || "$1" == gpu ]] || die "unknown fan: $1"; }
 
@@ -104,14 +104,11 @@ restore() {
 }
 
 sample() {
-    hw() { for h in /sys/class/hwmon/hwmon*; do [[ "$(<"$h/name")" == "$1" ]] && {
-        echo "$h"
-        return
-    }; done; }
     local k10 gpu asus
-    k10=$(hw k10temp)
-    gpu=$(hw amdgpu)
-    asus=$(hw asus)
+    k10=$(hwmon k10temp)
+    gpu=$(hwmon amdgpu)
+    asus=$(hwmon asus)
+    [[ -n $k10 && -n $gpu && -n $asus ]] || die "needs the k10temp, amdgpu and asus sensors (ASUS laptop with an AMD chip)"
     read -r t0 i0 < <(awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8, $5+$6}' /proc/stat)
     sleep 0.5
     read -r t1 i1 < <(awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8, $5+$6}' /proc/stat)
@@ -146,19 +143,21 @@ case "${1:-}" in
         echo ok
         ;;
     recommended)
-        repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
+        repo=$(repo_root)
         # this computer's host profile, found the way install.sh finds it: its hostname in hosts/*/host.conf
         conf=$(grep -lw "$(cat /etc/hostname)" "$repo"/hosts/*/host.conf 2>/dev/null | head -1)
         f=${conf%/host.conf}/steps/50-power.user.sh
         [[ -f $f ]] || die "no recommended setup for this computer"
         bash "$f" </dev/null >/dev/null && echo ok
         ;;
-    validate) msg=$(validate "${2:-}") && echo ok || die "$msg" ;;
+    validate)
+        msg=$(validate "${2:-}") || die "$msg"
+        echo ok
+        ;;
     backup) backup ;;
     restore) restore "${2:?usage: asusfan restore DIR}" ;;
     sample) sample ;;
     *)
-        sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
-        exit 2
+        usage 2 >&2
         ;;
 esac

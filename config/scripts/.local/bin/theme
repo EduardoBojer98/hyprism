@@ -4,11 +4,11 @@
 #   theme            list the themes, the current one marked
 #   theme pebble    switch (pebble, monolith, console, poster, glass, atlas, reactor)
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
-qs ipc call config get appearance theme >/dev/null 2>&1 || {
-    echo "theme: the shell (Quickshell) isn't running" >&2
-    exit 1
-}
+qs ipc call config get appearance theme >/dev/null 2>&1 || die "the shell (Quickshell) isn't running"
 themes=$(grep -oE '^\s+id: "[a-z0-9]+", name: "[^"]+", about: "[^"]+"' "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/Themes.qml" |
     sed -E 's/^\s+id: "([a-z0-9]+)", name: "([^"]+)", about: "([^"]+)"/\1\t\2\t\3/')
 current=$(qs ipc call config get appearance theme | tr -d '"')
@@ -27,8 +27,5 @@ fi
 
 # Config.set answers "ok" or the reason it refused
 r=$(qs ipc call config set appearance theme "\"$1\"")
-[[ $r == ok ]] || {
-    echo "theme: not switched: $r" >&2
-    exit 1
-}
+[[ $r == ok ]] || die "not switched: $r"
 echo "theme: $1"

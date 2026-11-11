@@ -7,6 +7,7 @@
 #   detect_write             write ~/.config/hyprism/hardware.toml (keeps your [override] section)
 #   hw_get SECTION.KEY       one value from the file, your override first; lists come space-separated
 #   hw_has SECTION.KEY       true when the value is "true" or a non-empty string
+#   hw_override KEY VALUE    record your own choice under [override]
 #
 # To correct a wrong guess, add to the end of hardware.toml (detect never touches this part):
 #   [override]
@@ -104,21 +105,26 @@ _hw_input() {
     awk -v want="$1" '
         function low(hex) { return index("0123456789abcdef", tolower(substr(hex, length(hex)))) - 1 } # last hex digit
         function flush() {
-            if (abs && prop % 2 == 1) pad = 1
-            if (abs && int(prop / 2) % 2 == 1) screen = 1
-            if (int(sw / 2) % 2 == 1) tablet = 1
-            abs = 0; prop = 0; sw = 0
+            if (abs && prop % 2 == 1) pad = "true"
+            if (abs && int(prop / 2) % 2 == 1) screen = "true"
+            if (int(sw / 2) % 2 == 1) tablet = name
+            abs = 0; prop = 0; sw = 0; name = ""
         }
         /^$/ { flush() }
+        /^N: Name=/ { name = $0; sub(/^N: Name="/, "", name); sub(/"$/, "", name) }
         /^B: PROP=/ { prop = low($2) }
         /^B: ABS=/ { abs = 1 }
         /^B: SW=/ { sw = low($2) }
-        END { flush(); v = (want == "touchpad") ? pad : (want == "touchscreen") ? screen : tablet; print (v ? "true" : "false") }
-    ' "$HW_ROOT/proc/bus/input/devices" 2>/dev/null || echo false # no input list = nothing to offer
+        END {
+            flush()
+            if (want == "tablet") print tablet
+            else print ((want == "touchpad" ? pad : screen) == "true" ? "true" : "false")
+        }
+    ' "$HW_ROOT/proc/bus/input/devices" 2>/dev/null || { [[ $1 == tablet ]] || echo false; } # no input list = nothing to offer
 }
 
 detect_hardware() {
-    local form line vendor pci boot internal outs
+    local form vendor pci boot internal outs
     local vendors=() all_outs=() primary="" primary_pci="" discrete="" discrete_pci="" panel="" first="" first_pci=""
     form=$(_hw_form)
     while read -r vendor pci boot internal outs; do
@@ -181,7 +187,8 @@ profiles = $(_hw_bool test -e "$HW_ROOT/sys/firmware/acpi/platform_profile")
 [input]
 touchpad = $(_hw_input touchpad)
 touchscreen = $(_hw_input touchscreen)
-tablet_switch = $(_hw_input tablet)
+# the name of the hinge switch on a 2-in-1 ("" when there is none)
+tablet_switch = "$(_hw_input tablet)"
 rotation_sensor = $(_hw_bool _hw_any "/sys/bus/iio/devices/iio:device*/in_accel_x_raw")
 
 [radio]
@@ -215,6 +222,13 @@ hw_get() {
         }
         END { print (found ? over : base) }
     ' "$HW_FILE" 2>/dev/null || true # no file yet = nothing detected
+}
+
+# hw_override KEY VALUE: record your own choice (e.g. module.gaming true); it survives every detect
+hw_override() {
+    [[ -f $HW_FILE ]] || detect_write
+    sed -i "/^\\[override\\]/,\$ { /^${1//./\\.}[ \t]*=/d }" "$HW_FILE"
+    printf '%s = %s\n' "$1" "$2" >>"$HW_FILE"
 }
 
 hw_has() {

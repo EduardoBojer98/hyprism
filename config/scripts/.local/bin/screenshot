@@ -15,6 +15,9 @@
 # Files: ~/Pictures/Screenshots/Screenshot_YYYY-MM-DD_HH-MM-SS.png. A notification with a preview
 # follows; click it to open the picture ("Show folder" opens the folder).
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
 dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots"
 mkdir -p "$dir"
@@ -29,11 +32,14 @@ for a in "$@"; do
     case $a in
         --copy) copy=true ;;
         area | screen | window | all | delay) mode=$a ;;
-        *) [[ $a =~ ^[0-9]+$ ]] && delay=$a || {
-            echo "screenshot: unknown option '$a'" >&2
-            sed -n '4,12p' "$0" >&2
-            exit 2
-        } ;;
+        *)
+            if [[ $a =~ ^[0-9]+$ ]]; then
+                delay=$a
+            else
+                echo "screenshot: unknown option '$a'" >&2
+                usage 2 >&2
+            fi
+            ;;
     esac
 done
 fail() {

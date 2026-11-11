@@ -2,6 +2,9 @@
 # A drop-down terminal (Super+`): slides down from the top of the screen, the same key hides it.
 # It lives on Hyprland's special workspace "drop"; the window rule in rules.lua sizes and places it.
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 if hyprctl -j clients | jq -e '.[] | select(.class == "linuxsetup.dropterm")' >/dev/null; then
     hyprctl dispatch 'hl.dsp.workspace.toggle_special("drop")' >/dev/null
 else

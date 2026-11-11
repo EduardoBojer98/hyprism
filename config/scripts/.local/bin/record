@@ -5,6 +5,9 @@
 #   add --audio to record what you hear (the default output's monitor), --mic for the microphone
 # Files: ~/Videos/Recordings/Recording_YYYY-MM-DD_HH-MM-SS.mp4. GPU encoding when available.
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
 pidfile="${XDG_RUNTIME_DIR:-/tmp}/record.pid"
 dir="$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")/Recordings"
@@ -19,8 +22,7 @@ for a in "$@"; do
         --audio) audio="--audio=$(pactl get-default-sink 2>/dev/null).monitor" ;;
         --mic) audio="--audio=$(pactl get-default-source 2>/dev/null)" ;;
         *)
-            sed -n '2,7p' "$0" >&2
-            exit 2
+            usage 2 >&2
             ;;
     esac
 done
@@ -56,8 +58,8 @@ esac
 # hardware encoding through VA-API on the AMD iGPU when it works, else software x264
 codec=(-c libx264 -p preset=veryfast -p crf=23)
 [[ -e /dev/dri/renderD128 ]] && codec=(-c h264_vaapi -d /dev/dri/renderD128)
-# shellcheck disable=SC2086
 log="${XDG_RUNTIME_DIR:-/tmp}/record.log"
+# shellcheck disable=SC2086  # $audio is one --audio=... word, or nothing at all when empty
 setsid wf-recorder "${target[@]}" "${codec[@]}" $audio -f "$file" >"$log" 2>&1 &
 pid=$!
 echo "$pid" >"$pidfile"

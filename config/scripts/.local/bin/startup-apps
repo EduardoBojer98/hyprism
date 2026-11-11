@@ -10,27 +10,27 @@
 #
 # Entries run their Exec line directly: gtk-launch started Flameshot twice (2026-10-31 audit).
 # Old lists in settings.json (startup.apps) are copied into the folder on the first run.
-set -uo pipefail
+set -uo pipefail # no -e: one entry that fails must not stop the others
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 dir=${XDG_CONFIG_HOME:-$HOME/.config}/autostart
 conf=${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/settings.json
 here=${XDG_CURRENT_DESKTOP:-Hyprland}
 
-# A key from the [Desktop Entry] group only (later groups are actions with their own Exec)
-key() { awk -v k="$2" '/^\[/ { s = ($0 == "[Desktop Entry]") } s && index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }' "$1"; }
-
-is_on() { [[ $(key "$1" Hidden) != true && $(key "$1" X-GNOME-Autostart-enabled) != false ]]; }
+is_on() { [[ $(desktop_key "$1" Hidden) != true && $(desktop_key "$1" X-GNOME-Autostart-enabled) != false ]]; }
 
 # OnlyShowIn / NotShowIn / TryExec: does this entry belong in this desktop at all?
 for_here() {
     local only not try
-    only=$(key "$1" OnlyShowIn)
-    not=$(key "$1" NotShowIn)
-    try=$(key "$1" TryExec)
+    only=$(desktop_key "$1" OnlyShowIn)
+    not=$(desktop_key "$1" NotShowIn)
+    try=$(desktop_key "$1" TryExec)
     [[ -z $only || ";$only;" == *";$here;"* ]] && [[ ";$not;" != *";$here;"* ]] && { [[ -z $try ]] || command -v "$try" >/dev/null; }
 }
 
 # The Exec line without %f/%u/... field codes
-cmd_of() { key "$1" Exec | sed -E 's/ +%[fFuUdDnNickvm]//g'; }
+cmd_of() { desktop_key "$1" Exec | sed -E 's/ +%[fFuUdDnNickvm]//g'; }
 
 # Path of a desktop entry by id: applications in the XDG data dirs, then system autostart entries
 find_entry() {
@@ -46,7 +46,7 @@ find_entry() {
 add() {
     local id=${1%.desktop} src
     [[ $id =~ ^[A-Za-z0-9._-]+$ ]] || {
-        echo "startup-apps: bad id: $1" >&2
+        echo "startup-apps: bad id: $1" >&2 # return, not die: the caller decides
         return 1
     }
     [[ -e $dir/$id.desktop ]] && {
@@ -72,10 +72,7 @@ set_hidden() {
 file_arg() {
     local f
     f=$dir/$(basename -- "${1:?file name needed}")
-    [[ -f $f ]] || {
-        echo "startup-apps: no such entry: $1" >&2
-        exit 1
-    }
+    [[ -f $f ]] || die "no such entry: $1"
     echo "$f"
 }
 
@@ -97,8 +94,8 @@ list() {
     local f
     shopt -s nullglob
     for f in "$dir"/*.desktop; do
-        jq -n --arg file "$(basename "$f")" --arg name "$(key "$f" Name)" --arg icon "$(key "$f" Icon)" \
-            --arg exec "$(cmd_of "$f")" --arg only "$(key "$f" OnlyShowIn)" \
+        jq -n --arg file "$(basename "$f")" --arg name "$(desktop_key "$f" Name)" --arg icon "$(desktop_key "$f" Icon)" \
+            --arg exec "$(cmd_of "$f")" --arg only "$(desktop_key "$f" OnlyShowIn)" \
             --argjson on "$(is_on "$f" && echo true || echo false)" \
             --argjson here "$(for_here "$f" && echo true || echo false)" \
             --argjson running "$(running "$(cmd_of "$f")")" \
@@ -125,7 +122,6 @@ case ${1:-} in
     off) set_hidden "$(file_arg "${2:-}")" true ;;
     remove) rm -f -- "$(file_arg "${2:-}")" ;;
     *)
-        sed -n '2,12p' "$0"
-        exit 2
+        usage 2 >&2
         ;;
 esac

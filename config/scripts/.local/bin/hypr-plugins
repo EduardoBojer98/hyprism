@@ -4,8 +4,11 @@
 # them into the running Hyprland. Rebuilds after a Hyprland update, since a plugin only loads into the
 # exact version it was built against. Run from Hyprland's autostart; a failed build only skips that
 # plugin. Then calls setup_plugins() (hypr/modules/plugins.lua), which configures what got loaded.
-set -uo pipefail
-repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd) # ~/.local/bin is a link into the repo
+set -uo pipefail # no -e: a failed build only skips that plugin
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+repo=$(repo_root) # ~/.local/bin is a link into the repo
 out=${XDG_DATA_HOME:-$HOME/.local/share}/hypr-plugins
 mkdir -p "$out"
 UPSTREAM=(hyprbars) # title bars with buttons for windows that draw none (hypr/modules/plugins.lua)

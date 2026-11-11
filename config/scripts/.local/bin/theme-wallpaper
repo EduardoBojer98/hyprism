@@ -6,10 +6,10 @@
 # 2560x1600 covers both screens here (16:10 laptop, 16:9 Acer; hyprpaper crops to fill).
 # Bump VERSION after changing a design so the cached pictures are redrawn.
 set -euo pipefail
-command -v magick >/dev/null || {
-    echo "theme-wallpaper: needs ImageMagick (magick)" >&2
-    exit 1
-}
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+command -v magick >/dev/null || die "needs ImageMagick (magick)"
 
 VERSION=7
 out_dir="${XDG_DATA_HOME:-$HOME/.local/share}/linux-setup/themes"
@@ -118,8 +118,7 @@ draw() {
 ids=("$@")
 [[ ${1:-} == --all ]] && ids=(pebble monolith console poster glass atlas reactor pebble-light monolith-light console-light glass-light atlas-dark reactor-light)
 [[ ${#ids[@]} -gt 0 ]] || {
-    sed -n '2,7p' "$0" >&2
-    exit 2
+    usage 2 >&2
 }
 for id in "${ids[@]}"; do
     [[ $id =~ ^[a-z]+(-[a-z]+)?$ ]] || {
@@ -130,8 +129,7 @@ for id in "${ids[@]}"; do
     if [[ ! -s $out ]]; then # PNG24: never a banded palette PNG
         draw "$id" "PNG24:$out.tmp.png" || {
             rm -f "$out.tmp.png"
-            echo "theme-wallpaper: couldn't draw '$id'" >&2
-            exit 1
+            die "couldn't draw '$id'"
         }
         mv "$out.tmp.png" "$out"
     fi

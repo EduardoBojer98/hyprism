@@ -2,14 +2,19 @@
 # Switch a monitor shared with another computer (e.g. a work PC) over DDC/CI,
 # and move Hyprland workspaces off / back onto it.
 #
-#   monswitch toggle   switch to whichever side isn't showing now (keybind / bar button)
+#   monswitch [toggle] switch to whichever side isn't showing now (keybind / bar button)
 #   monswitch pc       give the monitor to the work PC
 #   monswitch laptop   take the monitor back
+#   monswitch sync     match Hyprland to the monitor's current input, no DDC write (startup, resume)
 #   monswitch watch    background loop: follows switches made with the monitor's own buttons
 #
 # Linux keeps reporting the monitor as connected while it shows the PC, so Hyprland can't
 # notice on its own. The DDC input register (VCP 0x60) is the source of truth.
+# Setup is ~/.config/monswitch.conf (Settings > Shared Monitor writes it); without it nothing happens.
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
 # Per-computer values live in ~/.config/monswitch.conf (no file = feature off), for example:
 #   OUT=HDMI-A-1   # Hyprland output name of the shared monitor
@@ -164,7 +169,6 @@ case ${1:-toggle} in
         done
         ;;
     *)
-        echo "usage: monswitch [toggle|pc|laptop|watch]" >&2
-        exit 2
+        usage 2 >&2
         ;;
 esac

@@ -8,12 +8,12 @@
 #   installed-apps show ID       show the app's program (or its folder) in the file manager
 #   installed-apps remove ID     packages: uninstall in a terminal, which asks for confirmation there;
 #                                user entries: move the .desktop file to the Trash
-set -uo pipefail
+set -uo pipefail # no -e: one app that can't be looked up must not stop the list
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 data_home=${XDG_DATA_HOME:-$HOME/.local/share}
 export LC_ALL=C
-
-# A key from the [Desktop Entry] group only (later groups are actions with their own Exec)
-key() { awk -v k="$2" '/^\[/ { s = ($0 == "[Desktop Entry]") } s && index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }' "$1"; }
 
 # id<TAB>file for every app entry; the first one in the XDG data dirs wins, as in menus
 entries() {
@@ -34,7 +34,7 @@ entries() {
 # The program an entry runs, symlinks resolved (/usr/bin/code -> /opt/visual-studio-code/code)
 program() {
     local w p
-    for w in $(key "$1" Exec); do
+    for w in $(desktop_key "$1" Exec); do
         [[ $w == env || $w == *=* ]] && continue
         p=$(command -v -- "${w//\"/}" 2>/dev/null) && readlink -f -- "$p"
         return
@@ -109,16 +109,10 @@ describe() {
 }
 
 one() {
-    [[ ${1:-} =~ ^[A-Za-z0-9._+-]+$ ]] || {
-        echo "installed-apps: bad id: ${1:-}" >&2
-        exit 1
-    }
+    [[ ${1:-} =~ ^[A-Za-z0-9._+-]+$ ]] || die "bad id: ${1:-}"
     local row
     row=$(entries | awk -F'\t' -v id="$1" '$1 == id')
-    [[ -n $row ]] || {
-        echo "installed-apps: no app $1" >&2
-        exit 1
-    }
+    [[ -n $row ]] || die "no app $1"
     describe <<<"$row" | tr '\t' '\037' # read with IFS=$'\037': empty fields survive, tabs would collapse
 }
 
@@ -131,8 +125,8 @@ pick() {
 info() {
     local id f src pkg path desc url="" from
     IFS=$'\037' read -r id f src pkg _ _ path < <(one "$1") || exit 1
-    desc=$(key "$f" Comment)
-    [[ -n $desc ]] || desc=$(key "$f" GenericName)
+    desc=$(desktop_key "$f" Comment)
+    [[ -n $desc ]] || desc=$(desktop_key "$f" GenericName)
     case $src in
         pacman | aur) url=$(pacman -Qi -- "$pkg" | pick 'URL=x' | cut -f2) ;;
         rpm) url=$(rpm -q --qf '%{URL}' "$pkg") ;;
@@ -167,10 +161,10 @@ info() {
             *) printf 'Installed from\t%s\n' "Not from a package: copied in by hand or by its own installer" ;;
         esac
         printf 'Program\t%s\n' "$path"
-        printf 'Command\t%s\n' "$(key "$f" Exec | sed -E 's/ +%[fFuUdDnNickvm]//g')"
+        printf 'Command\t%s\n' "$(desktop_key "$f" Exec | sed -E 's/ +%[fFuUdDnNickvm]//g')"
         printf 'Menu entry\t%s\n' "$f"
         local cats
-        cats=$(key "$f" Categories | sed 's/;$//; s/;/, /g')
+        cats=$(desktop_key "$f" Categories | sed 's/;$//; s/;/, /g')
         [[ -n $cats ]] && printf 'Categories\t%s\n' "$cats"
     } | jq -Rn --arg desc "$desc" --arg url "$url" '{description: $desc, url: $url, fields: [inputs | split("\t") | select(length == 2)]}'
 }
@@ -190,7 +184,7 @@ case ${1:-} in
         IFS=$'\037' read -r _ _ _ _ _ _ path < <(one "${2:-}") || exit 1
         dbus-send --session --type=method_call --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 \
             org.freedesktop.FileManager1.ShowItems array:string:"file://$path" string:"" 2>/dev/null ||
-            xdg-open "$([[ -d $path ]] && echo "$path" || dirname -- "$path")"
+            xdg-open "$(if [[ -d $path ]]; then echo "$path"; else dirname -- "$path"; fi)"
         ;;
     remove)
         IFS=$'\037' read -r _ f src pkg _ _ _ < <(one "${2:-}") || exit 1
@@ -202,14 +196,10 @@ case ${1:-} in
                 in_terminal flatpak uninstall "$scope" "$pkg"
                 ;;
             user) gio trash -- "$f" ;;
-            *)
-                echo "installed-apps: don't know how to remove $2" >&2
-                exit 1
-                ;;
+            *) die "don't know how to remove $2" ;;
         esac
         ;;
     *)
-        sed -n '2,11p' "$0"
-        exit 2
+        usage 2 >&2
         ;;
 esac

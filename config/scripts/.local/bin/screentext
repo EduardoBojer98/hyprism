@@ -4,6 +4,9 @@
 # Super+V history, where it is searchable). Languages: SCREENTEXT_LANG, default "eng"
 # (installed packs: tesseract --list-langs).
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
 area=$(slurp) || exit 0 # Esc cancels
 text=$(grim -g "$area" - | tesseract stdin stdout -l "${SCREENTEXT_LANG:-eng}" 2>/dev/null |

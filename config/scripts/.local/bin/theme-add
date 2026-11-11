@@ -7,16 +7,15 @@
 # Copies every theme found inside (a folder with index.theme; cursor themes also have cursors/) to
 # ~/.local/share/icons/<name>, replacing an older copy there. Prints the names it added.
 set -euo pipefail
+# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 kind=${1:-}
 src=${2:-}
 [[ $kind == icons || $kind == cursors ]] && [[ -n $src ]] || {
-    sed -n '2,8p' "$0" >&2
-    exit 2
+    usage 2 >&2
 }
-[[ -e $src ]] || {
-    echo "theme-add: not found: $src" >&2
-    exit 1
-}
+[[ -e $src ]] || die "not found: $src"
 dest=${XDG_DATA_HOME:-$HOME/.local/share}/icons
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -25,10 +24,7 @@ if [[ -d $src ]]; then
     cp -a -- "$src" "$tmp/"
 else
     # bsdtar reads tar (any compression) and zip; it drops absolute paths and ".." by default
-    bsdtar -xf "$src" -C "$tmp" --no-same-owner || {
-        echo "theme-add: can't unpack $src" >&2
-        exit 1
-    }
+    bsdtar -xf "$src" -C "$tmp" --no-same-owner || die "can't unpack $src"
 fi
 
 added=()
@@ -45,10 +41,7 @@ while IFS= read -r -d '' index; do
     added+=("$name")
 done < <(find "$tmp" -mindepth 1 -maxdepth 4 -name index.theme -print0)
 
-((${#added[@]})) || {
-    echo "theme-add: no $kind theme in $src" >&2
-    exit 1
-}
+((${#added[@]})) || die "no $kind theme in $src"
 # GTK caches icon lookups per theme; refresh it when the tool is there (it isn't for cursor themes)
 [[ $kind == icons ]] && command -v gtk-update-icon-cache >/dev/null && for n in "${added[@]}"; do gtk-update-icon-cache -qf "$dest/$n" 2>/dev/null || true; done
 printf '%s\n' "${added[@]}"
