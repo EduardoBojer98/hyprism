@@ -12,8 +12,11 @@ repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
 files=("$cfg/quickshell/settings.json")
 case ${1:-all} in
     shell) ;;
-    all)   files+=("$cfg"/hypr/settings/* "$cfg/ghostty/theme.conf" "$cfg/fuzzel/theme.ini") ;;
-    *)     sed -n '2,6p' "$0" >&2; exit 2 ;;
+    all) files+=("$cfg"/hypr/settings/* "$cfg/ghostty/theme.conf" "$cfg/fuzzel/theme.ini") ;;
+    *)
+        sed -n '2,6p' "$0" >&2
+        exit 2
+        ;;
 esac
 
 mkdir -p "$keep"

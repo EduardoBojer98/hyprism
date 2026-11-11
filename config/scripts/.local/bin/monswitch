@@ -19,22 +19,27 @@ set -euo pipefail
 #   MIRROR_MODE=1920x1080@60   # optional: mode used for that mirror
 # Settings > Shared Monitor writes this file. By hand: ddcutil detect; ddcutil getvcp 60
 CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
-[[ -f $CONF ]] || { echo "monswitch: no $CONF, nothing to do" >&2; exit 0; }
-POLL=3        # seconds between DDC reads in watch mode
+[[ -f $CONF ]] || {
+    echo "monswitch: no $CONF, nothing to do" >&2
+    exit 0
+}
+POLL=3 # seconds between DDC reads in watch mode
 # read KEY=value lines (never run the file as shell): only the five keys, only plain values
 while IFS='=' read -r key value; do
-    case $key in OUT|LAPTOP|PC|MIRROR|MIRROR_MODE)
+    case $key in OUT | LAPTOP | PC | MIRROR | MIRROR_MODE)
         # plain values only, starting with a letter or digit (a leading "-" would reach ddcutil as an option)
-        if [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then printf -v "$key" '%s' "$value"
-        else echo "monswitch: ignored $key in $CONF (not a plain value)" >&2; fi ;;
+        if [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
+            printf -v "$key" '%s' "$value"
+        else echo "monswitch: ignored $key in $CONF (not a plain value)" >&2; fi
+        ;;
     esac
-done < "$CONF"
+done <"$CONF"
 : "${OUT:?set OUT in $CONF}" "${LAPTOP:?set LAPTOP in $CONF}" "${PC:?set PC in $CONF}"
 MIRROR=${MIRROR:-eDP-1}
 MIRROR_MODE=${MIRROR_MODE:-1920x1080@60}
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
-SHARED=${XDG_CONFIG_HOME:-$HOME/.config}/hypr/settings/shared.lua   # the hand-off, for Hyprland (modules/monitors.lua)
+SHARED=${XDG_CONFIG_HOME:-$HOME/.config}/hypr/settings/shared.lua # the hand-off, for Hyprland (modules/monitors.lua)
 LAYOUT=$STATE_DIR/layout.json
 mkdir -p "$STATE_DIR"
 
@@ -42,11 +47,21 @@ mkdir -p "$STATE_DIR"
 # links to the right one, so it is looked up on every call (watch runs for the whole session).
 bus() { readlink -f /sys/class/drm/card*-"$OUT"/ddc 2>/dev/null | sed 's/.*i2c-//' | head -1; }
 
-ddc_input() {  # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch, or unplugged)
-    local b; b=$(bus); [[ -n $b ]] || return 0
+ddc_input() { # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch, or unplugged)
+    local b
+    b=$(bus)
+    [[ -n $b ]] || return 0
     { ddcutil --bus "$b" getvcp 60 --terse 2>/dev/null || true; } | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}'
 }
-ddc_set() { local b; b=$(bus); [[ -n $b ]] || { echo "monswitch: $OUT isn't connected" >&2; return 1; }; ddcutil --bus "$b" setvcp 60 "$1"; }
+ddc_set() {
+    local b
+    b=$(bus)
+    [[ -n $b ]] || {
+        echo "monswitch: $OUT isn't connected" >&2
+        return 1
+    }
+    ddcutil --bus "$b" setvcp 60 "$1"
+}
 
 out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o)' >/dev/null; }
 
@@ -54,7 +69,7 @@ save_layout() {
     jq -n \
         --argjson ws "$(hyprctl -j workspaces | jq --arg o "$OUT" '[.[] | select(.monitor == $o and .id > 0) | .id]')" \
         --argjson active "$(hyprctl -j monitors | jq --arg o "$OUT" '.[] | select(.name == $o) | .activeWorkspace.id')" \
-        '{workspaces: $ws, active: $active}' > "$LAYOUT"
+        '{workspaces: $ws, active: $active}' >"$LAYOUT"
 }
 
 restore_layout() {
@@ -76,9 +91,9 @@ release() {
     save_layout
     # kept in a file Hyprland's monitors.lua reads, so a reload or a theme change keeps the hand-off
     local table="{ output = \"$OUT\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\" }"
-    printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "$OUT" "$table" > "$SHARED"
+    printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "$OUT" "$table" >"$SHARED"
     hyprctl eval "SHARED = $table; apply_displays()" >/dev/null
-    local id   # a mirror can keep its workspaces, so move them explicitly
+    local id # a mirror can keep its workspaces, so move them explicitly
     for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
         hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$MIRROR\" })" >/dev/null
     done
@@ -87,19 +102,19 @@ release() {
 reclaim() {
     out_enabled && return 0
     rm -f "$SHARED"
-    hyprctl eval "SHARED = nil; apply_displays()" >/dev/null   # its own monitor rule again (modules/monitors.lua)
+    hyprctl eval "SHARED = nil; apply_displays()" >/dev/null # its own monitor rule again (modules/monitors.lua)
     sleep 1
     restore_layout
     notify-send -a monswitch "Monitor → this computer" "Workspaces restored"
 }
 
 to_pc() {
-    ddc_set "$PC"   # switch first, while the laptop still sends a picture
-    sleep 2         # the input change causes a ~1 s HDMI disconnect blip; let it pass
+    ddc_set "$PC" # switch first, while the laptop still sends a picture
+    sleep 2       # the input change causes a ~1 s HDMI disconnect blip; let it pass
     release
 }
 to_laptop() {
-    reclaim         # send a picture first, so the monitor has a signal to switch to
+    reclaim # send a picture first, so the monitor has a signal to switch to
     ddc_set "$LAPTOP"
 }
 
@@ -107,8 +122,14 @@ to_laptop() {
 exec 9>"$STATE_DIR/lock"
 
 case ${1:-toggle} in
-    pc)     flock 9; to_pc ;;
-    laptop) flock 9; to_laptop ;;
+    pc)
+        flock 9
+        to_pc
+        ;;
+    laptop)
+        flock 9
+        to_laptop
+        ;;
     toggle)
         flock 9
         if out_enabled && [[ $(ddc_input) == "$LAPTOP" ]]; then to_pc; else to_laptop; fi
@@ -117,8 +138,10 @@ case ${1:-toggle} in
         # Align Hyprland to the actual DDC input on startup/resume without sending a DDC write.
         flock 9
         now=$(ddc_input)
-        if   [[ $now == "$PC" ]];     then release || true
-        elif [[ $now == "$LAPTOP" ]]; then reclaim || true
+        if [[ $now == "$PC" ]]; then
+            release || true
+        elif [[ $now == "$LAPTOP" ]]; then
+            reclaim || true
         fi
         ;;
     watch)
@@ -128,15 +151,20 @@ case ${1:-toggle} in
             # Act only on two identical readings in a row; ignores glitches during a switch.
             if [[ -n $now && $now == "$last" ]]; then
                 flock 9
-                now=$(ddc_input)   # re-read: a keypress may have switched while we waited for the lock
+                now=$(ddc_input) # re-read: a keypress may have switched while we waited for the lock
                 # || true: one failed hyprctl/notify call must not kill the watcher
-                if   [[ $now == "$PC" ]];     then release || true
-                elif [[ $now == "$LAPTOP" ]]; then reclaim || true
+                if [[ $now == "$PC" ]]; then
+                    release || true
+                elif [[ $now == "$LAPTOP" ]]; then
+                    reclaim || true
                 fi
                 flock -u 9
             fi
             last=$now
         done
         ;;
-    *) echo "usage: monswitch [toggle|pc|laptop|watch]" >&2; exit 2 ;;
+    *)
+        echo "usage: monswitch [toggle|pc|laptop|watch]" >&2
+        exit 2
+        ;;
 esac

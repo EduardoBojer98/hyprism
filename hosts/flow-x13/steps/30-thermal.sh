@@ -4,7 +4,10 @@
 # Safe to re-run. Runs after 10-hardware.sh (needs asusd).
 # Run: sudo bash hosts/flow-x13/steps/30-thermal.sh
 set -euo pipefail
-[[ $EUID -eq 0 ]] || { echo "Run with sudo"; exit 1; }
+[[ $EUID -eq 0 ]] || {
+    echo "Run with sudo"
+    exit 1
+}
 step() { printf '\n==> %s\n' "$*"; }
 
 # Fan curves and power limits moved to 50-power.user.sh (both curves on or both off: a curve on only
@@ -13,7 +16,7 @@ step() { printf '\n==> %s\n' "$*"; }
 step "NVIDIA: power the dGPU off (D3cold) whenever no app uses it"
 # Fine-grained RTD3 (NVIDIA README, "Dynamic Power Management"). nvidia isn't in the initramfs on
 # CachyOS (chwd drops the kms hook), so this applies at the next boot without a rebuild.
-echo 'options nvidia NVreg_DynamicPowerManagement=0x02' > /etc/modprobe.d/nvidia-rtd3.conf
+echo 'options nvidia NVreg_DynamicPowerManagement=0x02' >/etc/modprobe.d/nvidia-rtd3.conf
 
 step "TEMPORARY: boot the LTS kernel by default"
 # shortcut: RTD3 is broken on kernel 7.3 with driver 615 (CachyOS/linux-cachyos#1053,
@@ -22,17 +25,17 @@ step "TEMPORARY: boot the LTS kernel by default"
 if ! command -v limine-update >/dev/null || ! pacman -Si linux-cachyos-lts >/dev/null 2>&1; then
     echo "Skipped: needs CachyOS (linux-cachyos-lts) and Limine."
 else
-pacman -S --needed --noconfirm linux-cachyos-lts linux-cachyos-lts-nvidia-open linux-cachyos-lts-headers
-want='BOOT_ORDER="*lts, *, *fallback, Snapshots"'
-if ! grep -qxF "$want" /etc/default/limine; then
-    cp /etc/default/limine "/etc/default/limine.bak-$(date +%Y%m%d)"
-    if grep -q '^BOOT_ORDER=' /etc/default/limine; then
-        sed -i "s/^BOOT_ORDER=.*/$want/" /etc/default/limine
-    else
-        echo "$want" >> /etc/default/limine
+    pacman -S --needed --noconfirm linux-cachyos-lts linux-cachyos-lts-nvidia-open linux-cachyos-lts-headers
+    want='BOOT_ORDER="*lts, *, *fallback, Snapshots"'
+    if ! grep -qxF "$want" /etc/default/limine; then
+        cp /etc/default/limine "/etc/default/limine.bak-$(date +%Y%m%d)"
+        if grep -q '^BOOT_ORDER=' /etc/default/limine; then
+            sed -i "s/^BOOT_ORDER=.*/$want/" /etc/default/limine
+        else
+            echo "$want" >>/etc/default/limine
+        fi
+        limine-update
     fi
-    limine-update
-fi
 fi
 
 step "Result (after the next reboot the dGPU should say 'suspended')"

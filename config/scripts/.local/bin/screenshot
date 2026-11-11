@@ -22,15 +22,24 @@ file="$dir/Screenshot_$(date +%F_%H-%M-%S).png"
 tmp=$(mktemp --suffix=.png)
 trap 'rm -f "$tmp"' EXIT
 
-mode=area; delay=5; copy=false
+mode=area
+delay=5
+copy=false
 for a in "$@"; do
     case $a in
         --copy) copy=true ;;
-        area|screen|window|all|delay) mode=$a ;;
-        *) [[ $a =~ ^[0-9]+$ ]] && delay=$a || { echo "screenshot: unknown option '$a'" >&2; sed -n '4,12p' "$0" >&2; exit 2; } ;;
+        area | screen | window | all | delay) mode=$a ;;
+        *) [[ $a =~ ^[0-9]+$ ]] && delay=$a || {
+            echo "screenshot: unknown option '$a'" >&2
+            sed -n '4,12p' "$0" >&2
+            exit 2
+        } ;;
     esac
 done
-fail() { notify-send -a Screenshot -u critical "Screenshot failed" "$1"; exit 1; }
+fail() {
+    notify-send -a Screenshot -u critical "Screenshot failed" "$1"
+    exit 1
+}
 
 # selection colours follow the desktop theme (accent from Settings > Appearance)
 accent=$(grep -oE 'accent = "[0-9a-fA-F]{6}"' "$HOME/.config/hypr/settings/theme.lua" 2>/dev/null | grep -oE '[0-9a-fA-F]{6}' || echo ff9e7a)
@@ -51,21 +60,27 @@ case $mode in
     area)
         # slurp -d shows the size while dragging; Esc or a right click cancels (exit quietly)
         geo=$(slurp -d -c "${accent}ff" -b 0b0d0a66 -s "${accent}1f" -w 2 -B 00000000) || exit 0
-        sleep 0.15   # one more beat for the picker's layer to leave the screen (Hyprland rule: no fade)
-        grim -g "$geo" "$tmp" || fail "grim couldn't capture that area" ;;
+        sleep 0.15 # one more beat for the picker's layer to leave the screen (Hyprland rule: no fade)
+        grim -g "$geo" "$tmp" || fail "grim couldn't capture that area"
+        ;;
     screen) grim -o "$(monitor_under_mouse)" "$tmp" || fail "grim couldn't capture the screen" ;;
     window)
         geo=$(hyprctl -j activewindow | jq -r 'if .at then "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])" else empty end')
-        [[ -n $geo ]] || { notify-send -a Screenshot "No focused window to capture"; exit 1; }
-        grim -g "$geo" "$tmp" || fail "grim couldn't capture the window" ;;
-    all)    grim "$tmp" || fail "grim couldn't capture the screens" ;;
+        [[ -n $geo ]] || {
+            notify-send -a Screenshot "No focused window to capture"
+            exit 1
+        }
+        grim -g "$geo" "$tmp" || fail "grim couldn't capture the window"
+        ;;
+    all) grim "$tmp" || fail "grim couldn't capture the screens" ;;
     delay)
         for ((i = delay; i > 0; i--)); do
             notify-send -a Screenshot -t 700 -h string:x-canonical-private-synchronous:screenshot "Screenshot in $i…"
             sleep 1
         done
-        sleep 0.3   # let the last countdown bubble fade out of the shot
-        grim -o "$(monitor_under_mouse)" "$tmp" || fail "grim couldn't capture the screen" ;;
+        sleep 0.3 # let the last countdown bubble fade out of the shot
+        grim -o "$(monitor_under_mouse)" "$tmp" || fail "grim couldn't capture the screen"
+        ;;
 esac
 
 if $copy; then
@@ -85,7 +100,7 @@ if [[ -f $file ]]; then
             -A default=Open -A folder="Show folder" "$($copy && echo "Screenshot saved and copied" || echo "Screenshot saved")" "${file/#$HOME/\~}" --wait || true)
         case $action in
             default) xdg-open "$file" ;;
-            folder)  xdg-open "$dir" ;;
+            folder) xdg-open "$dir" ;;
         esac
     ) >/dev/null 2>&1 &
     disown

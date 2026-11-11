@@ -35,4 +35,7 @@ emoji=${choice%%  *}
 [[ -n "$emoji" ]] || exit 0
 
 printf '%s' "$emoji" | wl-copy
-command -v wtype >/dev/null && { sleep 0.15; wtype -- "$emoji"; }
+command -v wtype >/dev/null && {
+    sleep 0.15
+    wtype -- "$emoji"
+}

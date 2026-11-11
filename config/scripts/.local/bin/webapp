@@ -5,18 +5,38 @@
 #   webapp list                                             webapp remove "Shop admin"
 set -euo pipefail
 apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
-slug() { local s; s=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//; s/-$//'); printf '%s' "${s:-app$(printf '%s' "$1" | md5sum | cut -c1-8)}"; }
+slug() {
+    local s
+    s=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//; s/-$//')
+    printf '%s' "${s:-app$(printf '%s' "$1" | md5sum | cut -c1-8)}"
+}
 browser=$(command -v google-chrome-stable || command -v chromium || command -v brave || true)
 
 case ${1:-list} in
     add)
-        [[ $# -eq 3 ]] || { echo 'usage: webapp add "Name" https://example.com' >&2; exit 2; }
+        [[ $# -eq 3 ]] || {
+            echo 'usage: webapp add "Name" https://example.com' >&2
+            exit 2
+        }
         # what goes into the launcher entry: one line of name, a URL without spaces, quotes or % (field codes)
-        [[ $3 =~ ^https?://[^[:space:]\"\'%\\]+$ ]] || { echo "webapp: the address must start with http(s):// and have no spaces, quotes or %" >&2; exit 2; }
-        [[ $2 != *$'\n'* && -n ${2// /} ]] || { echo "webapp: the name must be one line" >&2; exit 2; }
-        [[ -n $browser ]] || { echo "webapp: needs Chrome, Chromium or Brave (Firefox has no app windows)" >&2; exit 1; }
-        s=$(slug "$2"); mkdir -p "$apps"
-        [[ -e $apps/webapp-$s.desktop ]] && { echo "webapp: '$2' exists already (webapp remove it first)" >&2; exit 1; }
+        [[ $3 =~ ^https?://[^[:space:]\"\'%\\]+$ ]] || {
+            echo "webapp: the address must start with http(s):// and have no spaces, quotes or %" >&2
+            exit 2
+        }
+        [[ $2 != *$'\n'* && -n ${2// /} ]] || {
+            echo "webapp: the name must be one line" >&2
+            exit 2
+        }
+        [[ -n $browser ]] || {
+            echo "webapp: needs Chrome, Chromium or Brave (Firefox has no app windows)" >&2
+            exit 1
+        }
+        s=$(slug "$2")
+        mkdir -p "$apps"
+        [[ -e $apps/webapp-$s.desktop ]] && {
+            echo "webapp: '$2' exists already (webapp remove it first)" >&2
+            exit 1
+        }
         cat >"$apps/webapp-$s.desktop" <<DESK
 [Desktop Entry]
 Type=Application
@@ -28,12 +48,22 @@ StartupWMClass=webapp-$s
 Categories=Network;WebBrowser;
 X-LinuxSetup-WebApp=true
 DESK
-        echo "webapp: added $2 (Spotlight finds it now)" ;;
+        echo "webapp: added $2 (Spotlight finds it now)"
+        ;;
     remove)
-        [[ $# -eq 2 ]] || { echo 'usage: webapp remove "Name"' >&2; exit 2; }
-        rm -v -- "$apps/webapp-$(slug "$2").desktop" ;;
+        [[ $# -eq 2 ]] || {
+            echo 'usage: webapp remove "Name"' >&2
+            exit 2
+        }
+        rm -v -- "$apps/webapp-$(slug "$2").desktop"
+        ;;
     list)
         grep -l '^X-LinuxSetup-WebApp=true' "$apps"/webapp-*.desktop 2>/dev/null | while read -r f; do
-            printf '%-24s %s\n' "$(sed -n 's/^Name=//p' "$f")" "$(sed -n 's/^Comment=Web app: //p' "$f")"; done ;;
-    *) sed -n '2,6p' "$0" >&2; exit 2 ;;
+            printf '%-24s %s\n' "$(sed -n 's/^Name=//p' "$f")" "$(sed -n 's/^Comment=Web app: //p' "$f")"
+        done
+        ;;
+    *)
+        sed -n '2,6p' "$0" >&2
+        exit 2
+        ;;
 esac

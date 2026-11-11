@@ -5,7 +5,10 @@
 # which covers resume. Safe to re-run. Runs as your normal user.
 # Run: bash hosts/flow-x13/steps/60-monswitch-resume.user.sh
 set -euo pipefail
-[[ $EUID -ne 0 ]] || { echo "Run as your normal user"; exit 1; }
+[[ $EUID -ne 0 ]] || {
+    echo "Run as your normal user"
+    exit 1
+}
 
 unit=${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user/monswitch-resume.service
 if [[ -f $unit ]]; then

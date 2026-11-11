@@ -12,8 +12,8 @@ set -euo pipefail
 MODES=(quiet balanced performance)
 # without asusd, only the profiles power-profiles-daemon offers here (many machines have no "performance")
 if ! command -v asusctl >/dev/null && command -v powerprofilesctl >/dev/null; then
-    mapfile -t MODES < <(powerprofilesctl list | sed -n 's/^[ *]*\([a-z-]*\):$/\1/p' | sed 's/power-saver/quiet/' \
-        | awk '{o["quiet"]=1; o["balanced"]=2; o["performance"]=3; print o[$1] ":" $1}' | sort -n | cut -d: -f2)
+    mapfile -t MODES < <(powerprofilesctl list | sed -n 's/^[ *]*\([a-z-]*\):$/\1/p' | sed 's/power-saver/quiet/' |
+        awk '{o["quiet"]=1; o["balanced"]=2; o["performance"]=3; print o[$1] ":" $1}' | sort -n | cut -d: -f2)
     ((${#MODES[@]})) || MODES=(quiet balanced performance)
 fi
 
@@ -36,7 +36,7 @@ set_mode() {
 
 case ${1:-} in
     "") get ;;
-    quiet|balanced|performance) set_mode "$1" ;;
+    quiet | balanced | performance) set_mode "$1" ;;
     next)
         now=$(get)
         n=${#MODES[@]}
@@ -46,18 +46,21 @@ case ${1:-} in
         ;;
     watch)
         get
-        if command -v asusctl >/dev/null; then dest=xyz.ljones.Asusd path=/xyz/ljones
+        if command -v asusctl >/dev/null; then
+            dest=xyz.ljones.Asusd path=/xyz/ljones
         else dest=net.hadess.PowerProfiles path=/net/hadess/PowerProfiles; fi
         # re-read the mode on every profile signal (asusd: PlatformProfile, ppd: ActiveProfile)
         # pdeathsig: the kernel stops gdbus when this watcher ends, even if it is killed outright (no trap runs then)
         exec 3< <(exec setpriv --pdeathsig TERM gdbus monitor --system --dest "$dest" --object-path "$path")
         mon=$!
         trap 'kill "$mon" 2>/dev/null' EXIT
-        trap 'exit 0' TERM INT HUP   # stopped by the shell (a reload): exit through the EXIT trap, taking gdbus along
-        trap '' PIPE   # a failed write returns an error instead of killing us, so the EXIT trap runs
+        trap 'exit 0' TERM INT HUP # stopped by the shell (a reload): exit through the EXIT trap, taking gdbus along
+        trap '' PIPE               # a failed write returns an error instead of killing us, so the EXIT trap runs
         while :; do
-            if read -r -t 30 line <&3; then [[ $line == *"Profile'"* ]] && get
-            elif (( $? <= 128 )); then break   # gdbus ended (the daemon went away)
+            if read -r -t 30 line <&3; then
+                [[ $line == *"Profile'"* ]] && get
+            elif (($? <= 128)); then
+                break # gdbus ended (the daemon went away)
             fi
             # a blank line now and then: once the shell reading us is gone (a reload), the write fails
             # and this watcher ends instead of piling up; the same if the shell that started it died
@@ -65,5 +68,8 @@ case ${1:-} in
             kill -0 "$PPID" 2>/dev/null || exit 0
         done
         ;;
-    *) echo "usage: powermode [quiet|balanced|performance|next|watch]" >&2; exit 2 ;;
+    *)
+        echo "usage: powermode [quiet|balanced|performance|next|watch]" >&2
+        exit 2
+        ;;
 esac

@@ -15,29 +15,43 @@ tell_shell() { qs ipc call recorder recording "$1" >/dev/null 2>&1 || true; }
 mode=screen audio=""
 for a in "$@"; do
     case $a in
-        screen|area|stop|status) mode=$a ;;
+        screen | area | stop | status) mode=$a ;;
         --audio) audio="--audio=$(pactl get-default-sink 2>/dev/null).monitor" ;;
-        --mic)   audio="--audio=$(pactl get-default-source 2>/dev/null)" ;;
-        *) sed -n '2,7p' "$0" >&2; exit 2 ;;
+        --mic) audio="--audio=$(pactl get-default-source 2>/dev/null)" ;;
+        *)
+            sed -n '2,7p' "$0" >&2
+            exit 2
+            ;;
     esac
 done
 
-if [[ $mode == status ]]; then running && echo on || echo off; exit 0; fi
+if [[ $mode == status ]]; then
+    running && echo on || echo off
+    exit 0
+fi
 if running || [[ $mode == stop ]]; then
-    running && kill -INT "$(cat "$pidfile")"   # the watcher below clears the dot once the file is written
+    running && kill -INT "$(cat "$pidfile")" # the watcher below clears the dot once the file is written
     rm -f "$pidfile"
     exit 0
 fi
-command -v wf-recorder >/dev/null || { notify-send -a Recording -u critical "Screen recording needs wf-recorder" "Install it with ./install.sh (packages: wf-recorder)"; exit 1; }
+command -v wf-recorder >/dev/null || {
+    notify-send -a Recording -u critical "Screen recording needs wf-recorder" "Install it with ./install.sh (packages: wf-recorder)"
+    exit 1
+}
 
 mkdir -p "$dir"
 file="$dir/Recording_$(date +%F_%H-%M-%S).mp4"
 case $mode in
-    area)   geo=$(slurp -d) || exit 0; target=(-g "$geo") ;;
-    screen) IFS=', ' read -r x y < <(hyprctl cursorpos)
-            out=$(hyprctl -j monitors | jq -r --argjson x "${x%.*}" --argjson y "${y%.*}" \
-                '.[] | select($x >= .x and $y >= .y and $x < .x + (.width / .scale) and $y < .y + (.height / .scale)) | .name' | head -1)
-            target=(-o "${out:-$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')}") ;;
+    area)
+        geo=$(slurp -d) || exit 0
+        target=(-g "$geo")
+        ;;
+    screen)
+        IFS=', ' read -r x y < <(hyprctl cursorpos)
+        out=$(hyprctl -j monitors | jq -r --argjson x "${x%.*}" --argjson y "${y%.*}" \
+            '.[] | select($x >= .x and $y >= .y and $x < .x + (.width / .scale) and $y < .y + (.height / .scale)) | .name' | head -1)
+        target=(-o "${out:-$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')}")
+        ;;
 esac
 # hardware encoding through VA-API on the AMD iGPU when it works, else software x264
 codec=(-c libx264 -p preset=veryfast -p crf=23)
@@ -48,20 +62,23 @@ setsid wf-recorder "${target[@]}" "${codec[@]}" $audio -f "$file" >"$log" 2>&1 &
 pid=$!
 echo "$pid" >"$pidfile"
 sleep 1
-if ! kill -0 "$pid" 2>/dev/null; then   # died at once: wrong codec, no permission, bad output
-    rm -f "$pidfile"; tell_shell false
+if ! kill -0 "$pid" 2>/dev/null; then # died at once: wrong codec, no permission, bad output
+    rm -f "$pidfile"
+    tell_shell false
     notify-send -a Recording -u critical "Recording didn't start" "$(tail -n 2 "$log")"
     exit 1
 fi
 tell_shell true
 notify-send -a Recording -t 2000 "Recording" "Press the same key, or the red dot in the bar, to stop"
 # wait for wf-recorder itself to finish writing (it finalises the file after the stop signal)
-( while kill -0 "$pid" 2>/dev/null; do sleep 0.5; done
-  tell_shell false
-  if [[ -s $file ]]; then
-      a=$(notify-send -a Recording -A default=Open -A folder="Show folder" "Recording saved" "${file/#$HOME/\~}" --wait || true)
-      case $a in default) xdg-open "$file" ;; folder) xdg-open "$dir" ;; esac
-  else
-      notify-send -a Recording -u critical "Recording failed" "$(tail -n 2 "$log")"
-  fi ) >/dev/null 2>&1 &
+(
+    while kill -0 "$pid" 2>/dev/null; do sleep 0.5; done
+    tell_shell false
+    if [[ -s $file ]]; then
+        a=$(notify-send -a Recording -A default=Open -A folder="Show folder" "Recording saved" "${file/#$HOME/\~}" --wait || true)
+        case $a in default) xdg-open "$file" ;; folder) xdg-open "$dir" ;; esac
+    else
+        notify-send -a Recording -u critical "Recording failed" "$(tail -n 2 "$log")"
+    fi
+) >/dev/null 2>&1 &
 disown

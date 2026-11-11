@@ -16,7 +16,8 @@ distro_prepare() {
 
 # distro_install SOURCE PACKAGES...
 distro_install() {
-    local src=$1; shift
+    local src=$1
+    shift
     local repo=() aur=() p helper
     for p in "$@"; do
         # cachyos: from the repo when this system has it (CachyOS), else from the AUR (plain Arch)
@@ -24,19 +25,24 @@ distro_install() {
     done
     ((${#repo[@]} == 0)) || run sudo pacman -S --needed --noconfirm "${repo[@]}"
     if ((${#aur[@]})); then
-        helper=$(aur_helper) || { warn "Skipped (no AUR helper): ${aur[*]}"; return 0; }
+        helper=$(aur_helper) || {
+            warn "Skipped (no AUR helper): ${aur[*]}"
+            return 0
+        }
         run "$helper" -S --needed --noconfirm "${aur[@]}"
     fi
 }
 
 # NVIDIA driver: CachyOS's chwd picks the right one for the kernel; plain Arch gets the open modules (Turing and newer)
 distro_nvidia() {
-    if command -v chwd >/dev/null; then run sudo chwd -a
+    if command -v chwd >/dev/null; then
+        run sudo chwd -a
     else run sudo pacman -S --needed --noconfirm nvidia-open-dkms nvidia-utils egl-wayland linux-headers; fi
 }
 
 # Full system update (AUR too when there's a helper); snap-pac snapshots before and after
 distro_update() {
-    local helper y=(); $YES && y=(--noconfirm)
+    local helper y=()
+    $YES && y=(--noconfirm)
     if helper=$(aur_helper); then run "$helper" -Syu "${y[@]}"; else run sudo pacman -Syu "${y[@]}"; fi
 }
