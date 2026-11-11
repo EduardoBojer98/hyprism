@@ -19,6 +19,8 @@ case ${1:-} in -h | --help) usage ;; esac
 STORE="${XDG_DATA_HOME:-$HOME/.local/share}/clipboard"
 SETTINGS="$HOME/.config/quickshell/settings.json"
 mkdir -p "$STORE"
+chmod 700 "$STORE" # copied text can hold passwords: no other user may read it (also fixes folders made before 2.0)
+umask 077          # and the same for every entry written from here on
 
 setting() { jq -r ".clipboard.$1 // empty" "$SETTINGS" 2>/dev/null || true; }
 

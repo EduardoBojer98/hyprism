@@ -69,6 +69,11 @@ for b in distros/*.sh; do
     done
 done
 
+# the clipboard history is private: folder 700, entries not readable by others
+mkdir -p "$t/clip"
+XDG_DATA_HOME="$t/clip" bash "$bin/clipstore" list >/dev/null 2>&1
+check "clipstore keeps its folder private (700)" '[[ $(stat -c %a "$t/clip/clipboard") == 700 ]]'
+
 # the Hyprland Lua the installer seeds parses
 luac=$(command -v luac || command -v luac5.4 || true)
 [[ -n $luac ]] && for f in config/hypr/.config/hypr/defaults/*.lua; do [[ -f $f ]] && check "parses: $f" "\"$luac\" -p \"$f\""; done

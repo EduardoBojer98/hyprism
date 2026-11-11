@@ -1,5 +1,6 @@
 # Checks every push and pull request:
 #   shell   every shell file is formatted (shfmt) and lint-clean (shellcheck, style level)
+#   secrets no key, token or password anywhere in the history (gitleaks)
 #   lint    QML, Lua, colours, themes, hardware detection on seven made-up computers, script tests
 #   install a fresh install in Arch and Fedora containers: the right modules per hardware profile, install
 #           twice, a third run changes nothing, the doctor is clean, a failure is reported, uninstall leaves
@@ -19,6 +20,15 @@ jobs:
       - uses: actions/checkout@v5
       - name: shfmt and shellcheck
         run: bash tests/format.sh
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # the whole history, so a secret committed and later removed is still found
+      - name: gitleaks (the same scan as the pre-commit hook)
+        run: docker run --rm -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e "GIT_CONFIG_VALUE_0=*" -v "$PWD":/repo:ro zricethezav/gitleaks:v8.21.2 git /repo --redact --no-banner
 
   lint:
     runs-on: ubuntu-latest
