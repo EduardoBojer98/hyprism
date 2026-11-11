@@ -1,7 +1,7 @@
 # Audit (2026-11-11)
 
 A full review of the repo at commit `ea51fdf` against the overhaul brief. Read-only: nothing was changed while
-auditing. The older `docs/AUDIT.md` and `docs/COUNCIL.md` are earlier reviews of a narrower goal (one laptop, 9.5
+auditing. The older reviews in `docs/history/` (`AUDIT-2026-10.md`, `COUNCIL.md`) are earlier reviews of a narrower goal (one laptop, 9.5
 per part); this one measures "any PC or laptop, 10/10 with proof".
 
 How to read it: each department has a score, why, the findings (where, how bad, the fix) and what 10/10 means.

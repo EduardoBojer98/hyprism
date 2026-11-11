@@ -7,8 +7,8 @@ Paste everything below the line into a new Claude Code session in `~/Documents/p
 Continue the council-led refurbish of this repo (the full brief I gave before is summarised here; the details live
 in the docs). You lead and do the work; ask me only for decisions that are truly mine, grouped together.
 
-**Read first:** `docs/COUNCIL.md` (scoreboard, what was fixed, what was rejected and why, hard limits),
-`docs/PROGRESS.md`, `docs/DECISIONS.md`, `docs/INVENTORY.md`, `docs/DESIGN.md`, `docs/THEMES.md`,
+**Read first:** `docs/history/COUNCIL.md` (scoreboard, what was fixed, what was rejected and why, hard limits),
+`docs/history/PROGRESS.md`, `docs/DECISIONS.md`, `docs/history/INVENTORY.md`, `docs/DESIGN.md`, `docs/THEMES.md`,
 `docs/USER-GUIDE.md`. The council brief every reviewer gets is `.council/brief.md` (local, git-excluded; recreate it
 from the "Council" section below if it is missing).
 
@@ -24,9 +24,9 @@ screenshots exist in `.council/shots/`, but the round 3 review has not run. No p
    back at the end (read them with `qs ipc call config get appearance theme|mode` first).
 2. Run council round 3: seven members, at most 3 agents at a time, each gets only `.council/brief.md`:
    design lead (opus), UX/newcomer (opus), systems engineer (opus), performance (sonnet), code quality (sonnet),
-   accessibility (sonnet), security (sonnet). Log raw scores in `.council/feedback.md`, the table in `docs/COUNCIL.md`.
+   accessibility (sonnet), security (sonnet). Log raw scores in `.council/feedback.md`, the table in `docs/history/COUNCIL.md`.
 3. Fix what they find: verify each finding against the code first, reject wrong ones with evidence in
-   `docs/COUNCIL.md`. Then re-capture and run round 4, and so on, until every part reaches 9.5 from every member
+   `docs/history/COUNCIL.md`. Then re-capture and run round 4, and so on, until every part reaches 9.5 from every member
    that judges it, or is logged as a hard limit.
 
 **Known open items** (from round 2): the bar has no keyboard focus path; `ControlCenter.qml` (≈1460 lines) wants

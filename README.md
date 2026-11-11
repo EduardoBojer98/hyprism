@@ -252,7 +252,7 @@ text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** save
 | `packages/` | `manifest.txt` (logical name, module, why) and `arch.txt` / `fedora.txt` (real names and sources) |
 | `distros/` | `arch.sh`, `fedora.sh`: install packages, enable repos, NVIDIA driver |
 | `plugins/` | Hyprland plugin (title-bar minimise), built by `hypr-plugins` |
-| `docs/` | users: [USER-GUIDE.md](docs/USER-GUIDE.md), [THEMES.md](docs/THEMES.md). Contributors: [ARCHITECTURE.md](docs/ARCHITECTURE.md), [DESIGN.md](docs/DESIGN.md), [DECISIONS.md](docs/DECISIONS.md), [INVENTORY.md](docs/INVENTORY.md), [COUNCIL.md](docs/COUNCIL.md), [PROGRESS.md](docs/PROGRESS.md) |
+| `docs/` | users: [USER-GUIDE.md](docs/USER-GUIDE.md), [THEMES.md](docs/THEMES.md). Contributors: [ARCHITECTURE.md](docs/ARCHITECTURE.md), [DESIGN.md](docs/DESIGN.md), [DECISIONS.md](docs/DECISIONS.md), [CONVENTIONS.md](docs/CONVENTIONS.md), [audit](docs/audit/AUDIT.md), [CHANGELOG.md](CHANGELOG.md) |
 
 - **A new computer**: `cp -r hosts/default hosts/<name>`, put its hostname in `hosts/<name>/host.conf`, add monitors
   or workspace rules to `home/.config/hypr/host.lua` and extra packages to `packages.txt`. See [hosts/README.md](hosts/README.md).

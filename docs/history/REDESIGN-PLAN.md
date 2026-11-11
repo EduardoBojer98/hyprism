@@ -67,7 +67,7 @@ These get restyled through tokens; their behaviour doesn't change.
 | **Workstation** | bottom taskbar: start, search, tasks, clock | start menu from the corner | the taskbar | radius 8, title bars (hyprbars) | IBM Plex Sans · slate / blue | quick ease |
 | **Poster** | top, paper white, huge workspace numbers | half-screen cobalt field, huge query | none | radius 0, 3px black frame, hard offset shadow | Archivo Black + Archivo · charcoal / red / cobalt | slam-in |
 
-Research behind them: docs/RESEARCH.md (Omarchy, HyDE and ML4W vary colour per theme but not structure;
+Research behind them: docs/research/setups-and-screenshot-tools.md (Omarchy, HyDE and ML4W vary colour per theme but not structure;
 the Hall of Fame winners carry a whole idea through layout, art and motion).
 
 ## Architecture

@@ -1,7 +1,7 @@
 # Inventory (2026-11-05)
 
 What the repo holds, what lives only on the machine, and the measured baseline. How the pieces connect is in
-[ARCHITECTURE.md](ARCHITECTURE.md); the look is in [DESIGN.md](DESIGN.md); scores are in [COUNCIL.md](COUNCIL.md).
+[ARCHITECTURE.md](../ARCHITECTURE.md); the look is in [DESIGN.md](../DESIGN.md); scores are in [COUNCIL.md](COUNCIL.md).
 
 ## Repo
 

@@ -31,7 +31,7 @@ moving parts than they earn).
 | **grimblast** ([hyprwm/contrib](https://github.com/hyprwm/contrib)) / **hyprshot** ([github](https://github.com/Gustash/Hyprshot)) | Shell wrappers around grim + slurp | none | same as grim | ✗ our ~90-line script does the same with no extra package |
 | **Ksnip** ([github](https://github.com/ksnip/ksnip)) | Qt editor with pin windows, OCR plugin | full set incl. pixelate, stickers | Wayland support documented for GNOME/Plasma only; global hotkeys don't work on Wayland; solo maintainer, 300+ open issues | ✗ fragile on Hyprland |
 | **Gradia** ([github](https://github.com/AlexanderVanhee/Gradia)) | GTK4 "make screenshots pretty" | basic annotation, backgrounds | — | ✗ aimed at presentation, Flatpak-first |
-| **Flameshot** ([github](https://github.com/flameshot-org/flameshot)) | Qt all-in-one | full set incl. pixelate | Wayland "experimental"; see `docs/AUDIT.md` audit 2 #1 for what went wrong here | ✗ replaced |
+| **Flameshot** ([github](https://github.com/flameshot-org/flameshot)) | Qt all-in-one | full set incl. pixelate | Wayland "experimental"; see `docs/history/AUDIT-2026-10.md` audit 2 #1 for what went wrong here | ✗ replaced |
 
 Grim and slurp are in Fedora's own repos (F44: grim 1.5.0, slurp 1.5.0; verified the same way).
 
