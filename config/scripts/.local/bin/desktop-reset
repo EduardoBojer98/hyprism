@@ -3,13 +3,13 @@
 # Hyprland on the shipped defaults. For when a setting or a theme leaves the desktop unusable.
 #   desktop-reset            everything Settings writes (theme, bar, dock, keys, displays, input, idle, lock)
 #   desktop-reset shell      only the shell's settings.json (theme, bar, dock, panels)
-# Your files go to ~/.local/state/linux-setup/reset-<time>/; copy one back to undo.
+# Your files go to ~/.local/state/hyprism/reset-<time>/; copy one back to undo.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 cfg=${XDG_CONFIG_HOME:-$HOME/.config}
-keep=${XDG_STATE_HOME:-$HOME/.local/state}/linux-setup/reset-$(date +%Y%m%d-%H%M%S)
+keep=${XDG_STATE_HOME:-$HOME/.local/state}/hyprism/reset-$(date +%Y%m%d-%H%M%S)
 repo=$(repo_root)
 
 files=("$cfg/quickshell/settings.json")

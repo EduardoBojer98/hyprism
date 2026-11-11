@@ -104,23 +104,28 @@ restore() {
 }
 
 sample() {
-    local k10 gpu asus
-    k10=$(hwmon k10temp)
-    gpu=$(hwmon amdgpu)
+    local k10 gpu asus pci gt="null" gw="null"
+    k10=$(hwmon k10temp)                   # AMD
+    [[ -n $k10 ]] || k10=$(hwmon coretemp) # Intel
+    gpu=$(hwmon amdgpu)                    # optional: only an AMD iGPU has it
     asus=$(hwmon asus)
-    [[ -n $k10 && -n $gpu && -n $asus ]] || die "needs the k10temp, amdgpu and asus sensors (ASUS laptop with an AMD chip)"
+    [[ -n $k10 && -n $asus ]] || die "needs a CPU temperature sensor (k10temp or coretemp) and the asus fan sensor"
+    if [[ -n $gpu ]]; then
+        gt=$(($(<"$gpu/temp1_input") / 1000))
+        gw=$(awk '{printf "%.1f", $1/1e6}' "$gpu/power1_input")
+    fi
     read -r t0 i0 < <(awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8, $5+$6}' /proc/stat)
     sleep 0.5
     read -r t1 i1 < <(awk '/^cpu /{print $2+$3+$4+$5+$6+$7+$8, $5+$6}' /proc/stat)
-    local dgpu=/sys/bus/pci/devices/0000:01:00.0/power/runtime_status # read without waking it
+    pci=$(hw gpu.discrete_pci)
+    local dgpu=/sys/bus/pci/devices/$pci/power/runtime_status # read without waking it
     printf '{"cpu":%s,"gpu":%s,"watts":%s,"mhz":%s,"load":%s,"fanCpu":%s,"fanGpu":%s,"profile":"%s","nvidia":"%s"}\n' \
-        "$(($(<"$k10/temp1_input") / 1000))" "$(($(<"$gpu/temp1_input") / 1000))" \
-        "$(awk '{printf "%.1f", $1/1e6}' "$gpu/power1_input")" \
+        "$(($(<"$k10/temp1_input") / 1000))" "$gt" "$gw" \
         "$(awk '{s+=$1; n++} END{printf "%d", s/n/1000}' /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq)" \
         "$(((100 * ((t1 - t0) - (i1 - i0))) / ((t1 - t0) > 0 ? (t1 - t0) : 1)))" \
         "$(<"$asus/fan1_input")" "$(<"$asus/fan2_input")" \
         "$(asusctl profile get 2>/dev/null | awk '/Active profile/{print $3}')" \
-        "$(cat "$dgpu" 2>/dev/null || echo unknown)"
+        "$([[ -n $pci ]] && cat "$dgpu" 2>/dev/null || echo unknown)"
 }
 
 case "${1:-}" in

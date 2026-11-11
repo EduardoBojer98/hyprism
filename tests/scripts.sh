@@ -29,7 +29,7 @@ echo '{"x":1}' >"$t/home/quickshell/settings.json"
 echo 'return {}' >"$t/home/hypr/settings/theme.lua"
 env -u HYPRLAND_INSTANCE_SIGNATURE XDG_CONFIG_HOME="$t/home" XDG_STATE_HOME="$t/state" bash "$bin/desktop-reset" >/dev/null 2>&1
 # shellcheck disable=SC2034  # read inside check's condition
-kept=$(find "$t/state/linux-setup" -name settings.json 2>/dev/null | head -1)
+kept=$(find "$t/state/hyprism" -name settings.json 2>/dev/null | head -1)
 check "desktop-reset keeps the old settings.json" '[[ -n $kept && $(cat "$kept") == "{\"x\":1}" ]]'
 check "desktop-reset removes it from ~/.config" '[[ ! -e $t/home/quickshell/settings.json ]]'
 check "desktop-reset seeds hypridle.conf" '[[ -f $t/home/hypr/settings/hypridle.conf ]]'
@@ -57,6 +57,17 @@ check "log writes a timestamped line to its own file" 'grep -qE "^[0-9-]+ [0-9:]
 # shellcheck disable=SC2034  # read inside check's condition
 none=$(bash -c 'set -e; . "$1"; hwmon nosuchname; echo end' x "$lib")
 check "hwmon of an unknown name prints nothing and succeeds under set -e" '[[ $none == end ]]'
+
+# package-manager commands live in distros/ only
+check "no package-manager command in scripts or module bin dirs" '! grep -nwE "pacman|paru|yay|dnf|rpm" "$bin"/* modules/*/home/.local/bin/* 2>/dev/null | grep -q .'
+
+# every distro backend defines the app-list functions
+for b in distros/*.sh; do
+    for fn in distro_pkg_owners distro_pkg_source distro_pkg_versions distro_pkg_info distro_pkg_url distro_pkg_remove_cmd; do
+        # shellcheck disable=SC2016  # expanded by the inner bash
+        check "$b defines $fn" 'bash -c "run(){ :; }; warn(){ :; }; say(){ :; }; . \"\$1\"; declare -F \"\$2\" >/dev/null" x "$b" "$fn"'
+    done
+done
 
 # the Hyprland Lua the installer seeds parses
 luac=$(command -v luac || command -v luac5.4 || true)

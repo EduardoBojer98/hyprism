@@ -17,21 +17,23 @@ set -euo pipefail
 case ${1:-} in -h | --help) usage ;; esac
 
 # Per-computer values live in ~/.config/monswitch.conf (no file = feature off), for example:
-#   OUT=HDMI-A-1   # Hyprland output name of the shared monitor
+#   OUT=HDMI-A-1   # for example: Hyprland output name of the shared monitor
 #   LAPTOP=0x11    # monitor input this computer is on (VCP 0x60 value)
 #   PC=0x12        # monitor input of the other computer
-#   MIRROR=eDP-1   # optional: screen it mirrors while the other computer has it (keeps a signal)
+#   MIRROR=eDP-1   # optional, for example: screen it mirrors while the other computer has it (keeps a signal).
+#                  # Default: this computer's built-in screen; none means no mirroring, workspaces stay put
 #   MIRROR_MODE=1920x1080@60   # optional: mode used for that mirror
+#   POLL=5         # optional: seconds between DDC reads in watch mode (30 while nothing changes and the screen is off)
 # Settings > Shared Monitor writes this file. By hand: ddcutil detect; ddcutil getvcp 60
 CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
 [[ -f $CONF ]] || {
     echo "monswitch: no $CONF, nothing to do" >&2
     exit 0
 }
-POLL=3 # seconds between DDC reads in watch mode
-# read KEY=value lines (never run the file as shell): only the five keys, only plain values
+POLL=5 # seconds between DDC reads in watch mode
+# read KEY=value lines (never run the file as shell): only the known keys, only plain values
 while IFS='=' read -r key value; do
-    case $key in OUT | LAPTOP | PC | MIRROR | MIRROR_MODE)
+    case $key in OUT | LAPTOP | PC | MIRROR | MIRROR_MODE | POLL)
         # plain values only, starting with a letter or digit (a leading "-" would reach ddcutil as an option)
         if [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
             printf -v "$key" '%s' "$value"
@@ -40,7 +42,9 @@ while IFS='=' read -r key value; do
     esac
 done <"$CONF"
 : "${OUT:?set OUT in $CONF}" "${LAPTOP:?set LAPTOP in $CONF}" "${PC:?set PC in $CONF}"
-MIRROR=${MIRROR:-eDP-1}
+[[ $POLL =~ ^[1-9][0-9]*$ ]] || POLL=5
+MIRROR=${MIRROR-$(hw display.internal)} # "none" in the file = no mirroring
+[[ $MIRROR == none ]] && MIRROR=""
 MIRROR_MODE=${MIRROR_MODE:-1920x1080@60}
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
@@ -89,10 +93,11 @@ restore_layout() {
 }
 
 # Hyprland side only: used directly by the watcher when the input was switched by hand.
-# The monitor is mirrored, not disabled: with no signal from this computer some monitors (the Acer)
+# The monitor is mirrored, not disabled: with no signal from this computer some monitors
 # give up on the other input within ~5 s. A mirror keeps a signal but holds no workspaces.
 release() {
     out_enabled || return 0
+    [[ -n $MIRROR ]] || return 0 # no screen to mirror: leave Hyprland as it is
     save_layout
     # kept in a file Hyprland's monitors.lua reads, so a reload or a theme change keeps the hand-off
     local table="{ output = \"$OUT\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\" }"
@@ -150,9 +155,10 @@ case ${1:-toggle} in
         fi
         ;;
     watch)
-        last=""
-        while sleep "$POLL"; do
+        last="" same=0 interval=$POLL
+        while sleep "$interval"; do
             now=$(ddc_input)
+            if [[ $now == "$last" ]]; then same=$((same + 1)); else same=0; fi
             # Act only on two identical readings in a row; ignores glitches during a switch.
             if [[ -n $now && $now == "$last" ]]; then
                 flock 9
@@ -166,6 +172,9 @@ case ${1:-toggle} in
                 flock -u 9
             fi
             last=$now
+            # nothing changed for three reads and the screen is off: look less often
+            interval=$POLL
+            if ((same >= 2)) && ! hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o and .dpmsStatus)' >/dev/null; then interval=30; fi
         done
         ;;
     *)

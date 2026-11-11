@@ -3,7 +3,8 @@
 #   record [screen]    the screen under the mouse        record area   pick an area (slurp)
 #   record stop        stop and save                     record status prints "on" or "off"
 #   add --audio to record what you hear (the default output's monitor), --mic for the microphone
-# Files: ~/Videos/Recordings/Recording_YYYY-MM-DD_HH-MM-SS.mp4. GPU encoding when available.
+#   (wf-recorder takes one --audio device, so --audio and --mic are exclusive: the last one wins)
+# Files: ~/Videos/Recordings/Recording_YYYY-MM-DD_HH-MM-SS.mp4. GPU encoding when available, else software.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
@@ -55,16 +56,23 @@ case $mode in
         target=(-o "${out:-$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')}")
         ;;
 esac
-# hardware encoding through VA-API on the AMD iGPU when it works, else software x264
-codec=(-c libx264 -p preset=veryfast -p crf=23)
-[[ -e /dev/dri/renderD128 ]] && codec=(-c h264_vaapi -d /dev/dri/renderD128)
+# hardware encoding through VA-API on the GPU that draws the desktop; software x264 when there is none or it fails to start
+soft=(-c libx264 -p preset=veryfast -p crf=23)
+node=$(gpu_render_node "$(hw gpu.primary_pci)")
 log="${XDG_RUNTIME_DIR:-/tmp}/record.log"
-# shellcheck disable=SC2086  # $audio is one --audio=... word, or nothing at all when empty
-setsid wf-recorder "${target[@]}" "${codec[@]}" $audio -f "$file" >"$log" 2>&1 &
-pid=$!
-echo "$pid" >"$pidfile"
-sleep 1
-if ! kill -0 "$pid" 2>/dev/null; then # died at once: wrong codec, no permission, bad output
+start() { # start RECORDER-CODEC-ARGS...; true when wf-recorder is still running a second later
+    # $audio is one --audio=... word, or nothing at all when empty
+    # shellcheck disable=SC2086
+    setsid wf-recorder "${target[@]}" "$@" $audio -f "$file" >"$log" 2>&1 &
+    pid=$!
+    echo "$pid" >"$pidfile"
+    sleep 1
+    kill -0 "$pid" 2>/dev/null
+}
+started=false
+if [[ -n $node ]] && start -c h264_vaapi -d "$node"; then started=true; fi
+if ! $started && start "${soft[@]}"; then started=true; fi
+if ! $started; then # died at once: wrong codec, no permission, bad output
     rm -f "$pidfile"
     tell_shell false
     notify-send -a Recording -u critical "Recording didn't start" "$(tail -n 2 "$log")"

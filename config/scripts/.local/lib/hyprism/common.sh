@@ -48,8 +48,41 @@ hwmon() {
     return 0
 }
 
+# One value from hardware.toml, [override] first; lists are space-separated. The installer's copy is lib/detect.sh hw_get (desktop scripts can't source the installer).
+hw() {
+    awk -v want="$1" '
+        function clean(v) { gsub(/^\[|\]$|"|,/, "", v); return v }
+        /^\[/ { section = substr($0, 2, index($0, "]") - 2); next }
+        /^[A-Za-z_.]+[ \t]*=/ {
+            key = $1; val = $0; sub(/^[^=]*=[ \t]*/, "", val)
+            if (section == "override" && key == want) { over = clean(val); found = 1 }
+            else if (section "." key == want) base = clean(val)
+        }
+        END { print (found ? over : base) }
+    ' "${HYPRISM_HARDWARE:-${XDG_CONFIG_HOME:-$HOME/.config}/hyprism/hardware.toml}" 2>/dev/null || true # no file = nothing detected
+}
+
+# The render node of a GPU given by PCI address; prints nothing when there is none
+gpu_render_node() {
+    local n=/dev/dri/by-path/pci-$1-render
+    [[ -n $1 && -e $n ]] && echo "$n"
+    return 0
+}
+
 # A key from the [Desktop Entry] group only (later groups are actions with their own Exec)
 desktop_key() { awk -v k="$2" '/^\[/ { s = ($0 == "[Desktop Entry]") } s && index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }' "$1"; }
 
-# The repo folder, found through this script's link back into it
-repo_root() { git -C "$(dirname "$(readlink -f "$0")")" rev-parse --show-toplevel; }
+# The repo folder: walk up from this script's real place to the folder that holds install.sh.
+# (No version-control command: it must also work in an unpacked archive and as another user.)
+repo_root() {
+    local d
+    d=$(dirname "$(readlink -f "$0")")
+    while [[ $d != / ]]; do
+        [[ -f $d/install.sh && -d $d/packages ]] && {
+            echo "$d"
+            return 0
+        }
+        d=$(dirname "$d")
+    done
+    return 1
+}

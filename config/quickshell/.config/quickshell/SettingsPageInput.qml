@@ -184,20 +184,20 @@ ColumnLayout {
         }
     }
 
-    // MX Master buttons, gestures and haptics are JuhRadial MX's own settings app
-    property bool juhradial: false
+    // Logitech buttons, DPI, battery and haptics are Solaar's own window (the logitech module installs it)
+    property bool solaar: false
     Process {
         running: true
-        command: ["sh", "-c", "command -v juhradial-settings"]
-        onExited: code => page.juhradial = code === 0
+        command: ["sh", "-c", "command -v solaar"]
+        onExited: code => page.solaar = code === 0
     }
     SettingGroup {
-        visible: page.juhradial
-        title: "Mouse buttons"
+        visible: page.solaar
+        title: "Logitech devices"
         SettingRow {
-            label: "MX Master buttons, gestures and haptics"
-            hint: "JuhRadial MX settings"
-            PillButton { text: "Open"; onClicked: Quickshell.execDetached(["juhradial-settings"]) }
+            label: "Buttons, scroll wheel, DPI and haptics"
+            hint: "Opens Solaar"
+            PillButton { text: "Open"; onClicked: Quickshell.execDetached(["solaar"]) }
         }
     }
 }

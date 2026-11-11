@@ -3,8 +3,8 @@
 #
 #   thermlog LABEL [SECONDS]    default 300 s; samples also go to ~/.local/state/thermlog/LABEL.log
 #
-# Columns: CPU temp (Tctl), iGPU temp, APU package power (W), CPU/GPU fan RPM, iGPU busy %,
-# avg CPU MHz, dGPU power state, battery drain (W, 0 on AC), profile.
+# Columns: CPU temp, iGPU temp, APU package power (W), CPU/GPU fan RPM, iGPU busy %,
+# avg CPU MHz, dGPU power state, battery drain (W, 0 on AC), profile. "-" = this computer has no such sensor.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
@@ -15,22 +15,24 @@ secs=${2:-300}
 dir=${XDG_STATE_HOME:-$HOME/.local/state}/thermlog
 mkdir -p "$dir"
 log=$dir/$label.log
-K=$(hwmon k10temp)
-A=$(hwmon amdgpu)
+K=$(hwmon k10temp)                 # AMD
+[[ -n $K ]] || K=$(hwmon coretemp) # Intel
+A=$(hwmon amdgpu)                  # optional: only an AMD iGPU has it
 F=$(hwmon asus)
-[[ -n $K && -n $A && -n $F ]] || die "needs the k10temp, amdgpu and asus sensors (ASUS laptop with an AMD chip)"
-busy=$A/device/gpu_busy_percent
-dgpu=/sys/bus/pci/devices/0000:01:00.0/power/runtime_status
-watts() { awk '{printf "%.1f", $1/1e6}' "$1"; }
+[[ -n $K && -n $F ]] || die "needs a CPU temperature sensor (k10temp or coretemp) and the asus fan sensor"
+dgpu=/sys/bus/pci/devices/$(hw gpu.discrete_pci)/power/runtime_status
+bat=/sys/class/power_supply/$(hw power.battery)/power_now
+watts() { [[ -r $1 ]] && awk '{printf "%.1f", $1/1e6}' "$1" || echo -; }
+val() { [[ -r $1 ]] && echo "$(<"$1")" || echo -; }
 
 echo "# $(date '+%F %T') $label: tctl edge ppt cpufan gpufan busy mhz dgpu batW profile" | tee -a "$log"
 end=$((SECONDS + secs))
 while ((SECONDS < end)); do
-    printf '%s %d %d %s %d %d %d %d %s %s %s\n' "$(date +%T)" \
-        $(($(<"$K/temp1_input") / 1000)) $(($(<"$A/temp1_input") / 1000)) "$(watts "$A/power1_input")" \
-        "$(<"$F/fan1_input")" "$(<"$F/fan2_input")" "$(<"$busy")" \
+    printf '%s %d %s %s %d %d %s %d %s %s %s\n' "$(date +%T)" \
+        $(($(<"$K/temp1_input") / 1000)) "$([[ -n $A ]] && echo $(($(<"$A/temp1_input") / 1000)) || echo -)" "$(watts "$A/power1_input")" \
+        "$(<"$F/fan1_input")" "$(<"$F/fan2_input")" "$(val "$A/device/gpu_busy_percent")" \
         "$(awk '/MHz/{s+=$4; n++} END{printf "%d", s/n}' /proc/cpuinfo)" \
-        "$(cat "$dgpu" 2>/dev/null || echo none)" "$(watts /sys/class/power_supply/BAT0/power_now)" \
+        "$(cat "$dgpu" 2>/dev/null || echo none)" "$(watts "$bat")" \
         "$(</sys/firmware/acpi/platform_profile)"
     sleep 2
 done | tee -a "$log" | awk -v l="$label" '{print; n++; t+=$2; if ($2>m) m=$2; p+=$4; f1+=$5; f2+=$6; b+=$7; c+=$8; w+=$10}

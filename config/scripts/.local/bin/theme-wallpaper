@@ -3,7 +3,8 @@
 #   theme-wallpaper pebble     -> ~/.local/share/linux-setup/themes/pebble.png
 #   theme-wallpaper --all      draw every one (to look at them)
 # Each design uses the theme's own colours (Themes.qml) and its fonts; nothing is downloaded.
-# 2560x1600 covers both screens here (16:10 laptop, 16:9 Acer; hyprpaper crops to fill).
+# Designs are drawn on a 2560x1600 sheet, then scaled to fill the largest connected screen (3840x2400 without
+# Hyprland); hyprpaper crops to fill the others.
 # Bump VERSION after changing a design so the cached pictures are redrawn.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
@@ -15,6 +16,10 @@ VERSION=7
 out_dir="${XDG_DATA_HOME:-$HOME/.local/share}/linux-setup/themes"
 mkdir -p "$out_dir"
 W=2560 H=1600
+TW=3840 TH=2400
+if size=$(hyprctl monitors -j 2>/dev/null | jq -r 'max_by(.width * .height) | "\(.width) \(.height)"' 2>/dev/null) && [[ $size =~ ^[0-9]+\ [0-9]+$ ]]; then
+    read -r TW TH <<<"$size"
+fi
 
 draw() {
     local id=$1 out=$2
@@ -130,6 +135,10 @@ for id in "${ids[@]}"; do
         draw "$id" "PNG24:$out.tmp.png" || {
             rm -f "$out.tmp.png"
             die "couldn't draw '$id'"
+        }
+        magick "$out.tmp.png" -resize "${TW}x${TH}^" -gravity center -extent "${TW}x${TH}" "PNG24:$out.tmp.png" || {
+            rm -f "$out.tmp.png"
+            die "couldn't scale '$id'"
         }
         mv "$out.tmp.png" "$out"
     fi

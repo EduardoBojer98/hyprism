@@ -50,11 +50,15 @@ fi
 
 # --- themes, and the scripts with logic
 python3 tests/themes.py || fail=1
+bash tests/no-hardcode.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
 bash tests/hypr-config.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/detect.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/scripts.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
+bash tests/hardware-scripts.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 
 ((fail == 0)) && echo "ok: QML, Lua, colours, themes and scripts"

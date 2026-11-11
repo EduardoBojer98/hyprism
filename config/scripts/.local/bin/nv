@@ -1,5 +1,11 @@
 #!/bin/sh
-# Run one app on the NVIDIA GPU:  nv blender
-# The Hyprland session hides NVIDIA's EGL driver so the dGPU can sleep; this brings it back for one app.
-# The same variables as prime-run (nvidia-prime), so Fedora needs nothing extra
-exec env -u __EGL_VENDOR_LIBRARY_FILENAMES __NV_PRIME_RENDER_OFFLOAD=1 __VK_LAYER_NV_optimus=NVIDIA_only __GLX_VENDOR_LIBRARY_NAME=nvidia "$@"
+# Run one app on the discrete GPU:  nv blender
+# The Hyprland session hides NVIDIA's EGL driver so the NVIDIA card can sleep; this brings it back for one app.
+# The same variables as prime-run (nvidia-prime), so Fedora needs nothing extra. Another vendor's card: DRI_PRIME=1.
+# POSIX sh on purpose (it can't source the bash library): a small awk reads the card's vendor from hardware.toml.
+hw=${HYPRISM_HARDWARE:-${XDG_CONFIG_HOME:-$HOME/.config}/hyprism/hardware.toml}
+vendor=$(awk -F'"' '/^\[/ { s = $0 } s == "[gpu]" && /^discrete[ \t]*=/ { print $2 }' "$hw" 2>/dev/null)
+if [ "$vendor" = nvidia ] || [ -z "$vendor" ]; then
+    exec env -u __EGL_VENDOR_LIBRARY_FILENAMES __NV_PRIME_RENDER_OFFLOAD=1 __VK_LAYER_NV_optimus=NVIDIA_only __GLX_VENDOR_LIBRARY_NAME=nvidia "$@"
+fi
+exec env DRI_PRIME=1 "$@"
