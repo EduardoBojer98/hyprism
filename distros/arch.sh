@@ -70,3 +70,46 @@ distro_kernel_args() {
         sys_note "kernel arguments you added by hand: $2"
     fi
 }
+
+# "Key   : value" lines (pacman -Qi) -> label<TAB>value for the keys asked (KEY=Label|KEY=Label), in that order
+arch_pick() {
+    awk -F' *: ' -v keys="$1" 'BEGIN { n = split(keys, k, "|") } NF > 1 { val = substr($0, index($0, ": ") + 2); gsub(/^ +/, "", $1); v[$1] = val }
+        END { for (i = 1; i <= n; i++) { split(k[i], kl, "="); if (v[kl[1]] != "" && v[kl[1]] != "None") print kl[2] "\t" v[kl[1]] } }'
+}
+
+# distro_pkg_owners FILE...: FILE<TAB>PACKAGE for each file a package owns (one call for all files)
+distro_pkg_owners() {
+    pacman -Qo -- "$@" 2>/dev/null | sed -nE 's/^(.*) is owned by ([^ ]+) [^ ]+$/\1\t\2/p'
+}
+
+# distro_pkg_source PACKAGE...: PACKAGE<TAB>LABEL per package, where it came from: aur (not in any repo) or pacman
+distro_pkg_source() {
+    printf '%s\n' "$@" | awk -F'\t' 'NR == FNR { foreign[$0] = 1; next } { print $0 "\t" ($0 in foreign ? "aur" : "pacman") }' <(pacman -Qqm) -
+}
+
+# distro_pkg_versions PACKAGE...: PACKAGE<TAB>VERSION<TAB>SIZE per package (one call for all)
+distro_pkg_versions() {
+    pacman -Qi -- "$@" 2>/dev/null |
+        awk -F' *: ' '/^Name/ { n = $2 } /^Version/ { v = $2 } /^Installed Size/ { print n "\t" v "\t" $2 }'
+}
+
+# distro_pkg_info PACKAGE: Label<TAB>value lines for the details panel
+distro_pkg_info() {
+    local qi from
+    qi=$(pacman -Qi -- "$1")
+    from=$(arch_pick 'Installed From=x' <<<"$qi" | cut -f2)
+    case $from in
+        "") from="AUR or built on this computer (not from a repository)" ;;
+        cachyos*) from="CachyOS repository ($from)" ;;
+        core | extra | multilib) from="Arch Linux repository ($from)" ;;
+    esac
+    printf 'Installed from\t%s\n' "$from"
+    arch_pick 'Name=Package|Version=Version|Description=Package description|Licenses=Licence|Installed Size=Size on disk|Install Date=Installed on|Build Date=Built on|Install Reason=Why it is here|Required By=Needed by|Packager=Packaged by' <<<"$qi" |
+        sed -E 's/\tExplicitly installed$/\tYou installed it/; s/\tInstalled as a dependency for another package$/\tAnother package needed it/'
+}
+
+# distro_pkg_url PACKAGE: homepage URL, or nothing
+distro_pkg_url() { pacman -Qi -- "$1" | arch_pick 'URL=x' | cut -f2; }
+
+# distro_pkg_remove_cmd PACKAGE: the removal command, as words on one line
+distro_pkg_remove_cmd() { echo "sudo pacman -Rns -- $1"; }
