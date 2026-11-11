@@ -11,7 +11,7 @@ Hyprland + a Quickshell shell for Arch, CachyOS and Fedora, switched in one step
 ![Arch / CachyOS](https://img.shields.io/badge/Arch%20%2F%20CachyOS-supported-1793D1?logo=archlinux&logoColor=white)
 ![Fedora 44+](https://img.shields.io/badge/Fedora%2044%2B-supported-51A2DA?logo=fedora&logoColor=white)
 
-[Themes](#themes) · [Features](#features) · [Install](#install) · [Keys](#keys) · [Customise](#customise) · [Recovery](#undo-and-recovery) · [User guide](docs/USER-GUIDE.md)
+[Themes](#themes) · [Features](#features) · [Install](#install) · [Keys](#keys) · [Customise](#customise) · [Recovery](#uninstall-and-recovery) · [User guide](docs/USER-GUIDE.md)
 
 <img src="docs/screenshots/themes/pebble-dark.webp" alt="Hyprism desktop with the Pebble theme: floating glass pills at the top, a pill dock at the bottom, a soft purple, coral and sea-green wallpaper" width="100%">
 
@@ -23,7 +23,7 @@ Hyprland + a Quickshell shell for Arch, CachyOS and Fedora, switched in one step
   motion, notifications, lock screen, terminal palette and wallpaper. Every one has a light and a dark version.
 - **Everything in Settings** (`Super+I`): bar, dock, displays, keyboard, shortcuts, wallpaper, power, lock screen,
   default apps. Your choices live in `~/.config`, never in the repo.
-- **One command** installs, updates, checks (`doctor`) and undoes it. Your existing KDE Plasma stays selectable at login.
+- **One command** installs, updates, checks (`doctor`) and uninstalls it. `uninstall` puts back the files it replaced.
 - **Free software only.** Hardware extras (ASUS fan curves, keyboard light, a shared monitor over DDC/CI) switch on
   only where the hardware exists.
 
@@ -156,18 +156,17 @@ cd ~/hyprism
 ./install.sh               # do it (asks before system changes; safe to run again)
 ```
 
-Log out and pick **Hyprland** at the login screen. KDE Plasma (or whatever you had) stays selectable.
+Log out and pick **Hyprland** at the login screen.
 
-| Step (in order) | What it does |
-|---|---|
-| `packages` | installs `packages/manifest.txt` + the host's `packages.txt`, using `packages/<distro>.txt` for the real names (Arch: repos + AUR via paru/yay; Fedora: repos, COPR, RPM Fusion) |
-| `nvidia` | offers the NVIDIA driver when there's an NVIDIA GPU without one |
-| `links` | links `config/<app>/` and `hosts/<host>/home/` into your home folder (GNU Stow, file by file); anything in the way is backed up to `~/.local/state/linux-setup/backups/` |
-| `services` | Bluetooth, NetworkManager; Docker, if you have it, starts on first use instead of at boot |
-| `session` | lid behaviour, Hyprland preselected on Plasma Login (asks) |
-| `host` | the host's `steps/NN-*.sh`, each shown and asked separately |
+What `./install.sh` does, in order:
 
-Options: `--yes` (no questions), `--host <name>`, `--only <steps or modules>` (e.g. `--only links`, `--only shell`), `--dry-run`. `./install.sh undo` removes the links and offers the last backup back.
+- detects the hardware and writes `~/.config/hyprism/hardware.toml`;
+- installs packages (Arch: repos and AUR; Fedora: repos, COPR, RPM Fusion);
+- links `config/<app>/` and each module's `home/` into your home folder, file by file. A file in the way is backed up to `~/.local/state/hyprism/backups/`;
+- enables services (Bluetooth, NetworkManager, and so on);
+- runs the system steps of the modules that fit this computer, asking before each one.
+
+Options: `--dry-run` (show, change nothing), `--yes` (no questions), `--only LIST` (steps like `links`, or groups like `shell`), `--with LIST` / `--without LIST` (turn modules on or off). `./install.sh uninstall` removes the links, puts a backup back and undoes the system changes. The full list of commands and flags is `./install.sh --help`.
 
 On Fedora, Hyprland 0.57 comes from the `sdegler/hyprland` COPR and Quickshell 0.3.2 from
 `errornointernet/quickshell` (Fedora's own Quickshell is too old). A few packages have no Fedora
@@ -191,8 +190,9 @@ choice ever breaks the desktop, `desktop-reset` puts the defaults back (see [doc
 ```
 
 Pulls this repo (only when it has no local changes), updates the whole system (`paru -Syu` or
-`pacman -Syu` / `dnf upgrade`, plus Flatpaks), installs packages the repo added, relinks the configs and
-runs the doctor. Same as **Settings → About → Update**.
+`pacman -Syu` / `dnf upgrade`, plus Flatpaks), installs packages the repo added, runs new migrations, relinks the
+configs and runs the doctor. Same as **Settings → About → Update**. `./install.sh rollback` goes back to the
+Hyprism version from before the last update.
 
 ```bash
 ./install.sh doctor
@@ -244,19 +244,23 @@ text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** save
 
 | Path | What |
 |---|---|
-| `install.sh` | the one command (install, update, doctor, undo) |
+| `install.sh` | the one command (install, update, doctor, detect, modules, rollback, backups, uninstall) |
+| `lib/` | the installer's parts, one file each (`detect.sh`, `modules.sh`, `links.sh`, `packages.sh`, `migrate.sh`, `doctor.sh`, …) |
 | `config/<app>/` | one folder per app, mirroring `~`: `hypr`, `quickshell`, `ghostty`, `fish`, `starship`, `fuzzel`, `scripts` (`~/.local/bin`), … |
 | `config/quickshell/.config/quickshell/` | the shell; `ConfigData.qml` holds every default, `Themes.qml` every theme, `Theme.qml` the tokens |
-| `config/hypr/.config/hypr/` | Hyprland Lua config: `hyprland.lua` loads `modules/` (env, monitors, input, look, animations, binds, rules, autostart), then the host's `host.lua` |
-| `hosts/<name>/` | one computer: `host.conf` (hostnames), `packages.txt`, `home/` (linked), `defaults/` (copied once), `steps/` (system steps). `default/` fits any PC; `flow-x13/` is the ROG Flow X13 |
+| `config/hypr/.config/hypr/` | Hyprland Lua config: `hyprland.lua` loads `modules/hardware.lua` first, then `modules/` (env, monitors, input, look, animations, binds, rules, windows, plugins, autostart), then the hardware files linked from `modules/<name>/home/.config/hypr/hardware/` |
+| `modules/<name>/` | optional hardware or uses: `detect`, `packages.txt`, `home/` (linked), `steps/` (system steps, asked one by one), `doctor`, `README.md`. See [modules/_template/](modules/_template/) |
+| `migrations/` | one-time changes that carry an old install over to a newer layout, run once by `update` |
 | `packages/` | `manifest.txt` (logical name, module, why) and `arch.txt` / `fedora.txt` (real names and sources) |
 | `distros/` | `arch.sh`, `fedora.sh`: install packages, enable repos, NVIDIA driver |
+| `tests/` | the checks: `lint.sh` (static checks), `detect.sh` (fake computers), `container-test.sh` (a full install in Arch and Fedora containers) |
 | `plugins/` | Hyprland plugin (title-bar minimise), built by `hypr-plugins` |
 | `docs/` | users: [USER-GUIDE.md](docs/USER-GUIDE.md), [THEMES.md](docs/THEMES.md). Contributors: [ARCHITECTURE.md](docs/ARCHITECTURE.md), [DESIGN.md](docs/DESIGN.md), [DECISIONS.md](docs/DECISIONS.md), [CONVENTIONS.md](docs/CONVENTIONS.md), [audit](docs/audit/AUDIT.md), [CHANGELOG.md](CHANGELOG.md) |
 
-- **A new computer**: `cp -r hosts/default hosts/<name>`, put its hostname in `hosts/<name>/host.conf`, add monitors
-  or workspace rules to `home/.config/hypr/host.lua` and extra packages to `packages.txt`. See [hosts/README.md](hosts/README.md).
-- **Another distro**: add `distros/<id>.sh` (four functions) and `packages/<id>.txt`. See [distros/README.md](distros/README.md).
+- **Hardware modules**: the installer detects this computer's hardware and turns on the modules that fit it.
+  `./install.sh modules` lists them; `--with NAME` / `--without NAME` override detection. A wrong guess is fixed under
+  `[override]` in `~/.config/hyprism/hardware.toml`. To add one, copy [modules/_template/](modules/_template/).
+- **Another distro**: add `distros/<id>.sh` (the functions are listed in [distros/README.md](distros/README.md)) and `packages/<id>.txt`. See [distros/README.md](distros/README.md).
 - **A new theme**: in Settings → Appearance → Theme Builder (no files), or by hand: copy an entry in `Themes.qml`,
   add a Ghostty palette and a wallpaper design. No component code changes. Full guide: [docs/THEMES.md](docs/THEMES.md).
 - **A new setting**: a default in `ConfigData.qml`, its rule in `Config.qml`'s `schema`, a row on its
@@ -264,12 +268,12 @@ text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** save
   `BarWidget.qml` and an entry in `Themes.barItems`.
 - Fonts the themes use that distros don't ship are bundled in `config/fonts/` (SIL Open Font License).
 
-## Undo and recovery
+## Uninstall and recovery
 
 | What broke | Do this |
 |---|---|
-| Dotfiles | `./install.sh undo` removes the links and offers to restore the last backup |
-| The Hyprland session | Log out (`Super+Shift+E`), pick **Plasma (Wayland)** at the login screen; KDE's config is never touched. No login screen: Ctrl+Alt+F3, log in on the console, `./install.sh undo` |
+| Dotfiles | `./install.sh uninstall` removes the links and puts back the backed-up files (`./install.sh backups` lists them) |
+| The Hyprland session | Log in on a text console with Ctrl+Alt+F3 and run `./install.sh uninstall`. It restores your backed-up files |
 | The shell (bar, dock) | `qs kill; qs &` restarts it; `qs log` shows errors; `desktop-reset shell` if a setting broke it |
 | A Settings choice | `desktop-reset` (everything) or `desktop-reset shell` (theme, bar, dock, panels): your files are kept aside. One page: its **Reset to defaults** |
 | An update | See below |

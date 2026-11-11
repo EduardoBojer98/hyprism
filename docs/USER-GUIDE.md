@@ -18,8 +18,7 @@ live), so those are outputs: edit Settings or `settings.json`, not them.
 | `~/.config/ghostty/theme.conf`, `~/.config/fuzzel/theme.ini`, `gtk-3.0/` + `gtk-4.0/linux-setup.css` | terminal, emoji picker and GTK apps: the theme's colours | Appearance → Themes |
 | `~/.config/hypr/settings/wallpaper` (a link), `shared.lua` (while a shared monitor is away) | hyprpaper; monitors.lua | Appearance → Wallpaper; Shared Monitor |
 
-Kept outside `settings.json` on purpose: `~/.config/autostart/*.desktop` (Startup Apps; the standard folder KDE
-shares) and `~/.local/share/icons/` (Icons and Cursor → Add theme).
+Kept outside `settings.json` on purpose: `~/.config/autostart/*.desktop` (Startup Apps; the standard autostart folder) and `~/.local/share/icons/` (Icons and Cursor → Add theme).
 
 A missing file means "use the defaults", so deleting one resets that part (`./install.sh` puts back
 the ones Hyprland needs). The defaults are in `config/quickshell/.config/quickshell/ConfigData.qml`,
@@ -49,19 +48,22 @@ between them, Space or Enter presses, arrows change a choice or a slider.
 | **About** | this computer, Update, Re-run the install, Run doctor; Language & Region |
 
 Everything applies right away except language (next login) and lid behaviour (a system file set by the
-installer's `session` step).
+installer's `laptop` module).
+
+## Your hardware
+
+- The installer looks at your computer and writes what it finds to `~/.config/hyprism/hardware.toml`.
+- See it: `./install.sh detect` looks again, rewrites the file and prints it.
+- A value is wrong? Add an `[override]` section at the end of the file, for example
+  `display.internal = "eDP-2"`. Detection never changes that part.
+- List the modules: `./install.sh modules`. It shows each one as on or off, and why.
+- Turn one on or off: `./install.sh --with NAME` or `./install.sh --without NAME`. Your choice is kept under
+  `[override]`; run `./install.sh` to apply it.
 
 ## Another computer
 
-Things that differ between computers go in `hosts/<name>/`; the installer picks the folder whose
-`host.conf` lists this computer's hostname (`cat /etc/hostname`), else `hosts/default/`, or the one
-you name with `--host`:
-
-- `home/.config/hypr/host.lua`: Hyprland overrides, loaded last (for example which desktop starts on
-  which screen). Linked like the other configs.
-- `packages.txt`: extra packages for that computer.
-- `steps/NN-*.sh`: system steps for that computer only, each asked before it runs. See
-  `hosts/flow-x13/` (ASUS tools, iGPU rendering, thermals, MX Master, power). Details: `hosts/README.md`.
+Nothing to set up for a new computer. The installer detects its hardware and turns on the modules that fit
+(see Your hardware above). Modules live in `modules/<name>/`; each has a `README.md` that says what it adds.
 
 Hardware features detect themselves at start (`Machine.qml`):
 
@@ -84,12 +86,13 @@ A broken setting or theme never needs a reinstall:
 
 | What | Do |
 |---|---|
-| The desktop looks wrong or unusable after a change | `desktop-reset` in a terminal (`Super+Return`): your Settings files move to `~/.local/state/linux-setup/reset-<time>/` (nothing is deleted), the shell and Hyprland restart on the defaults. `desktop-reset shell` resets only the bar, dock, theme and panels. Copy a file back to undo. |
+| The desktop looks wrong or unusable after a change | `desktop-reset` in a terminal (`Super+Return`): your Settings files move to `~/.local/state/hyprism/reset-<time>/` (nothing is deleted), the shell and Hyprland restart on the defaults. `desktop-reset shell` resets only the bar, dock, theme and panels. Copy a file back to undo. |
 | `settings.json` was damaged (a bad hand edit) | Nothing to do: the shell keeps it as `settings.json.broken` and starts on the defaults. Repair and copy it back, or leave it. |
 | One part is wrong (keys, displays, input, idle) | Delete that file in `~/.config/hypr/settings/` (see the table above); Settings writes it again. |
 | Hyprland shows a red error bar | `hyprctl configerrors` names the file and line. |
-| No working screen at all | `Ctrl+Alt+F3` for a text console, log in, run `desktop-reset`, then `Ctrl+Alt+F1` (or reboot). Or pick KDE Plasma at the login screen. |
+| No working screen at all | `Ctrl+Alt+F3` for a text console, log in, run `desktop-reset`, then `Ctrl+Alt+F1` (or reboot). To remove Hyprism, run `./install.sh uninstall` there instead. |
 | Is everything in order? | `./install.sh doctor` checks links, packages, Hyprland errors, the generated files and stray background helpers, and says how to fix each. |
+| Remove Hyprism | `./install.sh uninstall` removes the links, puts back the backed-up files and undoes the system changes. `./install.sh backups` lists the backups; `--backup NAME` picks one. |
 
 ## Troubleshooting
 
