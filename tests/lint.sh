@@ -52,6 +52,8 @@ fi
 
 # --- themes, and the scripts with logic
 python3 tests/themes.py || fail=1
+bash tests/detect.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
 bash tests/scripts.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 
