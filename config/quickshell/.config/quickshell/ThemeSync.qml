@@ -106,6 +106,8 @@ Scope {
         Quickshell.execDetached(["sh", "-c", "p=$(theme-wallpaper \"$1\") && qs ipc call wallpaper set \"$p\"", "sh", current.wall])
     }
     Timer { id: wallDebounce; interval: 500; onTriggered: if (Config.loaded) root.applyWallpaper() }
+    // First login: no wallpaper has been set yet, so draw the default theme's own (later logins keep what is set)
+    Connections { target: Config; function onLoadedChanged() { if (Config.loaded && Config.wallpaper.current === "") wallDebounce.restart() } }
     Connections { target: Config.appearance; function onThemeChanged() { root.lastWall = ""; wallDebounce.restart() } function onModeChanged() { wallDebounce.restart() } function onWallpaperChanged() { root.lastWall = ""; wallDebounce.restart() } }
 
     // Only key names Hyprland understands get through; anything else is dropped

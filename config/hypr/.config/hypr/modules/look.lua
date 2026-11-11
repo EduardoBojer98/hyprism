@@ -4,9 +4,9 @@
 local ok, saved = pcall(require, "settings.theme")
 THEME = ok and type(saved) == "table" and saved or {}
 local defaults = {
-    theme = "pebble", gaps_in = 7, gaps_out = 14, border_size = 2, rounding = 18,
-    active = { "ff9e7acc", "9ad1c0cc" }, inactive = "3a365000",
-    shadow = "soft", blur = true, motion = "spring", accent = "ff9e7a", accent2 = "9ad1c0",
+    theme = "reactor", gaps_in = 6, gaps_out = 12, border_size = 2, rounding = 10,
+    active = { "e4ff1aff", "ff6b0aff" }, inactive = "2a2c1cff",
+    shadow = "soft", blur = false, motion = "snappy", accent = "e4ff1a", accent2 = "ff6b0a",
 }
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 

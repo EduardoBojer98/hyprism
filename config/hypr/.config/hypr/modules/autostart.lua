@@ -1,6 +1,13 @@
 -- Started with Hyprland only. These are not systemd services on purpose:
 -- graphical-session.target is also reached in KDE, and these must not run there.
 hl.on("hyprland.start", function()
+    -- A test session (tests/nested.sh) is a window inside your real desktop: it gets the shell and a
+    -- wallpaper only. No idle timer, mounts or services, which would act on the real session.
+    if os.getenv("HYPRISM_TEST") then
+        hl.exec_cmd("qs")
+        hl.exec_cmd("hyprpaper")
+        return
+    end
     hl.exec_cmd("systemctl --user start hyprpolkitagent || /usr/lib/hyprpolkitagent/hyprpolkitagent")  -- password prompts for apps (its user unit: same on Arch and Fedora)
     hl.exec_cmd("hypr-plugins")                            -- repo plugins (title-bar minimise), ~/.local/bin/hypr-plugins
     hl.exec_cmd("qs")                                       -- Quickshell: bar, dock, OSD, notifications

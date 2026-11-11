@@ -2,7 +2,7 @@
 name: Themes
 description: Seven whole-desktop designs for Hyprland + Quickshell. A theme sets look and motion; every layout option works in every theme.
 source: config/quickshell/.config/quickshell/Themes.qml (data), Theme.qml (tokens), ThemeSync.qml (Hyprland, hyprlock, GTK, Ghostty, wallpaper), LockScreen.qml (lock layout)
-default: pebble
+default: reactor
 ---
 
 # Themes

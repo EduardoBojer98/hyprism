@@ -5,7 +5,7 @@ import Quickshell.Io
 JsonAdapter {
     property int version: 3                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
-        property string theme: "pebble"          // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
+        property string theme: "reactor"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property var userThemes: ({})           // your own themes (Theme builder): { "custom-name": { name, base, ...parts } }
         property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)
         property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
