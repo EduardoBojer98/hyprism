@@ -29,6 +29,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 - `install.sh` is a short entry point over `lib/*.sh`. A run that hits a problem ends non-zero with a summary;
   a dry run lists the questions it would ask.
+- Bar items can live in their own folder (`bar/items/<id>/`) and every item has its own settings in
+  `settings.json` (`bar.items.<id>`): enabled, icon, format, click, right-click, scroll, tooltip, warn, critical.
+  See `docs/bar.md`.
 - Reactor (acid yellow and orange) is the default theme. Your own choice is kept.
 - Hyprland reads the detected hardware (`modules/hardware.lua`): the laptop panel, touch mapping and
   workspace-per-screen rules no longer name `eDP-1` or `HDMI-A-1`.

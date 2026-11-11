@@ -8,7 +8,7 @@ import QtQuick
 //   icons  glyphs (Material Design Icons from the Nerd Font) with numbers where they help
 //   mixed  a glyph and its value on every item ("<glyph> 45"), in the bar's face (Monolith, Console)
 //   words  lowercase words and numbers ("vol 45"), caps: the same in capitals ("VOL 45")
-// Adding an item: a Component below, an entry in Themes.barItems (name + glyph for Settings), done.
+// Adding an item: a folder in bar/items/ (see BarItems.qml). The Components below are items not moved there yet.
 Loader {
     id: w
     required property string kind
@@ -25,10 +25,19 @@ Loader {
     readonly property bool words: voice === "words" || voice === "caps"
     readonly property bool mixed: voice === "mixed"
     function say(s) { return voice === "caps" || Theme.barStyle.caps === true ? s.toUpperCase() : s }
-    sourceComponent: ({ apps: appsC, launcher: launcherC, workspaces: wsC, window: windowC, clock: clockC, date: dateC, media: mediaC, tray: trayC,
-                        keyboard: keyboardC, notifications: bellC, status: statusC, network: networkC, bluetooth: btC, volume: volumeC,
-                        brightness: brightnessC, battery: batteryC, "power-profile": profileC, cpu: cpuC, memory: memC, gpu: gpuC,
-                        recording: recC, power: powerC, weather: weatherC })[kind] ?? null
+    // your settings for this item, over its defaults (BarItems.settings)
+    readonly property var cfg: BarItems.settings(kind)
+    // Items that live in their own folder (bar/items/<id>/) come from there; the rest are still below.
+    readonly property var builtIn: ({ apps: appsC, launcher: launcherC, workspaces: wsC, window: windowC, clock: clockC, date: dateC, media: mediaC, tray: trayC,
+                                      keyboard: keyboardC, notifications: bellC, status: statusC, network: networkC, bluetooth: btC, volume: volumeC,
+                                      battery: batteryC, "power-profile": profileC, cpu: cpuC, memory: memC, gpu: gpuC, recording: recC })
+    function load() {
+        if (BarItems.has(kind)) setSource(BarItems.url(kind), { bar: w })
+        else sourceComponent = builtIn[kind] ?? null
+    }
+    Component.onCompleted: load()
+    onKindChanged: load()
+    Connections { target: BarItems; function onDefsChanged() { w.load() } }
     // the separator sits in the gap before the item, outside it (the grid's spacing holds it)
     Rectangle {
         visible: w.separated && w.visible
@@ -40,34 +49,10 @@ Loader {
     }
     // an item with nothing to show takes no space (e.g. media with no player). Items say so with
     // `shown` (not `visible`, which follows this Loader and would never come back)
-    visible: item ? (item.shown ?? true) : false
+    visible: item ? (item.shown ?? true) && cfg.enabled !== false : false
 
-    // a glyph and/or a value, in the bar's voice; vertical bars stack them
-    component Indicator: BarItem {
-        id: ind
-        property string glyph: ""
-        property string word: ""          // words/caps voice: "vol"
-        property string value: ""         // "45", "72%"
-        property bool showValue: false    // icons voice: the value beside the glyph
-        property bool textual: false      // a readout: in the mixed voice it reads as words ("cpu 5%"), no glyph
-        readonly property bool asWords: w.words || (w.mixed && textual && !w.vertical)
-        property color ink: w.tone
-        vertical: w.vertical
-        spacing: 4
-        Text {
-            visible: !ind.asWords && ind.glyph !== ""
-            text: ind.glyph
-            color: ind.ink
-            font { family: Theme.iconFont; pixelSize: 16 }
-        }
-        Text {
-            visible: ind.asWords || ((ind.showValue || w.mixed) && ind.value !== "" && !(w.mixed && w.vertical))
-            text: ind.asWords ? w.say(ind.word + (ind.value !== "" ? (w.vertical ? "\n" : " ") + ind.value : "")) : ind.value
-            horizontalAlignment: Text.AlignHCenter
-            color: ind.ink
-            font { family: w.family; pixelSize: Theme.fontLabel; letterSpacing: w.voice === "caps" ? 1 : 0; features: { "tnum": 1 } }
-        }
-    }
+    // a glyph and/or a value in the bar's voice, with the settings every item shares (BarIndicator.qml)
+    component Indicator: BarIndicator { bar: w }
 
     // the dock inside the bar: pinned apps, then other running ones; a mark under each open app,
     // the accent under the focused one. Click: bring it up (again: its next window) or start it;
@@ -318,17 +303,6 @@ Loader {
         }
     }
     Component {
-        id: brightnessC
-        Indicator {
-            shown: Sys.brightness >= 0
-            glyph: "\u{F00DF}"
-            word: "lux"
-            value: String(Sys.brightness)
-            onPressed: ControlCenter.toggle()
-            onScrolled: d => Sys.nudgeBrightness(d)
-        }
-    }
-    Component {
         id: batteryC
         BarItem {
             shown: Sys.hasBattery
@@ -375,16 +349,6 @@ Loader {
             onPressed: Sensors.toggle()
         }
     }
-    Component {   // the sky now and the temperature; opens the forecast beside it
-        id: weatherC
-        Indicator {
-            shown: Weather.ready
-            glyph: Weather.glyph; word: "wx"; value: Math.round(Weather.temperature) + "°"; showValue: true
-            active: Weather.open
-            opens: "weather"
-            onPressed: Weather.toggle()
-        }
-    }
     Component {
         id: gpuC
         Indicator {
@@ -411,15 +375,6 @@ Loader {
                     NumberAnimation { to: 0.35; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
             }
             Text { visible: !w.vertical; text: w.say("rec"); color: Theme.error; font { family: w.family; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
-        }
-    }
-    Component {
-        id: powerC
-        Indicator {
-            glyph: "\u{F0425}"
-            word: "power"
-            active: PowerMenu.open
-            onPressed: PowerMenu.toggle()
         }
     }
 }

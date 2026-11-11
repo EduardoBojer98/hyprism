@@ -24,7 +24,7 @@ done
 if [[ -z $fmt ]]; then
     problem "Qt 6 qmlformat not found (Arch: qt6-declarative, Fedora: qt6-qtdeclarative-devel)"
 else
-    for f in "$q"/*.qml; do "$fmt" "$f" >/dev/null 2>&1 || problem "QML doesn't parse: $f ($("$fmt" "$f" 2>&1 >/dev/null | head -1))"; done
+    for f in "$q"/*.qml "$q"/bar/items/*/*.qml; do "$fmt" "$f" >/dev/null 2>&1 || problem "QML doesn't parse: $f ($("$fmt" "$f" 2>&1 >/dev/null | head -1))"; done
 fi
 
 # --- Lua: every Hyprland file, the hosts' too

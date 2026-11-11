@@ -72,7 +72,7 @@ Singleton {
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
                clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
-               windowTitle: "bool" },
+               windowTitle: "bool", items: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],

@@ -165,6 +165,10 @@ JsonAdapter {
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
         property string batteryPercent: "beside"  // the battery's percentage: inside (the icon) | beside | off
         property bool windowTitle: true          // the focused window's title after the app name
+        // your settings per item, over its bar/items/<id>/defaults.json. Every item understands: enabled, icon,
+        // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). Example:
+        //   { "weather": { "click": "panel:calendar" }, "brightness": { "enabled": false } }
+        property var items: ({})
     }
     property JsonObject battery: JsonObject {
         property bool warn: true                 // a notification when the battery runs low
