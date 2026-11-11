@@ -3,8 +3,8 @@
 #   remind 20m "Stand up"      remind 1h30m "Call the printer"      remind 17:45 "Leave"
 #   remind list                remind clear
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 case ${1:-list} in
     list) systemctl --user list-timers 'remind-*' --no-legend 2>/dev/null | awk '{print $1, $2, $3, "  ", $(NF-1)}' || true ;;

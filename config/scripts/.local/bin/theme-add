@@ -7,8 +7,8 @@
 # Copies every theme found inside (a folder with index.theme; cursor themes also have cursors/) to
 # ~/.local/share/icons/<name>, replacing an older copy there. Prints the names it added.
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 kind=${1:-}
 src=${2:-}

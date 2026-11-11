@@ -4,6 +4,8 @@
 
 aur_helper() { command -v paru || command -v yay; }
 
+distro_supported() { return 0; }
+
 # distro_installed SOURCE PACKAGE
 distro_installed() { pacman -Qq "$2" >/dev/null 2>&1; }
 
@@ -45,4 +47,26 @@ distro_update() {
     local helper y=()
     $YES && y=(--noconfirm)
     if helper=$(aur_helper); then run "$helper" -Syu "${y[@]}"; else run sudo pacman -Syu "${y[@]}"; fi
+}
+
+# Doctor extras: snapshots before updates, so a bad system update can be undone from the boot menu
+distro_doctor() {
+    [[ $(findmnt -no FSTYPE / 2>/dev/null) == btrfs ]] || return 0 # snapshots need btrfs
+    snapper list-configs 2>/dev/null | grep -qw root || warn "no snapper config for / : system updates can't be rolled back"
+    pacman -Qq snap-pac >/dev/null 2>&1 || warn "snap-pac isn't installed: pacman updates aren't snapshotted"
+    if pacman -Qq limine >/dev/null 2>&1 && ! pacman -Qq limine-snapper-sync >/dev/null 2>&1; then
+        warn "limine-snapper-sync isn't installed: snapshots aren't in the boot menu"
+    fi
+}
+
+# distro_kernel_args NAME ARGS: add kernel arguments under a name, so they can be found and removed later.
+# shortcut: Limine only (CachyOS's default); other boot loaders get the line to add by hand
+distro_kernel_args() {
+    if command -v limine-update >/dev/null; then
+        sys_write "/etc/limine-entry-tool.d/50-$1.conf" "KERNEL_CMDLINE[default]+=\" $2 \""
+        run sudo limine-update
+    else
+        warn "Add these to your boot loader's kernel line yourself: $2"
+        sys_note "kernel arguments you added by hand: $2"
+    fi
 }

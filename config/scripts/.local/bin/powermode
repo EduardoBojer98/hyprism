@@ -7,10 +7,10 @@
 #   powermode watch               print the mode now and again after every change (for Quickshell)
 #
 # On ASUS laptops asusd owns the mode (it also applies fan curves, power limits and EPP per mode,
-# see hosts/flow-x13/steps/50-power.user.sh); elsewhere power-profiles-daemon does.
+# see modules/quirk-flow-x13/steps/50-power.sh); elsewhere power-profiles-daemon does.
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 MODES=(quiet balanced performance)
 # without asusd, only the profiles power-profiles-daemon offers here (many machines have no "performance")

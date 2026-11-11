@@ -5,8 +5,8 @@
 # exact version it was built against. Run from Hyprland's autostart; a failed build only skips that
 # plugin. Then calls setup_plugins() (hypr/modules/plugins.lua), which configures what got loaded.
 set -uo pipefail # no -e: a failed build only skips that plugin
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 repo=$(repo_root) # ~/.local/bin is a link into the repo
 out=${XDG_DATA_HOME:-$HOME/.local/share}/hypr-plugins

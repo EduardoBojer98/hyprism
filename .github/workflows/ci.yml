@@ -1,31 +1,32 @@
-# Checks every push and pull request: shellcheck on all scripts; QML, Lua, colour and theme checks
-# (tests/lint.sh); then a fresh install (twice, idempotent, then doctor) in Arch and Fedora containers.
-# AUR packages and host steps can't run here.
+# Checks every push and pull request:
+#   shell   every shell file is formatted (shfmt) and lint-clean (shellcheck, style level)
+#   lint    QML, Lua, colours, themes, hardware detection on seven made-up computers, script tests
+#   install a fresh install in Arch and Fedora containers: the right modules per hardware profile, install
+#           twice, a third run changes nothing, the doctor is clean, a failure is reported, uninstall leaves
+#           the home folder as it was
+# AUR packages and real hardware steps can't run here (docs/testing covers those by hand).
 name: ci
 on:
   push:
   pull_request:
 permissions:
-  contents: read   # the checks only read the repo
+  contents: read # the checks only read the repo
 
 jobs:
-  shellcheck:
+  shell:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: shellcheck
-        run: |
-          files=$(for f in install.sh distros/*.sh hosts/*/steps/*.sh tests/*.sh .githooks/pre-commit config/scripts/.local/bin/*; do
-            head -1 "$f" | grep -qE 'bash|sh' && echo "$f"; done)
-          docker run --rm -v "$PWD":/mnt:ro -w /mnt koalaman/shellcheck:stable -S warning $files
+      - name: shfmt and shellcheck
+        run: bash tests/format.sh
 
   lint:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - run: pacman -Syu --noconfirm --needed git qt6-declarative lua python shellcheck >/dev/null
+      - run: pacman -Syu --noconfirm --needed git qt6-declarative lua python shellcheck shfmt >/dev/null
       - uses: actions/checkout@v5
-      - name: QML, Lua, colours, themes
+      - name: QML, Lua, colours, themes, detection, scripts
         run: bash tests/lint.sh
 
   install:
@@ -33,8 +34,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: [archlinux:latest, fedora:latest]
+        image: ["archlinux:latest", "fedora:latest"]
     steps:
       - uses: actions/checkout@v5
-      - name: install twice, then doctor (${{ matrix.image }})
+      - name: hardware profiles, install twice, doctor, uninstall (${{ matrix.image }})
         run: docker run --rm -v "$PWD":/mnt/repo:ro ${{ matrix.image }} bash /mnt/repo/tests/container-test.sh

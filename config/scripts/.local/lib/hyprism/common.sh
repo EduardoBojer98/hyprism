@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Shared helpers for the desktop scripts in ~/.local/bin. Sourced, never run; nothing happens at source time.
-# Each script finds this file relative to itself, so it works from the repo and from ~/.local/bin.
+# Scripts load it from ~/.local/lib/hyprism (HYPRISM_LIB points tests at the repo copy).
 
 # Help text is the script's own header comment, so help can't drift from the file ($0 = the calling script)
 usage() {
@@ -51,5 +51,5 @@ hwmon() {
 # A key from the [Desktop Entry] group only (later groups are actions with their own Exec)
 desktop_key() { awk -v k="$2" '/^\[/ { s = ($0 == "[Desktop Entry]") } s && index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }' "$1"; }
 
-# The repo folder, found through the symlink in ~/.local/bin (scripts live in config/scripts/.local/bin)
-repo_root() { (cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd); }
+# The repo folder, found through this script's link back into it
+repo_root() { git -C "$(dirname "$(readlink -f "$0")")" rev-parse --show-toplevel; }

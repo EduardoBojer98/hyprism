@@ -12,8 +12,8 @@
 # Each entry is a folder <ms-timestamp>-<hash>/ holding `data`, `mime` and, when pinned, `pinned`.
 # Limits come from Config.clipboard in ~/.config/quickshell/settings.json.
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 
 STORE="${XDG_DATA_HOME:-$HOME/.local/share}/clipboard"

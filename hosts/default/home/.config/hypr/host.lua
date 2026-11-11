@@ -1,2 +1,0 @@
--- Default host: nothing machine-specific. Copy hosts/default to hosts/<name> to start your own
--- (see hosts/README.md); Hyprland runs this file last, after every module.

@@ -9,8 +9,8 @@
 #   installed-apps remove ID     packages: uninstall in a terminal, which asks for confirmation there;
 #                                user entries: move the .desktop file to the Trash
 set -uo pipefail # no -e: one app that can't be looked up must not stop the list
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 data_home=${XDG_DATA_HOME:-$HOME/.local/share}
 export LC_ALL=C

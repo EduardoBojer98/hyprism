@@ -1,12 +1,15 @@
 -- Environment for apps started inside Hyprland only (KDE never sees these).
 
--- Render on the AMD iGPU only, so the NVIDIA dGPU can sleep. The link comes from the host step
--- hosts/flow-x13/steps/20-igpu.sh; without it Hyprland picks a GPU itself instead of failing.
+-- Hybrid graphics: draw on the built-in card only, so the second card can power off. The link comes from
+-- modules/nvidia-hybrid (steps/10-igpu-link.sh); without it Hyprland picks a card itself instead of failing.
 -- io.open, not os.execute: os.execute always fails inside Hyprland ("No child processes").
-local gpu = io.open("/dev/dri/amd-igpu", "r")
-if gpu then
-    gpu:close()
-    hl.env("AQ_DRM_DEVICES", "/dev/dri/amd-igpu")
+for _, link in ipairs({ "/dev/dri/igpu", "/dev/dri/amd-igpu" }) do -- the second is the name before 2.0
+    local gpu = io.open(link, "r")
+    if gpu then
+        gpu:close()
+        hl.env("AQ_DRM_DEVICES", link)
+        break
+    end
 end
 
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VS Code, Chrome and other Electron apps run natively on Wayland

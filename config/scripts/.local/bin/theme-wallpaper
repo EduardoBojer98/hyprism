@@ -6,8 +6,8 @@
 # 2560x1600 covers both screens here (16:10 laptop, 16:9 Acer; hyprpaper crops to fill).
 # Bump VERSION after changing a design so the cached pictures are redrawn.
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 command -v magick >/dev/null || die "needs ImageMagick (magick)"
 

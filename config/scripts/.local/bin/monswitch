@@ -12,8 +12,8 @@
 # notice on its own. The DDC input register (VCP 0x60) is the source of truth.
 # Setup is ~/.config/monswitch.conf (Settings > Shared Monitor writes it); without it nothing happens.
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 
 # Per-computer values live in ~/.config/monswitch.conf (no file = feature off), for example:

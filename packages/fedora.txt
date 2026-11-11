@@ -6,7 +6,7 @@
 #
 # Hyprland is NOT in Fedora's own repos (Fedora 44). The whole ecosystem comes from copr:sdegler/hyprland
 # (solopasha/hyprland is abandoned: rawhide only, last build 0.51.1 in 2025-10). Versions there match Arch.
-# NVIDIA (host extras, hosts/flow-x13): rpmfusion-nonfree akmod-nvidia + xorg-x11-drv-nvidia-cuda
+# NVIDIA (modules/nvidia): rpmfusion-nonfree akmod-nvidia + xorg-x11-drv-nvidia-cuda
 # (595.58.03 in nonfree, 615.78.08 in nonfree-updates). Not installed by this file; see the host notes.
 #
 # name                   package(s)                         source
@@ -102,3 +102,7 @@ gitleaks                 gitleaks                           repo
 asusctl                  asusctl                            copr:lukenukem/asus-linux
 # Same COPR, GUI is the subpackage asusctl-rog-gui 6.3.8-2.fc44
 rog-control-center       asusctl-rog-gui                    copr:lukenukem/asus-linux
+
+# Module extras (modules/<name>/packages.txt)
+solaar                   solaar                             repo
+iio-sensor-proxy         iio-sensor-proxy                   repo

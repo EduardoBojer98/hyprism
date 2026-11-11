@@ -11,8 +11,8 @@
 # Entries run their Exec line directly: gtk-launch started Flameshot twice (2026-10-31 audit).
 # Old lists in settings.json (startup.apps) are copied into the folder on the first run.
 set -uo pipefail # no -e: one entry that fails must not stop the others
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 dir=${XDG_CONFIG_HOME:-$HOME/.config}/autostart
 conf=${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/settings.json

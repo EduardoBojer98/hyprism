@@ -1,0 +1,2 @@
+# Exit 0 when this computer has the hardware. Read hardware.toml with hw_get / hw_has; never probe by name.
+hw_has section.key

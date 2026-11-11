@@ -5,6 +5,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 bin=$PWD/config/scripts/.local/bin
+export HYPRISM_LIB=$PWD/config/scripts/.local/lib/hyprism # the scripts load their library from here
 t=$(mktemp -d)
 trap 'rm -rf "$t"' EXIT
 fail=0

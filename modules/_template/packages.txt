@@ -1,0 +1,1 @@
+# Extra packages by logical name (mapped in packages/<distro>.txt). One per line: name, then why.

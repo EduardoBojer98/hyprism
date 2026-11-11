@@ -1,0 +1,2 @@
+# shellcheck shell=bash
+systemctl is-active -q asusd 2>/dev/null || bad "asus: asusd isn't running" "./install.sh --only modules"

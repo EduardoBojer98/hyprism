@@ -10,14 +10,42 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - Conventions (`docs/CONVENTIONS.md`)
 - `LICENSE` (MIT), `CONTRIBUTING.md`, `VERSION`, this changelog
 
+- Hardware detection: `./install.sh detect` writes `~/.config/hyprism/hardware.toml` (form factor, graphics
+  cards, screens, battery, touch, radios, known devices). Correct a wrong guess under `[override]`.
+- Modules (`modules/<name>/`): `laptop`, `nvidia`, `nvidia-hybrid`, `asus`, `tablet`, `ddc-monitor`, `logitech`,
+  `hibernate` (opt-in) and `quirk-flow-x13`. Each switches on when its hardware is found;
+  `./install.sh modules` lists them, `--with` / `--without` override.
+- Migrations (`migrations/`), `./install.sh rollback`, `./install.sh backups`, and a log of every run in
+  `~/.local/state/hyprism/logs/`.
+- `./install.sh uninstall` also undoes the system files and services it changed (kept in a manifest), and moves
+  your generated settings aside instead of leaving them.
+- `tests/detect.sh` (seven made-up computers), `tests/format.sh` (shfmt + shellcheck for every shell file).
+
 ### Changed
 
 - Every script is formatted with `shfmt -i 4 -ci`
 - Finished process notes moved to `docs/history/`
 
+- `install.sh` is a short entry point over `lib/*.sh`. A run that hits a problem ends non-zero with a summary;
+  a dry run lists the questions it would ask.
+- Hyprland reads the detected hardware (`modules/hardware.lua`): the laptop panel, touch mapping and
+  workspace-per-screen rules no longer name `eDP-1` or `HDMI-A-1`.
+- Module steps run inside the installer, so `--dry-run` shows each command they would run.
+- The lid rule is `/etc/systemd/logind.conf.d/50-hyprism-lid.conf` and only laptops get it.
+- Bluetooth is enabled only where there is an adapter.
+- State moved from `~/.local/state/linux-setup` to `~/.local/state/hyprism` (migration 0001).
+
 ### Removed
 
-- Nothing yet.
+- `hosts/` (computers picked by hostname). Replaced by detected modules; migration 0002 carries an existing
+  install over.
+- `--host` and `steps-done`. Not needed: nothing depends on the hostname any more.
+- KDE Plasma guard and the login-screen preselect. Hyprism no longer keeps a KDE fallback.
+- JuhRadial MX step for Logitech mice. Replaced by the `logitech` module (Solaar, in both distros' repos).
+  An existing JuhRadial install keeps working until you remove it.
+- The step that made the LTS kernel the boot default on one laptop (a workaround for a kernel bug). Nothing is
+  undone on a computer where it already ran.
+- Upgrading straight from before 1.1 (old whole-folder links). Update to 1.1 first.
 
 ## 1.1.0 (2026-11-06)
 

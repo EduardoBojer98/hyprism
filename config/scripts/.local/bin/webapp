@@ -4,8 +4,8 @@
 #   webapp add "Shop admin" https://admin.shopify.com     then find it in Spotlight like any app
 #   webapp list                                             webapp remove "Shop admin"
 set -euo pipefail
-# shellcheck source-path=SCRIPTDIR source=../lib/hyprism/common.sh
-. "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib/hyprism/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 slug() {

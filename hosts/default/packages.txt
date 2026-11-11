@@ -1,1 +1,0 @@
-# Extra packages for this host, by logical name (packages/manifest.txt, mapped in packages/<distro>.txt).

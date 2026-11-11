@@ -20,11 +20,13 @@ function apply_input()
                 natural_scroll = INPUT.natural_scroll,
                 tap_to_click   = INPUT.tap_to_click,
             },
-            -- Keep the touchscreen and stylus on the laptop panel, not stretched over both screens
-            touchdevice = { output = "eDP-1" },
-            tablet      = { output = "eDP-1" },
         },
     })
+    -- Keep the touchscreen and stylus on the laptop's own panel, not stretched over every screen
+    local panel = HW.display.internal
+    if panel and panel ~= "" then
+        hl.config({ input = { touchdevice = { output = panel }, tablet = { output = panel } } })
+    end
 end
 
 apply_input()

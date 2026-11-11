@@ -2,6 +2,12 @@
 # Fedora backend for install.sh: package manager calls only. Sourced, not run.
 # Sources in packages/fedora.txt: repo, copr:OWNER/PROJECT, rpmfusion-free, rpmfusion-nonfree.
 
+distro_supported() {
+    ((${VERSION_ID:-0} >= 44)) && return 0
+    echo "Fedora ${VERSION_ID:-?} is too old: Hyprism needs Fedora 44 or newer (its Hyprland and Quickshell)." >&2
+    return 1
+}
+
 distro_installed() { rpm -q "$2" >/dev/null 2>&1; }
 
 rpmfusion() { # rpmfusion free|nonfree
@@ -44,4 +50,13 @@ distro_update() {
     local y=()
     $YES && y=(-y)
     run sudo dnf upgrade --refresh "${y[@]}"
+}
+
+# Doctor extras: nothing Fedora-specific yet
+distro_doctor() { return 0; }
+
+# distro_kernel_args NAME ARGS: grubby edits every installed kernel entry
+distro_kernel_args() {
+    run sudo grubby --update-kernel=ALL --args="$2"
+    sys_note "kernel arguments added with grubby: $2 (remove: sudo grubby --update-kernel=ALL --remove-args=\"$2\")"
 }

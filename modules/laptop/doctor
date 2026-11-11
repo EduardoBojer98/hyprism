@@ -1,0 +1,2 @@
+# shellcheck shell=bash
+[[ -f /etc/systemd/logind.conf.d/50-hyprism-lid.conf ]] || warn "laptop: lid behaviour not set (./install.sh --only modules)"
