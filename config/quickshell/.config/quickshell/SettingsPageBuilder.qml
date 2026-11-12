@@ -245,7 +245,7 @@ ColumnLayout {
         property var labels: values.map(String)
         Choice {
             options: pk.labels
-            index: pk.values.indexOf(page.get(pk.path))
+            index: pk.values.findIndex(v => JSON.stringify(v) === JSON.stringify(page.get(pk.path)))   // values can be objects (a palette)
             onPicked: i => page.set(pk.path, pk.values[i])
         }
     }

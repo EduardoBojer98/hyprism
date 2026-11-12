@@ -247,7 +247,7 @@ text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** save
 | `install.sh` | the one command (install, update, doctor, detect, modules, rollback, backups, uninstall) |
 | `lib/` | the installer's parts, one file each (`detect.sh`, `modules.sh`, `links.sh`, `packages.sh`, `migrate.sh`, `doctor.sh`, …) |
 | `config/<app>/` | one folder per app, mirroring `~`: `hypr`, `quickshell`, `ghostty`, `fish`, `starship`, `fuzzel`, `scripts` (`~/.local/bin`), … |
-| `config/quickshell/.config/quickshell/` | the shell; `ConfigData.qml` holds every default, `Themes.qml` every theme, `Theme.qml` the tokens |
+| `config/quickshell/.config/quickshell/` | the shell; `ConfigData.qml` holds every default, `Theme.qml` the tokens, `bar/items/` the bar items |
 | `config/hypr/.config/hypr/` | Hyprland Lua config: `hyprland.lua` loads `modules/hardware.lua` first, then `modules/` (env, monitors, input, look, animations, binds, rules, windows, plugins, autostart), then the hardware files linked from `modules/<name>/home/.config/hypr/hardware/` |
 | `modules/<name>/` | optional hardware or uses: `detect`, `packages.txt`, `home/` (linked), `steps/` (system steps, asked one by one), `doctor`, `README.md`. See [modules/_template/](modules/_template/) |
 | `migrations/` | one-time changes that carry an old install over to a newer layout, run once by `update` |
@@ -261,11 +261,11 @@ text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** save
   `./install.sh modules` lists them; `--with NAME` / `--without NAME` override detection. A wrong guess is fixed under
   `[override]` in `~/.config/hyprism/hardware.toml`. To add one, copy [modules/_template/](modules/_template/).
 - **Another distro**: add `distros/<id>.sh` (the functions are listed in [distros/README.md](distros/README.md)) and `packages/<id>.txt`. See [distros/README.md](distros/README.md).
-- **A new theme**: in Settings → Appearance → Theme Builder (no files), or by hand: copy an entry in `Themes.qml`,
-  add a Ghostty palette and a wallpaper design. No component code changes. Full guide: [docs/THEMES.md](docs/THEMES.md).
+- **A new theme**: copy `themes/_template` to `~/.config/hyprism/themes/<id>`, edit `theme.json`, run `theme <id>`.
+  No code changes. Or use Settings → Appearance → Theme Builder (no files). Guide: [docs/THEMES.md](docs/THEMES.md).
 - **A new setting**: a default in `ConfigData.qml`, its rule in `Config.qml`'s `schema`, a row on its
-  `SettingsPage<Id>.qml`, and a search word in `SettingsApp.qml`. **A new bar item**: a component in
-  `BarWidget.qml` and an entry in `Themes.barItems`.
+  `SettingsPage<Id>.qml`, and a search word in `SettingsApp.qml`. **A new bar item**: copy
+  `bar/items/_template` ([docs/bar.md](docs/bar.md)).
 - Fonts the themes use that distros don't ship are bundled in `config/fonts/` (SIL Open Font License).
 
 ## Uninstall and recovery

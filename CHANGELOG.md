@@ -33,6 +33,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 - `install.sh` is a short entry point over `lib/*.sh`. A run that hits a problem ends non-zero with a summary;
   a dry run lists the questions it would ask.
+- Themes are folders (`themes/<id>/theme.json` + wallpaper). Copy `_template`, edit one file, `theme <id>`: no
+  code changes. Yours go in `~/.config/hyprism/themes/`. Terminal colours come from the theme file. The contrast
+  test also covers accents, status colours, bar text and the terminal palette. See `docs/THEMES.md`.
 - A system-info bar item (`sysinfo`): pick any of 25 readings, their order, compact or detailed, levels per
   reading, "only above", and a trend in the tooltip. One `metrics` program feeds it, found by kind of device.
 - Bar items can live in their own folder (`bar/items/<id>/`) and every item has its own settings in

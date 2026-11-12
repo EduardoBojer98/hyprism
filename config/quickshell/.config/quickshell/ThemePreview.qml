@@ -17,7 +17,7 @@ Item {
         return ({ glass: Qt.alpha(c.surface, 0.85), surface: c.surface, ground: c.ground, ink: c.text, none: "transparent" })[fill] ?? c.surface
     }
     readonly property real s: width / 200                 // drawing scale
-    readonly property string wall: Quickshell.env("HOME") + "/.local/share/linux-setup/themes/" + theme.wall + "-v" + Themes.wallVersion + ".png"
+    readonly property string wall: (Quickshell.env("XDG_CACHE_HOME") || Quickshell.env("HOME") + "/.cache") + "/hyprism/wallpapers/" + theme.wall + "-v" + Themes.wallVersion + ".png"
 
     implicitHeight: shot.height + name.implicitHeight + 10
 

@@ -39,9 +39,18 @@ Scope {
         + "\n\n" + LockScreen.conf
     onLockConfChanged: debounce.restart()
 
-    // Ghostty: the theme's palette (ghostty/themes/<Theme>) and its mono face
+    // Ghostty: the theme's own terminal palette (theme.json "term") and its mono face
+    function hexOk(c) { return /^#[0-9a-fA-F]{6}$/.test(c) }
+    readonly property string palette: {
+        const t = current.term ?? {}, lines = []
+        for (const [key, name] of [["background", "background"], ["foreground", "foreground"], ["cursor", "cursor-color"], ["cursorText", "cursor-text"],
+                                   ["selection", "selection-background"], ["selectionText", "selection-foreground"]])
+            if (hexOk(t[key])) lines.push(name + " = " + t[key])
+        ;(Array.isArray(t.palette) ? t.palette : []).slice(0, 16).forEach((c, i) => { if (hexOk(c)) lines.push("palette = " + i + "=" + c) })
+        return lines.join("\n")
+    }
     readonly property string terminal: !Config.appearance.terminal ? ""
-        : "theme = " + current.term + "\nfont-family = \"\"\nfont-family = " + (current.font.mono === "Martian Mono" ? "Martian Mono" : "JetBrainsMono Nerd Font")
+        : palette + "\nfont-family = \"\"\nfont-family = " + (current.font.mono === "Martian Mono" ? "Martian Mono" : "JetBrainsMono Nerd Font")
           + "\nfont-family = JetBrainsMono Nerd Font"   // "" resets the list; Nerd Font stays as the icon fallback
           + "\nbackground-opacity = " + (Theme.glassy ? "0.86" : "1")   // see-through only in the glass themes
 
@@ -98,16 +107,18 @@ Scope {
                                     ["pkill", "-USR2", "-x", "ghostty"])   // SIGUSR2 = reload config
     }
 
-    // The theme's own wallpaper, drawn once per theme into ~/.local/share/linux-setup/themes/
+    // The theme's own wallpaper, drawn once per theme into ~/.cache/hyprism/wallpapers/
     property string lastWall: ""
     function applyWallpaper() {
         if (!Config.appearance.wallpaper || current.wall === lastWall) return
         lastWall = current.wall
         Quickshell.execDetached(["sh", "-c", "p=$(theme-wallpaper \"$1\") && qs ipc call wallpaper set \"$p\"", "sh", current.wall])
     }
-    Timer { id: wallDebounce; interval: 500; onTriggered: if (Config.loaded) root.applyWallpaper() }
+    Timer { id: wallDebounce; interval: 500; onTriggered: if (Config.loaded && Themes.ready) root.applyWallpaper() }
     // First login: no wallpaper has been set yet, so draw the default theme's own (later logins keep what is set)
     Connections { target: Config; function onLoadedChanged() { if (Config.loaded && Config.wallpaper.current === "") wallDebounce.restart() } }
+    // the theme folders arrive a moment after start: push the real theme then
+    Connections { target: Themes; function onReadyChanged() { debounce.restart(); wallDebounce.restart() } }
     Connections { target: Config.appearance; function onThemeChanged() { root.lastWall = ""; wallDebounce.restart() } function onModeChanged() { wallDebounce.restart() } function onWallpaperChanged() { root.lastWall = ""; wallDebounce.restart() } }
 
     // Only key names Hyprland understands get through; anything else is dropped
@@ -130,7 +141,7 @@ Scope {
         SettingsApp.writeHyprFile("settings/keybinds.lua", text)
         if (!first) Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprctl reload"])
     }
-    Timer { id: keyDebounce; interval: 300; onTriggered: if (Config.loaded) root.applyKeybinds() }
+    Timer { id: keyDebounce; interval: 300; onTriggered: if (Config.loaded && Themes.ready) root.applyKeybinds() }
     Connections { target: Config.keybinds; function onOverridesChanged() { keyDebounce.restart() } }
     Connections { target: Config; function onLoadedChanged() { keyDebounce.restart() } }
 
@@ -147,12 +158,12 @@ Scope {
         Quickshell.execDetached(["hyprctl", "eval", "WINDOWS = " + windowsLua.replace(/\n/g, " ") + "; apply_windows()"])
         SettingsApp.writeHyprFile("settings/windows.lua", "-- Written by Quickshell from Settings > Windows. Safe to edit by hand.\nreturn " + windowsLua)
     }
-    Timer { id: winDebounce; interval: 300; onTriggered: if (Config.loaded) root.applyWindows() }
+    Timer { id: winDebounce; interval: 300; onTriggered: if (Config.loaded && Themes.ready) root.applyWindows() }
     onWindowsLuaChanged: winDebounce.restart()
     Connections { target: Config; function onLoadedChanged() { winDebounce.restart() } }
 
     // Debounced, and only once Config has loaded so defaults never overwrite saved values
-    Timer { id: debounce; interval: 300; onTriggered: if (Config.loaded) root.apply() }
+    Timer { id: debounce; interval: 300; onTriggered: if (Config.loaded && Themes.ready) root.apply() }
     onHyprLuaChanged: debounce.restart()
     Connections { target: Config; function onLoadedChanged() { debounce.restart() } }   // at login: the whole look once, even if nothing changed
     onLightChanged: debounce.restart()

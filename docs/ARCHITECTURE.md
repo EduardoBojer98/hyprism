@@ -46,7 +46,7 @@ Login ─► Hyprland reads ~/.config/hypr/hyprland.lua
 
 | What | File |
 |---|---|
-| The whole look: colours, fonts, shapes, bar style and items, dock, motion | `config/quickshell/.config/quickshell/Themes.qml` (rules: `docs/DESIGN.md`); adjust per theme in Settings → Appearance → Themes |
+| The whole look: colours, fonts, shapes, bar style and items, dock, motion | `themes/<id>/theme.json` (rules: `docs/DESIGN.md`); adjust per theme in Settings → Appearance → Themes |
 | Bar place, size and items; dock place | Settings → Menu Bar, Settings → Dock (`Config.bar`, `Config.dock`) |
 | Defaults of every Settings option | `config/quickshell/.config/quickshell/ConfigData.qml` |
 | Keybinds | `config/hypr/.config/hypr/modules/binds.lua` (Super+/ shows them; Settings can override) |

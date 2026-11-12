@@ -161,6 +161,18 @@ Singleton {
     // A file that isn't JSON at all is kept as settings.json.broken and replaced by the defaults.
     readonly property var renamedThemes: ({ workstation: "glass", canvas: "glass", noir: "console", garden: "pebble",
                                             zen: "glass", mist: "atlas", halo: "pebble" })   // themes removed 2026-11
+    // The saved theme must exist. Only judged once the theme folders are read (Themes.ready), or every
+    // theme would look missing during the first moments and your choice would be lost.
+    function checkTheme() {
+        const a = adapter.appearance
+        if (Themes.ready && !Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? defaultTheme()
+    }
+    function defaultTheme() {
+        const fresh = defaults.createObject(null), want = fresh.appearance.theme
+        fresh.destroy()
+        return Themes.ids.includes(want) ? want : Themes.ids[0]
+    }
+    Connections { target: Themes; function onReadyChanged() { if (file.loaded) root.checkTheme() } }
     function repair() {
         let raw
         try { raw = JSON.parse(file.text()) } catch (e) {
@@ -173,7 +185,7 @@ Singleton {
         const a = adapter.appearance
         const oldTheme = raw?.appearance?.rice   // settings from before "rices" were called themes
         if (typeof oldTheme === "string") a.theme = renamedThemes[oldTheme] ?? oldTheme
-        if (!Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? Themes.ids[0]
+        checkTheme()
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
         // format 1 (before 2026-11-05) saved the dock's place as "bottom" for everyone: follow the theme now
         // format 2 kept one bar layout and dock place for every theme, so an edit made in one theme broke the
@@ -197,11 +209,13 @@ Singleton {
         if (raw?.appearance?.animations === false && raw?.appearance?.motion === undefined) a.motion = "off"   // the old on/off switch
         const fresh = defaults.createObject(null)
         for (const section of Object.keys(schema))
-            for (const key of Object.keys(schema[section]))
+            for (const key of Object.keys(schema[section])) {
+                if (section === "appearance" && key === "theme") continue   // judged by checkTheme, once the theme folders are read
                 if (problem(schema[section][key], adapter[section][key])) {
                     console.warn("settings.json: " + section + "." + key + " was invalid, using the default")
                     adapter[section][key] = fresh[section][key]
                 }
+            }
         // the built-in bar presets an older file lacks come back; ones you edited stay as they are
         const have = JSON.parse(JSON.stringify(adapter.bar.presets ?? {})), builtIn = fresh.bar.presets
         const missing = Object.keys(builtIn).filter(n => have[n] === undefined)

@@ -1,0 +1,42 @@
+{
+  "name": "Console",
+  "about": "An amber HUD: a framed caps readout, corner brackets on every panel, a phosphor glow, panels that snap on",
+  "order": 3,
+  "dark": true,
+  "colour": {"ground": "#05080f", "surface": "#0a0f1a", "raised": "#131a28", "line": "#5a4418", "text": "#e9dcc0", "muted": "#c19b52", "faint": "#76623a", "accent": "#ffb000", "onAccent": "#05080f", "accent2": "#ff6a3d", "ok": "#66d19e", "warn": "#ff7a45", "err": "#ff4d5e"},
+  "alt": {
+    "dark": false,
+    "term": {
+      "palette": ["#2a1f0a", "#c0263a", "#1d7a4f", "#a35f00", "#2d5aa8", "#8c3c8f", "#1f7a80", "#a08a5c", "#6e5218", "#9a1e2e", "#16613f", "#824b00", "#244886", "#703072", "#186166", "#fbf8f0"],
+      "background": "#f4efe3",
+      "foreground": "#2a1f0a",
+      "cursor": "#a35f00",
+      "cursorText": "#f4efe3",
+      "selection": "#ead8b4",
+      "selectionText": "#2a1f0a"
+    },
+    "wall": "console-light",
+    "colour": {"ground": "#f4efe3", "surface": "#fbf8f0", "raised": "#ece5d4", "line": "#c9a85a", "text": "#2a1f0a", "muted": "#6e5218", "faint": "#93804f", "accent": "#a35f00", "onAccent": "#ffffff", "accent2": "#c2410c", "ok": "#1d7a4f", "warn": "#b4410f", "err": "#c0263a"},
+    "hypr": {"active": ["a35f00ff"], "inactive": "e0d6bfff"}
+  },
+  "font": {"ui": "Martian Mono", "display": "Martian Mono", "mono": "Martian Mono", "size": 12, "displayWeight": 300},
+  "shape": {"radius": 0, "radiusSmall": 0, "line": 1, "material": "solid"},
+  "bar": {"edge": "top", "size": 30, "floating": false, "segmented": false, "fill": "ground", "line": 1, "voice": "mixed", "mono": true, "caps": true, "ws": "text", "clock": "accent", "decor": "brackets", "sep": true, "start": ["launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "cpu", "memory", "status", "keyboard", "tray", "notifications"]},
+  "dock": {"edge": "bottom", "shape": "block", "hover": "plate", "mark": "bar", "fill": "surface"},
+  "popup": {"depth": "glow", "decor": "brackets", "tiles": "wash"},
+  "motion": {"enter": 140, "exit": 80, "curve": [0.15, 0, 0.1, 1], "travel": 4, "scale": 0.98, "press": 0.98},
+  "launcher": {"placement": "center", "view": "home", "header": "query", "width": 700, "select": "inverse", "prompt": "▸"},
+  "notify": {"corner": "top-right", "kind": "tag"},
+  "hypr": {"gapsIn": 4, "gapsOut": 10, "border": 1, "rounding": 0, "active": ["ffb000ff"], "inactive": "1d1a12ff", "shadow": "none", "blur": false, "motion": "crisp"},
+  "lock": {"clock": "readout", "align": "center"},
+  "term": {
+    "palette": ["#141c2c", "#ff4d5e", "#66d19e", "#ffb000", "#7aa7d9", "#d98ab5", "#7fd4d4", "#c19b52", "#6d5a33", "#ff7a86", "#8cdcb6", "#ffc440", "#9bbde2", "#e2a7c8", "#9fdfdf", "#e9dcc0"],
+    "background": "#05080f",
+    "foreground": "#e9dcc0",
+    "cursor": "#ffb000",
+    "cursorText": "#05080f",
+    "selection": "#4b370b",
+    "selectionText": "#e9dcc0"
+  },
+  "wall": "console"
+}

@@ -1,7 +1,7 @@
 ---
 name: Themes
 description: Seven whole-desktop designs for Hyprland + Quickshell. A theme sets look and motion; every layout option works in every theme.
-source: config/quickshell/.config/quickshell/Themes.qml (data), Theme.qml (tokens), ThemeSync.qml (Hyprland, hyprlock, GTK, Ghostty, wallpaper), LockScreen.qml (lock layout)
+source: themes/<id>/theme.json (data), Themes.qml (reads the folders), Theme.qml (tokens), ThemeSync.qml (Hyprland, hyprlock, GTK, Ghostty, wallpaper), LockScreen.qml (lock layout)
 default: reactor
 ---
 
@@ -19,7 +19,7 @@ The design rules come from the installed design and animation skills (impeccable
 animate, choreograph, animation-performance, taste-skill app screens): colour marks state, tone steps
 over ornament, one icon language, motion that confirms an action and never makes you wait.
 
-## Anatomy of a theme (`Themes.qml`)
+## Anatomy of a theme (`themes/<id>/theme.json`)
 
 | Part | Values |
 |---|---|
@@ -73,7 +73,7 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
 ## Light and dark
 
 Every theme has both halves: the dark themes (Pebble, Monolith, Console, Glass, Reactor) have a light version and the
-light ones (Poster, Atlas) a dark one, as `alt` in `Themes.qml` (colours, window frame colours, `term`, `wall`).
+light ones (Poster, Atlas) a dark one, as `alt` in `theme.json` (colours, window frame colours, `term`, `wall`).
 Settings → Appearance → Light or dark: Theme's (each theme's own), Light or Dark for all of them; GTK apps,
 the terminal, window frames, the lock screen and the wallpaper follow.
 

@@ -6,15 +6,19 @@ import Quickshell
 import QtQuick
 
 ShellRoot {
-    Variants {
-        model: Quickshell.screens
+    // the bars wait for the theme folders to be read (a few moments), so the first frame is already your theme
+    LazyLoader {
+        active: Themes.ready
+        Variants {
+            model: Quickshell.screens
 
-        Scope {
-            required property ShellScreen modelData
+            Scope {
+                required property ShellScreen modelData
 
-            Bar { screen: modelData }
-            LazyLoader { active: Theme.dockShownOn(modelData); Dock { screen: modelData } }
-            HotCorners { screen: modelData }
+                Bar { screen: modelData }
+                LazyLoader { active: Theme.dockShownOn(modelData); Dock { screen: modelData } }
+                HotCorners { screen: modelData }
+            }
         }
     }
 

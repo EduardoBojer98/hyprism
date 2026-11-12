@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-# Draws a theme's wallpaper with ImageMagick (once; later calls reuse it) and prints its path.
-#   theme-wallpaper pebble     -> ~/.local/share/linux-setup/themes/pebble.png
-#   theme-wallpaper --all      draw every one (to look at them)
-# Each design uses the theme's own colours (Themes.qml) and its fonts; nothing is downloaded.
-# Designs are drawn on a 2560x1600 sheet, then scaled to fill the largest connected screen (3840x2400 without
-# Hyprland); hyprpaper crops to fill the others.
-# Bump VERSION after changing a design so the cached pictures are redrawn.
+# Makes a theme's wallpaper (once; later calls reuse it) and prints its path.
+#   theme-wallpaper reactor         the theme's own half     -> ~/.cache/hyprism/wallpapers/reactor-v8.png
+#   theme-wallpaper reactor-light   its other half ("-light" or "-dark")
+#   theme-wallpaper --all           make every one (to look at them)
+# A theme folder (~/.config/hyprism/themes/<id> or ~/.local/share/hyprism/themes/<id>) brings either a picture
+# named like the wallpaper (reactor.png, reactor-light.jpg…) or wallpaper.sh, a recipe ImageMagick draws on a
+# 2560x1600 sheet. The result is scaled to fill the largest connected screen (3840x2400 without Hyprland).
+# Bump VERSION after changing a recipe so the cached pictures are made again.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 command -v magick >/dev/null || die "needs ImageMagick (magick)"
 
-VERSION=7
-out_dir="${XDG_DATA_HOME:-$HOME/.local/share}/linux-setup/themes"
+VERSION=8
+out_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hyprism/wallpapers"
 mkdir -p "$out_dir"
 W=2560 H=1600
 TW=3840 TH=2400
@@ -21,112 +22,50 @@ if size=$(hyprctl monitors -j 2>/dev/null | jq -r 'max_by(.width * .height) | "\
     read -r TW TH <<<"$size"
 fi
 
+# A theme folder: yours in ~/.config/hyprism/themes first, then the shipped ones
+theme_dir() {
+    local d
+    for d in "${XDG_CONFIG_HOME:-$HOME/.config}/hyprism/themes/$1" "${XDG_DATA_HOME:-$HOME/.local/share}/hyprism/themes/$1"; do
+        [[ -f $d/theme.json ]] && {
+            echo "$d"
+            return 0
+        }
+    done
+    return 1
+}
+
+# draw WALL OUT: WALL is a theme's id (its own half) or "<id>-light" / "<id>-dark" (its other half)
 draw() {
-    local id=$1 out=$2
-    case $id in
-        pebble) # dusk: three soft pebbles of light (coral, sea green, violet) and a little grain
-            magick -size ${W}x${H} xc:'#16141f' \
-                -fill '#6a3f86' -draw 'ellipse 640,520 760,520 0,360' -fill '#2f7f73' -draw 'ellipse 1960,1180 820,560 0,360' \
-                -fill '#ff9e7a' -draw 'ellipse 1640,420 360,300 0,360' -fill '#16141f' -draw 'ellipse 1280,1500 1500,260 0,360' \
-                -resize 25% -blur 0x48 -resize 400% -attenuate 0.14 +noise Gaussian -colorspace sRGB "$out"
-            ;;
-        monolith) # a terminal at rest: faint scanlines, the machine's name, a lime prompt and cursor
-            magick -size ${W}x${H} xc:'#0b0c0a' \
-                -fill '#11140f' -draw "$(for y in $(seq 0 6 $H); do printf 'rectangle 0,%d %d,%d ' "$y" "$W" "$((y + 2))"; done)" \
-                -font 'JetBrainsMono-NF-Bold' -pointsize 300 -fill '#151813' -gravity southwest -annotate +80+60 "$(hostname 2>/dev/null || cat /etc/hostname)" \
-                -font 'JetBrainsMono-NF-Bold' -pointsize 72 -fill '#b6ff3b' -gravity southwest -annotate +100+430 '~ $' \
-                -fill '#b6ff3b' -draw 'rectangle 330,1100 372,1172' "$out"
-            ;;
-        console) # an amber radar: range rings, a crosshair with ticks and a fading sweep
-            magick -size ${W}x${H} radial-gradient:'#111a2b'-'#05080f' \
-                \( -size ${W}x${H} xc:none -fill '#ffb00038' -draw 'path "M 1820,800 L 2620,640 A 820,820 0 0,1 2620,960 Z"' -blur 0x40 \) -composite \
-                -fill none -stroke '#ffb00042' -strokewidth 2 \
-                -draw 'circle 1820,800 1820,1000' -draw 'circle 1820,800 1820,1200' -draw 'circle 1820,800 1820,1400' -draw 'circle 1820,800 1820,1600' \
-                -stroke '#ffb00030' -draw 'line 0,800 2560,800' -draw 'line 1820,0 1820,1600' \
-                -stroke '#ffb000a0' -strokewidth 3 -draw 'line 1800,800 1840,800' -draw 'line 1820,780 1820,820' \
-                -stroke '#ffb00070' -strokewidth 2 -draw "$(for x in $(seq 1020 100 2620); do printf 'line %d,790 %d,810 ' "$x" "$x"; done)" \
-                -stroke none -fill '#ffb000' -draw 'circle 2240,610 2240,618' -fill '#ff6a3d' -draw 'circle 1500,1060 1500,1067' "$out"
-            ;;
-        poster) # Bauhaus poster: a red disc and a cobalt bar on charcoal
-            magick -size ${W}x${H} xc:'#141414' -fill '#ff3b1f' -draw 'circle 1880,700 1880,1160' \
-                -fill '#2d5bff' -draw 'rectangle 0,1180 1500,1360' -fill '#f4f1ea' -draw 'rectangle 1500,1180 1560,1600' "$out"
-            ;;
-        glass) # deep blue with an electric light falling from the top left and a violet glow below
-            magick -size ${W}x${H} xc:'#0f131c' -fill '#2f6bff' -draw 'ellipse 700,260 900,420 0,360' \
-                -fill '#8f86ff' -draw 'ellipse 2050,1380 760,380 0,360' -fill '#5b9cff' -draw 'ellipse 1250,720 300,180 0,360' \
-                -resize 25% -blur 0x60 -resize 400% -attenuate 0.06 +noise Gaussian -colorspace sRGB "$out"
-            ;;
-        atlas) # Swiss: off-white, a red square, black bars on a grid
-            magick -size ${W}x${H} xc:'#f2f2f0' -fill '#e30613' -draw 'rectangle 160,160 1040,1040' \
-                -fill '#111111' -draw 'rectangle 1200,160 1260,1440' -draw 'rectangle 160,1200 2400,1240' "$out"
-            ;;
-        pebble-light) # Pebble by day: the same pebbles of light, pale on lavender paper
-            magick -size ${W}x${H} xc:'#f3eff8' \
-                -fill '#dcc8f0' -draw 'ellipse 640,520 760,520 0,360' -fill '#bfe6dc' -draw 'ellipse 1960,1180 820,560 0,360' \
-                -fill '#ffc4ad' -draw 'ellipse 1640,420 360,300 0,360' -fill '#f3eff8' -draw 'ellipse 1280,1500 1500,260 0,360' \
-                -resize 25% -blur 0x48 -resize 400% -attenuate 0.08 +noise Gaussian -colorspace sRGB "$out"
-            ;;
-        monolith-light) # the terminal on paper: faint scanlines, the machine's name, an olive prompt and cursor
-            magick -size ${W}x${H} xc:'#eceee6' \
-                -fill '#e5e8de' -draw "$(for y in $(seq 0 6 $H); do printf 'rectangle 0,%d %d,%d ' "$y" "$W" "$((y + 2))"; done)" \
-                -font 'JetBrainsMono-NF-Bold' -pointsize 300 -fill '#dfe2d6' -gravity southwest -annotate +80+60 "$(hostname 2>/dev/null || cat /etc/hostname)" \
-                -font 'JetBrainsMono-NF-Bold' -pointsize 72 -fill '#4a7d00' -gravity southwest -annotate +100+430 '~ $' \
-                -fill '#4a7d00' -draw 'rectangle 330,1100 372,1172' "$out"
-            ;;
-        console-light) # the radar by day: amber ink rings on warm paper
-            magick -size ${W}x${H} radial-gradient:'#fbf8f0'-'#ece5d4' \
-                \( -size ${W}x${H} xc:none -fill '#a35f0024' -draw 'path "M 1820,800 L 2620,640 A 820,820 0 0,1 2620,960 Z"' -blur 0x40 \) -composite \
-                -fill none -stroke '#a35f0040' -strokewidth 2 \
-                -draw 'circle 1820,800 1820,1000' -draw 'circle 1820,800 1820,1200' -draw 'circle 1820,800 1820,1400' -draw 'circle 1820,800 1820,1600' \
-                -stroke '#a35f002c' -draw 'line 0,800 2560,800' -draw 'line 1820,0 1820,1600' \
-                -stroke '#a35f00a0' -strokewidth 3 -draw 'line 1800,800 1840,800' -draw 'line 1820,780 1820,820' \
-                -stroke '#a35f0070' -strokewidth 2 -draw "$(for x in $(seq 1020 100 2620); do printf 'line %d,790 %d,810 ' "$x" "$x"; done)" \
-                -stroke none -fill '#a35f00' -draw 'circle 2240,610 2240,618' -fill '#c2410c' -draw 'circle 1500,1060 1500,1067' "$out"
-            ;;
-        glass-light) # frosted daylight: pale blue light from the top left, a lilac glow below
-            magick -size ${W}x${H} xc:'#e9edf4' -fill '#a9c4ff' -draw 'ellipse 700,260 900,420 0,360' \
-                -fill '#cbc6ff' -draw 'ellipse 2050,1380 760,380 0,360' -fill '#bcd4ff' -draw 'ellipse 1250,720 300,180 0,360' \
-                -resize 25% -blur 0x60 -resize 400% -attenuate 0.04 +noise Gaussian -colorspace sRGB "$out"
-            ;;
-        atlas-dark) # Swiss at night: black, the red square, white bars on the grid
-            magick -size ${W}x${H} xc:'#121212' -fill '#e30613' -draw 'rectangle 160,160 1040,1040' \
-                -fill '#f2f2f0' -draw 'rectangle 1200,160 1260,1440' -draw 'rectangle 160,1200 2400,1240' "$out"
-            ;;
-        reactor) # radioactive: an acid disc burning through near-black, an orange core, hazard stripes low left
-            magick -size ${W}x${H} xc:'#0c0d08' \
-                \( -size ${W}x${H} xc:none -fill '#e4ff1a' -draw 'circle 1820,620 1820,1120' -blur 0x120 -channel A -evaluate multiply 0.55 +channel \) -composite \
-                -fill '#e4ff1a' -draw 'circle 1820,620 1820,940' -fill '#ff6b0a' -draw 'circle 1820,620 1820,760' \
-                -fill '#e4ff1a' -draw "$(for i in 0 1 2 3 4 5; do
-                    x=$((120 + i * 110))
-                    printf 'polygon %d,1600 %d,1600 %d,1260 %d,1260 ' $x $((x + 50)) $((x + 130)) $((x + 80))
-                done)" \
-                -attenuate 0.05 +noise Gaussian -colorspace sRGB "$out"
-            ;;
-        reactor-light) # Reactor by day: the disc in burnt orange on bone, the hazard tape still acid on a dark band
-            magick -size ${W}x${H} xc:'#f5f6ea' \
-                \( -size ${W}x${H} xc:none -fill '#ffb36b' -draw 'circle 1820,620 1820,1120' -blur 0x120 -channel A -evaluate multiply 0.45 +channel \) -composite \
-                -fill '#f0b27a' -draw 'circle 1820,620 1820,940' -fill '#b14800' -draw 'circle 1820,620 1820,760' \
-                -fill '#181a0e' -draw 'rectangle 0,1260 820,1600' \
-                -fill '#e4ff1a' -draw "$(for i in 0 1 2 3 4 5; do
-                    x=$((120 + i * 110))
-                    printf 'polygon %d,1600 %d,1600 %d,1260 %d,1260 ' $x $((x + 50)) $((x + 130)) $((x + 80))
-                done)" \
-                -attenuate 0.03 +noise Gaussian -colorspace sRGB "$out"
-            ;;
-        *)
-            echo "theme-wallpaper: unknown design '$id'" >&2
-            return 2
-            ;;
-    esac
+    local id=$1 out=$2 theme dir
+    theme=${id%-light}
+    theme=${theme%-dark}
+    dir=$(theme_dir "$theme") || return 1
+    local pic
+    for pic in "$dir/$id".png "$dir/$id".jpg "$dir/$id".jpeg "$dir/$id".webp; do # a picture wins over a recipe
+        [[ -f $pic ]] && {
+            magick "$pic" "$out"
+            return
+        }
+    done
+    [[ -f $dir/wallpaper.sh ]] || return 1
+    # shellcheck disable=SC1091  # each theme brings its own recipe
+    . "$dir/wallpaper.sh"
+    wallpaper "$id" "$out"
 }
 
 ids=("$@")
-[[ ${1:-} == --all ]] && ids=(pebble monolith console poster glass atlas reactor pebble-light monolith-light console-light glass-light atlas-dark reactor-light)
+if [[ ${1:-} == --all ]]; then # every theme folder: its own half, and the other one named in theme.json
+    ids=()
+    for d in "${XDG_DATA_HOME:-$HOME/.local/share}"/hyprism/themes/*/ "${XDG_CONFIG_HOME:-$HOME/.config}"/hyprism/themes/*/; do
+        [[ -f $d/theme.json && $(basename "$d") != _* ]] || continue
+        while read -r w; do [[ -n $w ]] && ids+=("$w"); done < <(jq -r '.wall // empty, .alt.wall // empty' "$d/theme.json")
+    done
+fi
 [[ ${#ids[@]} -gt 0 ]] || {
     usage 2 >&2
 }
 for id in "${ids[@]}"; do
-    [[ $id =~ ^[a-z]+(-[a-z]+)?$ ]] || {
+    [[ $id =~ ^[a-z0-9]+(-[a-z0-9]+)*$ ]] || {
         echo "theme-wallpaper: bad name '$id'" >&2
         exit 2
     }
