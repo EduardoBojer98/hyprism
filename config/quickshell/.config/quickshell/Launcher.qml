@@ -539,8 +539,11 @@ Singleton {
                     required property var modelData
                     required property int index
                     readonly property bool topHit: index === 0 && root.mode === "search"
-                    readonly property string group: Search.groupNames[Search.groupOf[modelData.kind]] ?? modelData.kind
-                    readonly property bool newSection: index > 0 && !(index === 1 && root.mode === "search")
+                    // Actions with nothing typed: the menu, under its own headings (Appearance, Screens & capture, …)
+                    readonly property bool menu: root.mode === "actions" && Search.query.trim() === ""
+                    readonly property string group: menu ? modelData.group : Search.groupNames[Search.groupOf[modelData.kind]] ?? modelData.kind
+                    readonly property bool newSection: menu ? root.listModel[index - 1]?.group !== modelData.group
+                        : index > 0 && !(index === 1 && root.mode === "search")
                         && (Search.groupNames[Search.groupOf[root.listModel[index - 1]?.kind]] ?? root.listModel[index - 1]?.kind) !== group
                     width: results.width
 

@@ -26,18 +26,6 @@ ShellRoot {
     BatteryWarning {}
     ThemeSync {}
     SettingsSync {}   // settings.json -> hypridle, input, displays, monswitch files
-    // first login: the three keys a newcomer needs, once
-    Connections {
-        target: Config
-        property bool done: false   // the file can load twice in a row (the save below re-reads it): once only
-        function onLoadedChanged() {
-            if (done || !Config.loaded || Config.system.welcomed) return
-            done = true
-            Quickshell.execDetached(["notify-send", "-a", "Welcome", "-t", "20000", "Welcome to your desktop",
-                "Super is the Windows key. Tap it to search for anything · Super+I opens Settings · Super+/ lists every shortcut"])
-            Config.set("system", "welcomed", true)
-        }
-    }
     // Create the singletons with IPC handlers now, so `qs ipc call …` works before first use
-    Component.onCompleted: { Machine.asus; Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = ""; Caffeine.minutes = 0; NightLight.now = new Date(); ControlCenter.expanded = ""; UtilityMenu.host; PowerMenu.open; Cheatsheet.open; Inputs.touchpad; Sys.recording; Notifications.unread = 0; NotificationCenter.unfolded = ({}); MissionControl.selected = -1; Calendar.month = new Date(); Wallpapers.images; WindowMenu.addr }
+    Component.onCompleted: { Machine.asus; Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = ""; Caffeine.minutes = 0; NightLight.now = new Date(); ControlCenter.expanded = ""; UtilityMenu.host; PowerMenu.open; Cheatsheet.open; Welcome.open; Inputs.touchpad; Sys.recording; Notifications.unread = 0; NotificationCenter.unfolded = ({}); MissionControl.selected = -1; Calendar.month = new Date(); Wallpapers.images; WindowMenu.addr }
 }

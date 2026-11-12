@@ -109,37 +109,79 @@ Singleton {
                  glyph: SettingsApp.allSections.find(x => x.id === p.id)?.glyph ?? "\u{F0493}", score: 30 + s * 45, run: () => SettingsApp.show(p.id) }
     }
 
+    // The menu: every action, in the order the launcher's Actions mode lists them (group, then position here).
+    // `cmd` runs a program; `run` calls into the shell. Themes and bar layouts are added by menuActions().
+    readonly property var groupOrder: ["Appearance", "Screens & capture", "Network & sound", "System", "Power", "Your actions"]
     readonly property var systemActions: [
-        { id: "lock", title: "Lock screen", words: "lock", glyph: "\u{F033E}", cmd: ["loginctl", "lock-session"] },
-        { id: "suspend", title: "Sleep", words: "suspend sleep", glyph: "\u{F04B2}", cmd: ["systemctl", "suspend"] },
-        { id: "hibernate", title: "Hibernate", words: "hibernate", glyph: "\u{F0717}", cmd: ["systemctl", "hibernate"] },
-        { id: "logout", title: "Log out", words: "logout log out exit", glyph: "\u{F0343}", cmd: ["hyprshutdown"] },
-        { id: "reboot", title: "Restart", words: "restart reboot", glyph: "\u{F0709}", cmd: ["systemctl", "reboot"] },
-        { id: "poweroff", title: "Shut down", words: "shutdown shut down power off", glyph: "\u{F0425}", cmd: ["systemctl", "poweroff"] },
-        { id: "monswitch", title: "Hand the shared monitor over / back", words: "monitor switch pc input shared kvm", glyph: "\u{F0379}", cmd: ["monswitch", "toggle"] },
-        { id: "shot", title: "Screenshot an area", words: "screenshot capture annotate satty", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot"] },
-        { id: "shot-all", title: "Screenshot all screens", words: "screenshot capture full screen all monitors", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot all"] },
-        { id: "shot-window", title: "Screenshot the focused window", words: "screenshot capture window", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot window"] },
-        { id: "shot-delay", title: "Screenshot in 5 seconds", words: "screenshot capture delay timer menu tooltip", glyph: "\u{F0104}", cmd: ["screenshot", "delay", "5"] },
-        { id: "ocr", title: "Copy text from screen (OCR)", words: "ocr text recognise recognize screenshot", glyph: "\u{F0A3B}", cmd: ["sh", "-c", "sleep 0.3; screentext"] },
-        { id: "picker", title: "Pick a colour", words: "colour color picker", glyph: "\u{F0266}", cmd: ["sh", "-c", "sleep 0.3; hyprpicker -a"] },
-        { id: "clipboard", title: "Clipboard history", words: "clipboard paste history", glyph: "\u{F014C}", cmd: ["qs", "ipc", "call", "clipboard", "toggle"] },
-        { id: "overview", title: "Mission Control", words: "overview windows workspaces mission control expose", glyph: "\u{F0570}", cmd: ["qs", "ipc", "call", "overview", "toggle"] },
-        { id: "caffeine", title: "Caffeine: keep awake", words: "caffeine awake inhibit sleep coffee", glyph: "\u{F0176}", cmd: ["qs", "ipc", "call", "caffeine", "toggle"] },
-        { id: "rog", title: "ROG Control Center", words: "rog asus fans gpu", glyph: "\u{F0493}", cmd: ["rog-control-center"] },
+        { id: "shot", group: "Screens & capture", title: "Screenshot an area", words: "screenshot capture annotate satty", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot"] },
+        { id: "shot-all", group: "Screens & capture", title: "Screenshot all screens", words: "screenshot capture full screen all monitors", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot all"] },
+        { id: "shot-window", group: "Screens & capture", title: "Screenshot the focused window", words: "screenshot capture window", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot window"] },
+        { id: "shot-delay", group: "Screens & capture", title: "Screenshot in 5 seconds", words: "screenshot capture delay timer menu tooltip", glyph: "\u{F0104}", cmd: ["screenshot", "delay", "5"] },
+        { id: "record", group: "Screens & capture", title: "Record the screen", words: "record recording video screencast capture", glyph: "\u{F044A}", cmd: ["sh", "-c", "sleep 0.3; record"] },
+        { id: "record-area", group: "Screens & capture", title: "Record an area", words: "record recording video screencast capture region", glyph: "\u{F044A}", cmd: ["sh", "-c", "sleep 0.3; record area"] },
+        { id: "record-stop", group: "Screens & capture", title: "Stop recording", words: "record recording video stop end save", glyph: "\u{F044A}", cmd: ["record", "stop"] },
+        { id: "ocr", group: "Screens & capture", title: "Copy text from screen (OCR)", words: "ocr text recognise recognize screenshot", glyph: "\u{F0A3B}", cmd: ["sh", "-c", "sleep 0.3; screentext"] },
+        { id: "picker", group: "Screens & capture", title: "Pick a colour", words: "colour color picker", glyph: "\u{F0266}", cmd: ["sh", "-c", "sleep 0.3; hyprpicker -a"] },
+        { id: "overview", group: "Screens & capture", title: "Mission Control", words: "overview windows workspaces mission control expose", glyph: "\u{F0570}", cmd: ["qs", "ipc", "call", "overview", "toggle"] },
+        { id: "nightlight", group: "Screens & capture", title: "Night Light", words: "night light warm blue filter eyes evening", glyph: "\u{F0599}", run: () => NightLight.toggle() },
+        { id: "displays", group: "Screens & capture", title: "Displays", words: "displays screens monitor resolution scale rotate", glyph: "\u{F0379}", run: () => SettingsApp.show("displays") },
+        { id: "monswitch", group: "Screens & capture", title: "Hand the shared monitor over / back", words: "monitor switch pc input shared kvm", glyph: "\u{F0379}", cmd: ["monswitch", "toggle"] },
+        { id: "wifi", group: "Network & sound", title: "Wi-Fi", words: "wifi wi-fi network internet connect wireless", glyph: "\u{F05A9}", run: () => ControlCenter.showSection("wifi") },
+        { id: "bluetooth", group: "Network & sound", title: "Bluetooth", words: "bluetooth pair headphones devices", glyph: "\u{F00AF}", run: () => ControlCenter.showSection("bt") },
+        { id: "sound-out", group: "Network & sound", title: "Sound output", words: "sound audio output speakers headphones volume", glyph: "\u{F057E}", run: () => ControlCenter.showSection("out") },
+        { id: "sound-in", group: "Network & sound", title: "Sound input", words: "sound audio input microphone mic", glyph: "\u{F036C}", run: () => ControlCenter.showSection("in") },
+        { id: "wifi-settings", group: "Network & sound", title: "Wi-Fi settings", words: "wifi wi-fi network settings", glyph: "\u{F05A9}", run: () => SettingsApp.show("network") },
+        { id: "bluetooth-settings", group: "Network & sound", title: "Bluetooth settings", words: "bluetooth settings", glyph: "\u{F00AF}", run: () => SettingsApp.show("bluetooth") },
+        { id: "sound-settings", group: "Network & sound", title: "Sound settings", words: "sound audio settings volume", glyph: "\u{F057E}", run: () => SettingsApp.show("sound") },
+        { id: "clipboard", group: "System", title: "Clipboard history", words: "clipboard paste history", glyph: "\u{F014C}", cmd: ["qs", "ipc", "call", "clipboard", "toggle"] },
+        { id: "keys", group: "System", title: "Keyboard shortcuts", words: "shortcuts keys keybinds hotkeys cheat sheet cheatsheet help", glyph: "\u{F0313}", run: () => Cheatsheet.show() },
+        { id: "dnd", group: "System", title: "Do Not Disturb", words: "dnd quiet silence notifications mute", glyph: "\u{F009B}", run: () => Notifications.toggleDnd() },
+        { id: "caffeine", group: "System", title: "Caffeine: keep awake", words: "caffeine awake inhibit sleep coffee", glyph: "\u{F0176}", cmd: ["qs", "ipc", "call", "caffeine", "toggle"] },
+        { id: "welcome", group: "System", title: "Welcome", words: "welcome first start tour intro help getting started", glyph: "\u{F02FD}", run: () => Welcome.show() },
+        { id: "update", group: "System", title: "Update the system and Hyprism", words: "update upgrade install packages hyprism system", glyph: "\u{F02FD}", run: () => inRepo("./install.sh update") },
+        { id: "doctor", group: "System", title: "Check this computer (doctor)", words: "doctor check health diagnose problems repair", glyph: "\u{F02FD}", run: () => inRepo("./install.sh doctor") },
+        { id: "rog", group: "System", title: "ROG Control Center", words: "rog asus fans gpu", glyph: "\u{F0493}", cmd: ["rog-control-center"] },
+        { id: "lock", group: "Power", title: "Lock screen", words: "lock", glyph: "\u{F033E}", cmd: ["loginctl", "lock-session"] },
+        { id: "suspend", group: "Power", title: "Sleep", words: "suspend sleep", glyph: "\u{F04B2}", cmd: ["systemctl", "suspend"] },
+        { id: "hibernate", group: "Power", title: "Hibernate", words: "hibernate", glyph: "\u{F0717}", cmd: ["systemctl", "hibernate"] },
+        { id: "logout", group: "Power", title: "Log out", words: "logout log out exit", glyph: "\u{F0343}", cmd: ["hyprshutdown"] },
+        { id: "reboot", group: "Power", title: "Restart", words: "restart reboot", glyph: "\u{F0709}", cmd: ["systemctl", "reboot"] },
+        { id: "poweroff", group: "Power", title: "Shut down", words: "shutdown shut down power off", glyph: "\u{F0425}", cmd: ["systemctl", "poweroff"] },
+        { id: "powermenu", group: "Power", title: "Power menu", words: "power menu shutdown restart log out sleep", glyph: "\u{F0425}", run: () => PowerMenu.show() },
     ]
+    // Appearance: a theme folder is an action the moment it exists; the bar layouts are Config.bar.presets
+    function menuActions() {
+        const ap = (id, title, words, glyph, run) => ({ id: id, group: "Appearance", title: title, words: words, glyph: glyph, run: run })
+        const out = [ap("themes", "Themes…", "themes appearance look design wallpaper", "\u{F03D8}", () => SettingsApp.show("appearance"))]
+        for (const t of Themes.list) out.push(ap("theme-" + t.id, "Theme: " + t.name, "theme look design " + t.id, "\u{F03D8}", () => Config.set("appearance", "theme", t.id)))
+        out.push(ap("mode-light", "Light mode", "light mode day bright appearance", "\u{F03D8}", () => Config.set("appearance", "mode", "light")),
+                 ap("mode-dark", "Dark mode", "dark mode night appearance", "\u{F03D8}", () => Config.set("appearance", "mode", "dark")),
+                 ap("mode-theme", "Theme's own light/dark", "theme default own light dark mode appearance auto", "\u{F03D8}", () => Config.set("appearance", "mode", "theme")),
+                 ap("bar-theme", "Bar layout: theme's own", "bar layout menu bar preset theme own default", "\u{F0E7F}", () => Config.set("bar", "preset", "theme")))
+        for (const name of Object.keys(Config.bar.presets ?? {}))
+            out.push(ap("bar-" + name, "Bar layout: " + name.charAt(0).toUpperCase() + name.slice(1), "bar layout menu bar preset " + name, "\u{F0E7F}", () => Config.set("bar", "preset", name)))
+        return out
+    }
+    // A command from the repo in a terminal that stays open. The shell's files are symlinks into the repo, so
+    // the repo is wherever shell.qml really lives (same way as Settings > About).
+    function inRepo(cmd) {
+        Quickshell.execDetached(["sh", "-c", "repo=$(git -C \"$(dirname \"$(readlink -f \"$HOME/.config/quickshell/shell.qml\")\")\" rev-parse --show-toplevel) || exit 1; "
+            + "exec ghostty +new-window -e sh -c 'cd \"$0\" && $1; echo; read -p \"Press Enter to close\" _' \"$repo\" \"$1\"", "sh", cmd])
+    }
     function actions(q, all) {
         const out = []
         // hardware-only actions appear where the hardware is
-        const has = { monswitch: Machine.monitorSwitch, rog: Machine.asus, hibernate: Machine.canHibernate }
-        for (const a of systemActions.filter(a => has[a.id] ?? true)) {
+        const has = { monswitch: Machine.monitorSwitch, rog: Machine.asus, hibernate: Machine.canHibernate,
+                      wifi: !!Sys.wifi, "wifi-settings": !!Sys.wifi, bluetooth: !!Sys.adapter, "bluetooth-settings": !!Sys.adapter,
+                      record: !Sys.recording, "record-area": !Sys.recording, "record-stop": Sys.recording }
+        for (const a of menuActions().concat(systemActions).filter(a => has[a.id] ?? true)) {
             const s = all ? 0.5 : Math.max(match(a.title, q), ...a.words.split(" ").map(w => match(w, q) * 0.9))
-            if (s > 0.5 || all) out.push({ key: "action:" + a.id, kind: "Actions", title: a.title, glyph: a.glyph,
-                score: 32 + s * 45 + usageBonus("action:" + a.id), run: () => Quickshell.execDetached(a.cmd) })
+            if (s > 0.5 || all) out.push({ key: "action:" + a.id, kind: "Actions", group: a.group, title: a.title, glyph: a.glyph,
+                score: 32 + s * 45 + usageBonus("action:" + a.id), run: a.run ?? (() => Quickshell.execDetached(a.cmd)) })
         }
         for (const [i, c] of (Config.launcher.actions ?? []).entries()) {
             const s = all ? 0.5 : match(c.name, q)
-            if (s > 0.5 || all) out.push({ key: "custom:" + c.name, kind: "Actions", title: c.name,
+            if (s > 0.5 || all) out.push({ key: "custom:" + c.name, kind: "Actions", group: "Your actions", title: c.name,
                 subtitle: (c.kind === "snippet" ? "Paste: " : "") + c.value, confirm: c.confirm === true,
                 glyph: c.kind === "snippet" ? "\u{F0187}" : c.kind === "open" ? "\u{F024B}" : "\u{F018D}",
                 score: 40 + s * 50 + usageBonus("custom:" + c.name), run: () => runCustom(c) })
@@ -253,7 +295,13 @@ Singleton {
         .filter(k => !recentItems.some(r => r.key === k)).map(resolve).filter(r => r).slice(0, 6)
 
     // Lists for the launcher's browse modes (no query needed)
-    function actionList(q) { return actions(q.toLowerCase(), !q).sort((a, b) => b.score - a.score) }
+    // Typed: best match first. Not typed: the menu, grouped in a fixed order (each group keeps the order of the list above).
+    function actionList(q) {
+        const list = actions(q.toLowerCase(), !q)
+        if (q) return list.sort((a, b) => b.score - a.score)
+        const at = new Map(list.map((a, i) => [a, i]))   // the sort isn't stable here, so the position breaks ties
+        return list.sort((a, b) => groupOrder.indexOf(a.group) - groupOrder.indexOf(b.group) || at.get(a) - at.get(b))
+    }
 
     function activate(r) {
         if (!r) return

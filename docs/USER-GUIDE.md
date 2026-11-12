@@ -50,6 +50,27 @@ between them, Space or Enter presses, arrows change a choice or a slider.
 Everything applies right away except language (next login) and lid behaviour (a system file set by the
 installer's `laptop` module).
 
+## The menu
+
+`Super+Space`, then the Actions button (or Tab to Actions): with nothing typed it lists everything under
+headings; type to find one. It reaches:
+
+- **Appearance**: Themes…, one "Theme: name" per theme (a new theme folder appears by itself), Light mode,
+  Dark mode, Theme's own light/dark, and a "Bar layout: name" for each bar preset.
+- **Screens & capture**: screenshots, Record the screen / an area / Stop recording, text from the screen,
+  colour picker, Mission Control, Night Light, Displays, the shared monitor (only when set up).
+- **Network & sound**: Wi-Fi and Bluetooth (only where the computer has them), Sound output and input, and
+  their Settings pages.
+- **System**: Clipboard history, Keyboard shortcuts, Do Not Disturb, Caffeine, Welcome, Update the system and
+  Hyprism, Check this computer (doctor), ROG Control Center (ASUS only). Update and doctor open a terminal
+  that stays open at the end.
+- **Power**: Lock, Sleep, Hibernate (where it works), Log out, Restart, Shut down, Power menu.
+
+Websites as apps are made in a terminal with `webapp add "Name" https://address`; there is no menu entry yet.
+
+The first time you log in, a Welcome panel offers a theme, light or dark, a bar layout and the keyboard
+layouts, and lists the keys to know. It opens once; the "Welcome" action shows it again.
+
 ## Your hardware
 
 - The installer looks at your computer and writes what it finds to `~/.config/hyprism/hardware.toml`.
