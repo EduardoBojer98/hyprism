@@ -74,6 +74,15 @@ qs ipc call config set bar items '{"weather":{"warn":30}}'
 
 ## State of the move
 
-Items in their own folder so far: `brightness`, `power`, `weather`. The others still live in `BarWidget.qml` and
-already obey the shared settings above; they move over one by one (roadmap D2). Presets, per-monitor layouts and
-the system-info item are roadmap D3 to D5.
+Every item is its own folder now (the move, roadmap D2, is done); `BarWidget.qml` only loads the folder. The
+helpers some items draw with (`BarWs`, `BarStatus`, `BarBattery`, `BarTray`, `BarKeyboard`, `BarBell`, `BarApp`,
+`BarMetric`) still sit in the shell's root folder.
+
+## System readings
+
+The `sysinfo` item shows any readings you pick, in your order: see
+[its README](../config/quickshell/.config/quickshell/bar/items/sysinfo/README.md) for the list and its settings.
+`cpu`, `memory` and `gpu` are single-reading items on the same service. Readings come from one small program,
+`metrics` (`metrics once` prints them all as JSON), which runs only while a bar shows one of them.
+
+Presets and per-monitor layouts are roadmap D5.

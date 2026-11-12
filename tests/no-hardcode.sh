@@ -18,6 +18,7 @@ known='^config/quickshell/.*/(Sensors|ConfigData|SettingsPageMonitor|SettingsPag
 hits=$(grep -rnE "$hardware" "${core[@]}" --exclude='*.md' 2>/dev/null |
     sed -E 's/^([^:]+:[0-9]+:)[[:space:]]*(#|--|\/\/).*/\1/; s/[[:space:]]+(#|--|\/\/) .*$//' |
     grep -E "^[^:]+:[0-9]+:.*($hardware)" |
+    grep -vE 'k10temp.*coretemp|coretemp.*k10temp' |                         # a list of every vendor's CPU sensor driver is not one machine's name
     grep -vE '^config/hypr/.config/hypr/modules/env.lua:.*amd-igpu' || true) # the pre-2.0 link name, kept so old installs keep working
 new=$(grep -vE "$known" <<<"$hits" | grep -v '^$' || true)
 if [[ -n $new ]]; then

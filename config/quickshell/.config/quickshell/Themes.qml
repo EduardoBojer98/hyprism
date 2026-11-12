@@ -216,32 +216,8 @@ Singleton {
         return into
     }
 
-    // every bar item (BarWidget.qml), in the order Settings > Menu Bar offers them
-    readonly property var barItems: [
-        { id: "apps",          name: "Apps (dock)",        glyph: "\u{F0A1F}" },
-        { id: "launcher",      name: "Apps button",        glyph: "\u{F003B}" },
-        { id: "workspaces",    name: "Workspaces",         glyph: "\u{F0570}" },
-        { id: "window",        name: "Active window",      glyph: "\u{F05AF}" },
-        { id: "clock",         name: "Clock",              glyph: "\u{F0954}" },
-        { id: "date",          name: "Date",               glyph: "\u{F00ED}" },
-        { id: "weather",       name: "Weather",            glyph: "\u{F0599}" },
-        { id: "media",         name: "Media player",       glyph: "\u{F075A}" },
-        { id: "tray",          name: "System tray",        glyph: "\u{F0D5E}" },
-        { id: "keyboard",      name: "Keyboard layout",    glyph: "\u{F030C}" },
-        { id: "notifications", name: "Notifications",      glyph: "\u{F009C}" },
-        { id: "status",        name: "Quick settings",     glyph: "\u{F0493}" },
-        { id: "network",       name: "Network",            glyph: "\u{F05A9}" },
-        { id: "bluetooth",     name: "Bluetooth",          glyph: "\u{F00AF}" },
-        { id: "volume",        name: "Volume",             glyph: "\u{F057E}" },
-        { id: "brightness",    name: "Brightness",         glyph: "\u{F00DF}" },
-        { id: "battery",       name: "Battery",            glyph: "\u{F0079}" },
-        { id: "power-profile", name: "Power profile",      glyph: "\u{F0E0E}" },
-        { id: "cpu",           name: "CPU usage",          glyph: "\u{F0EE0}" },
-        { id: "memory",        name: "Memory usage",       glyph: "\u{F035B}" },
-        { id: "gpu",           name: "GPU usage",          glyph: "\u{F08AE}" },
-        { id: "recording",     name: "Recording",          glyph: "\u{F044A}" },
-        { id: "power",         name: "Power menu",         glyph: "\u{F0425}" }
-    ]
+    // every bar item: the folders in bar/items/ (BarItems), named and ordered for Settings > Menu Bar
+    readonly property var barItems: BarItems.catalogue
     function barItem(id) { return barItems.find(i => i.id === id) ?? { id: id, name: id, glyph: "\u{F02D7}" } }
     readonly property int wallVersion: 7   // = VERSION in scripts/theme-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
@@ -352,10 +328,10 @@ Singleton {
         }
         if (num(o.barSize, 20, 96)) r.bar.size = o.barSize
         if (typeof o.barFloating === "boolean") r.bar.floating = o.barFloating
-        const items = o.barItems, known = barItems.map(i => i.id)
+        const items = o.barItems, known = barItems.map(i => i.id), settled = BarItems.ready   // ids are unknown until the folders are read
         if (items && typeof items === "object")
             for (const k of ["start", "center", "end"])
-                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => known.includes(i) && l.indexOf(i) === n)
+                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => (!settled || known.includes(i)) && l.indexOf(i) === n)
         if (o.dock === "bar") r.dock.edge = r.bar.edge
         else if (edges.includes(o.dock)) r.dock.edge = o.dock
         return r

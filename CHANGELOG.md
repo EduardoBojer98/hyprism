@@ -29,6 +29,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 - `install.sh` is a short entry point over `lib/*.sh`. A run that hits a problem ends non-zero with a summary;
   a dry run lists the questions it would ask.
+- A system-info bar item (`sysinfo`): pick any of 25 readings, their order, compact or detailed, levels per
+  reading, "only above", and a trend in the tooltip. One `metrics` program feeds it, found by kind of device.
 - Bar items can live in their own folder (`bar/items/<id>/`) and every item has its own settings in
   `settings.json` (`bar.items.<id>`): enabled, icon, format, click, right-click, scroll, tooltip, warn, critical.
   See `docs/bar.md`.

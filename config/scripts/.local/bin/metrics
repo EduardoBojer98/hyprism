@@ -108,8 +108,11 @@ m_dgpu() { # the second card: its power state always; numbers only while it is a
     vendor=$(hw gpu.discrete)
     if [[ $state == active && $vendor == nvidia && -z $R ]] && command -v nvidia-smi >/dev/null; then
         q=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total,power.draw --format=csv,noheader,nounits 2>/dev/null | head -1) || q=""
-        if [[ $q =~ ^([0-9]+),\ *([0-9]+),\ *([0-9]+),\ *([0-9]+),\ *([0-9.]+) ]]; then
-            printf '"dgpu":{"state":"active","pct":%s,"temp":%s,"vram_used":%s,"vram_total":%s,"watts":%s}' "${BASH_REMATCH[@]:1:5}"
+        local pct temp used total watts
+        IFS=', ' read -r pct temp used total watts <<<"$q"
+        if [[ $pct =~ ^[0-9]+$ && $temp =~ ^[0-9.]+$ && $used =~ ^[0-9]+$ && $total =~ ^[0-9]+$ ]]; then
+            [[ $watts =~ ^[0-9.]+$ ]] || watts="" # many laptops answer [N/A] for power
+            printf '"dgpu":{"state":"active","pct":%s,"temp":%s,"vram_used":%s,"vram_total":%s%s}' "$pct" "$temp" "$used" "$total" "${watts:+,\"watts\":$watts}"
             return 0
         fi
     elif [[ $state == active && $vendor != nvidia ]]; then

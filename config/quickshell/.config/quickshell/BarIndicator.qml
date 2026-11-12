@@ -14,12 +14,17 @@ BarItem {
     property real level: -1           // what warn / critical compare against (e.g. a percentage); -1 = nothing to judge
 
     readonly property var cfg: bar.cfg
+    // these come from your settings for the item; an item that shows several readings sets them per reading
+    property var icon: cfg.icon
+    property var format: cfg.format
+    property var warnAt: cfg.warn
+    property var criticalAt: cfg.critical
     // 0 fine, 1 warn, 2 critical. Shown by colour and by "!" marks, so it never rests on colour alone.
-    readonly property int alarm: level < 0 ? 0 : (typeof cfg.critical === "number" && level >= cfg.critical) ? 2
-                                                : (typeof cfg.warn === "number" && level >= cfg.warn) ? 1 : 0
-    readonly property string shownGlyph: typeof cfg.icon === "string" && cfg.icon !== "" ? cfg.icon : glyph
-    readonly property string shownValue: (typeof cfg.format === "string" && cfg.format !== ""
-                                          ? cfg.format.replace("{value}", value).replace("{word}", word) : value)
+    readonly property int alarm: level < 0 ? 0 : (typeof criticalAt === "number" && level >= criticalAt) ? 2
+                                                : (typeof warnAt === "number" && level >= warnAt) ? 1 : 0
+    readonly property string shownGlyph: typeof icon === "string" && icon !== "" ? icon : glyph
+    readonly property string shownValue: (typeof format === "string" && format !== ""
+                                          ? format.replace("{value}", value).replace("{word}", word) : value)
                                          + (alarm === 2 ? " !!" : alarm === 1 ? " !" : "")
     readonly property bool asWords: bar.words || (bar.mixed && textual && !bar.vertical)
     property color ink: alarm === 2 ? Theme.error : alarm === 1 ? Theme.warning : bar.tone
