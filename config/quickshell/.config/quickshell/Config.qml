@@ -72,7 +72,7 @@ Singleton {
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
                clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
-               windowTitle: "bool", items: "object" },
+               windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],
@@ -202,6 +202,10 @@ Singleton {
                     console.warn("settings.json: " + section + "." + key + " was invalid, using the default")
                     adapter[section][key] = fresh[section][key]
                 }
+        // the built-in bar presets an older file lacks come back; ones you edited stay as they are
+        const have = JSON.parse(JSON.stringify(adapter.bar.presets ?? {})), builtIn = fresh.bar.presets
+        const missing = Object.keys(builtIn).filter(n => have[n] === undefined)
+        if (missing.length) { for (const n of missing) have[n] = JSON.parse(JSON.stringify(builtIn[n])); adapter.bar.presets = have }
         fresh.destroy()
     }
 }

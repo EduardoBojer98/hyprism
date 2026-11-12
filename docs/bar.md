@@ -85,4 +85,36 @@ The `sysinfo` item shows any readings you pick, in your order: see
 `cpu`, `memory` and `gpu` are single-reading items on the same service. Readings come from one small program,
 `metrics` (`metrics once` prints them all as JSON), which runs only while a bar shows one of them.
 
-Presets and per-monitor layouts are roadmap D5.
+## Presets and screens
+
+A preset is a named layout: which items sit in `start`, `center` and `end`. Settings → Menu Bar → Layout picks one,
+and "Save current layout as…" keeps the layout shown in the editor under a name of your own (letters, digits and
+dashes). With a preset chosen, the editor changes that preset; with "Theme's own" it changes the theme's layout.
+
+| Key (`bar` in `settings.json`) | What it does |
+|---|---|
+| `preset` | `"theme"` (default): the theme's own layout. Any other value names an entry of `presets` |
+| `presets` | name → `{ "start": [ids], "center": [ids], "end": [ids] }` |
+| `monitors` | screen name → preset name. A screen not listed, or set to `""`, follows `preset` |
+| `hiddenOn` | screens without a bar ("No bar" in Settings → Screens) |
+
+Built in (an older file gets any that are missing back; one you edited is never overwritten):
+
+| Preset | start | center | end |
+|---|---|---|---|
+| `minimal` | launcher, workspaces | clock | status, battery, power |
+| `full` | launcher, workspaces, window | clock, date, weather | sysinfo, media, tray, keyboard, notifications, status, battery, power |
+| `laptop` | launcher, workspaces | clock | sysinfo, brightness, power-profile, keyboard, notifications, status, battery |
+| `external` | launcher, workspaces, window | clock, date | sysinfo, weather, media, tray, notifications, status, power |
+
+An id that isn't an item is skipped. Example, a laptop with an external monitor:
+
+```json
+"bar": {
+  "preset": "laptop",
+  "monitors": { "DP-1": "external" }
+}
+```
+
+`eDP-1` follows `preset` (`laptop`); `DP-1` shows `external`. Settings → Menu Bar → Item settings edits the settings
+above for any item in the layout.

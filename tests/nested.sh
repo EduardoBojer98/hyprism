@@ -6,9 +6,12 @@
 #   tests/nested.sh shot NAME      screenshot of the test desktop -> prints the PNG's path
 #   tests/nested.sh ipc ARGS...    qs ipc call ARGS... in the test shell (e.g. ipc config set appearance theme atlas)
 #   tests/nested.sh hypr ARGS...   hyprctl ARGS... in the test session
+#   tests/nested.sh key NAMES...   press keys in the test desktop (xkb names: Tab, Next, Return…)
 #   tests/nested.sh errors         the test shell's warnings and errors (nothing printed = clean)
 #   tests/nested.sh stop           close the window and delete the throwaway home
 #
+# Under Hyprland the window sits on a virtual screen of its own (1920x1200, or HYPRISM_TEST_SIZE=WxH), so it
+# never covers your work.
 # Kept away from the real session: its own D-Bus session, GTK settings kept in memory, and stand-ins on the
 # PATH for every command that would act on the real machine (pkill, systemctl, brightness, power, DDC…),
 # which only write what they were asked to do into <home>/shims.log.
@@ -30,6 +33,24 @@ need_running() {
 }
 inside() { env HOME="$T" XDG_CONFIG_HOME="$T/.config" XDG_STATE_HOME="$T/.local/state" XDG_DATA_HOME="$T/.local/share" \
     XDG_CACHE_HOME="$T/.cache" WAYLAND_DISPLAY="$SOCK" HYPRLAND_INSTANCE_SIGNATURE="$SIG" PATH="$T/shims:$T/.local/bin:$PATH" "$@"; }
+
+# Under Hyprland the test window goes onto a virtual screen of its own, far from your real ones: it gets a
+# full-size desktop (so Settings fits), keeps drawing (a window on a hidden workspace would not), and never
+# covers your work or takes your pointer.
+SCREEN=hyprism-test
+park() {
+    [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || return 0
+    local win=""
+    hyprctl output create headless "$SCREEN" >/dev/null || return 0
+    hyprctl eval "hl.monitor({ output = \"$SCREEN\", mode = \"${HYPRISM_TEST_SIZE:-1920x1200}@60\", position = \"20000x20000\", scale = 1 })" >/dev/null || true
+    for _ in $(seq 20); do
+        win=$(hyprctl clients -j | jq -r '.[] | select(.class == "aquamarine") | .address' | tail -1)
+        [[ -n $win ]] && break
+        sleep 0.25
+    done
+    [[ -n $win ]] || return 0
+    hyprctl dispatch "hl.dsp.window.move({ monitor = \"$SCREEN\", follow = false, window = \"address:$win\" })" >/dev/null || true
+}
 
 case ${1:-} in
     start)
@@ -73,6 +94,7 @@ case ${1:-} in
             exit 1
         }
         printf 'T=%q\nSIG=%q\nSOCK=%q\n' "$T" "$SIG" "$SOCK" >"$state/env"
+        park
         sleep 4 # the shell needs a moment to draw
         echo "test session up: home $T, display $SOCK"
         ;;
@@ -92,6 +114,11 @@ case ${1:-} in
         shift
         inside hyprctl "$@"
         ;;
+    key)
+        need_running
+        shift
+        for k in "$@"; do inside wtype -k "$k"; done # key names as in xkb: Tab, Next (Page Down), Return, Escape…
+        ;;
     errors)
         need_running
         inside qs log 2>/dev/null | grep -E ' (WARN|ERROR|CRITICAL|FATAL)' | grep -v 'org.freedesktop.Notifications\|StatusNotifierWatcher' | sed 's/\x1b\[[0-9;]*m//g' | sort | uniq -c | sort -rn | head -40 || true
@@ -101,6 +128,7 @@ case ${1:-} in
         inside hyprctl dispatch 'hl.dsp.exit()' >/dev/null 2>&1 || kill "$(cat "$state/pid")" 2>/dev/null || true
         sleep 1
         pkill -f "Hyprland -c $T/" 2>/dev/null || true
+        hyprctl output remove "$SCREEN" >/dev/null 2>&1 || true # not running under Hyprland = no virtual screen
         [[ $T == "$run"/hyprism-home.* ]] && rm -rf "$T"
         rm -rf "$state"
         echo "test session closed"

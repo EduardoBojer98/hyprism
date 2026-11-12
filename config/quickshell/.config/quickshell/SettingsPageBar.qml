@@ -2,14 +2,17 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Menu Bar: where the bar sits, its size and shape, which monitors have one, and which items each of
-// its three sections holds. Place, shape and items are saved for the active theme only (each theme keeps
+// Menu Bar: which preset of items the bar uses and what each screen shows, where the bar sits, its size and
+// shape, which items each of its three sections holds, and each item's own settings. Place, shape and
+// theme-layout items are saved for the active theme only (each theme keeps
 // its own; "Default" puts the theme's own back); every option works in every theme and on every edge.
 ColumnLayout {
     id: page
     spacing: 20
 
     readonly property var b: Config.bar
+
+    SettingsBarLayout { Layout.fillWidth: true; editor: barEditor }
 
     SettingGroup {
         title: "Place"
@@ -36,38 +39,24 @@ ColumnLayout {
         }
     }
 
-    SettingGroup {
-        title: "Monitors"
-        Repeater {
-            model: Quickshell.screens
-            SettingRow {
-                required property var modelData
-                label: modelData.name
-                hint: modelData.width + " × " + modelData.height + (modelData.model ? " · " + modelData.model : "")
-                Toggle {
-                    checked: !page.b.hiddenOn.includes(modelData.name)
-                    onToggled: on => Config.set("bar", "hiddenOn", on ? page.b.hiddenOn.filter(n => n !== modelData.name)
-                                                                        : Array.from(page.b.hiddenOn).concat([modelData.name]))
-                }
-            }
-        }
-    }
-
     // ---- items: a copy of the bar to drag them around on ------------------------------------------------
     SettingGroup {
         title: "Items"
         BarEditor {
+            id: barEditor
             Layout.fillWidth: true
             Layout.margins: 14
             floatOn: page.parent
         }
         SettingRow {
-            visible: ((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).barItems !== undefined
+            visible: !barEditor.onPreset && ((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).barItems !== undefined
             label: "Back to the theme's items"
             PillButton { text: "Use the theme's"; onClicked: Themes.adjust("barItems", undefined) }
         }
         SaveTheme {}
     }
+
+    SettingsBarItem { editor: barEditor }
 
     SettingGroup {
         title: "Battery"

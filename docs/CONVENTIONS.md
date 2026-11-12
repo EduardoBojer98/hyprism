@@ -96,6 +96,8 @@ docker run --rm -v "$PWD":/mnt/repo:ro archlinux:latest bash /mnt/repo/tests/con
 docker run --rm -v "$PWD":/mnt/repo:ro fedora:latest bash /mnt/repo/tests/container-test.sh
 ```
 
+`tests/settings-roundtrip.sh` (settings in the shell and in `settings.json` follow each other) needs a desktop session.
+
 A sub-agent's report is not proof. The lead reads the diff and runs the checks.
 
 ## How to add things

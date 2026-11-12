@@ -6,12 +6,19 @@ import QtQuick.Layouts
 // items below, drag one back to the tray (or press its ×) to take it off. Every change saves at once, for
 // the active theme only (Themes.adjust "barItems"), and the real bar follows. "Apps" is the dock itself:
 // adding it puts the dock in the bar; it leaves the bar only by moving the dock (Settings > Dock).
+// With a preset chosen (Config.bar.preset) it edits that preset's three lists instead of the theme's.
 ColumnLayout {
     id: ed
     spacing: 14
 
     property Item floatOn                         // where a carried item floats (the Settings page's parent)
-    readonly property var layout: Theme.barLayout
+    property string selected                      // the item whose settings the page shows; a click on the bar picks it
+    readonly property string preset: Config.bar.preset
+    readonly property bool onPreset: preset !== "theme" && Config.bar.presets?.[preset] !== undefined
+    readonly property var layout: {
+        const p = onPreset ? Config.bar.presets[preset] : undefined
+        return p ? { start: Array.from(p.start ?? []), center: Array.from(p.center ?? []), end: Array.from(p.end ?? []) } : Theme.barLayout
+    }
     readonly property var keys: ["start", "center", "end"]
     readonly property var names: ({ start: Theme.barVertical ? "Top" : "Left", center: "Middle", end: Theme.barVertical ? "Bottom" : "Right" })
     readonly property var used: [].concat(Array.from(layout.start), Array.from(layout.center), Array.from(layout.end))
@@ -24,7 +31,11 @@ ColumnLayout {
         return { start: Array.from(layout.start), center: Array.from(layout.center), end: Array.from(layout.end) }
     }
     readonly property bool edited: ((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).barItems !== undefined
-    function save(l) { Themes.adjust("barItems", l) }
+    function save(l) {
+        if (!onPreset) { Themes.adjust("barItems", l); return }
+        const all = JSON.parse(JSON.stringify(Config.bar.presets)); all[preset] = l
+        Config.set("bar", "presets", all)
+    }
     // payload: { id, from: section key or "tray" }; drop it into `section` at `index` (-1: the end)
     function drop(p, section, index) {
         if (p.id === "apps" && section === "tray") return   // the dock: moved on the Dock page
@@ -68,8 +79,8 @@ ColumnLayout {
     }
     Text {
         Layout.fillWidth: true
-        text: "Drag items to move them; drop one on the tray to take it off.\n"
-              + (ed.edited ? "Your layout for " + Theme.current.name + "." : "The layout " + Theme.current.name + " came with.")
+        text: "Drag items to move them; drop one on the tray to take it off. Click one for its settings.\n"
+              + (ed.onPreset ? "Editing the preset \u201c" + ed.preset + "\u201d." : ed.edited ? "Your layout for " + Theme.current.name + "." : "The layout " + Theme.current.name + " came with.")
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
@@ -160,7 +171,7 @@ ColumnLayout {
             anchors.fill: parent
             radius: chip.radius
             color: chip.onBar ? Qt.alpha(ed.ink, chip.hovered ? 0.16 : 0.09) : (chip.hovered ? Theme.fillHover : Theme.raised)
-            border { color: chip.onBar ? Qt.alpha(ed.ink, 0.2) : Theme.stroke; width: 1 }
+            border { color: chip.onBar && chip.itemId === ed.selected ? Theme.accent : chip.onBar ? Qt.alpha(ed.ink, 0.2) : Theme.stroke; width: chip.onBar && chip.itemId === ed.selected ? 2 : 1 }
             Row {
                 anchors { left: parent.left; leftMargin: chip.onBar ? 10 : 8; verticalCenter: parent.verticalCenter }
                 spacing: 6
@@ -179,7 +190,7 @@ ColumnLayout {
             }
         }
         // on the tray a click adds it to the end of the bar's last section
-        onClicked: if (!onBar) ed.drop({ id: itemId, from: "tray" }, "end", -1)
+        onClicked: if (onBar) ed.selected = itemId; else ed.drop({ id: itemId, from: "tray" }, "end", -1)
         DropSpot { anchors.fill: parent; key: "baritem"; owner: chip; enabled: chip.onBar && !chip.dragging; onPlaced: (p, after) => chip.droppedHere(p, after) }
     }
 }

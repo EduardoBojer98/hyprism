@@ -169,6 +169,21 @@ JsonAdapter {
         // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). Example:
         //   { "weather": { "click": "panel:calendar" }, "brightness": { "enabled": false } }
         property var items: ({})
+        // which items the bar holds: "theme" = the theme's own layout (Settings > Menu Bar, per theme); any other
+        // value names an entry of `presets`. A screen listed in `monitors` uses its own preset instead.
+        property string preset: "theme"
+        // name -> { start: [ids], center: [ids], end: [ids] }. These four ship with the desktop; repair() puts
+        // back any that an older settings.json lacks (it never overwrites one you changed).
+        property var presets: ({
+            minimal: { start: ["launcher", "workspaces"], center: ["clock"], end: ["status", "battery", "power"] },
+            full: { start: ["launcher", "workspaces", "window"], center: ["clock", "date", "weather"],
+                    end: ["sysinfo", "media", "tray", "keyboard", "notifications", "status", "battery", "power"] },
+            laptop: { start: ["launcher", "workspaces"], center: ["clock"],
+                      end: ["sysinfo", "brightness", "power-profile", "keyboard", "notifications", "status", "battery"] },
+            external: { start: ["launcher", "workspaces", "window"], center: ["clock", "date"],
+                        end: ["sysinfo", "weather", "media", "tray", "notifications", "status", "power"] }
+        })
+        property var monitors: ({})             // screen name (e.g. "eDP-1") -> preset name; unlisted or "" follows `preset`
     }
     property JsonObject battery: JsonObject {
         property bool warn: true                 // a notification when the battery runs low
