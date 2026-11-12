@@ -95,6 +95,15 @@ wallpaper exists. CI runs it on every push. A theme added to `themes/` must pass
 ## What follows the theme today
 
 Hyprland (borders, gaps, rounding, shadow, blur, animation), the whole shell (bar, dock, launcher, menus,
-notifications, on-screen display, Settings), the lock screen, GTK 3 and 4 apps, the Ghostty terminal, the app
-picker (fuzzel), the cursor and icon theme, and the wallpaper. Qt apps, the login screen, btop and the shell
-prompt are the next targets (roadmap C3).
+notifications, on-screen display, Settings), the lock screen, GTK 3 and 4 apps, Qt apps (through `qt6ct`;
+a Qt app that is already running takes the colours when you restart it), the Ghostty terminal, btop, the shell
+prompt (starship), the app picker (fuzzel), the cursor and icon theme, and the wallpaper.
+
+- btop: pick the theme once in btop's Options: `color_theme = "hyprism"`. If you have no `btop.conf`, one is
+  written for you; yours is never edited.
+- Prompt: the fish config points starship at `~/.config/hyprism/starship.toml`, a copy of `starship.toml` with
+  the theme's colours in its `[palettes.hyprism]` block. New prompts pick it up at once.
+- Qt: `~/.config/qt6ct/qt6ct.conf` is written only if you have none; your own is never overwritten.
+
+Still to do: the login screen. It runs as another user before you log in and differs per distro's display
+manager, so there is no one place for the theme to write to.

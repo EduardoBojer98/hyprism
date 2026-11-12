@@ -59,12 +59,14 @@ playerctl                tools     media keys and the media card
 xdg-utils                tools     xdg-open / xdg-mime: default apps, opening files from Spotlight
 glib2                    tools     gsettings: GTK light/dark, accent, icons, cursor
 kdialog                  tools     folder/file picker in Settings (wallpaper folders, add theme)
+btop                     tools     system monitor, coloured by the theme (btop theme "hyprism")
 imagemagick              tools     draws each theme's wallpaper (theme-wallpaper), blurred wallpaper copies
 fastfetch                tools     system summary in new terminals
 
 # Look
 adw-gtk-theme            look      GTK3 apps match libadwaita, dark and light
 papirus-icons            look      icon theme for the shell, dock and apps
+qt6ct                    look      Qt apps (Dolphin, pavucontrol-qt) follow the theme colours
 font-inter               look      UI font
 font-cantarell           look      "Cantarell" choice under Appearance > Font
 font-noto                look      "Noto Sans" choice; fallback for missing glyphs

@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 // Carries the active theme (Theme / Themes.qml) to the parts of the desktop Quickshell can't draw:
@@ -8,8 +9,11 @@ import QtQuick
 //   GTK        gsettings: light/dark, accent, icons, cursor, UI and mono fonts
 //   Ghostty    ghostty/theme.conf: the theme's terminal palette and font, reloaded live
 //   fuzzel     fuzzel/theme.ini (emoji picker)
+//   Qt apps    qt6ct/colors/hyprism.conf, and qt6ct/qt6ct.conf unless it is yours (env.lua points Qt at qt6ct)
+//   btop       btop/themes/hyprism.theme (btop.conf only if there is none: it is yours)
+//   prompt     hyprism/starship.toml: ~/.config/starship.toml with its palette block swapped for the theme's
 //   wallpaper  the theme's own picture (scripts/theme-wallpaper), unless Settings > Themes > Wallpaper is off
-// Qt/KDE apps keep following KDE's own settings, which this never writes.
+// Qt apps without qt6ct installed keep following KDE's own settings, which this never writes.
 // Also writes Config.keybinds to hypr/settings/keybinds.lua and Config.windows to hypr/settings/windows.lua.
 Scope {
     id: root
@@ -73,6 +77,51 @@ Scope {
         + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.motionLevel === "full" ? h.motion : Theme.motionLevel === "reduced" ? "instant" : "off")}, accent = ${q(hex(Theme.accent))}, `
         + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)} }`
 
+    // Qt apps (qt6ct), btop and the starship prompt: texts built from the same tokens, written only when they change.
+    // Colours are checked as #rrggbb before they go into a file.
+    function hx(c) { const t = String(c); return hexOk(t) ? t.slice(1) : "808080" }
+    function aarrggbb(c) { return "#ff" + hx(c) }
+    // the 21 QPalette roles: WindowText Button Light Midlight Dark Mid Text BrightText ButtonText Base Window Shadow
+    // Highlight HighlightedText Link LinkVisited AlternateBase NoRole ToolTipBase ToolTipText PlaceholderText
+    function qtRoles(fg) {
+        return [fg, Theme.raised, Qt.lighter(Theme.raised, 1.3), Qt.lighter(Theme.raised, 1.15), Qt.darker(Theme.surfaceColor, 1.4), Theme.stroke,
+                fg, Theme.text, fg, Theme.surfaceColor, Theme.base, Qt.darker(Theme.base, 3), Theme.accent, Theme.accentText, Theme.accent2,
+                Theme.accent2, Theme.raised, Theme.base, Theme.raised, Theme.text, Theme.subtext].map(aarrggbb).join(", ")
+    }
+    readonly property string qtColors: "[ColorScheme]\nactive_colors=" + qtRoles(Theme.text) + "\ndisabled_colors=" + qtRoles(Theme.muted)
+        + "\ninactive_colors=" + qtRoles(Theme.text)
+    readonly property string btopTheme: {
+        const t = []
+        const put = (k, c) => t.push(`theme[${k}]="#${hx(c)}"`)
+        put("main_bg", Theme.base); put("main_fg", Theme.text); put("title", Theme.text); put("hi_fg", Theme.accent)
+        put("selected_bg", Theme.accent); put("selected_fg", Theme.accentText); put("inactive_fg", Theme.muted)
+        put("graph_text", Theme.subtext); put("meter_bg", Theme.raised); put("proc_misc", Theme.accent2)
+        for (const b of ["cpu_box", "mem_box", "net_box", "proc_box", "div_line"]) put(b, Theme.stroke)
+        // graphs running ok -> warn -> err; memory and network keep one hue each
+        const ramp = { temp: null, cpu: null, used: null, process: null, free: Theme.success, cached: Theme.accent2, available: Theme.accent, download: Theme.accent, upload: Theme.accent2 }
+        for (const [name, one] of Object.entries(ramp))
+            [one ?? Theme.success, one ?? Theme.warning, one ?? Theme.error].forEach((c, i) => put(name + "_" + ["start", "mid", "end"][i], c))
+        return "# Written by Quickshell ThemeSync from the active theme\n" + t.join("\n")
+    }
+    FileView { id: starshipSrc; path: Quickshell.env("HOME") + "/.config/starship.toml"; watchChanges: true; onFileChanged: reload(); onLoaded: debounce.restart() }
+    readonly property string starshipToml: {
+        const src = starshipSrc.text()
+        if (src.indexOf("[palettes.hyprism]") < 0) return ""
+        const block = "[palettes.hyprism]\n" + [["accent", Theme.accent], ["on_accent", Theme.accentText], ["accent2", Theme.accent2], ["raised", Theme.raised],
+            ["ok", Theme.success], ["warn", Theme.warning], ["err", Theme.error], ["faint", Theme.muted]].map(([k, c]) => `${k} = "#${hx(c)}"`).join("\n") + "\n"
+        return src.replace(/\[palettes\.hyprism\][\s\S]*$/, () => block)
+    }
+    property var written: ({})
+    // write only when the text differs from what was last written (once per start at least)
+    function put(rel, text, then) {
+        if (text === "" || written[rel] === text) return
+        written[rel] = text
+        SettingsApp.writeConfigFile(rel, text, then)
+    }
+    onQtColorsChanged: debounce.restart()
+    onBtopThemeChanged: debounce.restart()
+    onStarshipTomlChanged: debounce.restart()
+
     function apply() {
         SettingsApp.writeHyprFile("settings/theme.lua", "-- Written by Quickshell ThemeSync from the active theme\nreturn " + hyprLua)
         SettingsApp.writeHyprFile("settings/hyprlock-theme.conf", lockConf)
@@ -105,6 +154,12 @@ Scope {
             + `selection=${a}55\nselection-text=${hex(Theme.text)}ff\nselection-match=${hex(Theme.text)}ff\nborder=${a}ff`)
         SettingsApp.writeConfigFile("ghostty/theme.conf", "# Written by Quickshell ThemeSync from the active theme (empty: the config's own theme)\n" + terminal,
                                     ["pkill", "-USR2", "-x", "ghostty"])   // SIGUSR2 = reload config
+        // qt6ct.conf is ours only if absent or marked by .hyprism; a user's own file is never touched
+        put("qt6ct/colors/hyprism.conf", qtColors, ["sh", "-c", 'd="$HOME/.config/qt6ct"; if [ ! -e "$d/qt6ct.conf" ] || [ -e "$d/.hyprism" ]; then printf "[Appearance]\\ncolor_scheme_path=%s/colors/hyprism.conf\\ncustom_palette=true\\nicon_theme=%s\\nstandard_dialogs=default\\nstyle=Fusion\\n" "$d" "$1" > "$d/qt6ct.conf" && : > "$d/.hyprism"; fi',
+                                                     "sh", /^[A-Za-z0-9._+ -]+$/.test(iconTheme) ? iconTheme : "Papirus-Dark"])
+        // btop.conf is yours: only when there is none, one line that picks the theme
+        put("btop/themes/hyprism.theme", btopTheme, ["sh", "-c", 'f="$HOME/.config/btop/btop.conf"; [ -e "$f" ] || printf "color_theme = \\"hyprism\\"\\ntheme_background = False\\n" > "$f"'])
+        put("hyprism/starship.toml", starshipToml)
     }
 
     // The theme's own wallpaper, drawn once per theme into ~/.cache/hyprism/wallpapers/

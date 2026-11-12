@@ -13,14 +13,16 @@ for _, link in ipairs({ "/dev/dri/igpu", "/dev/dri/amd-igpu" }) do -- the second
 end
 
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VS Code, Chrome and other Electron apps run natively on Wayland
--- Qt apps: KDE's platform theme where Plasma's integration is installed (Dolphin & co. look as in Plasma);
--- elsewhere Qt's own GTK3 theme, so they follow the light/dark and accent ThemeSync gives GTK (no extra package)
-local kde = false
-for _, d in ipairs({ "/usr/lib/qt6/plugins", "/usr/lib64/qt6/plugins" }) do
-    local f = io.open(d .. "/platformthemes/KDEPlasmaPlatformTheme6.so", "r")
-    if f then f:close(); kde = true end
+-- Qt apps: qt6ct where installed (ThemeSync writes its colour scheme, so they follow the theme); else KDE's
+-- platform theme where Plasma's integration is installed; else Qt's own GTK3 theme (follows ThemeSync's GTK light/dark)
+local function has_plugin(name)
+    for _, d in ipairs({ "/usr/lib/qt6/plugins", "/usr/lib64/qt6/plugins" }) do
+        local f = io.open(d .. "/platformthemes/" .. name, "r")
+        if f then f:close(); return true end
+    end
+    return false
 end
-hl.env("QT_QPA_PLATFORMTHEME", kde and "kde" or "gtk3")
+hl.env("QT_QPA_PLATFORMTHEME", has_plugin("libqt6ct.so") and "qt6ct" or has_plugin("KDEPlasmaPlatformTheme6.so") and "kde" or "gtk3")
 -- Cursor: Settings > Appearance > Cursor saves it in settings/theme.lua (folder name, not the title)
 local tok, theme = pcall(require, "settings.theme")
 theme = tok and type(theme) == "table" and theme or {}

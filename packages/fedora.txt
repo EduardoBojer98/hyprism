@@ -76,10 +76,12 @@ ddcutil                  ddcutil                            repo
 xdg-utils                xdg-utils                          repo
 glib2                    glib2                              repo
 kdialog                  kdialog                            repo
+btop                     btop                               repo
 imagemagick              ImageMagick                        repo
 fastfetch                fastfetch                          repo
 adw-gtk-theme            adw-gtk3-theme                     repo
 papirus-icons            papirus-icon-theme                 repo
+qt6ct                    qt6ct                              repo
 font-inter               rsms-inter-fonts                   repo
 font-cantarell           abattis-cantarell-fonts            repo
 font-noto                google-noto-sans-fonts             repo
@@ -106,3 +108,15 @@ rog-control-center       asusctl-rog-gui                    copr:lukenukem/asus-
 # Module extras (modules/<name>/packages.txt)
 solaar                   solaar                             repo
 iio-sensor-proxy         iio-sensor-proxy                   repo
+# mise is not in Fedora's own repos; this COPR is its author's (checked 2026-11-12)
+mise                     mise                               copr:jdxcode/mise
+docker                   moby-engine                        repo
+docker-compose           docker-compose                     repo
+steam                    steam                              rpmfusion-nonfree
+gamemode                 gamemode                           repo
+mangohud                 mangohud                           repo
+ollama                   ollama                             repo
+# Fedora's ollama package already uses the GPU when the NVIDIA driver is there; no separate build
+ollama-gpu               none                               none
+# only in NVIDIA's own repo (https://nvidia.github.io/libnvidia-container), not added for you
+nvidia-container-toolkit none                               none
