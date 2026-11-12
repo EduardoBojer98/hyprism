@@ -40,7 +40,7 @@ Rectangle {
                     color: seg.current === index ? Theme.thumbText : Theme.subtext
                     font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                 }
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: seg.picked(index) }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: seg.picked(index); Accessible.role: Accessible.Button; Accessible.name: modelData; Accessible.onPressAction: seg.picked(index) }
             }
         }
     }

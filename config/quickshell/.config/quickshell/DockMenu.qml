@@ -83,6 +83,9 @@ Glass {
                     }
                     MouseArea {
                         id: rowArea
+                        Accessible.role: Accessible.MenuItem
+                        Accessible.name: menuRow.modelData.label
+                        Accessible.onPressAction: { menuRow.modelData.run(); menu.done() }
                         anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: { menuRow.modelData.run(); menu.done() }
                     }

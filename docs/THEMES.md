@@ -81,6 +81,16 @@ Put a picture in the theme folder named after `wall` (and after `alt.wall` for t
 wallpaper always matches the palette and no pictures are stored in the repo. Settings → Wallpaper is for using
 your own pictures regardless of the theme.
 
+## Colours from your wallpaper
+
+Settings → Wallpaper → "Colours from the wallpaper" lets the accent and second accent follow a picture you chose
+yourself (`appearance.wallpaperColours`). It is off by default and does nothing while the wallpaper is one a theme
+draws or ships. `wallpaper-colours IMAGE [dark|light] [SURFACE]` picks the colours; their lightness is adjusted
+(hue stays) so each keeps at least 3:1 contrast on the theme's panels, and the text on an accent is still checked.
+They are saved like your own adjustments for the active theme (`appearance.custom`), after remembering the accents
+they replace. Switch the toggle off, go back to the theme's wallpaper or change theme, and the earlier accents
+return. A picture with no colour in it (grey) changes nothing.
+
 ## Contrast is checked
 
 ```bash

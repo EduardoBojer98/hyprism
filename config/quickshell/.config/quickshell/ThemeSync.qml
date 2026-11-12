@@ -144,8 +144,8 @@ Scope {
         const css = "/* Written by Quickshell ThemeSync from the active theme */\n"
             + Object.keys(named).map(k => `@define-color ${k} ${named[k]};`).join("\n") + "\n"
         for (const v of ["gtk-3.0", "gtk-4.0"])
-            SettingsApp.writeConfigFile(v + "/linux-setup.css", css,
-                ["sh", "-c", 'f="$HOME/.config/$1/gtk.css"; grep -qF "@import \'linux-setup.css\';" "$f" 2>/dev/null || printf "\\n%s\\n" "@import \'linux-setup.css\';" >> "$f"', "sh", v])
+            SettingsApp.writeConfigFile(v + "/hyprism.css", css,
+                ["sh", "-c", 'f="$HOME/.config/$1/gtk.css"; grep -qF "@import \'hyprism.css\';" "$f" 2>/dev/null || printf "\\n%s\\n" "@import \'hyprism.css\';" >> "$f"', "sh", v])
         // live for Hyprland and apps started from now on; env.lua reads theme.lua at the next login
         if (cursorTheme) Quickshell.execDetached(["hyprctl", "setcursor", cursorTheme, String(cursorSize)])
         const a = hex(Theme.accent)

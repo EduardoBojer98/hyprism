@@ -19,8 +19,8 @@ ColumnLayout {
     property string out: ""
     property string mine: "0x11"
     property string other: "0x12"
-    property string mirror: "eDP-1"
-    property string mirrorMode: "1920x1080@60"
+    property string mirror: ""
+    property string mirrorMode: ""
     property string status: ""
     readonly property string snapshot: JSON.stringify([enabled, out, mine, other, mirror, mirrorMode.trim()])
     property string savedState: snapshot   // page state as last loaded or saved

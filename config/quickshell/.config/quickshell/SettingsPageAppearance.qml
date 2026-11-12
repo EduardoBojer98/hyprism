@@ -90,7 +90,7 @@ ColumnLayout {
                         color: modelData
                         border { color: chosen ? Theme.text : Theme.stroke; width: chosen ? 2 : 1 }
                         Text { visible: sw.index === 0; anchors.centerIn: parent; text: "\u{F0674}"; color: Themes.textOn(sw.modelData, page.base.colour); font { family: Theme.iconFont; pixelSize: 11 } }
-                        MouseArea { id: swArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.adjust("accent", sw.index === 0 ? undefined : sw.modelData) }
+                        MouseArea { id: swArea; Accessible.role: Accessible.Button; Accessible.name: "Accent colour " + (sw.index === 0 ? "default" : sw.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.adjust("accent", sw.index === 0 ? undefined : sw.modelData) }
                         ToolTipText { shown: swArea.containsMouse; text: sw.index === 0 ? "The theme's own" : sw.modelData }
                     }
                 }

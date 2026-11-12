@@ -72,6 +72,15 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Colours"
+        SettingRow {
+            label: "Colours from the wallpaper"
+            hint: "The accent colours follow your picture. Off: the theme's own colours."
+            ConfigToggle { section: "appearance"; key: "wallpaperColours" }
+        }
+    }
+
+    SettingGroup {
         title: "Slideshow"
         SettingRow {
             label: "Change the wallpaper automatically"
@@ -128,7 +137,12 @@ ColumnLayout {
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
                     }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Wallpapers.apply(tile.modelData) }
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Wallpapers.apply(tile.modelData)
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "Use " + tile.modelData.split("/").pop() + " as the wallpaper"
+                        Accessible.onPressAction: Wallpapers.apply(tile.modelData)
+                    }
                     Rectangle {   // slideshow badge
                         visible: page.picking
                         anchors { right: parent.right; top: parent.top; margins: 8 }
@@ -136,7 +150,7 @@ ColumnLayout {
                         color: tile.inRotation ? Theme.accent : Qt.rgba(0, 0, 0, 0.45)
                         border { color: Qt.rgba(1, 1, 1, 0.7); width: tile.inRotation ? 0 : 1.5 }
                         Text { anchors.centerIn: parent; visible: tile.inRotation; text: "\u{F012C}"; color: Theme.accentText; font { family: Theme.iconFont; pixelSize: Theme.iconSmall } }
-                        MouseArea { anchors { fill: parent; margins: -4 } cursorShape: Qt.PointingHandCursor; onClicked: page.toggleSelected(tile.modelData) }
+                        MouseArea { anchors { fill: parent; margins: -4 } cursorShape: Qt.PointingHandCursor; onClicked: page.toggleSelected(tile.modelData); Accessible.role: Accessible.CheckBox; Accessible.name: "In the slideshow: " + tile.modelData.split("/").pop(); Accessible.checked: tile.inRotation }
                     }
                 }
                 Text {

@@ -46,7 +46,7 @@ echo "===== SAME FOLDER, NEW CODE ($new_ref = ${new_sha:0:9})"
 as "git remote add new /mnt/repo && git fetch -q new $new_sha && git checkout -q -B main $new_sha"
 bash $old/tests/detect.sh make /opt/fixtures
 as './install.sh --yes' desktop-amd 2>&1 | tee /tmp/update.log || fail "the new installer ended with an error"
-for m in 0001-state-folder 0002-hosts-to-modules; do
+for m in 0001-state-folder 0002-hosts-to-modules 0003-names; do
     [[ $(grep -c "Migration $m" /tmp/update.log) == 1 ]] || fail "migration $m was not named exactly once in the output"
     [[ -e /home/tester/.local/state/hyprism/migrations/$m ]] || fail "migration $m left no record"
 done

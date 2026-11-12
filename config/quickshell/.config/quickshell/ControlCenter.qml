@@ -238,7 +238,7 @@ Singleton {
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
                 Text { anchors.centerIn: parent; text: modelData.glyph; color: modelData.tip === "Power" ? Theme.error : Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
-                MouseArea { id: hdrArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                MouseArea { id: hdrArea; Accessible.role: Accessible.Button; Accessible.name: modelData.tip; Accessible.onPressAction: modelData.run(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onContainsMouseChanged: containsMouse ? cc.hint(parent, modelData.tip) : cc.unhint(parent)
                             onClicked: modelData.run() }
             }

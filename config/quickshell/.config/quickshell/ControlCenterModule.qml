@@ -52,6 +52,9 @@ Rectangle {   // same look as Tile
             MouseArea {
                 anchors.fill: mod.expandable ? header : headerDetail
                 anchors.margins: -6
+                Accessible.role: Accessible.Button
+                Accessible.name: mod.title
+                Accessible.onPressAction: mod.detailClicked()
                 cursorShape: Qt.PointingHandCursor
                 onClicked: mod.detailClicked()
             }

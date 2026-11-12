@@ -128,7 +128,7 @@ Singleton {
             }
 
             Rectangle { anchors.fill: parent; color: Theme.backdrop }
-            MouseArea { anchors.fill: parent; onClicked: root.hide() }
+            MouseArea { anchors.fill: parent; onClicked: root.hide(); Accessible.ignored: true }
 
             // ---- desktops: a glass bar along the top ----
             Glass {
@@ -192,7 +192,7 @@ Singleton {
                                     opacity: space.here || space.hot ? 1 : 0
                                     Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
                                 }
-                                MouseArea { id: spaceArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(space.modelData) }
+                                MouseArea { id: spaceArea; Accessible.role: Accessible.Button; Accessible.name: "Desktop " + space.modelData; Accessible.onPressAction: root.goTo(space.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(space.modelData) }
                                 DropArea { id: drop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, space.modelData) }
                             }
                             Text {
@@ -214,7 +214,7 @@ Singleton {
                             border { color: addDrop.containsDrag ? Theme.accent : Theme.stroke; width: addDrop.containsDrag ? 2 : 1 }
                             Behavior on color { ColorAnimation { duration: Theme.animFast } }
                             Text { anchors.centerIn: parent; text: "\u{F0415}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 22 } }
-                            MouseArea { id: addArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(root.nextSpace) }
+                            MouseArea { id: addArea; Accessible.role: Accessible.Button; Accessible.name: "New desktop"; Accessible.onPressAction: root.goTo(root.nextSpace); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(root.nextSpace) }
                             DropArea { id: addDrop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, root.nextSpace) }
                         }
                         Text {
@@ -292,6 +292,8 @@ Singleton {
                             }
                             MouseArea {
                                 id: area
+                                Accessible.role: Accessible.Button
+                                Accessible.name: slot.entry?.name ?? slot.modelData.client.title
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor

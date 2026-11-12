@@ -144,7 +144,7 @@ Scope {
 
         // while closing, the window still shows the fade but takes no input at all
         mask: Region { item: popup.open ? catcher : null }
-        MouseArea { id: catcher; anchors.fill: parent; enabled: popup.open; onClicked: popup.hide() }   // click outside
+        MouseArea { id: catcher; Accessible.ignored: true; anchors.fill: parent; enabled: popup.open; onClicked: popup.hide() }   // click outside
         Rectangle {   // optional dimmed screen behind the box
             anchors.fill: parent
             visible: popup.dim > 0

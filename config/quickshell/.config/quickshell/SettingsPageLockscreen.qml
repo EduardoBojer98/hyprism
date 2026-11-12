@@ -144,7 +144,7 @@ ColumnLayout {
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                         }
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Config.set("lockscreen", "wallpaper", pic.modelData) }
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Config.set("lockscreen", "wallpaper", pic.modelData); Accessible.role: Accessible.Button; Accessible.name: "Lock screen wallpaper"; Accessible.onPressAction: Config.set("lockscreen", "wallpaper", pic.modelData) }
                     }
                 }
             }

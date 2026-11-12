@@ -9,7 +9,7 @@ The rules every change follows. Short on purpose: if a rule isn't here, copy wha
    `packages.txt`) saying why, and a row in `docs/DECISIONS.md`.
 3. **Our own code.** Other projects are for ideas. Nothing is copied or vendored.
 4. **No hardware names in core.** No monitor names (`eDP-1`), PCI addresses, battery names (`BAT0`), sensor
-   driver names, resolutions, vendor names or hostnames outside `modules/<name>/` and `tests/fixtures/`.
+   driver names, resolutions, vendor names or hostnames outside `modules/<name>/` and the made-up computers in `tests/detect.sh`.
    Core asks `hardware.toml`. `tests/no-hardcode.sh` enforces this.
 5. **No distro commands outside `distros/`.** No `pacman`, `dnf`, `rpm`, `paru`, bootloader tools or
    distro-only paths anywhere else. Add a backend function instead.

@@ -168,7 +168,7 @@ ColumnLayout {
                         }
                     }
                 }
-                MouseArea { id: chipArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.filter = chip.index }
+                MouseArea { id: chipArea; Accessible.role: Accessible.Button; Accessible.name: chip.modelData.name; Accessible.onPressAction: page.filter = chip.index; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.filter = chip.index }
             }
         }
     }
@@ -207,7 +207,7 @@ ColumnLayout {
                         radius: Theme.radiusSmall
                         color: row.open ? Theme.accentWash : headArea.containsMouse ? Theme.fillHover : "transparent"
                     }
-                    MouseArea { id: headArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.toggle(row.modelData.id) }
+                    MouseArea { id: headArea; Accessible.role: Accessible.Button; Accessible.name: row.modelData.name; Accessible.onPressAction: page.toggle(row.modelData.id); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.toggle(row.modelData.id) }
                     Chevron {
                         id: chev
                         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }

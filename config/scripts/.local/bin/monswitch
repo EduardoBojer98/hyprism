@@ -45,7 +45,7 @@ done <"$CONF"
 [[ $POLL =~ ^[1-9][0-9]*$ ]] || POLL=5
 MIRROR=${MIRROR-$(hw display.internal)} # "none" in the file = no mirroring
 [[ $MIRROR == none ]] && MIRROR=""
-MIRROR_MODE=${MIRROR_MODE:-1920x1080@60}
+MIRROR_MODE=${MIRROR_MODE:-preferred} # your own mode from the file, else whatever the screen prefers
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
 SHARED=${XDG_CONFIG_HOME:-$HOME/.config}/hypr/settings/shared.lua # the hand-off, for Hyprland (modules/monitors.lua)

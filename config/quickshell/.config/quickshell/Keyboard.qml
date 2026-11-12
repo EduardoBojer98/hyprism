@@ -131,7 +131,7 @@ Singleton {
                                 font { family: Theme.iconFont; pixelSize: 14 }
                             }
                         }
-                        MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { root.use(row.index); popup.hide() } }
+                        MouseArea { id: area; Accessible.role: Accessible.Button; Accessible.name: row.modelData.name; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { root.use(row.index); popup.hide() } }
                     }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; Layout.topMargin: Theme.spaceXs; Layout.bottomMargin: Theme.spaceXs; color: Theme.stroke }
@@ -146,7 +146,7 @@ Singleton {
                         color: setArea.containsMouse ? Theme.accentText : Theme.text
                         font { family: Theme.font; pixelSize: Theme.fontSize }
                     }
-                    MouseArea { id: setArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { popup.hide(); SettingsApp.show("input") } }
+                    MouseArea { id: setArea; Accessible.role: Accessible.Button; Accessible.name: "Add or remove layouts"; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { popup.hide(); SettingsApp.show("input") } }
                 }
             }
         }

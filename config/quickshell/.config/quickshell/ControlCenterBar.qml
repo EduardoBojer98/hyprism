@@ -47,6 +47,8 @@ Item {
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
         property bool onIcon: false
+        Accessible.role: Accessible.Slider
+        Accessible.name: bar.hint || "Level"
         function set(x) { bar.moved(Math.max(0, Math.min(1, x / width))) }
         onPressed: mouse => { onIcon = bar.hint !== "" && mouse.x < track.height; if (!onIcon) set(mouse.x) }
         onPositionChanged: mouse => { if (pressed && !onIcon) set(mouse.x) }

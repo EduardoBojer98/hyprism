@@ -72,12 +72,6 @@ qs ipc call config set bar items '{"weather":{"warn":30}}'
 3. `defaults.json`: its name, glyph and default settings. `README.md`: two lines on what it shows.
 4. `./install.sh --only links`, then add it to a section in Settings → Menu Bar.
 
-## State of the move
-
-Every item is its own folder now (the move, roadmap D2, is done); `BarWidget.qml` only loads the folder. The
-helpers some items draw with (`BarWs`, `BarStatus`, `BarBattery`, `BarTray`, `BarKeyboard`, `BarBell`, `BarApp`,
-`BarMetric`) still sit in the shell's root folder.
-
 ## System readings
 
 The `sysinfo` item shows any readings you pick, in your order: see

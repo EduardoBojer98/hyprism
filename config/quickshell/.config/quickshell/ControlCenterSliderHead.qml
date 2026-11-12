@@ -37,6 +37,9 @@ Item {
     MouseArea {
         anchors.fill: parent
         enabled: sh.detail !== ""
+        Accessible.role: Accessible.Button
+        Accessible.name: sh.title
+        Accessible.onPressAction: sh.clicked()
         cursorShape: Qt.PointingHandCursor
         onClicked: sh.clicked()
     }

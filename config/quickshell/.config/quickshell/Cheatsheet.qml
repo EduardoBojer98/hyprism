@@ -101,7 +101,7 @@ Singleton {
             }
 
             Rectangle { anchors.fill: parent; color: Theme.backdrop }
-            MouseArea { anchors.fill: parent; onClicked: root.hide() }
+            MouseArea { anchors.fill: parent; onClicked: root.hide(); Accessible.ignored: true }
 
             Glass {
                 id: card

@@ -52,7 +52,9 @@ Scope {
     }
     function shareText(s) {
         return "# Written by Quickshell from Settings > Shared Monitor (settings.json monitorShare). Read by ~/.local/bin/monswitch.\n"
-            + `OUT=${s.output}\nLAPTOP=${s.thisInput}\nPC=${s.otherInput}\nMIRROR=${s.mirror}\nMIRROR_MODE=${s.mirrorMode}\n`
+            + `OUT=${s.output}\nLAPTOP=${s.thisInput}\nPC=${s.otherInput}\n`
+            + (s.mirror ? `MIRROR=${s.mirror}\n` : "")           // left out = monswitch uses this computer's own screen
+            + (s.mirrorMode ? `MIRROR_MODE=${s.mirrorMode}\n` : "")
     }
 
     readonly property string idle: idleText(Config.idle.lockMin, Config.idle.sleepMin)

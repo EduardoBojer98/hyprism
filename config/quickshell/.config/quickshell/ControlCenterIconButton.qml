@@ -27,5 +27,5 @@ Rectangle {
         Text { anchors.horizontalCenter: parent.horizontalCenter; text: ib.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
         Text { anchors.horizontalCenter: parent.horizontalCenter; text: ib.label; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium } }
     }
-    MouseArea { id: ibArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ib.clicked() }
+    MouseArea { id: ibArea; Accessible.role: Accessible.Button; Accessible.name: ib.label; Accessible.onPressAction: ib.clicked(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ib.clicked() }
 }

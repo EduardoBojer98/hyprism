@@ -32,6 +32,8 @@ Rectangle {
 
     MouseArea {
         id: rowHover
+        Accessible.role: Accessible.Button
+        Accessible.name: conn.title
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
@@ -52,7 +54,7 @@ Rectangle {
             color: conn.active ? Theme.tileOnIcon : Theme.text
             font { family: Theme.iconFont; pixelSize: 16 }
         }
-        MouseArea { id: discArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
+        MouseArea { id: discArea; Accessible.role: Accessible.Button; Accessible.name: conn.title; Accessible.onPressAction: conn.toggled(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
     }
     Column {
         anchors { left: disc.right; leftMargin: 9; right: chev.visible ? chev.left : parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }

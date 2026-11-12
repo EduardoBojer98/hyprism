@@ -11,6 +11,7 @@ JsonAdapter {
         property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
         property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
         property bool wallpaper: true           // the theme's own wallpaper; off = keep yours (Settings > Wallpaper)
+        property bool wallpaperColours: false   // the accents follow your own wallpaper (WallpaperColours.qml); off = the theme's own
         property real fontScale: 1
         property string motion: "full"          // full (the theme's own motion) | reduced (short fades, nothing moves) | off
         property string iconTheme: "Papirus-Dark"
@@ -255,8 +256,8 @@ JsonAdapter {
         property string output: ""               // Hyprland output name, e.g. HDMI-A-1
         property string thisInput: "0x11"        // DDC input (VCP 0x60) this computer is on
         property string otherInput: "0x12"       // the other computer's input
-        property string mirror: "eDP-1"          // screen it mirrors while away (keeps a signal)
-        property string mirrorMode: "1920x1080@60"
+        property string mirror: ""               // screen it mirrors while away (keeps a signal); empty = this computer's own screen, "none" = no mirror
+        property string mirrorMode: ""           // the mode for that mirror, e.g. 1920x1080@60; empty = the screen's own
         property bool imported: false
     }
 }

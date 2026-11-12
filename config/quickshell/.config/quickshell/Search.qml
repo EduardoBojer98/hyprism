@@ -74,7 +74,7 @@ Singleton {
         { id: "controlcenter", name: "Control Center", words: "control center quick settings" },
         { id: "notifications", name: "Notifications", words: "notification do not disturb dnd" },
         { id: "displays", name: "Displays", words: "display monitor screen resolution scale rotate night light" },
-        { id: "monitor", name: "Shared Monitor", words: "shared monitor acer switch kvm ddc input" },
+        { id: "monitor", name: "Shared Monitor", words: "shared monitor switch kvm ddc input" },
         { id: "sound", name: "Sound", words: "sound audio volume speaker microphone mic output input" },
         { id: "network", name: "Wi-Fi & Network", words: "wifi wi-fi network internet ethernet vpn" },
         { id: "bluetooth", name: "Bluetooth", words: "bluetooth pair headphones" },

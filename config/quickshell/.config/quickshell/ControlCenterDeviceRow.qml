@@ -76,5 +76,5 @@ Rectangle {
             font { family: Theme.iconFont; pixelSize: 14 }
         }
     }
-    MouseArea { id: drArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dr.clicked() }
+    MouseArea { id: drArea; Accessible.role: Accessible.Button; Accessible.name: dr.title; Accessible.onPressAction: dr.clicked(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dr.clicked() }
 }

@@ -19,7 +19,7 @@ for id in reactor atlas glass; do
     accent=$(jq -r .colour.accent "themes/$id/theme.json")
     bare=${accent#\#}
     for pair in ghostty/theme.conf:"$accent" qt6ct/colors/hyprism.conf:"#ff$bare" btop/themes/hyprism.theme:"$accent" \
-        hyprism/starship.toml:"$accent" hypr/settings/theme.lua:"$bare" gtk-4.0/linux-setup.css:"$accent"; do
+        hyprism/starship.toml:"$accent" hypr/settings/theme.lua:"$bare" gtk-4.0/hyprism.css:"$accent"; do
         f=${pair%%:*} want=${pair#*:}
         r=no
         grep -qiF -- "$want" "$T/.config/$f" 2>/dev/null && r=ok

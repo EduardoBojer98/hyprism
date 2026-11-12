@@ -66,6 +66,11 @@ bash tests/keybinds.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/accessibility.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
+bash tests/wallpaper-colours.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
+python3 tests/settings-reference.py --check || fail=1
+bash tests/docs.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
 
 ((fail == 0)) && echo "ok: QML, Lua, colours, themes and scripts"
 exit "$fail"

@@ -98,7 +98,7 @@ if file_exists(config .. "/monswitch.conf") then
     add("monitor-switch", "Screen", "Hand the shared monitor over and back", key("M"), exec("monswitch toggle"))
 end
 
--- Lid (~/.local/bin/panel); a convertible's tablet-mode switch goes in its hosts/<host>/.../host.lua
+-- Lid (~/.local/bin/panel); a convertible's tablet-mode switch is bound by the tablet module (modules/tablet)
 add("lid-close",  "Hardware", "Lid closed",      "switch:on:Lid Switch",                  exec("panel lid close"),  { locked = true, fixed = true })
 add("lid-open",   "Hardware", "Lid opened",      "switch:off:Lid Switch",                 exec("panel lid open"),   { locked = true, fixed = true })
 if has(HW.power.profiles) then

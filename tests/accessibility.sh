@@ -24,6 +24,8 @@ check "BarFocus has the bar focus handler" "grep -q 'target: \"bar\"' $qs/BarFoc
 allow="
 ThemePreview.qml:a picture of a theme, not a control
 DragItem.qml:a drag handle, the move up / down buttons are the accessible way
+SettingsPageAsus.qml:its MouseArea is a fan-curve drag handle; the clicks are PillButtons
+SettingsPageDisplays.qml:its MouseArea drags a screen rectangle; the clicks are PillButtons
 "
 n=0
 list=""
@@ -36,8 +38,13 @@ for f in "$qs"/*.qml; do
     n=$((n + 1))
     list="$list $b"
 done
-echo "note: $n QML files have a click target and no Accessible.* (none of them fail the check yet)"
-echo "note: $list"
+# every click target has a name now, so a new one without a name fails
+if ((n > 0)); then
+    echo "xx $n QML file(s) have a click target and no Accessible.* (name it, or add it to the allow list with a reason): $list"
+    fail=1
+else
+    echo "ok: every click target has an accessible name"
+fi
 
 ((fail == 0)) && echo "ok: accessibility"
 exit "$fail"

@@ -66,6 +66,9 @@ Rectangle {
     }
     MouseArea {
         id: qtArea
+        Accessible.role: Accessible.Button
+        Accessible.name: qt.label
+        Accessible.onPressAction: qt.toggled()
         anchors.fill: parent
         hoverEnabled: true
         onContainsMouseChanged: containsMouse && qt.hint !== "" ? ControlCenter.hint(qt, qt.hint) : ControlCenter.unhint(qt)
@@ -87,7 +90,7 @@ Rectangle {
             size: 13
             color: qt.active ? Theme.tileOnText : Theme.text
         }
-        MouseArea { id: chevArea; anchors { fill: parent; margins: -4 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
+        MouseArea { id: chevArea; Accessible.role: Accessible.Button; Accessible.name: "Options for " + qt.label; Accessible.onPressAction: qt.expand(); anchors { fill: parent; margins: -4 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
     }
 
 }

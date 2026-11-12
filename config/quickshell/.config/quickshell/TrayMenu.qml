@@ -135,6 +135,6 @@ PopupWindow {
             color: row.lit ? Theme.accentText : Theme.subtext
             font { family: Theme.iconFont; pixelSize: 13 }
         }
-        MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (row.enabled) row.clicked() }
+        MouseArea { id: area; Accessible.role: Accessible.Button; Accessible.name: row.label; Accessible.onPressAction: if (row.enabled) row.clicked(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (row.enabled) row.clicked() }
     }
 }

@@ -96,6 +96,8 @@ Item {
 
     MouseArea {
         id: winArea
+        Accessible.role: Accessible.Button
+        Accessible.name: win.modelData.title || win.entry?.name || "Window"
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor

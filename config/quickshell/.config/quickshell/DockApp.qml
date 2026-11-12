@@ -78,6 +78,8 @@ Item {
 
     MouseArea {
         id: area
+        Accessible.role: Accessible.Button
+        Accessible.name: app.modelData?.name ?? "App"
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: app.dragged ? Qt.ClosedHandCursor : Qt.PointingHandCursor

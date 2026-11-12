@@ -186,7 +186,7 @@ ColumnLayout {
                 width: 16; height: 16; radius: 8
                 color: Theme.error
                 Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.errorText; font { family: Theme.iconFont; pixelSize: 10 } }
-                MouseArea { anchors { fill: parent; margins: -3 } cursorShape: Qt.PointingHandCursor; onClicked: ed.drop({ id: chip.itemId, from: chip.from }, "tray", -1) }
+                MouseArea { anchors { fill: parent; margins: -3 } Accessible.role: Accessible.Button; Accessible.name: "Remove from tray"; cursorShape: Qt.PointingHandCursor; onClicked: ed.drop({ id: chip.itemId, from: chip.from }, "tray", -1) }
             }
         }
         // on the tray a click adds it to the end of the bar's last section

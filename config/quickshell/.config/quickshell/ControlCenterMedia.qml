@@ -68,7 +68,7 @@ ColumnLayout {
                         color: Theme.text
                         font { family: Theme.iconFont; pixelSize: parent.modelData[3] }
                     }
-                    MouseArea { id: mediaArea; anchors.fill: parent; hoverEnabled: true; enabled: parent.modelData[2]; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData[1]() }
+                    MouseArea { id: mediaArea; Accessible.role: Accessible.Button; Accessible.name: "Media control"; anchors.fill: parent; hoverEnabled: true; enabled: parent.modelData[2]; cursorShape: Qt.PointingHandCursor; onClicked: parent.modelData[1]() }
                 }
             }
         }

@@ -55,7 +55,7 @@ ColumnLayout {
                             color: parent.on ? Theme.thumbText : Theme.subtext
                             font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                         }
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerMode.set(index) }
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerMode.set(index); Accessible.role: Accessible.Button; Accessible.name: modelData; Accessible.onPressAction: PowerMode.set(index) }
                     }
                 }
             }

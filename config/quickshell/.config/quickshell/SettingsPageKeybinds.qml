@@ -192,6 +192,8 @@ ColumnLayout {
                             }
                             MouseArea {
                                 id: keyArea
+                                Accessible.role: Accessible.Button
+                                Accessible.name: "Change shortcut " + row.modelData.id
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 enabled: !row.modelData.fixed

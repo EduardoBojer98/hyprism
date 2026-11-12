@@ -34,7 +34,7 @@ Item {
         text: (ws.vertical ? "" : "WS ") + String(ws.list[ws.current]?.id ?? 0).padStart(2, "0")
         color: Theme.accent
         font { family: Theme.monoFont; pixelSize: Theme.fontLabel; letterSpacing: 1 }
-        MouseArea { anchors.fill: parent; onWheel: w => ws.step(w.angleDelta.y) }
+        MouseArea { anchors.fill: parent; onWheel: w => ws.step(w.angleDelta.y); Accessible.ignored: true }
     }
 
     Rectangle {   // numbers: the recessed pill behind the set
@@ -99,6 +99,9 @@ Item {
                 }
                 MouseArea {
                     id: area
+                    Accessible.role: Accessible.Button
+                    Accessible.name: "Workspace " + ws.label(cell.modelData)
+                    Accessible.onPressAction: cell.modelData.activate()
                     anchors.fill: parent
                     anchors.margins: cell.s === "dots" ? -6 : 0
                     hoverEnabled: true

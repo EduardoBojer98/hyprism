@@ -214,7 +214,7 @@ Singleton {
                                 font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
                             }
                         }
-                        MouseArea { id: tmArea; anchors.fill: parent; enabled: root.taskManager !== null; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.openTaskManager() }
+                        MouseArea { id: tmArea; Accessible.role: Accessible.Button; Accessible.name: "Open task manager"; Accessible.onPressAction: root.openTaskManager(); anchors.fill: parent; enabled: root.taskManager !== null; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.openTaskManager() }
                     }
                 }
             }

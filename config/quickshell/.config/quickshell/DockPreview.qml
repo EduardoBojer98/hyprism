@@ -56,6 +56,8 @@ Glass {
                 }
                 MouseArea {
                     id: pvArea
+                    Accessible.role: Accessible.Button
+                    Accessible.name: pv.modelData.title || "Window"
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
@@ -69,7 +71,7 @@ Glass {
                     visible: pvArea.containsMouse || closeArea.containsMouse
                     color: closeArea.containsMouse ? Theme.error : Theme.fillActive
                     Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 11 } }
-                    MouseArea { id: closeArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dock.close(pv.modelData) }
+                    MouseArea { id: closeArea; Accessible.role: Accessible.Button; Accessible.name: "Close window"; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dock.close(pv.modelData) }
                 }
             }
         }

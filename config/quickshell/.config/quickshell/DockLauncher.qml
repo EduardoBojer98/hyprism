@@ -65,6 +65,8 @@ Item {
 
     MouseArea {
         id: launcherArea
+        Accessible.role: Accessible.Button
+        Accessible.name: "Apps and search"
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
