@@ -17,6 +17,12 @@ Rectangle {
     Keys.onReturnPressed: chip.clicked()
     FocusRing {}
 
+    property string accessibleName: ""
+    Accessible.role: Accessible.Button
+    Accessible.name: chip.accessibleName !== "" ? chip.accessibleName : chip.label
+    Accessible.focusable: true
+    Accessible.onPressAction: chip.clicked()
+
     implicitWidth: row.implicitWidth + 18
     implicitHeight: Math.max(26, Theme.hit)
     radius: height / 2

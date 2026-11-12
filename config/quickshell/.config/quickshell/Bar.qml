@@ -33,6 +33,10 @@ Scope {
         screen: root.screen
         visible: Theme.barShownOn(root.screen)
         WlrLayershell.namespace: "qs-bar"
+        // Super+F6 (qs ipc call bar focus): this bar takes the keyboard until Escape or an activation
+        readonly property bool hasKeys: BarFocus.active && BarFocus.screen?.name === root.screen?.name
+        WlrLayershell.keyboardFocus: hasKeys ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        onHasKeysChanged: if (hasKeys) Qt.callLater(() => { const f = body.nextItemInFocusChain(true); if (f && f !== body) f.forceActiveFocus() })
         color: "transparent"
         anchors { top: root.edge !== "bottom"; bottom: root.edge !== "top"; left: root.edge !== "right"; right: root.edge !== "left" }
         exclusiveZone: Theme.barHeight

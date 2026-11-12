@@ -24,6 +24,12 @@ Item {
     Keys.onSpacePressed: dd.open = !dd.open
     Keys.onReturnPressed: dd.open = !dd.open
     FocusRing { radius: Theme.radiusSmall + 3 }
+    property string accessibleName: ""
+    Accessible.role: Accessible.ComboBox
+    Accessible.name: dd.accessibleName !== "" ? dd.accessibleName : dd.current
+    Accessible.description: dd.accessibleName !== "" ? dd.current : ""
+    Accessible.focusable: true
+    Accessible.onPressAction: dd.open = !dd.open
 
     Rectangle {
         anchors.fill: parent
@@ -81,6 +87,11 @@ Item {
                     width: list.width
                     height: Math.max(26, Theme.fontLabel + 14)   // grows with Settings > Text size
                     radius: Theme.radiusSmall
+                    Accessible.role: Accessible.MenuItem
+                    Accessible.name: modelData
+                    Accessible.checkable: true
+                    Accessible.checked: modelData === dd.current
+                    Accessible.onPressAction: { dd.open = false; dd.picked(modelData) }
                     color: optArea.containsMouse ? Theme.accent : "transparent"
                     Text {   // checkmark beside the current value
                         anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }

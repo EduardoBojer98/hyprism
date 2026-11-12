@@ -305,6 +305,35 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Advanced"
+        SettingRow {
+            label: "Adaptive sync (all screens)"
+            hint: "Smoother motion in games on screens that support it; \"Fullscreen\" only while an app is fullscreen"
+            ConfigChoice { section: "displays"; key: "vrr"; values: ["off", "on", "fullscreen"]; labels: ["Off", "On", "Fullscreen"] }
+        }
+        SettingRow {
+            label: "Prefer the highest refresh rate"
+            hint: "A screen you plug in for the first time starts at its fastest mode instead of its default"
+            ConfigToggle { section: "displays"; key: "preferHighRefresh" }
+        }
+        SettingRow {
+            label: "Sharp old apps"
+            hint: "Old X11 apps draw at the screen's real pixels: crisp, but smaller on a scaled screen"
+            ConfigToggle { section: "displays"; key: "xwaylandNativeScale" }
+        }
+        SettingRow {
+            label: "Automatic HDR colour"
+            hint: "Switches the screen's colour mode for HDR video; leave off if a screen blanks during fullscreen video"
+            ConfigToggle { section: "displays"; key: "autoHdr" }
+        }
+        SettingRow {
+            label: "Tell the screen what is playing"
+            hint: "Lets a TV pick its game or movie mode; leave off if a screen blanks when you go fullscreen"
+            ConfigToggle { section: "displays"; key: "sendContentType" }
+        }
+    }
+
+    SettingGroup {
         title: "Night Light"
         SettingRow {
             label: "Turn on"

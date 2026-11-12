@@ -214,7 +214,7 @@ folders, services that are off, and uncommitted changes. Also in **Settings → 
 | `Super+I` | Settings |
 | `Super+Enter` / `Super+E` / `Super+B` | Terminal / files / browser |
 | `Super+.` | Emoji picker |
-| `Super+Ctrl+Space` | Next keyboard layout (add layouts in Settings → Keyboard & Touchpad) |
+| `Super+Ctrl+Space` | Next keyboard layout, the one key for it (add layouts in Settings → Keyboard & Touchpad; Settings can add Alt+Shift or Ctrl+Shift too) |
 | `Super+Q` / `Super+H` | Close / minimise window (restore from the dock) |
 | `Super+F` / `Super+Shift+F` / `Super+T` | Fullscreen / maximise / float |
 | `Super+Arrows` / `Super+Shift+Arrows` | Focus / move window |
@@ -224,7 +224,7 @@ folders, services that are off, and uncommitted changes. Also in **Settings → 
 | `Super+Alt+R` / `Super+Alt+Shift+R` | Record the screen / an area (again: stop and save to ~/Videos/Recordings) |
 | `Super+M` | Hand a shared monitor to the other computer and back (Settings → Displays → Shared Monitor) |
 | `Super+Ctrl+↓` | Next empty workspace |
-| `Alt+Shift+S` (also `Print`, `Super+Shift+S`) | Screenshot an area, then annotate |
+| `Alt+Shift+S` (also `Print`) | Screenshot an area, then annotate |
 | `Ctrl+Print` / `Shift+Print` / `Super+Print` / `Ctrl+Shift+Print` / `Alt+Print` | Area straight to clipboard / this screen / focused window / both screens / in 5 seconds |
 | `Super+Shift+T` | Copy text from the screen (OCR) |
 | `Super+Shift+C` | Colour picker |

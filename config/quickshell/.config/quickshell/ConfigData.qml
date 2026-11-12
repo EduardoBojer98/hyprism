@@ -225,17 +225,30 @@ JsonAdapter {
     }
     property JsonObject input: JsonObject {
         property var layouts: [{ code: "us", variant: "" }]   // xkb layouts, the first is the default (max 4)
-        property int shortcut: 0                 // switch layouts with: 0 Alt+Shift, 1 Ctrl+Shift, 2 Caps Lock, 3 none
+        property int shortcut: 3                 // extra layout switch: 0 Alt+Shift, 1 Ctrl+Shift, 2 Caps Lock, 3 none (Super+Ctrl+Space always works)
         property int repeatRate: 25              // keys per second while held
         property int repeatDelay: 600            // ms before a held key repeats
         property real sensitivity: 0             // pointer speed, -1..1
         property bool naturalScroll: true
         property bool tapToClick: true
+        property bool disableWhileTyping: true   // touchpad ignores the palm while typing
+        property string clickMethod: "clickfinger"   // "clickfinger" (1, 2, 3 fingers = left, right, middle) or "buttonareas" (bottom corners)
+        property real scrollFactor: 1.0          // touchpad scroll speed, 0.2..3
+        property bool middleEmulation: false     // left + right together = middle click
+        property bool dragLock: false            // lift the finger mid-drag without dropping the item
         property bool imported: false
     }
     property JsonObject displays: JsonObject {
         property var layout: ({})                // output -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled }
+        property bool autoHdr: false             // switch a screen's colour space on fullscreen video (HDR screens)
+        property bool sendContentType: false     // tell the screen what is playing (some screens blank briefly when it changes)
+        property bool xwaylandNativeScale: true  // old X11 apps draw sharp but small, instead of stretched
+        property string vrr: "off"               // adaptive sync: off | on | fullscreen
+        property bool preferHighRefresh: true    // new screens start at their highest refresh rate
         property bool imported: false
+    }
+    property JsonObject apps: JsonObject {
+        property string terminal: "ghostty +new-window"   // command the terminal key runs (SettingsSync writes hypr/settings/apps.lua)
     }
     property JsonObject monitorShare: JsonObject {   // a monitor shared with another computer (~/.local/bin/monswitch)
         property bool enabled: false

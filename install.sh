@@ -88,7 +88,7 @@ if $DRY; then # a dry run detects into a throwaway copy, so nothing in ~ changes
     [[ -f $real ]] && cp "$real" "$HW_FILE"
 fi
 case $CMD in install | update | detect) detect_write ;; esac
-[[ -s $HW_FILE ]] || detect_write # doctor and friends before any install
+[[ -s $HW_FILE || $CMD == doctor ]] || detect_write # the first modules / backups call; the doctor reports a missing file instead
 for m in ${WITH//,/ }; do
     [[ -d $REPO/modules/$m ]] || {
         echo "No such module: $m (./install.sh modules lists them)" >&2

@@ -38,6 +38,7 @@ gtk3                     gtk3                               repo
 sound-theme              sound-theme-freedesktop            repo
 squeekboard              squeekboard                        repo
 fuzzel                   fuzzel                             repo
+emoji-data               unicode-emoji                      repo
 pavucontrol              pavucontrol                        repo
 nm-connection-editor     nm-connection-editor               repo
 satty                    satty                              repo

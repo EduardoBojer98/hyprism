@@ -62,6 +62,10 @@ bash tests/scripts.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/hardware-scripts.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
+bash tests/keybinds.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
+bash tests/accessibility.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
 
 ((fail == 0)) && echo "ok: QML, Lua, colours, themes and scripts"
 exit "$fail"

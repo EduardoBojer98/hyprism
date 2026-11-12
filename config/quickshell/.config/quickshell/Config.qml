@@ -32,6 +32,7 @@ Singleton {
     readonly property alias idle: adapter.idle
     readonly property alias input: adapter.input
     readonly property alias displays: adapter.displays
+    readonly property alias apps: adapter.apps
     readonly property alias monitorShare: adapter.monitorShare
     readonly property alias battery: adapter.battery
     readonly property alias hotCorners: adapter.hotCorners
@@ -81,8 +82,11 @@ Singleton {
                    showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] },
         idle: { lockMin: [0, 240], sleepMin: [0, 480], imported: "bool" },
         input: { layouts: "layouts", shortcut: [0, 3], repeatRate: [1, 100], repeatDelay: [100, 2000], sensitivity: [-1, 1],
-                 naturalScroll: "bool", tapToClick: "bool", imported: "bool" },
-        displays: { layout: "displays", imported: "bool" },
+                 naturalScroll: "bool", tapToClick: "bool", disableWhileTyping: "bool", clickMethod: ["buttonareas", "clickfinger"],
+                 scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", imported: "bool" },
+        displays: { layout: "displays", autoHdr: "bool", sendContentType: "bool", xwaylandNativeScale: "bool",
+                    vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool", imported: "bool" },
+        apps: { terminal: "command" },
         monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", imported: "bool" }
     })
 
@@ -100,6 +104,7 @@ Singleton {
         if (rule === "string") return typeof value === "string" ? "" : "Must be text"
         // values that end up in generated config files: plain characters only
         if (rule === "name") return typeof value === "string" && /^[A-Za-z0-9._-]*$/.test(value) ? "" : "Letters, digits, . _ - only"
+        if (rule === "command") return typeof value === "string" && /^[A-Za-z0-9 +._\/-]{1,80}$/.test(value) ? "" : "Letters, digits, space and + - _ . / only"
         if (rule === "ddc") return typeof value === "string" && /^(0x[0-9a-fA-F]{1,2})?$/.test(value) ? "" : "Use an input code like 0x11"
         if (rule === "mode") return typeof value === "string" && /^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(value) ? "" : "Use a mode like 1920x1080@60"
         if (rule === "layouts") return value && typeof value.length === "number" && value.length >= 1 && value.length <= 4

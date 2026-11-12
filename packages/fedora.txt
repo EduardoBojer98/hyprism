@@ -57,6 +57,7 @@ sound-theme              sound-theme-freedesktop            repo
 # Not packaged in Fedora 44 or in any COPR found. Alternative: maliit-keyboard (repo, 2.3.1) or no on-screen keyboard.
 squeekboard              none                               none
 fuzzel                   fuzzel                             repo
+emoji-data               unicode-emoji                      repo
 pavucontrol              pavucontrol                        repo
 nm-connection-editor     nm-connection-editor               repo
 # satty: not in Fedora's own repos; sdegler/hyprland has 0.20.0 (every flag the screenshot script uses; checked 2026-11-04)

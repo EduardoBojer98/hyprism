@@ -23,7 +23,8 @@ ColumnLayout {
                                 repeat_delay: Config.input.repeatDelay, sensitivity: Config.input.sensitivity,
                                 natural_scroll: Config.input.naturalScroll, tap_to_click: Config.input.tapToClick })
     readonly property var keyOf: ({ list: "layouts", shortcut: "shortcut", repeat_rate: "repeatRate", repeat_delay: "repeatDelay",
-                                    sensitivity: "sensitivity", natural_scroll: "naturalScroll", tap_to_click: "tapToClick" })
+                                    sensitivity: "sensitivity", natural_scroll: "naturalScroll", tap_to_click: "tapToClick",
+                                    scroll_factor: "scrollFactor" })
     // until the values written before are imported, the controls are off, so nothing can overwrite them
     readonly property bool loaded: Config.input.imported
     enabled: loaded
@@ -181,6 +182,40 @@ ColumnLayout {
                 value: (page.s.sensitivity + 1) / 2
                 onMoved: v => page.set("sensitivity", Math.round((v * 2 - 1) * 100) / 100)
             }
+        }
+    }
+
+    SettingGroup {
+        visible: Inputs.touchpadName !== ""   // only on a computer with a touchpad
+        title: "Touchpad"
+        SettingRow {
+            label: "Pause while typing"
+            hint: "Ignores the pad while you type, so a palm can't move the cursor"
+            ConfigToggle { section: "input"; key: "disableWhileTyping" }
+        }
+        SettingRow {
+            label: "Click with"
+            hint: "Fingers: one, two or three fingers pressed = left, right, middle. Corners: press the pad's bottom corners"
+            ConfigChoice { section: "input"; key: "clickMethod"; values: ["clickfinger", "buttonareas"]; labels: ["Fingers", "Corners"] }
+        }
+        SettingRow {
+            label: "Scroll speed"
+            hint: Config.input.scrollFactor.toFixed(1) + "×"
+            Slider {
+                width: 260
+                icon: "\u{F037D}"
+                value: (Config.input.scrollFactor - 0.2) / 2.8
+                onMoved: v => page.set("scroll_factor", Math.round((0.2 + v * 2.8) * 10) / 10)
+            }
+        }
+        SettingRow {
+            label: "Left + right = middle click"
+            ConfigToggle { section: "input"; key: "middleEmulation" }
+        }
+        SettingRow {
+            label: "Drag lock"
+            hint: "Lifting your finger mid-drag keeps holding the item until you tap again"
+            ConfigToggle { section: "input"; key: "dragLock" }
         }
     }
 

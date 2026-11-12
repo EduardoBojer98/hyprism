@@ -8,6 +8,10 @@ Rectangle {
     property bool small: false
     readonly property bool hovered: abArea.containsMouse
     signal clicked()
+    Accessible.role: Accessible.Button
+    Accessible.name: ab.tip
+    Accessible.focusable: true
+    Accessible.onPressAction: ab.clicked()
     width: small ? 18 : 24; height: width; radius: width / 2
     color: abArea.containsMouse && enabled ? Theme.fillActive : small ? "transparent" : Theme.fill
     opacity: enabled ? 1 : 0.3

@@ -22,9 +22,29 @@ local function monitor(name, overrides)
     hl.monitor(spec)
 end
 
+-- Options live under DISPLAYS._options (Settings > Displays > Advanced); each falls back to the old behaviour.
+local function option(key, default)
+    local o = type(DISPLAYS._options) == "table" and DISPLAYS._options[key]
+    if o == nil then return default end
+    return o
+end
+
 function apply_displays()
-    for name in pairs(DISPLAYS) do monitor(name) end
+    for name in pairs(DISPLAYS) do
+        if name:sub(1, 1) ~= "_" then monitor(name) end
+    end
     if SHARED and not DISPLAYS[SHARED.output] then monitor(SHARED.output) end
+    hl.monitor({ output = "", mode = option("preferHighRefresh", true) and "highrr" or "preferred", position = "auto", scale = "auto" }) -- any other screen
+    hl.config({
+        misc = { vrr = ({ off = 0, on = 1, fullscreen = 2 })[option("vrr", "off")] or 0 },
+        -- Auto HDR switches an HDMI screen's colour space on fullscreen video, which can blank some screens
+        -- for a few seconds; off keeps the signal the same in and out of fullscreen.
+        render = { cm_auto_hdr = option("autoHdr", false) and 1 or 0,
+                   -- Some screens treat a changed content type as a source change and go black briefly.
+                   send_content_type = option("sendContentType", false) },
+        -- X11 apps draw at real pixels instead of being stretched by the scale (stretching blurs their text).
+        xwayland = { force_zero_scaling = option("xwaylandNativeScale", true) },
+    })
 end
 
 -- Laptop panel rotation for tablet mode: hyprctl eval 'laptop_panel(1)' (0 normal … 3 = 270°).
@@ -38,7 +58,6 @@ function laptop_panel(transform)
 end
 
 apply_displays()
-hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" }) -- any other screen
 
 -- Workspaces open on the screen you're working on; pin some to a screen in host.lua (hosts/<host>/home/.config/hypr/host.lua).
 

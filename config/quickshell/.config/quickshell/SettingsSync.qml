@@ -40,7 +40,15 @@ Scope {
             kb_options: many ? shortcuts[i.shortcut] ?? "" : "",
             repeat_rate: i.repeatRate, repeat_delay: i.repeatDelay, sensitivity: i.sensitivity,
             natural_scroll: i.naturalScroll, tap_to_click: i.tapToClick,
+            disable_while_typing: i.disableWhileTyping, clickfinger: i.clickMethod === "clickfinger",
+            scroll_factor: i.scrollFactor, middle_emulation: i.middleEmulation, drag_lock: i.dragLock,
         })
+    }
+    // the layout, plus the Advanced options under "_options" (monitors.lua skips names that start with _)
+    function displaysTable(d) {
+        return SettingsApp.lua(Object.assign({}, d.layout, { _options: {
+            autoHdr: d.autoHdr, sendContentType: d.sendContentType, xwaylandNativeScale: d.xwaylandNativeScale,
+            vrr: d.vrr, preferHighRefresh: d.preferHighRefresh } }))
     }
     function shareText(s) {
         return "# Written by Quickshell from Settings > Shared Monitor (settings.json monitorShare). Read by ~/.local/bin/monswitch.\n"
@@ -49,7 +57,8 @@ Scope {
 
     readonly property string idle: idleText(Config.idle.lockMin, Config.idle.sleepMin)
     readonly property string inputLua: inputTable(Config.input)
-    readonly property string displaysLua: SettingsApp.lua(Config.displays.layout)
+    readonly property string displaysLua: displaysTable(Config.displays)
+    readonly property string appsLua: SettingsApp.lua({ terminal: Config.apps.terminal })   // read by modules/binds.lua at load
     readonly property string share: shareText(Config.monitorShare) + (Config.monitorShare.enabled ? "" : "#off\n")
 
     // ---- writing: each section once its old file has been read, and only when the text changed ----------
@@ -74,6 +83,9 @@ Scope {
         const body = "-- Written by Quickshell from Settings > Displays (settings.json displays). Positions are logical pixels.\nreturn " + displaysLua
         put("hypr/settings/displays.lua", body, ["hyprctl", "eval", "DISPLAYS = " + displaysLua.replace(/\n/g, " ") + "; apply_displays()"])
     }
+    function writeApps() {
+        put("hypr/settings/apps.lua", "-- Written by Quickshell from settings.json (apps). The terminal key uses it after the next Hyprland reload.\nreturn " + appsLua)
+    }
     function writeShare() {
         const s = Config.monitorShare
         if (!s.imported || !s.output) return
@@ -84,7 +96,8 @@ Scope {
              "sh", on ? "monswitch.conf.off" : "monswitch.conf", on ? "on" : "off"])
         Machine.refresh()
     }
-    Timer { id: later; interval: 300; onTriggered: { sync.writeIdle(); sync.writeInput(); sync.writeDisplays(); sync.writeShare() } }
+    Timer { id: later; interval: 300; onTriggered: { sync.writeIdle(); sync.writeInput(); sync.writeDisplays(); sync.writeApps(); sync.writeShare() } }
+    onAppsLuaChanged: if (Config.loaded) later.restart()
     onIdleChanged: if (Config.loaded) later.restart()
     onInputLuaChanged: if (Config.loaded) later.restart()
     onDisplaysLuaChanged: if (Config.loaded) later.restart()
@@ -93,7 +106,7 @@ Scope {
     // ---- once, at load: what is on disk now, and the old files' values for sections not imported yet --------
     Connections { target: Config; function onLoadedChanged() { if (Config.loaded) reader.running = true } }
     Component.onCompleted: if (Config.loaded) reader.running = true
-    readonly property var files: ["hypr/settings/hypridle.conf", "hypr/settings/input.lua", "hypr/settings/displays.lua", "monswitch.conf", "monswitch.conf.off"]
+    readonly property var files: ["hypr/settings/hypridle.conf", "hypr/settings/input.lua", "hypr/settings/displays.lua", "hypr/settings/apps.lua", "monswitch.conf", "monswitch.conf.off"]
     Process {
         id: reader
         command: ["sh", "-c", 'for f; do printf "\\036%s\\n" "$f"; cat "$HOME/.config/$f" 2>/dev/null; done', "sh"].concat(sync.files)
@@ -146,7 +159,7 @@ Scope {
         if (!Config.displays.imported) {
             const layout = {}
             for (const m of all(/\["([A-Za-z0-9._-]+)"\] = \{([^{}]*)\}/g, d["hypr/settings/displays.lua"] ?? ""))
-                layout[m[1]] = luaFields(m[2])
+                if (m[1] !== "_options") layout[m[1]] = luaFields(m[2])
             Config.set("displays", "layout", layout)
             Config.set("displays", "imported", true)
         }

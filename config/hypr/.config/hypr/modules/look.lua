@@ -64,17 +64,5 @@ hl.config({
         force_default_wallpaper = 0,
         disable_hyprland_logo   = true,
     },
-    -- X11 apps draw at the panel's real pixels instead of being stretched 1.2x on eDP-1
-    -- (nearest-neighbour stretching made their text and icons look pixelated). They look a
-    -- little smaller on the laptop screen; the 1x external monitor is unaffected.
-    xwayland = {
-        force_zero_scaling = true,
-    },
-    -- Fullscreen video made the Acer go black for a few seconds, like a source change: Hyprland
-    -- switched its HDMI colorspace to BT.2020 (auto HDR) and sent a new content type. Neither
-    -- screen here is HDR, so keep the signal the same in and out of fullscreen.
-    render = {
-        cm_auto_hdr       = 0,
-        send_content_type = false,
-    },
+    -- xwayland, render and misc.vrr options: modules/monitors.lua (Settings > Displays > Advanced)
 })

@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Keys only for hardware that exists (brightness, keyboard backlight, power mode, shared monitor); `tests/keybinds.sh`
+  fails on a key bound twice. The terminal key follows `apps.terminal` in settings.json.
+- Settings → Displays → Advanced (adaptive sync, highest refresh rate, X11 sharpness, auto HDR, content type) and
+  touchpad options in Settings → Keyboard & Touchpad (pause while typing, click method, scroll speed, middle click, drag lock).
 - Full audit, roadmap and feature matrix (`docs/audit/`, `docs/research/`)
 - Conventions (`docs/CONVENTIONS.md`)
 - `LICENSE` (MIT), `CONTRIBUTING.md`, `VERSION`, this changelog
@@ -38,8 +42,18 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 - The theme reaches Qt apps (`qt6ct`), btop (`btop` theme "hyprism") and the starship prompt
   (`~/.config/hyprism/starship.toml`, a copy of the repo file with the theme's palette).
+- Accessibility: the shared controls (toggle, choice, chip, buttons, slider, dropdown, text field, bar
+  items, notification card) carry screen-reader roles and names. `Super+F6` moves the keyboard to the bar
+  (arrows or Tab, Enter or Space to open, Esc to leave); `tests/accessibility.sh` guards it.
+
+- The doctor also checks the hardware file (and notices when the hardware changed), sound, network, the desktop
+  portal, the keyring, the password-prompt helper and the shell, each with the command that fixes it. The
+  container test breaks six things on purpose and checks each is reported with a fix.
 
 ### Changed
+
+- Layouts switch with `Super+Ctrl+Space` only by default (no more Alt+Shift, which started the screenshot key);
+  `Super+Shift+S` no longer takes a screenshot (`Alt+Shift+S` and `Print` do).
 
 - Every script is formatted with `shfmt -i 4 -ci`
 - Finished process notes moved to `docs/history/`
@@ -70,6 +84,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - State moved from `~/.local/state/linux-setup` to `~/.local/state/hyprism` (migration 0001).
 
 ### Removed
+
+- The emoji picker's use of KDE Plasma's emoji file. It reads Unicode's own list (package `unicode-emoji`).
 
 - `hosts/` (computers picked by hostname). Replaced by detected modules; migration 0002 carries an existing
   install over.

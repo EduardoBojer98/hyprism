@@ -89,6 +89,34 @@ as desktop-amd "test \"\$(readlink -f ~/.config/hypr/hyprland.lua)\" = $repo/con
 as desktop-amd 'ls ~/.local/state/hyprism/logs/install-*.log >/dev/null && grep -q "form = \"desktop\"" ~/.config/hyprism/hardware.toml'
 as desktop-amd './install.sh modules'
 
+echo "===== THE DOCTOR FINDS WHAT IS BROKEN (and says how to fix it)"
+# broken COMMAND-THAT-BREAKS EXPECTED-TEXT: the doctor must fail, name the problem and give a fix; then repair
+broken() {
+    local out
+    as desktop-amd "$1"
+    if out=$(as desktop-amd './install.sh doctor' 2>&1); then
+        echo "xx the doctor passed although: $1"
+        exit 1
+    fi
+    if ! grep -q "$2" <<<"$out" || ! grep -q 'fix: ' <<<"$out"; then
+        echo "xx the doctor did not report '$2' with a fix after: $1"
+        echo "$out" | tail -5
+        exit 1
+    fi
+    echo "ok: doctor reports: $2"
+    as desktop-amd './install.sh --yes --only links >/dev/null 2>&1; rm -f ~/.config/hypr/stray.lua'
+}
+broken 'rm ~/.config/hypr/hyprland.lua' 'not linked'
+broken 'rm ~/.local/bin/theme && cp config/scripts/.local/bin/theme ~/.local/bin/theme' 'copy instead of link'
+broken 'rm ~/.config/fuzzel/fuzzel.ini && echo changed > ~/.config/fuzzel/fuzzel.ini' 'differs from the repo'
+broken 'echo "-- mine" > ~/.config/hypr/stray.lua' "isn't from the repo"
+broken 'echo "{ not json" > ~/.config/quickshell/settings.json' "isn't valid JSON"
+as desktop-amd 'rm -f ~/.config/quickshell/settings.json'
+broken 'rm ~/.config/hyprism/hardware.toml' 'never looked at'
+as desktop-amd './install.sh detect >/dev/null'
+as desktop-amd 'rm -rf ~/.local/state/hyprism/backups' # the breakages above made backups; uninstall would put those files back
+as desktop-amd './install.sh doctor' >/dev/null
+
 echo "===== A FAILURE IS REPORTED"
 echo "no-such-package-xyz      core      test: a package that can't be mapped" >>$repo/packages/manifest.txt
 if as desktop-amd './install.sh --yes --only packages' >/tmp/fail.log 2>&1; then

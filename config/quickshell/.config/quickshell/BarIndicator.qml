@@ -30,6 +30,7 @@ BarItem {
     property color ink: alarm === 2 ? Theme.error : alarm === 1 ? Theme.warning : bar.tone
 
     actions: cfg
+    Accessible.name: ((word !== "" ? word + " " : "") + value).trim() !== "" ? ((word !== "" ? word + " " : "") + value).trim() : tip
     vertical: bar.vertical
     spacing: 4
     Text {

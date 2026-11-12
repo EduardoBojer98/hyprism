@@ -71,6 +71,17 @@ Websites as apps are made in a terminal with `webapp add "Name" https://address`
 The first time you log in, a Welcome panel offers a theme, light or dark, a bar layout and the keyboard
 layouts, and lists the keys to know. It opens once; the "Welcome" action shows it again.
 
+## Keyboard and screen readers
+
+- `Super+F6` moves the keyboard to the bar: Left / Right (Up / Down on a side bar) or Tab move along it,
+  Enter or Space opens the item, Esc leaves.
+- In panels and Settings, Tab moves between controls (a ring shows where you are), Space or Enter presses,
+  Left / Right changes a slider or a choice, Up / Down a dropdown.
+- Settings > Appearance has the text size and the cursor size.
+- The shared controls (switches, choices, buttons, sliders, dropdowns, bar items, notifications) have
+  names for screen readers. Quickshell's layer-shell panels are only partly exposed to screen readers,
+  and this has not been tested with Orca.
+
 ## Your hardware
 
 - The installer looks at your computer and writes what it finds to `~/.config/hyprism/hardware.toml`.
@@ -80,6 +91,15 @@ layouts, and lists the keys to know. It opens once; the "Welcome" action shows i
 - List the modules: `./install.sh modules`. It shows each one as on or off, and why.
 - Turn one on or off: `./install.sh --with NAME` or `./install.sh --without NAME`. Your choice is kept under
   `[override]`; run `./install.sh` to apply it.
+
+### Screens
+
+- Plug a screen in and it works. Arrange and scale screens in Settings → Displays.
+- Each screen's mode, scale and position are remembered by its output name (for example `DP-1`), so a
+  monitor you plug in again comes back as you left it.
+- Settings → Displays → Advanced: adaptive sync (off, on, fullscreen only), start new screens at their
+  highest refresh rate, sharp old X11 apps, automatic HDR colour, and telling the screen what is playing.
+- The generated file is `~/.config/hypr/settings/displays.lua`. The Advanced options sit under `_options` in it.
 
 ## Another computer
 

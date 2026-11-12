@@ -85,6 +85,14 @@ mkdir -p "$t/clip"
 XDG_DATA_HOME="$t/clip" bash "$bin/clipstore" list >/dev/null 2>&1
 check "clipstore keeps its folder private (700)" '[[ $(stat -c %a "$t/clip/clipboard") == 700 ]]'
 
+# the emoji picker builds its list from Unicode's own file (no desktop environment's data)
+mkdir -p "$t/emoji"
+printf '%s\n' '# group: Smileys & Emotion' '1F600 ; fully-qualified # 😀 E1.0 grinning face' '263A ; unqualified # ☺ E0.6 smiling face' \
+    '# group: Animals & Nature' '1F436 ; fully-qualified # 🐶 E0.7 dog face' >"$t/emoji/emoji-test.txt"
+# shellcheck disable=SC2034  # read inside check's condition
+emoji=$(EMOJI_DATA="$t/emoji/emoji-test.txt" XDG_CACHE_HOME="$t/emoji/cache" bash "$bin/emojipick" list)
+check "emojipick lists emoji with name and group" '[[ $emoji == $(printf "😀\tgrinning face\tSmileys & Emotion\n🐶\tdog face\tAnimals & Nature") ]]'
+
 # the Hyprland Lua the installer seeds parses
 luac=$(command -v luac || command -v luac5.4 || true)
 [[ -n $luac ]] && for f in config/hypr/.config/hypr/defaults/*.lua; do [[ -f $f ]] && check "parses: $f" "\"$luac\" -p \"$f\""; done

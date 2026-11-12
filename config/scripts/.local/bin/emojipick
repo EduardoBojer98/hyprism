@@ -1,41 +1,46 @@
 #!/usr/bin/env bash
-# Emoji picker for Hyprland (JuhRadial's Emoji slice, Super+.): search by name or keyword with
-# fuzzel, then type the emoji into the focused app (wtype) and leave it on the clipboard.
-# The list comes from KDE's emoji dictionary (/usr/share/plasma/emoji/<lang>.dict), cached as TSV.
+# Emoji picker (Super+.): search by name with fuzzel, then type the emoji into the focused app (wtype) and
+# leave it on the clipboard.
+#   emojipick          open the picker
+#   emojipick list     print the list it searches (emoji, name, group), tab-separated
+# The list is Unicode's own (the unicode-emoji package), cached as a small table.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 
-cache="${XDG_CACHE_HOME:-$HOME/.cache}/emojipick.tsv"
-dict=/usr/share/plasma/emoji/en.dict
+data=${EMOJI_DATA:-/usr/share/unicode/emoji/emoji-test.txt}
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/hyprism/emoji.tsv"
+[[ -r $data ]] || die "the emoji list is missing ($data): install the unicode-emoji package (./install.sh --only tools)"
 
-if [[ ! -s "$cache" || "$dict" -nt "$cache" ]]; then
-    # qCompress'd QDataStream: u32 count, then per emoji: string emoji, string name, u32 category,
-    # u32 n, n strings of keywords (strings are u32 length + UTF-8)
-    python3 -I - "$dict" >"$cache.tmp" <<'EOF'
-import struct, sys, zlib
-raw = zlib.decompress(open(sys.argv[1], "rb").read()[4:])
-pos = 0
-def u32():
-    global pos
-    v = struct.unpack_from("<I", raw, pos)[0]; pos += 4; return v
-def string():
-    global pos
-    n = u32(); s = raw[pos:pos + n].decode("utf-8", "replace"); pos += n; return s
-for _ in range(u32()):
-    emoji, name = string(), string()
-    u32()
-    words = [string() for _ in range(u32())]
-    print(f"{emoji}\t{name}\t{' '.join(w for w in words if w not in name)}")
-EOF
+if [[ ! -s $cache || $data -nt $cache ]]; then
+    mkdir -p "$(dirname "$cache")"
+    # lines look like: "1F600 ; fully-qualified # 😀 E1.0 grinning face", under "# group: Smileys & Emotion"
+    awk '
+        /^# group: / { group = substr($0, 10); next }
+        /; fully-qualified/ {
+            rest = substr($0, index($0, "# ") + 2)      # "😀 E1.0 grinning face"
+            emoji = substr(rest, 1, index(rest, " ") - 1)
+            name = substr(rest, index(rest, " ") + 1)
+            sub(/^E[0-9.]+ /, "", name)
+            print emoji "\t" name "\t" group
+        }' "$data" >"$cache.tmp"
     mv "$cache.tmp" "$cache"
 fi
 
-choice=$(awk -F'\t' '{ printf "%s  %s%s\n", $1, $2, ($3 ? "  · " $3 : "") }' "$cache" |
+case ${1:-} in
+    list)
+        cat "$cache"
+        exit 0
+        ;;
+    "") ;;
+    *) usage 2 >&2 ;;
+esac
+
+choice=$(awk -F'\t' '{ printf "%s  %s  · %s\n", $1, $2, $3 }' "$cache" |
     fuzzel --dmenu --prompt "Emoji  " --width 48 --lines 12) || exit 0
 emoji=${choice%%  *}
-[[ -n "$emoji" ]] || exit 0
+[[ -n $emoji ]] || exit 0
 
 printf '%s' "$emoji" | wl-copy
 command -v wtype >/dev/null && {

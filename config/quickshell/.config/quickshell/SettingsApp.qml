@@ -61,7 +61,7 @@ Singleton {
         { id: "windows",       name: "Window Behaviour",    glyph: "\u{F05AF}", keys: "layout tiling dwindle master scrolling focus follows mouse split snap gestures swipe" },
         { id: "windowlook",    name: "Window Look",         glyph: "\u{F03D8}", keys: "title bars opacity dim inactive border frame transparent" },
         { id: "apprules",      name: "App Rules",           glyph: "\u{F0493}", keys: "float pin workspace rule" },
-        { id: "displays",      name: "Screens",             glyph: "\u{F0379}", keys: "monitor resolution scale rotation refresh night light arrangement display screen hdmi external projector brightness" },
+        { id: "displays",      name: "Screens",             glyph: "\u{F0379}", keys: "monitor resolution scale rotation refresh night light arrangement display screen hdmi external projector brightness vrr adaptive sync freesync gsync hdr highest refresh rate xwayland" },
         { id: "monitor",       name: "Shared Monitor",      glyph: "\u{F0E58}", keys: "ddc input switch kvm mirror" },
         { id: "input",         name: "Keyboard & Touchpad", glyph: "\u{F030C}", keys: "layout serbian latin repeat touchpad mouse sensitivity natural scroll tap keyboard layout language mouse trackpad gestures swipe fingers" },
         { id: "keybinds",      name: "Keyboard Shortcuts",  glyph: "\u{F0313}", keys: "keys binds hotkeys shortcuts screenshot print capture record" },

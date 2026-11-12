@@ -25,6 +25,32 @@ Rectangle {
     property string tip: ""                 // one line shown on hover
     signal pressed(int button)
     signal scrolled(int delta)
+    property string accessibleName: ""      // for a screen reader, when the tip is empty
+
+    // what a click does, from the mouse or the keyboard
+    function activate(button) {
+        Anchor.take(item, item.edge, item.origin)
+        const mine = button === Qt.RightButton ? item.actions?.rightClick : item.actions?.click
+        if (!BarActions.run(mine)) item.pressed(button)
+    }
+
+    // keyboard (BarFocus): Tab or arrows along the bar, Enter / Space activates, Escape leaves
+    activeFocusOnTab: interactive && shown
+    function go(forward) { item.nextItemInFocusChain(forward).forceActiveFocus() }
+    Keys.onPressed: e => {
+        const next = item.vertical ? Qt.Key_Down : Qt.Key_Right, prev = item.vertical ? Qt.Key_Up : Qt.Key_Left
+        if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter || e.key === Qt.Key_Space) { item.activate(Qt.LeftButton); BarFocus.leave() }
+        else if (e.key === Qt.Key_Escape) BarFocus.leave()
+        else if (e.key === next) item.go(true)
+        else if (e.key === prev) item.go(false)
+        else return
+        e.accepted = true
+    }
+    FocusRing {}
+    Accessible.role: Accessible.Button
+    Accessible.name: item.accessibleName !== "" ? item.accessibleName : item.tip
+    Accessible.focusable: true
+    Accessible.onPressAction: item.activate(Qt.LeftButton)
 
     visible: shown
     implicitWidth: vertical ? Math.max(grid.implicitWidth + pad * 2, 28) : grid.implicitWidth + pad * 2
@@ -54,11 +80,7 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         acceptedButtons: typeof item.actions?.rightClick === "string" ? Qt.LeftButton | Qt.RightButton : Qt.LeftButton
         // your own action for this item wins (BarActions); otherwise the item does its own thing
-        onClicked: mouse => {
-            Anchor.take(item, item.edge, item.origin)
-            const mine = mouse.button === Qt.RightButton ? item.actions?.rightClick : item.actions?.click
-            if (!BarActions.run(mine)) item.pressed(mouse.button)
-        }
+        onClicked: mouse => item.activate(mouse.button)
         onWheel: wheel => {
             const d = wheel.angleDelta.y > 0 ? 1 : -1
             if (!BarActions.run(item.actions?.scroll, d)) item.scrolled(d)

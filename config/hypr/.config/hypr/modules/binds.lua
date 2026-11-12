@@ -9,6 +9,22 @@ local exec = hl.dsp.exec_cmd
 
 local ok, overrides = pcall(require, "settings.keybinds")
 if not ok or type(overrides) ~= "table" then overrides = {} end
+-- Settings writes settings/apps.lua (terminal command); the value is only accepted if it is plain text.
+local aok, apps = pcall(require, "settings.apps")
+if aok and type(apps) == "table" and type(apps.terminal) == "string" and apps.terminal:match("^[%w +._/-]+$") then terminal = apps.terminal end
+
+-- Hardware binds exist only where the hardware does. `v` is what hardware.toml says (a name, true/false);
+-- nil means it was never detected, so keep the bind (an install without hardware.toml loses nothing).
+local function has(v)
+    if v == nil then return true end
+    return v ~= "" and v ~= false
+end
+local function file_exists(path)
+    local f = io.open(path)
+    if f then f:close() end
+    return f ~= nil
+end
+local config = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
 
 local binds = {}
 -- fixed = not editable in Settings (mouse, hardware switches)
@@ -66,7 +82,6 @@ add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("ALT + 
 -- In the editor: Enter copies and saves, Ctrl+S saves, Esc cancels.
 add("screenshot",          "Screen", "Screenshot an area (editor)", "ALT + SHIFT + S", exec("screenshot"))
 add("screenshot-print",    "Screen", "Screenshot an area (editor)", "Print", exec("screenshot"))
-add("screenshot-alt",      "Screen", "Screenshot an area (editor)", key("SHIFT + S"), exec("screenshot"))
 add("screenshot-copy",     "Screen", "Screenshot an area, copy only", "CTRL + Print", exec("screenshot area --copy"))
 add("screenshot-screen",   "Screen", "Screenshot this screen", "SHIFT + Print", exec("screenshot screen"))
 add("screenshot-window",   "Screen", "Screenshot the focused window", key("Print"), exec("screenshot window"))
@@ -79,15 +94,22 @@ add("record-area",         "Screen", "Record an area (again: stop)", key("ALT + 
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))
 
 -- Shared monitor: hand it to the other computer and back (~/.local/bin/monswitch; off without ~/.config/monswitch.conf)
-add("monitor-switch", "Screen", "Hand the shared monitor over and back", key("M"), exec("monswitch toggle"))
+if file_exists(config .. "/monswitch.conf") then
+    add("monitor-switch", "Screen", "Hand the shared monitor over and back", key("M"), exec("monswitch toggle"))
+end
 
 -- Lid (~/.local/bin/panel); a convertible's tablet-mode switch goes in its hosts/<host>/.../host.lua
 add("lid-close",  "Hardware", "Lid closed",      "switch:on:Lid Switch",                  exec("panel lid close"),  { locked = true, fixed = true })
 add("lid-open",   "Hardware", "Lid opened",      "switch:off:Lid Switch",                 exec("panel lid open"),   { locked = true, fixed = true })
-add("power-mode", "Hardware", "Next power mode (Quiet, Balanced, Performance)", key("F5"), exec("powermode next"))
+if has(HW.power.profiles) then
+    add("power-mode", "Hardware", "Next power mode (Quiet, Balanced, Performance)", key("F5"), exec("powermode next"))
+end
+
+-- Keyboard access to the bar (Quickshell BarFocus)
+add("focus-bar", "Desktop", "Move the keyboard to the bar (arrows, Enter, Esc)", key("F6"), exec("qs ipc call bar focus"))
 
 -- Session
-add("lock",   "Session", "Lock the screen",  key("L"), exec("loginctl lock-session"))
+add("lock",  "Session", "Lock the screen",  key("L"), exec("loginctl lock-session"))
 add("reload", "Session", "Reload Hyprland",  key("SHIFT + R"), exec("hyprctl reload"))
 add("logout", "Session", "Log out",          key("SHIFT + E"), exec("hyprshutdown"))
 
@@ -98,8 +120,16 @@ add("volume-up",       "Media", "Volume up",       "XF86AudioRaiseVolume",  exec
 add("volume-down",     "Media", "Volume down",     "XF86AudioLowerVolume",  exec("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      held)
 add("mute",            "Media", "Mute",            "XF86AudioMute",         exec("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true })
 add("mic-mute",        "Media", "Mute microphone", "XF86AudioMicMute",      exec("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true })
-add("brightness-up",   "Media", "Brightness up",   "XF86MonBrightnessUp",   exec("brightnessctl -e4 -n2 set 5%+" .. osd),           held)
-add("brightness-down", "Media", "Brightness down", "XF86MonBrightnessDown", exec("brightnessctl -e4 -n2 set 5%-" .. osd),           held)
+if has(HW.power.backlight) then
+    add("brightness-up",   "Media", "Brightness up",   "XF86MonBrightnessUp",   exec("brightnessctl -e4 -n2 set 5%+" .. osd),           held)
+    add("brightness-down", "Media", "Brightness down", "XF86MonBrightnessDown", exec("brightnessctl -e4 -n2 set 5%-" .. osd),           held)
+end
+-- Keyboard backlight: needs the device name, so only when it was detected
+local kbd = HW.power.kbd_backlight
+if type(kbd) == "string" and kbd:match("^[%w:._-]+$") then
+    add("kbd-brightness-up",   "Media", "Keyboard backlight up",   "XF86KbdBrightnessUp",   exec("brightnessctl -d " .. kbd .. " set +1"), held)
+    add("kbd-brightness-down", "Media", "Keyboard backlight down", "XF86KbdBrightnessDown", exec("brightnessctl -d " .. kbd .. " set 1-"), held)
+end
 add("next",            "Media", "Next track",      "XF86AudioNext",         exec("playerctl next"),       { locked = true })
 add("previous",        "Media", "Previous track",  "XF86AudioPrev",         exec("playerctl previous"),   { locked = true })
 add("play",            "Media", "Play / pause",    "XF86AudioPlay",         exec("playerctl play-pause"), { locked = true })

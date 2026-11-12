@@ -13,6 +13,9 @@ Item {
     readonly property real textRoom: width - slot.implicitWidth - 48
     readonly property bool stacked: width > 0 && (textRoom < 200 || (hint.length > 60 && textRoom < 300))
 
+    // controls that take an accessibleName and have none are named by this row's label
+    Component.onCompleted: { for (const c of slot.children) if (c.accessibleName === "") c.accessibleName = row.label }
+
     Layout.fillWidth: true
     // tall controls (a wrapped swatch grid, a list) make the row taller, never spill over its border
     implicitHeight: stacked ? texts.implicitHeight + slot.implicitHeight + 34 : Math.max(48, texts.implicitHeight + 20, slot.implicitHeight + 24)

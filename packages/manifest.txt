@@ -42,6 +42,7 @@ sound-theme              desktop   notification sounds to choose from in Setting
 
 # Small tools the shell and scripts call
 fuzzel                   tools     emoji picker window (emojipick)
+emoji-data               tools     the list of emoji and their names (emojipick)
 pavucontrol              tools     full sound mixer
 nm-connection-editor     tools     advanced network settings (VPN, static IP) from Settings > Network
 satty                    tools     screenshot editor: arrows, shapes, text, numbered steps, blur, crop (screenshot)

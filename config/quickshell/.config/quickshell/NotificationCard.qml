@@ -20,6 +20,10 @@ Glass {
     readonly property string kind: banner ? Theme.current.notify.kind : "card"
     readonly property bool isMinimal: kind === "line"
     signal expandRequested()
+    Accessible.role: Accessible.Alert
+    Accessible.name: [card.notification?.appName, card.notification?.summary].filter(s => s).join(": ")
+    Accessible.description: card.notification?.body ?? ""
+    Accessible.onPressAction: if (card.stacked > 0) card.expandRequested(); else if (card.notification) Notifications.activate(card.notification)
 
     implicitHeight: content.implicitHeight + Theme.spaceM * 2
     strong: !isMinimal

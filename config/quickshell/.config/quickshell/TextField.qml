@@ -6,6 +6,10 @@ Rectangle {
     property string placeholder
     property bool invalid: false
     signal accepted()
+    property string accessibleName: ""
+    Accessible.role: Accessible.EditableText
+    Accessible.name: accessibleName !== "" ? accessibleName : placeholder
+    Accessible.focusable: true
 
     width: 240; height: Theme.controlHeight
     radius: Theme.radiusSmall

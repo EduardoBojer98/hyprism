@@ -2,8 +2,38 @@
 # Doctor: compares this computer with the repo and changes nothing. Every problem comes with its fix.
 # Modules add their own checks in modules/<name>/doctor (plain bash using ok, warn, bad and hw_get).
 
+# The hardware file: there, and still true (a new graphics card or a missing battery changes which modules fit)
+doctor_hardware() {
+    [[ -s $HW_FILE ]] || {
+        bad "this computer's hardware was never looked at (no hardware.toml)" "./install.sh detect"
+        return 0
+    }
+    local now was
+    now=$(detect_hardware | grep -v -e '^#' -e '^$')
+    was=$(sed '/^\[override\]/,$d' "$HW_FILE" | grep -v -e '^#' -e '^$')
+    [[ $now == "$was" ]] || warn "the hardware changed since it was last looked at (./install.sh detect, then ./install.sh for new modules)"
+}
+
+# What a working session needs, checked only inside one (a text console or a container has none of it)
+doctor_session() {
+    [[ -n ${WAYLAND_DISPLAY:-} && -d /run/systemd/system ]] || return 0
+    local u
+    for u in pipewire wireplumber; do
+        systemctl --user is-active -q "$u" 2>/dev/null || bad "sound: $u isn't running" "systemctl --user enable --now $u"
+    done
+    systemctl is-active -q NetworkManager 2>/dev/null || bad "network: NetworkManager isn't running" "./install.sh --only services"
+    pgrep -f hyprpolkitagent >/dev/null || warn "no password-prompt helper is running: apps can't ask for admin rights (log out and back in; package hyprpolkitagent)"
+    busctl --user status org.freedesktop.secrets >/dev/null 2>&1 || warn "no keyring is answering: browsers and Git can't store passwords safely (packages: kwallet with kwallet-pam, or gnome-keyring)"
+    busctl --user status org.freedesktop.portal.Desktop >/dev/null 2>&1 || bad "the desktop portal isn't running: screen sharing and file dialogs won't work" "./install.sh --only packages, then log out and back in"
+    if hw_has power.battery && ! busctl status org.freedesktop.UPower >/dev/null 2>&1; then
+        bad "battery: UPower isn't running" "sudo systemctl enable --now upower"
+    fi
+    pgrep -x qs >/dev/null || pgrep -x quickshell >/dev/null || bad "the shell (bar, panels) isn't running" "qs &   (errors: qs log)"
+}
+
 doctor() {
     say "Doctor: Hyprism $(cat "$REPO/VERSION"), $PRETTY_NAME, $(hw_get machine.form) ($(hw_get machine.product))"
+    echo "   logs: $STATE/logs/   hardware: $HW_FILE"
     echo "   modules on: $(modules_on | tr '\n' ' ')"
     local name src pkgs p
     while read -r name; do
@@ -71,6 +101,9 @@ doctor() {
         # shellcheck disable=SC1090
         [[ -f $REPO/modules/$m/doctor ]] && . "$REPO/modules/$m/doctor"
     done
+
+    doctor_hardware
+    doctor_session
 
     # the running desktop: Hyprland's own errors, the files Settings generates, stray helpers
     if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && command -v hyprctl >/dev/null; then
