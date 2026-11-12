@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:latest
     steps:
-      - run: pacman -Syu --noconfirm --needed git qt6-declarative lua python shellcheck shfmt >/dev/null
+      - run: pacman -Syu --noconfirm --needed git qt6-declarative lua python jq shellcheck shfmt >/dev/null
       - uses: actions/checkout@v5
       - name: QML, Lua, colours, themes, detection, scripts
         run: bash tests/lint.sh

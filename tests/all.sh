@@ -21,7 +21,7 @@ job() { # job NAME IMAGE COMMAND: run it, keep the log, print one line
     fi
 }
 if [[ $want == all || $want == lint ]]; then
-    job lint archlinux:latest 'pacman -Syu --noconfirm --needed qt6-declarative lua python shellcheck shfmt which >/dev/null 2>&1 && cp -a /mnt/repo /r && cd /r && bash tests/lint.sh'
+    job lint archlinux:latest 'pacman -Syu --noconfirm --needed qt6-declarative lua python jq shellcheck shfmt which >/dev/null 2>&1 && cp -a /mnt/repo /r && cd /r && bash tests/lint.sh'
 fi
 for distro in arch fedora; do
     [[ $want == all || $want == "$distro" ]] || continue
