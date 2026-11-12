@@ -62,6 +62,15 @@ JsonAdapter {
         property int volume: 60                          // %
         property list<string> mutedApps: []              // app names that only go to the notification centre
     }
+    property JsonObject osd: JsonObject {   // the pop-up that confirms volume, brightness, mic, layout and caps lock changes
+        property int timeoutMs: 1400
+        property bool volume: true
+        property bool brightness: true
+        property bool micMute: true
+        property bool layout: true
+        property bool capsLock: true            // polls the keyboard's caps lock light every 500 ms while on (if it has one)
+        property string position: "bottom"      // bottom | top | center
+    }
     property JsonObject caffeine: JsonObject {
         property int defaultMinutes: 0          // 0 = until turned off
         // the current state, so Caffeine stays on (or off) across shell reloads, logouts and reboots

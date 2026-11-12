@@ -15,6 +15,7 @@ Singleton {
     readonly property alias launcher: adapter.launcher
     readonly property alias clipboard: adapter.clipboard
     readonly property alias notifications: adapter.notifications
+    readonly property alias osd: adapter.osd
     readonly property alias caffeine: adapter.caffeine
     readonly property alias nightLight: adapter.nightLight
     readonly property alias controlCenter: adapter.controlCenter
@@ -51,6 +52,7 @@ Singleton {
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], historyMax: [10, 500], sound: "string", volume: [0, 100],
                          mutedApps: "list" },
+        osd: { timeoutMs: [600, 5000], volume: "bool", brightness: "bool", micMute: "bool", layout: "bool", capsLock: "bool", position: ["bottom", "top", "center"] },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", slidersOpen: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", toggles: "list", shortcuts: "list", hidden: "list" },

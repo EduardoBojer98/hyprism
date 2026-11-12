@@ -52,7 +52,7 @@ Singleton {
         { id: "dock",          name: "Dock",                glyph: "\u{F0A1F}", keys: "taskbar pinned apps icon size hide automatically running windows pictures position monitor" },
         { id: "lockscreen",    name: "Lock Screen",         glyph: "\u{F033E}", keys: "lock clock date avatar user picture blur brightness widgets battery media layout lock after password" },
         { id: "controlcenter", name: "Control Center",      glyph: "\u{F0493}", keys: "quick settings tiles toggles sliders shortcuts" },
-        { id: "notifications", name: "Notifications",       glyph: "\u{F009A}", keys: "do not disturb dnd sound banners history muted apps" },
+        { id: "notifications", name: "Notifications",       glyph: "\u{F009A}", keys: "do not disturb dnd sound banners history muted apps osd on-screen display volume brightness microphone mic mute caps lock keyboard layout" },
         { id: "launcher",      name: "Search & Launcher",   glyph: "\u{F0349}", keys: "spotlight apps files web search actions" },
         { id: "clipboard",     name: "Clipboard",           glyph: "\u{F014C}", keys: "copy paste history images" },
         { id: "weather",       name: "Weather",             glyph: "\u{F0595}", keys: "city forecast celsius fahrenheit" },
