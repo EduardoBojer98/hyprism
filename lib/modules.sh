@@ -37,6 +37,7 @@ modules_list() {
     local m state why
     for m in $(module_names); do
         if module_on "$m"; then state="on " why=detected; else state="off" why="not found"; fi
+        grep -q 'opt-in' "$REPO/modules/$m/detect" 2>/dev/null && ! module_on "$m" && why="optional" # never automatic
         [[ -n $(hw_get "module.$m") ]] && why="your choice"
         printf '  %s  %-18s %-13s %s\n' "$state" "$m" "($why)" "$(sed -n '3p' "$REPO/modules/$m/README.md" 2>/dev/null)" # no README = no summary
     done

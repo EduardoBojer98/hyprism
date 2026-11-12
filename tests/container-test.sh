@@ -53,6 +53,19 @@ expect_modules laptop-intel "laptop"
 expect_modules laptop-hybrid-nvidia "asus ddc-monitor laptop logitech nvidia nvidia-hybrid tablet"
 expect_modules hidpi-single "laptop"
 expect_modules multi-monitor "ddc-monitor"
+# the optional modules resolve their packages on this distro (a dry run with all three switched on)
+opt=$(as desktop-nvidia './install.sh --dry-run --yes --with dev,gaming,ai')
+for want in mise steam gamemode mangohud ollama docker; do
+    grep -qw "$want" <<<"$opt" || {
+        echo "xx optional modules: $want is not in the install plan"
+        exit 1
+    }
+done
+grep -q 'ai: 10-gpu.sh' <<<"$opt" || {
+    echo "xx the ai module's GPU step was not offered on the NVIDIA profile"
+    exit 1
+}
+echo "ok: dev, gaming and ai resolve their packages"
 [[ $(snapshot) == "$before" ]] || {
     echo "xx a dry run changed the home folder"
     exit 1

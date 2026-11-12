@@ -38,6 +38,7 @@ as() { sudo -u tester -H env ${2:+HYPRISM_ROOT="/opt/fixtures/$2"} bash -c "cd $
 
 echo "===== OLD RELEASE (v1.1.0)"
 mkdir $old && chown tester: $old
+sudo -u tester -H git config --global --add safe.directory '*' # the mounted repo belongs to another user
 as "git clone -q /mnt/repo . && git checkout -q -B main v1.1.0"
 as './install.sh --yes --host default'
 

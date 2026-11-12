@@ -23,6 +23,25 @@ wanted_names() {
 # "name" -> "source pkg1 pkg2 ..." from packages/<distro>.txt
 lookup() { awk -v n="$1" '$1 == n { gsub(",", " ", $2); print $3, $2; exit }' "$MAP"; }
 
+# install_names NAME...: install a few packages by logical name right now (a module step that needs more
+# only on some hardware, e.g. the CUDA build where there is an NVIDIA card)
+install_names() {
+    local name src pkgs p todo
+    for name in "$@"; do
+        read -r src pkgs <<<"$(lookup "$name")"
+        [[ -n ${src:-} && $src != none ]] || {
+            warn "$name: no package for $DISTRO (see packages/$DISTRO.txt)"
+            continue
+        }
+        todo=""
+        for p in $pkgs; do distro_installed "$src" "$p" || todo+=" $p"; done
+        [[ -n $todo ]] || continue
+        distro_prepare "$src"
+        # shellcheck disable=SC2086  # a list of package names
+        distro_install "$src" $todo
+    done
+}
+
 packages() {
     say "Packages for $PRETTY_NAME (packages/$DISTRO.txt)"
     declare -A batch=()

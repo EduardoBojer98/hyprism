@@ -1,0 +1,3 @@
+steam                    the game store and launcher, with Proton for Windows games
+gamemode                 asks the system for performance while a game runs (gamemoderun)
+mangohud                 frame rate, temperatures and load on screen (mangohud)

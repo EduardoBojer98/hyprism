@@ -1,1 +1,1 @@
-false # only with --with hibernate
+false # opt-in: ./install.sh --with hibernate

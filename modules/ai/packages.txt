@@ -1,0 +1,1 @@
+ollama                   runs language models locally (ollama run …)

@@ -10,6 +10,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - Conventions (`docs/CONVENTIONS.md`)
 - `LICENSE` (MIT), `CONTRIBUTING.md`, `VERSION`, this changelog
 
+- The launcher's Actions mode is now the menu: grouped headings (Appearance, Screens & capture, Network & sound,
+  System, Power) when nothing is typed. New actions: a theme per theme folder, light/dark, bar layouts,
+  screen recording, Wi-Fi, Bluetooth and sound, Displays, Night Light, Do Not Disturb, keyboard shortcuts,
+  Update, doctor, power menu, Welcome.
+- First-run Welcome panel (`Welcome.qml`, `qs ipc call welcome open`) replaces the one-time notification.
+
 - Hardware detection: `./install.sh detect` writes `~/.config/hyprism/hardware.toml` (form factor, graphics
   cards, screens, battery, touch, radios, known devices). Correct a wrong guess under `[override]`.
 - Modules (`modules/<name>/`): `laptop`, `nvidia`, `nvidia-hybrid`, `asus`, `tablet`, `ddc-monitor`, `logitech`,
@@ -25,6 +31,13 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   firewalld (Fedora), blocking incoming connections. The doctor notes when there is none.
 - `tests/update-test.sh` and a CI job `update`: install release 1.1.0, then update to this code, and check the
   migrations ran once, no link is dead and the doctor is clean.
+
+- Optional modules, each on only when you ask (`./install.sh --with NAME`): `dev` (mise for Node / PHP / Python
+  versions, Docker), `gaming` (Steam, GameMode, MangoHud) and `ai` (Ollama, with the CUDA build and the NVIDIA
+  container toolkit where there is an NVIDIA card). Each module's README is its guide.
+
+- The theme reaches Qt apps (`qt6ct`), btop (`btop` theme "hyprism") and the starship prompt
+  (`~/.config/hyprism/starship.toml`, a copy of the repo file with the theme's palette).
 
 ### Changed
 
