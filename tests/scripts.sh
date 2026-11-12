@@ -93,6 +93,36 @@ printf '%s\n' '# group: Smileys & Emotion' '1F600 ; fully-qualified # 😀 E1.0 
 emoji=$(EMOJI_DATA="$t/emoji/emoji-test.txt" XDG_CACHE_HOME="$t/emoji/cache" bash "$bin/emojipick" list)
 check "emojipick lists emoji with name and group" '[[ $emoji == $(printf "😀\tgrinning face\tSmileys & Emotion\n🐶\tdog face\tAnimals & Nature") ]]'
 
+# idle-sleep: sleeps only when the time for the current power source (battery or mains) is set and reached
+mkdir -p "$t/is/bin"
+printf '#!/bin/sh\necho "$@" >>"$IS_LOG"\n' >"$t/is/bin/systemctl"
+cp "$t/is/bin/systemctl" "$t/is/bin/hyprctl"
+chmod +x "$t/is/bin/systemctl" "$t/is/bin/hyprctl"
+# idle_sleep ROOT ARGS...: 0 when it asked systemd to suspend (called from check's conditions)
+# shellcheck disable=SC2329
+idle_sleep() {
+    local root=$1
+    shift
+    : >"$t/is/log"
+    IS_LOG=$t/is/log HYPRISM_ROOT=$root PATH=$t/is/bin:$PATH bash "$bin/idle-sleep" "$@" >/dev/null 2>&1
+    grep -q suspend "$t/is/log"
+}
+mkdir -p "$t/is/bat/sys/class/power_supply/BAT0" "$t/is/bat/sys/class/power_supply/AC" "$t/is/mains/sys/class/power_supply/BAT0" \
+    "$t/is/mains/sys/class/power_supply/AC" "$t/is/nobat/sys/class/power_supply/AC"
+echo Battery >"$t/is/bat/sys/class/power_supply/BAT0/type"
+echo Battery >"$t/is/mains/sys/class/power_supply/BAT0/type"
+echo Mains >"$t/is/bat/sys/class/power_supply/AC/type"
+echo Mains >"$t/is/mains/sys/class/power_supply/AC/type"
+echo Mains >"$t/is/nobat/sys/class/power_supply/AC/type"
+echo 0 >"$t/is/bat/sys/class/power_supply/AC/online"
+echo 1 >"$t/is/mains/sys/class/power_supply/AC/online"
+echo 1 >"$t/is/nobat/sys/class/power_supply/AC/online"
+check "idle-sleep sleeps on battery (20/0/20)" 'idle_sleep "$t/is/bat" 20 0 20'
+check "idle-sleep does not sleep on mains when mains is never (20/0/20)" '! idle_sleep "$t/is/mains" 20 0 20'
+check "idle-sleep sleeps on mains at the mains time (20/30/30)" 'idle_sleep "$t/is/mains" 20 30 30'
+check "idle-sleep never sleeps a computer without a battery (20/0/20)" '! idle_sleep "$t/is/nobat" 20 0 20'
+check "idle-sleep waits for the full time (battery 20, elapsed 10)" '! idle_sleep "$t/is/bat" 20 0 10'
+
 # the Hyprland Lua the installer seeds parses
 luac=$(command -v luac || command -v luac5.4 || true)
 [[ -n $luac ]] && for f in config/hypr/.config/hypr/defaults/*.lua; do [[ -f $f ]] && check "parses: $f" "\"$luac\" -p \"$f\""; done

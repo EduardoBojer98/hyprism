@@ -7,6 +7,8 @@
 #   monswitch laptop   take the monitor back
 #   monswitch sync     match Hyprland to the monitor's current input, no DDC write (startup, resume)
 #   monswitch watch    background loop: follows switches made with the monitor's own buttons
+#   monswitch inputs [OUTPUT]  JSON list of the DDC monitors and the inputs each one offers (read only; [] if none)
+#   monswitch setup    ask which monitor and inputs, then write ~/.config/monswitch.conf (Settings > Shared Monitor does the same)
 #
 # Linux keeps reporting the monitor as connected while it shows the PC, so Hyprland can't
 # notice on its own. The DDC input register (VCP 0x60) is the source of truth.
@@ -15,6 +17,114 @@ set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
+
+# Monitors that answer DDC, with the inputs each one lists itself, as JSON (nothing is written to a monitor).
+# Needs no config file. Prints [] plus one line on stderr saying why when there is nothing to list.
+inputs() {
+    local only=${1:-} detected rc=0 drm bus model cap names cur
+    local -a found=()
+    [[ -z $only || $only =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || only=""
+    if ! command -v ddcutil >/dev/null; then
+        echo "monswitch: ddcutil is not installed: ./install.sh --only modules (ddc-monitor)" >&2
+        echo '[]'
+        return 0
+    fi
+    detected=$(ddcutil detect --brief 2>&1) || rc=$? # a failure is read from the text below
+    if ((rc != 0)) || [[ $detected != *"I2C bus:"* && $detected =~ [Pp]ermission|i2c-dev|/dev/i2c ]]; then
+        echo "monswitch: no access to the monitor's control channel: ./install.sh --only modules (ddc-monitor)" >&2
+        echo '[]'
+        return 0
+    fi
+    # one "connector<TAB>bus<TAB>model" line per working display ("Invalid display" blocks are skipped)
+    while IFS=$'\t' read -r drm bus model; do
+        [[ -z $only || $drm == "$only" ]] || continue
+        [[ $bus =~ ^[0-9]+$ ]] || continue
+        cap=$(timeout 30 ddcutil capabilities --bus "$bus" 2>/dev/null || true) # slow, and some monitors never answer
+        names=$(awk '
+            /^ *Feature:/ { on = ($2 == "60") ; next }
+            on && /^ *[0-9A-Fa-f][0-9A-Fa-f]: / { c = tolower($1); sub(/:$/, "", c); n = $0; sub(/^ *[0-9A-Fa-f]+: */, "", n); print "0x" c "\t" n }
+        ' <<<"$cap" | jq -Rsc 'split("\n") | map(select(. != "") | split("\t") | {code: .[0], name: .[1]})')
+        cur=$(timeout 10 ddcutil getvcp 60 --bus "$bus" --brief 2>/dev/null | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}' || true)
+        found+=("$(jq -nc --arg o "$drm" --arg m "$model" --arg c "$cur" --argjson i "${names:-[]}" '{output: $o, model: $m, current: $c, inputs: $i}')")
+    done < <(awk '
+        function flush() { if (ok && bus != "" && drm != "") print drm "\t" bus "\t" mon; ok = 0; bus = drm = mon = "" }
+        /^Display [0-9]/ { flush(); ok = 1; next }
+        /^Invalid display/ { flush(); next }
+        /I2C bus:/ { bus = $NF; sub(/.*i2c-/, "", bus) }
+        /DRM[ _]connector:/ { drm = $NF; sub(/^card[0-9]+-/, "", drm) }
+        /^ *Monitor:/ { v = $0; sub(/^ *Monitor: */, "", v); split(v, m, ":"); mon = m[2] }
+        END { flush() }
+    ' <<<"$detected")
+    if ((${#found[@]} == 0)); then
+        echo "monswitch: no monitor that answers DDC/CI${only:+ on $only}: switch DDC/CI on in the monitor's menu, or check ddcutil detect" >&2
+        echo '[]'
+        return 0
+    fi
+    printf '%s\n' "${found[@]}" | jq -sc .
+}
+
+# Terminal version of Settings > Shared Monitor: pick from what the monitor lists, write the conf.
+setup() {
+    local json n i ans out mine other conf=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
+    json=$(inputs)
+    n=$(jq length <<<"$json")
+    ((n > 0)) || {
+        echo "monswitch: nothing to set up (see the line above)" >&2
+        return 1
+    }
+    echo "Monitors that answer DDC/CI:"
+    jq -r 'to_entries[] | "  \(.key + 1)) \(.value.output)  \(.value.model)"' <<<"$json"
+    read -r -p "Which one do you share with another computer? [1] " ans
+    ans=${ans:-1}
+    if [[ ! $ans =~ ^[0-9]+$ ]] || ((ans < 1 || ans > n)); then
+        echo "monswitch: not a number from the list" >&2
+        return 1
+    fi
+    i=$((ans - 1))
+    out=$(jq -r ".[$i].output" <<<"$json")
+    echo "Inputs of $out:"
+    jq -r ".[$i].inputs[] | \"  \(.code)  \(.name)\"" <<<"$json"
+    now=$(jq -r ".[$i].current" <<<"$json")
+    ask_input() { # prompt, default: loops until the answer is a code the monitor listed (or any 0x code if it listed none)
+        local a listed
+        listed=$(jq -r ".[$i].inputs | length" <<<"$json")
+        while :; do
+            read -r -p "$1${2:+ [$2]} " a
+            a=${a:-$2}
+            a=${a,,}
+            if [[ $a =~ ^0x[0-9a-f]{1,2}$ ]] && { ((listed == 0)) || jq -e --arg c "$a" ".[$i].inputs | any(.code == \$c)" <<<"$json" >/dev/null; }; then
+                printf '%s' "$a"
+                return 0
+            fi
+            echo "  Type one of the codes above, like 0x11." >&2
+        done
+    }
+    mine=$(ask_input "Which input is THIS computer on?" "$now")
+    other=$(ask_input "Which input does the OTHER computer use?" "")
+    [[ $mine != "$other" ]] || {
+        echo "monswitch: the two inputs must differ" >&2
+        return 1
+    }
+    mkdir -p "$(dirname "$conf")"
+    {
+        { grep -vE '^(OUT|LAPTOP|PC)=' "$conf" 2>/dev/null || true; } # other keys (MIRROR, POLL) stay
+        printf 'OUT=%s\nLAPTOP=%s\nPC=%s\n' "$out" "$mine" "$other"
+    } >"$conf.new"
+    mv "$conf.new" "$conf"
+    echo "Wrote $conf. Settings > Displays > Shared Monitor shows the same choices."
+}
+
+# these two need no config file: they are how it gets made
+case ${1:-} in
+    inputs)
+        inputs "${2:-}"
+        exit 0
+        ;;
+    setup)
+        setup
+        exit $?
+        ;;
+esac
 
 # Per-computer values live in ~/.config/monswitch.conf (no file = feature off), for example:
 #   OUT=HDMI-A-1   # for example: Hyprland output name of the shared monitor

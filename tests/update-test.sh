@@ -6,6 +6,8 @@
 #   2. that clone is moved to the new code and the new installer runs
 #   3. exit 0; migrations 0001 and 0002 ran, once; the old state folder is gone; no dead link is left in
 #      ~/.config; the doctor is clean; a second run runs no migration
+#   4. rollback: after one more (empty) commit, `rollback --yes` returns to the recorded commit, drops previous-commit,
+#      and the doctor is still clean
 #
 # Needs the repo's history and the tag v1.1.0 (CI checks out with fetch-depth: 0 and fetch-tags: true).
 # A git worktree has no history inside the container: the test says so and passes without running.
@@ -56,4 +58,14 @@ dead=$(find /home/tester/.config -xtype l)
 as './install.sh doctor' desktop-amd || fail "the doctor found problems"
 as './install.sh --yes' desktop-amd >/tmp/second.log 2>&1 || fail "the second run ended with an error"
 ! grep -q '^.*Migration ' /tmp/second.log || fail "a second run ran a migration again"
+echo "===== ROLLBACK"
+before=$(as 'git rev-parse HEAD')
+as 'git -c user.name=t -c user.email=t@t commit -q --allow-empty -m "artificial update"'
+[[ $(as 'git rev-parse HEAD') != "$before" ]] || fail "the artificial update did not move HEAD"
+state=/home/tester/.local/state/hyprism
+echo "$before" >$state/previous-commit # the way lib/migrate.sh's update() records it
+as './install.sh rollback --yes' desktop-amd || fail "rollback ended with an error"
+[[ $(as 'git rev-parse HEAD') == "$before" ]] || fail "rollback did not return to the recorded commit"
+[[ ! -e $state/previous-commit ]] || fail "rollback left previous-commit behind"
+as './install.sh doctor' desktop-amd || fail "the doctor found problems after the rollback"
 echo "PASSED (update from v1.1.0 to ${new_sha:0:9})"

@@ -105,7 +105,9 @@ The installer prints a warning for each and carries on.
 2. The first time, a **Welcome** panel offers a theme, light or dark, a bar layout and your keyboard layouts, and
    lists the keys to know. Tap `Super` to search, `Super+I` for Settings, `Super+/` for every shortcut. The
    "Welcome" action in the launcher shows it again.
-3. Check the result:
+3. The installer sets a default app for folders, links, text, images and PDFs, only where you have none yet
+   (`./install.sh --only defaults` runs it again; it never changes a choice you made).
+4. Check the result:
 
 ```bash
 ./install.sh doctor

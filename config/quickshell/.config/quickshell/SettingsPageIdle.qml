@@ -13,6 +13,7 @@ ColumnLayout {
     readonly property var sleepOptions: [10, 20, 30, 60, 0]
     readonly property int lockMin: Config.idle.lockMin
     readonly property int sleepMin: Config.idle.sleepMin
+    readonly property int powerMin: Config.idle.sleepOnPowerMin
     function label(m) { return m === 0 ? "Never" : m + " min" }
 
     SettingGroup {
@@ -27,13 +28,24 @@ ColumnLayout {
             }
         }
         SettingRow {
-            label: "Sleep after"
+            visible: Sys.hasBattery
+            label: "Sleep on battery after"
             hint: Machine.canHibernate ? "Sleeping laptops hibernate after another hour to save the battery" : "Turns the screens off and sleeps"
             Choice {
                 options: page.sleepOptions.map(page.label)
                 index: page.sleepOptions.indexOf(page.sleepMin)
                 extra: index < 0 ? page.sleepMin + " min (custom)" : ""
                 onPicked: i => Config.set("idle", "sleepMin", page.sleepOptions[i])
+            }
+        }
+        SettingRow {
+            label: "Sleep when plugged in after"
+            hint: Sys.hasBattery ? "Never by default: a plugged-in computer keeps running" : "Never by default: a desktop keeps running until you choose a time"
+            Choice {
+                options: page.sleepOptions.map(page.label)
+                index: page.sleepOptions.indexOf(page.powerMin)
+                extra: index < 0 ? page.powerMin + " min (custom)" : ""
+                onPicked: i => Config.set("idle", "sleepOnPowerMin", page.sleepOptions[i])
             }
         }
         SettingRow {

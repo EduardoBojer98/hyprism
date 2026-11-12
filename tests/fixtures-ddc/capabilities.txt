@@ -1,0 +1,22 @@
+Model: XZ322QU
+MCCS version: 2.2
+Commands:
+   Command: 01 (VCP Request)
+   Command: 02 (VCP Response)
+   Command: 03 (VCP Set)
+   Command: f3 (Capabilities Request)
+VCP Features:
+   Feature: 02 (New control value)
+   Feature: 10 (Brightness)
+   Feature: 12 (Contrast)
+   Feature: 60 (Input Source)
+      Values:
+         0f: DisplayPort-1
+         10: DisplayPort-2
+         11: HDMI-1
+         12: HDMI-2
+   Feature: 62 (Audio speaker volume)
+   Feature: D6 (Power mode)
+      Values:
+         01: DPM: On,  DPMS: Off
+         04: DPM: Off, DPMS: Off

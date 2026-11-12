@@ -1,0 +1,12 @@
+Invalid display
+   I2C bus:          /dev/i2c-5
+   DRM connector:    card1-eDP-1
+   drm_connector_id: 101
+   Monitor:          SHP:LQ134N1JW52:
+
+Display 1
+   I2C bus:          /dev/i2c-6
+   DRM connector:    card1-HDMI-A-1
+   drm_connector_id: 110
+   Monitor:          ACR:XZ322QU S:0000000000000
+

@@ -6,6 +6,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- `screenshot pin` (`Super+Ctrl+S`, and the menu): keep a picked area floating on top of the screen; drag, zoom, copy, close. `Pins.qml` shows them.
+- `monswitch inputs` and `monswitch setup`: find a monitor's inputs over DDC instead of typing codes; Settings → Shared Monitor uses the same list.
+- Sleep times that fit the computer: `idle.sleepOnPowerMin` (sleep when plugged in, default never) next to `idle.sleepMin` (on battery); the new `idle-sleep` script decides at the moment the listener fires. A desktop no longer sleeps by itself.
+- Laptop module step `20-charge-limit.sh`: stop charging at 80% where the kernel allows it; the doctor shows the current limit.
+- `./install.sh` sets default apps (folders, links, text, images, PDF) only where none is set (`--only defaults`).
+- `tests/performance.sh`: a CPU, memory and helper-process budget for an idle shell; `tests/update-test.sh` now tests rollback.
 - Documentation for newcomers: `docs/install.md`, `docs/how-to.md`, `docs/troubleshooting.md`, `docs/modules.md`, a docs index, and `tests/docs.sh`, which fails on a broken link, path or `./install.sh` command in the docs.
 - Keys only for hardware that exists (brightness, keyboard backlight, power mode, shared monitor); `tests/keybinds.sh`
   fails on a key bound twice. The terminal key follows `apps.terminal` in settings.json.

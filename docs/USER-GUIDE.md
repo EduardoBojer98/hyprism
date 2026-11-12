@@ -46,6 +46,9 @@ highlighter, text, numbered markers, blur, crop). **Enter** copies and saves, **
 Files land in `~/Pictures/Screenshots/`. In a terminal: `screenshot area|screen|window|all|delay N`; add `--copy`
 to skip the editor.
 
+`Super+Ctrl+S` (or `screenshot pin`): drag an area and it stays on top of the screen. Drag it to move, scroll to zoom,
+middle or double click to close, right click to copy. Up to 12 pins; the menu has "Remove all pinned screenshots".
+
 ## Settings
 
 `Super+I` (or from the Control Center). The search field finds a page by its name or by words like "dark",

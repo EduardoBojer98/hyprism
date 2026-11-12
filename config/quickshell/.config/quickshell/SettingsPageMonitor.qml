@@ -12,6 +12,15 @@ ColumnLayout {
     id: page
     spacing: 20
 
+    Text {
+        visible: page.scanned && page.found.length === 0
+        Layout.fillWidth: true
+        text: "Could not read the monitor's inputs; these are the usual codes."
+        color: Theme.subtext
+        wrapMode: Text.Wrap
+        font { family: Theme.font; pixelSize: Theme.fontCaption }
+    }
+
     // VCP 0x60 values most monitors use (MCCS); a value outside this list shows as "Other"
     readonly property var presets: [["0x11", "HDMI 1"], ["0x12", "HDMI 2"], ["0x13", "HDMI 3"],
                                     ["0x0f", "DisplayPort 1"], ["0x10", "DisplayPort 2"], ["0x1b", "USB-C"]]
@@ -25,15 +34,22 @@ ColumnLayout {
     readonly property string snapshot: JSON.stringify([enabled, out, mine, other, mirror, mirrorMode.trim()])
     property string savedState: snapshot   // page state as last loaded or saved
     readonly property bool dirty: snapshot !== savedState
+    property var found: []        // from `monswitch inputs`: [{ output, model, current, inputs: [{ code, name }] }]
+    property bool scanned: false
+    readonly property var monitor: found.find(m => m.output === out) ?? null
+    // [code, text] rows for the two input dropdowns: the monitor's own list when it gave one, else the usual codes
+    readonly property var table: monitor && monitor.inputs.length
+        ? monitor.inputs.map(i => [i.code, i.name + (i.code === monitor.current ? " (now)" : "")])
+        : presets.map(p => [p[0], `${p[1]} (${p[0]})`])
     readonly property var outputs: {
-        const names = Hyprland.monitors.values.map(m => m.name)
+        const names = found.length ? found.map(m => m.output) : Hyprland.monitors.values.map(m => m.name)
         if (out && !names.includes(out)) names.push(out)
         return names
     }
 
-    function label(v) { const p = presets.find(x => x[0] === v.toLowerCase()); return p ? `${p[1]} (${v})` : `Other (${v})` }
-    function options(v) { const l = presets.map(p => `${p[1]} (${p[0]})`); return presets.some(p => p[0] === v.toLowerCase()) ? l : l.concat([label(v)]) }
-    function valueOf(option) { return option.match(/\((0x[0-9a-fA-F]+)\)/)?.[1] ?? "" }
+    function label(v) { const p = table.find(x => x[0] === v.toLowerCase()); return p ? p[1] : `Other (${v})` }
+    function options(v) { const l = table.map(p => p[1]); return table.some(p => p[0] === v.toLowerCase()) ? l : l.concat([label(v)]) }
+    function valueOf(option) { return table.find(x => x[1] === option)?.[0] ?? option.match(/\((0x[0-9a-fA-F]+)\)/)?.[1] ?? "" }
 
     function save() {
         if (enabled && (!out || !mine || !other)) { status = "Pick the monitor and both inputs first"; return }
@@ -52,6 +68,17 @@ ColumnLayout {
         savedState = snapshot
     }
     Component.onCompleted: load()
+
+    Process {   // which monitors answer DDC/CI and what inputs each one offers; run once when the page opens
+        running: true
+        command: ["monswitch", "inputs"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { page.found = JSON.parse(text) } catch (e) { page.found = [] }
+                page.scanned = true
+            }
+        }
+    }
 
     Process {   // the input the monitor shows right now
         id: detect

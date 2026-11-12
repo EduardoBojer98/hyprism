@@ -221,7 +221,8 @@ JsonAdapter {
     // monswitch read from them. imported: the values were read once from the file written before (no loss).
     property JsonObject idle: JsonObject {
         property int lockMin: 5                  // minutes to lock; 0 = never
-        property int sleepMin: 20                // minutes to sleep; 0 = never
+        property int sleepMin: 20                // minutes to sleep on battery (the only value used without a battery counts as sleepOnPowerMin); 0 = never
+        property int sleepOnPowerMin: 0          // minutes to sleep on mains power; 0 = never
         property bool imported: false
     }
     property JsonObject input: JsonObject {

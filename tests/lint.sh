@@ -62,6 +62,8 @@ bash tests/scripts.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/hardware-scripts.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
+bash tests/monswitch-inputs.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
 bash tests/keybinds.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/accessibility.sh | grep -v '^ok'

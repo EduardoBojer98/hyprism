@@ -268,7 +268,8 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `lockMin` | `int` | `5` | minutes to lock; 0 = never |
-| `sleepMin` | `int` | `20` | minutes to sleep; 0 = never |
+| `sleepMin` | `int` | `20` | minutes to sleep on battery (the only value used without a battery counts as sleepOnPowerMin); 0 = never |
+| `sleepOnPowerMin` | `int` | `0` | minutes to sleep on mains power; 0 = never |
 | `imported` | `bool` | `false` |  |
 
 ## input

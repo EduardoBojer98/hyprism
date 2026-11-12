@@ -80,7 +80,7 @@ Singleton {
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],
                    showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] },
-        idle: { lockMin: [0, 240], sleepMin: [0, 480], imported: "bool" },
+        idle: { lockMin: [0, 240], sleepMin: [0, 480], sleepOnPowerMin: [0, 480], imported: "bool" },
         input: { layouts: "layouts", shortcut: [0, 3], repeatRate: [1, 100], repeatDelay: [100, 2000], sensitivity: [-1, 1],
                  naturalScroll: "bool", tapToClick: "bool", disableWhileTyping: "bool", clickMethod: ["buttonareas", "clickfinger"],
                  scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", imported: "bool" },

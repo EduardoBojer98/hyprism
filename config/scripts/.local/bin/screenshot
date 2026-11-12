@@ -8,6 +8,8 @@
 #   screenshot all        every monitor                        -> editor
 #   screenshot delay [N]  wait N seconds (default 5), then the monitor under the mouse -> editor
 #                         (for menus and tooltips: open them during the countdown, crop in the editor)
+#   screenshot pin [area] pick an area and keep it floating on top of the screen (no editor, no file in Pictures);
+#                         on the pin: drag moves it, scroll zooms, middle or double click closes, right click copies
 #   add --copy to any of these to skip the editor: copied and saved straight away
 #
 # In the editor (Satty): Enter copies and saves, Ctrl+S saves, Ctrl+C copies, Esc cancels,
@@ -31,7 +33,8 @@ copy=false
 for a in "$@"; do
     case $a in
         --copy) copy=true ;;
-        area | screen | window | all | delay) mode=$a ;;
+        area) [[ $mode == pin ]] || mode=area ;; # `pin area` is `pin`
+        screen | window | all | delay | pin) mode=$a ;;
         *)
             if [[ $a =~ ^[0-9]+$ ]]; then
                 delay=$a
@@ -68,6 +71,22 @@ case $mode in
         geo=$(slurp -d -c "${accent}ff" -b 0b0d0a66 -s "${accent}1f" -w 2 -B 00000000) || exit 0
         sleep 0.15 # one more beat for the picker's layer to leave the screen (Hyprland rule: no fade)
         grim -g "$geo" "$tmp" || fail "grim couldn't capture that area"
+        ;;
+    pin)
+        geo=$(slurp -d -c "${accent}ff" -b 0b0d0a66 -s "${accent}1f" -w 2 -B 00000000) || exit 0
+        sleep 0.15
+        pins="${XDG_RUNTIME_DIR:?}/hyprism-pins"
+        mkdir -p "$pins"
+        chmod 700 "$pins"
+        pinfile=$(mktemp -p "$pins" pin-XXXXXX.png)
+        grim -g "$geo" "$pinfile" || {
+            rm -f "$pinfile"
+            fail "grim couldn't capture that area"
+        }
+        # slurp prints "x,y WxH" in layout coordinates: the shell puts the pin exactly there
+        IFS=', x' read -r px py pw ph <<<"$geo"
+        qs ipc call pins add "$pinfile" "$px" "$py" "$pw" "$ph" || fail "the shell could not show the pin"
+        exit 0
         ;;
     screen) grim -o "$(monitor_under_mouse)" "$tmp" || fail "grim couldn't capture the screen" ;;
     window)

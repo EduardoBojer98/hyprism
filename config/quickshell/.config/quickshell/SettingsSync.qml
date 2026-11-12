@@ -17,7 +17,7 @@ Scope {
     readonly property var shortcuts: ["grp:alt_shift_toggle", "grp:ctrl_shift_toggle", "grp:caps_toggle", ""]
 
     // ---- the files, as text from Config --------------------------------------------------------------
-    function idleText(lockMin, sleepMin) {
+    function idleText(lockMin, sleepMin, powerMin) {
         const blocks = []
         if (lockMin > 0) {
             if (lockMin * 60 > 60)   // a dim first: half a minute's warning before the lock (any input brings it back)
@@ -25,9 +25,10 @@ Scope {
             blocks.push("# " + lockMin + " min: lock\nlistener {\n    timeout    = " + lockMin * 60 + "\n    on-timeout = loginctl lock-session\n}")
             blocks.push("# 30 s later: screens off\nlistener {\n    timeout    = " + (lockMin * 60 + 30) + "\n    on-timeout = hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'\n    on-resume  = " + screensOn + "\n}")
         }
-        if (sleepMin > 0)   // screens on first: an output that sleeps while off loses its CRTC and wakes black
-            blocks.push("# " + sleepMin + " min: sleep (then hibernate after 60 more min where hibernation is set up)\nlistener {\n    timeout    = " + sleepMin * 60
-                        + "\n    on-timeout = " + screensOn + "; systemctl suspend-then-hibernate || systemctl suspend\n}")
+        // one sleep listener per distinct non-zero time; idle-sleep decides at that moment which one applies (battery or mains)
+        for (const m of [...new Set([sleepMin, powerMin])].filter(m => m > 0).sort((a, b) => a - b))
+            blocks.push("# " + m + " min: idle-sleep sleeps if this is the time for the power source in use (then hibernate after 60 more min where hibernation is set up)\nlistener {\n    timeout    = " + m * 60
+                        + "\n    on-timeout = idle-sleep " + sleepMin + " " + powerMin + " " + m + "\n}")
         return "# Written by Quickshell from Settings > Lock & Sleep (settings.json idle). hypridle uses hyprlang.\n"
             + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = loginctl lock-session; " + screensOn + "\n"
             + "    after_sleep_cmd  = " + screensOn + "\n}\n\n" + blocks.join("\n\n") + "\n"
@@ -57,7 +58,7 @@ Scope {
             + (s.mirrorMode ? `MIRROR_MODE=${s.mirrorMode}\n` : "")
     }
 
-    readonly property string idle: idleText(Config.idle.lockMin, Config.idle.sleepMin)
+    readonly property string idle: idleText(Config.idle.lockMin, Config.idle.sleepMin, Config.idle.sleepOnPowerMin)
     readonly property string inputLua: inputTable(Config.input)
     readonly property string displaysLua: displaysTable(Config.displays)
     readonly property string appsLua: SettingsApp.lua({ terminal: Config.apps.terminal })   // read by modules/binds.lua at load
@@ -142,7 +143,9 @@ Scope {
                 const blocks = t.split("listener").slice(1)
                 const min = b => { const m = b?.match(/timeout\s*=\s*(\d+)/); return m ? Math.round(parseInt(m[1]) / 60) : 0 }
                 Config.set("idle", "lockMin", min(blocks.find(b => b.includes("lock-session"))))
-                Config.set("idle", "sleepMin", min(blocks.find(b => b.includes("systemctl suspend"))))
+                const sleep = blocks.find(b => b.includes("on-timeout = idle-sleep"))?.match(/on-timeout = idle-sleep (\d+) (\d+)/)
+                if (sleep) { Config.set("idle", "sleepMin", parseInt(sleep[1])); Config.set("idle", "sleepOnPowerMin", parseInt(sleep[2])) }
+                else Config.set("idle", "sleepMin", min(blocks.find(b => b.includes("systemctl suspend"))))
             }
             Config.set("idle", "imported", true)
         }

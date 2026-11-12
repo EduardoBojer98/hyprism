@@ -85,9 +85,9 @@ Refresh rate, Scale, Rotation) and → Advanced. File: `displays.layout.<screen>
 `{ "mode": "2560x1440@144", "position": "0x0", "scale": 1, "transform": 0 }`; `displays.vrr` = `"off"`, `"on"`
 or `"fullscreen"`; `displays.preferHighRefresh`.
 
-**Lock and sleep times.** Settings → Power → Lock & Sleep. File: `idle.lockMin`, `idle.sleepMin` (minutes, 0 = never).
+**Lock and sleep times.** Settings → Power → Lock & Sleep. File: `idle.lockMin`, `idle.sleepMin` (on battery), `idle.sleepOnPowerMin` (plugged in; a desktop uses only this one) (minutes, 0 = never).
 
-**Default apps.** Settings → Apps → Default Apps (browser, files, PDF, text, images, task manager). Command:
+**Default apps.** A fresh install sets a file manager, browser, text editor, image and PDF viewer only where none is set (`./install.sh --only defaults`). Settings → Apps → Default Apps (browser, files, PDF, text, images, task manager). Command:
 `xdg-settings set default-web-browser firefox.desktop`; `xdg-mime default org.kde.dolphin.desktop inode/directory`.
 The **terminal** the `Super+Enter` key opens has no row in Settings: set `apps.terminal` in the file (plain text
 only, for example `"ghostty +new-window"`).
@@ -113,7 +113,8 @@ only, for example `"ghostty +new-window"`).
 **Battery charge limit.** Only where the `asus` module is on: Settings → Power → Battery & Power → Charge limit (60,
 80 or 100 %). Command: `asusctl battery limit 80`. Other laptops: no row (the code gives none).
 
-**Share a monitor with another computer.** Needs the `ddc-monitor` module. Settings → Displays → Shared Monitor.
+**Share a monitor with another computer.** Needs the `ddc-monitor` module. Settings → Displays → Shared Monitor,
+which lists the inputs the monitor reports. Without the Settings app: `monswitch setup` asks the same questions in a terminal.
 File: `monitorShare.enabled`, `monitorShare.output`, `monitorShare.thisInput`, `monitorShare.otherInput`. Key `Super+M`
 hands it over.
 

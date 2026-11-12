@@ -64,7 +64,8 @@ persists, `./install.sh --only packages`.
 
 Needs the `ddc-monitor` module (on for an external screen on a real computer). Check: the `i2c-dev` kernel module
 is loaded (the doctor checks; `./install.sh --only modules` loads it); `ddcutil detect` lists your monitor; DDC/CI
-is switched on in the monitor's own menu. Not every monitor supports it.
+is switched on in the monitor's own menu. Not every monitor supports it. `monswitch inputs` prints what the monitor
+answers (`[]` plus one line saying why when it does not); some monitors list no inputs, then Settings shows the usual codes.
 
 ## Tablet mode does not rotate
 

@@ -117,6 +117,8 @@ Singleton {
         { id: "shot-all", group: "Screens & capture", title: "Screenshot all screens", words: "screenshot capture full screen all monitors", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot all"] },
         { id: "shot-window", group: "Screens & capture", title: "Screenshot the focused window", words: "screenshot capture window", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot window"] },
         { id: "shot-delay", group: "Screens & capture", title: "Screenshot in 5 seconds", words: "screenshot capture delay timer menu tooltip", glyph: "\u{F0104}", cmd: ["screenshot", "delay", "5"] },
+        { id: "shot-pin", group: "Screens & capture", title: "Pin an area on screen", words: "screenshot pin sticky float keep on top", glyph: "\u{F0104}", cmd: ["sh", "-c", "sleep 0.3; screenshot pin"] },
+        { id: "shot-unpin", group: "Screens & capture", title: "Remove all pinned screenshots", words: "screenshot pin unpin clear remove close", glyph: "\u{F0104}", run: () => Pins.clear() },
         { id: "record", group: "Screens & capture", title: "Record the screen", words: "record recording video screencast capture", glyph: "\u{F044A}", cmd: ["sh", "-c", "sleep 0.3; record"] },
         { id: "record-area", group: "Screens & capture", title: "Record an area", words: "record recording video screencast capture region", glyph: "\u{F044A}", cmd: ["sh", "-c", "sleep 0.3; record area"] },
         { id: "record-stop", group: "Screens & capture", title: "Stop recording", words: "record recording video stop end save", glyph: "\u{F044A}", cmd: ["record", "stop"] },
