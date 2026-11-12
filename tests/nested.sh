@@ -11,14 +11,19 @@
 #   tests/nested.sh stop           close the window and delete the throwaway home
 #
 # Under Hyprland the window sits on a virtual screen of its own (1920x1200, or HYPRISM_TEST_SIZE=WxH), so it
-# never covers your work.
+# never covers your work. HYPRISM_TEST_NAME=x runs a second, separate session (pass it to every command).
 # Kept away from the real session: its own D-Bus session, GTK settings kept in memory, and stand-ins on the
 # PATH for every command that would act on the real machine (pkill, systemctl, brightness, power, DDC…),
 # which only write what they were asked to do into <home>/shims.log.
 set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
 run=${XDG_RUNTIME_DIR:?needs a graphical session}
-state=$run/hyprism-nested
+name=${HYPRISM_TEST_NAME:-main} # several sessions can run side by side under different names
+[[ $name =~ ^[a-z0-9]+$ ]] || {
+    echo "HYPRISM_TEST_NAME: lower-case letters and digits only" >&2
+    exit 2
+}
+state=$run/hyprism-nested-$name
 usage() {
     awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
     exit "${1:-0}"
@@ -37,14 +42,18 @@ inside() { env HOME="$T" XDG_CONFIG_HOME="$T/.config" XDG_STATE_HOME="$T/.local/
 # Under Hyprland the test window goes onto a virtual screen of its own, far from your real ones: it gets a
 # full-size desktop (so Settings fits), keeps drawing (a window on a hidden workspace would not), and never
 # covers your work or takes your pointer.
-SCREEN=hyprism-test
+SCREEN=hyprism-test-$name
 park() {
     [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || return 0
     local win=""
+    local others # test screens already there: each new one goes further right, so they never overlap
+    others=$(hyprctl monitors -j | jq '[.[] | select(.name | startswith("hyprism-test"))] | length')
     hyprctl output create headless "$SCREEN" >/dev/null || return 0
-    hyprctl eval "hl.monitor({ output = \"$SCREEN\", mode = \"${HYPRISM_TEST_SIZE:-1920x1200}@60\", position = \"20000x20000\", scale = 1 })" >/dev/null || true
+    hyprctl eval "hl.monitor({ output = \"$SCREEN\", mode = \"${HYPRISM_TEST_SIZE:-1920x1200}@60\", position = \"$((20000 + others * 6000))x20000\", scale = 1 })" >/dev/null || true
     for _ in $(seq 20); do
-        win=$(hyprctl clients -j | jq -r '.[] | select(.class == "aquamarine") | .address' | tail -1)
+        # the nested compositor's window that isn't parked on a test screen yet (another session's already is)
+        win=$(jq -rn --argjson m "$(hyprctl monitors -j)" --argjson c "$(hyprctl clients -j)" \
+            '($m | map(select(.name | startswith("hyprism-test")) | .id)) as $parked | $c[] | select(.class == "aquamarine" and (.monitor as $i | $parked | index($i) | not)) | .address' | tail -1)
         [[ -n $win ]] && break
         sleep 0.25
     done

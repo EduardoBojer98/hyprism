@@ -19,7 +19,7 @@ $nested start >/dev/null || {
     exit 1
 }
 # shellcheck disable=SC1091
-. "${XDG_RUNTIME_DIR:?}/hyprism-nested/env"
+. "${XDG_RUNTIME_DIR:?}/hyprism-nested-${HYPRISM_TEST_NAME:-main}/env"
 file=$T/.config/quickshell/settings.json
 ipc() { $nested ipc "$@" 2>&1; }
 # in_file KEY VALUE-AS-JSON (after 1.5 s: the shell ignores a file change within 1 s of its own write): write it into the file the way an editor would (temp file, then move over)
