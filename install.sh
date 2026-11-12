@@ -13,7 +13,7 @@
 #
 #   --dry-run                 only show what would happen (questions are listed, not asked)
 #   --yes                     answer yes to every question (unattended)
-#   --only LIST               comma list of steps (packages, links, services, modules)
+#   --only LIST               comma list of steps (packages, links, services, firewall, modules)
 #                             and/or package groups (core, desktop, tools, look, apps, shell)
 #   --with LIST               turn modules on, whatever detection says (remembered)
 #   --without LIST            turn modules off (remembered)
@@ -134,6 +134,7 @@ case $CMD in
         if want_step packages; then packages; fi
         if want_step links; then links; fi
         if want_step services; then services; fi
+        if want_step firewall; then firewall; fi
         if want_step modules; then module_steps; fi
         finish "Done. Log out and pick Hyprland at the login screen. ./install.sh doctor checks the result."
         ;;

@@ -11,6 +11,7 @@ CachyOS, EndeavourOS and Manjaro say `ID_LIKE=arch`). A backend only talks to th
 | `distro_install SOURCE PKGS...` | install a batch from one source; wrap commands in `run` (dry run) |
 | `distro_nvidia` | install the NVIDIA driver |
 | `distro_supported` | exit 0 when this release is new enough (says why when not) |
+| `distro_firewall` | turn a firewall on that blocks incoming connections and allows outgoing (`./install.sh --only firewall`; Arch: ufw, Fedora: firewalld); use `run` and `sys_enable` so a dry run shows it and uninstall can undo the service |
 | `distro_doctor` | extra doctor checks (for example snapshots before updates) |
 | `distro_kernel_args NAME ARGS` | add kernel boot arguments (the `hibernate` module) |
 | `distro_pkg_owners FILE...` | print `FILE<TAB>PACKAGE` for each file a package owns (nothing for unowned files) |

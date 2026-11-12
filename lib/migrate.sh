@@ -31,6 +31,15 @@ migrations() {
     done
 }
 
+# The official Hyprland plugins are built only here, never at login (pinned commit: see hypr-plugins --help)
+plugins_build() {
+    local bin=$REPO/config/scripts/.local/bin/hypr-plugins
+    [[ -x $bin ]] && command -v g++ >/dev/null && command -v Hyprland >/dev/null || return 0
+    [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || return 0 # needs the running Hyprland: it names the version to build for
+    say "Building the Hyprland plugins"
+    run "$bin" build || FAILED+=("hypr-plugins build failed (hypr-plugins --help says how to pin a new Hyprland version)")
+}
+
 update() {
     if [[ -z ${HYPRISM_PULLED:-} ]] && git -C "$REPO" rev-parse -q --verify '@{u}' >/dev/null 2>&1; then # no upstream = nothing to pull
         if [[ -n $(git -C "$REPO" status --porcelain) ]]; then
@@ -53,6 +62,7 @@ update() {
     detect_write
     packages
     links
+    plugins_build
     module_steps # only new or changed ones; each asks first
     $DRY || doctor || FAILED+=("the doctor found problems (above)")
 }

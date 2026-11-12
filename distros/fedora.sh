@@ -12,6 +12,11 @@ distro_installed() { rpm -q "$2" >/dev/null 2>&1; }
 
 rpmfusion() { # rpmfusion free|nonfree
     rpm -q "rpmfusion-$1-release" >/dev/null 2>&1 && return 0
+    echo "   RPM Fusion: a community repo for software Fedora does not ship"
+    ask "Enable it?" || {
+        warn "Skipped RPM Fusion $1: its packages can't be installed"
+        return 0
+    }
     run sudo dnf install -y "https://mirrors.rpmfusion.org/$1/fedora/rpmfusion-$1-release-$(rpm -E %fedora).noarch.rpm"
 }
 
@@ -22,7 +27,10 @@ distro_prepare() {
         case $src in
             copr:*)
                 rpm -q dnf-plugins-core >/dev/null 2>&1 || run sudo dnf install -y dnf-plugins-core
-                run sudo dnf copr enable -y "${src#copr:}"
+                echo "   COPR ${src#copr:}: a third-party repo, not Fedora's own"
+                if ask "Enable it?"; then
+                    run sudo dnf copr enable -y "${src#copr:}"
+                else warn "Skipped COPR ${src#copr:}: its packages can't be installed"; fi
                 ;;
             rpmfusion-free) rpmfusion free ;;
             rpmfusion-nonfree)
@@ -45,6 +53,9 @@ distro_nvidia() {
     run sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda
     say "Wait a few minutes for akmods to build the module, then reboot. With Secure Boot see /usr/share/doc/akmods/README.secureboot"
 }
+
+# Firewall: firewalld ships with Fedora (deny incoming except SSH and the usual desktop services); turn it on
+distro_firewall() { sys_enable firewalld.service; }
 
 distro_update() {
     local y=()

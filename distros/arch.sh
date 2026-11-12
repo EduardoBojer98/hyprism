@@ -31,6 +31,11 @@ distro_install() {
             warn "Skipped (no AUR helper): ${aur[*]}"
             return 0
         }
+        printf '   %s (AUR: built from a user-submitted recipe)\n' "${aur[@]}"
+        ask "Build and install these from the AUR?" || {
+            warn "Skipped (AUR not trusted): ${aur[*]}"
+            return 0
+        }
         run "$helper" -S --needed --noconfirm "${aur[@]}"
     fi
 }
@@ -40,6 +45,17 @@ distro_nvidia() {
     if command -v chwd >/dev/null; then
         run sudo chwd -a
     else run sudo pacman -S --needed --noconfirm nvidia-open-dkms nvidia-utils egl-wayland linux-headers; fi
+}
+
+# Firewall: ufw, deny incoming and allow outgoing. A failed ufw call (no kernel firewall in a container) is a warning.
+distro_firewall() {
+    distro_installed repo ufw || distro_install repo ufw
+    {
+        run sudo ufw default deny incoming &&
+            run sudo ufw default allow outgoing &&
+            run sudo ufw --force enable # --force: the question was asked above
+    } || warn "ufw could not be switched on here"
+    sys_enable ufw.service
 }
 
 # Full system update (AUR too when there's a helper); snap-pac snapshots before and after

@@ -1,17 +1,36 @@
 #!/usr/bin/env bash
-# Builds this repo's Hyprland plugins (plugins/<name>/main.cpp) and the official ones listed in
-# UPSTREAM (hyprwm/hyprland-plugins, shallow-cloned at the tag of the running Hyprland), and loads
-# them into the running Hyprland. Rebuilds after a Hyprland update, since a plugin only loads into the
-# exact version it was built against. Run from Hyprland's autostart; a failed build only skips that
-# plugin. Then calls setup_plugins() (hypr/modules/plugins.lua), which configures what got loaded.
+# Hyprland plugins: this repo's own (plugins/<name>/main.cpp) and the official ones listed in UPSTREAM
+# (hyprwm/hyprland-plugins). A plugin only loads into the exact Hyprland version it was built against.
+#
+#   hypr-plugins          load the plugins built for the running Hyprland (run at login). Builds this repo's
+#                         own plugins when stale. Never downloads: if the official ones aren't built, it says so.
+#   hypr-plugins build    download hyprland-plugins at the tag of the running Hyprland, check its commit
+#                         against the PIN table in this script, compile and load. ./install.sh update runs it.
+#
+# A tag with no PIN is refused. To trust a new one: read the diff against the pinned tag
+# (git diff OLD_TAG NEW_TAG in a clone of hyprwm/hyprland-plugins), then add its commit
+# (git ls-remote https://github.com/hyprwm/hyprland-plugins 'refs/tags/TAG^{}') to PIN in this script.
+# Both modes end by calling setup_plugins() (hypr/modules/plugins.lua), which configures what got loaded.
 set -uo pipefail # no -e: a failed build only skips that plugin
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
-case ${1:-} in -h | --help) usage ;; esac
+case ${1:-} in -h | --help) usage ;; "" | build) ;; *) usage 2 >&2 ;; esac
+mode=${1:-load}
 repo=$(repo_root) # ~/.local/bin is a link into the repo
 out=${XDG_DATA_HOME:-$HOME/.local/share}/hypr-plugins
 mkdir -p "$out"
 UPSTREAM=(hyprbars) # title bars with buttons for windows that draw none (hypr/modules/plugins.lua)
+# tag of hyprland-plugins -> the commit it must point to (a tag can be moved, a commit can't)
+declare -A PIN=(
+    ["v0.57.0"]=d2427d4d15b36df40468f5a58bbd67cdba19835d
+)
+
+# load NAME: load a built plugin that is newer than the running Hyprland, unless it is loaded already
+load() {
+    local so=$out/$1.so
+    [[ -f $so && ! /usr/bin/Hyprland -nt $so ]] || return 1
+    hyprctl plugin list | grep -q "^Plugin $1 " || hyprctl plugin load "$so" >/dev/null
+}
 
 # build NAME SOURCES... : g++ into $out/NAME.so when missing or older than its sources or Hyprland
 build() {
@@ -39,12 +58,24 @@ done
 
 tag=$(hyprctl version -j | jq -r .tag)
 up=$out/src/hyprland-plugins-$tag
-if [[ ! -d $up ]] && ! git clone -q -c advice.detachedHead=false -b "$tag" --depth 1 \
-    https://github.com/hyprwm/hyprland-plugins "$up" 2>"$out/clone.log"; then
-    notify-send -a Hyprland "Hyprland plugins not downloaded" "No tag $tag yet, or offline; see $out/clone.log"
+if [[ $mode == build ]]; then
+    [[ -n ${PIN[$tag]:-} ]] || die "hyprland-plugins $tag has no pin. Read its diff, then add its commit to PIN in $(readlink -f "$0") (see --help)"
+    if [[ ! -d $up ]]; then
+        git clone -q -c advice.detachedHead=false -b "$tag" --depth 1 \
+            https://github.com/hyprwm/hyprland-plugins "$up" 2>"$out/clone.log" ||
+            die "could not download hyprland-plugins $tag (no such tag yet, or offline); see $out/clone.log"
+        if [[ $(git -C "$up" rev-parse HEAD) != "${PIN[$tag]}" ]]; then
+            rm -rf "$up"
+            die "hyprland-plugins $tag is not the pinned commit ${PIN[$tag]}: refusing to build it"
+        fi
+    fi
+    for name in "${UPSTREAM[@]}"; do
+        [[ -d $up/$name ]] && build "$name" "$up/$name"/*.cpp
+    done
+else
+    loaded=false
+    for name in "${UPSTREAM[@]}"; do load "$name" && loaded=true; done
+    $loaded || notify-send -a Hyprland "Title-bar buttons are off" "Run hypr-plugins build (or ./install.sh update) to build them for Hyprland $tag"
 fi
-for name in "${UPSTREAM[@]}"; do
-    [[ -d $up/$name ]] && build "$name" "$up/$name"/*.cpp
-done
 
 hyprctl eval "setup_plugins()" >/dev/null

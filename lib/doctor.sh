@@ -51,6 +51,7 @@ doctor() {
         bad "service not enabled: bluetooth" "./install.sh --only services"
     fi
     if systemctl is-enabled -q docker.service 2>/dev/null; then bad "docker.service starts at boot" "./install.sh --only services (starts it on first use instead)"; fi
+    if firewall_missing; then warn "no firewall is active (./install.sh --only firewall turns one on)"; fi
     distro_doctor
     if is_checkout; then
         [[ $(git -C "$REPO" config core.hooksPath) == .githooks ]] || bad "secret-scan hook not enabled" "./install.sh --only links"

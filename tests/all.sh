@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Everything CI runs, on this computer, through Docker: the lint suite as CI runs it (in an Arch container,
-# as root, on a copy) and the install test on Arch and Fedora. Changes nothing outside throwaway containers.
-#   tests/all.sh             all three
+# as root, on a copy), the install test on Arch and Fedora, and the update test (from the previous release;
+# it skips itself in a git worktree). Changes nothing outside throwaway containers.
+#   tests/all.sh             all four
 #   tests/all.sh lint        only the lint suite          tests/all.sh arch | fedora   only that install test
+#   tests/all.sh update      only the update test
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 want=${1:-all}
@@ -29,4 +31,7 @@ for distro in arch fedora; do
     [[ $distro == fedora ]] && image=fedora:latest
     job "install-$distro" "$image" 'bash /mnt/repo/tests/container-test.sh'
 done
+if [[ $want == all || $want == update ]]; then
+    job update archlinux:latest 'bash /mnt/repo/tests/update-test.sh'
+fi
 exit "$fail"

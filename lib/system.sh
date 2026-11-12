@@ -69,6 +69,23 @@ services() {
     return 0
 }
 
+# A firewall is on when ufw or firewalld runs, or nftables has rules.
+# shortcut: nft needs root, so it is read with sudo -n (no password prompt); without it that one test says "no"
+firewall_active() {
+    systemctl is-active -q ufw.service firewalld.service 2>/dev/null && return 0
+    [[ -n $(sudo -n nft list ruleset 2>/dev/null) ]]
+}
+# True when a firewall is worth offering: systemd is running (a container has neither systemd nor a firewall to set)
+firewall_missing() { [[ -d /run/systemd/system ]] && ! firewall_active; }
+
+# Offers a firewall when none is on: blocks incoming connections, allows outgoing (distro_firewall)
+firewall() {
+    firewall_missing || return 0
+    say "Firewall"
+    ask "No firewall is active. Turn one on (blocks incoming connections, allows outgoing)?" || return 0
+    distro_firewall
+}
+
 # Undo everything in the manifest, newest first
 system_undo() {
     [[ -s $STATE/manifest ]] || {

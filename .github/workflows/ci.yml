@@ -5,6 +5,8 @@
 #   install a fresh install in Arch and Fedora containers: the right modules per hardware profile, install
 #           twice, a third run changes nothing, the doctor is clean, a failure is reported, uninstall leaves
 #           the home folder as it was
+#   update  a computer set up with release v1.1.0 is updated to this code: migrations once, no dead links,
+#           doctor clean (Arch only; needs the tag v1.1.0 pushed)
 # AUR packages and real hardware steps can't run here (docs/testing covers those by hand).
 name: ci
 on:
@@ -49,3 +51,13 @@ jobs:
       - uses: actions/checkout@v5
       - name: hardware profiles, install twice, doctor, uninstall (${{ matrix.image }})
         run: docker run --rm -v "$PWD":/mnt/repo:ro ${{ matrix.image }} bash /mnt/repo/tests/container-test.sh
+
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # the test clones the previous release (a tag) and fetches this commit from the checkout
+          fetch-tags: true
+      - name: update from v1.1.0 (archlinux:latest)
+        run: docker run --rm -v "$PWD":/mnt/repo:ro archlinux:latest bash /mnt/repo/tests/update-test.sh

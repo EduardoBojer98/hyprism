@@ -61,6 +61,17 @@ check "hwmon of an unknown name prints nothing and succeeds under set -e" '[[ $n
 # package-manager commands live in distros/ only
 check "no package-manager command in scripts or module bin dirs" '! grep -nwE "pacman|paru|yay|dnf|rpm" "$bin"/* modules/*/home/.local/bin/* 2>/dev/null | grep -q .'
 
+# hypr-plugins build refuses a Hyprland tag that has no pin, before it downloads anything (stand-in tools on PATH)
+mkdir -p "$t/fake"
+printf '#!/bin/sh\necho "{\\"tag\\":\\"v0.0.0-nopin\\"}"\n' >"$t/fake/hyprctl"
+printf '#!/bin/sh\n' >"$t/fake/notify-send"
+printf '#!/bin/sh\nwhile [ $# -gt 0 ]; do [ "$1" = -o ] && touch "$2"; shift; done\n' >"$t/fake/g++"
+printf '#!/bin/sh\n' >"$t/fake/pkg-config"
+chmod +x "$t"/fake/*
+# shellcheck disable=SC2034  # read inside check's condition
+out=$(PATH=$t/fake:$PATH XDG_DATA_HOME="$t/plug" bash "$bin/hypr-plugins" build 2>&1)
+check "hypr-plugins build refuses a tag with no pin" '[[ $out == *"has no pin"* && ! -d $t/plug/hypr-plugins/src ]]'
+
 # every distro backend defines the app-list functions
 for b in distros/*.sh; do
     for fn in distro_pkg_owners distro_pkg_source distro_pkg_versions distro_pkg_info distro_pkg_url distro_pkg_remove_cmd; do
