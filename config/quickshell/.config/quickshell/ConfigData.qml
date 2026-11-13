@@ -40,7 +40,8 @@ JsonAdapter {
         // [{ name, kind: "command"|"terminal"|"open"|"snippet", value, confirm }]
         property list<var> actions: []
         property var usage: ({})                // launch counts, for ranking
-        // look (Search & Widgets > Spotlight)
+        // look (Search & Launcher > Style)
+        property string style: "theme"          // theme (the theme's own) | spotlight | command | launchpad | drawer | sidebar | terminal (Launcher.qml styles)
         property int columns: 7                 // apps per row in the apps grid
         property string startView: "theme"       // theme (the theme's own) | home (suggestions until you type) | apps (grid) | search (empty pill)
         property list<string> recent: []        // result keys, most recent first, for the home view

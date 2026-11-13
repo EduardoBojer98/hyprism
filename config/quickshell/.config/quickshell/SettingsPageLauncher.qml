@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Search & Launcher: Spotlight (tap Super): its design (a set of look options, or each one on its own),
+// Search & Launcher: Spotlight (tap Super): its style (the theme's own or a preset, drawn as a gallery),
 // how it opens, result order, and your own actions: commands, terminal
 // commands, folders/URLs to open, and text snippets to paste.
 ColumnLayout {
@@ -52,6 +52,41 @@ ColumnLayout {
 
 
 
+
+    // Style: the theme's own launcher or one of Launcher.styles, each drawn in the active theme's colours
+    SettingGroup {
+        title: "Style"
+        Text {
+            Layout.fillWidth: true
+            Layout.margins: 16
+            Layout.bottomMargin: 0
+            text: "Where Spotlight opens and its shape. Colours and fonts always follow the theme, so every style works in every theme."
+            color: Theme.subtext
+            wrapMode: Text.Wrap
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
+        }
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.margins: 12
+            columns: Math.max(2, Math.floor((width + columnSpacing) / (190 + columnSpacing)))
+            columnSpacing: 14
+            rowSpacing: 16
+            Repeater {
+                model: ["theme"].concat(Launcher.styleIds)
+                LauncherStylePreview {
+                    required property string modelData
+                    readonly property var style: Launcher.styles[modelData] ?? null
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    spec: style ?? Theme.current.launcher
+                    label: style ? style.name : Theme.current.name + "'s own"
+                    about: style ? style.about : "Follows the theme, and changes with it"
+                    chosen: (Config.launcher.style ?? "theme") === modelData
+                    onPicked: Config.set("launcher", "style", modelData)
+                }
+            }
+        }
+    }
 
     SettingGroup {
         title: "Spotlight"

@@ -33,7 +33,7 @@ Item {
             color: Theme.text
             selectionColor: Theme.accent
             font {
-                family: Launcher.bigQuery ? Theme.displayFont : Theme.font
+                family: Launcher.preset?.mono ? Theme.monoFont : Launcher.bigQuery ? Theme.displayFont : Theme.font
                 pixelSize: Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : 0.38))
                 weight: Launcher.bigQuery ? Theme.displayWeight : Font.Normal
             }
@@ -43,8 +43,10 @@ Item {
             }
             Text {
                 visible: !field.text
+                width: parent.width
+                elide: Text.ElideRight
                 anchors.verticalCenter: parent.verticalCenter
-                text: Launcher.mode === "search" ? (Launcher.bigQuery ? "Search" : "Search apps, files, settings and more") : Launcher.modes.find(m => m.id === Launcher.mode)?.hint ?? ""
+                text: Launcher.mode === "search" ? (Launcher.bigQuery || Launcher.look.width < 560 ? "Search" : "Search apps, files, settings and more") : Launcher.modes.find(m => m.id === Launcher.mode)?.hint ?? ""
                 color: Theme.muted
                 font: field.font
             }
@@ -98,7 +100,7 @@ Item {
         id: buttons
         anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
         width: modeRow.implicitWidth + 12
-        radius: height / 2
+        radius: Launcher.corner === 0 ? 0 : height / 2
         strong: true
         flat: Launcher.unified
         color: Launcher.unified ? "transparent" : Launcher.surface
@@ -113,7 +115,7 @@ Item {
                 required property var modelData
                 readonly property bool current: Launcher.mode === modelData.id
                 width: 36; height: 36
-                radius: width / 2
+                radius: Launcher.corner === 0 ? 0 : width / 2
                 color: current ? Theme.fillActive : buttonArea.containsMouse ? Theme.fillHover : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 Text {

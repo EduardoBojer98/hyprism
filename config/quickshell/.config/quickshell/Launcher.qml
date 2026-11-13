@@ -12,34 +12,70 @@ import QtQuick
 //   Files     files and folders only        Actions   system and custom actions only
 //   Clipboard the clipboard history inside this panel (or the Super+V popup, per Settings)
 // Keys: type · ↑↓ (←→ in Apps) move · Enter open · Tab next mode · Esc close
-// Look (Settings > Search & Widgets > Spotlight): separate options, the designs there are sets of them:
-// split (search pill, round buttons and results as separate glass) or unified (one card), width,
-// search size, colour, corners, apps per row, how the selected result is marked, and a dimmed screen.
+// Look (Settings > Search & Launcher > Style): the theme's own (its launcher block in theme.json) or one of
+// `styles` below. A style picks only shape and place; colours and fonts stay the theme's, so each works in every theme.
 Singleton {
     id: root
 
-    // The look comes from the theme (Themes.qml launcher: placement, view, header, width); your
-    // behaviour options (web search, files, actions, order, recent, clipboard) from Config.launcher.
-    readonly property var rl: Theme.current.launcher
+    // placement, view, header, width, select, prompt: as in a theme's launcher block (Themes.qml). The style's own:
+    // split (search pill and buttons as separate glass), corners (theme | sharp | round), field (search height px),
+    // dim, fill (the panel's share of the free height; 0 = as tall as its content), columns and icon (apps grid),
+    // mono (rows and typing in the mono face). Config.launcher.style names one, or "theme".
+    readonly property var styles: ({
+        spotlight: { name: "Spotlight", about: "A floating search pill with round buttons beside it, suggestions below",
+                     placement: "center", view: "home", header: "none", width: 640, select: "wash", prompt: "",
+                     split: true, corners: "round", field: 54, dim: 0.14 },
+        command:   { name: "Command bar", about: "A slim bar across the top edge; results drop down as you type",
+                     placement: "strip", view: "inline", header: "none", width: 0, select: "inverse", prompt: "",
+                     split: false, corners: "sharp", field: 46, dim: 0.16 },
+        launchpad: { name: "Launchpad", about: "A big sheet over a dark screen that opens on every app",
+                     placement: "fullscreen", view: "grid", header: "query", width: 1180, select: "wash", prompt: "",
+                     split: false, corners: "round", field: 72, dim: 0.55, fill: 0.86, columns: 8, icon: 60 },
+        drawer:    { name: "Drawer", about: "Rises from the bottom like a phone's app drawer, apps first",
+                     placement: "island", view: "grid", header: "none", width: 720, select: "wash", prompt: "",
+                     split: false, corners: "round", field: 50, dim: 0.22, fill: 0.78, columns: 6 },
+        sidebar:   { name: "Sidebar", about: "A full-height column on the left edge, everything as a list",
+                     placement: "column", view: "home", header: "none", width: 440, select: "inverse", prompt: "",
+                     split: false, corners: "sharp", field: 52, dim: 0.2, fill: 1, columns: 4 },
+        terminal:  { name: "Terminal", about: "A square prompt in the mono face, a solid block on the selection",
+                     placement: "center", view: "inline", header: "query", width: 720, select: "inverse", prompt: "❯",
+                     split: false, corners: "sharp", field: 60, dim: 0.24, mono: true },
+    })
+    readonly property var styleIds: Object.keys(styles)
+    readonly property var preset: styles[Config.launcher.style] ?? null
+
+    // The look comes from the style or the theme; your behaviour options (web search, files, actions, order,
+    // recent, clipboard) from Config.launcher.
+    readonly property var rl: preset ?? Theme.current.launcher
     readonly property real screenW: popup.targetScreen?.width ?? 1600
     readonly property real screenH: popup.targetScreen?.height ?? 1000
     readonly property var look: Object.assign({}, Config.launcher, {
         placement: rl.placement,
-        style: Theme.glassy && rl.placement === "center" ? "split" : "unified",
+        style: preset ? (preset.split ? "split" : "unified") : Theme.glassy && rl.placement === "center" ? "split" : "unified",
         width: rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
              : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
-             : rl.placement === "fullscreen" ? Math.min(rl.width, screenW - 80) : rl.width,
-        field: rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5),
-        corners: Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
+             : rl.placement === "fullscreen" ? Math.min(rl.width, screenW - 80)
+             : Math.min(rl.width, screenW - Theme.spaceL * 2),
+        field: preset?.field ?? (rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5)),
+        corners: preset && preset.corners !== "theme" ? preset.corners : Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
         selection: "accent",
         // a light dim behind it, never a blur (Hyprland skips blur under see-through layers, rules.lua)
-        dim: ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18,
+        dim: preset?.dim ?? ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18,
+        fill: preset?.fill ?? 0,
+        columns: preset?.columns ?? Config.launcher.columns,
+        icon: preset?.icon ?? Theme.iconApp,
         startView: rl.view === "grid" || rl.view === "start" ? "apps" : rl.view === "inline" ? "search" : "home"
     })
     readonly property bool unified: look.style === "unified"
     readonly property bool bigQuery: rl.header === "query"   // Console, Poster, Atlas, Noir: the query set large
+    readonly property string rowFont: preset?.mono ? Theme.monoFont : Theme.font
     readonly property color surface: Theme.surface("glass")
-    readonly property real corner: Theme.radius === 0 ? 0 : Theme.radiusLarge
+    readonly property real corner: look.corners === "sharp" ? 0 : look.corners === "round" ? Math.max(Theme.radiusLarge, 18) : Theme.radiusLarge
+    // the most the panel under the search field can take: from where CursorPopup.place() puts the top (the
+    // centred ones sit lower; bottom-anchored ones grow upwards) down to the dock
+    readonly property real top: ({ center: Math.max(popup.topReserve, screenH * 0.2), fullscreen: Math.max(popup.topReserve, screenH * 0.1),
+                                   strip: Theme.reserveTop, half: Theme.reserveTop, column: Theme.reserveTop })[look.placement] ?? popup.topReserve
+    readonly property real room: Math.max(180, screenH - popup.bottomReserve - top - look.field - (unified ? 0 : Theme.spaceS))   // a floor for tiny screens
     // the selected row, the theme's way: a soft accent tint (glass themes) or a solid accent block with
     // inverted text (the flat and terminal themes)
     readonly property bool inverse: (rl.select ?? "wash") === "inverse"
