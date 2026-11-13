@@ -1,6 +1,7 @@
 {
   "name": "CPU usage",
   "glyph": "󰻠",
+  "category": "System",
   "settings": {
     "interval": 2
   }

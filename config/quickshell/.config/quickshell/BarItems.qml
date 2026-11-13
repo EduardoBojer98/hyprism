@@ -17,8 +17,9 @@ Singleton {
 
     function has(id) { return defs[id] !== undefined }
     function url(id) { return Qt.resolvedUrl("bar/items/" + id + "/Item.qml") }
-    // name and glyph for Settings' item list
-    readonly property var catalogue: Object.keys(defs).sort().map(id => ({ id: id, name: defs[id].name ?? id, glyph: defs[id].glyph ?? "" }))
+    // name, glyph and category (defaults.json "category"; none = "Other") for Settings' item list
+    readonly property var catalogue: Object.keys(defs).sort().map(id => ({ id: id, name: defs[id].name ?? id, glyph: defs[id].glyph ?? "", category: defs[id].category || "Other" }))
+    readonly property var categories: ["Desktop", "System", "Connections & sound", "Time & info", "Other"]
 
     // Settings every item understands (docs/bar.md). Anything else in bar.items.<id> is the item's own.
     //   enabled      false hides it everywhere

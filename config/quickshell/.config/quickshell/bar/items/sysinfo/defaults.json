@@ -1,6 +1,7 @@
 {
   "name": "System info",
   "glyph": "󰓅",
+  "category": "System",
   "settings": {
     "metrics": [
       "cpu",

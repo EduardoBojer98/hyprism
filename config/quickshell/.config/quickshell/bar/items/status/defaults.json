@@ -1,6 +1,7 @@
 {
   "name": "Quick settings",
   "glyph": "󰒓",
+  "category": "Connections & sound",
   "settings": {
     "scroll": "volume"
   }

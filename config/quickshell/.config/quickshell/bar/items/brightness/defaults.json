@@ -1,6 +1,7 @@
 {
   "name": "Brightness",
   "glyph": "󰃟",
+  "category": "System",
   "settings": {
     "scroll": "brightness"
   }

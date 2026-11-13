@@ -1,6 +1,7 @@
 {
   "name": "GPU usage",
   "glyph": "󰢮",
+  "category": "System",
   "settings": {
     "interval": 2
   }

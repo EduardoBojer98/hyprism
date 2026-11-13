@@ -23,6 +23,9 @@ ColumnLayout {
     readonly property var names: ({ start: Theme.barVertical ? "Top" : "Left", center: "Middle", end: Theme.barVertical ? "Bottom" : "Right" })
     readonly property var used: [].concat(Array.from(layout.start), Array.from(layout.center), Array.from(layout.end))
     readonly property var unused: Themes.barItems.filter(it => !used.includes(it.id))
+    // the tray, one group per category that still has unused items (an item's category is in its defaults.json)
+    readonly property var unusedGroups: BarItems.categories.concat(unused.map(it => it.category).filter(c => !BarItems.categories.includes(c)))
+        .map(c => ({ name: c, items: unused.filter(it => it.category === c) })).filter(g => g.items.length)
     // the bar's own look, so the copy reads like the real one
     readonly property color ground: ({ glass: Theme.glassStrong, surface: Theme.surfaceColor, ground: Theme.base, ink: Theme.text, none: Theme.base })[Theme.barStyle.fill] ?? Theme.surfaceColor
     readonly property color ink: Theme.barInk
@@ -89,7 +92,7 @@ ColumnLayout {
     // ---- the tray of unused items ------------------------------------------------------------------
     Rectangle {
         Layout.fillWidth: true
-        implicitHeight: Math.max(56, tray.implicitHeight + 20)
+        implicitHeight: Math.max(56, tray.implicitHeight + 24)
         radius: Theme.radius
         color: trayDrop.active ? Theme.accentWash : Theme.fill
         border { color: trayDrop.active ? Theme.accent : Theme.stroke; width: 1 }
@@ -101,17 +104,35 @@ ColumnLayout {
             color: Theme.subtext
             font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
-        Flow {
+        Column {
             id: tray
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-            spacing: 6
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+            spacing: 12
             Repeater {
-                model: ed.unused
-                Chip {
+                model: ed.unusedGroups
+                Column {
+                    id: group
                     required property var modelData
-                    itemId: modelData.id
-                    from: "tray"
-                    onBar: false
+                    width: tray.width
+                    spacing: 6
+                    Text {
+                        text: group.modelData.name
+                        color: Theme.subtext
+                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                    }
+                    Flow {
+                        width: group.width
+                        spacing: 6
+                        Repeater {
+                            model: group.modelData.items
+                            Chip {
+                                required property var modelData
+                                itemId: modelData.id
+                                from: "tray"
+                                onBar: false
+                            }
+                        }
+                    }
                 }
             }
         }

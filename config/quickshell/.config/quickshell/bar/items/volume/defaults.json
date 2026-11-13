@@ -1,6 +1,7 @@
 {
   "name": "Volume",
   "glyph": "󰕾",
+  "category": "Connections & sound",
   "settings": {
     "scroll": "volume"
   }

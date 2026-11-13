@@ -1,6 +1,6 @@
 # Bar item: controls
 
-A button that opens the quick-tools menu beside it (UtilityMenu.qml): screenshot an area, copy text from the
+A button that opens the quick-tools menu beside it: screenshot an area, copy text from the
 screen, colour picker, clipboard, emoji, settings and power. Always shown.
 
 Its own settings: none.

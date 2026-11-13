@@ -1,6 +1,7 @@
 {
   "name": "Memory usage",
   "glyph": "󰍛",
+  "category": "System",
   "settings": {
     "interval": 2
   }
