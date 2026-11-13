@@ -1,0 +1,3 @@
+mise                     one version manager for Node, PHP, Python, Ruby… per project folder
+docker                   containers (Lando, databases, anything with a Dockerfile)
+docker-compose           multi-container projects (docker compose up)

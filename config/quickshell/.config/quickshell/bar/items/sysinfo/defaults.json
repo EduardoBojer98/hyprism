@@ -1,0 +1,19 @@
+{
+  "name": "System info",
+  "glyph": "󰓅",
+  "settings": {
+    "metrics": [
+      "cpu",
+      "cpu_temp",
+      "ram",
+      "net"
+    ],
+    "mode": "compact",
+    "sparkline": true,
+    "interval": 2,
+    "onlyAbove": {},
+    "thresholds": {},
+    "formats": {},
+    "icons": {}
+  }
+}

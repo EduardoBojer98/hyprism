@@ -1,9 +1,10 @@
 pragma Singleton
 import Quickshell
+import Quickshell.Io
 import QtQuick
 
 // The themes: each one is a whole desktop design, not a colour scheme (docs/DESIGN.md).
-// Data only. Theme.qml turns the active theme (and your Settings) into tokens every component reads;
+// They are folders on disk (docs/THEMES.md); this file reads them and holds the rules for laying your changes over them. Theme.qml turns the active theme (and your Settings) into tokens every component reads;
 // ThemeSync.qml carries it to Hyprland, hyprlock, GTK, Ghostty and the wallpaper. Switch: `theme NAME`.
 //
 // colour   ground (desktop/bar), surface (panels), raised (controls, hover), line, text, muted, faint,
@@ -28,161 +29,58 @@ import QtQuick
 // launcher placement + view (home: suggestions first) + header (query: the query set large) + select (wash: a tint,
 //          inverse: a solid accent row) + prompt (a typed prompt instead of the lens); notify corner + kind
 // hypr     gaps in/out, border px, rounding, active/inactive border colours, shadow, blur, motion preset
-// lock     clock style + align (ThemeSync writes the hyprlock layout); term: Ghostty theme; wall: theme-wallpaper id
+// lock     clock style + align (ThemeSync writes the hyprlock layout); term: the terminal palette (background,
+//          foreground, cursor, selection, 16 colours); wall: the wallpaper recipe or picture (theme-wallpaper)
 Singleton {
-    // the shipped themes, then your own (Settings > Appearance > Theme builder)
+    id: root
+    // Every theme is a folder with a theme.json (docs/THEMES.md): the shipped ones in
+    // ~/.local/share/hyprism/themes/<id>/ (the repo's themes/), yours in ~/.config/hyprism/themes/<id>/, which
+    // win over a shipped one with the same id. Copy a folder, edit theme.json, and it is in the list.
+    readonly property string shippedDir: (Quickshell.env("XDG_DATA_HOME") || Quickshell.env("HOME") + "/.local/share") + "/hyprism/themes"
+    readonly property string ownDir: (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/hyprism/themes"
+    property bool ready: false           // false for the first moments, while the folders are read
+    property var builtIn: [safe]         // the folder themes; until they are read, only the one below
     readonly property var list: builtIn.concat(userList)
-    readonly property var builtIn: [
-        {
-            id: "pebble", name: "Pebble", about: "Soft and round: floating glass pills, stretching dots, a pill dock that lifts its icons",
-            dark: true,
-            colour: { ground: "#16141f", surface: "#221f2e", raised: "#2d2a3b", line: "#3a3650", text: "#ece8f6", muted: "#b9b3cc", faint: "#7f7895",
-                      accent: "#ff9e7a", onAccent: "#1a1220", accent2: "#9ad1c0", ok: "#7fdc9a", warn: "#ffd27a", err: "#ff6b8a" },
-            alt: { dark: false, term: "Pebble Light", wall: "pebble-light",   // daylight: lavender paper, a deeper coral
-                   colour: { ground: "#f3eff8", surface: "#fbf9fd", raised: "#ebe6f2", line: "#d6cfe2", text: "#221d2e", muted: "#5b5370", faint: "#8d86a0",
-                             accent: "#d9572f", onAccent: "#ffffff", accent2: "#2f8f78", ok: "#23864a", warn: "#9a6400", err: "#c8324f" },
-                   hypr: { active: ["d9572fcc", "2f8f78cc"], inactive: "d6cfe200" } },
-            font: { ui: "Outfit", display: "Outfit", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Medium },
-            shape: { radius: 18, radiusSmall: 12, line: 1, material: "glass" },
-            bar: { edge: "top", size: 36, floating: true, segmented: true, fill: "glass", line: 0, voice: "icons", mono: false, ws: "dots", clock: "plain", decor: "", sep: false,
-                   start: ["launcher", "workspaces"], center: ["clock"], end: ["weather", "media", "tray", "keyboard", "notifications", "status"] },
-            dock: { edge: "bottom", shape: "pill", hover: "lift", mark: "line", fill: "glass" },
-            popup: { depth: "soft", decor: "", tiles: "solid" },
-            motion: { enter: 240, exit: 150, curve: [0.3, 1.25, 0.5, 1], travel: 10, scale: 0.94, press: 0.95 },
-            launcher: { placement: "center", view: "home", header: "none", width: 640, select: "wash", prompt: "" },
-            notify: { corner: "top-right", kind: "bubble" },
-            hypr: { gapsIn: 7, gapsOut: 14, border: 2, rounding: 18, active: ["ff9e7acc", "9ad1c0cc"], inactive: "3a365000",
-                    shadow: "soft", blur: true, motion: "spring" },
-            lock: { clock: "big", align: "center" }, term: "Pebble", wall: "pebble"
-        },
-        {
-            id: "monolith", name: "Monolith", about: "The desktop as tmux: one status line with your apps, icon + value readouts, an inverse lime clock, panels like focused panes",
-            dark: true,
-            colour: { ground: "#0b0c0a", surface: "#11130f", raised: "#1b1e18", line: "#30352b", text: "#d7ddcc", muted: "#8b9480", faint: "#5f6858",
-                      accent: "#b6ff3b", onAccent: "#0b0c0a", accent2: "#ff5f2e", ok: "#5ad1c2", warn: "#ffb547", err: "#ff5f5f" },
-            alt: { dark: false, term: "Monolith Light", wall: "monolith-light",   // tmux on paper: a dark olive for the lime
-                   colour: { ground: "#eceee6", surface: "#f6f7f2", raised: "#e2e5da", line: "#b9beae", text: "#1d2118", muted: "#565d4d", faint: "#848a78",
-                             accent: "#4a7d00", onAccent: "#ffffff", accent2: "#c2410c", ok: "#0f7f72", warn: "#a35f00", err: "#c42b2b" },
-                   hypr: { active: ["4a7d00ff"], inactive: "c9cdbfff" } },
-            font: { ui: "JetBrainsMono Nerd Font", display: "JetBrainsMono Nerd Font", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Bold },
-            shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
-            bar: { edge: "bottom", size: 28, floating: false, segmented: false, fill: "surface", line: 1, voice: "mixed", mono: true, ws: "filled", clock: "block", decor: "", sep: true,
-                   start: ["workspaces", "apps"], center: [], end: ["media", "tray", "keyboard", "cpu", "memory", "status", "notifications", "weather", "clock"] },
-            dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "none", decor: "topline", tiles: "wash" },
-            motion: { enter: 90, exit: 60, curve: [0.2, 0, 0, 1], travel: 0, scale: 1, press: 1 },
-            launcher: { placement: "strip", view: "inline", header: "none", width: 0, select: "inverse", prompt: "❯" },
-            notify: { corner: "bottom-right", kind: "line" },
-            hypr: { gapsIn: 1, gapsOut: 2, border: 2, rounding: 0, active: ["b6ff3bff"], inactive: "2a2d27ff", shadow: "none", blur: false, motion: "instant" },
-            lock: { clock: "terminal", align: "left" }, term: "Monolith", wall: "monolith"
-        },
-        {
-            id: "console", name: "Console", about: "An amber HUD: a framed caps readout, corner brackets on every panel, a phosphor glow, panels that snap on",
-            dark: true,
-            colour: { ground: "#05080f", surface: "#0a0f1a", raised: "#131a28", line: "#5a4418", text: "#e9dcc0", muted: "#c19b52", faint: "#76623a",
-                      accent: "#ffb000", onAccent: "#05080f", accent2: "#ff6a3d", ok: "#66d19e", warn: "#ff7a45", err: "#ff4d5e" },
-            alt: { dark: false, term: "Console Light", wall: "console-light",   // a daylight HUD: amber ink on warm paper
-                   colour: { ground: "#f4efe3", surface: "#fbf8f0", raised: "#ece5d4", line: "#c9a85a", text: "#2a1f0a", muted: "#6e5218", faint: "#93804f",
-                             accent: "#a35f00", onAccent: "#ffffff", accent2: "#c2410c", ok: "#1d7a4f", warn: "#b4410f", err: "#c0263a" },
-                   hypr: { active: ["a35f00ff"], inactive: "e0d6bfff" } },
-            font: { ui: "Martian Mono", display: "Martian Mono", mono: "Martian Mono", size: 12, displayWeight: Font.Light },
-            shape: { radius: 0, radiusSmall: 0, line: 1, material: "solid" },
-            bar: { edge: "top", size: 30, floating: false, segmented: false, fill: "ground", line: 1, voice: "mixed", mono: true, caps: true, ws: "text", clock: "accent", decor: "brackets", sep: true,
-                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["weather", "cpu", "memory", "status", "keyboard", "tray", "notifications"] },
-            dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "surface" },
-            popup: { depth: "glow", decor: "brackets", tiles: "wash" },
-            motion: { enter: 140, exit: 80, curve: [0.15, 0, 0.1, 1], travel: 4, scale: 0.98, press: 0.98 },
-            launcher: { placement: "center", view: "home", header: "query", width: 700, select: "inverse", prompt: "▸" },
-            notify: { corner: "top-right", kind: "tag" },
-            hypr: { gapsIn: 4, gapsOut: 10, border: 1, rounding: 0, active: ["ffb000ff"], inactive: "1d1a12ff", shadow: "none", blur: false, motion: "crisp" },
-            lock: { clock: "readout", align: "center" }, term: "Console", wall: "console"
-        },
-        {
-            id: "poster", name: "Poster", about: "Loud and flat: a paper bar, huge workspace numbers, hard offset shadows, panels that slam in",
-            dark: false,
-            colour: { ground: "#141414", surface: "#f4f1ea", raised: "#e6e1d6", line: "#141414", text: "#141414", muted: "#4a4740", faint: "#7d786d",
-                      accent: "#ff3b1f", onAccent: "#f4f1ea", accent2: "#2d5bff", ok: "#1a7f37", warn: "#b35c00", err: "#c4161c" },
-            alt: { dark: true, term: "Poster Dark", wall: "poster",   // the poster at night: ink panels, paper type
-                   colour: { ground: "#141414", surface: "#1f1f1f", raised: "#2b2b2b", line: "#f4f1ea", text: "#f4f1ea", muted: "#c9c4b8", faint: "#8f8a7f",
-                             accent: "#ff4a2e", onAccent: "#141414", accent2: "#6f8cff", ok: "#4cc26e", warn: "#ffa23a", err: "#ff5a5f" },
-                   hypr: { active: ["ff4a2eff"], inactive: "3a3a3aff" } },
-            font: { ui: "Archivo", display: "Archivo Black", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.Black },
-            shape: { radius: 0, radiusSmall: 0, line: 3, material: "solid" },
-            bar: { edge: "top", size: 52, floating: false, segmented: false, fill: "surface", line: 3, voice: "icons", mono: false, ws: "blocks", clock: "display", decor: "", sep: false,
-                   start: ["workspaces", "window"], center: [], end: ["media", "tray", "keyboard", "status", "notifications", "weather", "clock"] },
-            dock: { edge: "bottom", shape: "block", hover: "lift", mark: "bar", fill: "surface" },
-            popup: { depth: "hard", decor: "", tiles: "solid" },
-            motion: { enter: 200, exit: 110, curve: [0.16, 1, 0.3, 1], travel: 28, scale: 1, press: 0.96 },
-            launcher: { placement: "half", view: "home", header: "query", width: 0, select: "inverse", prompt: "" },
-            notify: { corner: "bottom-left", kind: "block" },
-            hypr: { gapsIn: 8, gapsOut: 16, border: 3, rounding: 0, active: ["f4f1eaff"], inactive: "3a3a3aff", shadow: "hard", blur: false, motion: "slam" },
-            lock: { clock: "stacked", align: "left" }, term: "Poster", wall: "poster"
-        },
-        {
-            id: "glass", name: "Glass", about: "Liquid glass: a floating glass bar, rimmed panels with soft depth, an electric blue to violet glow on windows",
-            dark: true,
-            colour: { ground: "#0f131c", surface: "#1a1f2b", raised: "#262c3a", line: "#323a4c", text: "#f4f6fb", muted: "#a9b0c2", faint: "#6f7891",
-                      accent: "#5b9cff", onAccent: "#ffffff", accent2: "#8f86ff", ok: "#63d17a", warn: "#f7c85b", err: "#ff5f57" },
-            alt: { dark: false, term: "Glass Light", wall: "glass-light",   // frosted daylight glass, the same blue to violet
-                   colour: { ground: "#e9edf4", surface: "#f7f9fc", raised: "#e3e8f1", line: "#cfd6e3", text: "#141a26", muted: "#4d5668", faint: "#7a8396",
-                             accent: "#2f6fe0", onAccent: "#ffffff", accent2: "#6a5ff0", ok: "#1f8a3d", warn: "#9a6a00", err: "#d63a32" },
-                   hypr: { active: ["2f6fe0dd", "6a5ff0dd"], inactive: "00000014" } },
-            font: { ui: "IBM Plex Sans", display: "IBM Plex Sans", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Light },
-            shape: { radius: 16, radiusSmall: 10, line: 1, material: "glass" },
-            bar: { edge: "top", size: 36, floating: true, segmented: false, fill: "glass", line: 0, voice: "icons", mono: false, ws: "numbers", clock: "plain", decor: "", sep: false,
-                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["weather", "media", "tray", "keyboard", "notifications", "status"] },
-            dock: { edge: "bottom", shape: "tile", hover: "grow", mark: "dot", fill: "glass" },
-            popup: { depth: "soft", decor: "", tiles: "wash" },
-            motion: { enter: 220, exit: 140, curve: [0.23, 1, 0.32, 1], travel: 6, scale: 0.97, press: 0.97 },
-            launcher: { placement: "center", view: "home", header: "none", width: 680, select: "wash", prompt: "" },
-            notify: { corner: "top-right", kind: "card" },
-            hypr: { gapsIn: 6, gapsOut: 12, border: 2, rounding: 16, active: ["5b9cffdd", "8f86ffdd"], inactive: "ffffff14", shadow: "soft", blur: true, motion: "ease" },
-            lock: { clock: "big", align: "top" }, term: "Glass", wall: "glass"
-        },
-        {
-            id: "atlas", name: "Atlas", about: "Swiss discipline: a black strip on top, heavy numerals, red squares, a black dock, everything on the grid",
-            dark: false,
-            colour: { ground: "#f2f2f0", surface: "#ffffff", raised: "#e8e8e5", line: "#111111", text: "#111111", muted: "#4b4b4b", faint: "#8a8a8a",
-                      accent: "#e30613", onAccent: "#ffffff", accent2: "#111111", ok: "#0a7d3b", warn: "#a35b00", err: "#a3001b" },
-            alt: { dark: true, term: "Atlas Dark", wall: "atlas-dark",   // Swiss at night: black ground, a white strip, the same red
-                   colour: { ground: "#121212", surface: "#1b1b1b", raised: "#262626", line: "#f2f2f0", text: "#f2f2f0", muted: "#bdbdbd", faint: "#7a7a7a",
-                             accent: "#ff2a36", onAccent: "#ffffff", accent2: "#f2f2f0", ok: "#3fbf6f", warn: "#f0a43a", err: "#ff4d5e" },
-                   hypr: { active: ["f2f2f0ff"], inactive: "333333ff" } },
-            font: { ui: "Archivo", display: "Archivo", mono: "JetBrainsMono Nerd Font", size: 14, displayWeight: Font.ExtraBold },
-            shape: { radius: 0, radiusSmall: 0, line: 2, material: "solid" },
-            bar: { edge: "top", size: 44, floating: false, segmented: false, fill: "ink", line: 0, voice: "icons", mono: false, ws: "squares", clock: "display", decor: "", sep: false,
-                   start: ["clock", "workspaces", "window"], center: [], end: ["media", "tray", "notifications", "keyboard", "status", "weather", "date"] },
-            dock: { edge: "bottom", shape: "block", hover: "plate", mark: "bar", fill: "ink" },
-            popup: { depth: "none", decor: "", tiles: "solid" },
-            motion: { enter: 160, exit: 100, curve: [0.23, 1, 0.32, 1], travel: 14, scale: 1, press: 0.97 },
-            launcher: { placement: "center", view: "home", header: "query", width: 640, select: "inverse", prompt: "" },
-            notify: { corner: "top-right", kind: "block" },
-            hypr: { gapsIn: 8, gapsOut: 16, border: 2, rounding: 0, active: ["111111ff"], inactive: "c8c8c4ff", shadow: "none", blur: false, motion: "snappy" },
-            lock: { clock: "stacked", align: "left" }, term: "Atlas", wall: "atlas"
-        },
-        {
-            id: "reactor", name: "Reactor", about: "Radioactive: acid yellow on near-black, a hot orange second colour, an inverse clock block and a glow on everything that is on",
-            dark: true,
-            colour: { ground: "#0c0d08", surface: "#15170e", raised: "#1f2216", line: "#3b3f22", text: "#f3f6df", muted: "#c2c69c", faint: "#8a8e6a",
-                      accent: "#e4ff1a", onAccent: "#0c0d08", accent2: "#ff6b0a", ok: "#3ddc97", warn: "#ffb547", err: "#ff4f6d" },
-            alt: { dark: false, term: "Reactor Light", wall: "reactor-light",   // by day: burnt orange on bone (acid as text would be unreadable), the acid hazard tape kept in the wallpaper
-                   colour: { ground: "#f5f6ea", surface: "#fdfdf7", raised: "#eaecda", line: "#cfd2b4", text: "#181a0e", muted: "#4f5238", faint: "#767a5c",
-                             accent: "#b14800", onAccent: "#ffffff", accent2: "#5f6e00", ok: "#16794a", warn: "#975b00", err: "#c22745" },
-                   hypr: { active: ["b14800ff", "5f6e00ff"], inactive: "d9dbc6ff" } },
-            font: { ui: "Archivo", display: "Martian Mono", mono: "JetBrainsMono Nerd Font", size: 13, displayWeight: Font.Medium },
-            shape: { radius: 10, radiusSmall: 6, line: 1, material: "solid" },
-            bar: { edge: "top", size: 34, floating: true, segmented: false, fill: "surface", line: 1, voice: "icons", mono: false, ws: "filled", clock: "block", decor: "", sep: false,
-                   start: ["launcher", "workspaces", "window"], center: ["clock"], end: ["weather", "media", "tray", "keyboard", "notifications", "status"] },
-            dock: { edge: "bottom", shape: "tile", hover: "lift", mark: "bar", fill: "surface" },
-            popup: { depth: "glow", decor: "topline", tiles: "solid" },
-            motion: { enter: 180, exit: 110, curve: [0.2, 0, 0, 1], travel: 8, scale: 0.97, press: 0.96 },
-            launcher: { placement: "center", view: "home", header: "query", width: 680, select: "inverse", prompt: "" },
-            notify: { corner: "top-right", kind: "card" },
-            hypr: { gapsIn: 6, gapsOut: 12, border: 2, rounding: 10, active: ["e4ff1aff", "ff6b0aff"], inactive: "2a2c1cff", shadow: "soft", blur: false, motion: "snappy" },
-            lock: { clock: "big", align: "left" }, term: "Reactor", wall: "reactor"
-        }
-    ]
     readonly property var ids: list.map(r => r.id)
+    // The one theme that lives in code, so the shell still starts when no theme folder can be read.
+    // Every folder theme is laid over a copy of it, so a theme.json with a part missing still works.
+    readonly property var safe: ({"name": "Safe mode", "about": "Shown only if no theme folder can be read", "order": 7, "dark": true, "colour": {"ground": "#0c0d08", "surface": "#15170e", "raised": "#1f2216", "line": "#3b3f22", "text": "#f3f6df", "muted": "#c2c69c", "faint": "#8a8e6a", "accent": "#e4ff1a", "onAccent": "#0c0d08", "accent2": "#ff6b0a", "ok": "#3ddc97", "warn": "#ffb547", "err": "#ff4f6d"}, "alt": {"dark": false, "term": {"palette": ["#181a0e", "#c22745", "#16794a", "#975b00", "#1f5fbf", "#8a2fb8", "#0b7a73", "#4f5238", "#767a5c", "#d63c59", "#1f8f5a", "#b14800", "#3274d4", "#9f45cc", "#138d85", "#eaecda"], "background": "#f5f6ea", "foreground": "#181a0e", "cursor": "#b14800", "cursorText": "#ffffff", "selection": "#f0d2b8", "selectionText": "#181a0e"}, "wall": "reactor-light", "colour": {"ground": "#f5f6ea", "surface": "#fdfdf7", "raised": "#eaecda", "line": "#cfd2b4", "text": "#181a0e", "muted": "#4f5238", "faint": "#767a5c", "accent": "#b14800", "onAccent": "#ffffff", "accent2": "#5f6e00", "ok": "#16794a", "warn": "#975b00", "err": "#c22745"}, "hypr": {"active": ["b14800ff", "5f6e00ff"], "inactive": "d9dbc6ff"}}, "font": {"ui": "Archivo", "display": "Martian Mono", "mono": "JetBrainsMono Nerd Font", "size": 13, "displayWeight": 500}, "shape": {"radius": 10, "radiusSmall": 6, "line": 1, "material": "solid"}, "bar": {"edge": "top", "size": 34, "floating": true, "segmented": false, "fill": "surface", "line": 1, "voice": "icons", "mono": false, "ws": "filled", "clock": "block", "decor": "", "sep": false, "start": ["launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]}, "dock": {"edge": "bottom", "shape": "tile", "hover": "lift", "mark": "bar", "fill": "surface"}, "popup": {"depth": "glow", "decor": "topline", "tiles": "solid"}, "motion": {"enter": 180, "exit": 110, "curve": [0.2, 0, 0, 1], "travel": 8, "scale": 0.97, "press": 0.96}, "launcher": {"placement": "center", "view": "home", "header": "query", "width": 680, "select": "inverse", "prompt": ""}, "notify": {"corner": "top-right", "kind": "card"}, "hypr": {"gapsIn": 6, "gapsOut": 12, "border": 2, "rounding": 10, "active": ["e4ff1aff", "ff6b0aff"], "inactive": "2a2c1cff", "shadow": "soft", "blur": false, "motion": "snappy"}, "lock": {"clock": "big", "align": "left"}, "term": {"palette": ["#1f2216", "#ff4f6d", "#3ddc97", "#e4ff1a", "#6fb3ff", "#d98aff", "#5ee0d6", "#c2c69c", "#8a8e6a", "#ff7a90", "#6ee8b2", "#efff6b", "#99c9ff", "#e5aaff", "#8aeae2", "#f3f6df"], "background": "#0c0d08", "foreground": "#f3f6df", "cursor": "#e4ff1a", "cursorText": "#0c0d08", "selection": "#3d4510", "selectionText": "#f3f6df"}, "wall": "reactor", "id": "safe"})
+    function reload() { reader.running = false; reader.running = true }
+    // `qs ipc call themes reload` after adding or editing a theme folder (the `theme` command does it for you)
+    IpcHandler {
+        target: "themes"
+        function reload(): void { root.reload() }
+        function list(): string { return root.list.map(t => t.id).join(" ") }
+    }
+    Process {
+        id: reader
+        running: true
+        // one line per theme: "<id><TAB><folder><TAB><theme.json on one line>"; QML can't list a folder
+        command: ["sh", "-c", 'for dir in "$@"; do for d in "$dir"/*/; do d=${d%/}; id=${d##*/}; case $id in _*|"*") continue;; esac; '
+                              + '[ -f "$d/theme.json" ] && printf "%s\\t%s\\t%s\\n" "$id" "$d" "$(tr -d "\\n" < "$d/theme.json")"; done; done', "sh", root.shippedDir, root.ownDir]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const found = {}
+                for (const line of text.split("\n")) {
+                    const cut = line.split("\t")
+                    if (cut.length < 3 || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(cut[0])) continue
+                    let raw
+                    try { raw = JSON.parse(cut.slice(2).join("\t")) } catch (e) { console.warn("theme " + cut[0] + ": theme.json doesn't parse: " + e); continue }
+                    const t = root.merge(JSON.parse(JSON.stringify(root.safe)), raw)   // checked part by part, like your own themes
+                    t.id = cut[0]
+                    t.folder = cut[1]
+                    t.name = typeof raw.name === "string" && raw.name.trim() ? raw.name.trim().slice(0, 32) : cut[0]
+                    t.about = typeof raw.about === "string" ? raw.about.slice(0, 200) : ""
+                    t.order = typeof raw.order === "number" ? raw.order : 1000
+                    found[cut[0]] = t                                                   // a later folder (yours) wins
+                }
+                const all = Object.values(found).sort((x, y) => x.order - y.order || x.name.localeCompare(y.name))
+                if (all.length) root.builtIn = all
+                else console.warn("no theme folders found in " + root.shippedDir + ": running in safe mode (./install.sh --only links)")
+                root.ready = true
+            }
+        }
+    }
 
     // Your own themes: Config.appearance.userThemes = { "custom-<name>": { name, base: "<theme id>", <any part of a
     // theme, e.g. colour: { accent: "#..." }, bar: { edge: "bottom" }> } }. Each is its base theme with your parts laid
@@ -216,34 +114,10 @@ Singleton {
         return into
     }
 
-    // every bar item (BarWidget.qml), in the order Settings > Menu Bar offers them
-    readonly property var barItems: [
-        { id: "apps",          name: "Apps (dock)",        glyph: "\u{F0A1F}" },
-        { id: "launcher",      name: "Apps button",        glyph: "\u{F003B}" },
-        { id: "workspaces",    name: "Workspaces",         glyph: "\u{F0570}" },
-        { id: "window",        name: "Active window",      glyph: "\u{F05AF}" },
-        { id: "clock",         name: "Clock",              glyph: "\u{F0954}" },
-        { id: "date",          name: "Date",               glyph: "\u{F00ED}" },
-        { id: "weather",       name: "Weather",            glyph: "\u{F0599}" },
-        { id: "media",         name: "Media player",       glyph: "\u{F075A}" },
-        { id: "tray",          name: "System tray",        glyph: "\u{F0D5E}" },
-        { id: "keyboard",      name: "Keyboard layout",    glyph: "\u{F030C}" },
-        { id: "notifications", name: "Notifications",      glyph: "\u{F009C}" },
-        { id: "status",        name: "Quick settings",     glyph: "\u{F0493}" },
-        { id: "network",       name: "Network",            glyph: "\u{F05A9}" },
-        { id: "bluetooth",     name: "Bluetooth",          glyph: "\u{F00AF}" },
-        { id: "volume",        name: "Volume",             glyph: "\u{F057E}" },
-        { id: "brightness",    name: "Brightness",         glyph: "\u{F00DF}" },
-        { id: "battery",       name: "Battery",            glyph: "\u{F0079}" },
-        { id: "power-profile", name: "Power profile",      glyph: "\u{F0E0E}" },
-        { id: "cpu",           name: "CPU usage",          glyph: "\u{F0EE0}" },
-        { id: "memory",        name: "Memory usage",       glyph: "\u{F035B}" },
-        { id: "gpu",           name: "GPU usage",          glyph: "\u{F08AE}" },
-        { id: "recording",     name: "Recording",          glyph: "\u{F044A}" },
-        { id: "power",         name: "Power menu",         glyph: "\u{F0425}" }
-    ]
+    // every bar item: the folders in bar/items/ (BarItems), named and ordered for Settings > Menu Bar
+    readonly property var barItems: BarItems.catalogue
     function barItem(id) { return barItems.find(i => i.id === id) ?? { id: id, name: id, glyph: "\u{F02D7}" } }
-    readonly property int wallVersion: 7   // = VERSION in scripts/theme-wallpaper (the picture's file name)
+    readonly property int wallVersion: 8   // = VERSION in scripts/theme-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
 
     // Your adjustments to a theme (Settings > Themes > Adjust), saved per theme in
@@ -352,10 +226,10 @@ Singleton {
         }
         if (num(o.barSize, 20, 96)) r.bar.size = o.barSize
         if (typeof o.barFloating === "boolean") r.bar.floating = o.barFloating
-        const items = o.barItems, known = barItems.map(i => i.id)
+        const items = o.barItems, known = barItems.map(i => i.id), settled = BarItems.ready   // ids are unknown until the folders are read
         if (items && typeof items === "object")
             for (const k of ["start", "center", "end"])
-                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => known.includes(i) && l.indexOf(i) === n)
+                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => (!settled || known.includes(i)) && l.indexOf(i) === n)
         if (o.dock === "bar") r.dock.edge = r.bar.edge
         else if (edges.includes(o.dock)) r.dock.edge = o.dock
         return r

@@ -12,6 +12,14 @@ Rectangle {
     Keys.onReturnPressed: toggle.toggled(!toggle.checked)
     FocusRing {}
 
+    property string accessibleName: ""
+    Accessible.role: Accessible.CheckBox
+    Accessible.name: toggle.accessibleName
+    Accessible.checkable: true
+    Accessible.checked: toggle.checked
+    Accessible.focusable: true
+    Accessible.onPressAction: toggle.toggled(!toggle.checked)
+
     implicitWidth: 42
     implicitHeight: 24
     radius: height / 2

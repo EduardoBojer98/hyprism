@@ -98,7 +98,7 @@ ColumnLayout {
         text: audio?.muted ? "Muted" : Math.round((audio?.volume ?? 0) * 100) + "%"
         color: audio?.muted ? Theme.warning : Theme.subtext
         font { family: Theme.font; pixelSize: Theme.fontLabel; features: { "tnum": 1 } }
-        MouseArea { anchors { fill: parent; margins: -4 } cursorShape: Qt.PointingHandCursor; onClicked: if (parent.audio) parent.audio.muted = !parent.audio.muted }
+        MouseArea { anchors { fill: parent; margins: -4 } cursorShape: Qt.PointingHandCursor; onClicked: if (parent.audio) parent.audio.muted = !parent.audio.muted; Accessible.role: Accessible.CheckBox; Accessible.name: "Mute" }
     }
     // a device row's control: "In use" with a check, or a button to switch to it
     component InUse: Item {

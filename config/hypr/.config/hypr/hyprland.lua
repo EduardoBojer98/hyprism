@@ -21,12 +21,20 @@ function window_rules_json()
     return "[" .. table.concat(out, ",") .. "]"
 end
 
-for _, name in ipairs({ "env", "monitors", "input", "look", "animations", "binds", "rules", "windows", "plugins", "autostart" }) do
+for _, name in ipairs({ "hardware", "env", "monitors", "input", "look", "animations", "binds", "rules", "windows", "plugins", "autostart" }) do
     require("modules." .. name)
 end
 
--- Per-machine overrides: host.lua comes from hosts/<host>/home/.config/hypr/host.lua (install.sh
--- links the chosen host's files), runs last, so it can replace monitors, binds or anything else.
--- Loaded only if present, without pcall, so a mistake in it shows up in hyprctl configerrors.
-local hostfile = io.open(os.getenv("HOME") .. "/.config/hypr/host.lua")
-if hostfile then hostfile:close(); require("host") end
+-- Hardware modules (modules/<name>/home/.config/hypr/hardware/<name>.lua in the repo) run last, so they can
+-- add binds and rules for hardware this computer has. install.sh links them and lists them in the index,
+-- because Lua here can't list a folder. Loaded without pcall, so a mistake shows up in hyprctl configerrors.
+-- dofile with the full path, not require: Hyprland looks for required files beside the real hyprland.lua
+-- (in the repo), and these live in ~/.config/hypr/hardware/.
+local folder = os.getenv("HOME") .. "/.config/hypr/hardware/"
+local index = io.open(folder .. "index")
+if index then
+    for name in index:lines() do
+        if name ~= "" then dofile(folder .. name .. ".lua") end
+    end
+    index:close()
+end

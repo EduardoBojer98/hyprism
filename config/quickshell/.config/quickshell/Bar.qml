@@ -13,6 +13,7 @@ Scope {
     required property ShellScreen screen
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property var st: Theme.barStyle
+    readonly property var layout: Theme.barLayoutFor(screen?.name ?? "")   // this screen's items (a preset or the theme's)
     readonly property string edge: Theme.barEdge
     readonly property bool vertical: Theme.barVertical
     readonly property int size: Theme.barSize
@@ -32,6 +33,10 @@ Scope {
         screen: root.screen
         visible: Theme.barShownOn(root.screen)
         WlrLayershell.namespace: "qs-bar"
+        // Super+F6 (qs ipc call bar focus): this bar takes the keyboard until Escape or an activation
+        readonly property bool hasKeys: BarFocus.active && BarFocus.screen?.name === root.screen?.name
+        WlrLayershell.keyboardFocus: hasKeys ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        onHasKeysChanged: if (hasKeys) Qt.callLater(() => { const f = body.nextItemInFocusChain(true); if (f && f !== body) f.forceActiveFocus() })
         color: "transparent"
         anchors { top: root.edge !== "bottom"; bottom: root.edge !== "top"; left: root.edge !== "right"; right: root.edge !== "left" }
         exclusiveZone: Theme.barHeight
@@ -81,20 +86,20 @@ Scope {
             readonly property real endLength: Math.min(root.vertical ? endSection.implicitHeight : endSection.implicitWidth, length)
             Section {
                 id: startSection
-                ids: Theme.barLayout.start
+                ids: root.layout.start
                 room: body.length - body.endLength - 12
                 x: root.vertical ? (parent.width - width) / 2 : body.pad
                 y: root.vertical ? body.pad + 6 : (parent.height - height) / 2
             }
             Section {
                 id: endSection
-                ids: Theme.barLayout.end
+                ids: root.layout.end
                 room: body.length
                 x: root.vertical ? (parent.width - width) / 2 : parent.width - width - body.pad
                 y: root.vertical ? parent.height - height - body.pad - 6 : (parent.height - height) / 2
             }
             Section {   // centred, but never over the other two (with very many items it gives way)
-                ids: Theme.barLayout.center
+                ids: root.layout.center
                 readonly property real lo: root.vertical ? startSection.y + startSection.height + 12 : startSection.x + startSection.width + 12
                 readonly property real hi: root.vertical ? endSection.y - 12 : endSection.x - 12
                 readonly property real mid: ((root.vertical ? parent.height : parent.width) - (root.vertical ? height : width)) / 2

@@ -4,10 +4,13 @@
 # Super+V history, where it is searchable). Languages: SCREENTEXT_LANG, default "eng"
 # (installed packs: tesseract --list-langs).
 set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
-area=$(slurp) || exit 0                                  # Esc cancels
+area=$(slurp) || exit 0 # Esc cancels
 text=$(grim -g "$area" - | tesseract stdin stdout -l "${SCREENTEXT_LANG:-eng}" 2>/dev/null |
-       sed -e 's/[[:space:]]*$//' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}')   # trim trailing blanks
+    sed -e 's/[[:space:]]*$//' | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}') # trim trailing blanks
 
 if [[ -z "${text//[[:space:]]/}" ]]; then
     notify-send -a "Screen text" -i edit-copy "No text found" "Try a larger or sharper area"

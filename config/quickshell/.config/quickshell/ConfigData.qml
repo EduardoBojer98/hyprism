@@ -5,12 +5,13 @@ import Quickshell.Io
 JsonAdapter {
     property int version: 3                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
-        property string theme: "pebble"          // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
+        property string theme: "reactor"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property var userThemes: ({})           // your own themes (Theme builder): { "custom-name": { name, base, ...parts } }
         property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)
         property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
         property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
         property bool wallpaper: true           // the theme's own wallpaper; off = keep yours (Settings > Wallpaper)
+        property bool wallpaperColours: false   // the accents follow your own wallpaper (WallpaperColours.qml); off = the theme's own
         property real fontScale: 1
         property string motion: "full"          // full (the theme's own motion) | reduced (short fades, nothing moves) | off
         property string iconTheme: "Papirus-Dark"
@@ -61,6 +62,15 @@ JsonAdapter {
         property string sound: "message-new-instant"   // a freedesktop sound name (Notifications.sounds), "" = none
         property int volume: 60                          // %
         property list<string> mutedApps: []              // app names that only go to the notification centre
+    }
+    property JsonObject osd: JsonObject {   // the pop-up that confirms volume, brightness, mic, layout and caps lock changes
+        property int timeoutMs: 1400
+        property bool volume: true
+        property bool brightness: true
+        property bool micMute: true
+        property bool layout: true
+        property bool capsLock: true            // polls the keyboard's caps lock light every 500 ms while on (if it has one)
+        property string position: "bottom"      // bottom | top | center
     }
     property JsonObject caffeine: JsonObject {
         property int defaultMinutes: 0          // 0 = until turned off
@@ -165,6 +175,25 @@ JsonAdapter {
         property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
         property string batteryPercent: "beside"  // the battery's percentage: inside (the icon) | beside | off
         property bool windowTitle: true          // the focused window's title after the app name
+        // your settings per item, over its bar/items/<id>/defaults.json. Every item understands: enabled, icon,
+        // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). Example:
+        //   { "weather": { "click": "panel:calendar" }, "brightness": { "enabled": false } }
+        property var items: ({})
+        // which items the bar holds: "theme" = the theme's own layout (Settings > Menu Bar, per theme); any other
+        // value names an entry of `presets`. A screen listed in `monitors` uses its own preset instead.
+        property string preset: "theme"
+        // name -> { start: [ids], center: [ids], end: [ids] }. These four ship with the desktop; repair() puts
+        // back any that an older settings.json lacks (it never overwrites one you changed).
+        property var presets: ({
+            minimal: { start: ["launcher", "workspaces"], center: ["clock"], end: ["status", "battery", "power"] },
+            full: { start: ["launcher", "workspaces", "window"], center: ["clock", "date", "weather"],
+                    end: ["sysinfo", "media", "tray", "keyboard", "notifications", "status", "battery", "power"] },
+            laptop: { start: ["launcher", "workspaces"], center: ["clock"],
+                      end: ["sysinfo", "brightness", "power-profile", "keyboard", "notifications", "status", "battery"] },
+            external: { start: ["launcher", "workspaces", "window"], center: ["clock", "date"],
+                        end: ["sysinfo", "weather", "media", "tray", "notifications", "status", "power"] }
+        })
+        property var monitors: ({})             // screen name (e.g. "eDP-1") -> preset name; unlisted or "" follows `preset`
     }
     property JsonObject battery: JsonObject {
         property bool warn: true                 // a notification when the battery runs low
@@ -192,30 +221,44 @@ JsonAdapter {
     // monswitch read from them. imported: the values were read once from the file written before (no loss).
     property JsonObject idle: JsonObject {
         property int lockMin: 5                  // minutes to lock; 0 = never
-        property int sleepMin: 20                // minutes to sleep; 0 = never
+        property int sleepMin: 20                // minutes to sleep on battery (the only value used without a battery counts as sleepOnPowerMin); 0 = never
+        property int sleepOnPowerMin: 0          // minutes to sleep on mains power; 0 = never
         property bool imported: false
     }
     property JsonObject input: JsonObject {
         property var layouts: [{ code: "us", variant: "" }]   // xkb layouts, the first is the default (max 4)
-        property int shortcut: 0                 // switch layouts with: 0 Alt+Shift, 1 Ctrl+Shift, 2 Caps Lock, 3 none
+        property int shortcut: 3                 // extra layout switch: 0 Alt+Shift, 1 Ctrl+Shift, 2 Caps Lock, 3 none (Super+Ctrl+Space always works)
         property int repeatRate: 25              // keys per second while held
         property int repeatDelay: 600            // ms before a held key repeats
         property real sensitivity: 0             // pointer speed, -1..1
         property bool naturalScroll: true
         property bool tapToClick: true
+        property bool disableWhileTyping: true   // touchpad ignores the palm while typing
+        property string clickMethod: "clickfinger"   // "clickfinger" (1, 2, 3 fingers = left, right, middle) or "buttonareas" (bottom corners)
+        property real scrollFactor: 1.0          // touchpad scroll speed, 0.2..3
+        property bool middleEmulation: false     // left + right together = middle click
+        property bool dragLock: false            // lift the finger mid-drag without dropping the item
         property bool imported: false
     }
     property JsonObject displays: JsonObject {
         property var layout: ({})                // output -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled }
+        property bool autoHdr: false             // switch a screen's colour space on fullscreen video (HDR screens)
+        property bool sendContentType: false     // tell the screen what is playing (some screens blank briefly when it changes)
+        property bool xwaylandNativeScale: true  // old X11 apps draw sharp but small, instead of stretched
+        property string vrr: "off"               // adaptive sync: off | on | fullscreen
+        property bool preferHighRefresh: true    // new screens start at their highest refresh rate
         property bool imported: false
+    }
+    property JsonObject apps: JsonObject {
+        property string terminal: "ghostty +new-window"   // command the terminal key runs (SettingsSync writes hypr/settings/apps.lua)
     }
     property JsonObject monitorShare: JsonObject {   // a monitor shared with another computer (~/.local/bin/monswitch)
         property bool enabled: false
         property string output: ""               // Hyprland output name, e.g. HDMI-A-1
         property string thisInput: "0x11"        // DDC input (VCP 0x60) this computer is on
         property string otherInput: "0x12"       // the other computer's input
-        property string mirror: "eDP-1"          // screen it mirrors while away (keeps a signal)
-        property string mirrorMode: "1920x1080@60"
+        property string mirror: ""               // screen it mirrors while away (keeps a signal); empty = this computer's own screen, "none" = no mirror
+        property string mirrorMode: ""           // the mode for that mirror, e.g. 1920x1080@60; empty = the screen's own
         property bool imported: false
     }
 }

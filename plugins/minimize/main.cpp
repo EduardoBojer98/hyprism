@@ -56,7 +56,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         if (w->mapped())
             watch(w);
 
-    return {"minimize", "Title-bar minimise buttons send windows to the dock", "linux-setup", "1.0"};
+    return {"minimize", "Title-bar minimise buttons send windows to the dock", "hyprism", "1.0"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {

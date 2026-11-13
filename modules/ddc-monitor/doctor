@@ -1,0 +1,2 @@
+# shellcheck shell=bash
+[[ -d /sys/module/i2c_dev ]] || bad "ddc-monitor: the i2c-dev kernel module isn't loaded" "./install.sh --only modules"

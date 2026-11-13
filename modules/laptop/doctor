@@ -1,0 +1,5 @@
+# shellcheck shell=bash
+[[ -f /etc/systemd/logind.conf.d/50-hyprism-lid.conf ]] || warn "laptop: lid behaviour not set (./install.sh --only modules)"
+for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do
+    [[ -r $f ]] && ok "laptop: battery charge limit is $(<"$f")%" # information only
+done

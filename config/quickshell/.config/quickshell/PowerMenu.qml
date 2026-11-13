@@ -86,7 +86,7 @@ Singleton {
             }
 
             Rectangle { anchors.fill: parent; color: Theme.backdrop }
-            MouseArea { anchors.fill: parent; onClicked: root.hide() }
+            MouseArea { anchors.fill: parent; onClicked: root.hide(); Accessible.ignored: true }
 
             Glass {
                 id: card
@@ -134,7 +134,7 @@ Singleton {
                                 width: 28; height: 28; radius: 14
                                 color: closeArea.containsMouse ? Theme.fillHover : Theme.fill
                                 Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: 14 } }
-                                MouseArea { id: closeArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.hide() }
+                                MouseArea { id: closeArea; Accessible.role: Accessible.Button; Accessible.name: "Close"; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.hide() }
                             }
                         }
 
@@ -207,6 +207,9 @@ Singleton {
                                     }
                                     MouseArea {
                                         id: tileArea
+                                        Accessible.role: Accessible.Button
+                                        Accessible.name: tile.modelData.label
+                                        Accessible.onPressAction: root.activate(tile.index)
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor

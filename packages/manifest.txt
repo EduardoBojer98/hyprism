@@ -1,8 +1,8 @@
 # What this setup installs, by logical name. One line each: name, module, why.
 # Real package names and where they come from: packages/<distro>.txt (arch, fedora).
-# Modules can be installed alone: ./install.sh --only <module>. Host extras: hosts/<host>/packages.txt.
+# Groups can be installed alone: ./install.sh --only <group>. Hardware extras: modules/<name>/packages.txt.
 #
-# name                   module    why
+# name                   group     why
 
 # Basics the installer and scripts need
 git                      core      clone and update this repo
@@ -39,10 +39,10 @@ udiskie                  desktop   mounts USB drives as soon as they're plugged 
 keyring                  desktop   Secret Service (browser and Git passwords) with KDE Wallet, unlocked at login
 gtk3                     desktop   gtk-launch: Super+B opens your default browser
 sound-theme              desktop   notification sounds to choose from in Settings > Notifications
-squeekboard              desktop   on-screen keyboard (shell button; useful on touch screens)
 
 # Small tools the shell and scripts call
 fuzzel                   tools     emoji picker window (emojipick)
+emoji-data               tools     the list of emoji and their names (emojipick)
 pavucontrol              tools     full sound mixer
 nm-connection-editor     tools     advanced network settings (VPN, static IP) from Settings > Network
 satty                    tools     screenshot editor: arrows, shapes, text, numbered steps, blur, crop (screenshot)
@@ -57,16 +57,17 @@ libnotify                tools     notify-send from scripts
 qalculate                tools     calculator in Spotlight (qalc)
 brightnessctl            tools     brightness keys
 playerctl                tools     media keys and the media card
-ddcutil                  tools     external monitor control over DDC/CI (monswitch)
 xdg-utils                tools     xdg-open / xdg-mime: default apps, opening files from Spotlight
 glib2                    tools     gsettings: GTK light/dark, accent, icons, cursor
 kdialog                  tools     folder/file picker in Settings (wallpaper folders, add theme)
+btop                     tools     system monitor, coloured by the theme (btop theme "hyprism")
 imagemagick              tools     draws each theme's wallpaper (theme-wallpaper), blurred wallpaper copies
 fastfetch                tools     system summary in new terminals
 
 # Look
 adw-gtk-theme            look      GTK3 apps match libadwaita, dark and light
 papirus-icons            look      icon theme for the shell, dock and apps
+qt6ct                    look      Qt apps (Dolphin, pavucontrol-qt) follow the theme colours
 font-inter               look      UI font
 font-cantarell           look      "Cantarell" choice under Appearance > Font
 font-noto                look      "Noto Sans" choice; fallback for missing glyphs

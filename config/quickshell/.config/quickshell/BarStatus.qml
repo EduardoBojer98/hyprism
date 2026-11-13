@@ -33,7 +33,7 @@ BarItem {
         width: 10; height: 10; radius: 5
         color: Theme.error
         SequentialAnimation on opacity { running: Sys.recording && Theme.animate; loops: Animation.Infinite; NumberAnimation { to: 0.35; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
-        MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["record", "stop"]) }
+        MouseArea { anchors.fill: parent; anchors.margins: -6; Accessible.role: Accessible.Button; Accessible.name: "Stop recording"; Accessible.onPressAction: Quickshell.execDetached(["record", "stop"]); cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["record", "stop"]) }
     }
     Text { visible: Notifications.dnd; text: "\u{F009B}"; color: Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
     Text { visible: Caffeine.active; text: "\u{F0176}"; color: Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }

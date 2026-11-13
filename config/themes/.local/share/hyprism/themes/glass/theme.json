@@ -1,0 +1,42 @@
+{
+  "name": "Glass",
+  "about": "Liquid glass: a floating glass bar, rimmed panels with soft depth, an electric blue to violet glow on windows",
+  "order": 5,
+  "dark": true,
+  "colour": {"ground": "#0f131c", "surface": "#1a1f2b", "raised": "#262c3a", "line": "#323a4c", "text": "#f4f6fb", "muted": "#a9b0c2", "faint": "#6f7891", "accent": "#5b9cff", "onAccent": "#ffffff", "accent2": "#8f86ff", "ok": "#63d17a", "warn": "#f7c85b", "err": "#ff5f57"},
+  "alt": {
+    "dark": false,
+    "term": {
+      "palette": ["#141a26", "#d63a32", "#1f8a3d", "#9a6a00", "#2f6fe0", "#6a5ff0", "#14808f", "#8790a3", "#4d5668", "#ab2e28", "#186e31", "#7b5500", "#2559b3", "#554cc0", "#106672", "#f7f9fc"],
+      "background": "#e9edf4",
+      "foreground": "#141a26",
+      "cursor": "#2f6fe0",
+      "cursorText": "#e9edf4",
+      "selection": "#c9d9f7",
+      "selectionText": "#141a26"
+    },
+    "wall": "glass-light",
+    "colour": {"ground": "#e9edf4", "surface": "#f7f9fc", "raised": "#e3e8f1", "line": "#cfd6e3", "text": "#141a26", "muted": "#4d5668", "faint": "#7a8396", "accent": "#2f6fe0", "onAccent": "#ffffff", "accent2": "#6a5ff0", "ok": "#1f8a3d", "warn": "#9a6a00", "err": "#d63a32"},
+    "hypr": {"active": ["2f6fe0dd", "6a5ff0dd"], "inactive": "00000014"}
+  },
+  "font": {"ui": "IBM Plex Sans", "display": "IBM Plex Sans", "mono": "JetBrainsMono Nerd Font", "size": 13, "displayWeight": 300},
+  "shape": {"radius": 16, "radiusSmall": 10, "line": 1, "material": "glass"},
+  "bar": {"edge": "top", "size": 36, "floating": true, "segmented": false, "fill": "glass", "line": 0, "voice": "icons", "mono": false, "ws": "numbers", "clock": "plain", "decor": "", "sep": false, "start": ["launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
+  "dock": {"edge": "bottom", "shape": "tile", "hover": "grow", "mark": "dot", "fill": "glass"},
+  "popup": {"depth": "soft", "decor": "", "tiles": "wash"},
+  "motion": {"enter": 220, "exit": 140, "curve": [0.23, 1, 0.32, 1], "travel": 6, "scale": 0.97, "press": 0.97},
+  "launcher": {"placement": "center", "view": "home", "header": "none", "width": 680, "select": "wash", "prompt": ""},
+  "notify": {"corner": "top-right", "kind": "card"},
+  "hypr": {"gapsIn": 6, "gapsOut": 12, "border": 2, "rounding": 16, "active": ["5b9cffdd", "8f86ffdd"], "inactive": "ffffff14", "shadow": "soft", "blur": true, "motion": "ease"},
+  "lock": {"clock": "big", "align": "top"},
+  "term": {
+    "palette": ["#1c1f28", "#ff5f57", "#63d17a", "#f7c85b", "#5b9cff", "#c58af9", "#5ee0b5", "#a7abb8", "#6e7282", "#ff8781", "#8adc9b", "#f9d684", "#84b5ff", "#d4a7fa", "#86e8c8", "#f3f4f8"],
+    "background": "#141821",
+    "foreground": "#f3f4f8",
+    "cursor": "#5b9cff",
+    "cursorText": "#141821",
+    "selection": "#283d5f",
+    "selectionText": "#f3f4f8"
+  },
+  "wall": "glass"
+}

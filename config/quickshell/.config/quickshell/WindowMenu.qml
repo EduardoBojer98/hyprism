@@ -147,7 +147,7 @@ Singleton {
                                     width: modelData[2] * inner - 3; height: modelData[3] * innerH - 3
                                     radius: 3
                                     color: part.containsMouse ? Theme.accent : Theme.fillActive
-                                    MouseArea { id: part; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.snap(parent.modelData) }
+                                    MouseArea { id: part; Accessible.role: Accessible.Button; Accessible.name: "Snap window"; Accessible.onPressAction: root.snap(parent.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.snap(parent.modelData) }
                                 }
                             }
                         }
@@ -263,6 +263,6 @@ Singleton {
             color: pill.current ? Theme.accentText : Theme.text
             font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
         }
-        MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pill.clicked() }
+        MouseArea { id: area; Accessible.role: Accessible.Button; Accessible.name: pill.text; Accessible.onPressAction: pill.clicked(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pill.clicked() }
     }
 }

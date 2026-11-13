@@ -3,23 +3,32 @@
 # Installed Apps shows the list (names and icons come from Quickshell's own desktop entries).
 #
 #   installed-apps list          JSON object: desktop id -> {file, source, package, version, size, path}
-#                                source: pacman | aur (pacman, not from a repo) | rpm | flatpak | user (~/.local/share/applications) | other
+#                                source: the distro backend's label (distros/*.sh) | flatpak | user (~/.local/share/applications) | other
 #   installed-apps info ID       JSON: {description, url, fields: [[label, value], ...]} for the details panel
 #   installed-apps show ID       show the app's program (or its folder) in the file manager
 #   installed-apps remove ID     packages: uninstall in a terminal, which asks for confirmation there;
 #                                user entries: move the .desktop file to the Trash
-set -uo pipefail
+set -uo pipefail # no -e: one app that can't be looked up must not stop the list
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 data_home=${XDG_DATA_HOME:-$HOME/.local/share}
 export LC_ALL=C
 
-# A key from the [Desktop Entry] group only (later groups are actions with their own Exec)
-key() { awk -v k="$2" '/^\[/ { s = ($0 == "[Desktop Entry]") } s && index($0, k "=") == 1 { print substr($0, length(k) + 2); exit }' "$1"; }
+# The distro backend (distros/<id>.sh, first of ID then ID_LIKE that exists), as lib/distro.sh picks it.
+# No backend: system packages are not listed. Sourcing only defines functions.
+repo=$(repo_root)
+for id in $(. /etc/os-release && echo "${ID:-} ${ID_LIKE:-}"); do
+    # shellcheck source=distros/arch.sh
+    [[ -f $repo/distros/$id.sh ]] && . "$repo/distros/$id.sh" && break
+done
+unset id
 
 # id<TAB>file for every app entry; the first one in the XDG data dirs wins, as in menus
 entries() {
     local d f id
     declare -A seen=()
-    IFS=: read -ra dirs <<< "$data_home:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    IFS=: read -ra dirs <<<"$data_home:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
     shopt -s nullglob
     for d in "${dirs[@]}"; do
         for f in "$d"/applications/*.desktop; do
@@ -34,7 +43,7 @@ entries() {
 # The program an entry runs, symlinks resolved (/usr/bin/code -> /opt/visual-studio-code/code)
 program() {
     local w p
-    for w in $(key "$1" Exec); do
+    for w in $(desktop_key "$1" Exec); do
         [[ $w == env || $w == *=* ]] && continue
         p=$(command -v -- "${w//\"/}" 2>/dev/null) && readlink -f -- "$p"
         return
@@ -44,46 +53,49 @@ program() {
 # id<TAB>file lines in, id<TAB>file<TAB>source<TAB>package<TAB>version<TAB>size<TAB>path lines out
 describe() {
     local id f real app src pkg ver size path
-    declare -A owner=() pver=() psize=() fver=() fsize=() foreign=()
-    local -a rows=() sys=()
+    declare -A owner=() pver=() psize=() psrc=() fver=() fsize=()
+    local -a rows=() sys=() pkgs=()
     while IFS=$'\t' read -r id f; do
         rows+=("$id"$'\t'"$f")
         [[ $(readlink -f -- "$f") != */flatpak/* && $f != "$data_home"/* ]] && sys+=("$f")
     done
-    if command -v pacman >/dev/null && ((${#sys[@]})); then
-        while IFS=$'\t' read -r f pkg; do owner[$f]=$pkg; done < <(
-            pacman -Qo -- "${sys[@]}" 2>/dev/null | sed -nE 's/^(.*) is owned by ([^ ]+) [^ ]+$/\1\t\2/p')
-        while read -r pkg; do foreign[$pkg]=1; done < <(pacman -Qqm)
+    if ((${#sys[@]})) && declare -F distro_pkg_owners >/dev/null; then
+        while IFS=$'\t' read -r f pkg; do owner[$f]=$pkg; done < <(distro_pkg_owners "${sys[@]}")
         if ((${#owner[@]})); then
-            while IFS=$'\t' read -r pkg ver size; do pver[$pkg]=$ver; psize[$pkg]=$size; done < <(
-                printf '%s\n' "${owner[@]}" | sort -u | xargs pacman -Qi -- |
-                awk -F' *: ' '/^Name/ { n = $2 } /^Version/ { v = $2 } /^Installed Size/ { print n "\t" v "\t" $2 }')
+            mapfile -t pkgs < <(printf '%s\n' "${owner[@]}" | sort -u)
+            while IFS=$'\t' read -r pkg ver size; do
+                pver[$pkg]=$ver
+                psize[$pkg]=$size
+            done < <(distro_pkg_versions "${pkgs[@]}")
+            while IFS=$'\t' read -r pkg src; do psrc[$pkg]=$src; done < <(distro_pkg_source "${pkgs[@]}")
         fi
-    elif command -v rpm >/dev/null; then
-        # shortcut: one rpm call per entry (a few seconds on a full menu); batch it if that gets slow
-        for f in "${sys[@]}"; do
-            IFS=$'\t' read -r pkg ver size < <(rpm -qf --qf '%{NAME}\t%{VERSION}\t%{SIZE}\n' -- "$f" 2>/dev/null | head -1)
-            [[ -n ${pkg:-} && $pkg != file ]] || continue
-            owner[$f]=$pkg; pver[$pkg]=$ver; psize[$pkg]=$(numfmt --to=iec-i --suffix=B "$size")
-        done
     fi
     if command -v flatpak >/dev/null; then
-        while IFS=$'\t' read -r app ver size; do fver[$app]=$ver; fsize[$app]=$size; done < <(
-            flatpak list --app --columns=application,version,size 2>/dev/null)
+        while IFS=$'\t' read -r app ver size; do
+            fver[$app]=$ver
+            fsize[$app]=$size
+        done < <(
+            flatpak list --app --columns=application,version,size 2>/dev/null
+        )
     fi
 
     for row in "${rows[@]}"; do
-        IFS=$'\t' read -r id f <<< "$row"
+        IFS=$'\t' read -r id f <<<"$row"
         real=$(readlink -f -- "$f")
         pkg="" ver="" size="" path=""
         if [[ $real == */flatpak/* ]]; then
-            path=$(sed -E 's#^(.*/flatpak/app/[^/]+)/.*#\1#' <<< "$real")
-            pkg=$(basename "$path"); src=flatpak; ver=${fver[$pkg]:-}; size=${fsize[$pkg]:-}
+            path=$(sed -E 's#^(.*/flatpak/app/[^/]+)/.*#\1#' <<<"$real")
+            pkg=$(basename "$path")
+            src=flatpak
+            ver=${fver[$pkg]:-}
+            size=${fsize[$pkg]:-}
         elif [[ $f == "$data_home"/* ]]; then
             src=user
         elif [[ -n ${owner[$f]:-} ]]; then
-            pkg=${owner[$f]}; ver=${pver[$pkg]:-}; size=${psize[$pkg]:-}
-            if ! command -v pacman >/dev/null; then src=rpm; elif [[ -n ${foreign[$pkg]:-} ]]; then src=aur; else src=pacman; fi
+            pkg=${owner[$f]}
+            ver=${pver[$pkg]:-}
+            size=${psize[$pkg]:-}
+            src=${psrc[$pkg]:-}
         else
             src=other
         fi
@@ -93,13 +105,14 @@ describe() {
 }
 
 one() {
-    [[ ${1:-} =~ ^[A-Za-z0-9._+-]+$ ]] || { echo "installed-apps: bad id: ${1:-}" >&2; exit 1; }
-    local row; row=$(entries | awk -F'\t' -v id="$1" '$1 == id')
-    [[ -n $row ]] || { echo "installed-apps: no app $1" >&2; exit 1; }
-    describe <<< "$row" | tr '\t' '\037'   # read with IFS=$'\037': empty fields survive, tabs would collapse
+    [[ ${1:-} =~ ^[A-Za-z0-9._+-]+$ ]] || die "bad id: ${1:-}"
+    local row
+    row=$(entries | awk -F'\t' -v id="$1" '$1 == id')
+    [[ -n $row ]] || die "no app $1"
+    describe <<<"$row" | tr '\t' '\037' # read with IFS=$'\037': empty fields survive, tabs would collapse
 }
 
-# "Key   : value" lines (pacman -Qi, flatpak info) -> label<TAB>value for the keys asked, in that order
+# "Key   : value" lines (flatpak info) -> label<TAB>value for the keys asked, in that order
 pick() {
     awk -F' *: ' -v keys="$1" 'BEGIN { n = split(keys, k, "|") } NF > 1 { val = substr($0, index($0, ": ") + 2); gsub(/^ +/, "", $1); v[$1] = val }
         END { for (i = 1; i <= n; i++) { split(k[i], kl, "="); if (v[kl[1]] != "" && v[kl[1]] != "None") print kl[2] "\t" v[kl[1]] } }'
@@ -108,39 +121,31 @@ pick() {
 info() {
     local id f src pkg path desc url="" from
     IFS=$'\037' read -r id f src pkg _ _ path < <(one "$1") || exit 1
-    desc=$(key "$f" Comment); [[ -n $desc ]] || desc=$(key "$f" GenericName)
+    desc=$(desktop_key "$f" Comment)
+    [[ -n $desc ]] || desc=$(desktop_key "$f" GenericName)
     case $src in
-        pacman|aur) url=$(pacman -Qi -- "$pkg" | pick 'URL=x' | cut -f2) ;;
-        rpm)     url=$(rpm -q --qf '%{URL}' "$pkg") ;;
         flatpak) url="https://flathub.org/apps/$pkg" ;;
+        user | other) ;;
+        *) url=$(distro_pkg_url "$pkg") ;;
     esac
     {
         case $src in
-            pacman|aur)
-                local qi; qi=$(pacman -Qi -- "$pkg")
-                from=$(pick 'Installed From=x' <<< "$qi" | cut -f2)
-                case $from in
-                    "")                 from="AUR or built on this computer (not from a repository)" ;;
-                    cachyos*)           from="CachyOS repository ($from)" ;;
-                    core|extra|multilib) from="Arch Linux repository ($from)" ;;
-                esac
-                printf 'Installed from\t%s\n' "$from"
-                pick 'Name=Package|Version=Version|Description=Package description|Licenses=Licence|Installed Size=Size on disk|Install Date=Installed on|Build Date=Built on|Install Reason=Why it is here|Required By=Needed by|Packager=Packaged by' <<< "$qi" |
-                    sed -E 's/\tExplicitly installed$/\tYou installed it/; s/\tInstalled as a dependency for another package$/\tAnother package needed it/' ;;
-            rpm)
-                printf 'Installed from\t%s\n' "$(rpm -q --qf '%{FROM_REPO}' "$pkg" 2>/dev/null || echo "Fedora package")"
-                rpm -q --qf 'Package\t%{NAME}\nVersion\t%{VERSION}-%{RELEASE}\nPackage description\t%{SUMMARY}\nLicence\t%{LICENSE}\nInstalled on\t%{INSTALLTIME:date}\n' "$pkg" ;;
             flatpak)
-                local info; info=$(flatpak info "$pkg" 2>/dev/null)
-                pick 'Origin=Installed from|Installation=Installed for|ID=App ID|Version=Version|Branch=Branch|License=Licence|Installed Size=Size on disk|Runtime=Runs on|Date=Last updated' <<< "$info" |
-                    sed -E 's/^(Installed from\t)flathub$/\1Flathub/; s/^(Installed for\t)system$/\1Everyone on this computer/; s/^(Installed for\t)user$/\1Only you/' ;;
-            user)  printf 'Installed from\t%s\n' "A menu entry in your own apps folder (added by the app itself, a browser web app or by hand)" ;;
-            *)     printf 'Installed from\t%s\n' "Not from a package: copied in by hand or by its own installer" ;;
+                local info
+                info=$(flatpak info "$pkg" 2>/dev/null)
+                pick 'Origin=Installed from|Installation=Installed for|ID=App ID|Version=Version|Branch=Branch|License=Licence|Installed Size=Size on disk|Runtime=Runs on|Date=Last updated' <<<"$info" |
+                    sed -E 's/^(Installed from\t)flathub$/\1Flathub/; s/^(Installed for\t)system$/\1Everyone on this computer/; s/^(Installed for\t)user$/\1Only you/'
+                ;;
+            user) printf 'Installed from\t%s\n' "A menu entry in your own apps folder (added by the app itself, a browser web app or by hand)" ;;
+            other) printf 'Installed from\t%s\n' "Not from a package: copied in by hand or by its own installer" ;;
+            *) distro_pkg_info "$pkg" ;;
         esac
         printf 'Program\t%s\n' "$path"
-        printf 'Command\t%s\n' "$(key "$f" Exec | sed -E 's/ +%[fFuUdDnNickvm]//g')"
+        printf 'Command\t%s\n' "$(desktop_key "$f" Exec | sed -E 's/ +%[fFuUdDnNickvm]//g')"
         printf 'Menu entry\t%s\n' "$f"
-        local cats; cats=$(key "$f" Categories | sed 's/;$//; s/;/, /g'); [[ -n $cats ]] && printf 'Categories\t%s\n' "$cats"
+        local cats
+        cats=$(desktop_key "$f" Categories | sed 's/;$//; s/;/, /g')
+        [[ -n $cats ]] && printf 'Categories\t%s\n' "$cats"
     } | jq -Rn --arg desc "$desc" --arg url "$url" '{description: $desc, url: $url, fields: [inputs | split("\t") | select(length == 2)]}'
 }
 
@@ -152,22 +157,31 @@ in_terminal() {
 case ${1:-} in
     list)
         entries | describe | jq -Rn '[inputs | split("\t") | {key: .[0], value: {file: .[1], source: .[2],
-            package: .[3], version: .[4], size: .[5], path: .[6]}}] | from_entries' ;;
+            package: .[3], version: .[4], size: .[5], path: .[6]}}] | from_entries'
+        ;;
     info) info "${2:-}" ;;
     show)
         IFS=$'\037' read -r _ _ _ _ _ _ path < <(one "${2:-}") || exit 1
         dbus-send --session --type=method_call --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 \
             org.freedesktop.FileManager1.ShowItems array:string:"file://$path" string:"" 2>/dev/null ||
-            xdg-open "$( [[ -d $path ]] && echo "$path" || dirname -- "$path")" ;;
+            xdg-open "$(if [[ -d $path ]]; then echo "$path"; else dirname -- "$path"; fi)"
+        ;;
     remove)
         IFS=$'\037' read -r _ f src pkg _ _ _ < <(one "${2:-}") || exit 1
         case $src in
-            pacman|aur) in_terminal sudo pacman -Rns -- "$pkg" ;;
-            rpm)     in_terminal sudo dnf remove "$pkg" ;;
-            flatpak) [[ $(readlink -f -- "$f") == "$HOME"/* ]] && scope=--user || scope=--system
-                     in_terminal flatpak uninstall "$scope" "$pkg" ;;
-            user)    gio trash -- "$f" ;;
-            *)       echo "installed-apps: don't know how to remove $2" >&2; exit 1 ;;
-        esac ;;
-    *)  sed -n '2,11p' "$0"; exit 2 ;;
+            flatpak)
+                [[ $(readlink -f -- "$f") == "$HOME"/* ]] && scope=--user || scope=--system
+                in_terminal flatpak uninstall "$scope" "$pkg"
+                ;;
+            user) gio trash -- "$f" ;;
+            other) die "don't know how to remove $2" ;;
+            *)
+                read -ra cmd < <(distro_pkg_remove_cmd "$pkg")
+                in_terminal "${cmd[@]}"
+                ;;
+        esac
+        ;;
+    *)
+        usage 2 >&2
+        ;;
 esac

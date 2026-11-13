@@ -1,0 +1,2 @@
+asusctl                  charge limit, power modes, fan curves, keyboard light (asusd)
+rog-control-center       GUI for asusctl

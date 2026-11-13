@@ -2,39 +2,163 @@
 # Switch a monitor shared with another computer (e.g. a work PC) over DDC/CI,
 # and move Hyprland workspaces off / back onto it.
 #
-#   monswitch toggle   switch to whichever side isn't showing now (keybind / bar button)
+#   monswitch [toggle] switch to whichever side isn't showing now (keybind / bar button)
 #   monswitch pc       give the monitor to the work PC
 #   monswitch laptop   take the monitor back
+#   monswitch sync     match Hyprland to the monitor's current input, no DDC write (startup, resume)
 #   monswitch watch    background loop: follows switches made with the monitor's own buttons
+#   monswitch inputs [OUTPUT]  JSON list of the DDC monitors and the inputs each one offers (read only; [] if none)
+#   monswitch setup    ask which monitor and inputs, then write ~/.config/monswitch.conf (Settings > Shared Monitor does the same)
 #
 # Linux keeps reporting the monitor as connected while it shows the PC, so Hyprland can't
 # notice on its own. The DDC input register (VCP 0x60) is the source of truth.
+# Setup is ~/.config/monswitch.conf (Settings > Shared Monitor writes it); without it nothing happens.
 set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+
+# Monitors that answer DDC, with the inputs each one lists itself, as JSON (nothing is written to a monitor).
+# Needs no config file. Prints [] plus one line on stderr saying why when there is nothing to list.
+inputs() {
+    local only=${1:-} detected rc=0 drm bus model cap names cur
+    local -a found=()
+    [[ -z $only || $only =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || only=""
+    if ! command -v ddcutil >/dev/null; then
+        echo "monswitch: ddcutil is not installed: ./install.sh --only modules (ddc-monitor)" >&2
+        echo '[]'
+        return 0
+    fi
+    detected=$(ddcutil detect --brief 2>&1) || rc=$? # a failure is read from the text below
+    if ((rc != 0)) || [[ $detected != *"I2C bus:"* && $detected =~ [Pp]ermission|i2c-dev|/dev/i2c ]]; then
+        echo "monswitch: no access to the monitor's control channel: ./install.sh --only modules (ddc-monitor)" >&2
+        echo '[]'
+        return 0
+    fi
+    # one "connector<TAB>bus<TAB>model" line per working display ("Invalid display" blocks are skipped)
+    while IFS=$'\t' read -r drm bus model; do
+        [[ -z $only || $drm == "$only" ]] || continue
+        [[ $bus =~ ^[0-9]+$ ]] || continue
+        cap=$(timeout 30 ddcutil capabilities --bus "$bus" 2>/dev/null || true) # slow, and some monitors never answer
+        names=$(awk '
+            /^ *Feature:/ { on = ($2 == "60") ; next }
+            on && /^ *[0-9A-Fa-f][0-9A-Fa-f]: / { c = tolower($1); sub(/:$/, "", c); n = $0; sub(/^ *[0-9A-Fa-f]+: */, "", n); print "0x" c "\t" n }
+        ' <<<"$cap" | jq -Rsc 'split("\n") | map(select(. != "") | split("\t") | {code: .[0], name: .[1]})')
+        cur=$(timeout 10 ddcutil getvcp 60 --bus "$bus" --brief 2>/dev/null | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}' || true)
+        found+=("$(jq -nc --arg o "$drm" --arg m "$model" --arg c "$cur" --argjson i "${names:-[]}" '{output: $o, model: $m, current: $c, inputs: $i}')")
+    done < <(awk '
+        function flush() { if (ok && bus != "" && drm != "") print drm "\t" bus "\t" mon; ok = 0; bus = drm = mon = "" }
+        /^Display [0-9]/ { flush(); ok = 1; next }
+        /^Invalid display/ { flush(); next }
+        /I2C bus:/ { bus = $NF; sub(/.*i2c-/, "", bus) }
+        /DRM[ _]connector:/ { drm = $NF; sub(/^card[0-9]+-/, "", drm) }
+        /^ *Monitor:/ { v = $0; sub(/^ *Monitor: */, "", v); split(v, m, ":"); mon = m[2] }
+        END { flush() }
+    ' <<<"$detected")
+    if ((${#found[@]} == 0)); then
+        echo "monswitch: no monitor that answers DDC/CI${only:+ on $only}: switch DDC/CI on in the monitor's menu, or check ddcutil detect" >&2
+        echo '[]'
+        return 0
+    fi
+    printf '%s\n' "${found[@]}" | jq -sc .
+}
+
+# Terminal version of Settings > Shared Monitor: pick from what the monitor lists, write the conf.
+setup() {
+    local json n i ans out mine other conf=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
+    json=$(inputs)
+    n=$(jq length <<<"$json")
+    ((n > 0)) || {
+        echo "monswitch: nothing to set up (see the line above)" >&2
+        return 1
+    }
+    echo "Monitors that answer DDC/CI:"
+    jq -r 'to_entries[] | "  \(.key + 1)) \(.value.output)  \(.value.model)"' <<<"$json"
+    read -r -p "Which one do you share with another computer? [1] " ans
+    ans=${ans:-1}
+    if [[ ! $ans =~ ^[0-9]+$ ]] || ((ans < 1 || ans > n)); then
+        echo "monswitch: not a number from the list" >&2
+        return 1
+    fi
+    i=$((ans - 1))
+    out=$(jq -r ".[$i].output" <<<"$json")
+    echo "Inputs of $out:"
+    jq -r ".[$i].inputs[] | \"  \(.code)  \(.name)\"" <<<"$json"
+    now=$(jq -r ".[$i].current" <<<"$json")
+    ask_input() { # prompt, default: loops until the answer is a code the monitor listed (or any 0x code if it listed none)
+        local a listed
+        listed=$(jq -r ".[$i].inputs | length" <<<"$json")
+        while :; do
+            read -r -p "$1${2:+ [$2]} " a
+            a=${a:-$2}
+            a=${a,,}
+            if [[ $a =~ ^0x[0-9a-f]{1,2}$ ]] && { ((listed == 0)) || jq -e --arg c "$a" ".[$i].inputs | any(.code == \$c)" <<<"$json" >/dev/null; }; then
+                printf '%s' "$a"
+                return 0
+            fi
+            echo "  Type one of the codes above, like 0x11." >&2
+        done
+    }
+    mine=$(ask_input "Which input is THIS computer on?" "$now")
+    other=$(ask_input "Which input does the OTHER computer use?" "")
+    [[ $mine != "$other" ]] || {
+        echo "monswitch: the two inputs must differ" >&2
+        return 1
+    }
+    mkdir -p "$(dirname "$conf")"
+    {
+        { grep -vE '^(OUT|LAPTOP|PC)=' "$conf" 2>/dev/null || true; } # other keys (MIRROR, POLL) stay
+        printf 'OUT=%s\nLAPTOP=%s\nPC=%s\n' "$out" "$mine" "$other"
+    } >"$conf.new"
+    mv "$conf.new" "$conf"
+    echo "Wrote $conf. Settings > Displays > Shared Monitor shows the same choices."
+}
+
+# these two need no config file: they are how it gets made
+case ${1:-} in
+    inputs)
+        inputs "${2:-}"
+        exit 0
+        ;;
+    setup)
+        setup
+        exit $?
+        ;;
+esac
 
 # Per-computer values live in ~/.config/monswitch.conf (no file = feature off), for example:
-#   OUT=HDMI-A-1   # Hyprland output name of the shared monitor
+#   OUT=HDMI-A-1   # for example: Hyprland output name of the shared monitor
 #   LAPTOP=0x11    # monitor input this computer is on (VCP 0x60 value)
 #   PC=0x12        # monitor input of the other computer
-#   MIRROR=eDP-1   # optional: screen it mirrors while the other computer has it (keeps a signal)
+#   MIRROR=eDP-1   # optional, for example: screen it mirrors while the other computer has it (keeps a signal).
+#                  # Default: this computer's built-in screen; none means no mirroring, workspaces stay put
 #   MIRROR_MODE=1920x1080@60   # optional: mode used for that mirror
+#   POLL=5         # optional: seconds between DDC reads in watch mode (30 while nothing changes and the screen is off)
 # Settings > Shared Monitor writes this file. By hand: ddcutil detect; ddcutil getvcp 60
 CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
-[[ -f $CONF ]] || { echo "monswitch: no $CONF, nothing to do" >&2; exit 0; }
-POLL=3        # seconds between DDC reads in watch mode
-# read KEY=value lines (never run the file as shell): only the five keys, only plain values
+[[ -f $CONF ]] || {
+    echo "monswitch: no $CONF, nothing to do" >&2
+    exit 0
+}
+POLL=5 # seconds between DDC reads in watch mode
+# read KEY=value lines (never run the file as shell): only the known keys, only plain values
 while IFS='=' read -r key value; do
-    case $key in OUT|LAPTOP|PC|MIRROR|MIRROR_MODE)
+    case $key in OUT | LAPTOP | PC | MIRROR | MIRROR_MODE | POLL)
         # plain values only, starting with a letter or digit (a leading "-" would reach ddcutil as an option)
-        if [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then printf -v "$key" '%s' "$value"
-        else echo "monswitch: ignored $key in $CONF (not a plain value)" >&2; fi ;;
+        if [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
+            printf -v "$key" '%s' "$value"
+        else echo "monswitch: ignored $key in $CONF (not a plain value)" >&2; fi
+        ;;
     esac
-done < "$CONF"
+done <"$CONF"
 : "${OUT:?set OUT in $CONF}" "${LAPTOP:?set LAPTOP in $CONF}" "${PC:?set PC in $CONF}"
-MIRROR=${MIRROR:-eDP-1}
-MIRROR_MODE=${MIRROR_MODE:-1920x1080@60}
+[[ $POLL =~ ^[1-9][0-9]*$ ]] || POLL=5
+MIRROR=${MIRROR-$(hw display.internal)} # "none" in the file = no mirroring
+[[ $MIRROR == none ]] && MIRROR=""
+MIRROR_MODE=${MIRROR_MODE:-preferred} # your own mode from the file, else whatever the screen prefers
 
 STATE_DIR=${XDG_STATE_HOME:-$HOME/.local/state}/monswitch
-SHARED=${XDG_CONFIG_HOME:-$HOME/.config}/hypr/settings/shared.lua   # the hand-off, for Hyprland (modules/monitors.lua)
+SHARED=${XDG_CONFIG_HOME:-$HOME/.config}/hypr/settings/shared.lua # the hand-off, for Hyprland (modules/monitors.lua)
 LAYOUT=$STATE_DIR/layout.json
 mkdir -p "$STATE_DIR"
 
@@ -42,11 +166,21 @@ mkdir -p "$STATE_DIR"
 # links to the right one, so it is looked up on every call (watch runs for the whole session).
 bus() { readlink -f /sys/class/drm/card*-"$OUT"/ddc 2>/dev/null | sed 's/.*i2c-//' | head -1; }
 
-ddc_input() {  # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch, or unplugged)
-    local b; b=$(bus); [[ -n $b ]] || return 0
+ddc_input() { # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch, or unplugged)
+    local b
+    b=$(bus)
+    [[ -n $b ]] || return 0
     { ddcutil --bus "$b" getvcp 60 --terse 2>/dev/null || true; } | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}'
 }
-ddc_set() { local b; b=$(bus); [[ -n $b ]] || { echo "monswitch: $OUT isn't connected" >&2; return 1; }; ddcutil --bus "$b" setvcp 60 "$1"; }
+ddc_set() {
+    local b
+    b=$(bus)
+    [[ -n $b ]] || {
+        echo "monswitch: $OUT isn't connected" >&2
+        return 1
+    }
+    ddcutil --bus "$b" setvcp 60 "$1"
+}
 
 out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o)' >/dev/null; }
 
@@ -54,7 +188,7 @@ save_layout() {
     jq -n \
         --argjson ws "$(hyprctl -j workspaces | jq --arg o "$OUT" '[.[] | select(.monitor == $o and .id > 0) | .id]')" \
         --argjson active "$(hyprctl -j monitors | jq --arg o "$OUT" '.[] | select(.name == $o) | .activeWorkspace.id')" \
-        '{workspaces: $ws, active: $active}' > "$LAYOUT"
+        '{workspaces: $ws, active: $active}' >"$LAYOUT"
 }
 
 restore_layout() {
@@ -69,16 +203,17 @@ restore_layout() {
 }
 
 # Hyprland side only: used directly by the watcher when the input was switched by hand.
-# The monitor is mirrored, not disabled: with no signal from this computer some monitors (the Acer)
+# The monitor is mirrored, not disabled: with no signal from this computer some monitors
 # give up on the other input within ~5 s. A mirror keeps a signal but holds no workspaces.
 release() {
     out_enabled || return 0
+    [[ -n $MIRROR ]] || return 0 # no screen to mirror: leave Hyprland as it is
     save_layout
     # kept in a file Hyprland's monitors.lua reads, so a reload or a theme change keeps the hand-off
     local table="{ output = \"$OUT\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\" }"
-    printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "$OUT" "$table" > "$SHARED"
+    printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "$OUT" "$table" >"$SHARED"
     hyprctl eval "SHARED = $table; apply_displays()" >/dev/null
-    local id   # a mirror can keep its workspaces, so move them explicitly
+    local id # a mirror can keep its workspaces, so move them explicitly
     for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
         hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$MIRROR\" })" >/dev/null
     done
@@ -87,19 +222,19 @@ release() {
 reclaim() {
     out_enabled && return 0
     rm -f "$SHARED"
-    hyprctl eval "SHARED = nil; apply_displays()" >/dev/null   # its own monitor rule again (modules/monitors.lua)
+    hyprctl eval "SHARED = nil; apply_displays()" >/dev/null # its own monitor rule again (modules/monitors.lua)
     sleep 1
     restore_layout
     notify-send -a monswitch "Monitor → this computer" "Workspaces restored"
 }
 
 to_pc() {
-    ddc_set "$PC"   # switch first, while the laptop still sends a picture
-    sleep 2         # the input change causes a ~1 s HDMI disconnect blip; let it pass
+    ddc_set "$PC" # switch first, while the laptop still sends a picture
+    sleep 2       # the input change causes a ~1 s HDMI disconnect blip; let it pass
     release
 }
 to_laptop() {
-    reclaim         # send a picture first, so the monitor has a signal to switch to
+    reclaim # send a picture first, so the monitor has a signal to switch to
     ddc_set "$LAPTOP"
 }
 
@@ -107,8 +242,14 @@ to_laptop() {
 exec 9>"$STATE_DIR/lock"
 
 case ${1:-toggle} in
-    pc)     flock 9; to_pc ;;
-    laptop) flock 9; to_laptop ;;
+    pc)
+        flock 9
+        to_pc
+        ;;
+    laptop)
+        flock 9
+        to_laptop
+        ;;
     toggle)
         flock 9
         if out_enabled && [[ $(ddc_input) == "$LAPTOP" ]]; then to_pc; else to_laptop; fi
@@ -117,26 +258,36 @@ case ${1:-toggle} in
         # Align Hyprland to the actual DDC input on startup/resume without sending a DDC write.
         flock 9
         now=$(ddc_input)
-        if   [[ $now == "$PC" ]];     then release || true
-        elif [[ $now == "$LAPTOP" ]]; then reclaim || true
+        if [[ $now == "$PC" ]]; then
+            release || true
+        elif [[ $now == "$LAPTOP" ]]; then
+            reclaim || true
         fi
         ;;
     watch)
-        last=""
-        while sleep "$POLL"; do
+        last="" same=0 interval=$POLL
+        while sleep "$interval"; do
             now=$(ddc_input)
+            if [[ $now == "$last" ]]; then same=$((same + 1)); else same=0; fi
             # Act only on two identical readings in a row; ignores glitches during a switch.
             if [[ -n $now && $now == "$last" ]]; then
                 flock 9
-                now=$(ddc_input)   # re-read: a keypress may have switched while we waited for the lock
+                now=$(ddc_input) # re-read: a keypress may have switched while we waited for the lock
                 # || true: one failed hyprctl/notify call must not kill the watcher
-                if   [[ $now == "$PC" ]];     then release || true
-                elif [[ $now == "$LAPTOP" ]]; then reclaim || true
+                if [[ $now == "$PC" ]]; then
+                    release || true
+                elif [[ $now == "$LAPTOP" ]]; then
+                    reclaim || true
                 fi
                 flock -u 9
             fi
             last=$now
+            # nothing changed for three reads and the screen is off: look less often
+            interval=$POLL
+            if ((same >= 2)) && ! hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o and .dpmsStatus)' >/dev/null; then interval=30; fi
         done
         ;;
-    *) echo "usage: monswitch [toggle|pc|laptop|watch]" >&2; exit 2 ;;
+    *)
+        usage 2 >&2
+        ;;
 esac

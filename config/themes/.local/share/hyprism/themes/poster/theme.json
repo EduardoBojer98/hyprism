@@ -1,0 +1,42 @@
+{
+  "name": "Poster",
+  "about": "Loud and flat: a paper bar, huge workspace numbers, hard offset shadows, panels that slam in",
+  "order": 4,
+  "dark": false,
+  "colour": {"ground": "#141414", "surface": "#f4f1ea", "raised": "#e6e1d6", "line": "#141414", "text": "#141414", "muted": "#4a4740", "faint": "#7d786d", "accent": "#ff3b1f", "onAccent": "#f4f1ea", "accent2": "#2d5bff", "ok": "#1a7f37", "warn": "#b35c00", "err": "#c4161c"},
+  "alt": {
+    "dark": true,
+    "term": {
+      "palette": ["#262626", "#ff4a2e", "#4cc26e", "#ffa23a", "#6f8cff", "#ff6fb5", "#4fd1e0", "#c9c4b8", "#8f8a7f", "#ff7a62", "#79d295", "#ffbd6b", "#95a9ff", "#ff93c8", "#7bdce8", "#f4f1ea"],
+      "background": "#141414",
+      "foreground": "#f4f1ea",
+      "cursor": "#ff4a2e",
+      "cursorText": "#141414",
+      "selection": "#561f17",
+      "selectionText": "#f4f1ea"
+    },
+    "wall": "poster",
+    "colour": {"ground": "#141414", "surface": "#1f1f1f", "raised": "#2b2b2b", "line": "#f4f1ea", "text": "#f4f1ea", "muted": "#c9c4b8", "faint": "#8f8a7f", "accent": "#ff4a2e", "onAccent": "#141414", "accent2": "#6f8cff", "ok": "#4cc26e", "warn": "#ffa23a", "err": "#ff5a5f"},
+    "hypr": {"active": ["ff4a2eff"], "inactive": "3a3a3aff"}
+  },
+  "font": {"ui": "Archivo", "display": "Archivo Black", "mono": "JetBrainsMono Nerd Font", "size": 14, "displayWeight": 900},
+  "shape": {"radius": 0, "radiusSmall": 0, "line": 3, "material": "solid"},
+  "bar": {"edge": "top", "size": 52, "floating": false, "segmented": false, "fill": "surface", "line": 3, "voice": "icons", "mono": false, "ws": "blocks", "clock": "display", "decor": "", "sep": false, "start": ["workspaces", "window"], "center": [], "end": ["media", "tray", "keyboard", "status", "notifications", "weather", "clock"]},
+  "dock": {"edge": "bottom", "shape": "block", "hover": "lift", "mark": "bar", "fill": "surface"},
+  "popup": {"depth": "hard", "decor": "", "tiles": "solid"},
+  "motion": {"enter": 200, "exit": 110, "curve": [0.16, 1, 0.3, 1], "travel": 28, "scale": 1, "press": 0.96},
+  "launcher": {"placement": "half", "view": "home", "header": "query", "width": 0, "select": "inverse", "prompt": ""},
+  "notify": {"corner": "bottom-left", "kind": "block"},
+  "hypr": {"gapsIn": 8, "gapsOut": 16, "border": 3, "rounding": 0, "active": ["f4f1eaff"], "inactive": "3a3a3aff", "shadow": "hard", "blur": false, "motion": "slam"},
+  "lock": {"clock": "stacked", "align": "left"},
+  "term": {
+    "palette": ["#262626", "#ff3b1f", "#4cc38a", "#ffb020", "#5b82ff", "#ff6fb5", "#4fd1e0", "#c9c4b8", "#7d786d", "#ff6c57", "#79d2a7", "#ffc458", "#84a1ff", "#ff93c8", "#7bdce8", "#f4f1ea"],
+    "background": "#141414",
+    "foreground": "#f4f1ea",
+    "cursor": "#ff3b1f",
+    "cursorText": "#141414",
+    "selection": "#561f17",
+    "selectionText": "#f4f1ea"
+  },
+  "wall": "poster"
+}

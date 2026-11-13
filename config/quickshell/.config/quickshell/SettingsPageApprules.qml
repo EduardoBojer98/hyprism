@@ -197,8 +197,8 @@ ColumnLayout {
         }
         SettingRow {
             label: "These come with the desktop"
-            hint: "Change them in ~/.config/hypr/modules/rules.lua (or this computer's host.lua)"
-            PillButton { text: "Open rules.lua"; onClicked: Quickshell.execDetached(["xdg-open", Quickshell.env("HOME") + "/.config/hypr/modules/rules.lua"]) }
+            hint: "They live in a file that updates replace: to change how an app opens, add a rule above"
+            PillButton { text: "Built-in rules (read-only file)"; onClicked: Quickshell.execDetached(["xdg-open", Quickshell.env("HOME") + "/.config/hypr/modules/rules.lua"]) }
         }
     }
 

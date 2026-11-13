@@ -1,0 +1,2 @@
+squeekboard              on-screen keyboard (shell button)
+iio-sensor-proxy         reads the rotation sensor, so the screen turns in tablet mode

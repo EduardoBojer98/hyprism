@@ -101,6 +101,6 @@ Singleton {
             Text { text: row.icon; color: area.containsMouse ? Theme.accentText : row.danger ? Theme.error : Theme.subtext; font { family: Theme.iconFont; pixelSize: 14 } }
             Text { Layout.fillWidth: true; text: row.label; elide: Text.ElideRight; color: area.containsMouse ? Theme.accentText : row.danger ? Theme.error : Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize } }
         }
-        MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: row.clicked() }
+        MouseArea { id: area; Accessible.role: Accessible.Button; Accessible.name: row.label; Accessible.onPressAction: row.clicked(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: row.clicked() }
     }
 }

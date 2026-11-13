@@ -1,17 +1,19 @@
 # Rounded "pill" prompt: folder pill + git pill, then a clean input line.
-# Language versions and command time sit on the right. Catppuccin Macchiato colours.
+# Language versions and command time sit on the right. Colours are palette names: the
+# block at the end holds Reactor's; ThemeSync writes ~/.config/hyprism/starship.toml with the active theme's.
+palette = "hyprism"
 add_newline = true
 format = """
-[](#8aadf4)$directory[](fg:#8aadf4 bg:#363a4f)$git_branch$git_status[](#363a4f)
+[](accent)$directory[](fg:accent bg:raised)$git_branch$git_status[](raised)
 $character"""
 right_format = "$nodejs$php$python$cmd_duration"
 
 [character]
-success_symbol = "[❯](bold #8aadf4)"
-error_symbol = "[❯](bold #ed8796)"
+success_symbol = "[❯](bold accent)"
+error_symbol = "[❯](bold err)"
 
 [directory]
-style = "bold fg:#181926 bg:#8aadf4"
+style = "bold fg:on_accent bg:accent"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncate_to_repo = true
@@ -19,29 +21,39 @@ truncation_symbol = "…/"
 
 [git_branch]
 symbol = ""
-style = "fg:#c6a0f6 bg:#363a4f"
+style = "fg:accent2 bg:raised"
 format = "[ $symbol $branch ]($style)"
 
 [git_status]
-style = "fg:#eed49f bg:#363a4f"
+style = "fg:warn bg:raised"
 format = "[($all_status$ahead_behind )]($style)"
 
 [nodejs]
 symbol = " "
-style = "#a6da95"
+style = "ok"
 format = "[$symbol$version]($style) "
 
 [php]
 symbol = " "
-style = "#b7bdf8"
+style = "accent2"
 format = "[$symbol$version]($style) "
 
 [python]
 symbol = " "
-style = "#eed49f"
+style = "warn"
 format = "[$symbol$version]($style) "
 
 [cmd_duration]
 min_time = 2000
-style = "#6e738d"
+style = "faint"
 format = "[󱎫 $duration]($style)"
+
+[palettes.hyprism]
+accent = "#e4ff1a"
+on_accent = "#0c0d08"
+accent2 = "#ff6b0a"
+raised = "#1f2216"
+ok = "#3ddc97"
+warn = "#ffb547"
+err = "#ff4f6d"
+faint = "#8a8e6a"

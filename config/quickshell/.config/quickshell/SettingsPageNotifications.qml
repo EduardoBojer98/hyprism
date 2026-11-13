@@ -26,6 +26,27 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "On-screen display"
+        SettingRow { label: "Volume"; hint: "A pop-up when the volume or mute changes"; ConfigToggle { section: "osd"; key: "volume" } }
+        SettingRow { label: "Brightness"; ConfigToggle { section: "osd"; key: "brightness" } }
+        SettingRow { label: "Microphone mute"; ConfigToggle { section: "osd"; key: "micMute" } }
+        SettingRow { label: "Keyboard layout"; ConfigToggle { section: "osd"; key: "layout" } }
+        SettingRow {
+            label: "Caps Lock"
+            hint: "Checks the keyboard's light twice a second while on"
+            ConfigToggle { section: "osd"; key: "capsLock" }
+        }
+        SettingRow {
+            label: "Position"
+            ConfigChoice { section: "osd"; key: "position"; values: ["bottom", "top", "center"]; labels: ["Bottom", "Top", "Center"] }
+        }
+        SettingRow {
+            label: "Stays for"
+            ConfigSlider { section: "osd"; key: "timeoutMs"; from: 600; to: 5000; step: 100; format: v => (v / 1000).toFixed(1) + " s" }
+        }
+    }
+
+    SettingGroup {
         title: "Sound"
         SettingRow {
             label: "Sound"

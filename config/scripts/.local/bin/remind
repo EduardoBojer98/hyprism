@@ -3,19 +3,35 @@
 #   remind 20m "Stand up"      remind 1h30m "Call the printer"      remind 17:45 "Leave"
 #   remind list                remind clear
 set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 case ${1:-list} in
-    list)  systemctl --user list-timers 'remind-*' --no-legend 2>/dev/null | awk '{print $1, $2, $3, "  ", $(NF-1)}' || true ;;
-    clear) systemctl --user stop 'remind-*.timer' 2>/dev/null; echo "remind: cleared" ;;
+    list) systemctl --user list-timers 'remind-*' --no-legend 2>/dev/null | awk '{print $1, $2, $3, "  ", $(NF-1)}' || true ;;
+    clear)
+        systemctl --user stop 'remind-*.timer' 2>/dev/null
+        echo "remind: cleared"
+        ;;
     *)
-        [[ $# -ge 2 ]] || { sed -n '2,4p' "$0" >&2; exit 2; }
-        when=$1; shift; msg="$*"
+        [[ $# -ge 2 ]] || {
+            usage 2 >&2
+        }
+        when=$1
+        shift
+        msg="$*"
         if [[ $when =~ ^[0-9]{1,2}:[0-9]{2}$ ]]; then
             # one shot: today at that time, or tomorrow if it has passed (a bare HH:MM would repeat daily)
-            at=$(date -d "$when" +%s); (( at > $(date +%s) )) || at=$(date -d "tomorrow $when" +%s)
+            at=$(date -d "$when" +%s)
+            ((at > $(date +%s))) || at=$(date -d "tomorrow $when" +%s)
             on=(--on-calendar="$(date -d "@$at" '+%F %T')")
-        elif [[ $when =~ ^([0-9]+[hms])+$ ]]; then on=(--on-active="$when")
-        else echo "remind: say when as 20m, 1h30m or 17:45" >&2; exit 2; fi
+        elif [[ $when =~ ^([0-9]+[hms])+$ ]]; then
+            on=(--on-active="$when")
+        else
+            echo "remind: say when as 20m, 1h30m or 17:45" >&2
+            exit 2
+        fi
         systemd-run --user --quiet --unit="remind-$(date +%s%N)" "${on[@]}" --timer-property=AccuracySec=1s \
             notify-send -a Reminder -u critical -i appointment-soon "Reminder" "$msg"
-        echo "remind: $when — $msg" ;;
+        echo "remind: $when — $msg"
+        ;;
 esac

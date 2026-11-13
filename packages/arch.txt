@@ -38,6 +38,7 @@ gtk3                     gtk3                               repo
 sound-theme              sound-theme-freedesktop            repo
 squeekboard              squeekboard                        repo
 fuzzel                   fuzzel                             repo
+emoji-data               unicode-emoji                      repo
 pavucontrol              pavucontrol                        repo
 nm-connection-editor     nm-connection-editor               repo
 satty                    satty                              repo
@@ -56,10 +57,12 @@ ddcutil                  ddcutil                            repo
 xdg-utils                xdg-utils                          repo
 glib2                    glib2                              repo
 kdialog                  kdialog                            repo
+btop                     btop                               repo
 imagemagick              imagemagick                        repo
 fastfetch                fastfetch                          repo
 adw-gtk-theme            adw-gtk-theme                      repo
 papirus-icons            papirus-icon-theme                 repo
+qt6ct                    qt6ct                              repo
 font-inter               inter-font                         repo
 font-cantarell           cantarell-fonts                    repo
 font-noto                noto-fonts                         repo
@@ -76,3 +79,17 @@ gitleaks                 gitleaks                           repo
 # Host extras (hosts/*/packages.txt)
 asusctl                  asusctl                            repo
 rog-control-center       rog-control-center                 repo
+
+# Module extras (modules/<name>/packages.txt)
+solaar                   solaar                             repo
+iio-sensor-proxy         iio-sensor-proxy                   repo
+mise                     mise                               repo
+docker                   docker                             repo
+docker-compose           docker-compose                     repo
+# steam and lib32 drivers need the multilib repo (on by default on CachyOS; plain Arch: enable it in /etc/pacman.conf)
+steam                    steam                              repo
+gamemode                 gamemode                           repo
+mangohud                 mangohud                           repo
+ollama                   ollama                             repo
+ollama-gpu               ollama-cuda                        repo
+nvidia-container-toolkit nvidia-container-toolkit           repo

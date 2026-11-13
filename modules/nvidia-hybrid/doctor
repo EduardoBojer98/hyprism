@@ -1,0 +1,6 @@
+# shellcheck shell=bash
+[[ -e /dev/dri/igpu ]] || warn "nvidia-hybrid: /dev/dri/igpu is missing, so the desktop may keep the NVIDIA card awake (./install.sh --only modules)"
+_pci=$(hw_get gpu.discrete_pci)
+if [[ -r /sys/bus/pci/devices/$_pci/power/runtime_status ]]; then
+    echo "   nvidia card is: $(cat "/sys/bus/pci/devices/$_pci/power/runtime_status") (suspended = powered off, good when idle)"
+fi

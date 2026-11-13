@@ -45,14 +45,14 @@ Singleton {
     readonly property var allSections: [
         { id: "appearance",    name: "Themes",              glyph: "\u{F03D8}", keys: "theme look colour accent font text size corners gaps shadow blur animations motion reduce terminal dark light mode night day border frame window gaps rounding color colors gray grey" },
         { id: "builder",       name: "Theme Builder",       glyph: "\u{F0E1E}", keys: "custom own theme create make editor colours fonts bar dock panels motion design color colors" },
-        { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}", keys: "background picture slideshow blur folder" },
+        { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}", keys: "background picture slideshow blur folder colours accent follow wallpaper" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}", keys: "icon theme papirus" },
         { id: "cursor",        name: "Cursor",              glyph: "\u{F01BF}", keys: "pointer mouse size" },
-        { id: "bar",           name: "Menu Bar",            glyph: "\u{F0E7F}", keys: "panel top bottom left right position size floating items widgets clock seconds date 24-hour window title monitor hide autohide hidden status" },
+        { id: "bar",           name: "Menu Bar",            glyph: "\u{F0E7F}", keys: "panel top bottom left right position size floating items widgets clock seconds date 24-hour window title monitor hide autohide hidden status preset layout screen screens save item settings icon label format click right-click scroll tooltip warn critical interval sysinfo readings" },
         { id: "dock",          name: "Dock",                glyph: "\u{F0A1F}", keys: "taskbar pinned apps icon size hide automatically running windows pictures position monitor" },
         { id: "lockscreen",    name: "Lock Screen",         glyph: "\u{F033E}", keys: "lock clock date avatar user picture blur brightness widgets battery media layout lock after password" },
         { id: "controlcenter", name: "Control Center",      glyph: "\u{F0493}", keys: "quick settings tiles toggles sliders shortcuts" },
-        { id: "notifications", name: "Notifications",       glyph: "\u{F009A}", keys: "do not disturb dnd sound banners history muted apps" },
+        { id: "notifications", name: "Notifications",       glyph: "\u{F009A}", keys: "do not disturb dnd sound banners history muted apps osd on-screen display volume brightness microphone mic mute caps lock keyboard layout" },
         { id: "launcher",      name: "Search & Launcher",   glyph: "\u{F0349}", keys: "spotlight apps files web search actions" },
         { id: "clipboard",     name: "Clipboard",           glyph: "\u{F014C}", keys: "copy paste history images" },
         { id: "weather",       name: "Weather",             glyph: "\u{F0595}", keys: "city forecast celsius fahrenheit" },
@@ -61,7 +61,7 @@ Singleton {
         { id: "windows",       name: "Window Behaviour",    glyph: "\u{F05AF}", keys: "layout tiling dwindle master scrolling focus follows mouse split snap gestures swipe" },
         { id: "windowlook",    name: "Window Look",         glyph: "\u{F03D8}", keys: "title bars opacity dim inactive border frame transparent" },
         { id: "apprules",      name: "App Rules",           glyph: "\u{F0493}", keys: "float pin workspace rule" },
-        { id: "displays",      name: "Screens",             glyph: "\u{F0379}", keys: "monitor resolution scale rotation refresh night light arrangement display screen hdmi external projector brightness" },
+        { id: "displays",      name: "Screens",             glyph: "\u{F0379}", keys: "monitor resolution scale rotation refresh night light arrangement display screen hdmi external projector brightness vrr adaptive sync freesync gsync hdr highest refresh rate xwayland" },
         { id: "monitor",       name: "Shared Monitor",      glyph: "\u{F0E58}", keys: "ddc input switch kvm mirror" },
         { id: "input",         name: "Keyboard & Touchpad", glyph: "\u{F030C}", keys: "layout serbian latin repeat touchpad mouse sensitivity natural scroll tap keyboard layout language mouse trackpad gestures swipe fingers" },
         { id: "keybinds",      name: "Keyboard Shortcuts",  glyph: "\u{F0313}", keys: "keys binds hotkeys shortcuts screenshot print capture record" },
@@ -218,7 +218,7 @@ Singleton {
                                     Text { width: parent.width; elide: Text.ElideRight; text: modelData.group; color: Theme.subtext
                                            font { family: Theme.font; pixelSize: Theme.fontCaption } }
                                 }
-                                MouseArea { id: resArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                MouseArea { id: resArea; Accessible.role: Accessible.Button; Accessible.name: modelData.name; Accessible.onPressAction: result.go(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                             onClicked: result.go() }
                             }
                         }
@@ -270,7 +270,7 @@ Singleton {
                                             font { family: Theme.font; pixelSize: Theme.fontLabel; weight: current ? Font.DemiBold : Font.Normal }
                                         }
                                     }
-                                    MouseArea { id: navArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData.id) }
+                                    MouseArea { id: navArea; Accessible.role: Accessible.Button; Accessible.name: modelData.name; Accessible.onPressAction: root.show(modelData.id); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData.id) }
                                 }
                                 // submenu: the open group's pages
                                 Repeater {
@@ -301,7 +301,7 @@ Singleton {
                                             color: parent.current ? Theme.text : Theme.subtext
                                             font { family: Theme.font; pixelSize: Theme.fontLabel; weight: parent.current ? Font.DemiBold : Font.Normal }
                                         }
-                                        MouseArea { id: subArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData) }
+                                        MouseArea { id: subArea; Accessible.role: Accessible.Button; Accessible.name: modelData; Accessible.onPressAction: root.show(modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.show(modelData) }
                                     }
                                 }
                             }
@@ -382,7 +382,7 @@ Singleton {
                             color: Theme.text
                             font { family: Theme.iconFont; pixelSize: 13 }
                         }
-                        MouseArea { id: btnArea; anchors.fill: parent; hoverEnabled: true; onClicked: modelData.act() }
+                        MouseArea { id: btnArea; Accessible.role: Accessible.Button; Accessible.name: modelData.tip; Accessible.onPressAction: modelData.act(); anchors.fill: parent; hoverEnabled: true; onClicked: modelData.act() }
                         ToolTipText { shown: btnArea.containsMouse; text: modelData.tip }
                     }
                 }

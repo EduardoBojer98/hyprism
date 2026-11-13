@@ -1,0 +1,1 @@
+hw_has input.touchscreen || hw_has input.tablet_switch

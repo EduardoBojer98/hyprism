@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 # Switch the whole desktop design in one step: layout, type, shapes, colours, motion, lock screen,
-# terminal and wallpaper. Same as Settings > Themes. The themes live in ~/.config/quickshell/Themes.qml.
+# terminal and wallpaper. Same as Settings > Themes. Each theme is a folder (docs/THEMES.md).
 #   theme            list the themes, the current one marked
-#   theme pebble    switch (pebble, monolith, console, poster, glass, atlas, reactor)
+#   theme reactor    switch to it (any id from the list)
 set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
-qs ipc call config get appearance theme >/dev/null 2>&1 || { echo "theme: the shell (Quickshell) isn't running" >&2; exit 1; }
-themes=$(grep -oE '^\s+id: "[a-z0-9]+", name: "[^"]+", about: "[^"]+"' "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/Themes.qml" \
-    | sed -E 's/^\s+id: "([a-z0-9]+)", name: "([^"]+)", about: "([^"]+)"/\1\t\2\t\3/')
+qs ipc call config get appearance theme >/dev/null 2>&1 || die "the shell (Quickshell) isn't running"
+# id, name and description of every theme folder (yours first, so it wins over a shipped one with the same id)
+themes=$(for d in "${XDG_CONFIG_HOME:-$HOME/.config}"/hyprism/themes/*/ "${XDG_DATA_HOME:-$HOME/.local/share}"/hyprism/themes/*/; do
+    [[ -f $d/theme.json && $(basename "$d") != _* ]] || continue
+    jq -r --arg id "$(basename "$d")" '[$id, (.name // $id), (.about // ""), (.order // 1000)] | @tsv' "$d/theme.json"
+done | sort -t$'\t' -k4,4n -k1,1 -u | sort -t$'\t' -k4,4n)
 current=$(qs ipc call config get appearance theme | tr -d '"')
 
 if [[ $# -eq 0 ]]; then
@@ -17,9 +23,14 @@ if [[ $# -eq 0 ]]; then
     exit 0
 fi
 # your own themes (Settings > Theme Builder) are custom-<name>; the shell checks every id
-[[ $1 =~ ^[a-z0-9-]+$ ]] || { echo "theme: unknown theme '$1' (run 'theme' for the list)" >&2; exit 2; }
+[[ $1 =~ ^[a-z0-9-]+$ ]] || {
+    echo "theme: unknown theme '$1' (run 'theme' for the list)" >&2
+    exit 2
+}
 
+qs ipc call themes reload >/dev/null 2>&1 || true # a folder you just added or edited is read again (older shells have no such call)
+sleep 0.3
 # Config.set answers "ok" or the reason it refused
 r=$(qs ipc call config set appearance theme "\"$1\"")
-[[ $r == ok ]] || { echo "theme: not switched: $r" >&2; exit 1; }
+[[ $r == ok ]] || die "not switched: $r"
 echo "theme: $1"

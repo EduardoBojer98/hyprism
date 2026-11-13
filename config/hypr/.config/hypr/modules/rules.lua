@@ -14,7 +14,7 @@ hl.window_rule({
 
 hl.window_rule({
     name  = "float-small-tools",
-    match = { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-connection-editor|org.opengamingcollective.rog-control-center)$" },
+    match = { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-connection-editor)$" },
     float = true,
 })
 
@@ -68,11 +68,4 @@ hl.window_rule({
     float  = true,
     size   = "1020 700",
     center = true,
-})
-
--- JuhRadial MX radial menu (Logitech MX Master): the daemon places it at the cursor itself
-hl.window_rule({
-    name = "juhradial-overlay",
-    match = { title = "^(JuhRadial MX)$" },
-    float = true, pin = true, no_blur = true, no_shadow = true, no_anim = true, border_size = 0,
 })

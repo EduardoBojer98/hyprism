@@ -1,0 +1,1 @@
+[[ $(hw_get machine.tools) == asus && $(hw_get machine.form) == laptop ]]

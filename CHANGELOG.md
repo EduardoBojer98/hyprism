@@ -1,0 +1,123 @@
+# Changelog
+
+All notable changes to Hyprism. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## Unreleased (2.0.0)
+
+### Added
+
+- `screenshot pin` (`Super+Ctrl+S`, and the menu): keep a picked area floating on top of the screen; drag, zoom, copy, close. `Pins.qml` shows them.
+- `monswitch inputs` and `monswitch setup`: find a monitor's inputs over DDC instead of typing codes; Settings → Shared Monitor uses the same list.
+- Sleep times that fit the computer: `idle.sleepOnPowerMin` (sleep when plugged in, default never) next to `idle.sleepMin` (on battery); the new `idle-sleep` script decides at the moment the listener fires. A desktop no longer sleeps by itself.
+- Laptop module step `20-charge-limit.sh`: stop charging at 80% where the kernel allows it; the doctor shows the current limit.
+- `./install.sh` sets default apps (folders, links, text, images, PDF) only where none is set (`--only defaults`).
+- `tests/performance.sh`: a CPU, memory and helper-process budget for an idle shell; `tests/update-test.sh` now tests rollback.
+- Documentation for newcomers: `docs/install.md`, `docs/how-to.md`, `docs/troubleshooting.md`, `docs/modules.md`, a docs index, and `tests/docs.sh`, which fails on a broken link, path or `./install.sh` command in the docs.
+- Keys only for hardware that exists (brightness, keyboard backlight, power mode, shared monitor); `tests/keybinds.sh`
+  fails on a key bound twice. The terminal key follows `apps.terminal` in settings.json.
+- Settings → Displays → Advanced (adaptive sync, highest refresh rate, X11 sharpness, auto HDR, content type) and
+  touchpad options in Settings → Keyboard & Touchpad (pause while typing, click method, scroll speed, middle click, drag lock).
+- Full audit, roadmap and feature matrix (`docs/audit/`, `docs/research/`)
+- Conventions (`docs/CONVENTIONS.md`)
+- `LICENSE` (MIT), `CONTRIBUTING.md`, `VERSION`, this changelog
+
+- The launcher's Actions mode is now the menu: grouped headings (Appearance, Screens & capture, Network & sound,
+  System, Power) when nothing is typed. New actions: a theme per theme folder, light/dark, bar layouts,
+  screen recording, Wi-Fi, Bluetooth and sound, Displays, Night Light, Do Not Disturb, keyboard shortcuts,
+  Update, doctor, power menu, Welcome.
+- First-run Welcome panel (`Welcome.qml`, `qs ipc call welcome open`) replaces the one-time notification.
+
+- Hardware detection: `./install.sh detect` writes `~/.config/hyprism/hardware.toml` (form factor, graphics
+  cards, screens, battery, touch, radios, known devices). Correct a wrong guess under `[override]`.
+- Modules (`modules/<name>/`): `laptop`, `nvidia`, `nvidia-hybrid`, `asus`, `tablet`, `ddc-monitor`, `logitech`,
+  `hibernate` (opt-in) and `quirk-flow-x13`. Each switches on when its hardware is found;
+  `./install.sh modules` lists them, `--with` / `--without` override.
+- Migrations (`migrations/`), `./install.sh rollback`, `./install.sh backups`, and a log of every run in
+  `~/.local/state/hyprism/logs/`.
+- `./install.sh uninstall` also undoes the system files and services it changed (kept in a manifest), and moves
+  your generated settings aside instead of leaving them.
+- `tests/nested.sh`: a test desktop in a window, from this checkout, kept apart from your real session.
+- `tests/detect.sh` (seven made-up computers), `tests/format.sh` (shfmt + shellcheck for every shell file).
+- A firewall step (`./install.sh --only firewall`): when none is active it asks, then turns on ufw (Arch) or
+  firewalld (Fedora), blocking incoming connections. The doctor notes when there is none.
+- `tests/update-test.sh` and a CI job `update`: install release 1.1.0, then update to this code, and check the
+  migrations ran once, no link is dead and the doctor is clean.
+
+- Optional modules, each on only when you ask (`./install.sh --with NAME`): `dev` (mise for Node / PHP / Python
+  versions, Docker), `gaming` (Steam, GameMode, MangoHud) and `ai` (Ollama, with the CUDA build and the NVIDIA
+  container toolkit where there is an NVIDIA card). Each module's README is its guide.
+
+- The theme reaches Qt apps (`qt6ct`), btop (`btop` theme "hyprism") and the starship prompt
+  (`~/.config/hyprism/starship.toml`, a copy of the repo file with the theme's palette).
+- Accessibility: the shared controls (toggle, choice, chip, buttons, slider, dropdown, text field, bar
+  items, notification card) carry screen-reader roles and names. `Super+F6` moves the keyboard to the bar
+  (arrows or Tab, Enter or Space to open, Esc to leave); `tests/accessibility.sh` guards it.
+
+- The doctor also checks the hardware file (and notices when the hardware changed), sound, network, the desktop
+  portal, the keyring, the password-prompt helper and the shell, each with the command that fixes it. The
+  container test breaks six things on purpose and checks each is reported with a fix.
+- Optional "Colours from the wallpaper" (Settings → Wallpaper, off by default): the accents follow your own
+  picture at 3:1 contrast, and the theme's own come back when it is off (`wallpaper-colours`, `docs/THEMES.md`).
+- `docs/settings-reference.md`: every setting, its type, default and meaning, generated by
+  `tests/settings-reference.py`; CI fails when it is out of date.
+
+### Changed
+- The launcher is split into `Launcher*.qml` parts, and nearly every click target in the shell now has an accessible name and role; `tests/accessibility.sh` lists the rest.
+
+- One name: the GTK colours file is `hyprism.css` (was `linux-setup.css`) and the bundled fonts folder is
+  `fonts/hyprism/`; migration 0003 removes the old files.
+- Settings → App Rules: the button for the built-in rules says it opens a read-only file.
+
+- Layouts switch with `Super+Ctrl+Space` only by default (no more Alt+Shift, which started the screenshot key);
+  `Super+Shift+S` no longer takes a screenshot (`Alt+Shift+S` and `Print` do).
+
+- Every script is formatted with `shfmt -i 4 -ci`
+- Finished process notes moved to `docs/history/`
+
+- `install.sh` is a short entry point over `lib/*.sh`. A run that hits a problem ends non-zero with a summary;
+  a dry run lists the questions it would ask.
+- Themes are folders (`themes/<id>/theme.json` + wallpaper). Copy `_template`, edit one file, `theme <id>`: no
+  code changes. Yours go in `~/.config/hyprism/themes/`. Terminal colours come from the theme file. The contrast
+  test also covers accents, status colours, bar text and the terminal palette. See `docs/THEMES.md`.
+- A system-info bar item (`sysinfo`): pick any of 25 readings, their order, compact or detailed, levels per
+  reading, "only above", and a trend in the tooltip. One `metrics` program feeds it, found by kind of device.
+- Bar items can live in their own folder (`bar/items/<id>/`) and every item has its own settings in
+  `settings.json` (`bar.items.<id>`): enabled, icon, format, click, right-click, scroll, tooltip, warn, critical.
+  See `docs/bar.md`.
+- Reactor (acid yellow and orange) is the default theme. Your own choice is kept.
+- Hyprland reads the detected hardware (`modules/hardware.lua`): the laptop panel, touch mapping and
+  workspace-per-screen rules no longer name `eDP-1` or `HDMI-A-1`.
+- Module steps run inside the installer, so `--dry-run` shows each command they would run.
+- The lid rule is `/etc/systemd/logind.conf.d/50-hyprism-lid.conf` and only laptops get it.
+- Bluetooth is enabled only where there is an adapter.
+- AUR packages, COPR repos and RPM Fusion are named and asked about before they are trusted (answered yes
+  under `--yes`).
+- The extra Hyprland plugins (title-bar buttons) are no longer downloaded and built at login. Login only loads
+  what is built; `./install.sh update` runs `hypr-plugins build`, which checks the download against a pinned
+  commit and refuses a Hyprland version that has no pin.
+- Autostart finds the polkit agent on Arch and Fedora, and unlocks KWallet or starts GNOME Keyring, whichever
+  is installed.
+- State moved from `~/.local/state/linux-setup` to `~/.local/state/hyprism` (migration 0001).
+- README pictures retaken from the current code (`tests/screenshots.sh`): all seven themes in dark and light, plus the welcome panel, menu, system panel, bar system-info item and notification centre.
+
+### Removed
+
+- The emoji picker's use of KDE Plasma's emoji file. It reads Unicode's own list (package `unicode-emoji`).
+
+- `hosts/` (computers picked by hostname). Replaced by detected modules; migration 0002 carries an existing
+  install over.
+- `--host` and `steps-done`. Not needed: nothing depends on the hostname any more.
+- KDE Plasma guard and the login-screen preselect. Hyprism no longer keeps a KDE fallback.
+- JuhRadial MX step for Logitech mice. Replaced by the `logitech` module (Solaar, in both distros' repos).
+  An existing JuhRadial install keeps working until you remove it.
+- The step that made the LTS kernel the boot default on one laptop (a workaround for a kernel bug). Nothing is
+  undone on a computer where it already ran.
+- Upgrading straight from before 1.1 (old whole-folder links). Update to 1.1 first.
+
+## 1.1.0 (2026-11-06)
+
+Seven themes with light and dark halves, modular bar and dock, Settings app with one settings file, installer with update, doctor and undo. See `docs/history/` for how it got here.
+
+## 1.0 (2026-10-30)
+
+First release: Quickshell glass shell, Control Center, launcher, tablet mode, installer.

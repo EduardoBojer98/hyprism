@@ -6,7 +6,7 @@
 #
 # Hyprland is NOT in Fedora's own repos (Fedora 44). The whole ecosystem comes from copr:sdegler/hyprland
 # (solopasha/hyprland is abandoned: rawhide only, last build 0.51.1 in 2025-10). Versions there match Arch.
-# NVIDIA (host extras, hosts/flow-x13): rpmfusion-nonfree akmod-nvidia + xorg-x11-drv-nvidia-cuda
+# NVIDIA (modules/nvidia): rpmfusion-nonfree akmod-nvidia + xorg-x11-drv-nvidia-cuda
 # (595.58.03 in nonfree, 615.78.08 in nonfree-updates). Not installed by this file; see the host notes.
 #
 # name                   package(s)                         source
@@ -57,6 +57,7 @@ sound-theme              sound-theme-freedesktop            repo
 # Not packaged in Fedora 44 or in any COPR found. Alternative: maliit-keyboard (repo, 2.3.1) or no on-screen keyboard.
 squeekboard              none                               none
 fuzzel                   fuzzel                             repo
+emoji-data               unicode-emoji                      repo
 pavucontrol              pavucontrol                        repo
 nm-connection-editor     nm-connection-editor               repo
 # satty: not in Fedora's own repos; sdegler/hyprland has 0.20.0 (every flag the screenshot script uses; checked 2026-11-04)
@@ -76,10 +77,12 @@ ddcutil                  ddcutil                            repo
 xdg-utils                xdg-utils                          repo
 glib2                    glib2                              repo
 kdialog                  kdialog                            repo
+btop                     btop                               repo
 imagemagick              ImageMagick                        repo
 fastfetch                fastfetch                          repo
 adw-gtk-theme            adw-gtk3-theme                     repo
 papirus-icons            papirus-icon-theme                 repo
+qt6ct                    qt6ct                              repo
 font-inter               rsms-inter-fonts                   repo
 font-cantarell           abattis-cantarell-fonts            repo
 font-noto                google-noto-sans-fonts             repo
@@ -102,3 +105,19 @@ gitleaks                 gitleaks                           repo
 asusctl                  asusctl                            copr:lukenukem/asus-linux
 # Same COPR, GUI is the subpackage asusctl-rog-gui 6.3.8-2.fc44
 rog-control-center       asusctl-rog-gui                    copr:lukenukem/asus-linux
+
+# Module extras (modules/<name>/packages.txt)
+solaar                   solaar                             repo
+iio-sensor-proxy         iio-sensor-proxy                   repo
+# mise is not in Fedora's own repos; this COPR is its author's (checked 2026-11-12)
+mise                     mise                               copr:jdxcode/mise
+docker                   moby-engine                        repo
+docker-compose           docker-compose                     repo
+steam                    steam                              rpmfusion-nonfree
+gamemode                 gamemode                           repo
+mangohud                 mangohud                           repo
+ollama                   ollama                             repo
+# Fedora's ollama package already uses the GPU when the NVIDIA driver is there; no separate build
+ollama-gpu               none                               none
+# only in NVIDIA's own repo (https://nvidia.github.io/libnvidia-container), not added for you
+nvidia-container-toolkit none                               none

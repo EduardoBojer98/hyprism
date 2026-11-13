@@ -109,11 +109,21 @@ Singleton {
     readonly property bool barFloating: barStyle.floating
     readonly property int barMargin: barFloating ? cb.margin : 0            // gap to the screen edge (and along it)
     // the dock inside the bar is its "apps" item: in the middle unless placed, and only while the dock is there
-    readonly property var barLayout: {
-        const l = { start: Array.from(barStyle.start), center: Array.from(barStyle.center), end: Array.from(barStyle.end) }
+    function withDock(l) {
         if (!dockInBar) for (const k of ["start", "center", "end"]) l[k] = l[k].filter(i => i !== "apps")
         else if (!l.start.concat(l.center, l.end).includes("apps")) l.center.unshift("apps")
         return l
+    }
+    readonly property var barLayout: withDock({ start: Array.from(barStyle.start), center: Array.from(barStyle.center), end: Array.from(barStyle.end) })
+    // the layout one screen's bar uses: its preset in Config.bar.monitors, else Config.bar.preset, else (also for
+    // "theme" or a name that isn't there) the theme's own. Unknown ids are skipped once the item folders are read.
+    function barLayoutFor(screenName) {
+        const p = cb.presets?.[cb.monitors?.[screenName] || cb.preset]
+        if (!p || typeof p !== "object") return barLayout
+        const l = {}
+        for (const k of ["start", "center", "end"])
+            l[k] = Array.from(p[k] ?? []).filter((i, n, a) => (!BarItems.ready || BarItems.has(i)) && a.indexOf(i) === n)
+        return withDock(l)
     }
     readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
     readonly property color barInk: barStyle.fill === "ink" ? base : text    // text on the bar's own ground

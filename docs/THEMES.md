@@ -1,56 +1,119 @@
-# Themes: how they work and how to make one
+# Themes
 
-A theme is a whole desktop design: colours, type, shape, the bar's and dock's look, panel depth, motion, window
-frames, notifications, launcher, lock screen, terminal palette and wallpaper. Layout (where the bar and dock sit,
-their size and items) is yours and works in every theme. The rules every theme follows are in
-[DESIGN.md](DESIGN.md).
+A theme is a whole desktop design: colours, fonts, corners, the bar and dock layout, how panels open, the lock
+screen, the terminal colours and the wallpaper. Every theme has a dark and a light half.
 
-## Where things live
+## Switch
 
-| Piece | File | Who writes it |
-|---|---|---|
-| The seven built-in themes, as data | `config/quickshell/.config/quickshell/Themes.qml` | the repo |
-| Your own themes | `~/.config/quickshell/settings.json` → `appearance.userThemes` (only the parts you changed) | Settings → Appearance → Theme Builder |
-| Your adjustments to any theme (accent, corners, gaps, font, bar and dock place…) | `settings.json` → `appearance.custom.<theme>` | Settings → Appearance, Menu Bar, Dock |
-| Tokens every component reads | `Theme.qml` | computed from the active theme + your adjustments |
-| Everything outside the shell | `ThemeSync.qml` → Hyprland (`settings/theme.lua`), lock screen (`settings/hyprlock-theme.conf`), GTK 3/4 (gsettings + `gtk-*/linux-setup.css`), Ghostty (`ghostty/theme.conf`), emoji picker (`fuzzel/theme.ini`), wallpaper (`theme-wallpaper`) | on every change, live |
-| Terminal palettes | `config/ghostty/.config/ghostty/themes/<Theme>` and `<Theme> Light/Dark` | the repo |
-| Wallpapers | `config/scripts/.local/bin/theme-wallpaper` (one ImageMagick design per id, drawn once) | the repo |
+```bash
+theme
+```
 
-One change flows one way: Settings → `settings.json` → `Themes.resolve()` → `Theme` tokens → every component,
-and `ThemeSync` → every app outside the shell. No component checks which theme is on; no colour is written
-anywhere else (`tests/lint.sh` fails on a hex colour outside `Themes.qml` / `Theme.qml`).
+lists them. `theme atlas` switches. Or Settings → Appearance → Themes, which shows a preview of each. It applies
+at once, with no logout: Hyprland's borders and gaps, the bar and dock, menus, notifications, the lock screen,
+GTK apps, the terminal and the wallpaper all follow.
 
-## Make one in Settings (no files)
+Settings → Appearance → **Adjust** changes one theme's accent, corners, gaps, font and motion without touching
+its files. **Light or dark** picks each theme's own default, or one mode for all.
 
-Settings → Appearance → **Theme Builder**: pick a starting theme, name it, then change any part. It applies live,
-is saved as only the parts you changed, and appears in the gallery like the built-in ones. Editing a built-in theme
-there makes your copy; the shipped one never changes. Delete or rename it on the same page. "Save as a theme" on
-the Appearance, Menu Bar and Dock pages turns your adjustments into a theme too.
+## Where a theme lives
 
-Bad values are ignored part by part (`Themes.makeUser` keeps the base's value), and text on an accent colour is
-switched to dark or white when the theme's own choice is under WCAG AA (4.5:1).
+Each theme is one folder:
 
-## Make a built-in one (by hand)
+```
+themes/reactor/
+  theme.json      every value of the design
+  wallpaper.sh    how its two wallpapers are drawn (or pictures: reactor.png, reactor-light.png)
+```
 
-1. Copy a block in `Themes.qml` `builtIn` and give it a new `id` and `name`. Every part is described at the top
-   of the file; keep all 13 colour keys in `colour` and in `alt.colour` (the other half: light for a dark theme).
-2. Add its terminal palettes: `config/ghostty/.config/ghostty/themes/<term>` and `<alt.term>`.
-3. Add its wallpaper designs (`wall`, `alt.wall`) to `theme-wallpaper` and bump `VERSION` there and
-   `wallVersion` in `Themes.qml` together.
-4. Add a row to the tables in `docs/DESIGN.md` and `README.md`.
-5. `tests/lint.sh`: checks every theme half for missing colours, contrast (text 7:1, secondary 4.5:1, faint 3:1
-   on panels; 4.5:1 on the accent), and that its terminal palette and wallpaper exist.
-6. `./install.sh --only links` links the new palette files; `theme <id>` switches to it.
-
-## Tokens (`Theme.qml`)
-
-| Group | Tokens |
+| Folder | Whose |
 |---|---|
-| Colour | `base` (ground), `surfaceColor`, `raised`, `text`, `subtext`, `muted`, `accent`, `accent2`, `accentText`, `accentWash`, `success`, `warning`, `error`, `errorText`, `stroke`, `strokeStrong`, `fill`, `fillHover`, `fillActive`, `selected`, `onSelected`, `thumb`, `onImage` |
-| Surfaces | `glass`, `glassStrong`, `menu`, `sidebar`, `highlight`, `backdrop` (behind full-screen modes), `shadow`, `tileOn*` (Control Center tiles that are on) |
-| Type | `font`, `displayFont`, `displayWeight`, `monoFont`, `iconFont`, `fontCaption`, `fontLabel`, `fontSize`, `fontTitle`, `fontHeading`, `fontDisplay`, `fontHero` (all scaled by Settings → Text size; caption ≥ 11 px, label ≥ 12 px) |
-| Shape and space | `radiusSmall`, `radius`, `radiusLarge`, `radiusPanel`, `line`, `spaceXs`…`spaceXl`, `rowHeight`, `controlHeight`, `popupGap` |
-| Bar and dock | `barEdge`, `barSize`, `barFloating`, `barLayout`, `barInk`, `barDim`, `dockEdge`, `dockInBar`, `reserve(side)` |
-| Depth | `depth` (soft, hard, glow, none), `shadowBlur`, `shadowOffset` |
-| Motion | `enter`, `exit`, `curve`, `travel`, `startScale`, `pressScale`, `animFast`, `anim` (Settings → Animations: Full, Reduced = short fades, Off) |
+| `themes/<id>/` in the repo (linked to `~/.local/share/hyprism/themes/`) | the shipped themes |
+| `~/.config/hyprism/themes/<id>/` | yours; one with the same id as a shipped theme replaces it |
+
+Nothing else lists the themes. A folder with a `theme.json` is a theme.
+
+## Make your own
+
+```bash
+cp -r ~/.local/share/hyprism/themes/_template ~/.config/hyprism/themes/mine
+```
+
+Edit `~/.config/hyprism/themes/mine/theme.json`, then:
+
+```bash
+theme mine
+```
+
+`theme` reads the folders again each time, so edit and run it again to see a change. A part you leave out, or
+get wrong, falls back to a safe value instead of breaking the desktop. Text placed on your accent colour is
+corrected to stay readable.
+
+For a quick variation without files, use Settings → Appearance → Theme Builder: it saves the difference from an
+existing theme in `settings.json`.
+
+## What is in theme.json
+
+| Part | What it sets |
+|---|---|
+| `name`, `about`, `order` | Its name, one line about it, and its place in the list |
+| `dark` | `true` if this half is the dark one |
+| `colour` | 13 colours: `ground` (desktop, bar), `surface` (panels), `raised` (controls), `line`, `text`, `muted`, `faint`, `accent`, `onAccent` (text on the accent), `accent2`, `ok`, `warn`, `err` |
+| `alt` | The other half: its `dark`, `colour`, `term`, `wall`, and window border colours (`hypr.active`, `hypr.inactive`) |
+| `font` | `ui`, `display` (clocks, big numbers), `mono`, `size` in px, `displayWeight` |
+| `shape` | `radius`, `radiusSmall`, `line` (panel border px), `material`: `solid` or `glass` |
+| `bar` | Edge, size, floating or attached, fill, how items speak (`voice`: `icons`, `mixed`, `words`, `caps`), workspace style, and the items in `start`, `center`, `end` |
+| `dock` | Edge, shape, hover effect, running mark, fill |
+| `popup` | Panel depth (`soft`, `hard`, `glow`, `none`), decoration, tile style |
+| `motion` | How panels open: `enter` and `exit` in ms, `curve`, `travel`, `scale`, `press` |
+| `launcher`, `notify` | Launcher placement and look; where notifications appear and their shape |
+| `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset |
+| `lock` | Lock screen clock style and alignment |
+| `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, and `palette` (16 colours) |
+| `wall` | The wallpaper's name: a picture `<wall>.png` in the folder, or a recipe with that name in `wallpaper.sh` |
+
+The design rules behind the shipped themes are in [DESIGN.md](DESIGN.md).
+
+## Wallpaper
+
+Put a picture in the theme folder named after `wall` (and after `alt.wall` for the other half): `mine.png`,
+`mine-light.jpg`. Or write `wallpaper.sh`, a small ImageMagick recipe; the shipped themes do this so the
+wallpaper always matches the palette and no pictures are stored in the repo. Settings → Wallpaper is for using
+your own pictures regardless of the theme.
+
+## Colours from your wallpaper
+
+Settings → Wallpaper → "Colours from the wallpaper" lets the accent and second accent follow a picture you chose
+yourself (`appearance.wallpaperColours`). It is off by default and does nothing while the wallpaper is one a theme
+draws or ships. `wallpaper-colours IMAGE [dark|light] [SURFACE]` picks the colours; their lightness is adjusted
+(hue stays) so each keeps at least 3:1 contrast on the theme's panels, and the text on an accent is still checked.
+They are saved like your own adjustments for the active theme (`appearance.custom`), after remembering the accents
+they replace. Switch the toggle off, go back to the theme's wallpaper or change theme, and the earlier accents
+return. A picture with no colour in it (grey) changes nothing.
+
+## Contrast is checked
+
+```bash
+python3 tests/themes.py
+```
+
+checks every shipped theme, both halves: body text 7:1, secondary text 4.5:1 and captions 3:1 against the panel
+and the desktop; text on the accent 4.5:1; the accent, second accent and the ok / warn / error colours 3:1
+against the panel; the bar's text on the bar; the terminal's text 7:1 and its six colours 3:1; and that the
+wallpaper exists. CI runs it on every push. A theme added to `themes/` must pass.
+
+## What follows the theme today
+
+Hyprland (borders, gaps, rounding, shadow, blur, animation), the whole shell (bar, dock, launcher, menus,
+notifications, on-screen display, Settings), the lock screen, GTK 3 and 4 apps, Qt apps (through `qt6ct`;
+a Qt app that is already running takes the colours when you restart it), the Ghostty terminal, btop, the shell
+prompt (starship), the app picker (fuzzel), the cursor and icon theme, and the wallpaper.
+
+- btop: pick the theme once in btop's Options: `color_theme = "hyprism"`. If you have no `btop.conf`, one is
+  written for you; yours is never edited.
+- Prompt: the fish config points starship at `~/.config/hyprism/starship.toml`, a copy of `starship.toml` with
+  the theme's colours in its `[palettes.hyprism]` block. New prompts pick it up at once.
+- Qt: `~/.config/qt6ct/qt6ct.conf` is written only if you have none; your own is never overwritten.
+
+Still to do: the login screen. It runs as another user before you log in and differs per distro's display
+manager, so there is no one place for the theme to write to.

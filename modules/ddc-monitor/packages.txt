@@ -1,0 +1,1 @@
+ddcutil                  external monitor control over DDC/CI (monswitch)

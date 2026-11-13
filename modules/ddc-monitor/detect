@@ -1,0 +1,1 @@
+[[ -n $(hw_get display.external) && $(hw_get machine.form) != vm ]]

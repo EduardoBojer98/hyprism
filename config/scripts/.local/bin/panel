@@ -6,8 +6,11 @@
 #   panel lid close|open  lid: hand everything to the Acer, or suspend if the Acer isn't ours
 #   panel rotate          (internal) follow the accelerometer until killed
 set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 
-rotate() { hyprctl eval "laptop_panel($1)" >/dev/null; }  # function from hypr/modules/monitors.lua
+rotate() { hyprctl eval "laptop_panel($1)" >/dev/null; } # function from hypr/modules/monitors.lua
 # the laptop's own panel (eDP-1, eDP-2…) and whether another screen is showing this desktop
 internal() { hyprctl -j monitors all | jq -r '[.[] | select(.name | startswith("eDP"))][0].name // empty'; }
 other_active() { hyprctl -j monitors | jq -e --arg i "$1" 'any(.[]; .name != $i)' >/dev/null; }
@@ -16,7 +19,7 @@ case "${1:-} ${2:-}" in
     "tablet on")
         pkill -f "panel rotate" || true
         setsid -f "$0" rotate
-        qs ipc call tablet set true >/dev/null 2>&1 || true   # finger-sized controls in the shell
+        qs ipc call tablet set true >/dev/null 2>&1 || true # finger-sized controls in the shell
         ;;
     "tablet off")
         qs ipc call tablet set false >/dev/null 2>&1 || true
@@ -27,10 +30,10 @@ case "${1:-} ${2:-}" in
     "rotate ")
         monitor-sensor | while read -r line; do
             case $line in
-                *"orientation: normal"*|*"orientation changed: normal"*)    rotate 0 ;;
-                *"orientation: left-up"*|*"orientation changed: left-up"*)   rotate 1 ;;
-                *"orientation: bottom-up"*|*"orientation changed: bottom-up"*) rotate 2 ;;
-                *"orientation: right-up"*|*"orientation changed: right-up"*)  rotate 3 ;;
+                *"orientation: normal"* | *"orientation changed: normal"*) rotate 0 ;;
+                *"orientation: left-up"* | *"orientation changed: left-up"*) rotate 1 ;;
+                *"orientation: bottom-up"* | *"orientation changed: bottom-up"*) rotate 2 ;;
+                *"orientation: right-up"* | *"orientation changed: right-up"*) rotate 3 ;;
             esac
         done
         ;;
@@ -41,11 +44,13 @@ case "${1:-} ${2:-}" in
         if [[ -n $lap ]] && other_active "$lap"; then
             hyprctl eval "hl.monitor({ output = \"$lap\", disabled = true })" >/dev/null
         elif grep -qx connected /sys/class/drm/card*-{HDMI,DP}-*/status 2>/dev/null; then
-            systemctl suspend-then-hibernate 2>/dev/null || systemctl suspend   # plain sleep where hibernation isn't set up
+            systemctl suspend-then-hibernate 2>/dev/null || systemctl suspend # plain sleep where hibernation isn't set up
         fi
         ;;
     "lid open")
         rotate 0
         ;;
-    *) echo "usage: panel tablet on|off | panel lid close|open" >&2; exit 2 ;;
+    *)
+        usage 2 >&2
+        ;;
 esac

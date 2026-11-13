@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Sleep from hypridle's sleep listener, if the time for the current power source has been reached.
+# hypridle can't tell mains from battery, so the listener asks this at the moment it fires.
+#
+#   idle-sleep BATTERY_MIN POWER_MIN ELAPSED_MIN
+#
+# BATTERY_MIN / POWER_MIN: minutes until sleep on battery / on mains, 0 = never. ELAPSED_MIN: the idle minutes
+# of the listener that called. A computer without a battery only ever uses POWER_MIN.
+set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+[[ $# -eq 3 && $1 =~ ^[0-9]+$ && $2 =~ ^[0-9]+$ && $3 =~ ^[0-9]+$ ]] || usage 1
+
+R=${HYPRISM_ROOT:-} # tests point this at a made-up /sys
+battery=0 mains_offline=0
+for d in "$R"/sys/class/power_supply/*; do
+    [[ -r $d/type ]] || continue
+    case $(<"$d/type") in
+        Battery) battery=1 ;;
+        Mains) [[ $(cat "$d/online" 2>/dev/null || echo 1) == 0 ]] && mains_offline=1 ;;
+    esac
+done
+limit=$2
+((battery && mains_offline)) && limit=$1
+((limit > 0 && $3 >= limit)) || exit 0
+
+# screens on first: an output that sleeps while off loses its CRTC and wakes black
+hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' || true
+systemctl suspend-then-hibernate || systemctl suspend

@@ -15,6 +15,7 @@ Singleton {
     readonly property alias launcher: adapter.launcher
     readonly property alias clipboard: adapter.clipboard
     readonly property alias notifications: adapter.notifications
+    readonly property alias osd: adapter.osd
     readonly property alias caffeine: adapter.caffeine
     readonly property alias nightLight: adapter.nightLight
     readonly property alias controlCenter: adapter.controlCenter
@@ -31,6 +32,7 @@ Singleton {
     readonly property alias idle: adapter.idle
     readonly property alias input: adapter.input
     readonly property alias displays: adapter.displays
+    readonly property alias apps: adapter.apps
     readonly property alias monitorShare: adapter.monitorShare
     readonly property alias battery: adapter.battery
     readonly property alias hotCorners: adapter.hotCorners
@@ -40,7 +42,7 @@ Singleton {
     readonly property var schema: ({
         appearance: {
             theme: Themes.ids,
-            mode: ["theme", "light", "dark"], custom: "object", userThemes: "object", terminal: "bool", wallpaper: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"],
+            mode: ["theme", "light", "dark"], custom: "object", userThemes: "object", terminal: "bool", wallpaper: "bool", wallpaperColours: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"],
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { enabled: "bool", size: ["compact", "regular", "roomy"], hiddenOn: "list",
@@ -51,6 +53,7 @@ Singleton {
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], historyMax: [10, 500], sound: "string", volume: [0, 100],
                          mutedApps: "list" },
+        osd: { timeoutMs: [600, 5000], volume: "bool", brightness: "bool", micMute: "bool", layout: "bool", capsLock: "bool", position: ["bottom", "top", "center"] },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", slidersOpen: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", toggles: "list", shortcuts: "list", hidden: "list" },
@@ -72,15 +75,18 @@ Singleton {
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
                clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
-               windowTitle: "bool" },
+               windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],
                    showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] },
-        idle: { lockMin: [0, 240], sleepMin: [0, 480], imported: "bool" },
+        idle: { lockMin: [0, 240], sleepMin: [0, 480], sleepOnPowerMin: [0, 480], imported: "bool" },
         input: { layouts: "layouts", shortcut: [0, 3], repeatRate: [1, 100], repeatDelay: [100, 2000], sensitivity: [-1, 1],
-                 naturalScroll: "bool", tapToClick: "bool", imported: "bool" },
-        displays: { layout: "displays", imported: "bool" },
+                 naturalScroll: "bool", tapToClick: "bool", disableWhileTyping: "bool", clickMethod: ["buttonareas", "clickfinger"],
+                 scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", imported: "bool" },
+        displays: { layout: "displays", autoHdr: "bool", sendContentType: "bool", xwaylandNativeScale: "bool",
+                    vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool", imported: "bool" },
+        apps: { terminal: "command" },
         monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", imported: "bool" }
     })
 
@@ -98,6 +104,7 @@ Singleton {
         if (rule === "string") return typeof value === "string" ? "" : "Must be text"
         // values that end up in generated config files: plain characters only
         if (rule === "name") return typeof value === "string" && /^[A-Za-z0-9._-]*$/.test(value) ? "" : "Letters, digits, . _ - only"
+        if (rule === "command") return typeof value === "string" && /^[A-Za-z0-9 +._\/-]{1,80}$/.test(value) ? "" : "Letters, digits, space and + - _ . / only"
         if (rule === "ddc") return typeof value === "string" && /^(0x[0-9a-fA-F]{1,2})?$/.test(value) ? "" : "Use an input code like 0x11"
         if (rule === "mode") return typeof value === "string" && /^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(value) ? "" : "Use a mode like 1920x1080@60"
         if (rule === "layouts") return value && typeof value.length === "number" && value.length >= 1 && value.length <= 4
@@ -161,6 +168,18 @@ Singleton {
     // A file that isn't JSON at all is kept as settings.json.broken and replaced by the defaults.
     readonly property var renamedThemes: ({ workstation: "glass", canvas: "glass", noir: "console", garden: "pebble",
                                             zen: "glass", mist: "atlas", halo: "pebble" })   // themes removed 2026-11
+    // The saved theme must exist. Only judged once the theme folders are read (Themes.ready), or every
+    // theme would look missing during the first moments and your choice would be lost.
+    function checkTheme() {
+        const a = adapter.appearance
+        if (Themes.ready && !Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? defaultTheme()
+    }
+    function defaultTheme() {
+        const fresh = defaults.createObject(null), want = fresh.appearance.theme
+        fresh.destroy()
+        return Themes.ids.includes(want) ? want : Themes.ids[0]
+    }
+    Connections { target: Themes; function onReadyChanged() { if (file.loaded) root.checkTheme() } }
     function repair() {
         let raw
         try { raw = JSON.parse(file.text()) } catch (e) {
@@ -173,7 +192,7 @@ Singleton {
         const a = adapter.appearance
         const oldTheme = raw?.appearance?.rice   // settings from before "rices" were called themes
         if (typeof oldTheme === "string") a.theme = renamedThemes[oldTheme] ?? oldTheme
-        if (!Themes.ids.includes(a.theme)) a.theme = renamedThemes[a.theme] ?? Themes.ids[0]
+        checkTheme()
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
         // format 1 (before 2026-11-05) saved the dock's place as "bottom" for everyone: follow the theme now
         // format 2 kept one bar layout and dock place for every theme, so an edit made in one theme broke the
@@ -197,11 +216,17 @@ Singleton {
         if (raw?.appearance?.animations === false && raw?.appearance?.motion === undefined) a.motion = "off"   // the old on/off switch
         const fresh = defaults.createObject(null)
         for (const section of Object.keys(schema))
-            for (const key of Object.keys(schema[section]))
+            for (const key of Object.keys(schema[section])) {
+                if (section === "appearance" && key === "theme") continue   // judged by checkTheme, once the theme folders are read
                 if (problem(schema[section][key], adapter[section][key])) {
                     console.warn("settings.json: " + section + "." + key + " was invalid, using the default")
                     adapter[section][key] = fresh[section][key]
                 }
+            }
+        // the built-in bar presets an older file lacks come back; ones you edited stay as they are
+        const have = JSON.parse(JSON.stringify(adapter.bar.presets ?? {})), builtIn = fresh.bar.presets
+        const missing = Object.keys(builtIn).filter(n => have[n] === undefined)
+        if (missing.length) { for (const n of missing) have[n] = JSON.parse(JSON.stringify(builtIn[n])); adapter.bar.presets = have }
         fresh.destroy()
     }
 }

@@ -11,6 +11,12 @@ Rectangle {
     Keys.onRightPressed: step(1)
     FocusRing {}
 
+    property string accessibleName: ""
+    Accessible.role: Accessible.RadioButton
+    Accessible.name: choice.accessibleName !== "" ? choice.accessibleName : String(choice.shown[choice.current] ?? "")
+    Accessible.description: choice.accessibleName !== "" ? String(choice.shown[choice.current] ?? "") : ""
+    Accessible.focusable: true
+
     property var options: []
     property int index: 0
     property string extra: ""   // value outside options, shown as a selected extra entry
@@ -35,6 +41,12 @@ Rectangle {
                 width: label.implicitWidth + (Theme.hit ? 32 : 22)
                 height: choice.height - 6
                 radius: height / 2
+                Accessible.role: Accessible.RadioButton
+                Accessible.name: String(modelData)
+                Accessible.checkable: true
+                Accessible.checked: index === choice.current
+                Accessible.focusable: true
+                Accessible.onPressAction: if (index < choice.options.length) choice.picked(index)
                 color: index === choice.current ? Theme.fillActive : area.containsMouse ? Theme.fillHover : "transparent"
                 border { color: index === choice.current ? Theme.stroke : "transparent"; width: 1 }
                 Text {

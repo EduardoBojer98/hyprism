@@ -12,6 +12,10 @@ Rectangle {
     Keys.onSpacePressed: btn.clicked()
     Keys.onReturnPressed: btn.clicked()
     FocusRing {}
+    Accessible.role: Accessible.Button
+    Accessible.name: btn.text
+    Accessible.focusable: true
+    Accessible.onPressAction: btn.clicked()
 
     implicitWidth: label.implicitWidth + 28
     implicitHeight: Math.max(30, Theme.hit)

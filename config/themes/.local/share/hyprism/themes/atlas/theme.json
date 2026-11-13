@@ -1,0 +1,42 @@
+{
+  "name": "Atlas",
+  "about": "Swiss discipline: a black strip on top, heavy numerals, red squares, a black dock, everything on the grid",
+  "order": 6,
+  "dark": false,
+  "colour": {"ground": "#f2f2f0", "surface": "#ffffff", "raised": "#e8e8e5", "line": "#111111", "text": "#111111", "muted": "#4b4b4b", "faint": "#8a8a8a", "accent": "#e30613", "onAccent": "#ffffff", "accent2": "#111111", "ok": "#0a7d3b", "warn": "#a35b00", "err": "#a3001b"},
+  "alt": {
+    "dark": true,
+    "term": {
+      "palette": ["#262626", "#ff4d5e", "#3fbf6f", "#f0a43a", "#6f8cff", "#d77ad9", "#4fc7d1", "#bdbdbd", "#7a7a7a", "#ff7a87", "#6fd18f", "#f5bc68", "#95aaff", "#e29de3", "#7ad6dd", "#f2f2f0"],
+      "background": "#121212",
+      "foreground": "#f2f2f0",
+      "cursor": "#ff2a36",
+      "cursorText": "#121212",
+      "selection": "#4a1418",
+      "selectionText": "#f2f2f0"
+    },
+    "wall": "atlas-dark",
+    "colour": {"ground": "#121212", "surface": "#1b1b1b", "raised": "#262626", "line": "#f2f2f0", "text": "#f2f2f0", "muted": "#bdbdbd", "faint": "#7a7a7a", "accent": "#ff2a36", "onAccent": "#ffffff", "accent2": "#f2f2f0", "ok": "#3fbf6f", "warn": "#f0a43a", "err": "#ff4d5e"},
+    "hypr": {"active": ["f2f2f0ff"], "inactive": "333333ff"}
+  },
+  "font": {"ui": "Archivo", "display": "Archivo", "mono": "JetBrainsMono Nerd Font", "size": 14, "displayWeight": 800},
+  "shape": {"radius": 0, "radiusSmall": 0, "line": 2, "material": "solid"},
+  "bar": {"edge": "top", "size": 44, "floating": false, "segmented": false, "fill": "ink", "line": 0, "voice": "icons", "mono": false, "ws": "squares", "clock": "display", "decor": "", "sep": false, "start": ["clock", "workspaces", "window"], "center": [], "end": ["media", "tray", "notifications", "keyboard", "status", "weather", "date"]},
+  "dock": {"edge": "bottom", "shape": "block", "hover": "plate", "mark": "bar", "fill": "ink"},
+  "popup": {"depth": "none", "decor": "", "tiles": "solid"},
+  "motion": {"enter": 160, "exit": 100, "curve": [0.23, 1, 0.32, 1], "travel": 14, "scale": 1, "press": 0.97},
+  "launcher": {"placement": "center", "view": "home", "header": "query", "width": 640, "select": "inverse", "prompt": ""},
+  "notify": {"corner": "top-right", "kind": "block"},
+  "hypr": {"gapsIn": 8, "gapsOut": 16, "border": 2, "rounding": 0, "active": ["111111ff"], "inactive": "c8c8c4ff", "shadow": "none", "blur": false, "motion": "snappy"},
+  "lock": {"clock": "stacked", "align": "left"},
+  "term": {
+    "palette": ["#111111", "#c4161c", "#0a7d3b", "#a35b00", "#1b4fd1", "#9c1aa8", "#0a7d8c", "#8a8a8a", "#4b4b4b", "#9d1216", "#08642f", "#824900", "#163fa7", "#7d1586", "#086470", "#f2f2f0"],
+    "background": "#f2f2f0",
+    "foreground": "#111111",
+    "cursor": "#e30613",
+    "cursorText": "#f2f2f0",
+    "selection": "#efc8c8",
+    "selectionText": "#111111"
+  },
+  "wall": "atlas"
+}

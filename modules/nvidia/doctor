@@ -1,0 +1,2 @@
+# shellcheck shell=bash
+[[ -e /proc/driver/nvidia ]] || bad "nvidia: the driver isn't loaded" "./install.sh --only modules, then reboot"

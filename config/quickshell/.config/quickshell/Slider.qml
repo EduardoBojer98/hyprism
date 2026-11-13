@@ -22,6 +22,11 @@ Item {
     Keys.onRightPressed: slider.moved(Math.min(1, slider.v + 0.05))
     Keys.onPressed: e => { if (e.key === Qt.Key_Home) slider.moved(0); else if (e.key === Qt.Key_End) slider.moved(1) }
     FocusRing { radius: track.radius + 3 }
+    property string accessibleName: ""
+    Accessible.role: Accessible.Slider
+    Accessible.name: slider.accessibleName
+    Accessible.description: Math.round(slider.v * 100) + "%"
+    Accessible.focusable: true
 
     Rectangle {
         id: track

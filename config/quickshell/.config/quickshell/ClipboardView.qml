@@ -48,6 +48,8 @@ Item {
 
             MouseArea {
                 id: area
+                Accessible.role: Accessible.ListItem
+                Accessible.name: "Clipboard entry"
                 anchors.fill: parent
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton

@@ -293,6 +293,8 @@ Singleton {
                                     }
                                     MouseArea {
                                         id: dayArea
+                                        Accessible.role: Accessible.Button
+                                        Accessible.name: Qt.formatDate(cell.day, "d MMMM")
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor

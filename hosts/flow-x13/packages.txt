@@ -1,3 +1,0 @@
-# ROG Flow X13 (GV301QC) extras, by logical name (mapped in packages/<distro>.txt).
-asusctl                  hardware  charge limit, power modes, fan curves, keyboard light (asusd)
-rog-control-center       hardware  GUI for asusctl

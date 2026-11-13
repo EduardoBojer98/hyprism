@@ -1,0 +1,252 @@
+#!/usr/bin/env bash
+# System readings for the bar's system-info item, as JSON. Works on any computer: every source is found by
+# what it is (a CPU sensor, a battery, a fan), never by one machine's device names, and a reading this
+# computer doesn't have is simply left out.
+#
+#   metrics list                      the metric names
+#   metrics once [NAMES]              one JSON object (NAMES: comma list; default: all)
+#   metrics watch [NAMES] [SECONDS]   one JSON line every SECONDS (default 2), until stopped
+#
+# Names: cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio net battery fans profile uptime load
+# The second graphics card (dgpu) is only asked for numbers while it is already awake, so reading it never
+# wakes it. Adding a metric: one m_<name> function below, its name in ALL, and a line in docs/bar.md.
+set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+
+R=${HYPRISM_ROOT:-} # tests point this at a made-up /proc and /sys
+ALL=(cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio net battery fans profile uptime load)
+declare -A PREV=() # last tick's counters, for the readings that are rates
+
+rd() { [[ -r $R$1 ]] && head -n1 "$R$1" 2>/dev/null || true; } # a missing file = this computer has no such reading
+now_ms() {
+    local t=${EPOCHREALTIME/[.,]/} # seconds.microseconds without the dot
+    echo $((t / 1000))
+}
+sensor() { # the folder of the first hwmon sensor with one of these names
+    local h n
+    for n in "$@"; do
+        for h in "$R"/sys/class/hwmon/hwmon*; do
+            [[ $(rd "${h#"$R"}/name") == "$n" ]] && {
+                echo "${h#"$R"}"
+                return 0
+            }
+        done
+    done
+    return 0
+}
+milli() { [[ $1 =~ ^-?[0-9]+$ ]] && printf '%d.%d' $(($1 / 1000)) $(((${1#-} % 1000) / 100)) || true; } # 61500 -> 61.5
+rate() {                                                                                                # rate KEY VALUE: units per second since the last tick (0 on the first), left in RATE
+    # (a variable, not output: called as $(rate …) it would run in a copy of the shell and forget the last tick)
+    local key=$1 val=$2 t prev pt out=0
+    t=$(now_ms)
+    prev=${PREV[$key]:-} pt=${PREV[${key}_t]:-}
+    if [[ -n $prev && $t -gt $pt ]]; then out=$(((val - prev) * 1000 / (t - pt))); fi
+    PREV[$key]=$val PREV[${key}_t]=$t
+    RATE=$((out < 0 ? 0 : out))
+}
+
+m_cpu() { # load in percent: all cores together, then each core
+    local name rest total idle out="" cores="" pct dt di
+    while read -r name rest; do
+        [[ $name == cpu* ]] || break
+        # shellcheck disable=SC2086  # the counters are words
+        set -- $rest
+        total=$(($1 + $2 + $3 + $4 + $5 + $6 + $7 + ${8:-0})) idle=$(($4 + $5))
+        dt=$((total - ${PREV[${name}_t]:-total})) di=$((idle - ${PREV[${name}_i]:-idle}))
+        pct=$((dt > 0 ? 100 * (dt - di) / dt : 0))
+        PREV[${name}_t]=$total PREV[${name}_i]=$idle
+        if [[ $name == cpu ]]; then out=$pct; else cores+="${cores:+,}$pct"; fi
+    done <"$R/proc/stat"
+    [[ -n $out ]] && printf '"cpu":{"pct":%s,"cores":[%s]}' "$out" "$cores"
+}
+m_cpu_temp() {
+    local s t
+    s=$(sensor k10temp coretemp zenpower cpu_thermal)
+    [[ -n $s ]] || return 0
+    t=$(milli "$(rd "$s/temp1_input")")
+    [[ -n $t ]] && printf '"cpu_temp":%s' "$t"
+}
+m_cpu_freq() { # average of the cores, MHz
+    local f sum=0 n=0 v
+    for f in "$R"/sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_cur_freq; do
+        [[ -r $f ]] || continue
+        read -r v <"$f" && sum=$((sum + v)) n=$((n + 1))
+    done
+    ((n)) && printf '"cpu_freq":%s' $((sum / n / 1000))
+}
+card() { # card NAME PCI: load, temperature, memory and power from a card's own files (AMD and Intel expose different ones)
+    local d=/sys/bus/pci/devices/$2 out="" v u t h
+    v=$(rd "$d/gpu_busy_percent")
+    [[ -n $v ]] && out+="\"pct\":$v"
+    u=$(rd "$d/mem_info_vram_used") t=$(rd "$d/mem_info_vram_total")
+    [[ -n $u && -n $t ]] && out+="${out:+,}\"vram_used\":$((u / 1048576)),\"vram_total\":$((t / 1048576))"
+    for h in "$R$d"/hwmon/hwmon*; do
+        [[ -d $h ]] || continue
+        v=$(milli "$(rd "${h#"$R"}/temp1_input")")
+        [[ -n $v ]] && out+="${out:+,}\"temp\":$v"
+        v=$(rd "${h#"$R"}/power1_average")
+        [[ -z $v ]] && v=$(rd "${h#"$R"}/power1_input")
+        [[ -n $v ]] && out+="${out:+,}\"watts\":$(milli $((v / 1000)))"
+        break
+    done
+    [[ -n $out ]] && printf '"%s":{%s}' "$1" "$out"
+}
+m_gpu() { # the card that draws the desktop
+    local pci
+    pci=$(hw gpu.primary_pci)
+    [[ -n $pci ]] && card gpu "$pci"
+    return 0
+}
+m_dgpu() { # the second card: its power state always; numbers only while it is awake
+    local pci state vendor q
+    pci=$(hw gpu.discrete_pci)
+    [[ -n $pci ]] || return 0
+    state=$(rd "/sys/bus/pci/devices/$pci/power/runtime_status")
+    [[ -n $state ]] || state=unknown
+    vendor=$(hw gpu.discrete)
+    if [[ $state == active && $vendor == nvidia && -z $R ]] && command -v nvidia-smi >/dev/null; then
+        q=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total,power.draw --format=csv,noheader,nounits 2>/dev/null | head -1) || q=""
+        local pct temp used total watts
+        IFS=', ' read -r pct temp used total watts <<<"$q"
+        if [[ $pct =~ ^[0-9]+$ && $temp =~ ^[0-9.]+$ && $used =~ ^[0-9]+$ && $total =~ ^[0-9]+$ ]]; then
+            [[ $watts =~ ^[0-9.]+$ ]] || watts="" # many laptops answer [N/A] for power
+            printf '"dgpu":{"state":"active","pct":%s,"temp":%s,"vram_used":%s,"vram_total":%s%s}' "$pct" "$temp" "$used" "$total" "${watts:+,\"watts\":$watts}"
+            return 0
+        fi
+    elif [[ $state == active && $vendor != nvidia ]]; then
+        q=$(card x "$pci")
+        [[ -n $q ]] && {
+            printf '"dgpu":{"state":"active",%s' "${q#\"x\":\{}"
+            return 0
+        }
+    fi
+    printf '"dgpu":{"state":"%s"}' "$state"
+}
+meminfo() { awk -v k="$1:" '$1 == k { print $2; exit }' "$R/proc/meminfo"; } # kB
+m_ram() {
+    local total avail
+    total=$(meminfo MemTotal) avail=$(meminfo MemAvailable)
+    [[ -n $total && $total -gt 0 ]] && printf '"ram":{"used":%s,"total":%s,"pct":%s}' $(((total - avail) / 1024)) $((total / 1024)) $((100 * (total - avail) / total))
+}
+m_swap() {
+    local total free
+    total=$(meminfo SwapTotal) free=$(meminfo SwapFree)
+    [[ -n $total && $total -gt 0 ]] && printf '"swap":{"used":%s,"total":%s,"pct":%s}' $(((total - free) / 1024)) $((total / 1024)) $((100 * (total - free) / total))
+    return 0
+}
+m_disk() {                  # every real filesystem: where it is mounted, GB used and total
+    [[ -z $R ]] || return 0 # df reads the real computer
+    local out
+    out=$(df -P -B1 -x tmpfs -x devtmpfs -x overlay -x squashfs -x efivarfs -x ramfs 2>/dev/null |
+        awk 'NR > 1 && !seen[$1]++ { printf "%s{\"mount\":\"%s\",\"used\":%.1f,\"total\":%.1f,\"pct\":%d}", (n++ ? "," : ""), $6, $3 / 1e9, $2 / 1e9, $5 }') || out=""
+    [[ -n $out ]] && printf '"disk":[%s]' "$out"
+}
+m_diskio() { # bytes per second read and written, whole disks only
+    local r w
+    read -r r w < <(awk '$3 ~ /^(nvme[0-9]+n[0-9]+|sd[a-z]+|vd[a-z]+|mmcblk[0-9]+)$/ { r += $6; w += $10 } END { print r * 512, w * 512 }' "$R/proc/diskstats" 2>/dev/null) || return 0
+    [[ -n ${r:-} ]] || return 0
+    rate dio.r "$r"
+    r=$RATE
+    rate dio.w "$w"
+    printf '"diskio":{"read":%s,"write":%s}' "$r" "$RATE"
+}
+m_net() { # bytes per second down and up over real interfaces, and the one the default route uses
+    local rx tx iface
+    read -r rx tx < <(awk -F'[: ]+' 'NR > 2 { n = $2; if (n !~ /^(lo|docker|br-|veth|virbr|tun|tap|wg)/) { rx += $3; tx += $11 } } END { print rx + 0, tx + 0 }' "$R/proc/net/dev" 2>/dev/null) || return 0
+    iface=$(awk '$2 == "00000000" { print $1; exit }' "$R/proc/net/route" 2>/dev/null) || iface=""
+    rate net.rx "$rx"
+    rx=$RATE
+    rate net.tx "$tx"
+    printf '"net":{"down":%s,"up":%s,"iface":"%s"}' "$rx" "$RATE" "$iface"
+}
+m_battery() { # percent, state, watts in or out, minutes left (to empty, or to full while charging)
+    local b d pct status uw now full mins=""
+    b=$(hw power.battery)
+    [[ -n $b ]] || return 0
+    d=/sys/class/power_supply/$b
+    pct=$(rd "$d/capacity")
+    [[ -n $pct ]] || return 0
+    status=$(rd "$d/status")
+    uw=$(rd "$d/power_now")
+    if [[ -z $uw ]]; then
+        local ua uv
+        ua=$(rd "$d/current_now") uv=$(rd "$d/voltage_now")
+        [[ -n $ua && -n $uv ]] && uw=$((ua * uv / 1000000)) # microamps x microvolts -> microwatts
+    fi
+    now=$(rd "$d/energy_now") full=$(rd "$d/energy_full")
+    if [[ -n ${uw:-} && $uw -gt 0 && -n $now && -n $full ]]; then
+        if [[ $status == Discharging ]]; then mins=$((now * 60 / uw)); elif [[ $status == Charging ]]; then mins=$(((full - now) * 60 / uw)); fi
+    fi
+    printf '"battery":{"pct":%s,"state":"%s","watts":%s%s}' "$pct" "${status,,}" "$(milli $((${uw:-0} / 1000)))" "${mins:+,\"minutes\":$mins}"
+}
+m_fans() { # every fan this computer reports, in RPM
+    local f v out=""
+    for f in "$R"/sys/class/hwmon/hwmon*/fan*_input; do
+        [[ -r $f ]] || continue
+        read -r v <"$f" || continue
+        out+="${out:+,}$v"
+    done
+    [[ -n $out ]] && printf '"fans":[%s]' "$out"
+}
+m_profile() {
+    local p
+    p=$(rd /sys/firmware/acpi/platform_profile)
+    [[ -n $p ]] && printf '"profile":"%s"' "$p"
+}
+m_uptime() {
+    local s
+    read -r s _ <"$R/proc/uptime" && printf '"uptime":%s' "${s%%.*}"
+}
+m_load() {
+    local a b c
+    read -r a b c _ <"$R/proc/loadavg" && printf '"load":[%s,%s,%s]' "$a" "$b" "$c"
+}
+
+names() { # "cpu,ram" -> checked names; nothing -> all
+    local n list=()
+    [[ -n ${1:-} ]] || {
+        echo "${ALL[*]}"
+        return 0
+    }
+    for n in ${1//,/ }; do
+        [[ " ${ALL[*]} " == *" $n "* ]] || die "no such metric: $n (metrics list)"
+        list+=("$n")
+    done
+    echo "${list[*]}"
+}
+
+# The rates and the CPU load compare with the tick before, and a function called in $( ) can't keep its
+# numbers. So every metric runs in this shell and writes to a variable instead.
+emit() {
+    local m buf out=""
+    for m in "$@"; do
+        buf=""
+        "m_$m" >"$TMP" || true # a reading that isn't there prints nothing
+        buf=$(<"$TMP")
+        out+="${buf:+${out:+,}$buf}"
+    done
+    printf '{%s}\n' "$out"
+}
+
+case ${1:-} in
+    list) printf '%s\n' "${ALL[@]}" ;;
+    once | watch)
+        picked=$(names "${2:-}") # on its own line, so a wrong name stops the command
+        read -r -a want <<<"$picked"
+        TMP=$(mktemp)
+        trap 'rm -f "$TMP"' EXIT
+        if [[ $1 == once ]]; then
+            emit "${want[@]}" >/dev/null # first sample, so loads and rates have something to compare with
+            sleep 0.3
+            emit "${want[@]}"
+        else
+            secs=${3:-2}
+            [[ $secs =~ ^[0-9]+$ && $secs -ge 1 ]] || die "SECONDS must be a whole number, 1 or more"
+            emit "${want[@]}" >/dev/null
+            while sleep "$secs"; do emit "${want[@]}"; done
+        fi
+        ;;
+    *) usage 2 >&2 ;;
+esac

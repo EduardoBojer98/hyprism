@@ -5,7 +5,7 @@
 
 -- Apps that draw their own minimise / maximise / close buttons, and overlays that must stay bare
 local OWN_BUTTONS = "(?i)^(google-chrome.*|chromium.*|com\\.anthropic\\.claude|firefox|org\\.quickshell|code|com\\.microsoft\\.vscode|org\\.gnome\\..*)$"
-local BARE_TITLES = "^(Picture-in-Picture|JuhRadial MX|)$"
+local BARE_TITLES = "^(Picture-in-Picture|)$"
 
 -- Buttons and rules are added once per Lua state: a config reload makes a new state and also
 -- clears hyprbars' buttons, while later setup_plugins() calls (Settings) must not add them again
