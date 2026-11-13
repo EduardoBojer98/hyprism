@@ -98,6 +98,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - Autostart finds the polkit agent on Arch and Fedora, and unlocks KWallet or starts GNOME Keyring, whichever
   is installed.
 - State moved from `~/.local/state/linux-setup` to `~/.local/state/hyprism` (migration 0001).
+- README pictures retaken from the current code (`tests/screenshots.sh`): all seven themes in dark and light, plus the welcome panel, menu, system panel, bar system-info item and notification centre.
 
 ### Removed
 

@@ -63,7 +63,7 @@ Column {
                 required property var modelData
                 required property int index
                 readonly property bool current: Launcher.homeIndex === index
-                width: freq.width / 8; height: 92
+                width: freq.width / 8; height: 106   // room for a two-line name ("Visual Studio Code")
                 z: appArea.containsMouse ? 1 : 0
                 Rectangle {
                     anchors { fill: parent; margins: 3 }
@@ -82,6 +82,8 @@ Column {
                     id: appName
                     text: app.modelData.title
                     elide: Text.ElideRight
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
                     color: app.current ? Launcher.selText : Theme.text
                     font { family: Theme.font; pixelSize: Theme.fontLabel }
                 }

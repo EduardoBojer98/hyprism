@@ -122,7 +122,7 @@ Singleton {
         { id: "record", group: "Screens & capture", title: "Record the screen", words: "record recording video screencast capture", glyph: "\u{F044A}", cmd: ["sh", "-c", "sleep 0.3; record"] },
         { id: "record-area", group: "Screens & capture", title: "Record an area", words: "record recording video screencast capture region", glyph: "\u{F044A}", cmd: ["sh", "-c", "sleep 0.3; record area"] },
         { id: "record-stop", group: "Screens & capture", title: "Stop recording", words: "record recording video stop end save", glyph: "\u{F044A}", cmd: ["record", "stop"] },
-        { id: "ocr", group: "Screens & capture", title: "Copy text from screen (OCR)", words: "ocr text recognise recognize screenshot", glyph: "\u{F0A3B}", cmd: ["sh", "-c", "sleep 0.3; screentext"] },
+        { id: "ocr", group: "Screens & capture", title: "Copy text from screen", words: "ocr text recognise recognize screenshot", glyph: "\u{F0A3B}", cmd: ["sh", "-c", "sleep 0.3; screentext"] },
         { id: "picker", group: "Screens & capture", title: "Pick a colour", words: "colour color picker", glyph: "\u{F0266}", cmd: ["sh", "-c", "sleep 0.3; hyprpicker -a"] },
         { id: "overview", group: "Screens & capture", title: "Mission Control", words: "overview windows workspaces mission control expose", glyph: "\u{F0570}", cmd: ["qs", "ipc", "call", "overview", "toggle"] },
         { id: "nightlight", group: "Screens & capture", title: "Night Light", words: "night light warm blue filter eyes evening", glyph: "\u{F0599}", run: () => NightLight.toggle() },

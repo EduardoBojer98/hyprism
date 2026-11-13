@@ -119,10 +119,28 @@ motion, shadow and blur, kept per theme; Reset puts it back. **Animations** is F
     <td><b>Power menu</b>: lock, sleep, hibernate, log out, restart, shut down.</td>
   </tr>
   <tr>
-    <td colspan="2"><img src="docs/screenshots/features/cheatsheet.webp" alt="Keyboard shortcut cheatsheet grouped by apps, windows, workspaces, screen, media and session"></td>
+    <td><img src="docs/screenshots/features/cheatsheet.webp" alt="Keyboard shortcut cheatsheet grouped by apps, windows, workspaces, screen, media and session"></td>
+    <td><img src="docs/screenshots/features/welcome.webp" alt="First-run welcome panel with a theme picker, light or dark choice, bar layout and keyboard layouts"></td>
   </tr>
   <tr>
-    <td colspan="2"><b>Shortcut cheatsheet</b> (<code>Super+/</code>): every binding on screen, type to filter, all rebindable in Settings.</td>
+    <td><b>Shortcut cheatsheet</b> (<code>Super+/</code>): every binding on screen, type to filter, all rebindable in Settings.</td>
+    <td><b>Welcome</b>: on first start, pick a look, light or dark, a bar layout and your keyboard layouts.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/features/menu.webp" alt="Grouped menu listing actions under headings, starting with the Appearance group of themes and light or dark mode"></td>
+    <td><img src="docs/screenshots/features/system.webp" alt="System panel under the bar with the processor temperature, a table of the top processes and an Open System Monitor button"></td>
+  </tr>
+  <tr>
+    <td><b>Menu</b>: one grouped menu for every action.</td>
+    <td><b>System panel</b>: processor temperature and the top processes, one click from the bar.</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/features/bar-sysinfo.webp" alt="Menu bar with a system-info item showing processor, temperature, memory and network next to the weather and status icons"></td>
+    <td><img src="docs/screenshots/features/notifications.webp" alt="Notification centre panel on the right side of the screen"></td>
+  </tr>
+  <tr>
+    <td><b>System-info bar item</b>: pick the metrics it shows.</td>
+    <td><b>Notification centre</b>: everything you missed, in one place.</td>
   </tr>
 </table>
 
@@ -232,6 +250,7 @@ one on screen**. Generated from `config/hypr/.config/hypr/modules/binds.lua`.
 | `Super+Print` | Screenshot the focused window |
 | `Ctrl+Shift+Print` | Screenshot both screens |
 | `Alt+Print` | Screenshot in 5 seconds |
+| `Super+Ctrl+S` | Pin an area of the screen on top |
 | `Super+Shift+T` | Copy text from the screen |
 | `Super+Alt+R` | Record the screen (again: stop) |
 | `Super+Alt+Shift+R` | Record an area (again: stop) |
