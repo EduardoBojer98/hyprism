@@ -45,18 +45,38 @@ ColumnLayout {
         color: Theme.subtext; wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }
-    Flow {
+    // one group per category (Metrics.categories, in order), each a heading and its readings' chips
+    Column {
         Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16
-        spacing: 4
+        spacing: 10
         Repeater {
-            model: Metrics.ids
-            Chip {
+            model: Metrics.categories
+            Column {
+                id: catGroup
                 required property string modelData
-                icon: Metrics.registry[modelData].glyph ?? ""
-                label: Metrics.registry[modelData].name
-                active: si.picked.includes(modelData)
-                Accessible.name: label
-                onClicked: si.toggle(modelData)
+                readonly property var ids: Metrics.ids.filter(id => Metrics.registry[id].category === catGroup.modelData)
+                width: parent.width
+                spacing: 6
+                Text {
+                    text: catGroup.modelData
+                    color: Theme.subtext
+                    font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                }
+                Flow {
+                    width: catGroup.width
+                    spacing: 4
+                    Repeater {
+                        model: catGroup.ids
+                        Chip {
+                            required property string modelData
+                            icon: Metrics.registry[modelData].glyph ?? ""
+                            label: Metrics.registry[modelData].name
+                            active: si.picked.includes(modelData)
+                            Accessible.name: label
+                            onClicked: si.toggle(modelData)
+                        }
+                    }
+                }
             }
         }
     }
