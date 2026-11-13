@@ -64,7 +64,7 @@ ColumnLayout {
             ConfigChoice { section: "dock"; key: "size"; values: ["compact", "regular", "roomy"]; labels: ["Compact", "Regular", "Roomy"] }
         }
         Repeater {
-            model: Config.dock.enabled && !page.inBar ? Quickshell.screens : []
+            model: Config.dock.enabled && !page.inBar ? Quickshell.screens.filter(s => Machine.realScreen(s.name)) : []
             SettingRow {
                 required property var modelData
                 label: "On " + modelData.name

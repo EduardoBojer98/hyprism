@@ -49,7 +49,7 @@ ColumnLayout {
         command: ["hyprctl", "-j", "monitors", "all"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const list = JSON.parse(text)
+                const list = JSON.parse(text).filter(m => Machine.realScreen(m.name))
                 const e = {}
                 for (const m of list) {
                     // a screen that's off may report 0x0: its first (preferred) mode then

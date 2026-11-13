@@ -42,7 +42,7 @@ ColumnLayout {
         ? monitor.inputs.map(i => [i.code, i.name + (i.code === monitor.current ? " (now)" : "")])
         : presets.map(p => [p[0], `${p[1]} (${p[0]})`])
     readonly property var outputs: {
-        const names = found.length ? found.map(m => m.output) : Hyprland.monitors.values.map(m => m.name)
+        const names = found.length ? found.map(m => m.output) : Hyprland.monitors.values.map(m => m.name).filter(n => Machine.realScreen(n))
         if (out && !names.includes(out)) names.push(out)
         return names
     }
@@ -63,7 +63,7 @@ ColumnLayout {
 
     function load() {
         const c = Config.monitorShare
-        enabled = c.enabled; out = c.output || (Hyprland.monitors.values.find(x => !x.name.startsWith("eDP"))?.name ?? "")
+        enabled = c.enabled; out = c.output || (Hyprland.monitors.values.find(x => !x.name.startsWith("eDP") && Machine.realScreen(x.name))?.name ?? "")
         mine = c.thisInput; other = c.otherInput; mirror = c.mirror; mirrorMode = c.mirrorMode
         savedState = snapshot
     }
@@ -121,7 +121,7 @@ ColumnLayout {
         SettingRow {
             label: "While it's away, mirror"
             hint: "Some monitors drop the other input without a signal from this computer, so it mirrors this screen instead of turning off"
-            Dropdown { width: 200; options: Hyprland.monitors.values.map(m => m.name).filter(n => n !== page.out); current: page.mirror; onPicked: v => page.mirror = v }
+            Dropdown { width: 200; options: Hyprland.monitors.values.map(m => m.name).filter(n => n !== page.out && Machine.realScreen(n)); current: page.mirror; onPicked: v => page.mirror = v }
         }
         SettingRow {
             label: "Mirror mode"

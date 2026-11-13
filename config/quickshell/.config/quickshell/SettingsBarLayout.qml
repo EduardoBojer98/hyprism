@@ -76,10 +76,10 @@ ColumnLayout {
     }
 
     SettingGroup {
-        visible: Quickshell.screens.length > 1
+        visible: Quickshell.screens.filter(s => Machine.realScreen(s.name)).length > 1
         title: "Screens"
         Repeater {
-            model: Quickshell.screens
+            model: Quickshell.screens.filter(s => Machine.realScreen(s.name))
             SettingRow {
                 required property var modelData
                 label: modelData.name

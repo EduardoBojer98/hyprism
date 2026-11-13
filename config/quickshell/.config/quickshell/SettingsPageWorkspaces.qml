@@ -13,7 +13,7 @@ ColumnLayout {
     readonly property var c: Config.workspaces
     readonly property bool fixed: c.mode === "fixed"
     // "" = any screen, every connected screen, then screens given workspaces that aren't connected now
-    readonly property var connected: Hyprland.monitors.values.map(m => m.name)
+    readonly property var connected: Hyprland.monitors.values.map(m => m.name).filter(n => Machine.realScreen(n))
     readonly property var columns: [""].concat(connected, Object.values(c.screens).filter((s, i, all) => s && !connected.includes(s) && all.indexOf(s) === i))
     function label(name) {
         if (name === "") return "Any screen"

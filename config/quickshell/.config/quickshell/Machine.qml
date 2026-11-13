@@ -8,6 +8,9 @@ import QtQuick
 // LED), the shared-monitor switch (~/.config/monswitch.conf, see docs/USER-GUIDE.md), hibernation
 // (logind says it can: swap and resume set up) and an NVIDIA GPU.
 Singleton {
+    // a real display, not a virtual screen tests/nested.sh parks its test desktop on (kept out of every Settings list)
+    function realScreen(name) { return !String(name ?? "").startsWith("hyprism-test-") }
+
     property bool asus: false
     property bool canHibernate: false
     property bool nvidia: false

@@ -57,7 +57,7 @@ ColumnLayout {
                 // a monitor doesn't answer (DDC/CI off in its menu)
                 Repeater {
                     id: externals
-                    model: ControlCenter.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP")) : []
+                    model: ControlCenter.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP") && Machine.realScreen(m.name)) : []
                     ColumnLayout {
                         id: ext
                         required property var modelData
