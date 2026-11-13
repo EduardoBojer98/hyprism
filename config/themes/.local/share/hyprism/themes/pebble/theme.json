@@ -21,7 +21,7 @@
   },
   "font": {"ui": "Outfit", "display": "Outfit", "mono": "JetBrainsMono Nerd Font", "size": 14, "displayWeight": 500},
   "shape": {"radius": 18, "radiusSmall": 12, "line": 1, "material": "glass"},
-  "bar": {"edge": "top", "size": 36, "floating": true, "segmented": true, "fill": "glass", "line": 0, "voice": "icons", "mono": false, "ws": "dots", "clock": "plain", "decor": "", "sep": false, "start": ["launcher", "workspaces"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
+  "bar": {"edge": "top", "size": 36, "floating": true, "segmented": true, "fill": "glass", "line": 0, "voice": "icons", "mono": false, "ws": "dots", "clock": "plain", "decor": "", "sep": false, "start": ["controls", "launcher", "workspaces"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
   "dock": {"edge": "bottom", "shape": "pill", "hover": "lift", "mark": "line", "fill": "glass"},
   "popup": {"depth": "soft", "decor": "", "tiles": "solid"},
   "motion": {"enter": 240, "exit": 150, "curve": [0.3, 1.25, 0.5, 1], "travel": 10, "scale": 0.94, "press": 0.95},

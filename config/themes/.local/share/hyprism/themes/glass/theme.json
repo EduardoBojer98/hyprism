@@ -21,7 +21,7 @@
   },
   "font": {"ui": "IBM Plex Sans", "display": "IBM Plex Sans", "mono": "JetBrainsMono Nerd Font", "size": 13, "displayWeight": 300},
   "shape": {"radius": 16, "radiusSmall": 10, "line": 1, "material": "glass"},
-  "bar": {"edge": "top", "size": 36, "floating": true, "segmented": false, "fill": "glass", "line": 0, "voice": "icons", "mono": false, "ws": "numbers", "clock": "plain", "decor": "", "sep": false, "start": ["launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
+  "bar": {"edge": "top", "size": 36, "floating": true, "segmented": false, "fill": "glass", "line": 0, "voice": "icons", "mono": false, "ws": "numbers", "clock": "plain", "decor": "", "sep": false, "start": ["controls", "launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
   "dock": {"edge": "bottom", "shape": "tile", "hover": "grow", "mark": "dot", "fill": "glass"},
   "popup": {"depth": "soft", "decor": "", "tiles": "wash"},
   "motion": {"enter": 220, "exit": 140, "curve": [0.23, 1, 0.32, 1], "travel": 6, "scale": 0.97, "press": 0.97},

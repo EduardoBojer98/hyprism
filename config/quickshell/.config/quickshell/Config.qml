@@ -32,6 +32,7 @@ Singleton {
     readonly property alias idle: adapter.idle
     readonly property alias input: adapter.input
     readonly property alias displays: adapter.displays
+    readonly property alias workspaces: adapter.workspaces
     readonly property alias apps: adapter.apps
     readonly property alias monitorShare: adapter.monitorShare
     readonly property alias battery: adapter.battery
@@ -85,7 +86,9 @@ Singleton {
                  naturalScroll: "bool", tapToClick: "bool", disableWhileTyping: "bool", clickMethod: ["buttonareas", "clickfinger"],
                  scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", imported: "bool" },
         displays: { layout: "displays", autoHdr: "bool", sendContentType: "bool", xwaylandNativeScale: "bool",
-                    vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool", imported: "bool" },
+                    vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool",
+                    newScreen: ["right", "left", "above", "below", "mirror"], imported: "bool" },
+        workspaces: { mode: ["dynamic", "fixed"], count: [1, 10], screens: "displays" },
         apps: { terminal: "command" },
         monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", imported: "bool" }
     })

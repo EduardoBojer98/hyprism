@@ -230,7 +230,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `windowTitle` | `bool` | `true` | the focused window's title after the app name |
 | `items` | `var` | `{}` |  |
 | `preset` | `string` | `"theme"` |  |
-| `presets` | `var` | `{ minimal: { start: ["launcher", "workspaces"], center: [...` |  |
+| `presets` | `var` | `{ minimal: { start: ["controls", "launcher", "workspaces"...` |  |
 | `monitors` | `var` | `{}` | screen name (e.g. "eDP-1") -> preset name; unlisted or "" follows `preset` |
 
 ## battery
@@ -300,7 +300,16 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `xwaylandNativeScale` | `bool` | `true` | old X11 apps draw sharp but small, instead of stretched |
 | `vrr` | `string` | `"off"` | adaptive sync: off \| on \| fullscreen |
 | `preferHighRefresh` | `bool` | `true` | new screens start at their highest refresh rate |
+| `newScreen` | `string` | `"right"` | a screen with no saved layout: right \| left \| above \| below (of the others) \| mirror |
 | `imported` | `bool` | `false` |  |
+
+## workspaces
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `mode` | `string` | `"dynamic"` | dynamic: made when needed on the screen you're on \| fixed: always there, each on its screen |
+| `count` | `int` | `10` | fixed: how many (Super+1..0 reach the first ten) |
+| `screens` | `var` | `{}` | fixed: workspace number -> output name; missing = the screen you're on |
 
 ## apps
 

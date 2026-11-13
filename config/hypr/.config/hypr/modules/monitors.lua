@@ -34,7 +34,12 @@ function apply_displays()
         if name:sub(1, 1) ~= "_" then monitor(name) end
     end
     if SHARED and not DISPLAYS[SHARED.output] then monitor(SHARED.output) end
-    hl.monitor({ output = "", mode = option("preferHighRefresh", true) and "highrr" or "preferred", position = "auto", scale = "auto" }) -- any other screen
+    -- any other screen: beside the others (Settings > Displays > New screens), or showing the laptop panel's picture
+    local new = option("newScreen", "right")
+    local fallback = { output = "", mode = option("preferHighRefresh", true) and "highrr" or "preferred", scale = "auto",
+                       position = ({ right = "auto-right", left = "auto-left", above = "auto-up", below = "auto-down" })[new] or "auto" }
+    if new == "mirror" and HW.display.internal and HW.display.internal ~= "" then fallback.mirror = HW.display.internal end
+    hl.monitor(fallback)
     hl.config({
         misc = { vrr = ({ off = 0, on = 1, fullscreen = 2 })[option("vrr", "off")] or 0 },
         -- Auto HDR switches an HDMI screen's colour space on fullscreen video, which can blank some screens
@@ -59,12 +64,28 @@ end
 
 apply_displays()
 
--- Workspaces open on the screen you're working on; pin some to a screen in host.lua (hosts/<host>/home/.config/hypr/host.lua).
-
--- A laptop with another screen: the laptop starts on workspace 1 and the first other screen on 2.
--- (Screens plugged in later take the next free workspace by themselves.)
-local panel, others = HW.display.internal, HW.display.external or {}
-if panel and panel ~= "" and others[1] then
-    hl.workspace_rule({ workspace = "1", monitor = panel, default = true })
-    hl.workspace_rule({ workspace = "2", monitor = others[1], default = true })
+-- Workspaces (Settings > Displays > Workspaces writes settings/workspaces.lua):
+--   dynamic  made when needed on the screen you're working on, gone when empty
+--   fixed    1..count always there, each on the screen it was given (none given = the screen you're on)
+local wok, wsaved = pcall(require, "settings.workspaces")
+WORKSPACES = wok and type(wsaved) == "table" and wsaved or { mode = "dynamic" }
+if WORKSPACES.mode == "fixed" then
+    local first = {} -- the lowest workspace on each screen is the one it shows at start
+    for i = 1, math.min(tonumber(WORKSPACES.count) or 10, 10) do
+        local screen = type(WORKSPACES.screens) == "table" and WORKSPACES.screens[tostring(i)] or nil
+        local rule = { workspace = tostring(i), persistent = true }
+        if type(screen) == "string" and screen ~= "" then
+            rule.monitor = screen
+            if not first[screen] then rule.default, first[screen] = true, true end
+        end
+        hl.workspace_rule(rule)
+    end
+else
+    -- A laptop with another screen: the laptop starts on workspace 1 and the first other screen on 2.
+    -- (Screens plugged in later take the next free workspace by themselves.)
+    local panel, others = HW.display.internal, HW.display.external or {}
+    if panel and panel ~= "" and others[1] then
+        hl.workspace_rule({ workspace = "1", monitor = panel, default = true })
+        hl.workspace_rule({ workspace = "2", monitor = others[1], default = true })
+    end
 end

@@ -21,7 +21,7 @@
   },
   "font": {"ui": "Martian Mono", "display": "Martian Mono", "mono": "Martian Mono", "size": 12, "displayWeight": 300},
   "shape": {"radius": 0, "radiusSmall": 0, "line": 1, "material": "solid"},
-  "bar": {"edge": "top", "size": 30, "floating": false, "segmented": false, "fill": "ground", "line": 1, "voice": "mixed", "mono": true, "caps": true, "ws": "text", "clock": "accent", "decor": "brackets", "sep": true, "start": ["launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "cpu", "memory", "status", "keyboard", "tray", "notifications"]},
+  "bar": {"edge": "top", "size": 30, "floating": false, "segmented": false, "fill": "ground", "line": 1, "voice": "mixed", "mono": true, "caps": true, "ws": "text", "clock": "accent", "decor": "brackets", "sep": true, "start": ["controls", "launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "cpu", "memory", "status", "keyboard", "tray", "notifications"]},
   "dock": {"edge": "bottom", "shape": "block", "hover": "plate", "mark": "bar", "fill": "surface"},
   "popup": {"depth": "glow", "decor": "brackets", "tiles": "wash"},
   "motion": {"enter": 140, "exit": 80, "curve": [0.15, 0, 0.1, 1], "travel": 4, "scale": 0.98, "press": 0.98},

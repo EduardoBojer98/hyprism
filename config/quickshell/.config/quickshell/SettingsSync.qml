@@ -7,6 +7,7 @@ import QtQuick
 //   Config.idle          -> hypr/settings/hypridle.conf (lock, dim, screens off, sleep), hypridle restarted
 //   Config.input         -> hypr/settings/input.lua (layouts, repeat, touchpad), applied with hyprctl eval
 //   Config.displays      -> hypr/settings/displays.lua (arrangement, modes, scale…), applied with hyprctl eval
+//   Config.workspaces    -> hypr/settings/workspaces.lua (dynamic or fixed, which screen), applied with hyprctl reload
 //   Config.monitorShare  -> ~/.config/monswitch.conf (or .off when switched off), its watcher restarted
 // Before a section has `imported` set, its values are read once from the file written before (by an older
 // Settings, or by hand), so nothing is lost. A file is only written when its text differs from what is on disk.
@@ -49,7 +50,7 @@ Scope {
     function displaysTable(d) {
         return SettingsApp.lua(Object.assign({}, d.layout, { _options: {
             autoHdr: d.autoHdr, sendContentType: d.sendContentType, xwaylandNativeScale: d.xwaylandNativeScale,
-            vrr: d.vrr, preferHighRefresh: d.preferHighRefresh } }))
+            vrr: d.vrr, preferHighRefresh: d.preferHighRefresh, newScreen: d.newScreen } }))
     }
     function shareText(s) {
         return "# Written by Quickshell from Settings > Shared Monitor (settings.json monitorShare). Read by ~/.local/bin/monswitch.\n"
@@ -62,6 +63,7 @@ Scope {
     readonly property string inputLua: inputTable(Config.input)
     readonly property string displaysLua: displaysTable(Config.displays)
     readonly property string appsLua: SettingsApp.lua({ terminal: Config.apps.terminal })   // read by modules/binds.lua at load
+    readonly property string workspacesLua: SettingsApp.lua({ mode: Config.workspaces.mode, count: Config.workspaces.count, screens: Config.workspaces.screens })
     readonly property string share: shareText(Config.monitorShare) + (Config.monitorShare.enabled ? "" : "#off\n")
 
     // ---- writing: each section once its old file has been read, and only when the text changed ----------
@@ -89,6 +91,9 @@ Scope {
     function writeApps() {
         put("hypr/settings/apps.lua", "-- Written by Quickshell from settings.json (apps). The terminal key uses it after the next Hyprland reload.\nreturn " + appsLua)
     }
+    function writeWorkspaces() {   // a reload drops the old rules (dynamic after fixed) and makes the fixed ones
+        put("hypr/settings/workspaces.lua", "-- Written by Quickshell from Settings > Displays > Workspaces (settings.json workspaces).\nreturn " + workspacesLua, ["hyprctl", "reload"])
+    }
     function writeShare() {
         const s = Config.monitorShare
         if (!s.imported || !s.output) return
@@ -99,17 +104,18 @@ Scope {
              "sh", on ? "monswitch.conf.off" : "monswitch.conf", on ? "on" : "off"])
         Machine.refresh()
     }
-    Timer { id: later; interval: 300; onTriggered: { sync.writeIdle(); sync.writeInput(); sync.writeDisplays(); sync.writeApps(); sync.writeShare() } }
+    Timer { id: later; interval: 300; onTriggered: { sync.writeIdle(); sync.writeInput(); sync.writeDisplays(); sync.writeApps(); sync.writeWorkspaces(); sync.writeShare() } }
     onAppsLuaChanged: if (Config.loaded) later.restart()
     onIdleChanged: if (Config.loaded) later.restart()
     onInputLuaChanged: if (Config.loaded) later.restart()
     onDisplaysLuaChanged: if (Config.loaded) later.restart()
     onShareChanged: if (Config.loaded) later.restart()
+    onWorkspacesLuaChanged: if (Config.loaded) later.restart()
 
     // ---- once, at load: what is on disk now, and the old files' values for sections not imported yet --------
     Connections { target: Config; function onLoadedChanged() { if (Config.loaded) reader.running = true } }
     Component.onCompleted: if (Config.loaded) reader.running = true
-    readonly property var files: ["hypr/settings/hypridle.conf", "hypr/settings/input.lua", "hypr/settings/displays.lua", "hypr/settings/apps.lua", "monswitch.conf", "monswitch.conf.off"]
+    readonly property var files: ["hypr/settings/hypridle.conf", "hypr/settings/input.lua", "hypr/settings/displays.lua", "hypr/settings/apps.lua", "hypr/settings/workspaces.lua", "monswitch.conf", "monswitch.conf.off"]
     Process {
         id: reader
         command: ["sh", "-c", 'for f; do printf "\\036%s\\n" "$f"; cat "$HOME/.config/$f" 2>/dev/null; done', "sh"].concat(sync.files)

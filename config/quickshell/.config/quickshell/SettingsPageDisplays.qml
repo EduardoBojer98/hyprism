@@ -3,7 +3,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Displays: drag screens to arrange them; per screen: on/off, mirror, resolution, refresh rate, scale,
+// Displays: extend, mirror or one screen only; drag screens to arrange them; per screen: on/off, mirror, resolution, refresh rate, scale,
 // rotation, adaptive sync and 10-bit colour. Apply saves the layout in settings.json (displays); SettingsSync.qml
 // writes hypr/settings/displays.lua and applies it live. Unless you keep it, the old layout comes back after 15 s.
 ColumnLayout {
@@ -102,6 +102,27 @@ ColumnLayout {
         reloadTimer.restart()
     }
     Timer { id: reloadTimer; interval: 800; onTriggered: page.load() }
+    // One switch for every screen, like a projector key: extend the desktop, mirror one picture, or one screen only
+    readonly property string arrangement: {
+        const names = Object.keys(edits), on = names.filter(n => !edits[n].disabled)
+        if (on.length === 1 && names.length > 1) return "only:" + on[0]
+        return on.some(n => edits[n].mirror) ? "mirror" : "extend"
+    }
+    function arrange(how) {
+        const names = Object.keys(edits), e = {}
+        // the picture to mirror or the screen kept on: the laptop panel when there is one, else the first screen
+        const main = names.find(n => n.startsWith("eDP")) ?? names[0]
+        let x = 0
+        for (const n of names.slice().sort((a, b) => (a === main ? -1 : b === main ? 1 : 0))) {
+            const one = Object.assign({}, edits[n], { disabled: false, mirror: "" })
+            if (how === "mirror" && n !== main) one.mirror = main
+            if (how.startsWith("only:")) one.disabled = n !== how.slice(5)
+            if (how === "extend") { one.x = x; one.y = 0; x += logicalSize(n).w }   // side by side, main screen first
+            e[n] = one
+        }
+        edits = e
+        apply(true)
+    }
     function keep() { countdown.stop(); previous = null }
     function revert() { countdown.stop(); edits = previous; previous = null; apply(false) }
     Timer {
@@ -109,6 +130,23 @@ ColumnLayout {
         property int left: 15
         interval: 1000; repeat: true
         onTriggered: if (--left <= 0) page.revert()
+    }
+
+    // ---- several screens: extend, mirror or one only ----------------------------------------
+    SettingGroup {
+        title: "Multiple displays"
+        visible: page.monitors.length > 1
+        SettingRow {
+            label: "Show the desktop"
+            hint: "Extend: one desktop across the screens. Mirror: the same picture on all. Only: the others go dark"
+            Choice {
+                accessibleName: "Show the desktop"
+                readonly property var keys: ["extend", "mirror"].concat(page.monitors.map(m => "only:" + m.name))
+                options: ["Extend", "Mirror"].concat(page.monitors.map(m => "Only " + page.label(m)))
+                index: Math.max(0, keys.indexOf(page.arrangement))
+                onPicked: i => page.arrange(keys[i])
+            }
+        }
     }
 
     // ---- arrangement canvas -----------------------------------------------------------------
@@ -310,6 +348,11 @@ ColumnLayout {
             label: "Adaptive sync (all screens)"
             hint: "Smoother motion in games on screens that support it; \"Fullscreen\" only while an app is fullscreen"
             ConfigChoice { section: "displays"; key: "vrr"; values: ["off", "on", "fullscreen"]; labels: ["Off", "On", "Fullscreen"] }
+        }
+        SettingRow {
+            label: "New screens"
+            hint: "Where a screen goes the first time it is plugged in (after that, its saved place)"
+            ConfigChoice { section: "displays"; key: "newScreen"; values: ["right", "left", "above", "below", "mirror"]; labels: ["Right", "Left", "Above", "Below", "Mirror"] }
         }
         SettingRow {
             label: "Prefer the highest refresh rate"

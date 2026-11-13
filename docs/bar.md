@@ -96,10 +96,10 @@ Built in (an older file gets any that are missing back; one you edited is never 
 
 | Preset | start | center | end |
 |---|---|---|---|
-| `minimal` | launcher, workspaces | clock | status, battery, power |
-| `full` | launcher, workspaces, window | clock, date, weather | sysinfo, media, tray, keyboard, notifications, status, battery, power |
-| `laptop` | launcher, workspaces | clock | sysinfo, brightness, power-profile, keyboard, notifications, status, battery |
-| `external` | launcher, workspaces, window | clock, date | sysinfo, weather, media, tray, notifications, status, power |
+| `minimal` | controls, launcher, workspaces | clock | status, battery, power |
+| `full` | controls, launcher, workspaces, window | clock, date, weather | sysinfo, media, tray, keyboard, notifications, status, battery, power |
+| `laptop` | controls, launcher, workspaces | clock | sysinfo, brightness, power-profile, keyboard, notifications, status, battery |
+| `external` | controls, launcher, workspaces, window | clock, date | sysinfo, weather, media, tray, notifications, status, power |
 
 An id that isn't an item is skipped. Example, a laptop with an external monitor:
 

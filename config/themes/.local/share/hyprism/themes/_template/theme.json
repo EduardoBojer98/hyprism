@@ -21,7 +21,7 @@
   },
   "font": {"ui": "Archivo", "display": "Martian Mono", "mono": "JetBrainsMono Nerd Font", "size": 13, "displayWeight": 500},
   "shape": {"radius": 10, "radiusSmall": 6, "line": 1, "material": "solid"},
-  "bar": {"edge": "top", "size": 34, "floating": true, "segmented": false, "fill": "surface", "line": 1, "voice": "icons", "mono": false, "ws": "filled", "clock": "block", "decor": "", "sep": false, "start": ["launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
+  "bar": {"edge": "top", "size": 34, "floating": true, "segmented": false, "fill": "surface", "line": 1, "voice": "icons", "mono": false, "ws": "filled", "clock": "block", "decor": "", "sep": false, "start": ["controls", "launcher", "workspaces", "window"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
   "dock": {"edge": "bottom", "shape": "tile", "hover": "lift", "mark": "bar", "fill": "surface"},
   "popup": {"depth": "glow", "decor": "topline", "tiles": "solid"},
   "motion": {"enter": 180, "exit": 110, "curve": [0.2, 0, 0, 1], "travel": 8, "scale": 0.97, "press": 0.96},

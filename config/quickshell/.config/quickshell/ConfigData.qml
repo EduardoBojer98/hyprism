@@ -182,15 +182,15 @@ JsonAdapter {
         // which items the bar holds: "theme" = the theme's own layout (Settings > Menu Bar, per theme); any other
         // value names an entry of `presets`. A screen listed in `monitors` uses its own preset instead.
         property string preset: "theme"
-        // name -> { start: [ids], center: [ids], end: [ids] }. These four ship with the desktop; repair() puts
+        // name -> { start: ["controls", ids], center: [ids], end: [ids] }. These four ship with the desktop; repair() puts
         // back any that an older settings.json lacks (it never overwrites one you changed).
         property var presets: ({
-            minimal: { start: ["launcher", "workspaces"], center: ["clock"], end: ["status", "battery", "power"] },
-            full: { start: ["launcher", "workspaces", "window"], center: ["clock", "date", "weather"],
+            minimal: { start: ["controls", "launcher", "workspaces"], center: ["clock"], end: ["status", "battery", "power"] },
+            full: { start: ["controls", "launcher", "workspaces", "window"], center: ["clock", "date", "weather"],
                     end: ["sysinfo", "media", "tray", "keyboard", "notifications", "status", "battery", "power"] },
-            laptop: { start: ["launcher", "workspaces"], center: ["clock"],
+            laptop: { start: ["controls", "launcher", "workspaces"], center: ["clock"],
                       end: ["sysinfo", "brightness", "power-profile", "keyboard", "notifications", "status", "battery"] },
-            external: { start: ["launcher", "workspaces", "window"], center: ["clock", "date"],
+            external: { start: ["controls", "launcher", "workspaces", "window"], center: ["clock", "date"],
                         end: ["sysinfo", "weather", "media", "tray", "notifications", "status", "power"] }
         })
         property var monitors: ({})             // screen name (e.g. "eDP-1") -> preset name; unlisted or "" follows `preset`
@@ -247,7 +247,13 @@ JsonAdapter {
         property bool xwaylandNativeScale: true  // old X11 apps draw sharp but small, instead of stretched
         property string vrr: "off"               // adaptive sync: off | on | fullscreen
         property bool preferHighRefresh: true    // new screens start at their highest refresh rate
+        property string newScreen: "right"       // a screen with no saved layout: right | left | above | below (of the others) | mirror
         property bool imported: false
+    }
+    property JsonObject workspaces: JsonObject {   // Settings > Displays > Workspaces (SettingsSync writes hypr/settings/workspaces.lua)
+        property string mode: "dynamic"          // dynamic: made when needed on the screen you're on | fixed: always there, each on its screen
+        property int count: 10                   // fixed: how many (Super+1..0 reach the first ten)
+        property var screens: ({})               // fixed: workspace number -> output name; missing = the screen you're on
     }
     property JsonObject apps: JsonObject {
         property string terminal: "ghostty +new-window"   // command the terminal key runs (SettingsSync writes hypr/settings/apps.lua)
