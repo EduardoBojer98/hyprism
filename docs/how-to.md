@@ -64,6 +64,9 @@ All keys: [bar.md](bar.md).
 **The dock on or off, pinned apps.** Settings → Dock (Show the dock, Pinned apps). File: `dock.enabled`,
 `dock.pinned` (desktop entry ids), `dock.hiddenOn` (screens without a dock), `dock.autoHide`. Its place:
 `appearance.custom.<theme>.dock` = `"bar"`, `"bottom"`, `"left"`, `"right"` or `"top"`.
+Inside the bar only Open windows, Combine, Show open apps and Pinned apps apply; Settings → Dock hides the rest.
+**Dock widgets.** Settings → Dock → Widgets (floating dock only). File: `dock.widgets`, ids in order: `clock`, `load`,
+`media`, `trash` (right-click twice to empty), `downloads`. Each reads only while it is on the dock.
 
 ## Keys, input, screens
 

@@ -140,6 +140,7 @@ Singleton {
     readonly property int dockPad: ({ compact: 5, regular: 8, roomy: 12 })[Config.dock.size] ?? 8
     readonly property int dockLift: dockStyle.shape === "pill" || dockStyle.shape === "tile" ? 8 : 6   // gap to the edge
     readonly property int dockThickness: Config.dock.iconSize + dockPad * 2 + 8                      // icon + padding + marks
+    readonly property var dockWidgets: ({ clock: "Clock and date", load: "CPU load", media: "Media player", trash: "Trash", downloads: "Downloads" })   // dock.widgets ids
     readonly property bool dockReserves: Config.dock.enabled && !dockInBar && !Config.dock.autoHide
     function dockShownOn(screen) { return Config.dock.enabled && !dockInBar && !Config.dock.hiddenOn.includes(screen?.name ?? "") }
 
