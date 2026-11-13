@@ -8,6 +8,7 @@ BarIndicator {
     word: Sys.btOn ? (Sys.btLinked ? "bt on" : "bt") : "bt off"
     ink: Sys.btOn ? bar.tone : bar.dim
     tip: !Sys.btOn ? "Bluetooth is off" : Sys.btLinked ? "Bluetooth: a device is connected" : "Bluetooth is on"
+    panel: "controlcenter"
     active: ControlCenter.open && ControlCenter.expanded === "bt"
     onPressed: ControlCenter.showSection("bt")
 }

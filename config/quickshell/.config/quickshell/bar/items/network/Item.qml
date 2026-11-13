@@ -8,6 +8,7 @@ BarIndicator {
     value: Sys.wired || Sys.signal < 0 ? "" : String(Sys.signal)
     ink: Sys.signal < 0 && !Sys.wired ? bar.dim : bar.tone
     tip: Sys.wired ? "Network: wired" : !Sys.wifiOn ? "Wi-Fi is off" : Sys.signal < 0 ? "Offline" : "Wi-Fi " + Sys.signal + "%"
+    panel: "controlcenter"
     active: ControlCenter.open && ControlCenter.expanded === "wifi"
     onPressed: ControlCenter.showSection("wifi")
 }

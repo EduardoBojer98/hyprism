@@ -13,7 +13,7 @@ BarItem {
     minHeight: block && !bar.vertical ? bar.thickness - 1 : 0
     radius: block ? 0 : Theme.radiusSmall
     pad: block ? 12 : 8
-    color: block ? (active ? Qt.darker(Theme.accent, 1.15) : Theme.accent) : active ? pressedColor : hovered ? hover : "transparent"
+    color: block ? (lit ? Qt.darker(Theme.accent, 1.15) : Theme.accent) : lit ? pressedColor : hovered ? hover : "transparent"
     tip: "Clock: " + Sys.clockText
     active: Calendar.open === true
     opens: "calendar"

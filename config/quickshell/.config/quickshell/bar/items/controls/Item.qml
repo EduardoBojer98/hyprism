@@ -8,6 +8,7 @@ BarItem {
     actions: bar.cfg
     vertical: bar.vertical
     tip: "Quick tools"
+    panel: "utilitymenu"
     active: UtilityMenu.open
     onPressed: UtilityMenu.toggle()
     Text { text: "\u{F062E}"; color: Theme.accent; font { family: Theme.iconFont; pixelSize: 18 } }

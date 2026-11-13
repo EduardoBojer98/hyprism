@@ -97,6 +97,11 @@ Scope {
         }
     }
     function hide() { if (open) { open = false; closed() } }
+    onOpenChanged: {
+        if (open) Anchor.opened(name, targetScreen); else Anchor.closed(name)
+        if (open && focusItem) focusItem.forceActiveFocus()
+    }
+    onTargetScreenChanged: if (open) Anchor.opened(name, targetScreen)
     function toggle() { if (open) hide(); else show() }
 
     // Pointer position and monitor layout from Hyprland, in one call
@@ -242,5 +247,4 @@ Scope {
         onCleared: popup.hide()
     }
 
-    onOpenChanged: if (open && focusItem) focusItem.forceActiveFocus()
 }

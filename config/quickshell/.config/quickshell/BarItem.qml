@@ -1,3 +1,4 @@
+import Quickshell
 import QtQuick
 
 // One clickable bar item in any theme: its content in a row (or a column on a vertical bar), a
@@ -19,6 +20,8 @@ Rectangle {
     property string edge: Theme.barEdge     // the screen edge this item sits on (the dock sets its own)
     property var origin: undefined          // its window's top-left on the screen, when not at the edge (Anchor)
     property string opens: ""               // the panel it opens (CursorPopup name): from a shortcut it opens here too
+    property string panel: opens            // the panel whose being open lights it up: only on the screen it is open on
+    readonly property bool lit: active && (panel === "" || Anchor.openOn[panel] === undefined || Anchor.openOn[panel] === QsWindow.window?.screen)
     Component.onCompleted: if (opens !== "") Anchor.register(opens, item)
     Component.onDestruction: if (opens !== "") Anchor.unregister(item)
     property var actions: null              // your settings for this item (BarItems.settings): click, rightClick, scroll, tooltip
@@ -57,7 +60,7 @@ Rectangle {
     property real minHeight: 0          // e.g. a block that fills the bar's height
     implicitHeight: vertical ? grid.implicitHeight + pad * 2 : Math.max(grid.implicitHeight + 6, 24, minHeight)
     radius: Theme.radiusSmall
-    color: active ? pressedColor : interactive && area.containsMouse ? hover : "transparent"
+    color: lit ? pressedColor : interactive && area.containsMouse ? hover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
     scale: area.pressed ? Theme.pressScale : 1
     Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }

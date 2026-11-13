@@ -31,6 +31,11 @@ Singleton {
         at = Date.now()
     }
 
+    // which screen each open panel is on (CursorPopup keeps it), so only that screen's bar item lights up
+    property var openOn: ({})
+    function opened(name, screen) { const o = Object.assign({}, openOn); o[name] = screen; openOn = o }
+    function closed(name) { if (openOn[name] === undefined) return; const o = Object.assign({}, openOn); delete o[name]; openOn = o }
+
     property var triggers: []                  // bar items that open a panel: { name, item }
     function register(name, item) { triggers = triggers.concat([{ name: name, item: item }]) }
     function unregister(item) { triggers = triggers.filter(t => t.item !== item) }
