@@ -140,7 +140,19 @@ Singleton {
     readonly property int dockPad: ({ compact: 5, regular: 8, roomy: 12 })[Config.dock.size] ?? 8
     readonly property int dockLift: dockStyle.shape === "pill" || dockStyle.shape === "tile" ? 8 : 6   // gap to the edge
     readonly property int dockThickness: Config.dock.iconSize + dockPad * 2 + 8                      // icon + padding + marks
-    readonly property var dockWidgets: ({ clock: "Clock and date", load: "CPU load", media: "Media player", trash: "Trash", downloads: "Downloads" })   // dock.widgets ids
+    readonly property var dockWidgets: ({   // dock.widgets ids, in the order Settings lists the unused ones
+        clock: { name: "Clock", about: "An analogue clock; click for the calendar" },
+        date: { name: "Date", about: "Today's weekday and day; click for the calendar" },
+        weather: { name: "Weather", about: "The sky and temperature now; click for the forecast" },
+        media: { name: "Media player", about: "Cover and progress of what's playing; click to pause, scroll to skip" },
+        volume: { name: "Volume", about: "The output level; click to mute, scroll to change" },
+        battery: { name: "Battery", about: "Charge left, on computers with a battery" },
+        load: { name: "CPU load", about: "How busy the processor is; click for the system monitor" },
+        network: { name: "Network speed", about: "Download and upload speed right now" },
+        screenshot: { name: "Screenshot", about: "Click to capture an area; right-click for the other screen tools" },
+        trash: { name: "Trash", about: "What's in the trash; right-click twice to empty it" },
+        downloads: { name: "Downloads", about: "Files downloaded today; click to open the folder" }
+    })
     readonly property bool dockReserves: Config.dock.enabled && !dockInBar && !Config.dock.autoHide
     function dockShownOn(screen) { return Config.dock.enabled && !dockInBar && !Config.dock.hiddenOn.includes(screen?.name ?? "") }
 
