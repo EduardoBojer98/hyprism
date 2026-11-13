@@ -10,9 +10,9 @@ import QtQuick.Effects
 // Mission Control (Super+W, Spotlight "Mission Control", `qs ipc call overview toggle`): on the
 // focused screen, the windows of the current desktop spread out with live previews, and every
 // desktop of this screen in a strip along the top.
-//   Click a window to go to it · drag it onto a desktop to move it there · click a desktop (or
-//   press 1-9) to switch · + opens a new empty desktop · arrows/Tab + Enter pick a window ·
-//   Esc or a click on empty space closes.
+//   Click a window to go to it · drag it onto a desktop to move it there (drop on + for a new one)
+//   · click a desktop (or press 1-9) to switch · arrows/Tab + Enter pick a window · Esc closes.
+//   A click on empty space does nothing: it stays open until you pick something or press Esc.
 // Minimised windows (special:minimized) stay in the dock and aren't shown here.
 // Opening freezes a copy of the screen and blurs it behind everything (works in every theme, even
 // those with Hyprland's blur off); the windows then lift off their real places into the grid, and
@@ -163,7 +163,8 @@ Singleton {
                 saturation: 0.15 * root.t   // a little richer, as frosted glass reads
             }
             Rectangle { anchors.fill: parent; color: Theme.backdrop; opacity: root.t }
-            MouseArea { anchors.fill: parent; onClicked: root.hide(); Accessible.ignored: true }
+            // empty space does nothing on its own: Esc, a window or a desktop are what close this
+            MouseArea { anchors.fill: parent; Accessible.ignored: true }
 
             // ---- desktops: a glass bar along the top ----
             Glass {
