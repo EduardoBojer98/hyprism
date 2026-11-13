@@ -31,7 +31,7 @@ JsonAdapter {
         property bool previews: true            // combined: hover an open app for a picture of each window
         property bool thumbnails: true          // off: open windows show only their app icon
         property int thumbRefresh: 60           // s between still pictures (live only while hovered)
-        property list<string> widgets: []       // small tiles after the open windows, in order: clock | load | media | trash | downloads
+        property list<string> widgets: []       // small tiles after the open windows, in order: ids of Theme.dockWidgets (clock, date, weather, media, …)
         property list<string> pinned: ["firefox", "google-chrome", "com.microsoft.VSCode", "com.mitchellh.ghostty", "org.kde.dolphin"]
     }
     property JsonObject launcher: JsonObject {

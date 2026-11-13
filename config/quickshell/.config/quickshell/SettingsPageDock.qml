@@ -215,7 +215,8 @@ ColumnLayout {
                 id: wrow
                 required property string modelData
                 readonly property bool on: page.widgets.includes(modelData)
-                label: Theme.dockWidgets[modelData]
+                label: Theme.dockWidgets[modelData].name
+                hint: Theme.dockWidgets[modelData].about
                 Row {
                     spacing: 8
                     ArrowButton { visible: wrow.on; glyph: "\u{F0143}"; tip: "Move " + wrow.label + " earlier"; enabled: page.widgets.indexOf(wrow.modelData) > 0; onClicked: page.moveWidget(wrow.modelData, -1) }
