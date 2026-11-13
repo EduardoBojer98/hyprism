@@ -13,7 +13,8 @@ local sok, shared = pcall(require, "settings.shared")
 SHARED = sok and type(shared) == "table" and shared or nil
 
 local function monitor(name, overrides)
-    local spec = { output = name, mode = "preferred", position = "auto", scale = "auto" }
+    -- mirror = "" by default: Hyprland keeps an earlier mirror (a hand-off, a Mirror setting) unless told otherwise
+    local spec = { output = name, mode = "preferred", position = "auto", scale = "auto", mirror = "" }
     for k, v in pairs(DISPLAYS[name] or {}) do spec[k] = v end
     for k, v in pairs(overrides or {}) do spec[k] = v end
     if SHARED and SHARED.output == name then

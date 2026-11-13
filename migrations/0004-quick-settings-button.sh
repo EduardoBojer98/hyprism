@@ -8,5 +8,8 @@ add='if (.start | type) == "array" and (.start | index("controls") | not) then .
 new=$(jq "(.appearance.custom |= (if type == \"object\" then map_values(if (.barItems | type) == \"object\" then .barItems |= ($add) else . end) else . end))
           | (.bar.presets |= (if type == \"object\" then map_values($add) else . end))" "$f" 2>/dev/null) || return 0
 [[ $new == "$(jq . "$f")" ]] && return 0
-$DRY && { echo "   would add the quick-settings button to your saved bar layouts in $f"; return 0; }
+$DRY && {
+    echo "   would add the quick-settings button to your saved bar layouts in $f"
+    return 0
+}
 printf '%s\n' "$new" >"$f.tmp" && mv -f "$f.tmp" "$f"

@@ -182,7 +182,8 @@ ddc_set() {
     ddcutil --bus "$b" setvcp 60 "$1"
 }
 
-out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o)' >/dev/null; }
+# true while the monitor is this computer's own screen; false while it mirrors another one (handed over) or is gone
+out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o and ((.mirrorOf // "none") == "none"))' >/dev/null; }
 
 save_layout() {
     jq -n \
@@ -229,8 +230,12 @@ reclaim() {
 }
 
 to_pc() {
-    ddc_set "$PC" # switch first, while the laptop still sends a picture
-    sleep 2       # the input change causes a ~1 s HDMI disconnect blip; let it pass
+    # switch first, while the laptop still sends a picture; if the monitor refused, nothing changes here
+    ddc_set "$PC" || {
+        notify-send -a monswitch "Monitor didn't switch" "It didn't take the input change; check DDC/CI is on in its menu"
+        return 1
+    }
+    sleep 2 # the input change causes a ~1 s HDMI disconnect blip; let it pass
     release
 }
 to_laptop() {
@@ -252,7 +257,8 @@ case ${1:-toggle} in
         ;;
     toggle)
         flock 9
-        if out_enabled && [[ $(ddc_input) == "$LAPTOP" ]]; then to_pc; else to_laptop; fi
+        # decided by Hyprland's side (is it our own screen now?), not by a DDC read some monitors answer badly
+        if out_enabled; then to_pc; else to_laptop; fi
         ;;
     sync)
         # Align Hyprland to the actual DDC input on startup/resume without sending a DDC write.

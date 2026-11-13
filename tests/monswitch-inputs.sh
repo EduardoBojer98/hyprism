@@ -41,4 +41,46 @@ check "inputs for an unknown output is []" '[[ $(run inputs NOSUCH) == "[]" ]]'
 check "inputs without ddcutil is []" '[[ $(PATH="$t/empty" bash "$bin/monswitch" inputs 2>/dev/null) == "[]" ]]'
 check "inputs never wrote to the monitor" '[[ ! -e $t/WROTE ]]'
 
+# toggle: decided by Hyprland's side (own screen -> hand over, mirroring -> take back), never stuck on a mirror.
+# Fakes: hyprctl reports $t/sw/monitors.json and logs eval/dispatch; ddcutil logs setvcp (fails when $t/sw/refuse exists).
+sw=$t/sw
+mkdir -p "$sw/fake" "$sw/cfg/hypr/settings" "$sw/state"
+printf 'OUT=HDMI-A-1\nLAPTOP=0x11\nPC=0x12\nMIRROR=eDP-1\n' >"$sw/cfg/monswitch.conf"
+cat >"$sw/fake/hyprctl" <<FAKE
+#!/usr/bin/env bash
+case "\$*" in
+    "-j monitors") cat "$sw/monitors.json" ;;
+    "-j workspaces") echo '[{"id":3,"monitor":"HDMI-A-1"}]' ;;
+    *) echo "\$*" >>"$sw/hypr.log" ;;
+esac
+FAKE
+cat >"$sw/fake/ddcutil" <<FAKE
+#!/usr/bin/env bash
+[[ "\$*" == *setvcp* ]] || exit 0
+[[ -e "$sw/refuse" ]] && exit 1
+echo "\$*" >>"$sw/ddc.log"
+FAKE
+printf '#!/bin/sh\n' >"$sw/fake/notify-send"
+printf '#!/bin/sh\nexit 0\n' >"$sw/fake/sleep"
+printf '#!/bin/sh\necho /sys/devices/i2c-7\n' >"$sw/fake/readlink" # the monitor's i2c bus
+chmod +x "$sw/fake"/*
+own='[{"name":"eDP-1","mirrorOf":"none","activeWorkspace":{"id":1}},{"name":"HDMI-A-1","mirrorOf":"none","activeWorkspace":{"id":3}}]'
+mirrored='[{"name":"eDP-1","mirrorOf":"none","activeWorkspace":{"id":1}},{"name":"HDMI-A-1","mirrorOf":"eDP-1","activeWorkspace":{"id":1}}]'
+toggle() {
+    : >"$sw/hypr.log"
+    : >"$sw/ddc.log"
+    PATH="$sw/fake:$PATH" XDG_CONFIG_HOME="$sw/cfg" XDG_STATE_HOME="$sw/state" bash "$bin/monswitch" "${1:-toggle}" 2>/dev/null
+}
+echo "$own" >"$sw/monitors.json"
+toggle
+check "toggle on its own screen hands it over (PC input, then mirror)" 'grep -q "setvcp 60 0x12" "$sw/ddc.log" && grep -q "SHARED = { output = \"HDMI-A-1\", mirror = \"eDP-1\"" "$sw/hypr.log"'
+echo "$mirrored" >"$sw/monitors.json"
+toggle
+check "toggle while mirroring takes it back (mirror off, then laptop input)" 'grep -q "SHARED = nil" "$sw/hypr.log" && grep -q "setvcp 60 0x11" "$sw/ddc.log" && [[ ! -e $sw/cfg/hypr/settings/shared.lua ]]'
+toggle pc
+check "pc while already handed over leaves Hyprland alone" '! grep -q "SHARED =" "$sw/hypr.log"'
+echo "$own" >"$sw/monitors.json"
+touch "$sw/refuse"
+toggle
+check "a monitor that refuses the switch is not mirrored" '! grep -q "SHARED =" "$sw/hypr.log"'
 exit $fail
