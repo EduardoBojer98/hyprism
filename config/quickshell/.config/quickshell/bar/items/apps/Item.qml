@@ -90,16 +90,14 @@ Item {
                     color: app.active ? Theme.accentText : app.marked ? apps.bar.tone : apps.bar.dim
                     font { family: apps.bar.family; pixelSize: Theme.fontLabel; weight: app.active ? Font.Bold : Font.Normal }
                 }
-                Rectangle {   // open / focused mark, on the screen-edge side (icons only)
+                DockMark {   // open / focused mark, on the screen-edge side (icons only; same look as the floating dock)
                     parent: app
                     visible: app.marked && !app.asText
-                    readonly property bool far: Theme.barEdge === "top" || Theme.barEdge === "left"
-                    width: apps.bar.vertical ? 3 : (app.active ? 14 : 5)
-                    height: apps.bar.vertical ? (app.active ? 14 : 5) : 3
-                    radius: Theme.radius === 0 ? 0 : 1.5
-                    x: apps.bar.vertical ? (far ? 0 : parent.width - width) : (parent.width - width) / 2
-                    y: apps.bar.vertical ? (parent.height - height) / 2 : (far ? 0 : parent.height - height)
-                    color: app.active ? Theme.accent : Qt.alpha(apps.bar.tone, 0.6)
+                    vertical: apps.bar.vertical
+                    sign: Theme.barEdge === "bottom" || Theme.barEdge === "right" ? 1 : -1
+                    ink: Qt.alpha(apps.bar.tone, 0.6)
+                    style: Theme.dockStyle.mark
+                    on: app.active
                 }
             }
         }

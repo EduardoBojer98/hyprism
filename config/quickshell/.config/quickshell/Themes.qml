@@ -232,6 +232,7 @@ Singleton {
                 if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => (!settled || known.includes(i)) && l.indexOf(i) === n)
         if (o.dock === "bar") r.dock.edge = r.bar.edge
         else if (edges.includes(o.dock)) r.dock.edge = o.dock
+        if (["dot", "line", "bar", "ring", "diamond"].includes(o.dockMark)) r.dock.mark = o.dockMark
         return r
     }
     // WCAG relative luminance and contrast ratio

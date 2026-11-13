@@ -82,6 +82,12 @@ ColumnLayout {
             hint: "An icon, or with its name or title beside it"
             ConfigChoice { section: "dock"; key: "barLabels"; values: ["icon", "name", "title"]; labels: ["Icon", "App name", "Window title"] }
         }
+        SettingRow {
+            visible: Config.dock.enabled
+            label: "Active window mark"
+            hint: "Under each open app" + (page.inBar ? "" : "'s icon") + "; bigger on the focused one. Works the same in the bar."
+            ThemeChoice { key: "dockMark"; values: ["theme", "dot", "line", "bar", "ring", "diamond"]; labels: ["Default", "Dot", "Line", "Bar", "Ring", "Diamond"] }
+        }
         SaveTheme {}
     }
 
