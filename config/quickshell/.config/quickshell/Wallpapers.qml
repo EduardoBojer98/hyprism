@@ -7,7 +7,7 @@ import QtQuick
 // saved as hypr/settings/wallpaper for hyprpaper and the lock screen), the optional slideshow, and
 // the desktop blur: hyprpaper can't blur, so it is shown a blurred copy kept in ~/.cache/wallpaper-blur
 // (the link keeps the original; the lock screen blurs on its own).
-//   Wallpapers.images · Wallpapers.apply(path) · Wallpapers.next() · `qs ipc call wallpaper next`
+//   Wallpapers.images · Wallpapers.apply(path) · Wallpapers.pick(path) · Wallpapers.next() · `qs ipc call wallpaper next`
 Singleton {
     id: root
 
@@ -58,10 +58,16 @@ Singleton {
         apply(list[i])
     }
 
-    // every image in the folders (and one level of subfolders), plus the one shown now
+    // A wallpaper you pick yourself stays when you switch themes (Settings > Themes > Wallpaper turns it back on)
+    function pick(path) {
+        Config.set("appearance", "wallpaper", false)
+        apply(path)
+    }
+
+    // every image in the folders (and one level of subfolders), every theme's own wallpaper, plus the one shown now
     Process {
         id: lister
-        command: ["sh", "-c", "for d in \"$@\"; do [ -d \"$d\" ] && find -L \"$d\" -maxdepth 2 -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \\); done | sort -u; echo '--'; readlink -f \"$HOME/.config/hypr/settings/wallpaper\"",
+        command: ["sh", "-c", "{ for d in \"$@\"; do [ -d \"$d\" ] && find -L \"$d\" -maxdepth 2 -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \\); done; theme-wallpaper --all 2>/dev/null; } | sort -u; echo '--'; readlink -f \"$HOME/.config/hypr/settings/wallpaper\"",
                   "sh"].concat(root.c.folders.map(root.expand))
         stdout: StdioCollector {
             onStreamFinished: {

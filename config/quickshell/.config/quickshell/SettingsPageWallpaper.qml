@@ -3,7 +3,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Wallpaper: image folders, an optional slideshow, and a grid of every image in those folders.
+// Wallpaper: image folders, an optional slideshow, and a grid of every image in those folders and every theme's own.
 // Click an image to use it now (the lock screen follows). With the slideshow on "Selected
 // images", the round badge on each image adds it to or removes it from the rotation.
 ColumnLayout {
@@ -138,10 +138,10 @@ ColumnLayout {
                         asynchronous: true
                     }
                     MouseArea {
-                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Wallpapers.apply(tile.modelData)
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Wallpapers.pick(tile.modelData)
                         Accessible.role: Accessible.Button
                         Accessible.name: "Use " + tile.modelData.split("/").pop() + " as the wallpaper"
-                        Accessible.onPressAction: Wallpapers.apply(tile.modelData)
+                        Accessible.onPressAction: Wallpapers.pick(tile.modelData)
                     }
                     Rectangle {   // slideshow badge
                         visible: page.picking

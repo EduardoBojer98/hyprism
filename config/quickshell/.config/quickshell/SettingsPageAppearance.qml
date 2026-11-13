@@ -164,7 +164,7 @@ ColumnLayout {
         title: "Everywhere"
         SettingRow {
             label: "Theme wallpaper"
-            hint: "Each theme brings its own picture; off keeps yours (Wallpaper page)"
+            hint: "Each theme brings its own picture; off keeps yours. Picking one on the Wallpaper page turns this off"
             ConfigToggle { section: "appearance"; key: "wallpaper" }
         }
         SettingRow {
