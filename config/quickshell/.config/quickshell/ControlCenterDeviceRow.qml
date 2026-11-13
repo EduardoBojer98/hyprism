@@ -25,7 +25,7 @@ Rectangle {
     Rectangle {
         id: badge
         anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
-        width: 28; height: 28; radius: 14
+        width: 28; height: 28; radius: Theme.radius === 0 ? 0 : 14
         color: dr.selected ? Theme.accent : Theme.fillHover
         Behavior on color { ColorAnimation { duration: Theme.anim } }
         Text {
@@ -63,7 +63,7 @@ Rectangle {
             id: actionPill
             visible: drArea.containsMouse && dr.action !== ""
             anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-            width: actionText.implicitWidth + 16; height: 22; radius: 11
+            width: actionText.implicitWidth + 16; height: 22; radius: Theme.radius === 0 ? 0 : 11
             color: Theme.fillActive
             Text { id: actionText; anchors.centerIn: parent; text: dr.action; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
         }

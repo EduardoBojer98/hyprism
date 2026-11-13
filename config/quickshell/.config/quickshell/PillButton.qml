@@ -19,7 +19,7 @@ Rectangle {
 
     implicitWidth: label.implicitWidth + 28
     implicitHeight: Math.max(30, Theme.hit)
-    radius: height / 2
+    radius: Theme.radius === 0 ? 0 : height / 2
     // disabled: a plain, quiet button (a faded accent pill reads as a broken one)
     readonly property bool filled: primary && enabled
     color: filled ? (area.containsMouse ? Qt.lighter(Theme.accent, 1.08) : Theme.accent)

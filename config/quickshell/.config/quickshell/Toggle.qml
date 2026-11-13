@@ -22,13 +22,13 @@ Rectangle {
 
     implicitWidth: 42
     implicitHeight: 24
-    radius: height / 2
+    radius: Theme.radius === 0 ? 0 : height / 2
     color: checked ? Theme.accent : Theme.fillActive
     border { color: Theme.stroke; width: 1 }
     Behavior on color { ColorAnimation { duration: Theme.anim } }
 
     Rectangle {
-        width: 18; height: 18; radius: 9
+        width: 18; height: 18; radius: Theme.radius === 0 ? 0 : 9
         anchors.verticalCenter: parent.verticalCenter
         x: toggle.checked ? parent.width - width - 3 : 3
         color: Theme.thumb

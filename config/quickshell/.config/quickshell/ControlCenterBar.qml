@@ -19,7 +19,7 @@ Item {
     Rectangle {
         id: track
         anchors.fill: parent
-        radius: height / 2
+        radius: Theme.radius === 0 ? 0 : height / 2   // square themes keep square controls
         color: Theme.fill
         Rectangle {
             width: Math.max(track.height, track.width * bar.v)
