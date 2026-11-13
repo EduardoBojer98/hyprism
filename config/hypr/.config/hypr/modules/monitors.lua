@@ -13,14 +13,34 @@ local sok, shared = pcall(require, "settings.shared")
 SHARED = sok and type(shared) == "table" and shared or nil
 
 local function monitor(name, overrides)
-    -- mirror = "" by default: Hyprland keeps an earlier mirror (a hand-off, a Mirror setting) unless told otherwise
-    local spec = { output = name, mode = "preferred", position = "auto", scale = "auto", mirror = "" }
+    -- mirror and disabled are always said: Hyprland keeps an earlier value (a hand-off, a Mirror setting) otherwise
+    local spec = { output = name, mode = "preferred", position = "auto", scale = "auto", mirror = "", disabled = false }
     for k, v in pairs(DISPLAYS[name] or {}) do spec[k] = v end
     for k, v in pairs(overrides or {}) do spec[k] = v end
     if SHARED and SHARED.output == name then
-        spec = { output = name, mode = SHARED.mode, position = "auto", scale = 1, mirror = SHARED.mirror }
+        spec = { output = name, mode = SHARED.mode, position = "auto", scale = 1, mirror = SHARED.mirror, disabled = false }
     end
+    if SHARED and SHARED.output == name then HANDED = name end
     hl.monitor(spec)
+end
+
+-- A screen that stops mirroring isn't announced to apps again (no bar, no dock, no screenshots there), and a
+-- reload doesn't even end the mirror. get_monitors() leaves a mirroring screen out, so a moment after applying,
+-- every screen that should be its own but is missing is switched off and on once (an unplugged one: harmless).
+local function reannounce()
+    local shown = {}
+    for _, m in ipairs(hl.get_monitors()) do shown[m.name] = true end
+    local names = {}
+    for name, d in pairs(DISPLAYS) do
+        if name:sub(1, 1) ~= "_" and not d.disabled and (d.mirror or "") == "" then names[name] = true end
+    end
+    if HANDED then names[HANDED] = true end -- the shared monitor, when it isn't in the saved layout
+    for name in pairs(names) do
+        if not shown[name] and not (SHARED and SHARED.output == name) then
+            hl.monitor({ output = name, disabled = true })
+            monitor(name)
+        end
+    end
 end
 
 -- Options live under DISPLAYS._options (Settings > Displays > Advanced); each falls back to the old behaviour.
@@ -51,6 +71,7 @@ function apply_displays()
         -- X11 apps draw at real pixels instead of being stretched by the scale (stretching blurs their text).
         xwayland = { force_zero_scaling = option("xwaylandNativeScale", true) },
     })
+    hl.timer(reannounce, { timeout = 600, type = "oneshot" })
 end
 
 -- Laptop panel rotation for tablet mode: hyprctl eval 'laptop_panel(1)' (0 normal … 3 = 270°).
