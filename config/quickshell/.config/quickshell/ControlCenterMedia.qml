@@ -59,7 +59,7 @@ ColumnLayout {
                 ]
                 Rectangle {
                     required property var modelData
-                    width: 32; height: 32; radius: 16
+                    width: 32; height: 32; radius: Theme.radius === 0 ? 0 : 16
                     color: mediaArea.containsMouse && modelData[2] ? Theme.fillHover : "transparent"
                     Text {
                         anchors.centerIn: parent

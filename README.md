@@ -38,7 +38,7 @@ Hyprland + a Quickshell shell for Arch, CachyOS and Fedora, switched in one step
 | Theme | The idea | Bar | Motion |
 |---|---|---|---|
 | **Pebble** | soft and round, glass, coral and sea green | three floating glass pills at the top | soft, a touch of spring |
-| **Monolith** | the desktop as tmux, acid lime | a mono status line at the bottom with your apps and an inverse lime clock | near-instant |
+| **Monolith** | the desktop as tmux, acid lime | a mono status line at the top with your apps and an inverse lime clock | near-instant |
 | **Console** | amber HUD | a framed caps readout, rules between items, corner brackets, glowing panels | crisp snap-on |
 | **Poster** | loud and flat, red and cobalt on paper | a paper bar with huge workspace blocks, hard shadows | slams in |
 | **Glass** | liquid glass, electric blue to violet | a floating glass bar with a lit rim, glowing window frames | smooth ease-out |

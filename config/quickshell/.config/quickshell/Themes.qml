@@ -117,7 +117,7 @@ Singleton {
     // every bar item: the folders in bar/items/ (BarItems), named and ordered for Settings > Menu Bar
     readonly property var barItems: BarItems.catalogue
     function barItem(id) { return barItems.find(i => i.id === id) ?? { id: id, name: id, glyph: "\u{F02D7}" } }
-    readonly property int wallVersion: 8   // = VERSION in scripts/theme-wallpaper (the picture's file name)
+    readonly property int wallVersion: 9   // = VERSION in scripts/theme-wallpaper (the picture's file name)
     function get(id) { return list.find(r => r.id === id) ?? list[0] }
 
     // Your adjustments to a theme (Settings > Themes > Adjust), saved per theme in

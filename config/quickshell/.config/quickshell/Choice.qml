@@ -26,7 +26,7 @@ Rectangle {
 
     implicitWidth: row.implicitWidth + 6
     implicitHeight: Math.max(28, Theme.hit)
-    radius: height / 2
+    radius: Theme.radius === 0 ? 0 : height / 2
     color: Theme.fill
     border { color: Theme.stroke; width: 1 }
 
@@ -40,7 +40,7 @@ Rectangle {
                 required property int index
                 width: label.implicitWidth + (Theme.hit ? 32 : 22)
                 height: choice.height - 6
-                radius: height / 2
+                radius: Theme.radius === 0 ? 0 : height / 2
                 Accessible.role: Accessible.RadioButton
                 Accessible.name: String(modelData)
                 Accessible.checkable: true

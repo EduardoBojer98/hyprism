@@ -32,7 +32,7 @@ Item {
         id: track
         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
         height: slider.plain ? 6 : parent.height
-        radius: height / 2
+        radius: Theme.radius === 0 ? 0 : height / 2
         color: Theme.fill
         border { color: slider.plain ? Theme.stroke : "transparent"; width: slider.plain ? 1 : 0 }
         clip: true
@@ -40,14 +40,14 @@ Item {
         Rectangle {
             width: slider.plain ? thumb.x + thumb.width / 2 : Math.max(track.height, track.width * slider.v)
             height: parent.height
-            radius: height / 2
+            radius: Theme.radius === 0 ? 0 : height / 2
             color: Theme.selected
         }
     }
     Rectangle {   // thumb (plain only)
         id: thumb
         visible: slider.plain
-        width: Math.min(slider.height, 18); height: width; radius: width / 2
+        width: Math.min(slider.height, 18); height: width; radius: Theme.radius === 0 ? 0 : width / 2
         x: (slider.width - width) * slider.v
         anchors.verticalCenter: parent.verticalCenter
         color: Theme.thumb

@@ -13,7 +13,7 @@ set -euo pipefail
 case ${1:-} in -h | --help) usage ;; esac
 command -v magick >/dev/null || die "needs ImageMagick (magick)"
 
-VERSION=8
+VERSION=9
 out_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hyprism/wallpapers"
 mkdir -p "$out_dir"
 W=2560 H=1600

@@ -79,7 +79,7 @@ Rectangle {
     Rectangle {   // dropdown button: a small round badge that reads on both the light (on) and dark (off) tile
         visible: qt.expandable
         anchors { right: parent.right; top: parent.top; margins: 5 }
-        width: 20; height: 20; radius: 10
+        width: 20; height: 20; radius: Theme.radius === 0 ? 0 : 10
         color: qt.active ? Qt.alpha(Theme.tileOnText, chevArea.containsMouse || qt.isExpanded ? 0.16 : 0.09)
                          : chevArea.containsMouse || qt.isExpanded ? Theme.fillActive : Theme.fillHover
         Behavior on color { ColorAnimation { duration: Theme.animFast } }

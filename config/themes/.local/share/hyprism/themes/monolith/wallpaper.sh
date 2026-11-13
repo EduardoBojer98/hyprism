@@ -10,14 +10,14 @@ wallpaper() {
                 -fill '#11140f' -draw "$(for y in $(seq 0 6 $H); do printf 'rectangle 0,%d %d,%d ' "$y" "$W" "$((y + 2))"; done)" \
                 -font 'JetBrainsMono-NF-Bold' -pointsize 300 -fill '#151813' -gravity southwest -annotate +80+60 "$(hostname 2>/dev/null || cat /etc/hostname)" \
                 -font 'JetBrainsMono-NF-Bold' -pointsize 72 -fill '#b6ff3b' -gravity southwest -annotate +100+430 '~ $' \
-                -fill '#b6ff3b' -draw 'rectangle 330,1100 372,1172' "$out"
+                -fill '#b6ff3b' -draw 'rectangle 274,1100 317,1172' "$out"
             ;;
         monolith-light) # the terminal on paper: faint scanlines, the machine's name, an olive prompt and cursor
             magick -size ${W}x${H} xc:'#eceee6' \
                 -fill '#e5e8de' -draw "$(for y in $(seq 0 6 $H); do printf 'rectangle 0,%d %d,%d ' "$y" "$W" "$((y + 2))"; done)" \
                 -font 'JetBrainsMono-NF-Bold' -pointsize 300 -fill '#dfe2d6' -gravity southwest -annotate +80+60 "$(hostname 2>/dev/null || cat /etc/hostname)" \
                 -font 'JetBrainsMono-NF-Bold' -pointsize 72 -fill '#4a7d00' -gravity southwest -annotate +100+430 '~ $' \
-                -fill '#4a7d00' -draw 'rectangle 330,1100 372,1172' "$out"
+                -fill '#4a7d00' -draw 'rectangle 274,1100 317,1172' "$out"
             ;;
         *) return 1 ;;
     esac

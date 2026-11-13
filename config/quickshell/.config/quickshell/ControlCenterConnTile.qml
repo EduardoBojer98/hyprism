@@ -42,7 +42,7 @@ Rectangle {
     Rectangle {   // round toggle (inline: components declared in this file can't nest)
         id: disc
         anchors { left: parent.left; leftMargin: 9; verticalCenter: parent.verticalCenter }
-        width: 32; height: 32; radius: 16
+        width: 32; height: 32; radius: Theme.radius === 0 ? 0 : 16
         color: conn.active ? Theme.tileOn : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
         border { width: conn.active && Theme.washTiles ? 1 : 0; color: Theme.tileOnBorder }
         scale: discArea.pressed ? 0.92 : 1
