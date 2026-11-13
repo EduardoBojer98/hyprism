@@ -7,6 +7,8 @@ import QtQuick.Effects
 
 // Dock part: the open-app mark on the edge side of an icon (theme dock.mark, Settings > Dock > Active window
 // mark): a dot, a short line, a square bar, a hollow ring or a diamond; bigger and in the accent when focused.
+// side (Settings > Dock > Mark position): "edge" toward the screen edge, "inner" the other way, "left" beside
+// the icon (the top on a vertical bar or dock).
 // Pass a `dock` (Dock.qml's root: vertical, sign, ink, indicator) in the floating dock, or the four props
 // directly (vertical, sign, ink, style) from anywhere else, such as the dock item inside the bar.
 Rectangle {
@@ -16,6 +18,7 @@ Rectangle {
     property int sign: dock ? dock.sign : -1          // +1: mark sits toward the bottom/right of the icon
     property color ink: dock ? dock.ink : Theme.text
     property string style: dock ? dock.indicator : "dot"
+    property string side: dock ? dock.markSide : "edge"
     property bool on: false
     property bool urgent: false
     readonly property bool round: style === "dot" || style === "ring"
@@ -23,10 +26,12 @@ Rectangle {
                                : round || style === "diamond" ? (on ? 9 : 7) : 4
     readonly property real thick: style === "dot" ? 4 : style === "ring" ? len : style === "diamond" ? len : 3
     readonly property color tone: urgent ? Theme.warning : on ? Theme.accent : ink
-    x: vertical ? (sign > 0 ? parent.width - thick - 1 : 1) : (parent.width - width) / 2
-    y: vertical ? (parent.height - height) / 2 : (sign > 0 ? parent.height - thick - 1 : 1)
-    width: vertical ? thick : len
-    height: vertical ? len : thick
+    readonly property bool upright: side === "left" ? !vertical : vertical   // a standing mark, beside the icon
+    readonly property int towards: side === "left" ? -1 : side === "inner" ? -sign : sign
+    x: upright ? (towards > 0 ? parent.width - thick - 1 : 1) : (parent.width - width) / 2
+    y: upright ? (parent.height - height) / 2 : (towards > 0 ? parent.height - thick - 1 : 1)
+    width: upright ? thick : len
+    height: upright ? len : thick
     radius: style === "bar" || style === "diamond" ? 0 : thick / 2
     rotation: style === "diamond" ? 45 : 0
     color: style === "ring" ? "transparent" : tone

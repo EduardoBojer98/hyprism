@@ -97,6 +97,7 @@ Item {
                     sign: Theme.barEdge === "bottom" || Theme.barEdge === "right" ? 1 : -1
                     ink: Qt.alpha(apps.bar.tone, 0.6)
                     style: Theme.dockStyle.mark
+                    side: Theme.dockStyle.markSide ?? "edge"
                     on: app.active
                 }
             }

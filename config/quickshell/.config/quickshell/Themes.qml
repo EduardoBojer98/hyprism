@@ -131,7 +131,8 @@ Singleton {
         // Settings > Menu Bar and Dock: where this theme's bar and dock go and what the bar holds
         barEdge:  "bar.edge",      barSize: "bar.size (px)",   barFloating: "bar.floating",
         barItems: "bar.start / center / end ({ start: [...], center: [...], end: [...] })",
-        dock:     "dock.edge: bar (inside the bar), bottom, left, right or top"
+        dock:     "dock.edge: bar (inside the bar), bottom, left, right or top",
+        dockMark: "dock.mark: dot, line, bar, ring or diamond",   dockMarkSide: "dock.markSide: edge, inner or left"
     })
     // write one adjustment for the active theme (undefined removes it); "" when saved, else why not
     function adjust(key, value) {
@@ -233,6 +234,7 @@ Singleton {
         if (o.dock === "bar") r.dock.edge = r.bar.edge
         else if (edges.includes(o.dock)) r.dock.edge = o.dock
         if (["dot", "line", "bar", "ring", "diamond"].includes(o.dockMark)) r.dock.mark = o.dockMark
+        if (["edge", "inner", "left"].includes(o.dockMarkSide)) r.dock.markSide = o.dockMarkSide
         return r
     }
     // WCAG relative luminance and contrast ratio

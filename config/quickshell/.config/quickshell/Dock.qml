@@ -18,6 +18,7 @@ PanelWindow {
     readonly property var ds: Theme.dockStyle
     readonly property string shape: ds.shape          // pill | tile | block
     readonly property string indicator: ds.mark       // line | dot | bar
+    readonly property string markSide: ds.markSide ?? "edge"   // edge | inner | left
     readonly property string hoverStyle: ds.hover     // lift | grow | plate
     readonly property int lift: Theme.dockLift        // gap to the screen edge
     readonly property string edge: Theme.dockEdge
