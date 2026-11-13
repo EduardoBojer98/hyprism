@@ -4,7 +4,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Small utility menu behind the system logo at the left end of the bar (also
+// Small utility menu behind the quick-tools button at the left end of the bar (bar item controls; also
 // `qs ipc call utilitymenu toggle`): this computer, quick tools, then Power… which opens the
 // power menu (PowerMenu.qml).
 Singleton {
