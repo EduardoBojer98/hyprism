@@ -26,7 +26,7 @@ BarItem {
     readonly property string shownValue: (typeof format === "string" && format !== ""
                                           ? format.replace("{value}", value).replace("{word}", word) : value)
                                          + (alarm === 2 ? " !!" : alarm === 1 ? " !" : "")
-    readonly property bool asWords: bar.words || (bar.mixed && textual && !bar.vertical)
+    property bool asWords: bar.words || (bar.mixed && textual && !bar.vertical)
     property color ink: alarm === 2 ? Theme.error : alarm === 1 ? Theme.warning : bar.tone
 
     actions: cfg

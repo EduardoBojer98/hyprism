@@ -9,7 +9,9 @@ BarItem {
     required property var bar
     readonly property var cfg: bar.cfg
     // only names the registry knows, each once
-    readonly property var chosen: Array.from(new Set((Array.isArray(cfg.metrics) ? cfg.metrics : []).filter(id => Metrics.registry[id] !== undefined)))
+    // Array.from, not Array.isArray: a list read from settings.json at start is a Qt list, not a JS array, and
+    // isArray said no, so after every shell start the item had no readings and hid itself
+    readonly property var chosen: Array.from(new Set(Array.from(cfg.metrics ?? []).filter(id => Metrics.registry[id] !== undefined)))
     readonly property bool detailed: cfg.mode === "detailed"
     function above(id) {   // "only show above a level": hidden below it
         const floor = cfg.onlyAbove?.[id]
@@ -18,7 +20,7 @@ BarItem {
 
     actions: cfg
     vertical: bar.vertical
-    spacing: detailed ? 8 : 4
+    spacing: 10
     pad: 4
     shown: chosen.some(id => Metrics.has(id) && above(id))
     active: Sensors.open
@@ -37,8 +39,9 @@ BarItem {
             pad: 2
             shown: Metrics.has(modelData) && root.above(modelData)
             tip: ""
-            // your own text per reading, else "word value" in detailed mode, else just the value
-            format: root.cfg.formats?.[modelData] ?? (root.detailed && !root.bar.words ? "{word} {value}" : "")
+            // Icons (compact): symbol and number, in every bar voice. Labels (detailed): short name and number.
+            asWords: root.detailed
+            format: root.cfg.formats?.[modelData] ?? ""
             icon: root.cfg.icons?.[modelData] ?? ""
             warnAt: root.cfg.thresholds?.[modelData]?.warn ?? entry?.warn
             criticalAt: root.cfg.thresholds?.[modelData]?.critical ?? entry?.critical

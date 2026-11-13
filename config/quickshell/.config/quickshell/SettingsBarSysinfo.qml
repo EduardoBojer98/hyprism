@@ -30,9 +30,9 @@ ColumnLayout {
     }
 
     SettingRow {
-        label: "Mode"
-        hint: "Compact: icon and number. Detailed: the name too"
-        Choice { options: ["Compact", "Detailed"]; index: si.item.merged.mode === "detailed" ? 1 : 0; Accessible.name: "Mode"
+        label: "Show readings as"
+        hint: "Icons: a symbol and the number. Labels: a short name and the number (\"ctmp 56°\")"
+        Choice { options: ["Icons", "Labels"]; index: si.item.merged.mode === "detailed" ? 1 : 0; Accessible.name: "Show readings as"
                  onPicked: i => si.item.put("mode", i === 1 ? "detailed" : "compact") }
     }
     SettingRow {
