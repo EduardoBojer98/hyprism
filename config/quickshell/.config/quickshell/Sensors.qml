@@ -19,8 +19,8 @@ Singleton {
     property var procs: []            // [{ name, cpu, mem }]
 
     // what the panel shows: asked for while it is visible, given back with exactly the same list
-    readonly property var panelIds: ["cpu", "cpu_temp", "cpu_freq", "gpu", "gpu_temp", "gpu_vram", "gpu_power",
-        "dgpu", "dgpu_temp", "dgpu_vram", "dgpu_power", "ram", "swap", "disk", "disk_io", "net", "battery",
+    readonly property var panelIds: ["cpu", "cpu_core_max", "cpu_temp", "cpu_freq", "gpu", "gpu_temp", "gpu_vram", "gpu_power",
+        "dgpu", "dgpu_temp", "dgpu_vram", "dgpu_power", "ram", "swap", "disk", "disk_io", "disk_temp", "net", "battery",
         "battery_power", "battery_time", "fans", "profile", "uptime", "load"]
     // the Control Center's temperature line needs only the CPU temperature
     readonly property var wantIds: popup.open ? panelIds : ControlCenter.open ? ["cpu_temp"] : []
@@ -103,7 +103,7 @@ Singleton {
                         Chip_ {
                             visible: Metrics.has("cpu") || Metrics.has("cpu_temp")
                             title: "CPU"; loadId: "cpu"; tempId: "cpu_temp"
-                            detail: Metrics.has("cpu_freq") ? Metrics.text("cpu_freq") : ""
+                            detail: [Metrics.has("cpu_freq") ? Metrics.text("cpu_freq") : "", Metrics.has("cpu_core_max") ? "busiest core " + Metrics.text("cpu_core_max") : ""].filter(x => x).join("  ")
                             cores: root.d.cpu?.cores ?? []
                         }
                         Chip_ {
@@ -160,6 +160,7 @@ Singleton {
                             Line { visible: Metrics.has("battery_power") && Metrics.value("battery_power") > 0; glyph: "\u{F0E0E}"; label: root.d.battery?.state === "charging" ? "Charging at" : "Battery draw"; value: Metrics.text("battery_power") }
                             Line { visible: Metrics.has("battery_time"); glyph: "\u{F0954}"; label: root.d.battery?.state === "charging" ? "Time to full" : "Time left"; value: Metrics.text("battery_time") }
                             Line { visible: Metrics.has("net"); glyph: "\u{F05A9}"; label: root.d.net?.iface || "No network"; value: Metrics.text("net") }
+                            Line { visible: Metrics.has("disk_temp"); glyph: "\u{F050F}"; label: "Drive temperature"; value: Metrics.text("disk_temp"); mark: root.flag("disk_temp") }
                             Line { visible: Metrics.has("disk_io"); glyph: "\u{F02CA}"; label: "Disk activity"; value: Metrics.text("disk_io") }
                             Repeater {
                                 model: Metrics.has("fans") ? root.d.fans : []

@@ -16,6 +16,19 @@ ColumnLayout {
         item.put("metrics", l)
     }
 
+    // thresholds.<id>.warn / .critical and onlyAbove.<id>: empty removes the entry (the reading's own level applies)
+    function setLevel(map, id, sub, text) {
+        const all = JSON.parse(JSON.stringify(item.merged[map] ?? {}))
+        const v = text.trim() === "" ? undefined : Number(text)
+        if (sub === "") { if (v === undefined) delete all[id]; else all[id] = v }
+        else {
+            const o = all[id] ?? {}
+            if (v === undefined) delete o[sub]; else o[sub] = v
+            if (Object.keys(o).length) all[id] = o; else delete all[id]
+        }
+        item.put(map, Object.keys(all).length ? all : undefined)
+    }
+
     SettingRow {
         label: "Mode"
         hint: "Compact: icon and number. Detailed: the name too"
@@ -67,5 +80,43 @@ ColumnLayout {
                 PillButton { text: "›"; Accessible.name: "Move " + modelData + " later"; onClicked: si.move(modelData, 1) }
             }
         }
+    }
+    Text {
+        Layout.fillWidth: true; Layout.margins: 16; Layout.bottomMargin: 4
+        visible: si.picked.length > 0
+        text: "Levels per reading. Warn: amber and a !. Critical: red and !!. Only above: hide it below that number. Empty: the reading's own. Press Enter to apply"
+        color: Theme.subtext; wrapMode: Text.Wrap
+        font { family: Theme.font; pixelSize: Theme.fontCaption }
+    }
+    Repeater {
+        model: si.picked.filter(id => Metrics.registry[id] !== undefined)
+        RowLayout {
+            id: lv
+            required property string modelData
+            readonly property var entry: Metrics.registry[modelData]
+            Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.bottomMargin: 4
+            spacing: 6
+            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: lv.entry.name; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+            LevelField { rid: lv.modelData; map: "thresholds"; sub: "warn"; label: "warn"; shown: lv.entry.warn }
+            LevelField { rid: lv.modelData; map: "thresholds"; sub: "critical"; label: "critical"; shown: lv.entry.critical }
+            LevelField { rid: lv.modelData; map: "onlyAbove"; sub: ""; label: "only above"; shown: undefined }
+        }
+    }
+
+    // one number of a reading; it follows the file while not being typed in
+    component LevelField: TextField {
+        id: lf
+        property string rid
+        property string map
+        property string sub
+        property string label
+        property var shown                       // the reading's own level, shown as the hint
+        readonly property var stored: sub === "" ? si.item.merged[map]?.[rid] : si.item.merged[map]?.[rid]?.[sub]
+        width: 70
+        placeholder: shown === undefined ? label : String(shown)
+        Accessible.name: (Metrics.registry[rid]?.name ?? rid) + " " + label
+        invalid: text.trim() !== "" && isNaN(Number(text))
+        onAccepted: if (!invalid) si.setLevel(map, rid, sub, text)
+        Binding on text { value: lf.stored === undefined ? "" : String(lf.stored); when: !lf.children[0].activeFocus; restoreMode: Binding.RestoreNone }
     }
 }

@@ -76,7 +76,7 @@ qs ipc call config set bar items '{"weather":{"warn":30}}'
 
 The `sysinfo` item shows any readings you pick, in your order: see
 [its README](../config/quickshell/.config/quickshell/bar/items/sysinfo/README.md) for the list and its settings.
-`cpu`, `memory` and `gpu` are single-reading items on the same service. Readings come from one small program,
+`cpu`, `memory` and `gpu` are single-reading items on the same service; `sysinfo` combines them and more (its settings page has a switch, order and warn / only-above levels per reading). Readings come from one small program,
 `metrics` (`metrics once` prints them all as JSON), which runs only while a bar shows one of them.
 
 ## Presets and screens

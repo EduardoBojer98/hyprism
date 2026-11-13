@@ -47,6 +47,8 @@ put "$r" /proc/diskstats "   259       0 nvme0n1 100 0 2000 0 50 0 1000 0 0 0 0
    259       1 nvme0n1p1 100 0 9999 0 50 0 9999 0 0 0 0"
 put "$r" /sys/class/hwmon/hwmon0/name k10temp
 put "$r" /sys/class/hwmon/hwmon0/temp1_input 61500
+put "$r" /sys/class/hwmon/hwmon2/name nvme
+put "$r" /sys/class/hwmon/hwmon2/temp1_input 38200
 put "$r" /sys/class/hwmon/hwmon1/name somefans
 put "$r" /sys/class/hwmon/hwmon1/fan1_input 3600
 put "$r" /sys/class/hwmon/hwmon1/fan2_input 4000
@@ -79,6 +81,7 @@ expect "the output is one JSON object" 'type' object
 expect "cpu load is 0 when nothing changed between samples" '.cpu.pct' 0
 expect "one entry per core" '.cpu.cores | length' 2
 expect "cpu temperature from the sensor found by name" '.cpu_temp' 61.5
+expect "drive temperature from the nvme sensor" '.disk_temp' 38.2
 expect "cpu frequency is the average of the cores, in MHz" '.cpu_freq' 2500
 expect "built-in card load" '.gpu.pct' 12
 expect "built-in card memory in MB" '.gpu.vram_used' 512
@@ -137,7 +140,7 @@ put "$r" /sys/class/hwmon/hwmon0/temp1_input 40000
 json=$(HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/desktop.toml bash "$m" once)
 expect "desktop: still one JSON object" 'type' object
 expect "desktop: Intel CPU temperature" '.cpu_temp == 40' true
-expect "desktop: what it lacks is left out" '[.battery, .fans, .dgpu, .gpu, .swap, .profile] | map(select(. != null)) | length' 0
+expect "desktop: what it lacks is left out" '[.battery, .fans, .dgpu, .gpu, .swap, .profile, .disk_temp] | map(select(. != null)) | length' 0
 expect "desktop: memory" '.ram.pct' 50
 
 # --- the command line
@@ -146,7 +149,7 @@ out=$(HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/desktop.toml bash "$m" once nosuch 2>&
     fail=1
 }
 [[ $out == *"no such metric"* ]] && echo "ok: an unknown metric is refused by name"
-if [[ $(bash "$m" list | wc -l) == 15 ]]; then echo "ok: metrics list names all 15"; else
+if [[ $(bash "$m" list | wc -l) == 16 ]]; then echo "ok: metrics list names all 16"; else
     echo "xx metrics list"
     fail=1
 fi

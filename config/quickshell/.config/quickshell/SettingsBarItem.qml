@@ -66,8 +66,8 @@ SettingGroup {
             label: "Tooltip"
             Toggle { Accessible.name: "Tooltip"; checked: g.merged.tooltip !== false; onToggled: on => g.put("tooltip", on) }
         }
-        NumRow { label: "Warn at"; hint: "Amber and a ! from here. Empty: the item's own"; key: "warn" }
-        NumRow { label: "Critical at"; hint: "Red and !! from here. Empty: the item's own"; key: "critical" }
+        NumRow { visible: g.cur !== "sysinfo"; label: "Warn at"; hint: "Amber and a ! from here. Empty: the item's own"; key: "warn" }
+        NumRow { visible: g.cur !== "sysinfo"; label: "Critical at"; hint: "Red and !! from here. Empty: the item's own"; key: "critical" }
         NumRow { visible: g.base.interval !== undefined; label: "Update every"; hint: "Seconds between readings"; key: "interval"; min: 1 }
         SettingsBarSysinfo { visible: g.cur === "sysinfo"; Layout.fillWidth: true; item: g }
         SettingRow {

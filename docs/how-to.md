@@ -49,7 +49,7 @@ See [THEMES.md](THEMES.md).
 All keys: [bar.md](bar.md).
 
 **The system-info readings.** Same page, item `sysinfo`. File: `bar.items.sysinfo.metrics`, for example
-`["cpu", "cpu_temp", "ram"]`; also `mode`, `onlyAbove`, `thresholds`. The list of readings:
+`["cpu", "cpu_temp", "ram"]`; also `mode`, `interval`, `onlyAbove`, `thresholds` (levels per reading, set on the same page). The list of readings:
 [the sysinfo README](../config/quickshell/.config/quickshell/bar/items/sysinfo/README.md).
 
 **A different bar on my second screen.** Settings → Menu Bar → Screens. File: `bar.monitors` =
