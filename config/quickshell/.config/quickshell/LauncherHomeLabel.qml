@@ -7,5 +7,5 @@ Text {
     topPadding: Theme.spaceXs
     leftPadding: Theme.spaceXs
     color: Theme.subtext
-    font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+    font { family: Launcher.rowFont; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
 }

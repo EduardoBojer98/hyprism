@@ -34,6 +34,14 @@ See [THEMES.md](THEMES.md).
 **The cursor.** Settings → Appearance → Cursor (theme, size, add a theme). File: `appearance.cursorTheme`,
 `appearance.cursorSize`.
 
+**How Spotlight looks.** Settings → Search & Launcher → Style (a picture of each). File: `launcher.style` =
+`"theme"` (the theme's own, the default), `"spotlight"` (a floating search pill with round buttons),
+`"command"` (a slim bar across the top), `"launchpad"` (a big sheet of every app over a dark screen), `"drawer"`
+(rises from the bottom, apps first), `"sidebar"` (a full-height column on the left) or `"terminal"` (a square
+prompt in the mono face). A style picks only the place and shape; colours and fonts stay the theme's. What it shows
+before you type: `launcher.startView`. From a terminal: `qs ipc call config set launcher style '"drawer"'`.
+The styles are data in `Launcher.qml` (`styles`).
+
 ## The bar and the dock
 
 **Which items are in the bar.** Settings → Menu Bar → Items (drag between start, centre and end). File:

@@ -32,7 +32,7 @@ Column {
                 required property var modelData
                 width: (glance.width - glance.spacing * (glance.tiles.length - 1)) / glance.tiles.length
                 height: 52
-                radius: Theme.radius
+                radius: Launcher.corner === 0 ? 0 : Theme.radius
                 color: tileArea.containsMouse ? Theme.fillHover : Theme.fill
                 Text {
                     id: tileGlyph
@@ -43,8 +43,8 @@ Column {
                 }
                 Column {
                     anchors { left: tileGlyph.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-                    Text { width: parent.width; text: tile.modelData.title; elide: Text.ElideRight; maximumLineCount: 1; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium } }
-                    Text { width: parent.width; text: tile.modelData.sub; elide: Text.ElideRight; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                    Text { width: parent.width; text: tile.modelData.title; elide: Text.ElideRight; maximumLineCount: 1; color: Theme.text; font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: Font.Medium } }
+                    Text { width: parent.width; text: tile.modelData.sub; elide: Text.ElideRight; color: Theme.subtext; font { family: Launcher.rowFont; pixelSize: Theme.fontCaption } }
                 }
                 MouseArea { id: tileArea; Accessible.role: Accessible.Button; Accessible.name: tile.modelData.title; Accessible.onPressAction: tile.modelData.run(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tile.modelData.run() }
             }
@@ -52,9 +52,14 @@ Column {
     }
 
     LauncherHomeLabel { text: "Frequently used" }
-    Row {
+    // a centred row of up to 8 (two rows in a narrow panel); a few apps get wider cells instead of a gap at the end
+    Grid {
         id: freq
-        width: parent.width
+        readonly property int fits: Math.max(3, Math.min(8, Math.floor(home.width / 80)))
+        readonly property int perRow: Math.max(1, Math.min(Search.frequentApps.length, fits))
+        readonly property real cell: Math.floor(home.width / Math.max(perRow, Math.min(fits, 6)))
+        anchors.horizontalCenter: parent.horizontalCenter
+        columns: perRow
         z: 1   // name tooltips over the labels below
         Repeater {
             model: Search.frequentApps
@@ -63,11 +68,11 @@ Column {
                 required property var modelData
                 required property int index
                 readonly property bool current: Launcher.homeIndex === index
-                width: freq.width / 8; height: 106   // room for a two-line name ("Visual Studio Code")
+                width: freq.cell; height: 104   // room for a two-line name ("Visual Studio Code")
                 z: appArea.containsMouse ? 1 : 0
                 Rectangle {
                     anchors { fill: parent; margins: 3 }
-                    radius: Theme.radius
+                    radius: Launcher.corner === 0 ? 0 : Theme.radius
                     color: app.current ? Launcher.selection : appArea.containsMouse ? Theme.fillHover : "transparent"
                 }
                 IconImage {
@@ -85,7 +90,7 @@ Column {
                     wrapMode: Text.Wrap
                     maximumLineCount: 2
                     color: app.current ? Launcher.selText : Theme.text
-                    font { family: Theme.font; pixelSize: Theme.fontLabel }
+                    font { family: Launcher.rowFont; pixelSize: Theme.fontLabel }
                 }
                 ToolTipText { gap: -Theme.spaceS; shown: appArea.containsMouse && appName.truncated; text: app.modelData.title }
                 MouseArea { id: appArea; Accessible.role: Accessible.ListItem; Accessible.name: app.modelData.title; Accessible.onPressAction: Launcher.activate(app.modelData); anchors.fill: parent; hoverEnabled: true; onEntered: Launcher.homeIndex = app.index; onClicked: Launcher.activate(app.modelData) }
@@ -101,8 +106,9 @@ Column {
 
     LauncherHomeLabel { text: "Quick actions" }
     Grid {
+        id: quick
         width: parent.width
-        columns: 3
+        columns: Math.max(1, Math.min(3, Math.floor(home.width / 200)))
         columnSpacing: Theme.spaceXs
         rowSpacing: Theme.spaceXs
         Repeater {
@@ -110,7 +116,7 @@ Column {
             LauncherHomeRow {
                 required property var modelData
                 required property int index
-                width: (home.width - Theme.spaceXs * 2) / 3
+                width: (home.width - Theme.spaceXs * (quick.columns - 1)) / quick.columns
                 item: modelData
                 at: Search.frequentApps.length + Search.recentItems.length + index
             }

@@ -10,8 +10,9 @@ Rectangle {
     readonly property bool current: Launcher.homeIndex === at
     width: parent ? parent.width : 0
     height: Theme.rowHeight + 4
-    radius: Theme.radiusSmall
+    radius: Launcher.corner === 0 ? 0 : Theme.radiusSmall
     color: current ? Launcher.selection : hrArea.containsMouse ? Theme.fillHover : "transparent"
+    LauncherMark { visible: hr.current }
     Item {
         id: hrIcon
         anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
@@ -21,8 +22,8 @@ Rectangle {
     }
     Column {
         anchors { left: hrIcon.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-        Text { width: parent.width; text: hr.item.title; elide: Text.ElideRight; color: hr.current ? Launcher.selText : Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium } }
-        Text { width: parent.width; visible: !!hr.item.subtitle; text: hr.item.subtitle ?? ""; elide: Text.ElideMiddle; color: hr.current ? Launcher.selSub : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+        Text { width: parent.width; text: hr.item.title; elide: Text.ElideRight; color: hr.current ? Launcher.selText : Theme.text; font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: Font.Medium } }
+        Text { width: parent.width; visible: !!hr.item.subtitle; text: hr.item.subtitle ?? ""; elide: Text.ElideMiddle; color: hr.current ? Launcher.selSub : Theme.subtext; font { family: Launcher.rowFont; pixelSize: Theme.fontCaption } }
     }
     MouseArea { id: hrArea; Accessible.role: Accessible.ListItem; Accessible.name: hr.item.title; Accessible.onPressAction: Launcher.activate(hr.item); anchors.fill: parent; hoverEnabled: true; onEntered: Launcher.homeIndex = hr.at; onClicked: Launcher.activate(hr.item) }
 }

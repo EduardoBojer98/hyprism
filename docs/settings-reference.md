@@ -59,6 +59,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `showFiles` | `bool` | `true` |  |
 | `actions` | `list<var>` | `[]` |  |
 | `usage` | `var` | `{}` | launch counts, for ranking |
+| `style` | `string` | `"theme"` | theme (the theme's own) \| spotlight \| command \| launchpad \| drawer \| sidebar \| terminal (Launcher.qml styles) |
 | `columns` | `int` | `7` | apps per row in the apps grid |
 | `startView` | `string` | `"theme"` | theme (the theme's own) \| home (suggestions until you type) \| apps (grid) \| search (empty pill) |
 | `recent` | `list<string>` | `[]` | result keys, most recent first, for the home view |

@@ -12,12 +12,33 @@ ListView {
     boundsBehavior: Flickable.StopAtBounds
     highlightMoveDuration: Theme.animFast
 
-    Text {
+    // nothing to show: a quiet glyph, what happened, and what to try instead
+    Column {
         anchors.centerIn: parent
         visible: results.count === 0
-        text: Launcher.mode === "files" ? (Launcher.field.text ? "No files found" : "Start typing to search your home folder") : "No results"
-        color: Theme.subtext
-        font { family: Theme.font; pixelSize: Theme.fontSize }
+        spacing: Theme.spaceXs
+        readonly property bool waiting: Launcher.mode === "files" && !Launcher.field.text
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: Launcher.mode === "files" ? "\u{F024B}" : "\u{F0349}"
+            color: Theme.muted
+            font { family: Theme.iconFont; pixelSize: Theme.iconLarge }
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: parent.waiting ? "Start typing to search your home folder"
+                : Launcher.mode === "files" ? "No files match “" + Launcher.field.text.trim() + "”"
+                : "Nothing matches “" + Launcher.field.text.trim() + "”"
+            color: Theme.text
+            font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: Font.Medium }
+        }
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: !parent.waiting
+            text: "Try fewer letters, or Tab to another mode"
+            color: Theme.subtext
+            font { family: Launcher.rowFont; pixelSize: Theme.fontCaption }
+        }
     }
 
     delegate: Column {
@@ -40,14 +61,15 @@ ListView {
             topPadding: row.index === 0 ? 2 : Theme.spaceS
             bottomPadding: Theme.spaceXs
             color: Theme.subtext
-            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+            font { family: Launcher.rowFont; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
         }
 
         Rectangle {
             width: parent.width
             height: row.topHit ? 56 : Theme.rowHeight + 4
-            radius: Theme.radiusSmall
+            radius: Launcher.corner === 0 ? 0 : Theme.radiusSmall
             color: row.ListView.isCurrentItem ? Launcher.selection : rowArea.containsMouse ? Theme.fillHover : "transparent"
+            LauncherMark { visible: row.ListView.isCurrentItem }
 
             Item {
                 id: iconBox
@@ -73,7 +95,7 @@ ListView {
                     text: row.modelData.title
                     elide: Text.ElideRight
                     color: row.ListView.isCurrentItem ? Launcher.selText : Theme.text
-                    font { family: Theme.font; pixelSize: row.topHit ? Theme.fontTitle : Theme.fontSize; weight: row.topHit ? Font.DemiBold : Font.Medium }
+                    font { family: Launcher.rowFont; pixelSize: row.topHit ? Theme.fontTitle : Theme.fontSize; weight: row.topHit ? Font.DemiBold : Font.Medium }
                 }
                 Text {
                     width: parent.width
@@ -81,7 +103,7 @@ ListView {
                     text: row.modelData.subtitle ?? ""
                     elide: Text.ElideMiddle
                     color: row.ListView.isCurrentItem ? Launcher.selSub : Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                    font { family: Launcher.rowFont; pixelSize: Theme.fontCaption }
                 }
             }
             Text {
@@ -90,7 +112,7 @@ ListView {
                 visible: row.ListView.isCurrentItem
                 text: "↵"
                 color: Launcher.selSub
-                font { family: Theme.font; pixelSize: Theme.fontSize }
+                font { family: Launcher.rowFont; pixelSize: Theme.fontSize }
             }
             MouseArea {
                 id: rowArea
