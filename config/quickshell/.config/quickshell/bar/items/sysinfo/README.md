@@ -1,6 +1,6 @@
 # Bar item: sysinfo
 
-System info: any readings you pick, in your order, in one item. Click opens the system panel. The tooltip shows
+System info: the one monitoring item. It combines the separate CPU, memory and graphics items (which stay) and adds temperatures, drive, network, battery, fan and load readings; pick any, in your order. Click opens the system panel, which shows the same readings in more detail. The tooltip shows
 the longer line for each reading and its recent trend.
 
 ## Its settings (`bar.items.sysinfo` in `settings.json`)
@@ -12,14 +12,14 @@ the longer line for each reading and its recent trend.
 | `sparkline` | `true` | The recent trend in the tooltip |
 | `interval` | `2` | Seconds between readings |
 | `onlyAbove` | `{}` | Show a reading only at or above a level, e.g. `{ "cpu_temp": 70 }` |
-| `thresholds` | `{}` | Your own levels per reading, e.g. `{ "cpu": { "warn": 70, "critical": 90 } }` |
+| `thresholds` | `{}` | Warn and critical per reading (Settings > Menu Bar > Item settings > Levels per reading), e.g. `{ "cpu": { "warn": 70, "critical": 90 } }` |
 | `formats` | `{}` | Your own text per reading, e.g. `{ "ram": "{value} used" }` |
 | `icons` | `{}` | Your own glyph per reading |
 
 ## Readings
 
-`cpu`, `cpu_temp`, `cpu_freq`, `gpu`, `gpu_temp`, `gpu_vram`, `gpu_power`, `dgpu`, `dgpu_temp`, `dgpu_vram`,
-`dgpu_power`, `ram`, `swap`, `disk`, `disk_io`, `net`, `net_down`, `net_up`, `battery`, `battery_power`,
+`cpu`, `cpu_core_max`, `cpu_temp`, `cpu_freq`, `gpu`, `gpu_temp`, `gpu_vram`, `gpu_power`, `dgpu`, `dgpu_temp`, `dgpu_vram`,
+`dgpu_power`, `ram`, `swap`, `disk`, `disk_io`, `disk_temp`, `net`, `net_down`, `net_up`, `battery`, `battery_power`,
 `battery_time`, `fans`, `profile`, `uptime`, `load`.
 
 A reading your computer doesn't have (no battery, no second graphics card, no fan sensor) is skipped. The second

@@ -7,7 +7,7 @@
 #   metrics once [NAMES]              one JSON object (NAMES: comma list; default: all)
 #   metrics watch [NAMES] [SECONDS]   one JSON line every SECONDS (default 2), until stopped
 #
-# Names: cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio net battery fans profile uptime load
+# Names: cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio disk_temp net battery fans profile uptime load
 # The second graphics card (dgpu) is only asked for numbers while it is already awake, so reading it never
 # wakes it. Adding a metric: one m_<name> function below, its name in ALL, and a line in docs/bar.md.
 set -euo pipefail
@@ -16,7 +16,7 @@ set -euo pipefail
 case ${1:-} in -h | --help) usage ;; esac
 
 R=${HYPRISM_ROOT:-} # tests point this at a made-up /proc and /sys
-ALL=(cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio net battery fans profile uptime load)
+ALL=(cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio disk_temp net battery fans profile uptime load)
 declare -A PREV=() # last tick's counters, for the readings that are rates
 
 rd() { [[ -r $R$1 ]] && head -n1 "$R$1" 2>/dev/null || true; } # a missing file = this computer has no such reading
@@ -151,6 +151,16 @@ m_diskio() { # bytes per second read and written, whole disks only
     r=$RATE
     rate dio.w "$w"
     printf '"diskio":{"read":%s,"write":%s}' "$r" "$RATE"
+}
+m_disk_temp() { # hottest NVMe drive, degrees (its sensor is read straight from sysfs, no smartctl)
+    local h t best=""
+    for h in "$R"/sys/class/hwmon/hwmon*; do
+        [[ $(rd "${h#"$R"}/name") == nvme ]] || continue
+        t=$(milli "$(rd "${h#"$R"}/temp1_input")")
+        [[ -n $t && (-z $best || ${t%.*} -gt ${best%.*}) ]] && best=$t
+    done
+    [[ -n $best ]] && printf '"disk_temp":%s' "$best"
+    return 0
 }
 m_net() { # bytes per second down and up over real interfaces, and the one the default route uses
     local rx tx iface
