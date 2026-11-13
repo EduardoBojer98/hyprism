@@ -192,6 +192,9 @@ Singleton {
         radius: cc.style === "compact" ? Theme.radiusLarge : cc.style === "borderless" ? Theme.radius : Theme.radiusPanel
         border.width: cc.style === "borderless" ? 0 : 1
 
+        // empty background, inside the panel: a tile or a toggle above this still gets the click first
+        MouseArea { anchors.fill: parent; Accessible.ignored: true; onClicked: popup.hide() }
+
     // ---- header: the time large in the theme's display face, the date, then battery and the three
     // things you reach for (Settings, Lock, Power) as round buttons ----
     RowLayout {
@@ -252,6 +255,9 @@ Singleton {
         boundsBehavior: Flickable.StopAtBounds
         clip: true
         ScrollBar.vertical: GlassScrollBar {}
+
+    // empty background between and around the sections: a tile or a toggle above this still gets its own click first
+    MouseArea { anchors.fill: content; Accessible.ignored: true; onClicked: popup.hide() }
 
     GridLayout {   // one column; each section takes the row of its place in cc.shownSections
         id: content
