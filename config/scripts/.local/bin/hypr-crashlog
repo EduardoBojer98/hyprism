@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Evidence for Hyprland crashes and freezes around sleep, kept on disk in ~/.local/state/hyprism/logs.
+#   hypr-crashlog              report: sleeps that never woke, the last session's log, crash reports, core dumps
+#   hypr-crashlog keep         (autostart) copy this session's hyprland.log to disk as Hyprland writes it
+#   hypr-crashlog mark WORD    (hypridle) note "sleep" or "wake" and flush it to disk
+set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+
+dir=${XDG_STATE_HOME:-$HOME/.local/state}/hyprism/logs
+marks=$dir/hypr-crashlog.log # common.sh log() writes here
+
+case ${1:-report} in
+    mark)
+        [[ $# -eq 2 ]] || usage 1
+        log "$2"
+        sync # a forced power-off loses whatever is still only in RAM
+        ;;
+    keep)
+        # /run is RAM, so Hyprland's own log is gone after a forced power-off
+        src=${XDG_RUNTIME_DIR:-/run/user/$UID}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:?not in a Hyprland session}/hyprland.log
+        mkdir -p "$dir"
+        if [[ -f $dir/hyprland.log ]]; then mv -f "$dir/hyprland.log" "$dir/hyprland.prev.log"; fi
+        log "session start"
+        exec tail -n +1 -F "$src" >"$dir/hyprland.log" 2>/dev/null
+        ;;
+    report)
+        echo "== Sleeps that never woke (the machine froze asleep or while waking; Hyprland never got control back)"
+        awk '/ sleep$/ { s = $1 " " $2; next } / wake$/ { s = ""; next }
+             / session start$/ { if (s) print "  slept " s ", next session " $1 " " $2; s = "" }' "$marks" 2>/dev/null | tail -n 10 || true
+        echo "== Last sleep/wake marks ($marks)"
+        tail -n 8 "$marks" 2>/dev/null || echo "  none yet"
+        echo "== Previous session's Hyprland log, last 25 lines ($dir/hyprland.prev.log)"
+        tail -n 25 "$dir/hyprland.prev.log" 2>/dev/null || echo "  none yet"
+        echo "== Hyprland crash reports"
+        ls -lt "${XDG_CACHE_HOME:-$HOME/.cache}"/hyprland/hyprlandCrashReport*.txt 2>/dev/null | head -n 3 || echo "  none"
+        echo "== Hyprland core dumps (nested test sessions dump here too: check the command line with coredumpctl info PID)"
+        coredumpctl list --no-pager -q Hyprland 2>/dev/null | tail -n 5 || echo "  none"
+        echo "== Previous boot: suspend/resume lines, then its last lines"
+        journalctl -b -1 -k --no-pager -q -g 'PM: (suspend|hibernation)|ACPI: PM|nvidia|amdgpu.*(error|fail|timeout)' 2>/dev/null | tail -n 10 || true
+        journalctl -b -1 --no-pager -q -n 15 2>/dev/null || echo "  no previous boot in the journal"
+        ;;
+    *) usage 1 ;;
+esac

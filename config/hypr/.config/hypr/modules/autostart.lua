@@ -1,5 +1,8 @@
 -- Started with Hyprland only. These are not systemd services on purpose:
 -- graphical-session.target is also reached in KDE, and these must not run there.
+-- Hyprland's log, so a crash or a freeze after sleep leaves evidence (hypr-crashlog keeps a copy on disk)
+hl.config({ debug = { disable_logs = false } })
+
 hl.on("hyprland.start", function()
     -- A test session (tests/nested.sh) is a window inside your real desktop: it gets the shell and a
     -- wallpaper only. No idle timer, mounts or services, which would act on the real session.
@@ -16,6 +19,7 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprpaper")                                -- wallpaper
     -- GTK look (light or dark, accent, icons, fonts): Quickshell's ThemeSync sets it from the theme once
     -- Settings have loaded. dconf is shared with KDE, and KDE re-applies Breeze at its own login.
+    hl.exec_cmd("hypr-crashlog keep")                       -- Hyprland log on disk + sleep/wake marks; `hypr-crashlog` reports
     hl.exec_cmd("hypridle -c ~/.config/hypr/settings/hypridle.conf") -- lock / screen off / sleep (Settings > Lock & Sleep)
     hl.exec_cmd("command -v udiskie >/dev/null && udiskie --automount --notify --no-tray")  -- USB drives mount when plugged in
     hl.exec_cmd("wl-paste --watch clipstore store")         -- clipboard history (Super+V), ~/.local/bin/clipstore

@@ -127,6 +127,22 @@ check "idle-sleep sleeps on mains at the mains time (20/30/30)" 'idle_sleep "$t/
 check "idle-sleep never sleeps a computer without a battery (20/0/20)" '! idle_sleep "$t/is/nobat" 20 0 20'
 check "idle-sleep waits for the full time (battery 20, elapsed 10)" '! idle_sleep "$t/is/bat" 20 0 10'
 
+# hypr-crashlog: a sleep with no wake before the next session start is reported as a freeze
+mkdir -p "$t/hc/hyprism/logs"
+printf '%s\n' '2026-11-10 08:00:00 session start' '2026-11-10 09:00:00 sleep' '2026-11-10 09:30:00 wake' \
+    '2026-11-10 12:00:00 sleep' '2026-11-10 14:00:00 session start' >"$t/hc/hyprism/logs/hypr-crashlog.log"
+XDG_STATE_HOME=$t/hc bash "$bin/hypr-crashlog" mark sleep
+# shellcheck disable=SC2034  # read inside check's condition
+hc=$(XDG_STATE_HOME=$t/hc XDG_CACHE_HOME=$t/hc bash "$bin/hypr-crashlog" 2>&1)
+check "hypr-crashlog reports the sleep that never woke, only that one" '[[ $hc == *"slept 2026-11-10 12:00:00, next session 2026-11-10 14:00:00"* && $hc != *"slept 2026-11-10 09"* ]]'
+check "hypr-crashlog mark writes the mark" '[[ $(tail -n 1 "$t/hc/hyprism/logs/hypr-crashlog.log") == *" sleep" ]]'
+# shellcheck disable=SC2034  # read inside check's condition
+hc=$(XDG_STATE_HOME=$t/hc-empty XDG_CACHE_HOME=$t/hc-empty bash "$bin/hypr-crashlog" 2>&1)
+check "hypr-crashlog reports with no state yet" '[[ $hc == *"Previous boot"* ]]'
+mkdir -p "$t/hc-run/hypr/sig" && echo line1 >"$t/hc-run/hypr/sig/hyprland.log"
+XDG_RUNTIME_DIR=$t/hc-run HYPRLAND_INSTANCE_SIGNATURE=sig XDG_STATE_HOME=$t/hc-keep timeout 1 bash "$bin/hypr-crashlog" keep
+check "hypr-crashlog keep copies the session log on first run" '[[ $(cat "$t/hc-keep/hyprism/logs/hyprland.log") == line1 ]]'
+
 # the Hyprland Lua the installer seeds parses
 luac=$(command -v luac || command -v luac5.4 || true)
 [[ -n $luac ]] && for f in config/hypr/.config/hypr/defaults/*.lua; do [[ -f $f ]] && check "parses: $f" "\"$luac\" -p \"$f\""; done

@@ -31,8 +31,8 @@ Scope {
             blocks.push("# " + m + " min: idle-sleep sleeps if this is the time for the power source in use (then hibernate after 60 more min where hibernation is set up)\nlistener {\n    timeout    = " + m * 60
                         + "\n    on-timeout = idle-sleep " + sleepMin + " " + powerMin + " " + m + "\n}")
         return "# Written by Quickshell from Settings > Lock & Sleep (settings.json idle). hypridle uses hyprlang.\n"
-            + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = loginctl lock-session; " + screensOn + "\n"
-            + "    after_sleep_cmd  = " + screensOn + "\n}\n\n" + blocks.join("\n\n") + "\n"
+            + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = hypr-crashlog mark sleep; loginctl lock-session; " + screensOn + "\n"
+            + "    after_sleep_cmd  = hypr-crashlog mark wake; " + screensOn + "\n}\n\n" + blocks.join("\n\n") + "\n"
     }
     function inputTable(i) {
         const list = Array.from(i.layouts), many = list.length > 1
