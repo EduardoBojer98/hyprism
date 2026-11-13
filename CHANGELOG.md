@@ -6,6 +6,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- `./install.sh update` restarts the shell after a pull, so new QML and moved fonts load at once (a running
+  shell kept the old font files open and drew garbled text).
 - `screenshot pin` (`Super+Ctrl+S`, and the menu): keep a picked area floating on top of the screen; drag, zoom, copy, close. `Pins.qml` shows them.
 - `monswitch inputs` and `monswitch setup`: find a monitor's inputs over DDC instead of typing codes; Settings → Shared Monitor uses the same list.
 - Sleep times that fit the computer: `idle.sleepOnPowerMin` (sleep when plugged in, default never) next to `idle.sleepMin` (on battery); the new `idle-sleep` script decides at the moment the listener fires. A desktop no longer sleeps by itself.
@@ -93,8 +95,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - AUR packages, COPR repos and RPM Fusion are named and asked about before they are trusted (answered yes
   under `--yes`).
 - The extra Hyprland plugins (title-bar buttons) are no longer downloaded and built at login. Login only loads
-  what is built; `./install.sh update` runs `hypr-plugins build`, which checks the download against a pinned
-  commit and refuses a Hyprland version that has no pin.
+  what is built; `./install.sh update` runs `hypr-plugins build`, which builds the newest hyprland-plugins release
+  for the running Hyprland (the same 0.X series when the patch release has no tag yet). No version is hard-coded.
 - Autostart finds the polkit agent on Arch and Fedora, and unlocks KWallet or starts GNOME Keyring, whichever
   is installed.
 - State moved from `~/.local/state/linux-setup` to `~/.local/state/hyprism` (migration 0001).

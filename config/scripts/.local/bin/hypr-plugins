@@ -4,12 +4,10 @@
 #
 #   hypr-plugins          load the plugins built for the running Hyprland (run at login). Builds this repo's
 #                         own plugins when stale. Never downloads: if the official ones aren't built, it says so.
-#   hypr-plugins build    download hyprland-plugins at the tag of the running Hyprland, check its commit
-#                         against the PIN table in this script, compile and load. ./install.sh update runs it.
+#   hypr-plugins build    download the newest hyprland-plugins release for the running Hyprland (its own tag,
+#                         or the newest earlier one of the same 0.X series when upstream has not tagged the
+#                         patch release), compile and load. ./install.sh update runs it; login never downloads.
 #
-# A tag with no PIN is refused. To trust a new one: read the diff against the pinned tag
-# (git diff OLD_TAG NEW_TAG in a clone of hyprwm/hyprland-plugins), then add its commit
-# (git ls-remote https://github.com/hyprwm/hyprland-plugins 'refs/tags/TAG^{}') to PIN in this script.
 # Both modes end by calling setup_plugins() (hypr/modules/plugins.lua), which configures what got loaded.
 set -uo pipefail # no -e: a failed build only skips that plugin
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
@@ -20,10 +18,15 @@ repo=$(repo_root) # ~/.local/bin is a link into the repo
 out=${XDG_DATA_HOME:-$HOME/.local/share}/hypr-plugins
 mkdir -p "$out"
 UPSTREAM=(hyprbars) # title bars with buttons for windows that draw none (hypr/modules/plugins.lua)
-# tag of hyprland-plugins -> the commit it must point to (a tag can be moved, a commit can't)
-declare -A PIN=(
-    ["v0.57.0"]=d2427d4d15b36df40468f5a58bbd67cdba19835d
-)
+URL=https://github.com/hyprwm/hyprland-plugins
+
+# release_for TAG: the newest hyprland-plugins tag of TAG's 0.X series that is not newer than TAG
+release_for() {
+    local t
+    git ls-remote --tags --refs "$URL" "${1%.*}.*" | sed 's#.*refs/tags/##' | while read -r t; do
+        [[ $(printf '%s\n' "$t" "$1" | sort -V | tail -1) == "$1" ]] && echo "$t"
+    done | sort -V | tail -1
+}
 
 # load NAME: load a built plugin that is newer than the running Hyprland, unless it is loaded already
 load() {
@@ -57,17 +60,13 @@ for src in "$repo"/plugins/*/main.cpp; do
 done
 
 tag=$(hyprctl version -j | jq -r .tag)
-up=$out/src/hyprland-plugins-$tag
 if [[ $mode == build ]]; then
-    [[ -n ${PIN[$tag]:-} ]] || die "hyprland-plugins $tag has no pin. Read its diff, then add its commit to PIN in $(readlink -f "$0") (see --help)"
+    rel=$(release_for "$tag")
+    [[ -n $rel ]] || die "hyprland-plugins has no ${tag%.*} release yet (or offline): title-bar buttons stay off until it does"
+    up=$out/src/hyprland-plugins-$rel
     if [[ ! -d $up ]]; then
-        git clone -q -c advice.detachedHead=false -b "$tag" --depth 1 \
-            https://github.com/hyprwm/hyprland-plugins "$up" 2>"$out/clone.log" ||
-            die "could not download hyprland-plugins $tag (no such tag yet, or offline); see $out/clone.log"
-        if [[ $(git -C "$up" rev-parse HEAD) != "${PIN[$tag]}" ]]; then
-            rm -rf "$up"
-            die "hyprland-plugins $tag is not the pinned commit ${PIN[$tag]}: refusing to build it"
-        fi
+        git clone -q -c advice.detachedHead=false -b "$rel" --depth 1 "$URL" "$up" 2>"$out/clone.log" ||
+            die "could not download hyprland-plugins $rel; see $out/clone.log"
     fi
     for name in "${UPSTREAM[@]}"; do
         [[ -d $up/$name ]] && build "$name" "$up/$name"/*.cpp

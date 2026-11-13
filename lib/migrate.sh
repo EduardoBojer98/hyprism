@@ -31,13 +31,22 @@ migrations() {
     done
 }
 
-# The official Hyprland plugins are built only here, never at login (pinned commit: see hypr-plugins --help)
+# The official Hyprland plugins are built only here, never at login (the newest release for this Hyprland)
 plugins_build() {
     local bin=$REPO/config/scripts/.local/bin/hypr-plugins
     [[ -x $bin ]] && command -v g++ >/dev/null && command -v Hyprland >/dev/null || return 0
     [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || return 0 # needs the running Hyprland: it names the version to build for
     say "Building the Hyprland plugins"
-    run "$bin" build || FAILED+=("hypr-plugins build failed (hypr-plugins --help says how to pin a new Hyprland version)")
+    run "$bin" build || FAILED+=("hypr-plugins build failed (the line above says why)")
+}
+
+# After a pull: a running shell keeps the old QML and font files open, so start a fresh one
+shell_restart() {
+    [[ -n ${HYPRISM_PULLED:-} && -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && pgrep -x qs >/dev/null || return 0
+    say "Restarting the shell"
+    run fc-cache -f
+    run qs kill # only the instance of ~/.config/quickshell, not a test desktop
+    run hyprctl dispatch 'hl.dsp.exec_cmd("qs")' >/dev/null
 }
 
 update() {
@@ -62,6 +71,7 @@ update() {
     detect_write
     packages
     links
+    shell_restart
     plugins_build
     module_steps # only new or changed ones; each asks first
     $DRY || doctor || FAILED+=("the doctor found problems (above)")

@@ -33,7 +33,7 @@ owner can run, the score stops short and the reason is in the last column.
 | 21 | Apps & defaults | 5 | 8 | Default apps set only where unset; Qt apps themed without KDE; own emoji list; keyring and polkit found on both distros. Missing: no viewer or office packages are installed for you. |
 | 22 | Performance | 7 | 9 | `tests/performance.sh`: 0.37 % of one core idle, 299 MB, no reader running when no item needs one. Not run in CI (needs a desktop). |
 | 23 | Reliability & diagnostics | 6 | 9 | Doctor with a fix on every finding; CI breaks six things and checks each is reported. Module checks are thin for `tablet` and `logitech`. |
-| 24 | Security & privacy | 6 | 9 | Named AUR / COPR prompts; pinned plugin build on update only; firewall offer; secret scan of the whole history in CI. The pin table has no entry for Hyprland 0.57.2 (upstream has no such tag), so title-bar buttons stay on the copy already built. |
+| 24 | Security & privacy | 6 | 9 | Named AUR / COPR prompts; plugin build on update only (newest release of the running Hyprland's series, chosen by the owner over a pin table); firewall offer; secret scan of the whole history in CI. |
 | 25 | Accessibility | 5 | 8 | Names and roles on every control and click target (CI fails on a new unnamed one); bar reachable by keyboard; contrast for accents and status colours. Missing: a screen-reader run. |
 | 26 | First-run experience | 2 | 9 | Welcome panel seen in the test desktop; sets only `settings.json`. |
 | 27 | Documentation | 6 | 9 | Install, how-to, troubleshooting, modules, hardware, themes, bar, settings reference; `tests/docs.sh` checks links, paths and commands. No outside reader has tried it yet. |
@@ -69,7 +69,7 @@ row: most need the manual checklist, a few are real unfinished items (below).
 2. Per-device input settings (one touchpad or mouse differently from another).
 3. 65 settings have no explanatory comment, so their rows in the settings reference are empty.
 4. No row in Settings for the default terminal (file key `apps.terminal` works).
-5. The plugin pin table needs an entry once upstream tags a release for Hyprland 0.57.2.
+5. ~~Plugin pin for Hyprland 0.57.2~~: done, the build takes the newest matching release (2026-11-13).
 6. The second `screenshot` audio source, and the "new web app" menu entry.
 
 ## What only you can check

@@ -61,16 +61,20 @@ check "hwmon of an unknown name prints nothing and succeeds under set -e" '[[ $n
 # package-manager commands live in distros/ only
 check "no package-manager command in scripts or module bin dirs" '! grep -nwE "pacman|paru|yay|dnf|rpm" "$bin"/* modules/*/home/.local/bin/* 2>/dev/null | grep -q .'
 
-# hypr-plugins build refuses a Hyprland tag that has no pin, before it downloads anything (stand-in tools on PATH)
+# hypr-plugins build takes the newest release of the running Hyprland's 0.X series that is not newer than it
+# (stand-in tools on PATH: git lists tags and records what it was asked to clone, then fails, so nothing downloads)
 mkdir -p "$t/fake"
-printf '#!/bin/sh\necho "{\\"tag\\":\\"v0.0.0-nopin\\"}"\n' >"$t/fake/hyprctl"
+printf '#!/bin/sh\necho "{\\"tag\\":\\"$FAKE_TAG\\"}"\n' >"$t/fake/hyprctl"
 printf '#!/bin/sh\n' >"$t/fake/notify-send"
 printf '#!/bin/sh\nwhile [ $# -gt 0 ]; do [ "$1" = -o ] && touch "$2"; shift; done\n' >"$t/fake/g++"
 printf '#!/bin/sh\n' >"$t/fake/pkg-config"
+printf '#!/bin/sh\ncase "$1" in ls-remote) case "$5" in v0.57.*) printf "x\\trefs/tags/v0.57.0\\nx\\trefs/tags/v0.57.3\\n" ;; esac ;; clone) echo "$*" >"$FAKE_LOG"; exit 1 ;; esac\n' >"$t/fake/git"
 chmod +x "$t"/fake/*
+PATH=$t/fake:$PATH FAKE_TAG=v0.57.2 FAKE_LOG=$t/clone.args XDG_DATA_HOME="$t/plug" bash "$bin/hypr-plugins" build >/dev/null 2>&1
+check "hypr-plugins build picks the newest release not newer than Hyprland" 'grep -q -- "-b v0.57.0 " "$t/clone.args"'
 # shellcheck disable=SC2034  # read inside check's condition
-out=$(PATH=$t/fake:$PATH XDG_DATA_HOME="$t/plug" bash "$bin/hypr-plugins" build 2>&1)
-check "hypr-plugins build refuses a tag with no pin" '[[ $out == *"has no pin"* && ! -d $t/plug/hypr-plugins/src ]]'
+out=$(PATH=$t/fake:$PATH FAKE_TAG=v0.99.0 FAKE_LOG=$t/clone2.args XDG_DATA_HOME="$t/plug" bash "$bin/hypr-plugins" build 2>&1)
+check "hypr-plugins build says so when its series has no release, without downloading" '[[ $out == *"no v0.99 release"* && ! -e $t/clone2.args ]]'
 
 # every distro backend defines the app-list functions
 for b in distros/*.sh; do
