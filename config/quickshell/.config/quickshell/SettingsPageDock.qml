@@ -3,14 +3,26 @@ import QtQuick
 import QtQuick.Layouts
 
 // Dock: on or off, where it sits and on which monitors, how it behaves, and its pinned apps
-// (dock.pinned, app ids). Its look comes from the theme; every option works in every theme, and a dock
-// on the same edge as the bar sits beside it.
+// (dock.pinned, app ids) and widgets (dock.widgets). Its look comes from the theme; every option works in
+// every theme, and a dock on the same edge as the bar sits beside it. Inside the menu bar the dock is the bar's
+// "apps" item: only what applies there is shown (icon size, hiding, previews and widgets are the floating dock's).
 ColumnLayout {
     id: page
     spacing: 20
 
     property string query: ""
     readonly property var pinned: Config.dock.pinned
+    readonly property bool inBar: Theme.dockInBar
+    // every widget: the shown ones in their order, then the rest
+    readonly property var widgets: Config.dock.widgets.filter(id => Theme.dockWidgets[id] !== undefined)
+    readonly property var widgetList: widgets.concat(Object.keys(Theme.dockWidgets).filter(id => !widgets.includes(id)))
+    function moveWidget(id, by) {
+        const list = Array.from(widgets), i = list.indexOf(id), j = i + by
+        if (i < 0 || j < 0 || j >= list.length) return
+        list.splice(i, 1); list.splice(j, 0, id)
+        Config.set("dock", "widgets", list)
+    }
+    function showWidget(id, on) { Config.set("dock", "widgets", on ? widgets.concat([id]) : widgets.filter(x => x !== id)) }
     readonly property var matches: {
         const q = query.trim().toLowerCase()
         if (!q) return []
@@ -46,13 +58,13 @@ ColumnLayout {
             ThemeChoice { key: "dock"; values: ["theme", "bar", "bottom", "left", "right", "top"]; labels: ["Default", "In the bar", "Bottom", "Left", "Right", "Top"] }
         }
         SettingRow {
-            visible: Config.dock.enabled
+            visible: Config.dock.enabled && !page.inBar
             label: "Spacing"
             hint: "Room around the icons"
             ConfigChoice { section: "dock"; key: "size"; values: ["compact", "regular", "roomy"]; labels: ["Compact", "Regular", "Roomy"] }
         }
         Repeater {
-            model: Config.dock.enabled ? Quickshell.screens : []
+            model: Config.dock.enabled && !page.inBar ? Quickshell.screens : []
             SettingRow {
                 required property var modelData
                 label: "On " + modelData.name
@@ -65,9 +77,9 @@ ColumnLayout {
             }
         }
         SettingRow {
-            visible: Config.dock.enabled
-            label: "Open windows in the bar"
-            hint: Theme.dockInBar ? "An icon, or with its name or title beside it" : "When the dock is in the menu bar"
+            visible: Config.dock.enabled && page.inBar
+            label: "Open windows"
+            hint: "An icon, or with its name or title beside it"
             ConfigChoice { section: "dock"; key: "barLabels"; values: ["icon", "name", "title"]; labels: ["Icon", "App name", "Window title"] }
         }
         SaveTheme {}
@@ -77,22 +89,24 @@ ColumnLayout {
         visible: Config.dock.enabled
         title: "Behaviour"
         SettingRow {
+            visible: !page.inBar
             label: "Icon size"
             ConfigChoice { section: "dock"; key: "iconSize"; values: [36, 44, 52, 60]; labels: ["Small", "Medium", "Large", "Huge"] }
         }
         SettingRow {
+            visible: !page.inBar
             label: "Hide automatically"
             hint: "Slides away until the pointer touches its edge; stays on an empty desktop"
             ConfigToggle { section: "dock"; key: "autoHide" }
         }
         SettingRow {
             label: "Combine open apps with their icons"
-            hint: Config.dock.combine ? "Like Windows' combined taskbar: an open app shares its icon; hover it for its windows"
+            hint: Config.dock.combine ? "Like Windows' combined taskbar: an open app shares its icon" + (page.inBar ? "" : "; hover it for its windows")
                                       : "Off: pinned apps are launchers, every open window is its own tile after them"
             ConfigToggle { section: "dock"; key: "combine" }
         }
         SettingRow {
-            visible: Config.dock.combine
+            visible: Config.dock.combine && !page.inBar
             label: "Window previews on hover"
             hint: "A live picture of each window; click one to bring it up, middle-click to close it"
             ConfigToggle { section: "dock"; key: "previews" }
@@ -103,7 +117,7 @@ ColumnLayout {
             ConfigToggle { section: "dock"; key: "showRunning" }
         }
         SettingRow {
-            visible: Config.dock.showRunning && !Config.dock.combine
+            visible: Config.dock.showRunning && !Config.dock.combine && !page.inBar
             label: "Window pictures"
             hint: "A picture of each window, live while the pointer is on the dock. Off: just the app icon"
             ConfigToggle { section: "dock"; key: "thumbnails" }
@@ -113,7 +127,7 @@ ColumnLayout {
             readonly property var presets: [30, 60, 300, 900]
             property bool custom: !presets.includes(Config.dock.thumbRefresh)
             property string error: ""
-            visible: Config.dock.showRunning && Config.dock.thumbnails && !Config.dock.combine
+            visible: Config.dock.showRunning && Config.dock.thumbnails && !Config.dock.combine && !page.inBar
             label: "Refresh pictures"
             hint: error !== "" ? error : "How often the pictures update while the pointer is elsewhere"
             Choice {
@@ -192,9 +206,30 @@ ColumnLayout {
         }
     }
 
+    SettingGroup {
+        visible: Config.dock.enabled && !page.inBar
+        title: "Widgets · small tiles after the open windows"
+        Repeater {
+            model: page.widgetList
+            SettingRow {
+                id: wrow
+                required property string modelData
+                readonly property bool on: page.widgets.includes(modelData)
+                label: Theme.dockWidgets[modelData]
+                Row {
+                    spacing: 8
+                    ArrowButton { visible: wrow.on; glyph: "\u{F0143}"; tip: "Move " + wrow.label + " earlier"; enabled: page.widgets.indexOf(wrow.modelData) > 0; onClicked: page.moveWidget(wrow.modelData, -1) }
+                    ArrowButton { visible: wrow.on; glyph: "\u{F0140}"; tip: "Move " + wrow.label + " later"; enabled: page.widgets.indexOf(wrow.modelData) < page.widgets.length - 1; onClicked: page.moveWidget(wrow.modelData, 1) }
+                    Toggle { checked: wrow.on; onToggled: on => page.showWidget(wrow.modelData, on) }
+                }
+            }
+        }
+    }
+
     Text {
         Layout.fillWidth: true
-        text: "In the dock: drag an icon along it to reorder, right-click it to pin, unpin, minimise or quit."
+        text: page.inBar ? "In the bar: click an open app to bring it up, middle-click for a new window. Icon size, hiding, previews and widgets are for a dock of its own: choose another place above."
+                         : "In the dock: drag an icon along it to reorder, right-click it to pin, unpin, minimise or quit."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }

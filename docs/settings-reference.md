@@ -48,6 +48,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `previews` | `bool` | `true` | combined: hover an open app for a picture of each window |
 | `thumbnails` | `bool` | `true` | off: open windows show only their app icon |
 | `thumbRefresh` | `int` | `60` | s between still pictures (live only while hovered) |
+| `widgets` | `list<string>` | `[]` | small tiles after the open windows, in order: clock \| load \| media \| trash \| downloads |
 | `pinned` | `list<string>` | `["firefox", "google-chrome", "com.microsoft.VSCode", "com...` |  |
 
 ## launcher

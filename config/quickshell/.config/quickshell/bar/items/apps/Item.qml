@@ -26,6 +26,11 @@ Item {
         }
         return out
     }
+    // a window minimised from the dock (parked on special:minimized) comes back to this screen's workspace first
+    function bring(t) {
+        if (t.workspace?.name !== "special:minimized") { t.wayland.activate(); return }
+        Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.window.move({ workspace = "${bar.monitor?.activeWorkspace?.id ?? 1}", window = "address:0x${String(t.address).replace(/^0x/, "")}" })`])
+    }
     readonly property int icon: Math.max(16, Math.min(Math.round(bar.thickness * 0.62), 30))
     implicitWidth: grid.implicitWidth
     implicitHeight: grid.implicitHeight
@@ -51,10 +56,10 @@ Item {
                 active: marked && wins.some(t => t.activated)
                 acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                 onPressed: button => {
-                    if (win) { if (button === Qt.MiddleButton) win.wayland.close(); else win.wayland.activate(); return }
+                    if (win) { if (button === Qt.MiddleButton) win.wayland.close(); else apps.bring(win); return }
                     if (button === Qt.MiddleButton || wins.length === 0) { entry?.execute(); return }
                     const i = wins.findIndex(t => t.activated)
-                    wins[(i + 1) % wins.length].wayland.activate()
+                    apps.bring(wins[(i + 1) % wins.length])
                 }
                 // words voices (terminal themes) name the apps instead, like tmux's window list
                 readonly property bool asText: apps.bar.words && !apps.bar.vertical

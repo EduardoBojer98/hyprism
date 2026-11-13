@@ -68,6 +68,7 @@ PanelWindow {
         for (const t of openWindows) { const e = entryFor(t.wayland?.appId ?? ""); if (e && !pinnedIds.includes(e.id) && !out.some(x => x.id === e.id)) out.push(e) }
         return out
     }
+    readonly property var widgetIds: Config.dock.widgets.filter((id, i, a) => Theme.dockWidgets[id] !== undefined && a.indexOf(id) === i)
     readonly property var appEntries: pinnedEntries.concat(runningEntries)
     function dragTo(x) {
         dragX = x
@@ -223,6 +224,14 @@ PanelWindow {
                 model: ScriptModel { values: root.combine ? [] : root.openWindows }
 
                 DockWindow { dock: root }
+            }
+
+            DockSeparator { dock: root; visible: widgetIds.length > 0 }   // before the widgets (Settings > Dock > Widgets)
+
+            Repeater {
+                model: ScriptModel { values: root.widgetIds }
+
+                DockWidget { dock: root }
             }
         }
     }
