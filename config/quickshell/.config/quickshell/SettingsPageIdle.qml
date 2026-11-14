@@ -30,7 +30,7 @@ ColumnLayout {
         SettingRow {
             visible: Sys.hasBattery
             label: "Sleep on battery after"
-            hint: Machine.canHibernate ? "Sleeping laptops hibernate after another hour to save the battery" : "Turns the screens off and sleeps"
+            hint: Machine.sleepThenHibernate ? "Sleeping laptops hibernate after another hour to save the battery" : "Turns the screens off and sleeps"
             Choice {
                 options: page.sleepOptions.map(page.label)
                 index: page.sleepOptions.indexOf(page.sleepMin)
