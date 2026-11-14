@@ -36,10 +36,10 @@ ColumnLayout {
             else page.folderError = "No such folder"
         }
     }
-    // folder picker (KDE's dialog, works outside Plasma too)
+    // folder picker (GTK file dialog via zenity)
     Process {
         id: browse
-        command: ["kdialog", "--getexistingdirectory", Quickshell.env("HOME") + "/Pictures"]
+        command: ["zenity", "--file-selection", "--directory", "--title=Wallpaper folder", "--filename=" + Quickshell.env("HOME") + "/Pictures/"]
         stdout: StdioCollector { onStreamFinished: if (text.trim()) page.addFolder(text.trim()) }
     }
 

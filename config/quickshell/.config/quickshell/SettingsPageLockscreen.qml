@@ -72,10 +72,10 @@ ColumnLayout {
                 PillButton { text: page.l.avatar !== "" ? "Change…" : "Choose…"; onClicked: avatarPick.running = true }
                 PillButton { visible: page.l.avatar !== ""; text: "Remove"; onClicked: Config.set("lockscreen", "avatar", "") }
             }
-            // KDE's file dialog, like the theme pickers (ThemeAdder); only a plain path is saved
+            // GTK file dialog (zenity), like the theme pickers (ThemeAdder); only a plain path is saved
             Process {
                 id: avatarPick
-                command: ["kdialog", "--title", "Your picture", "--getopenfilename", Quickshell.env("HOME") + "/Pictures", "*.png *.jpg *.jpeg *.webp|Pictures"]
+                command: ["zenity", "--file-selection", "--title=Your picture", "--filename=" + Quickshell.env("HOME") + "/Pictures/", "--file-filter=Pictures | *.png *.jpg *.jpeg *.webp"]
                 stdout: StdioCollector { onStreamFinished: { const f = text.trim(); if (f && /^[^\n#]+$/.test(f)) Config.set("lockscreen", "avatar", f) } }
             }
         }

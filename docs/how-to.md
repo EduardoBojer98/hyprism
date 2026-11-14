@@ -100,11 +100,11 @@ or `"fullscreen"`; `displays.preferHighRefresh`.
 **Lock and sleep times.** Settings → Power → Lock & Sleep. File: `idle.lockMin`, `idle.sleepMin` (on battery), `idle.sleepOnPowerMin` (plugged in; a desktop uses only this one) (minutes, 0 = never).
 
 **Default apps.** A fresh install sets a file manager, browser, text editor, image and PDF viewer only where none is set (`./install.sh --only defaults`). Settings → Apps → Default Apps (browser, files, PDF, text, images, task manager). Command:
-`xdg-settings set default-web-browser firefox.desktop`; `xdg-mime default org.kde.dolphin.desktop inode/directory`.
+`xdg-settings set default-web-browser firefox.desktop`; `xdg-mime default org.gnome.Nautilus.desktop inode/directory`.
 The **terminal** the `Super+Enter` key opens has no row in Settings: set `apps.terminal` in the file (plain text
 only, for example `"ghostty +new-window"`).
 
-**Startup apps.** Settings → Apps → Startup Apps. Command: `startup-apps add org.kde.dolphin` (a desktop entry id),
+**Startup apps.** Settings → Apps → Startup Apps. Command: `startup-apps add org.gnome.Nautilus` (a desktop entry id),
 `startup-apps list`, `startup-apps remove FILE`. They live in `~/.config/autostart/`, not in `settings.json`.
 
 **Notifications and Do Not Disturb.** Settings → Desktop & Widgets → Notifications. Key `Super+Shift+N`. File:

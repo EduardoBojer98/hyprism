@@ -42,3 +42,20 @@ is installed. Elsewhere they fell back to plain Fusion.
 - Why existing tools can't: `top` and `htop` are not themed by us, and neither is as complete a monitor.
 - Size: about 1.5 MB. Maintenance: in Arch extra and Fedora, maintained.
 - Cost: one package; a theme file in `~/.config/btop/themes/`.
+
+## Everyday apps are GTK4/libadwaita, not KDE (decided 2026-11-15)
+
+Dolphin and the other KDE apps outside Plasma load Breeze Light over qt6ct's palette, so they looked broken in
+dark themes; a generated KDE colour scheme fixes that (ThemeSync, `Hyprism.colors`), but KDE apps still pull
+in KDE Frameworks and look different from the rest of the desktop.
+
+- What it does: the `apps` group installs GNOME's apps: Nautilus, Text Editor, Loupe, Papers, File Roller,
+  Celluloid, Amberol, Calculator, Disks, Baobab, Resources. Settings' file pickers use `zenity` instead of `kdialog`.
+- Why: ThemeSync already writes `gtk-4.0/hyprism.css`, so libadwaita apps take the theme's surfaces, text and
+  exact accent with no extra code. One toolkit, one look.
+- Size: about 110 MB with their GNOME libraries. Maintenance: all in Arch extra; Fedora lacks Amberol and
+  Resources (Flathub) and ReGreet.
+- Cost: no split pane or terminal panel in the file manager (Dolphin's). Anyone who wants KDE apps can install
+  them: qt6ct plus the Hyprism KDE scheme keep them themed.
+- Login screen: the opt-in `greeter` module (greetd + ReGreet) replaces Plasma Login Manager / SDDM / GDM, with
+  the theme's GTK colours and KDE Wallet still unlocked at login.

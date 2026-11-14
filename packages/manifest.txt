@@ -25,7 +25,7 @@ hyprshutdown             desktop   clean log out (Super+Shift+E)
 hyprpaper                desktop   wallpaper
 hyprsunset               desktop   Night Light
 hyprpicker               desktop   colour picker (Super+Shift+C)
-qt6-wayland              desktop   Qt apps (Quickshell, Dolphin) run natively on Wayland
+qt6-wayland              desktop   Qt apps (Quickshell) run natively on Wayland
 quickshell               desktop   the whole shell: bar, dock, launcher, notifications, Settings
 pipewire                 desktop   sound (pw-play for notification sounds)
 pipewire-pulse           desktop   sound for apps that speak PulseAudio
@@ -59,7 +59,7 @@ brightnessctl            tools     brightness keys
 playerctl                tools     media keys and the media card
 xdg-utils                tools     xdg-open / xdg-mime: default apps, opening files from Spotlight
 glib2                    tools     gsettings: GTK light/dark, accent, icons, cursor
-kdialog                  tools     folder/file picker in Settings (wallpaper folders, add theme)
+zenity                   tools     folder/file picker in Settings (wallpaper folders, add theme, lock picture)
 btop                     tools     system monitor, coloured by the theme (btop theme "hyprism")
 imagemagick              tools     draws each theme's wallpaper (theme-wallpaper), blurred wallpaper copies
 fastfetch                tools     system summary in new terminals
@@ -67,16 +67,30 @@ fastfetch                tools     system summary in new terminals
 # Look
 adw-gtk-theme            look      GTK3 apps match libadwaita, dark and light
 papirus-icons            look      icon theme for the shell, dock and apps
-qt6ct                    look      Qt apps (Dolphin, pavucontrol-qt) follow the theme colours
+qt6ct                    look      Qt and KDE apps you add yourself follow the theme colours
 font-inter               look      UI font
 font-cantarell           look      "Cantarell" choice under Appearance > Font
 font-noto                look      "Noto Sans" choice; fallback for missing glyphs
 font-noto-emoji          look      emoji in the picker, notifications and browser
 font-jetbrains-nerd      look      terminal and code font with icons
 
-# Everyday apps
+# Everyday apps: GTK4/libadwaita, so they take the theme's colours and accent (ThemeSync's hyprism.css)
 ghostty                  apps      terminal (Super+Return)
-dolphin                  apps      file manager (Super+E)
+nautilus                 apps      file manager (Super+E): tabs, search, previews, admin:// for system files
+gvfs-mtp                 apps      phones and cameras in the file manager
+gvfs-smb                 apps      Windows / NAS network shares in the file manager
+ffmpegthumbnailer        apps      video thumbnails in the file manager
+file-roller              apps      open and make archives (zip, tar, 7z, rar) from the file manager
+7zip                     apps      7z and rar support for archives
+text-editor              apps      text editor with tabs, syntax colours and a dark/light switch
+loupe                    apps      image viewer: fast, zoom, rotate, set as wallpaper
+papers                   apps      PDF and document viewer: search, annotations, forms
+celluloid                apps      video player (mpv inside): every format, subtitles, playlists
+amberol                  apps      music player for your local files
+calculator               apps      calculator with units, currency and programmer modes
+disks                    apps      format USB sticks, partitions, disk health (SMART), disk images
+baobab                   apps      what is filling your disk
+resources                apps      system monitor: CPU, GPU, memory, disks, network, apps and processes
 
 # Shell (fish config in config/fish uses these) and this repo's secret scan
 starship                 shell     shell prompt

@@ -9,9 +9,9 @@ Item {
     property string kind              // "icons" or "cursors"
     signal done(var names, string error)
 
-    function pickFile() { picker.command = ["kdialog", "--title", "Add a theme", "--getopenfilename", Quickshell.env("HOME") + "/Downloads",
-                                            "*.tar.gz *.tgz *.tar.xz *.tar.bz2 *.tar.zst *.zip|Theme archives"]; picker.running = true }
-    function pickFolder() { picker.command = ["kdialog", "--title", "Add a theme", "--getexistingdirectory", Quickshell.env("HOME") + "/Downloads"]; picker.running = true }
+    function pickFile() { picker.command = ["zenity", "--file-selection", "--title=Add a theme", "--filename=" + Quickshell.env("HOME") + "/Downloads/",
+                                            "--file-filter=Theme archives | *.tar.gz *.tgz *.tar.xz *.tar.bz2 *.tar.zst *.zip"]; picker.running = true }
+    function pickFolder() { picker.command = ["zenity", "--file-selection", "--directory", "--title=Add a theme", "--filename=" + Quickshell.env("HOME") + "/Downloads/"]; picker.running = true }
 
     Process {
         id: picker

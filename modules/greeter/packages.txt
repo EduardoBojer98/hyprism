@@ -1,0 +1,3 @@
+greetd                   login daemon that starts the greeter and then your session
+regreet                  the login screen: GTK4, takes the theme's colours, picks the session and user
+cage                     tiny Wayland compositor the login screen runs in

@@ -6,6 +6,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Everyday apps that follow the theme (GTK4/libadwaita): Nautilus replaces Dolphin, plus Text Editor, Loupe,
+  Papers, File Roller, Celluloid, Amberol, Calculator, Disks, Baobab and Resources. Settings' file pickers use zenity.
+- Module `greeter` (opt-in): greetd + ReGreet login screen in the theme's colours, KDE Wallet unlocked at login.
+- KDE apps follow the theme too: ThemeSync writes a Hyprism KDE colour scheme, picked in Hyprland only.
+
 - `./install.sh update` restarts the shell after a pull, so new QML and moved fonts load at once (a running
   shell kept the old font files open and drew garbled text).
 - `screenshot pin` (`Super+Ctrl+S`, and the menu): keep a picked area floating on top of the screen; drag, zoom, copy, close. `Pins.qml` shows them.

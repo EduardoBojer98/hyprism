@@ -13,7 +13,7 @@ ColumnLayout {
         { name: "Web browser",  mimes: ["x-scheme-handler/http", "x-scheme-handler/https", "text/html"], category: "WebBrowser" },
         { name: "Files",        mimes: ["inode/directory"], category: "FileManager" },
         { name: "PDF documents", mimes: ["application/pdf"], ids: ["org.kde.okular", "org.gnome.Papers", "firefox", "google-chrome"] },
-        { name: "Text files",   mimes: ["text/plain"], category: "TextEditor", ids: ["com.microsoft.VSCode", "org.kde.kate"] },
+        { name: "Text files",   mimes: ["text/plain"], category: "TextEditor", ids: ["org.gnome.TextEditor", "com.microsoft.VSCode", "org.kde.kate"] },
         { name: "Images",       mimes: ["image/png", "image/jpeg", "image/webp"], category: "Viewer" },
     ]
     property var current: ({})   // mime -> desktop id

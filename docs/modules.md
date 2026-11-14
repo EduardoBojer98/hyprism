@@ -21,6 +21,7 @@ Each module has a README in its folder: `modules/<name>/README.md`.
 | `ddc-monitor` | switch an external monitor's input over DDC/CI | external screen on a real computer | `ddcutil`; `/etc/modules-load.d/hyprism-i2c.conf` | `./install.sh uninstall` |
 | `dev` | mise (Node, PHP, Python versions), Docker | you ask | packages; Docker starts on first use; optional `docker` group (asked) | uninstall; `sudo gpasswd -d $USER docker` |
 | `gaming` | Steam, GameMode, MangoHud | you ask | packages only (Fedora: RPM Fusion) | `--without gaming`; remove packages |
+| `greeter` | themed login screen (greetd + ReGreet) | you ask | `/etc/greetd/*`, `/etc/pam.d/greetd`; disables the old display manager, enables `greetd` | `sudo systemctl disable greetd`, re-enable the old one |
 | `hibernate` | hibernate with a swap file | you ask (btrfs root) | `/etc/fstab`, a swap subvolume, kernel boot arguments | `./install.sh uninstall` restores files, lists the rest |
 | `laptop` | lid: sleep on close, run with an external screen | laptop | `/etc/systemd/logind.conf.d/50-hyprism-lid.conf` | `./install.sh uninstall` |
 | `logitech` | Solaar for Logitech devices | a Logitech device | package `solaar`; tray entry at login | `--without logitech` |

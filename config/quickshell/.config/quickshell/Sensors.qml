@@ -40,7 +40,7 @@ Singleton {
     readonly property var d: Metrics.data
 
     // Task manager: the chosen desktop id, or the first installed of these
-    readonly property var taskManagers: ["io.missioncenter.MissionCenter", "org.kde.plasma-systemmonitor", "btop", "htop"]
+    readonly property var taskManagers: ["net.nokyan.Resources", "io.missioncenter.MissionCenter", "org.kde.plasma-systemmonitor", "btop", "htop"]
     readonly property var taskManager: {
         DesktopEntries.applications.values.length   // re-check once the app list has loaded
         const pick = Config.system.taskManager

@@ -53,8 +53,8 @@ default_apps() {
     else
         warn "no web browser installed: nothing set"
     fi
-    default_role "file manager" inode/directory org.kde.dolphin.desktop org.gnome.Nautilus.desktop thunar.desktop
-    default_role "text editor" text/plain org.kde.kate.desktop org.gnome.TextEditor.desktop code.desktop
-    default_role "image viewer" image/png,image/jpeg org.kde.gwenview.desktop org.gnome.Loupe.desktop imv.desktop
-    default_role "PDF viewer" application/pdf org.kde.okular.desktop org.gnome.Evince.desktop org.pwmt.zathura.desktop ${browser:+"$browser"}
+    default_role "file manager" inode/directory org.gnome.Nautilus.desktop org.kde.dolphin.desktop thunar.desktop
+    default_role "text editor" text/plain org.gnome.TextEditor.desktop org.kde.kate.desktop code.desktop
+    default_role "image viewer" image/png,image/jpeg org.gnome.Loupe.desktop org.kde.gwenview.desktop imv.desktop
+    default_role "PDF viewer" application/pdf org.gnome.Papers.desktop org.kde.okular.desktop org.gnome.Evince.desktop org.pwmt.zathura.desktop ${browser:+"$browser"}
 }

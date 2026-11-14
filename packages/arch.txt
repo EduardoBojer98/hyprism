@@ -56,7 +56,7 @@ playerctl                playerctl                          repo
 ddcutil                  ddcutil                            repo
 xdg-utils                xdg-utils                          repo
 glib2                    glib2                              repo
-kdialog                  kdialog                            repo
+zenity                   zenity                             repo
 btop                     btop                               repo
 imagemagick              imagemagick                        repo
 fastfetch                fastfetch                          repo
@@ -69,13 +69,31 @@ font-noto                noto-fonts                         repo
 font-noto-emoji          noto-fonts-emoji                   repo
 font-jetbrains-nerd      ttf-jetbrains-mono-nerd            repo
 ghostty                  ghostty                            repo
-dolphin                  dolphin                            repo
+nautilus                 nautilus                           repo
+gvfs-mtp                 gvfs-mtp                           repo
+gvfs-smb                 gvfs-smb                           repo
+ffmpegthumbnailer        ffmpegthumbnailer                  repo
+file-roller              file-roller                        repo
+7zip                     7zip                               repo
+text-editor              gnome-text-editor                  repo
+loupe                    loupe                              repo
+papers                   papers                             repo
+celluloid                celluloid                          repo
+amberol                  amberol                            repo
+calculator               gnome-calculator                   repo
+disks                    gnome-disk-utility                 repo
+baobab                   baobab                             repo
+resources                resources                          repo
 starship                 starship                           repo
 zoxide                   zoxide                             repo
 fd                       fd                                 repo
 ripgrep                  ripgrep                            repo
 fzf                      fzf                                repo
 gitleaks                 gitleaks                           repo
+# Login screen (modules/greeter)
+greetd                   greetd                             repo
+regreet                  greetd-regreet                     repo
+cage                     cage                               repo
 # Host extras (hosts/*/packages.txt)
 asusctl                  asusctl                            repo
 rog-control-center       rog-control-center                 repo

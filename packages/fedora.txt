@@ -76,7 +76,7 @@ playerctl                playerctl                          repo
 ddcutil                  ddcutil                            repo
 xdg-utils                xdg-utils                          repo
 glib2                    glib2                              repo
-kdialog                  kdialog                            repo
+zenity                   zenity                             repo
 btop                     btop                               repo
 imagemagick              ImageMagick                        repo
 fastfetch                fastfetch                          repo
@@ -92,7 +92,23 @@ font-noto-emoji          google-noto-color-emoji-fonts      repo
 font-jetbrains-nerd      jetbrains-mono-fonts               repo
 # ghostty 1.4.0-1.fc44 (no ghostty in Fedora's own repo)
 ghostty                  ghostty                            copr:scottames/ghostty
-dolphin                  dolphin                            repo
+nautilus                 nautilus                           repo
+gvfs-mtp                 gvfs-mtp                           repo
+gvfs-smb                 gvfs-smb                           repo
+ffmpegthumbnailer        ffmpegthumbnailer                  repo
+file-roller              file-roller                        repo
+7zip                     7zip                               repo
+text-editor              gnome-text-editor                  repo
+loupe                    loupe                              repo
+papers                   papers                             repo
+celluloid                celluloid                          repo
+# Not in Fedora 44's repos (checked 2026-11-15); Flathub: flatpak install flathub io.bassi.Amberol
+amberol                  none                               none
+calculator               gnome-calculator                   repo
+disks                    gnome-disk-utility                 repo
+baobab                   baobab                             repo
+# Not in Fedora 44's repos (checked 2026-11-15); Flathub: flatpak install flathub net.nokyan.Resources
+resources                none                               none
 # starship 1.24.2-1.fc44 (not in Fedora's own repo)
 starship                 starship                           copr:atim/starship
 zoxide                   zoxide                             repo
@@ -100,6 +116,11 @@ fd                       fd-find                            repo
 ripgrep                  ripgrep                            repo
 fzf                      fzf                                repo
 gitleaks                 gitleaks                           repo
+# Login screen (modules/greeter)
+# ReGreet is not packaged for Fedora 44 (checked 2026-11-15)
+greetd                   greetd                             repo
+regreet                  none                               none
+cage                     cage                               repo
 # Host extras (hosts/*/packages.txt)
 # asusctl 6.3.8-2.fc44 (also in this COPR: supergfxctl 5.2.7)
 asusctl                  asusctl                            copr:lukenukem/asus-linux
