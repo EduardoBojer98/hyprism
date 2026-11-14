@@ -10,6 +10,7 @@ import QtQuick
 //   Ghostty    ghostty/theme.conf: the theme's terminal palette and font, reloaded live
 //   fuzzel     fuzzel/theme.ini (emoji picker)
 //   Qt apps    qt6ct/colors/hyprism.conf, and qt6ct/qt6ct.conf unless it is yours (env.lua points Qt at qt6ct)
+//   KDE apps   ~/.local/share/color-schemes/Hyprism.colors, picked by hyprism/kde/kdeglobals (env.lua, with qt6ct)
 //   btop       btop/themes/hyprism.theme (btop.conf only if there is none: it is yours)
 //   prompt     hyprism/starship.toml: ~/.config/starship.toml with its palette block swapped for the theme's
 //   wallpaper  the theme's own picture (scripts/theme-wallpaper), unless Settings > Themes > Wallpaper is off
@@ -90,6 +91,23 @@ Scope {
     }
     readonly property string qtColors: "[ColorScheme]\nactive_colors=" + qtRoles(Theme.text) + "\ndisabled_colors=" + qtRoles(Theme.muted)
         + "\ninactive_colors=" + qtRoles(Theme.text)
+    // KDE apps (Dolphin, Kate, Okular) ignore qt6ct's palette: outside Plasma KDE's colour-scheme manager finds no
+    // scheme and loads Breeze Light over it. This is a KDE scheme from the same tokens; env.lua makes KDE apps
+    // pick it in Hyprland only (hyprism/kde/kdeglobals on XDG_CONFIG_DIRS), so Plasma keeps its own.
+    // Surfaces as in GTK (panels' surface, not the ground). Colours are "r,g,b".
+    function rgb(c) { const t = hx(c); return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16)).join(",") }
+    readonly property string kdeColors: {
+        const set = (name, bg, alt, fg, dim, act) => `[Colors:${name}]\n` + [["BackgroundNormal", bg], ["BackgroundAlternate", alt],
+            ["ForegroundNormal", fg], ["ForegroundInactive", dim], ["ForegroundActive", act], ["ForegroundLink", Theme.accent2],
+            ["ForegroundVisited", Theme.accent2], ["ForegroundNegative", Theme.error], ["ForegroundNeutral", Theme.warning],
+            ["ForegroundPositive", Theme.success], ["DecorationFocus", Theme.accent], ["DecorationHover", Theme.accent]]
+            .map(([k, c]) => k + "=" + rgb(c)).join("\n")
+        const s = Theme.surfaceColor, r = Theme.raised, t = Theme.text, d = Theme.subtext, a = Theme.accent
+        return "# Written by Quickshell ThemeSync from the active theme\n[General]\nColorScheme=Hyprism\nName=Hyprism\n\n"
+            + [set("View", s, r, t, d, a), set("Window", s, r, t, d, a), set("Header", s, r, t, d, a), set("Button", r, s, t, d, a),
+               set("Tooltip", r, s, t, d, a), set("Complementary", s, r, t, d, a),
+               set("Selection", a, a, Theme.accentText, Theme.accentText, Theme.accentText)].join("\n\n")
+    }
     readonly property string btopTheme: {
         const t = []
         const put = (k, c) => t.push(`theme[${k}]="#${hx(c)}"`)
@@ -119,6 +137,7 @@ Scope {
         SettingsApp.writeConfigFile(rel, text, then)
     }
     onQtColorsChanged: debounce.restart()
+    onKdeColorsChanged: debounce.restart()
     onBtopThemeChanged: debounce.restart()
     onStarshipTomlChanged: debounce.restart()
 
@@ -157,6 +176,9 @@ Scope {
         // qt6ct.conf is ours only if absent or marked by .hyprism; a user's own file is never touched
         put("qt6ct/colors/hyprism.conf", qtColors, ["sh", "-c", 'd="$HOME/.config/qt6ct"; if [ ! -e "$d/qt6ct.conf" ] || [ -e "$d/.hyprism" ]; then printf "[Appearance]\\ncolor_scheme_path=%s/colors/hyprism.conf\\ncustom_palette=true\\nicon_theme=%s\\nstandard_dialogs=default\\nstyle=Fusion\\n" "$d" "$1" > "$d/qt6ct.conf" && : > "$d/.hyprism"; fi',
                                                      "sh", /^[A-Za-z0-9._+ -]+$/.test(iconTheme) ? iconTheme : "Papirus-Dark"])
+        // ~/.config-relative, like every write here; KDE looks for schemes in ~/.local/share/color-schemes
+        put("../.local/share/color-schemes/Hyprism.colors", kdeColors)
+        put("hyprism/kde/kdeglobals", "# Written by Quickshell ThemeSync: KDE apps in Hyprland use the Hyprism scheme\n[UiSettings]\nColorScheme=Hyprism")
         // btop.conf is yours: only when there is none, one line that picks the theme
         put("btop/themes/hyprism.theme", btopTheme, ["sh", "-c", 'f="$HOME/.config/btop/btop.conf"; [ -e "$f" ] || printf "color_theme = \\"hyprism\\"\\ntheme_background = False\\n" > "$f"'])
         put("hyprism/starship.toml", starshipToml)

@@ -25,5 +25,9 @@ for id in reactor atlas glass; do
         grep -qiF -- "$want" "$T/.config/$f" 2>/dev/null && r=ok
         check "$id: $f has $want" "$r"
     done
+    rgb=$(printf '%d,%d,%d' "0x${bare:0:2}" "0x${bare:2:2}" "0x${bare:4:2}")
+    r=no
+    grep -qF "DecorationFocus=$rgb" "$T/.local/share/color-schemes/Hyprism.colors" 2>/dev/null && r=ok
+    check "$id: Hyprism.colors has $rgb" "$r"
 done
 exit $fail

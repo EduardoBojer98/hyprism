@@ -22,7 +22,15 @@ local function has_plugin(name)
     end
     return false
 end
-hl.env("QT_QPA_PLATFORMTHEME", has_plugin("libqt6ct.so") and "qt6ct" or has_plugin("KDEPlasmaPlatformTheme6.so") and "kde" or "gtk3")
+local qt6ct = has_plugin("libqt6ct.so")
+hl.env("QT_QPA_PLATFORMTHEME", qt6ct and "qt6ct" or has_plugin("KDEPlasmaPlatformTheme6.so") and "kde" or "gtk3")
+-- KDE apps (Dolphin) load a KDE colour scheme over qt6ct's palette: a kdeglobals early on the config path picks
+-- ThemeSync's Hyprism scheme. Only here: your ~/.config/kdeglobals and Plasma are left alone.
+if qt6ct then
+    local mine, dirs = os.getenv("HOME") .. "/.config/hyprism/kde", os.getenv("XDG_CONFIG_DIRS")
+    dirs = (dirs and dirs ~= "") and dirs or "/etc/xdg"
+    if not dirs:find(mine, 1, true) then hl.env("XDG_CONFIG_DIRS", mine .. ":" .. dirs) end -- a reload keeps one copy
+end
 -- Cursor: Settings > Appearance > Cursor saves it in settings/theme.lua (folder name, not the title)
 local tok, theme = pcall(require, "settings.theme")
 theme = tok and type(theme) == "table" and theme or {}
