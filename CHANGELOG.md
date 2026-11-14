@@ -67,7 +67,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - The launcher is split into `Launcher*.qml` parts, and nearly every click target in the shell now has an accessible name and role; `tests/accessibility.sh` lists the rest.
 
 - One name: the GTK colours file is `hyprism.css` (was `linux-setup.css`) and the bundled fonts folder is
-  `fonts/hyprism/`; migration 0003 removes the old files.
+  `fonts/hyprism/`; migration 0003 removes the old files, and 0005 the old import that shared a line in `gtk.css`
+  (GTK apps warned about the missing file).
 - Settings → App Rules: the button for the built-in rules says it opens a read-only file.
 
 - Layouts switch with `Super+Ctrl+Space` only by default (no more Alt+Shift, which started the screenshot key);
