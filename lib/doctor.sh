@@ -43,7 +43,7 @@ doctor() {
             continue
         }
         [[ $src == none ]] && continue
-        for p in $pkgs; do distro_installed "$src" "$p" || bad "package missing: $p ($name, $src)" "./install.sh --only packages"; done
+        for p in $pkgs; do distro_installed "$src" "$p" || bad "package missing (or only another app's dependency): $p ($name, $src)" "./install.sh --only packages"; done
     done < <(wanted_names)
 
     local srcdir f rel target

@@ -7,7 +7,8 @@ aur_helper() { command -v paru || command -v yay; }
 distro_supported() { return 0; }
 
 # distro_installed SOURCE PACKAGE
-distro_installed() { pacman -Qq "$2" >/dev/null 2>&1; }
+# explicitly installed only: one that came in as another app's dependency (e.g. ddcutil with KDE) would go with it
+distro_installed() { pacman -Qqe "$2" >/dev/null 2>&1; }
 
 # distro_prepare SOURCES...: nothing to enable on Arch; AUR packages need paru or yay
 distro_prepare() {
@@ -25,7 +26,8 @@ distro_install() {
         # cachyos: from the repo when this system has it (CachyOS), else from the AUR (plain Arch)
         if [[ $src == repo ]] || { [[ $src == cachyos ]] && pacman -Si "$p" >/dev/null 2>&1; }; then repo+=("$p"); else aur+=("$p"); fi
     done
-    ((${#repo[@]} == 0)) || run sudo pacman -S --needed --noconfirm "${repo[@]}"
+    # --asexplicit: --needed skips a package that is there as a dependency, so mark it as ours
+    ((${#repo[@]} == 0)) || { run sudo pacman -S --needed --noconfirm "${repo[@]}" && run sudo pacman -D --asexplicit "${repo[@]}" >/dev/null; }
     if ((${#aur[@]})); then
         helper=$(aur_helper) || {
             warn "Skipped (no AUR helper): ${aur[*]}"
