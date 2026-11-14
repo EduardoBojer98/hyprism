@@ -32,7 +32,11 @@ case ${1:-report} in
         echo "== Last sleep/wake marks ($marks)"
         tail -n 8 "$marks" 2>/dev/null || echo "  none yet"
         echo "== Previous session's Hyprland log, last 25 lines ($dir/hyprland.prev.log)"
-        tail -n 25 "$dir/hyprland.prev.log" 2>/dev/null || echo "  none yet"
+        # the black-screen-on-wake signature: the screens couldn't be put back after a console switch
+        n=$(grep -c "failed restore" "$dir/hyprland.prev.log" 2>/dev/null || true)
+        ((${n:-0} == 0)) || echo "  !! $n screen(s) failed to restore after a console switch (black screen on wake)"
+        tail -n 25 "$dir/hyprland.prev.log" 2>/dev/null | cut -c1-300 || echo "  none yet"
+        echo # a log cut off by a power-off ends mid-line
         echo "== Hyprland crash reports"
         ls -lt "${XDG_CACHE_HOME:-$HOME/.cache}"/hyprland/hyprlandCrashReport*.txt 2>/dev/null | head -n 3 || echo "  none"
         echo "== Hyprland core dumps (nested test sessions dump here too: check the command line with coredumpctl info PID)"

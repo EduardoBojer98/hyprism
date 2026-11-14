@@ -143,6 +143,23 @@ mkdir -p "$t/hc-run/hypr/sig" && echo line1 >"$t/hc-run/hypr/sig/hyprland.log"
 XDG_RUNTIME_DIR=$t/hc-run HYPRLAND_INSTANCE_SIGNATURE=sig XDG_STATE_HOME=$t/hc-keep timeout 1 bash "$bin/hypr-crashlog" keep
 check "hypr-crashlog keep copies the session log on first run" '[[ $(cat "$t/hc-keep/hyprism/logs/hyprland.log") == line1 ]]'
 
+# nvidia sleep step: kernel suspend notifiers -> NVIDIA's sleep services off (their console switch broke wake);
+# an older driver without them -> services on. sys_* and modinfo are stubs that only record.
+# shellcheck disable=SC2329
+nv_sleep() {
+    mkdir -p "$t/nv/bin"
+    printf '#!/bin/sh\nprintf "%%s\\n" $NV_PARAMS\n' >"$t/nv/bin/modinfo"
+    chmod +x "$t/nv/bin/modinfo"
+    NV_PARAMS=$1 PATH=$t/nv/bin:$PATH bash -c 'sys_disable() { echo "disable $1"; }; sys_enable() { echo "enable $*"; }
+        sys_write() { echo "write $1 $2"; }; . "$0"' modules/nvidia/steps/20-sleep.sh
+}
+# shellcheck disable=SC2034  # read inside check's condition
+nvn=$(nv_sleep "NVreg_UseKernelSuspendNotifiers:(int) NVreg_PreserveVideoMemoryAllocations:(int)")
+# shellcheck disable=SC2034
+nvo=$(nv_sleep "NVreg_PreserveVideoMemoryAllocations:(int)")
+check "nvidia sleep: notifiers -> services off, notifier option on" '[[ $nvn == *"disable nvidia-suspend.service"* && $nvn == *"disable nvidia-resume.service"* && $nvn == *"UseKernelSuspendNotifiers=1"* && $nvn != *enable\ * ]]'
+check "nvidia sleep: older driver -> services on, preserve option" '[[ $nvo == *"enable nvidia-suspend.service"* && $nvo == *"PreserveVideoMemoryAllocations=1"* && $nvo != *disable* ]]'
+
 # the Hyprland Lua the installer seeds parses
 luac=$(command -v luac || command -v luac5.4 || true)
 [[ -n $luac ]] && for f in config/hypr/.config/hypr/defaults/*.lua; do [[ -f $f ]] && check "parses: $f" "\"$luac\" -p \"$f\""; done
