@@ -26,5 +26,10 @@ limit=$2
 ((limit > 0 && $3 >= limit)) || exit 0
 
 # screens on first: an output that sleeps while off loses its CRTC and wakes black
+off=$(hyprctl monitors -j 2>/dev/null | grep -c '"dpmsStatus": *false' || true)
 hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' || true
+# then let them settle: a monitor woken from standby re-handshakes and its HDMI drops for a moment. A drop
+# that lands after sleep has begun can't be applied, and on wake Hyprland can't restore the laptop screen
+# (black until reboot; aquamarine issue 437, no fix upstream; seen 2026-11-14)
+((off == 0)) || sleep "${IDLE_SLEEP_SETTLE:-8}"
 systemctl suspend-then-hibernate || systemctl suspend

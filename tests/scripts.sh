@@ -126,6 +126,23 @@ check "idle-sleep does not sleep on mains when mains is never (20/0/20)" '! idle
 check "idle-sleep sleeps on mains at the mains time (20/30/30)" 'idle_sleep "$t/is/mains" 20 30 30'
 check "idle-sleep never sleeps a computer without a battery (20/0/20)" '! idle_sleep "$t/is/nobat" 20 0 20'
 check "idle-sleep waits for the full time (battery 20, elapsed 10)" '! idle_sleep "$t/is/bat" 20 0 10'
+# idle-sleep with a screen off: screens on, then a wait for them to settle, then sleep (in that order)
+mkdir -p "$t/is/off"
+cat >"$t/is/off/hyprctl" <<'FAKE'
+#!/bin/sh
+[ "$1" = monitors ] && { echo '[{"dpmsStatus": false}]'; exit 0; }
+echo "hyprctl $*" >>"$IS_LOG"
+FAKE
+cat >"$t/is/off/sleep" <<'FAKE'
+#!/bin/sh
+echo "sleep $*" >>"$IS_LOG"
+FAKE
+chmod +x "$t/is/off/hyprctl" "$t/is/off/sleep"
+: >"$t/is/log"
+IS_LOG=$t/is/log HYPRISM_ROOT=$t/is/bat PATH=$t/is/off:$t/is/bin:$PATH bash "$bin/idle-sleep" 20 0 20 >/dev/null 2>&1
+# shellcheck disable=SC2034  # read inside check's condition
+isorder=$(grep -o "dpms\|sleep 8\|suspend" "$t/is/log" | tr '\n' ' ')
+check "idle-sleep turns screens on, waits, then sleeps" '[[ $isorder == "dpms sleep 8 suspend " ]]'
 
 # hypr-crashlog: a sleep with no wake before the next session start is reported as a freeze
 mkdir -p "$t/hc/hyprism/logs"
