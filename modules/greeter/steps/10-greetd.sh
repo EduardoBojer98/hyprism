@@ -4,7 +4,7 @@
 # disabled, greetd enabled; both take effect at the next boot (switching now would end this session).
 for c in greetd regreet cage; do
     command -v "$c" >/dev/null || $DRY || {
-        warn "$c isn't installed (not packaged for this distro?): login screen left as it is."
+        warn "$c isn't installed: login screen left as it is. ./install.sh --only packages installs it (Fedora has no ReGreet)."
         exit 0
     }
 done

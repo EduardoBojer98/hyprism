@@ -159,7 +159,11 @@ Scope {
                         window_bg_color: Theme.surfaceColor, window_fg_color: Theme.text, view_bg_color: Theme.surfaceColor,
                         view_fg_color: Theme.text, headerbar_bg_color: Theme.raised, headerbar_fg_color: Theme.text,
                         card_bg_color: Theme.raised, card_fg_color: Theme.text, popover_bg_color: Theme.surfaceColor,
-                        popover_fg_color: Theme.text, dialog_bg_color: Theme.surfaceColor, dialog_fg_color: Theme.text }
+                        popover_fg_color: Theme.text, dialog_bg_color: Theme.surfaceColor, dialog_fg_color: Theme.text,
+                        // libadwaita 1.4+ sidebars (Nautilus, Settings-style apps): else its own blue-grey
+                        sidebar_bg_color: Theme.raised, sidebar_fg_color: Theme.text, sidebar_backdrop_color: Theme.raised,
+                        secondary_sidebar_bg_color: Theme.raised, secondary_sidebar_fg_color: Theme.text,
+                        secondary_sidebar_backdrop_color: Theme.raised }
         const css = "/* Written by Quickshell ThemeSync from the active theme */\n"
             + Object.keys(named).map(k => `@define-color ${k} ${named[k]};`).join("\n") + "\n"
         for (const v of ["gtk-3.0", "gtk-4.0"])
