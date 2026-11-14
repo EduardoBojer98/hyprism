@@ -33,7 +33,8 @@ git -C $repo rev-parse --git-dir >/dev/null 2>&1 ||
 bash $repo/tests/detect.sh make /opt/fixtures
 # as PROFILE COMMAND: run as the test user on that made-up computer
 as() { sudo -u tester -H env HYPRISM_ROOT="/opt/fixtures/$1" bash -c "cd $repo && $2"; }
-snapshot() { (cd /home/tester && find . -path ./.local/state -prune -o \( -type f -o -type l \) -printf '%p %l\n' | sort); }
+# ./.cache/dconf: GLib's settings cache (gsettings get with no /run/user in the container), not Hyprism's file
+snapshot() { (cd /home/tester && find . \( -path ./.local/state -o -path ./.cache/dconf \) -prune -o \( -type f -o -type l \) -printf '%p %l\n' | sort); }
 
 echo "===== MODULES PER PROFILE (dry runs)"
 expect_modules() { # expect_modules PROFILE "module module ..."
@@ -46,13 +47,25 @@ expect_modules() { # expect_modules PROFILE "module module ..."
     echo "ok: $1 -> ${2:-none}"
 }
 before=$(snapshot)
-expect_modules vm ""
-expect_modules desktop-amd "ddc-monitor"
-expect_modules desktop-nvidia "ddc-monitor nvidia"
-expect_modules laptop-intel "laptop"
-expect_modules laptop-hybrid-nvidia "asus ddc-monitor laptop logitech nvidia nvidia-hybrid tablet"
-expect_modules hidpi-single "laptop"
-expect_modules multi-monitor "ddc-monitor"
+# --yes answers "Full setup?" with yes, so the greeter (themed login screen) is on everywhere
+expect_modules vm "greeter"
+expect_modules desktop-amd "ddc-monitor greeter"
+expect_modules desktop-nvidia "ddc-monitor greeter nvidia"
+expect_modules laptop-intel "greeter laptop"
+expect_modules laptop-hybrid-nvidia "asus ddc-monitor greeter laptop logitech nvidia nvidia-hybrid tablet"
+expect_modules hidpi-single "greeter laptop"
+expect_modules multi-monitor "ddc-monitor greeter"
+# the base setup: the desktop only, so no greeter and none of the apps group
+base=$(as desktop-amd './install.sh --dry-run --yes --profile base')
+if grep -q 'modules:.*greeter' <<<"$base" || grep -qE '^   (repo|copr|aur).*\bnautilus\b' <<<"$base"; then
+    echo "xx --profile base still brings the greeter or the apps"
+    exit 1
+fi
+grep -qE '^   (repo|copr).*\bghostty\b' <<<"$base" || {
+    echo "xx --profile base left out the desktop itself (ghostty)"
+    exit 1
+}
+echo "ok: --profile base -> the desktop only"
 # the optional modules resolve their packages on this distro (a dry run with all three switched on)
 opt=$(as desktop-nvidia './install.sh --dry-run --yes --with dev,gaming,ai')
 for want in mise steam gamemode mangohud ollama docker; do

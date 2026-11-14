@@ -176,8 +176,13 @@ git clone https://github.com/EduardoBojer98/hyprism.git ~/hyprism && cd ~/hypris
 ./install.sh               # does it; asks before every system change
 ```
 
-Then log out and pick **Hyprland** at the login screen. The installer does not set up a login manager: how to
-start Hyprland without one is in [docs/install.md](docs/install.md). `./install.sh doctor` checks the result;
+The first run asks **full or base**. Full also installs apps that follow the theme (Nautilus, Text Editor, Loupe,
+Papers, Celluloid, Amberol, Resources…) and a themed login screen (greetd + ReGreet, asked before it replaces
+yours). Base sets up only the desktop and keeps your own apps and login screen. Change it later with
+`./install.sh --profile full` or `--profile base`; nothing is uninstalled either way.
+
+Then log out and pick **Hyprland** at the login screen (how to start Hyprland without one is in
+[docs/install.md](docs/install.md)). `./install.sh doctor` checks the result;
 `./install.sh update` updates; `./install.sh uninstall` removes it. All commands: `./install.sh --help`.
 
 ## Keys

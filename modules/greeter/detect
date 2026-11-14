@@ -1,1 +1,1 @@
-false # opt-in: ./install.sh --with greeter
+[[ $(hw_get setup.profile) == full ]] # the full setup; base keeps your login screen (--with greeter turns it on anyway)

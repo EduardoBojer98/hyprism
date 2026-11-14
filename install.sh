@@ -15,6 +15,8 @@
 #   --yes                     answer yes to every question (unattended)
 #   --only LIST               comma list of steps (packages, links, services, defaults, firewall, modules)
 #                             and/or package groups (core, desktop, tools, look, apps, shell)
+#   --profile full|base       full: Hyprism's apps and themed login screen too; base: only the desktop,
+#                             your own apps and login screen stay (asked at the first install, remembered)
 #   --with LIST               turn modules on, whatever detection says (remembered)
 #   --without LIST            turn modules off (remembered)
 #   --step MODULE/FILE        run just that one module step again
@@ -26,7 +28,7 @@ set -Eeuo pipefail # -E: the failure summary (on_fail) also fires inside functio
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 ARGS=("$@") # kept for update, which re-runs itself after a pull
-DRY=false YES=false ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" CMD=install
+DRY=false YES=false ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" PROFILE="" CMD=install
 usage() {
     awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
     exit "${1:-0}"
@@ -35,7 +37,7 @@ while (($#)); do
     case $1 in
         --dry-run) DRY=true ;;
         --yes | -y) YES=true ;;
-        --only | --with | --without | --backup | --step)
+        --only | --with | --without | --backup | --step | --profile)
             [[ -n ${2:-} ]] || {
                 echo "$1 needs a value" >&2
                 exit 2
@@ -46,6 +48,13 @@ while (($#)); do
                 --without) WITHOUT=$2 ;;
                 --backup) BACKUP=$2 ;;
                 --step) STEP=$2 ONLY=modules ;;
+                --profile)
+                    [[ $2 == full || $2 == base ]] || {
+                        echo "--profile is full or base" >&2
+                        exit 2
+                    }
+                    PROFILE=$2
+                    ;;
             esac
             shift
             ;;
@@ -97,6 +106,10 @@ for m in ${WITH//,/ }; do
     hw_override "module.$m" true
 done
 for m in ${WITHOUT//,/ }; do hw_override "module.$m" false; done
+[[ -z $PROFILE ]] || hw_override setup.profile "$PROFILE"
+# the first install asks (only when it installs packages or modules); later runs use the saved answer
+if [[ $CMD == install ]] && { want_step packages || want_step modules; }; then choose_profile; fi
+PROFILE=$(hw_get setup.profile) # "" = an install from before the choice: apps as before, no greeter
 
 case $CMD in
     doctor) doctor ;;

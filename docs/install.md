@@ -10,10 +10,10 @@ One command sets up the desktop. It asks before every change to your system, and
   for `sudo` itself when it needs it.
 - A way to start Hyprland (see below).
 
-**What the installer does not do.** It does not install or set up a login manager (the screen where you type your
-password). It installs the `hyprland` package, and on Arch that package adds a "Hyprland" entry to
-the session list of managers that read `/usr/share/wayland-sessions` (GDM, SDDM and similar). If you already have
-a login manager, pick Hyprland there after the install.
+**Login screen.** The base setup does not touch your login manager (the screen where you type your password). It
+installs the `hyprland` package, which adds a "Hyprland" entry to the session list of managers that read
+`/usr/share/wayland-sessions` (GDM, SDDM and similar): pick Hyprland there after the install. The full setup
+offers its own themed one (the `greeter` module: greetd + ReGreet, Arch only), asked before it replaces yours.
 
 With no login manager, start Hyprland from a text console (Ctrl+Alt+F3, log in), with the command Hyprland's
 own documentation gives (upstream's instruction, not something Hyprism adds):
@@ -56,7 +56,14 @@ How to read it:
 
 In order, it:
 
-1. looks at the hardware and writes `~/.config/hyprism/hardware.toml`;
+1. looks at the hardware and writes `~/.config/hyprism/hardware.toml`, and the first time asks **full or base**:
+   - **full**: the desktop plus Hyprism's apps, all GTK4/libadwaita so they follow the theme (Nautilus, Text Editor,
+     Loupe, Papers, File Roller, Celluloid, Amberol, Calculator, Disks, Baobab, Resources) and the `greeter` module
+     (a themed login screen in place of yours; its step is asked separately);
+   - **base**: the desktop only (Hyprland, the shell, Ghostty, theming, tools). Your apps and login screen stay.
+
+   The answer is saved as `setup.profile` in `hardware.toml`. Switch with `./install.sh --profile full` (or `base`).
+   Switching to base uninstalls nothing; `--without greeter` keeps your login screen on a full setup;
 2. installs the packages that are missing (one question: "Install these?");
 3. links the files in `config/` and the active modules into your home folder, one file at a time. A file of
    yours that is in the way is moved to `~/.local/state/hyprism/backups/<time>/`, never deleted;

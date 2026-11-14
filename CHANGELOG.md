@@ -6,6 +6,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Full or base setup: the first install asks; `--profile full|base` changes it. Full adds the themed apps and
+  login screen; base sets up only the desktop and keeps your own apps and login screen.
 - Everyday apps that follow the theme (GTK4/libadwaita): Nautilus replaces Dolphin, plus Text Editor, Loupe,
   Papers, File Roller, Celluloid, Amberol, Calculator, Disks, Baobab and Resources. Settings' file pickers use zenity.
 - Module `greeter` (opt-in): greetd + ReGreet login screen in the theme's colours, KDE Wallet unlocked at login.
@@ -69,6 +71,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   `tests/settings-reference.py`; CI fails when it is out of date.
 
 ### Changed
+
+- On Arch, packages the setup needs are marked as explicitly installed, so removing another desktop (KDE) can't
+  take them along as its dependencies (ddcutil, iio-sensor-proxy, libqalculate did).
+- `tests/hypr-config.sh` says "skipped" when Hyprland 0.57's `--verify-config` crashes, and checks the running
+  session's config with `hyprctl configerrors` instead of failing every profile.
 - The launcher is split into `Launcher*.qml` parts, and nearly every click target in the shell now has an accessible name and role; `tests/accessibility.sh` lists the rest.
 
 - One name: the GTK colours file is `hyprism.css` (was `linux-setup.css`) and the bundled fonts folder is

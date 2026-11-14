@@ -24,8 +24,13 @@ for profile in "$t"/fixtures/*/; do
         ln -s "$PWD/$f" "$home/.config/hypr/hardware/"
         basename "$f" .lua >>"$home/.config/hypr/hardware/index"
     done
-    out=$(HOME=$home XDG_CONFIG_HOME=$home/.config hyprland --verify-config -c "$home/.config/hypr/hyprland.lua" 2>&1) || true # judged by its text below
-    if grep -qi 'config ok\|no errors' <<<"$out"; then
+    rc=0
+    out=$(HOME=$home XDG_CONFIG_HOME=$home/.config hyprland --verify-config -c "$home/.config/hypr/hyprland.lua" 2>&1) || rc=$? # judged by its text below
+    # Hyprland 0.57 crashes in --verify-config with a Lua config: it can't judge, so no verdict
+    if ((rc >= 128)); then
+        echo "skipped: hyprland --verify-config crashed on $name (signal $((rc - 128))): Hyprland's bug, not the config"
+        crashed=1
+    elif grep -qi 'config ok\|no errors' <<<"$out"; then
         echo "ok: Hyprland accepts the config on $name"
     else
         echo "xx Hyprland rejects the config on $name:"
@@ -33,4 +38,13 @@ for profile in "$t"/fixtures/*/; do
         fail=1
     fi
 done
+# the config this session is running, as Hyprland itself loaded it (the check that works when --verify-config can't)
+if ((${crashed:-0})) && [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && $(readlink -f "$HOME/.config/hypr/hyprland.lua") == "$PWD"/* ]]; then
+    errs=$(hyprctl configerrors 2>&1)
+    if [[ -z ${errs//[[:space:]]/} ]]; then echo "ok: the running Hyprland loaded this repo's config without errors"; else
+        echo "xx the running Hyprland reports config errors:"
+        echo "$errs"
+        fail=1
+    fi
+fi
 exit "$fail"

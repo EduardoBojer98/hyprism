@@ -27,6 +27,7 @@ hyprsunset               desktop   Night Light
 hyprpicker               desktop   colour picker (Super+Shift+C)
 qt6-wayland              desktop   Qt apps (Quickshell) run natively on Wayland
 quickshell               desktop   the whole shell: bar, dock, launcher, notifications, Settings
+ghostty                  desktop   terminal (Super+Return), coloured by the theme
 pipewire                 desktop   sound (pw-play for notification sounds)
 pipewire-pulse           desktop   sound for apps that speak PulseAudio
 wireplumber              desktop   picks audio devices; the shell's sound controls and the volume keys (wpctl)
@@ -74,8 +75,7 @@ font-noto                look      "Noto Sans" choice; fallback for missing glyp
 font-noto-emoji          look      emoji in the picker, notifications and browser
 font-jetbrains-nerd      look      terminal and code font with icons
 
-# Everyday apps: GTK4/libadwaita, so they take the theme's colours and accent (ThemeSync's hyprism.css)
-ghostty                  apps      terminal (Super+Return)
+# Everyday apps (full setup only): GTK4/libadwaita, so they take the theme's colours and accent (hyprism.css)
 nautilus                 apps      file manager (Super+E): tabs, search, previews, admin:// for system files
 gvfs-mtp                 apps      phones and cameras in the file manager
 gvfs-smb                 apps      Windows / NAS network shares in the file manager

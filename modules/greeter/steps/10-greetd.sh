@@ -40,7 +40,7 @@ if [[ -r $pam ]] && ! grep -q pam_kwallet5 "$pam"; then
 fi
 
 old=$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)")
-if [[ $old != greetd.service ]]; then
+if [[ $old != greetd.service ]] && _sys_unit_exists greetd.service; then # no systemd (container): nothing to switch
     [[ -n $old ]] && run sudo systemctl disable "$old"
     run sudo systemctl enable greetd.service
     sys_note "login screen switched to greetd at next boot; back: sudo systemctl disable greetd && sudo systemctl enable ${old:-<your old display manager>}"

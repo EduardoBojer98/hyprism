@@ -4,10 +4,24 @@
 
 PACKAGE_GROUPS=(core desktop tools look apps shell) # --only core,tools installs just those
 
+# Full: the desktop plus Hyprism's apps and login screen. Base: the desktop only; your apps and login screen stay.
+choose_profile() {
+    [[ -n $(hw_get setup.profile) ]] && return 0
+    say "Full setup or base?"
+    echo "   Full: also Hyprism's apps (Nautilus, Text Editor, Loupe, Papers, Celluloid, Amberol, Resources…),"
+    echo "         which follow the theme, and a themed login screen in place of your current one."
+    echo "   Base: only the desktop (Hyprland, the shell, terminal, theming, tools); your own apps and login"
+    echo "         screen stay as they are. Change later: ./install.sh --profile full (or base)."
+    local p=base
+    ask "Full setup?" && p=full
+    echo "   setup: $p"
+    hw_override setup.profile "$p"
+}
+
 want_group() {
     local g sel=false
     for g in "${PACKAGE_GROUPS[@]}"; do [[ ",$ONLY," == *",$g,"* ]] && sel=true; done
-    ! $sel || [[ ",$ONLY," == *",$1,"* ]]
+    if $sel; then [[ ",$ONLY," == *",$1,"* ]]; else [[ $1 != apps || ${PROFILE:-} != base ]]; fi # by name: always
 }
 
 wanted_names() {
