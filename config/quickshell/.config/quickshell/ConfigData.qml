@@ -48,6 +48,7 @@ JsonAdapter {
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
         property bool clipboardInside: true     // Spotlight's clipboard button shows history in the panel
+        property string position: "pointer"     // pointer (opens around the mouse pointer) | theme (the theme's own place)
     }
     property JsonObject clipboard: JsonObject {
         property int maxItems: 300
@@ -132,6 +133,9 @@ JsonAdapter {
         property bool snap: false               // floating windows snap to edges and each other
         property bool hideCursorTyping: false
         property bool titleBars: true           // hyprbars: title bar with buttons on apps that draw none
+        property string border: "accent"        // focused window's frame: accent (the theme's) | gradient (accent to accent2) | rainbow
+        property int rainbowSpeed: 5            // rainbow: 1 slow .. 10 fast
+        property bool rainbowOnBattery: false   // rainbow keeps turning on battery (it redraws every frame); off = still rainbow
         property var apps: []                   // [{ id, name, class (regex), open: normal|float|pin|maximize|fullscreen, workspace: 0 = any }]
     }
     property JsonObject keybinds: JsonObject {
@@ -139,13 +143,15 @@ JsonAdapter {
         property var overrides: ({})
     }
     property JsonObject weather: JsonObject {
-        property string city: "Belgrade"
-        property real latitude: 44.82
-        property real longitude: 20.46
-        property int days: 7                     // forecast days in the weather dropdown
-        property bool showHourly: true           // next 12 hours strip
-        property bool showDetails: true          // feels like, humidity, wind, UV, sunrise/sunset
+        // saved places, in your order: [{ name, region, country, latitude, longitude }]; Settings > Weather adds them
+        // from a search. Empty = the panel asks for a place. Night Light's sunset mode uses the first one.
+        property var locations: []
+        property int current: 0                  // which saved place the bar shows (index into locations)
         property string units: "celsius"         // "celsius" (km/h) or "fahrenheit" (mph)
+        property int days: 7                     // days in the forecast list (0 = no daily list)
+        property int hours: 12                   // hours in the hourly strip (0 = no hourly strip)
+        property list<string> details: ["feels", "humidity", "wind", "uv", "rain", "sun"]   // readings under the current conditions, in order
+        property int refreshMin: 15              // minutes between updates
     }
     property JsonObject system: JsonObject {
         property string taskManager: "auto"      // desktop id, or "auto": first installed (Sensors.taskManagers)
@@ -256,6 +262,14 @@ JsonAdapter {
         property string mode: "dynamic"          // dynamic: made when needed on the screen you're on | fixed: always there, each on its screen
         property int count: 10                   // fixed: how many (Super+1..0 reach the first ten)
         property var screens: ({})               // fixed: workspace number -> output name; missing = the screen you're on
+    }
+    property JsonObject capture: JsonObject {   // screenshots and recordings (~/.local/bin/screenshot, record)
+        property string folder: "~/Pictures/Screenshots"
+        property string recordFolder: "~/Videos/Recordings"
+        property string after: "edit"           // after a region/window/screen capture: edit (annotate in Satty) | copy | save (and copy)
+        property int delay: 0                   // seconds before a full-screen capture
+        property string audio: "none"           // recordings: none | desktop | mic | both
+        property bool notify: true              // a notification with the picture after each capture
     }
     property JsonObject apps: JsonObject {
         property string terminal: "ghostty +new-window"   // command the terminal key runs (SettingsSync writes hypr/settings/apps.lua)

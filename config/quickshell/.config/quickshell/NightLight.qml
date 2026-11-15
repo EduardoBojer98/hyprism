@@ -12,7 +12,8 @@ Singleton {
 
     readonly property var cfg: Config.nightLight
     property date now: new Date()
-    readonly property var sun: sunTimes(now, Config.weather.latitude, Config.weather.longitude)
+    readonly property var place: Config.weather.locations?.[0] ?? null   // the first saved weather place
+    readonly property var sun: place ? sunTimes(now, place.latitude, place.longitude) : null
     readonly property bool active: {
         const m = now.getHours() * 60 + now.getMinutes()
         switch (cfg.mode) {

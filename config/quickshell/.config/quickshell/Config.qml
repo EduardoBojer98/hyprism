@@ -35,6 +35,7 @@ Singleton {
     readonly property alias workspaces: adapter.workspaces
     readonly property alias apps: adapter.apps
     readonly property alias monitorShare: adapter.monitorShare
+    readonly property alias capture: adapter.capture
     readonly property alias battery: adapter.battery
     readonly property alias hotCorners: adapter.hotCorners
     readonly property bool loaded: file.loaded
@@ -50,7 +51,7 @@ Singleton {
                 iconSize: [24, 72], autoHide: "bool", showRunning: "bool", combine: "bool", barLabels: ["icon", "name", "title"], previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list", widgets: "list" },
         launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
                     style: ["theme", "spotlight", "command", "launchpad", "drawer", "sidebar", "terminal"],
-                    columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool" },
+                    columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool", position: ["pointer", "theme"] },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], historyMax: [10, 500], sound: "string", volume: [0, 100],
@@ -67,7 +68,8 @@ Singleton {
                    masterNew: ["master", "slave"], masterSide: ["left", "right", "top", "center"], columnWidth: [0.3, 1],
                    followMouse: "bool", focusOnActivate: "bool", warpCursor: "bool", backAndForth: "bool",
                    inactiveOpacity: [0.6, 1], dimInactive: "bool", dimStrength: [0.05, 0.6], resizeOnBorder: "bool",
-                   snap: "bool", hideCursorTyping: "bool", titleBars: "bool", apps: "list" },
+                   snap: "bool", hideCursorTyping: "bool", titleBars: "bool", apps: "list",
+                   border: ["accent", "gradient", "rainbow"], rainbowSpeed: [1, 10], rainbowOnBattery: "bool" },
         calendar: { holidays: "bool", country: "string", localNames: "bool", observances: "bool", moon: "bool",
                     weekNumbers: "bool", firstDay: ["monday", "sunday"] },
         language: { languages: "list", formats: "string" },
@@ -80,8 +82,10 @@ Singleton {
                windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
-        weather: { city: "string", latitude: [-90, 90], longitude: [-180, 180], days: [1, 16],
-                   showHourly: "bool", showDetails: "bool", units: ["celsius", "fahrenheit"] },
+        weather: { locations: "places", current: [0, 19], units: ["celsius", "fahrenheit"], days: [0, 16], hours: [0, 48],
+                   details: "list", refreshMin: [10, 180] },
+        capture: { folder: "string", recordFolder: "string", after: ["edit", "copy", "save"], delay: [0, 10],
+                   audio: ["none", "desktop", "mic", "both"], notify: "bool" },
         idle: { lockMin: [0, 240], sleepMin: [0, 480], sleepOnPowerMin: [0, 480], imported: "bool" },
         input: { layouts: "layouts", shortcut: [0, 3], repeatRate: [1, 100], repeatDelay: [100, 2000], sensitivity: [-1, 1],
                  naturalScroll: "bool", tapToClick: "bool", disableWhileTyping: "bool", clickMethod: ["buttonareas", "clickfinger"],
@@ -113,6 +117,10 @@ Singleton {
         if (rule === "mode") return typeof value === "string" && /^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(value) ? "" : "Use a mode like 1920x1080@60"
         if (rule === "layouts") return value && typeof value.length === "number" && value.length >= 1 && value.length <= 4
             && Array.from(value).every(l => /^[a-z]{2,8}$/.test(l?.code ?? "") && /^[a-z0-9_-]*$/.test(l?.variant ?? "")) ? "" : "One to four keyboard layouts"
+        if (rule === "places") return value && typeof value.length === "number" && value.length <= 20
+            && Array.from(value).every(l => typeof l?.name === "string" && l.name.length > 0
+                && typeof l?.latitude === "number" && Math.abs(l.latitude) <= 90
+                && typeof l?.longitude === "number" && Math.abs(l.longitude) <= 180) ? "" : "Up to 20 places, each with a name and coordinates"
         if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(n => /^[A-Za-z0-9._-]+$/.test(n)) ? "" : "Unknown display names"
         return ""
     }
@@ -217,6 +225,12 @@ Singleton {
             }
             adapter.version = 3
         }
+        // before 2026-11-15 the weather had one place and two switches
+        const rw = raw?.weather ?? {}
+        if (rw.locations === undefined && typeof rw.city === "string" && typeof rw.latitude === "number" && typeof rw.longitude === "number")
+            adapter.weather.locations = [{ name: rw.city, region: "", country: "", latitude: rw.latitude, longitude: rw.longitude }]
+        if (rw.hours === undefined && rw.showHourly === false) adapter.weather.hours = 0
+        if (rw.details === undefined && rw.showDetails === false) adapter.weather.details = []
         if (raw?.appearance?.animations === false && raw?.appearance?.motion === undefined) a.motion = "off"   // the old on/off switch
         const fresh = defaults.createObject(null)
         for (const section of Object.keys(schema))
