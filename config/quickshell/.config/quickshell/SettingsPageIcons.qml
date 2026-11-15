@@ -31,12 +31,13 @@ ColumnLayout {
     SettingGroup {
         SettingRow {
             label: "Icon theme"
-            hint: "App icons in the dock, launcher and lists (Papirus switches to its light set in light themes)"
+            hint: (Config.appearance.iconTheme === "theme" ? Theme.current.name + " uses " + Theme.iconTheme + ". " : "")
+                + "App icons in the dock, launcher and lists (Papirus switches to its light set in light themes)"
             Dropdown {
                 width: 240
-                options: page.themes
-                current: Config.appearance.iconTheme
-                onPicked: v => Config.set("appearance", "iconTheme", v)
+                options: ["Theme's own"].concat(page.themes)
+                current: Config.appearance.iconTheme === "theme" ? "Theme's own" : Config.appearance.iconTheme
+                onPicked: v => Config.set("appearance", "iconTheme", v === "Theme's own" ? "theme" : v)
             }
         }
         SettingRow {

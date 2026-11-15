@@ -202,5 +202,7 @@
     "selection": "#3b1636",
     "selectionText": "#e3e8ef"
   },
-  "wall": "monolith"
+  "wall": "monolith",
+  "icons": "Papirus",
+  "cursor": "Bibata-Modern-Ice"
 }

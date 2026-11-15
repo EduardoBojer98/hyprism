@@ -257,6 +257,12 @@ Singleton {
             }
             adapter.version = 3
         }
+        // format 3 saved Papirus-Dark icons and the system cursor for everyone: every theme has its own now
+        if ((raw?.version ?? 1) < 4) {
+            if (adapter.appearance.iconTheme === "Papirus-Dark") adapter.appearance.iconTheme = "theme"
+            if (adapter.appearance.cursorTheme === "default") adapter.appearance.cursorTheme = "theme"
+            adapter.version = 4
+        }
         // before 2026-11-15 the weather had one place and two switches
         const rw = raw?.weather ?? {}
         if (rw.locations === undefined && typeof rw.city === "string" && typeof rw.latitude === "number" && typeof rw.longitude === "number")

@@ -195,7 +195,9 @@ Singleton {
     readonly property int reserveRight: reserve("right")
 
     // ---- icons ---------------------------------------------------------------------------------------
-    readonly property string iconTheme: a.iconTheme
+    // icons and cursor: the theme's own (theme.json icons / cursor) unless you picked one; "Papirus" follows light/dark
+    readonly property string iconTheme: a.iconTheme === "theme" ? (current.icons || "Papirus") : a.iconTheme
+    readonly property string cursorTheme: a.cursorTheme === "theme" ? (current.cursor || "default") : a.cursorTheme
     readonly property int iconSmall: 16
     readonly property int iconMedium: 22
     readonly property int iconLarge: 32

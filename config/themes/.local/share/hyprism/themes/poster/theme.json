@@ -192,5 +192,7 @@
     "selection": "#561f17",
     "selectionText": "#f4f1ea"
   },
-  "wall": "poster"
+  "wall": "poster",
+  "icons": "Papirus",
+  "cursor": "Adwaita"
 }
