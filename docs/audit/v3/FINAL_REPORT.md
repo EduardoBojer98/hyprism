@@ -148,7 +148,8 @@ different scales: this desktop mixes 1.2 and 1.0.
   - `tests/all.sh` passes: lint, install on Arch and Fedora, and the update test from the last release, which
     runs migration 0006.
   - `settings-coverage`: 191 options, 0 gaps.
-  - `tests/performance.sh` with the laptop preset: 0.67 % CPU, 443 MB.
+  - `tests/performance.sh`, final `main` vs the release before (5b11a1a): idle CPU 0.27 % vs 0.23 %, memory 415 MB vs
+    413 MB (budgets 2 % / 450 MB). PLAN's 299 MB target predates this machine's numbers: 5b11a1a itself uses 413 MB.
 - **Test desktop QA:**
   - All panels, the battery flyout and the Settings pages (Appearance, Menu Bar) were checked in Pebble, Poster
     and Monolith.
@@ -196,3 +197,22 @@ different scales: this desktop mixes 1.2 and 1.0.
   - Try Rainbow in Settings > Windows.
   - Add a second weather place.
   - Open the System panel while on battery.
+
+## 11. Follow-up requests (2026-11-15, after the first live merge)
+
+| Request | Done | Checked |
+|---|---|---|
+| Quick settings icons open the whole Control Center | `BarStatus.qml` | QML loads; the click itself not scriptable |
+| Redesign the quick settings panel | Control Center redesign; Screen and Sound in separate tiles (fold row and `controlCenter.slidersOpen` removed) | test desktop, 3 themes; live (built-in + XZ322QU brightness) |
+| Launcher in the middle in every theme | `launcher.position: center` (default), set live | test desktop, 3 themes |
+| Monolith redesign, cyberpunk terminal, new bar layout | neon terminal HUD: workspace tabs, split clock, slash rules, magenta brackets + glow, lime→magenta frame, scanline wallpaper; new theme options `ws: tabs`, `clock: split`, `bar.sepStyle`, `popup.decorColour` | test desktop dark + light; live bar |
+| Better animations, different looks, examples in Settings | looks Theme's own / Smooth / Snappy / Springy / Minimal (`appearance.motionStyle`), preview cards in Settings > Appearance > Motion; overlay, OSD, weather skeleton, Hyprland close curve and Reduced fixed; shell layers skip Hyprland's fade | test desktop; idle CPU unchanged |
+| Menu Bar visual editor, only the picked item's settings | bar preview + three equal columns + "Add to the bar"; keyboard moves; per-item panel | test desktop, 3 themes, keyboard only |
+| Notification badge with no notifications | unread is counted from the history (`Notifications.qml`) | reproduced live, fixed live |
+| Screenshot tool not working | `~/.local/bin` was not on Hyprland's PATH under greetd (also broke `hypr-plugins`, `hypr-crashlog` at login) | live: a keybind shot saves |
+
+Also fixed on the way: `shape.density` and `hypr.frame` never applied (lint now guards theme keys); a start-up
+TypeError in `shell.qml`; Wi-Fi row warnings; 24-hour time reachable from the Lock Screen page.
+
+Not verified by a real pointer: dragging in the bar editor, the quick-settings click, Springy overshoot on real
+panels (checked in the preview cards), an area selection with the mouse.
