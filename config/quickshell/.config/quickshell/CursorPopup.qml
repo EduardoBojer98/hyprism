@@ -245,10 +245,11 @@ Scope {
             // keep the keyboard's place in view: Tab or the arrows into a row below the cut scroll to it
             readonly property Item focused: Window.activeFocusItem
             onFocusedChanged: {
-                if (!overflow || !focused) return
                 let p = focused
-                while (p && p !== scroll.contentItem) p = p.parent
-                if (!p) return
+                while (p && p !== box) p = p.parent
+                // the focused row was rebuilt or removed (a list changed): back to the panel, so Escape still works
+                if (!p) { if (popup.open) Qt.callLater(popup.takeFocus); return }
+                if (!overflow) return
                 const y = focused.mapToItem(scroll.contentItem, 0, 0).y, pad = Theme.spaceXl
                 if (y < scroll.contentY + pad) scroll.contentY = Math.max(0, y - pad)
                 else if (y + focused.height > scroll.contentY + height - pad)

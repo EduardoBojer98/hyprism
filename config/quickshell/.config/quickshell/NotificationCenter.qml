@@ -15,6 +15,12 @@ Singleton {
     property var unfolded: ({})            // app name -> true
 
     function toggle() { popup.toggle() }
+    // keyboard: Up / Down walk the cards (Tab reaches the buttons too), Enter opens one, Delete dismisses it
+    function step(from, forward) {
+        for (let i = from.nextItemInFocusChain(forward), n = 0; i && i !== from && n < 500; i = i.nextItemInFocusChain(forward), n++)
+            if (i.notificationCard) { i.forceActiveFocus(); return true }
+        return false
+    }
     function fold(app, on) { const u = Object.assign({}, unfolded); if (on) delete u[app]; else u[app] = true; unfolded = u }
 
     CursorPopup {
@@ -23,6 +29,7 @@ Singleton {
         placement: "topRight"
         boxWidth: 380
         boxHeight: column.implicitHeight + Theme.spaceM * 2
+        focusItem: column
         onOpened: { Notifications.unread = 0; Notifications.now = new Date(); root.unfolded = ({}) }
 
         Glass {
@@ -34,6 +41,24 @@ Singleton {
                 id: column
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
                 spacing: 8
+                readonly property Item focused: Window.activeFocusItem
+                Keys.onDownPressed: root.step(focused ?? column, true)
+                Keys.onUpPressed: root.step(focused ?? column, false)
+                function cards() {
+                    const out = []
+                    for (let i = column.nextItemInFocusChain(true), n = 0; i && i !== column && n < 500; i = i.nextItemInFocusChain(true), n++)
+                        if (i.notificationCard && !out.includes(i)) out.push(i)
+                    return out
+                }
+                Keys.onDeletePressed: {
+                    const card = focused
+                    if (!card?.notificationCard) return
+                    // the list is rebuilt after a dismiss: put the keyboard on the card now in the same place
+                    const at = cards().indexOf(card)
+                    column.forceActiveFocus()
+                    card.notification?.dismiss()
+                    Qt.callLater(() => { const c = column.cards(); if (c.length) c[Math.min(at, c.length - 1)].forceActiveFocus() })
+                }
 
                 // ---- header: title and count, Do Not Disturb, Clear all ----
                 RowLayout {

@@ -10,7 +10,7 @@ import QtQuick.Layouts
 Glass {
     id: card
 
-    property Notification notification
+    property var notification              // a live Notification, or a saved record (Notifications.qml)
     property bool banner: false
     property int stacked: 0                // more notifications folded behind this one
     readonly property bool hovered: area.containsMouse || closeArea.containsMouse
@@ -23,7 +23,17 @@ Glass {
     Accessible.role: Accessible.Alert
     Accessible.name: [card.notification?.appName, card.notification?.summary].filter(s => s).join(": ")
     Accessible.description: card.notification?.body ?? ""
-    Accessible.onPressAction: if (card.stacked > 0) card.expandRequested(); else if (card.notification) Notifications.activate(card.notification)
+    Accessible.onPressAction: open()
+    Accessible.focusable: !banner
+    readonly property bool notificationCard: true   // NotificationCenter walks the cards by this
+
+    // keyboard (in the notification centre): Tab or the arrows to a card, Enter opens it, Delete dismisses it
+    activeFocusOnTab: !banner
+    function open() { if (card.stacked > 0) card.expandRequested(); else if (card.notification) Notifications.activate(card.notification) }
+    Keys.onReturnPressed: open()
+    Keys.onEnterPressed: open()
+    Keys.onSpacePressed: open()
+    FocusRing {}
 
     implicitHeight: content.implicitHeight + Theme.spaceM * 2
     strong: !isMinimal
@@ -59,7 +69,7 @@ Glass {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: if (card.stacked > 0) card.expandRequested(); else if (card.notification) Notifications.activate(card.notification)
+        onClicked: card.open()
     }
 
     RowLayout {
@@ -132,7 +142,7 @@ Glass {
         id: closeButton
         anchors { top: parent.top; right: parent.right; margins: Theme.spaceS }
         width: 22; height: 22; radius: 11
-        visible: card.hovered && card.stacked === 0
+        visible: (card.hovered || card.activeFocus) && card.stacked === 0
         color: closeArea.containsMouse ? Theme.fillActive : Theme.fillHover
         Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 12 } }
         MouseArea {
