@@ -45,7 +45,10 @@ shell_restart() {
     [[ -n ${HYPRISM_PULLED:-} && -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && pgrep -x qs >/dev/null || return 0
     say "Restarting the shell"
     run fc-cache -f
-    run qs kill # only the instance of ~/.config/quickshell, not a test desktop
+    # every instance of ~/.config/quickshell on this display, not a test desktop: `qs kill` stops one, and the
+    # shell's own reload when the links change can leave two
+    local i
+    if $DRY; then run qs kill; else for i in 1 2 3; do qs kill >/dev/null 2>&1 || break; done; fi
     run hyprctl dispatch 'hl.dsp.exec_cmd("qs")' >/dev/null
 }
 
