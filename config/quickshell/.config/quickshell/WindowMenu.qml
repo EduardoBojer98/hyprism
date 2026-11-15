@@ -146,7 +146,13 @@ Singleton {
                                     x: 4 + modelData[0] * inner + 1.5; y: 4 + modelData[1] * innerH + 1.5
                                     width: modelData[2] * inner - 3; height: modelData[3] * innerH - 3
                                     radius: 3
-                                    color: part.containsMouse ? Theme.accent : Theme.fillActive
+                                    color: part.containsMouse || activeFocus ? Theme.accent : Theme.fillActive
+                                    activeFocusOnTab: true
+                                    Keys.onReturnPressed: root.snap(modelData)
+                                    Keys.onSpacePressed: root.snap(modelData)
+                                    Accessible.role: Accessible.Button
+                                    Accessible.name: "Snap window"
+                                    FocusRing {}
                                     MouseArea { id: part; Accessible.role: Accessible.Button; Accessible.name: "Snap window"; Accessible.onPressAction: root.snap(parent.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.snap(parent.modelData) }
                                 }
                             }
@@ -156,12 +162,12 @@ Singleton {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Theme.spaceS
-                    Pill_ { text: "Big, centred"; onClicked: root.snap([0.125, 0.08, 0.75, 0.84]) }
-                    Pill_ {
+                    PillButton { text: "Big, centred"; onClicked: root.snap([0.125, 0.08, 0.75, 0.84]) }
+                    PillButton {
                         text: (root.win.fullscreen ?? 0) === 1 ? "Restore" : "Maximise"
                         onClicked: root.act([`hl.dsp.window.fullscreen({ action = "toggle", mode = "maximized", window = "${root.addr}" })`])
                     }
-                    Pill_ {
+                    PillButton {
                         text: (root.win.fullscreen ?? 0) === 2 ? "Leave fullscreen" : "Fullscreen"
                         onClicked: root.act([`hl.dsp.window.fullscreen({ action = "toggle", window = "${root.addr}" })`])
                     }
@@ -174,10 +180,10 @@ Singleton {
                     spacing: Theme.spaceXs + 2
                     Repeater {
                         model: root.monitors
-                        Pill_ {
+                        PillButton {
                             required property var modelData
                             text: modelData.name + (modelData.id === root.win.monitor ? " (here)" : "")
-                            current: modelData.id === root.win.monitor
+                            primary: modelData.id === root.win.monitor
                             onClicked: root.act([`hl.dsp.window.move({ monitor = "${modelData.name}", window = "${root.addr}" })`])
                         }
                     }
@@ -190,11 +196,11 @@ Singleton {
                     spacing: Theme.spaceXs + 2
                     Repeater {
                         model: 10
-                        Pill_ {
+                        PillButton {
                             required property int index
                             width: (menu.width - 4 * (Theme.spaceXs + 2)) / 5
                             text: String(index + 1)
-                            current: root.win.workspace?.id === index + 1
+                            primary: root.win.workspace?.id === index + 1
                             onClicked: root.act([`hl.dsp.window.move({ workspace = ${index + 1}, follow = false, window = "${root.addr}" })`])
                         }
                     }
@@ -204,17 +210,17 @@ Singleton {
                 Flow {
                     Layout.fillWidth: true
                     spacing: Theme.spaceXs + 2
-                    Pill_ {
-                        text: "Floating"; current: root.win.floating === true
+                    PillButton {
+                        text: "Floating"; primary: root.win.floating === true
                         onClicked: root.act([`hl.dsp.window.float({ action = "toggle", window = "${root.addr}" })`])
                     }
-                    Pill_ {
-                        text: "On top, every desktop"; current: root.win.pinned === true
+                    PillButton {
+                        text: "On top, every desktop"; primary: root.win.pinned === true
                         // pin only works on floating windows
                         onClicked: root.act((root.win.floating ? [] : [`hl.dsp.window.float({ action = "enable", window = "${root.addr}" })`])
                                             .concat([`hl.dsp.window.pin({ action = "toggle", window = "${root.addr}" })`]))
                     }
-                    Pill_ {
+                    PillButton {
                         text: "Centre"; enabled: root.win.floating === true
                         onClicked: root.act([`hl.dsp.window.center({ window = "${root.addr}" })`])
                     }
@@ -243,26 +249,5 @@ Singleton {
         Layout.topMargin: Theme.spaceXs
         color: Theme.subtext
         font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
-    }
-
-    component Pill_: Rectangle {
-        id: pill
-        property string text
-        property bool current: false
-        signal clicked()
-        implicitWidth: lbl.implicitWidth + 22
-        implicitHeight: 28
-        radius: height / 2
-        opacity: enabled ? 1 : 0.4
-        color: current ? Theme.accent : area.containsMouse ? Theme.fillHover : Theme.fill
-        border { color: current ? "transparent" : Theme.stroke; width: 1 }
-        Text {
-            id: lbl
-            anchors.centerIn: parent
-            text: pill.text
-            color: pill.current ? Theme.accentText : Theme.text
-            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
-        }
-        MouseArea { id: area; Accessible.role: Accessible.Button; Accessible.name: pill.text; Accessible.onPressAction: pill.clicked(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pill.clicked() }
     }
 }

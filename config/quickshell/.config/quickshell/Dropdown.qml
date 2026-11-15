@@ -53,21 +53,30 @@ Item {
     }
 
     // A popup so the list floats above the rows below instead of being covered by them
+    // The theme's depth and decor like every popup; the window leaves room around the list for its shadow.
+    // Keyboard inside: Up / Down / Home / End, Enter picks, Escape closes.
     PopupWindow {
+        id: menu
+        readonly property int room: depthUnder.room
         visible: dd.open || box.opacity > 0   // stays up while it fades out
         anchor.item: dd
         anchor.edges: Edges.Bottom
         anchor.gravity: Edges.Bottom
-        anchor.margins.top: 4
+        anchor.rect.width: dd.width
+        anchor.rect.height: dd.height
+        anchor.rect.y: 4 - room
         grabFocus: true
-        implicitWidth: dd.width
-        implicitHeight: Math.min(list.contentHeight + 8, 260)
+        implicitWidth: dd.width + room * 2
+        implicitHeight: Math.min(list.contentHeight + 8, 260) + room * 2
         color: "transparent"
-        onVisibleChanged: if (!visible) dd.open = false
+        onVisibleChanged: {
+            if (!visible) dd.open = false
+            else { list.currentIndex = Math.max(0, list.model.indexOf(dd.current)); list.forceActiveFocus() }
+        }
 
         Rectangle {
             id: box
-            anchors.fill: parent
+            anchors { fill: parent; margins: menu.room }
             radius: Theme.radius
             color: Theme.menu
             opacity: dd.open ? 1 : 0
@@ -75,11 +84,22 @@ Item {
             transform: Translate { y: dd.open ? 0 : -Math.min(6, Theme.travel); Behavior on y { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } } }
             Behavior on opacity { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
             border { color: Theme.stroke; width: Theme.line }
+            PopupDepth { id: depthUnder; anchors.fill: parent; z: -1; radius: box.radius }
+            PopupDepth { anchors.fill: parent; z: 10; over: true }
 
             ListView {
                 id: list
                 anchors { fill: parent; margins: 4 }
                 clip: true
+                Keys.onReturnPressed: { dd.open = false; dd.picked(model[currentIndex]) }
+                Keys.onEnterPressed: { dd.open = false; dd.picked(model[currentIndex]) }
+                Keys.onEscapePressed: dd.open = false
+                Keys.onPressed: e => {
+                    if (e.key === Qt.Key_Home) currentIndex = 0
+                    else if (e.key === Qt.Key_End) currentIndex = count - 1
+                    else return
+                    e.accepted = true
+                }
                 model: dd.isCustom ? [dd.current].concat(dd.options) : dd.options
                 delegate: Rectangle {
                     required property string modelData
@@ -92,19 +112,20 @@ Item {
                     Accessible.checkable: true
                     Accessible.checked: modelData === dd.current
                     Accessible.onPressAction: { dd.open = false; dd.picked(modelData) }
-                    color: optArea.containsMouse ? Theme.accent : "transparent"
+                    readonly property bool lit: ListView.isCurrentItem
+                    color: lit ? Theme.accent : "transparent"
                     Text {   // checkmark beside the current value
                         anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
                         visible: modelData === dd.current
                         text: "\u{F012C}"
-                        color: optArea.containsMouse ? Theme.accentText : Theme.text
+                        color: lit ? Theme.accentText : Theme.text
                         font { family: Theme.iconFont; pixelSize: Theme.fontLabel }
                     }
                     Text {
                         anchors { left: parent.left; leftMargin: 8 + Theme.fontLabel + 4; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
                         text: dd.isCustom && index === 0 ? modelData + " (custom)" : modelData
                         elide: Text.ElideRight
-                        color: optArea.containsMouse ? Theme.accentText : Theme.text
+                        color: lit ? Theme.accentText : Theme.text
                         font { family: Theme.font; pixelSize: Theme.fontLabel }
                     }
                     MouseArea {
@@ -112,6 +133,7 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
+                        onEntered: list.currentIndex = index
                         onClicked: { dd.open = false; dd.picked(modelData) }
                     }
                 }
