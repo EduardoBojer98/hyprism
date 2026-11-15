@@ -9,7 +9,7 @@ import QtQuick.Layouts
 
 // Control Center, opened beside its bar item (the quick-settings item, Super+C,
 // `qs ipc call controlcenter toggle`): one panel, most used first.
-//   large tiles (Wi-Fi, Bluetooth) · sliders (screen, sound, microphone) · small buttons (Focus, Night Light,
+//   large tiles (Wi-Fi, Bluetooth) · a Screen card (brightness, DDC monitors) · a Sound card (output, microphone) · small buttons (Focus, Night Light,
 //   Caffeine, Record, Screenshot ...) · media (while something plays) · power mode · a footer with the battery,
 //   Arrange, Settings, Lock and Power. Notifications have their own panel (NotificationCenter.qml).
 // Any tile can be large or small (Settings > Control Center drags it between the two): `items` describes each
@@ -26,9 +26,9 @@ Singleton {
     // ---- layout (Settings > Control Center): order of sections and tiles, and what's hidden ----
     // `tiles` (large) and `toggles` (small) share their ids: an id sits in one of the two
     readonly property var defaults: ({
-        sections: ["connections", "sliders", "toggles", "media", "power"],
+        sections: ["connections", "screen", "audio", "toggles", "media", "power"],
         tiles: ["wifi", "bt"],
-        sliders: ["display", "sound", "mic"],
+        sliders: ["sound", "mic"],   // the Sound card's rows
         toggles: ["focus", "nightlight", "caffeine", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "colorpicker", "mission"]
     })
     // the saved order; anything never saved goes to its default group, at its default place
@@ -62,12 +62,12 @@ Singleton {
     // sections and sliders, for the editor in Settings > Control Center (tiles describe themselves in `items`)
     readonly property var itemInfo: ({
         connections: { label: "Large tiles", glyph: "\u{F0570}", group: "tiles", about: "Big tiles with their state; Wi-Fi and Bluetooth open their lists" },
-        sliders: { label: "Sliders", glyph: "\u{F00DF}", group: "sliders", about: "Screen brightness, sound and microphone" },
+        screen: { label: "Screen", glyph: "\u{F00DF}", about: "Brightness and external monitors; hidden when nothing can be dimmed" },
+        audio: { label: "Sound", glyph: "\u{F057E}", group: "sliders", about: "Output and microphone, each with its device list" },
         toggles: { label: "Small buttons", glyph: "\u{F0176}", group: "toggles", about: "A compact grid: click to switch, right-click for options" },
         media: { label: "Media", glyph: "\u{F075A}", about: "Only while something plays" },
         power: { label: "Power mode", glyph: "\u{F0079}", about: "Silent, Balanced or Performance" },
-        display: { label: "Screen", glyph: "\u{F00DF}" },
-        sound: { label: "Sound", glyph: "\u{F057E}" },
+        sound: { label: "Output", glyph: "\u{F057E}" },
         mic: { label: "Microphone", glyph: "\u{F036C}" }
     })
     function info(id) { return itemInfo[id] ?? items[id] ?? { label: id, glyph: "" } }

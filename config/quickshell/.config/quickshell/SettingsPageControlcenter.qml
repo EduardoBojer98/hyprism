@@ -56,7 +56,7 @@ ColumnLayout {
                         required property string modelData
                         readonly property var inf: ControlCenter.info(modelData)
                         readonly property bool on: !page.hidden.includes(modelData)
-                        // large and small tiles take each other's tiles; sliders keep to themselves
+                        // large and small tiles take each other's tiles; the Sound card's sliders keep to themselves
                         readonly property string chipKey: inf.group === "sliders" ? "cc-slider" : "cc-tile"
                         Layout.fillWidth: true
                         implicitHeight: secCol.implicitHeight + 20

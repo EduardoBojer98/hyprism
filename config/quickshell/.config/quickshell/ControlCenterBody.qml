@@ -16,7 +16,8 @@ ColumnLayout {
         rowSpacing: ControlCenter.groupGap
 
         ControlCenterConnections { host: body.host; tiles: ControlCenter.shownTiles; Layout.row: ControlCenter.row("connections"); visible: ControlCenter.shows("connections") && tiles.length > 0 }
-        ControlCenterSliders { host: body.host; inPanel: true; parts: ControlCenter.shownSliders; Layout.row: ControlCenter.row("sliders"); visible: ControlCenter.shows("sliders") && parts.length > 0 }
+        ControlCenterSliders { host: body.host; inPanel: true; title: "Screen"; parts: ["display"]; Layout.row: ControlCenter.row("screen"); visible: ControlCenter.shows("screen") && hasAny }
+        ControlCenterSliders { host: body.host; inPanel: true; title: "Sound"; parts: ControlCenter.shownSliders; Layout.row: ControlCenter.row("audio"); visible: ControlCenter.shows("audio") && hasAny }
         ControlCenterToggles { host: body.host; ids: ControlCenter.shownToggles; Layout.row: ControlCenter.row("toggles"); visible: ControlCenter.shows("toggles") && ids.length > 0 }
         ControlCenterMedia { host: body.host; Layout.row: ControlCenter.row("media"); visible: ControlCenter.shows("media") }
         ControlCenterPower { host: body.host; Layout.row: ControlCenter.row("power"); visible: ControlCenter.shows("power") }
