@@ -184,7 +184,6 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `locations` | `var` | `[]` |  |
-| `current` | `int` | `0` | which saved place the bar shows (index into locations) |
 | `units` | `string` | `"celsius"` | "celsius" (km/h) or "fahrenheit" (mph) |
 | `days` | `int` | `7` | days in the forecast list (0 = no daily list) |
 | `hours` | `int` | `12` | hours in the hourly strip (0 = no hourly strip) |
@@ -325,7 +324,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `recordFolder` | `string` | `"~/Videos/Recordings"` |  |
 | `after` | `string` | `"edit"` | after a region/window/screen capture: edit (annotate in Satty) \| copy \| save (and copy) |
 | `delay` | `int` | `0` | seconds before a full-screen capture |
-| `audio` | `string` | `"none"` | recordings: none \| desktop \| mic \| both |
+| `audio` | `string` | `"none"` | recordings: none \| desktop \| mic |
 | `notify` | `bool` | `true` | a notification with the picture after each capture |
 
 ## apps

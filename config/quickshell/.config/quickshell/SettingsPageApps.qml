@@ -56,6 +56,21 @@ ColumnLayout {
             }
         }
         SettingRow {
+            label: "Terminal"
+            hint: "Opens with Super+Enter and from the menu"
+            Dropdown {
+                width: 240
+                // terminals with a known "new window" command; apps.terminal keeps any other command you set
+                readonly property var known: [{ id: "com.mitchellh.ghostty", cmd: "ghostty +new-window" }, { id: "org.wezfurlong.wezterm", cmd: "wezterm start" },
+                                              { id: "kitty", cmd: "kitty" }, { id: "Alacritty", cmd: "alacritty" }, { id: "foot", cmd: "foot" },
+                                              { id: "org.gnome.Ptyxis", cmd: "ptyxis --new-window" }, { id: "org.kde.konsole", cmd: "konsole" }]
+                readonly property var installed: known.filter(t => DesktopEntries.byId(t.id))
+                options: installed.map(t => DesktopEntries.byId(t.id).name)
+                current: DesktopEntries.byId(installed.find(t => t.cmd === Config.apps.terminal)?.id ?? "")?.name ?? Config.apps.terminal
+                onPicked: v => { const t = installed.find(t => DesktopEntries.byId(t.id).name === v); if (t) Config.set("apps", "terminal", t.cmd) }
+            }
+        }
+        SettingRow {
             label: "Task manager"
             hint: "Opens with Ctrl+Shift+Esc or a click on the temperatures in the bar"
             Dropdown {

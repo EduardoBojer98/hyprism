@@ -11,6 +11,27 @@ ColumnLayout {
 
 
     SettingGroup {
+        title: "Border of the window you're using"
+        SettingRow {
+            label: "Colour"
+            hint: Config.windows.border === "rainbow" ? "The rainbow turns slowly while animations are on Full and the power mode isn't Silent; otherwise it stands still"
+                : "The theme's own, the accent, or a gradient from the accent to the second accent"
+            ConfigChoice { section: "windows"; key: "border"; values: ["theme", "accent", "gradient", "rainbow"]; labels: ["Theme's", "Accent", "Gradient", "Rainbow"] }
+        }
+        SettingRow {
+            visible: Config.windows.border === "rainbow"
+            label: "Rainbow speed"
+            ConfigSlider { section: "windows"; key: "rainbowSpeed"; from: 1; to: 10; step: 1; format: v => v <= 3 ? "Slow" : v >= 8 ? "Fast" : "Medium" }
+        }
+        SettingRow {
+            visible: Config.windows.border === "rainbow"
+            label: "Keep turning on battery"
+            hint: "A turning border redraws the screen all the time, which costs battery"
+            ConfigToggle { section: "windows"; key: "rainbowOnBattery" }
+        }
+    }
+
+    SettingGroup {
         title: "Title bars"
         SettingRow {
             label: "Title bars on apps without buttons"

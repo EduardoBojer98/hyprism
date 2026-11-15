@@ -146,7 +146,6 @@ JsonAdapter {
         // saved places, in your order: [{ name, region, country, latitude, longitude }]; Settings > Weather adds them
         // from a search. Empty = the panel asks for a place. Night Light's sunset mode uses the first one.
         property var locations: []
-        property int current: 0                  // which saved place the bar shows (index into locations)
         property string units: "celsius"         // "celsius" (km/h) or "fahrenheit" (mph)
         property int days: 7                     // days in the forecast list (0 = no daily list)
         property int hours: 12                   // hours in the hourly strip (0 = no hourly strip)
@@ -268,7 +267,7 @@ JsonAdapter {
         property string recordFolder: "~/Videos/Recordings"
         property string after: "edit"           // after a region/window/screen capture: edit (annotate in Satty) | copy | save (and copy)
         property int delay: 0                   // seconds before a full-screen capture
-        property string audio: "none"           // recordings: none | desktop | mic | both
+        property string audio: "none"           // recordings: none | desktop | mic
         property bool notify: true              // a notification with the picture after each capture
     }
     property JsonObject apps: JsonObject {
