@@ -56,7 +56,8 @@ Column {
     Grid {
         id: freq
         readonly property int fits: Math.max(3, Math.min(8, Math.floor(home.width / 80)))
-        readonly property int perRow: Math.max(1, Math.min(Search.frequentApps.length, fits))
+        // more than fit: rows of even length (4 + 4, not 7 + 1)
+        readonly property int perRow: Math.max(1, Math.ceil(Search.frequentApps.length / Math.max(1, Math.ceil(Search.frequentApps.length / fits))))
         readonly property real cell: Math.floor(home.width / Math.max(perRow, Math.min(fits, 6)))
         anchors.horizontalCenter: parent.horizontalCenter
         columns: perRow

@@ -85,7 +85,10 @@ ColumnLayout {
                     readonly property var style: Launcher.styles[modelData] ?? null
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    spec: style ?? Theme.current.launcher
+                    // drawn where it will open: centred unless "Style's place", and on the view you start on
+                    spec: Object.assign({}, style ?? Theme.current.launcher,
+                        Config.launcher.position !== "theme" ? { placement: "center" } : {},
+                        ({ home: { view: "home" }, apps: { view: "grid" }, search: { view: "inline" } })[Config.launcher.startView] ?? {})
                     label: style ? style.name : Theme.current.name + "'s own"
                     about: style ? style.about : "Follows the theme, and changes with it"
                     chosen: (Config.launcher.style ?? "theme") === modelData
@@ -99,7 +102,13 @@ ColumnLayout {
         title: "Spotlight"
         SettingRow {
             label: "Before you type, show"
-            ConfigChoice { section: "launcher"; key: "startView"; values: ["theme", "home", "apps", "search"]; labels: ["The theme's", "Suggestions", "All apps", "Just the search field"] }
+            hint: Config.launcher.startView === "theme" ? "Launchpad and Drawer open on all apps, Terminal on the search field, the others on suggestions" : ""
+            ConfigChoice { section: "launcher"; key: "startView"; values: ["home", "apps", "search", "theme"]; labels: ["Suggestions", "All apps", "Just the search field", "The style's own"] }
+        }
+        SettingRow {
+            label: "Apps per row"
+            hint: "In All apps; fewer when the panel is too narrow for them"
+            ConfigChoice { section: "launcher"; key: "columns"; values: [5, 6, 7, 8, 9] }
         }
         SettingRow {
             label: "Clipboard button"
@@ -152,8 +161,9 @@ ColumnLayout {
             ConfigToggle { section: "launcher"; key: "showFiles" }
         }
         SettingRow {
-            label: "Forget most-used ranking"
-            PillButton { text: "Forget"; onClicked: Config.set("launcher", "usage", {}) }
+            label: "Forget what you used"
+            hint: "Clears the most-used ranking and the Recent list on the suggestions"
+            PillButton { text: "Forget"; onClicked: { Config.set("launcher", "usage", {}); Config.set("launcher", "recent", []) } }
         }
     }
 

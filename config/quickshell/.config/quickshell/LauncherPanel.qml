@@ -19,7 +19,10 @@ Glass {
           : Launcher.view === "apps" || Launcher.view === "clip" ? 460
           : resultsView.count === 0 ? 150   // room for the empty state
           : Math.min(440, Math.max(64, resultsView.contentHeight + Theme.spaceS * 2 + (Launcher.confirmFor ? 44 : 0))))
-    height: Math.max(0, Launcher.look.fill > 0 ? Math.round(Launcher.room * Launcher.look.fill) : Math.min(natural, Launcher.room))
+    // a style's `fill` holds for the browsing views; opened in the middle or at the pointer, suggestions and results
+    // stay as tall as they are (no empty sheet under them)
+    readonly property bool filled: Launcher.look.fill > 0 && (!Launcher.pointer || Launcher.view === "apps" || Launcher.view === "clip")
+    height: Math.max(0, filled ? Math.round(Launcher.room * Launcher.look.fill) : Math.min(natural, Launcher.room))
 
     // Confirmation strip for actions marked "ask first"
     Rectangle {

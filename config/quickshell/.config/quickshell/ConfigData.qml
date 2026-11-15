@@ -41,9 +41,9 @@ JsonAdapter {
         property list<var> actions: []
         property var usage: ({})                // launch counts, for ranking
         // look (Search & Launcher > Style)
-        property string style: "theme"          // theme (the theme's own) | spotlight | command | launchpad | drawer | sidebar | terminal (Launcher.qml styles)
-        property int columns: 7                 // apps per row in the apps grid
-        property string startView: "theme"       // theme (the theme's own) | home (suggestions until you type) | apps (grid) | search (empty pill)
+        property string style: "theme"          // theme (the theme's own) | spotlight | launchpad | drawer | sidebar | terminal (Launcher.qml styles)
+        property int columns: 7                 // apps per row in the apps grid (fewer when the panel is too narrow)
+        property string startView: "home"       // home (suggestions until you type, every theme) | apps (grid) | search (empty field) | theme (the style's own)
         property list<string> recent: []        // result keys, most recent first, for the home view
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]

@@ -54,14 +54,12 @@ ListView {
             && (Search.groupNames[Search.groupOf[Launcher.listModel[index - 1]?.kind]] ?? Launcher.listModel[index - 1]?.kind) !== group
         width: results.width
 
-        Text {
+        LauncherHomeLabel {
             visible: row.topHit || row.newSection || (row.index === 1 && Launcher.mode === "search")
             text: row.topHit ? "Top Hit" : row.group
-            leftPadding: Theme.spaceM
-            topPadding: row.index === 0 ? 2 : Theme.spaceS
-            bottomPadding: Theme.spaceXs
-            color: Theme.subtext
-            font { family: Launcher.rowFont; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+            leftPad: Theme.spaceM
+            topPad: row.index === 0 ? 2 : Theme.spaceS
+            bottomPad: Theme.spaceXs
         }
 
         Rectangle {
