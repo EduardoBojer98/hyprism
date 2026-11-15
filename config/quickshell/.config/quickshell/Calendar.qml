@@ -156,7 +156,7 @@ Singleton {
         name: "calendar"
         placement: "top"
         boxWidth: 340
-        boxHeight: Math.min(body.implicitHeight + Theme.spaceL * 2, popup.maxHeight)
+        boxHeight: body.implicitHeight + Theme.spaceL * 2
         onOpened: root.goToday()
 
         Glass {

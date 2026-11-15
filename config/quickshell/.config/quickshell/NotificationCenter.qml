@@ -2,7 +2,6 @@ pragma Singleton
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls as QQC
 
 // Notifications: their own panel, opened from the bell in the bar, Super+N or
 // `qs ipc call notifications toggle` (the Control Center holds the controls only). A header with the
@@ -23,24 +22,17 @@ Singleton {
         name: "notifications"
         placement: "topRight"
         boxWidth: 380
-        boxHeight: Math.min(column.implicitHeight + 24, popup.maxHeight)
+        boxHeight: column.implicitHeight + Theme.spaceM * 2
         onOpened: { Notifications.unread = 0; Notifications.now = new Date(); root.unfolded = ({}) }
 
         Glass {
             anchors.fill: parent
             strong: true
             radius: Theme.radiusLarge
-        }
-        Flickable {
-            anchors { fill: parent; margins: 12 }
-            contentHeight: column.implicitHeight
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            QQC.ScrollBar.vertical: GlassScrollBar {}
 
             ColumnLayout {
                 id: column
-                width: parent.width
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
                 spacing: 8
 
                 // ---- header: title and count, Do Not Disturb, Clear all ----

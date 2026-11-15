@@ -147,7 +147,7 @@ Singleton {
     function opened(visible) {
         if (wifi) wifi.scannerEnabled = visible
         if (visible) {
-            scroller.contentY = 0; brightnessRead.running = true; Hyprland.refreshMonitors(); kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
+            brightnessRead.running = true; Hyprland.refreshMonitors(); kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
             Notifications.now = new Date()
         }
         else { expanded = ""; passwordFor = null; hintItem = null }
@@ -183,8 +183,7 @@ Singleton {
     name: "controlcenter"
     placement: "topRight"
     boxWidth: cc.customWidth
-    // capped to the screen; the content scrolls when lists make it taller
-    boxHeight: Math.min(header.height + cc.gap + content.implicitHeight + cc.pad * 2, popup.maxHeight)
+    boxHeight: header.height + cc.gap + content.implicitHeight + cc.pad * 2
 
     Glass {   // the backdrop every tile sits on
         anchors.fill: parent
@@ -248,20 +247,12 @@ Singleton {
         }
     }
 
-    Flickable {
-        id: scroller
-        anchors { fill: parent; margins: cc.pad; topMargin: cc.pad + header.height + cc.gap }
-        contentHeight: content.implicitHeight
-        boundsBehavior: Flickable.StopAtBounds
-        clip: true
-        ScrollBar.vertical: GlassScrollBar {}
-
     // empty background between and around the sections: a tile or a toggle above this still gets its own click first
     MouseArea { anchors.fill: content; Accessible.ignored: true; onClicked: popup.hide() }
 
     GridLayout {   // one column; each section takes the row of its place in cc.shownSections
         id: content
-        width: scroller.width
+        anchors { left: parent.left; right: parent.right; top: header.bottom; margins: cc.pad; topMargin: cc.gap }
         columns: 1
         rowSpacing: cc.gap
 
@@ -274,19 +265,18 @@ Singleton {
 
     }
     }
-    }
 
     Rectangle {   // the shared tooltip (cc.hint), kept inside the panel's edges
         id: hintBox
-        readonly property var at: cc.hintItem ? cc.hintItem.mapToItem(popup.box, 0, 0) : Qt.point(0, 0)
-        readonly property bool fitsBelow: at.y + (cc.hintItem?.height ?? 0) + 6 + height <= popup.box.height - 4
+        readonly property var at: cc.hintItem ? cc.hintItem.mapToItem(hintBox.parent, 0, 0) : Qt.point(0, 0)
+        readonly property bool fitsBelow: at.y + (cc.hintItem?.height ?? 0) + 6 + height <= hintBox.parent.height - 4
         z: 100
         opacity: cc.hintItem ? 1 : 0
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-        width: Math.min(hintLabel.implicitWidth + Theme.spaceM * 2, popup.box.width - 8)
+        width: Math.min(hintLabel.implicitWidth + Theme.spaceM * 2, hintBox.parent.width - 8)
         height: hintLabel.implicitHeight + Theme.spaceS
-        x: Math.max(4, Math.min(at.x + (cc.hintItem?.width ?? 0) / 2 - width / 2, popup.box.width - width - 4))
+        x: Math.max(4, Math.min(at.x + (cc.hintItem?.width ?? 0) / 2 - width / 2, hintBox.parent.width - width - 4))
         y: fitsBelow ? at.y + (cc.hintItem?.height ?? 0) + 6 : at.y - height - 6
         radius: Theme.radiusSmall - 2
         color: Theme.menu
@@ -294,7 +284,7 @@ Singleton {
         Text {
             id: hintLabel
             anchors.centerIn: parent
-            width: Math.min(implicitWidth, popup.box.width - 8 - Theme.spaceM * 2)
+            width: Math.min(implicitWidth, hintBox.parent.width - 8 - Theme.spaceM * 2)
             text: cc.hintText
             elide: Text.ElideRight
             color: Theme.text
