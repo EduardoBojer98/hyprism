@@ -57,8 +57,10 @@ Rectangle {
 
     visible: shown
     implicitWidth: vertical ? Math.max(grid.implicitWidth + pad * 2, 28) : grid.implicitWidth + pad * 2
-    property real minHeight: 0          // e.g. a block that fills the bar's height
-    implicitHeight: vertical ? grid.implicitHeight + pad * 2 : Math.max(grid.implicitHeight + 6, 24, minHeight)
+    property real minHeight: 0          // e.g. a block that fills the bar's height: then exactly that tall
+    // a block's height is the bar's, never more: content plus the usual 6 px made the split clock 39 px in a 34 px bar,
+    // so on a floating bar it (and where it takes clicks) spilled into the gap around the bar
+    implicitHeight: vertical ? grid.implicitHeight + pad * 2 : minHeight > 0 ? minHeight : Math.max(grid.implicitHeight + 6, 24)
     radius: Theme.radiusSmall
     color: lit ? pressedColor : interactive && area.containsMouse ? hover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }

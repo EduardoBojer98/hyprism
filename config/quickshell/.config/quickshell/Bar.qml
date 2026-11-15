@@ -79,8 +79,9 @@ Scope {
                 height: root.vertical ? parent.height : root.st.line
             }
 
-            // blocks and a block clock run flush to the screen's edges, like tmux's status line
-            readonly property int pad: root.segmented ? 0 : root.vertical ? 10 : (root.st.ws === "blocks" || ["block", "split"].includes(root.st.clock) && !root.floating ? 0 : 12)
+            // blocks and a block clock run flush to the screen's edges, like tmux's status line; a floating bar has
+            // rounded ends instead, so they keep the usual inset (flush, the end items sat on the corner)
+            readonly property int pad: root.segmented ? 0 : root.vertical ? 10 : (!root.floating && (root.st.ws === "blocks" || ["block", "split"].includes(root.st.clock)) ? 0 : 12)
             readonly property real length: (root.vertical ? height : width) - pad * 2 - 12
             // too many items: the end (status, clock) keeps its room, the start gets the rest, the middle
             // what's between them; whatever doesn't fit is cut off rather than drawn over a neighbour
