@@ -225,4 +225,24 @@ Singleton {
     readonly property int animFast: animate ? Math.min(120, Math.max(60, m.enter / 2)) : 0
     readonly property int anim: animate ? Math.min(220, m.enter) : 0
     readonly property int easing: Easing.OutCubic
+
+    // ---- Control Center tokens ---------------------------------------------------------------------------
+    // One rhythm for the quick-settings panel and the flyouts that reuse its modules: gaps from the density,
+    // two radii (tiles and panels take `radius`, wells and buttons inside them `radiusSmall`), and one "on" signal:
+    // an accent icon well (wash themes) or a solid accent tile (solid themes).
+    readonly property int ccGap: spaceS                                                   // between tiles in a group
+    readonly property int ccGroupGap: spaceL                                              // between groups
+    readonly property int ccPad: spaceM                                                   // panel edge to content
+    readonly property int ccInset: Math.round(10 * density)                               // tile edge to its content
+    readonly property int ccWell: Math.max(Math.round(32 * Math.sqrt(density)), hit)      // icon well, header button
+    readonly property int ccTile: Math.max(Math.round(56 * Math.sqrt(density)), hit)      // connection tile height
+    readonly property int ccToggle: Math.round(72 * Math.sqrt(density))                   // quick toggle height
+    readonly property int ccSlider: Math.max(Math.round(32 * Math.sqrt(density)), hit)    // slider row (its hit area)
+    readonly property int ccTrack: Math.max(4, Math.round(6 * Math.sqrt(density)))       // slider track thickness
+    readonly property int ccKnob: Math.round(18 * Math.sqrt(density))                     // slider handle
+    readonly property color ccTileOn: washTiles ? Qt.alpha(accent, light ? 0.16 : 0.13) : accent
+    readonly property color ccTileOnHover: washTiles ? Qt.alpha(accent, light ? 0.22 : 0.19) : Qt.lighter(accent, light ? 1.06 : 1.1)
+    readonly property color ccWellOn: washTiles ? accent : Qt.alpha(accentText, 0.18)
+    readonly property color ccOnText: washTiles ? text : accentText
+    readonly property color ccOnSubtext: washTiles ? subtext : Qt.alpha(accentText, 0.82)
 }

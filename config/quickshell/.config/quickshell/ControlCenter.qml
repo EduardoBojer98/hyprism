@@ -88,8 +88,9 @@ Singleton {
 
     readonly property string style: Config.controlCenter.style || "panel"
     readonly property int customWidth: Config.controlCenter.width || Theme.panelWidth
-    readonly property int gap: style === "compact" ? 4 : 8          // between tiles
-    readonly property int pad: style === "compact" ? 6 : 10         // panel padding
+    readonly property int gap: style === "compact" ? Math.max(4, Theme.ccGap - 3) : Theme.ccGap   // between tiles
+    readonly property int pad: style === "compact" ? Math.max(6, Theme.ccPad - 4) : Theme.ccPad   // panel padding
+    readonly property int groupGap: style === "compact" ? gap : Theme.ccGroupGap                 // between sections
 
 
     function toggle() { popup.toggle() }
@@ -140,7 +141,7 @@ Singleton {
     name: "controlcenter"
     placement: "topRight"
     boxWidth: cc.customWidth
-    boxHeight: header.height + cc.gap + content.implicitHeight + cc.pad * 2
+    boxHeight: header.height + cc.groupGap + content.implicitHeight + cc.pad * 2
 
     Glass {   // the backdrop every tile sits on
         anchors.fill: parent
@@ -151,22 +152,24 @@ Singleton {
         // empty background, inside the panel: a tile or a toggle above this still gets the click first
         MouseArea { anchors.fill: parent; Accessible.ignored: true; onClicked: popup.hide() }
 
-    // ---- header: the time large in the theme's display face, the date, then battery and the three
-    // things you reach for (Settings, Lock, Power) as round buttons ----
+    // ---- header: the time large in the theme's display face, the date under it; then the battery and the
+    // three things you reach for (Settings, Lock, Power) as buttons in the panel's small radius ----
     RowLayout {
         id: header
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: cc.pad; leftMargin: cc.pad + 4 }
-        height: 52
-        spacing: 6
-        Column {
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: cc.pad; leftMargin: cc.pad + 2 }
+        spacing: Theme.spaceXs
+        ColumnLayout {
             Layout.fillWidth: true
+            spacing: 0
             Text {
                 text: Sys.time()
                 color: Theme.text
-                font { family: Theme.displayFont; pixelSize: Theme.fontDisplay - 2; weight: Theme.displayWeight; letterSpacing: -0.5; features: { "tnum": 1 } }
+                font { family: Theme.displayFont; pixelSize: Theme.fontDisplay; weight: Theme.displayWeight; letterSpacing: -0.5; features: { "tnum": 1 } }
             }
             Text {
+                Layout.fillWidth: true
                 text: Qt.formatDateTime(Sys.now, "dddd, d MMMM")
+                elide: Text.ElideRight
                 color: Theme.subtext
                 font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
             }
@@ -174,12 +177,12 @@ Singleton {
         Row {   // battery, as a readout
             visible: Sys.hasBattery
             Layout.alignment: Qt.AlignVCenter
-            Layout.rightMargin: 4
-            spacing: 4
+            Layout.rightMargin: Theme.spaceS
+            spacing: 3
             Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryGlyph; color: Sys.batteryLow ? Theme.error : Sys.charging ? Theme.success : Theme.subtext
                    font { family: Theme.iconFont; pixelSize: 16 } }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryPct + "%"; color: Theme.subtext
-                   font { family: Theme.font; pixelSize: Theme.fontLabel; features: { "tnum": 1 } } }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryPct + "%"; color: Sys.batteryLow ? Theme.error : Theme.text
+                   font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
         }
         Repeater {
             model: [
@@ -188,18 +191,23 @@ Singleton {
                 { glyph: "\u{F0425}", tip: "Power", run: () => { popup.hide(); PowerMenu.show() } }
             ]
             Rectangle {
+                id: hdrBtn
                 required property var modelData
                 Layout.alignment: Qt.AlignVCenter
-                implicitWidth: 34; implicitHeight: 34
-                radius: Theme.radius === 0 ? 0 : 17
+                implicitWidth: Theme.ccWell; implicitHeight: Theme.ccWell
+                radius: Theme.radiusSmall
                 color: hdrArea.pressed ? Theme.fillActive : hdrArea.containsMouse ? Theme.fillHover : Theme.fill
                 scale: hdrArea.pressed ? Theme.pressScale : 1
+                activeFocusOnTab: true
+                Keys.onSpacePressed: modelData.run()
+                Keys.onReturnPressed: modelData.run()
+                FocusRing {}
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-                Text { anchors.centerIn: parent; text: modelData.glyph; color: modelData.tip === "Power" ? Theme.error : Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
-                MouseArea { id: hdrArea; Accessible.role: Accessible.Button; Accessible.name: modelData.tip; Accessible.onPressAction: modelData.run(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                            onContainsMouseChanged: containsMouse ? cc.hint(parent, modelData.tip) : cc.unhint(parent)
-                            onClicked: modelData.run() }
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+                Text { anchors.centerIn: parent; text: hdrBtn.modelData.glyph; color: hdrBtn.modelData.tip === "Power" ? Theme.error : Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
+                MouseArea { id: hdrArea; Accessible.role: Accessible.Button; Accessible.name: hdrBtn.modelData.tip; Accessible.onPressAction: hdrBtn.modelData.run(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            onContainsMouseChanged: containsMouse ? cc.hint(parent, hdrBtn.modelData.tip) : cc.unhint(parent)
+                            onClicked: hdrBtn.modelData.run() }
             }
         }
     }
@@ -209,9 +217,9 @@ Singleton {
 
     GridLayout {   // one column; each section takes the row of its place in cc.shownSections
         id: content
-        anchors { left: parent.left; right: parent.right; top: header.bottom; margins: cc.pad; topMargin: cc.gap }
+        anchors { left: parent.left; right: parent.right; top: header.bottom; margins: cc.pad; topMargin: cc.groupGap }
         columns: 1
-        rowSpacing: cc.gap
+        rowSpacing: cc.groupGap
 
         ControlCenterConnections { host: cc.view; tiles: cc.shownTiles; Layout.row: cc.row("connections"); visible: cc.shows("connections") }
         ControlCenterToggles {}

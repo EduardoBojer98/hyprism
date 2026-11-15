@@ -3,7 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center building block (used by ControlCenter.qml and its parts).
-// Connection tile: round icon that toggles, then name and status that open its list (chevron)
+// Connection tile: an icon well that toggles, then the name and its state; with a list, the rest of the tile
+// opens it and a chevron sits behind a hairline at the right. On: the well fills with the accent (wash
+// themes) or the whole tile turns accent (solid themes).
 Rectangle {
     id: conn
     property string glyph
@@ -21,45 +23,59 @@ Rectangle {
     Keys.onReturnPressed: if (conn.expandable) conn.expand()
     FocusRing {}
 
+    readonly property bool flat: ControlCenter.style === "borderless"
     Layout.fillWidth: true
     Layout.preferredWidth: 1
-    Layout.preferredHeight: Math.max(ControlCenter.style === "compact" ? 44 : 52, Theme.hit)
-    radius: ControlCenter.style === "borderless" ? Theme.radiusSmall : Theme.radius
-    color: conn.active ? Theme.tileOn
-         : conn.isExpanded || rowHover.containsMouse ? Theme.fillHover
-         : ControlCenter.style === "borderless" ? "transparent" : Theme.fill
-    border { color: conn.isExpanded ? Theme.strokeStrong : conn.active ? Theme.tileOnBorder : ControlCenter.style === "borderless" ? Theme.stroke : "transparent"; width: 1 }
-    Behavior on color { ColorAnimation { duration: Theme.animFast } }
+    Layout.preferredHeight: ControlCenter.style === "compact" ? Math.max(Theme.ccTile - 8, Theme.hit) : Theme.ccTile
+    radius: flat ? Theme.radiusSmall : Theme.radius
+    color: conn.active ? (rowHover.containsMouse ? Theme.ccTileOnHover : Theme.ccTileOn)
+         : rowHover.containsMouse || conn.isExpanded ? Theme.fillHover
+         : flat ? "transparent" : Theme.fill
+    border { color: conn.isExpanded ? Theme.strokeStrong : flat && !conn.active ? Theme.stroke : "transparent"; width: 1 }
+    Behavior on color { ColorAnimation { duration: Theme.anim; easing.type: Theme.easing } }
 
     MouseArea {
         id: rowHover
         Accessible.role: Accessible.Button
         Accessible.name: conn.title
+        Accessible.description: conn.subtitle
+        Accessible.onPressAction: conn.expandable ? conn.expand() : conn.toggled()
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: conn.expandable ? conn.expand() : conn.toggled()
     }
-    Rectangle {   // round toggle (inline: components declared in this file can't nest)
+    Rectangle {   // the icon well: toggles (inline: components declared in this file can't nest)
         id: disc
-        anchors { left: parent.left; leftMargin: 9; verticalCenter: parent.verticalCenter }
-        width: 32; height: 32; radius: Theme.radius === 0 ? 0 : 16
-        color: conn.active ? Qt.alpha(Theme.tileOnText, discArea.containsMouse ? 0.22 : 0.14) : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
-        scale: discArea.pressed ? 0.92 : 1
-        Behavior on color { ColorAnimation { duration: Theme.anim } }
+        anchors { left: parent.left; leftMargin: Theme.ccInset; verticalCenter: parent.verticalCenter }
+        width: Theme.ccWell; height: Theme.ccWell; radius: Theme.radiusSmall
+        color: conn.active ? Theme.ccWellOn
+             : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
+        scale: discArea.pressed ? Theme.pressScale : 1
+        Behavior on color { ColorAnimation { duration: Theme.anim; easing.type: Theme.easing } }
         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         Text {
             anchors.centerIn: parent
             text: conn.glyph
-            color: conn.active ? Theme.tileOnIcon : Theme.text
-            font { family: Theme.iconFont; pixelSize: 16 }
+            color: conn.active ? Theme.accentText : Theme.text
+            font { family: Theme.iconFont; pixelSize: 17 }
+            Behavior on color { ColorAnimation { duration: Theme.anim } }
         }
-        MouseArea { id: discArea; Accessible.role: Accessible.Button; Accessible.name: conn.title; Accessible.onPressAction: conn.toggled(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
+        MouseArea { id: discArea; Accessible.role: Accessible.Button; Accessible.name: (conn.active ? "Turn off " : "Turn on ") + conn.title; Accessible.onPressAction: conn.toggled(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
     }
     Column {
-        anchors { left: disc.right; leftMargin: 9; right: chev.visible ? chev.left : parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
-        Text { width: parent.width; text: conn.title; color: conn.active ? Theme.tileOnText : Theme.text; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
-        Text { width: parent.width; text: conn.subtitle; color: conn.active ? Theme.tileOnText : Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+        anchors { left: disc.right; leftMargin: Theme.spaceS; right: conn.expandable ? rule.left : parent.right; rightMargin: Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        spacing: 1
+        Text { width: parent.width; text: conn.title; color: conn.active ? Theme.ccOnText : Theme.text; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+        Text { width: parent.width; text: conn.subtitle; color: conn.active ? Theme.ccOnSubtext : Theme.subtext; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption - 1; font { family: Theme.font; pixelSize: Theme.fontCaption } }
     }
-    Chevron { id: chev; visible: conn.expandable; open: conn.isExpanded; size: 12; color: conn.active ? Theme.tileOnText : Theme.text; anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter } }
+    Rectangle {   // hairline before the chevron: the tile's right end opens the list
+        id: rule
+        visible: conn.expandable
+        anchors { right: chev.left; rightMargin: Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        width: 1; height: Math.round(conn.height * 0.42)
+        color: conn.active ? Qt.alpha(Theme.ccOnText, 0.22) : Theme.stroke
+    }
+    Chevron { id: chev; visible: conn.expandable; open: conn.isExpanded; size: 14; color: conn.isExpanded && !conn.active ? Theme.accent : conn.active ? Theme.ccOnText : Theme.subtext
+              anchors { right: parent.right; rightMargin: Theme.spaceXs + 2; verticalCenter: parent.verticalCenter } }
 }

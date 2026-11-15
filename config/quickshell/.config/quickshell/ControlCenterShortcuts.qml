@@ -20,7 +20,7 @@ ColumnLayout {
     // ---- shortcuts ------------------------------------------------------------------------
     GridLayout {
         Layout.fillWidth: true
-        columns: 4
+        columns: Math.max(1, ControlCenter.shownShortcuts.length)   // at most three: Settings, Lock and Power sit in the header
         columnSpacing: ControlCenter.gap
         rowSpacing: ControlCenter.gap
         Repeater {
