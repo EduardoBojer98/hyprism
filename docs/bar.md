@@ -26,6 +26,35 @@ bar/items/weather/
 
 Nothing else lists the items: a folder with `Item.qml` and `defaults.json` is an item.
 
+## The same item more than once
+
+Every item can sit in the bar as often as you like (only the dock, `apps`, is one of a kind). Each copy is an
+**instance** with settings of its own: the first is the plain id (`clock`), the next ones are `clock#2`, `clock#3`…
+In Settings → Menu Bar → "Add to the bar", an item already on the bar is added again as a new copy, and Selected item
+edits only the copy you picked. A copy's settings go when it leaves the last list it was on.
+
+```json
+"bar": {
+  "layout": { "start": ["clock#2"], "center": [], "end": ["sysinfo", "sysinfo#2", "clock"] },
+  "items": {
+    "clock":     { "seconds": true },
+    "clock#2":   { "time": false, "weekday": "long", "month": "long", "year": true },
+    "sysinfo#2": { "metrics": ["cpu_freq", "cpu_temp"], "mode": "detailed" }
+  }
+}
+```
+
+The ids work the same in `bar.monitors` and `bar.presets`. Copies that open a panel each open it beside themselves,
+and only the one that opened it lights up.
+
+## The clock
+
+What each clock shows: time on or off, 24-hour, seconds, date on or off, weekday / day / month / year, which comes
+first and what goes between, or a Qt date pattern of your own (`"ddd d MMM, HH:mm"`). Settings → Menu Bar → Selected
+item has the switches and a live preview; the keys are in
+[the clock's README](../config/quickshell/.config/quickshell/bar/items/clock/README.md). `bar.clock24` and
+`bar.seconds` are what a clock uses until it has its own (`bar.clock24` is also the lock screen's).
+
 ## Settings every item understands
 
 Put them under `bar.items.<id>` in `settings.json`. Leave one out to keep the item's default.
@@ -87,7 +116,7 @@ Settings → Menu Bar (or Settings → Dock → Position) copies what is on scre
 
 | Key (`bar` in `settings.json`) | What it does |
 |---|---|
-| `layout` | `{ "edge": "top", "size": 34, "floating": true, "dock": "bar", "start": [ids], "center": [ids], "end": [ids] }`; `{}` = the theme's own. `dock` is `bar` or an edge. It survives theme switches |
+| `layout` | `{ "edge": "top", "size": 34, "floating": true, "dock": "bar", "start": [ids], "center": [ids], "end": [ids] }`; `{}` = the theme's own. `size` is any px (Settings: Slim 26, Regular 34, Tall 44, Huge 56, or 24–56 on the slider). `dock` is `bar` or an edge. It survives theme switches |
 | `presets` | the "Start from" buttons in Settings → Menu Bar: name → `{ "start": [ids], "center": [ids], "end": [ids] }`. A click copies the items into the layout; nothing stays linked |
 | `monitors` | screen name → `{ "start": [ids], "center": [ids], "end": [ids] }`, that screen's own items (`bar.monitors`) ("Its own items" in Settings → Screens). Older files named a preset here; that still reads |
 | `hiddenOn` | screens without a bar ("No bar" in Settings → Screens) |

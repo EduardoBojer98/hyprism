@@ -78,7 +78,7 @@ Singleton {
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
-               clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
+               clock24: "bool", seconds: "bool",
                windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object", layout: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
@@ -236,6 +236,13 @@ Singleton {
                 a.custom = all
                 adapter.bar.preset = "theme"
             }
+        }
+        // before 2026-11-15 one bar.date served the bar's only clock; each clock now has its own date settings
+        const rd = raw?.bar?.date, rc = raw?.bar?.items?.clock
+        if ((rd === "short" || rd === "none") && rc?.date === undefined && rc?.weekday === undefined) {
+            const all = JSON.parse(JSON.stringify(adapter.bar.items ?? {}))
+            all.clock = Object.assign(all.clock ?? {}, rd === "none" ? { date: false } : { weekday: "none" })
+            adapter.bar.items = all
         }
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
         // format 1 (before 2026-11-05) saved the dock's place as "bottom" for everyone: follow the theme now

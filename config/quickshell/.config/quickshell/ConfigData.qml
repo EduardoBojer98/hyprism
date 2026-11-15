@@ -175,16 +175,17 @@ JsonAdapter {
         // where the bar goes, its size, shape and items are set per theme (Config.appearance.custom, Themes.resolve)
         property int margin: 8                  // gap around a floating bar, px
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a bar
-        // clock and title
-        property bool clock24: true
-        property bool seconds: false
-        property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
+        // clock and title. Each clock on the bar has its own time and date settings (bar.items.<id>, see
+        // bar/items/clock/format.js); these two are what a clock uses until it has its own
+        property bool clock24: true             // 24-hour time: the lock screen's, and a bar clock's until it has its own h24
+        property bool seconds: false            // seconds: the dock clock's hand, and a bar clock's until it has its own
         property string batteryPercent: "beside"  // the battery's percentage: inside (the icon) | beside | off
         property bool windowTitle: true          // the focused window's title after the app name
         // your settings per item, over its bar/items/<id>/defaults.json. Every item understands: enabled, icon,
-        // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). Example:
+        // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). A second copy of an item
+        // on the bar is "<id>#2" (then #3…) and has its own entry here. Example:
         //   { "weather": { "click": "panel:calendar" }, "brightness": { "enabled": false } }
-        property var items: ({})
+        property var items: ({})               // item or copy ("clock", "clock#2") -> its settings (docs/bar.md)
         // which items the bar holds: "theme" = the theme's own layout (Settings > Menu Bar, per theme); any other
         // value names an entry of `presets`. A screen listed in `monitors` uses its own preset instead.
         property string preset: "theme"

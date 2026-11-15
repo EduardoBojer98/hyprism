@@ -227,12 +227,11 @@ Every setting, with its type, default and meaning. This file is generated from `
 | --- | --- | --- | --- |
 | `margin` | `int` | `8` | gap around a floating bar, px |
 | `hiddenOn` | `list<string>` | `[]` | monitor names (e.g. "eDP-1") without a bar |
-| `clock24` | `bool` | `true` |  |
-| `seconds` | `bool` | `false` |  |
-| `date` | `string` | `"full"` | "full" (Fri 30 Oct), "short" (30 Oct) or "none" |
+| `clock24` | `bool` | `true` | 24-hour time: the lock screen's, and a bar clock's until it has its own h24 |
+| `seconds` | `bool` | `false` | seconds: the dock clock's hand, and a bar clock's until it has its own |
 | `batteryPercent` | `string` | `"beside"` | the battery's percentage: inside (the icon) \| beside \| off |
 | `windowTitle` | `bool` | `true` | the focused window's title after the app name |
-| `items` | `var` | `{}` |  |
+| `items` | `var` | `{}` | item or copy ("clock", "clock#2") -> its settings (docs/bar.md) |
 | `preset` | `string` | `"theme"` |  |
 | `presets` | `var` | `{ minimal: { start: ["controls", "launcher", "workspaces"...` |  |
 | `layout` | `var` | `{}` |  |

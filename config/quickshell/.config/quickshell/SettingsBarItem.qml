@@ -2,8 +2,9 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Menu Bar > the picked item's settings: only what that item really reads. Its own options first (the clock's
-// time format, the window title, the battery percentage, System info's readings), then the shared ones it
+// Menu Bar > the picked item's settings: only what that item really reads. Each copy of an item on the bar is an
+// instance ("clock#2") with settings of its own; what it offers follows its item ("clock"). Its own options first
+// (what the clock shows, the window title, the battery percentage, System info's readings), then the shared ones it
 // understands (docs/bar.md): levels, icon and label, what the mouse does. Each bar.items row writes the whole
 // bar.items object back (Config.set), so the bar follows at once.
 SettingGroup {
@@ -11,11 +12,12 @@ SettingGroup {
     title: "Selected item"
 
     required property var editor                         // the BarEditor: its `current` is the item shown here
-    readonly property string cur: editor.current
-    readonly property var info: Themes.barItem(cur)
+    readonly property string cur: editor.current            // the instance: "clock", "clock#2"…
+    readonly property string kind: BarItems.base(cur)       // its item: "clock"
+    readonly property var info: BarItems.info(cur)
     readonly property var merged: BarItems.settings(cur)
     readonly property var mine: Config.bar.items?.[cur] ?? {}
-    readonly property var base: BarItems.defs[cur]?.settings ?? {}
+    readonly property var base: BarItems.defs[kind]?.settings ?? {}
 
     // What each item draws with (bar/items/<id>/Item.qml): "mouse" = it takes click / right-click / scroll /
     // tooltip (BarItem actions), "icon" = a glyph of your own, "label" = a format around its value, "levels" =
@@ -30,9 +32,9 @@ SettingGroup {
         cpu: ["levels", "icon", "label", "mouse"], gpu: ["levels", "icon", "label", "mouse"], memory: ["levels", "icon", "label", "mouse"],
         weather: ["levels", "icon", "label", "mouse"]
     })
-    readonly property var has: kinds[cur] ?? ["levels", "icon", "label", "mouse"]
+    readonly property var has: kinds[kind] ?? ["levels", "icon", "label", "mouse"]
     // the reading a metric item shows (Metrics.registry), for its own warn / critical levels
-    readonly property var metric: Metrics.registry[({ cpu: "cpu", gpu: "gpu", memory: "ram" })[cur] ?? ""] ?? null
+    readonly property var metric: Metrics.registry[({ cpu: "cpu", gpu: "gpu", memory: "ram" })[kind] ?? ""] ?? null
     // where the rest of an item's options live
     readonly property var elsewhere: ({ apps: ["Dock", "dock"], workspaces: ["Workspaces", "workspaces"], weather: ["Weather", "weather"],
                                         notifications: ["Notifications", "notifications"], keyboard: ["Input", "input"] })
@@ -51,12 +53,12 @@ SettingGroup {
     }
 
     // the first sentence of the item's README, when there is one
-    FileView { id: readme; path: g.cur ? BarItems.dir + "/" + g.cur + "/README.md" : "" }
+    FileView { id: readme; path: g.cur ? BarItems.dir + "/" + g.kind + "/README.md" : "" }
     readonly property string about: {
         const t = readme.path ? readme.text() : ""
         const p = t.split("\n\n").map(x => x.trim()).filter(x => x && x[0] !== "#")
         const s = p.length ? p[0].replace(/\n/g, " ") : "", end = s.indexOf(". ")
-        const first = (end > 0 ? s.slice(0, end + 1) : s).replace(g.info.name + ": ", "")   // "System info: the one…" sits under its name
+        const first = (end > 0 ? s.slice(0, end + 1) : s).replace((BarItems.defs[g.kind]?.name ?? "") + ": ", "")   // "System info: the one…" sits under its name
         return first.charAt(0).toUpperCase() + first.slice(1)
     }
 
@@ -76,9 +78,9 @@ SettingGroup {
             label: g.info.name
             hint: g.about
             PillButton {
-                visible: g.elsewhere[g.cur] !== undefined
-                text: (g.elsewhere[g.cur]?.[0] ?? "") + " settings"
-                onClicked: SettingsApp.show(g.elsewhere[g.cur][1])
+                visible: g.elsewhere[g.kind] !== undefined
+                text: (g.elsewhere[g.kind]?.[0] ?? "") + " settings"
+                onClicked: SettingsApp.show(g.elsewhere[g.kind][1])
             }
             PillButton {
                 visible: g.has.length > 0 || Object.keys(g.mine).length > 0   // nothing to reset on an item without options
@@ -95,46 +97,30 @@ SettingGroup {
         }
 
         // ---- its own options --------------------------------------------------------------------
+        SettingsBarClock { visible: g.kind === "clock"; Layout.fillWidth: true; item: g }
         SettingRow {
-            visible: g.cur === "clock"
-            label: "24-hour time"
-            hint: (Config.bar.clock24 ? "14:40" : "2:40 PM") + ". The lock screen follows"
-            ConfigToggle { section: "bar"; key: "clock24" }
-        }
-        SettingRow {
-            visible: g.cur === "clock"
-            label: "Seconds"
-            ConfigToggle { section: "bar"; key: "seconds" }
-        }
-        SettingRow {
-            visible: g.cur === "clock"
-            label: "Date beside the time"
-            hint: "Where there's room"
-            ConfigChoice { section: "bar"; key: "date"; values: ["full", "short", "none"]; labels: ["Fri 30 Oct", "30 Oct", "None"] }
-        }
-        SettingRow {
-            visible: g.cur === "window"
+            visible: g.kind === "window"
             label: "Window title"
             hint: "After the app's name"
             ConfigToggle { section: "bar"; key: "windowTitle" }
         }
         SettingRow {
-            visible: g.cur === "battery" || g.cur === "status"
+            visible: g.kind === "battery" || g.kind === "status"
             label: "Battery percentage"
-            hint: g.cur === "status" ? "Shared with the Battery item" : "Shared with Quick settings"
+            hint: g.kind === "status" ? "Shared with the Battery item" : "Shared with Quick settings"
             ConfigChoice { section: "bar"; key: "batteryPercent"; values: ["inside", "beside", "off"]; labels: ["Inside", "Beside", "Off"] }
         }
-        SettingsBarSysinfo { visible: g.cur === "sysinfo"; Layout.fillWidth: true; item: g }
+        SettingsBarSysinfo { visible: g.kind === "sysinfo"; Layout.fillWidth: true; item: g }
         NumRow { visible: g.base.interval !== undefined; label: "Update every"; hint: "Seconds between readings"; key: "interval"; min: 1; own: g.base.interval }
-        NumRow { visible: g.has.includes("levels"); label: "Warn at"; hint: g.cur === "weather" ? "Amber and a ! from this temperature" : "Amber and a ! from here"; key: "warn"; own: g.metric?.warn }
-        NumRow { visible: g.has.includes("levels"); label: "Critical at"; hint: g.cur === "weather" ? "Red and !! from this temperature" : "Red and !! from here"; key: "critical"; own: g.metric?.critical }
+        NumRow { visible: g.has.includes("levels"); label: "Warn at"; hint: g.kind === "weather" ? "Amber and a ! from this temperature" : "Amber and a ! from here"; key: "warn"; own: g.metric?.warn }
+        NumRow { visible: g.has.includes("levels"); label: "Critical at"; hint: g.kind === "weather" ? "Red and !! from this temperature" : "Red and !! from here"; key: "critical"; own: g.metric?.critical }
         TextRow { visible: g.has.includes("icon"); label: "Icon"; hint: "One glyph in place of its own"; key: "icon"; fieldWidth: 70 }
         TextRow { visible: g.has.includes("label"); label: "Label"; hint: "Your text around {value}. Enter applies"; key: "format"; placeholder: "{value}" }
 
         SettingRow {   // an item with nothing to set
-            visible: g.has.length === 0 && g.cur !== "window"
+            visible: g.has.length === 0 && g.kind !== "window"
             label: "No options of its own"
-            hint: g.elsewhere[g.cur] ? "They are on the " + g.elsewhere[g.cur][0] + " page" : "Its look follows the theme"
+            hint: g.elsewhere[g.kind] ? "They are on the " + g.elsewhere[g.kind][0] + " page" : "Its look follows the theme"
         }
 
         // ---- the mouse --------------------------------------------------------------------------
