@@ -36,12 +36,16 @@ Loader {
     Component.onCompleted: load()
     onKindChanged: load()
     Connections { target: BarItems; function onDefsChanged() { w.load() } }
-    // the separator sits in the gap before the item, outside it (the grid's spacing holds it)
+    // the separator sits in the gap before the item, outside it (the grid's spacing holds it);
+    // theme bar.sepStyle "slash" leans it like a HUD's segment cut (horizontal bars only)
     Rectangle {
+        readonly property bool slash: Theme.barStyle.sepStyle === "slash" && !w.vertical
         visible: w.separated && w.visible
-        color: Qt.alpha(w.tone, 0.28)
+        color: Qt.alpha(w.tone, slash ? 0.34 : 0.28)
+        antialiasing: slash
+        rotation: slash ? 22 : 0
         width: w.vertical ? Math.min(14, w.thickness * 0.45) : 1
-        height: w.vertical ? 1 : Math.min(14, w.thickness * 0.45)
+        height: w.vertical ? 1 : Math.min(slash ? 18 : 14, w.thickness * (slash ? 0.56 : 0.45))
         x: w.vertical ? (w.width - width) / 2 : -8
         y: w.vertical ? -8 : (w.height - height) / 2
     }
