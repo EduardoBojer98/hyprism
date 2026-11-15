@@ -177,7 +177,27 @@ Singleton {
         }
         return out
     }
-    function resolve(id, custom, mode) {
+    // the bar and dock parts of an adjustment object (Settings > Menu Bar / Dock), each checked and laid over r
+    function applyBar(r, o) {
+        const num = (v, lo, hi) => typeof v === "number" && v >= lo && v <= hi
+        const edges = ["top", "bottom", "left", "right"], side = e => e === "left" || e === "right"
+        if (edges.includes(o.barEdge) && o.barEdge !== r.bar.edge) {
+            // a theme's own size suits its own edge: a rail turned into a strip gets a strip's height and back
+            if (side(o.barEdge) !== side(r.bar.edge)) r.bar.size = side(o.barEdge) ? Math.max(r.bar.size, 44) : Math.min(r.bar.size, 44)
+            r.bar.edge = o.barEdge
+        }
+        if (num(o.barSize, 20, 96)) r.bar.size = o.barSize
+        if (typeof o.barFloating === "boolean") r.bar.floating = o.barFloating
+        const items = o.barItems, known = barItems.map(i => i.id), settled = BarItems.ready   // ids are unknown until the folders are read
+        if (items && typeof items === "object")
+            for (const k of ["start", "center", "end"])
+                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => (!settled || known.includes(i)) && l.indexOf(i) === n)
+        if (o.dock === "bar") r.dock.edge = r.bar.edge
+        else if (edges.includes(o.dock)) r.dock.edge = o.dock
+        if (["dot", "line", "bar", "ring", "diamond"].includes(o.dockMark)) r.dock.mark = o.dockMark
+        if (["edge", "inner", "left"].includes(o.dockMarkSide)) r.dock.markSide = o.dockMarkSide
+    }
+    function resolve(id, custom, mode, layout) {
         const r = JSON.parse(JSON.stringify(get(id)))
         // light or dark: the other half swaps in, and the half it replaces becomes the alt (so a saved theme keeps both)
         if (r.alt && (mode === "light" && r.dark || mode === "dark" && !r.dark)) {
@@ -218,23 +238,10 @@ Singleton {
         if (ok(o.motion)) r.hypr.motion = o.motion
         if (ok(o.shadow)) r.hypr.shadow = o.shadow
         if (ok(o.blur)) r.hypr.blur = o.blur
-        // the bar and dock (Settings > Menu Bar / Dock), checked the same way
-        const edges = ["top", "bottom", "left", "right"], side = e => e === "left" || e === "right"
-        if (edges.includes(o.barEdge) && o.barEdge !== r.bar.edge) {
-            // a theme's own size suits its own edge: a rail turned into a strip gets a strip's height and back
-            if (side(o.barEdge) !== side(r.bar.edge)) r.bar.size = side(o.barEdge) ? Math.max(r.bar.size, 44) : Math.min(r.bar.size, 44)
-            r.bar.edge = o.barEdge
-        }
-        if (num(o.barSize, 20, 96)) r.bar.size = o.barSize
-        if (typeof o.barFloating === "boolean") r.bar.floating = o.barFloating
-        const items = o.barItems, known = barItems.map(i => i.id), settled = BarItems.ready   // ids are unknown until the folders are read
-        if (items && typeof items === "object")
-            for (const k of ["start", "center", "end"])
-                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => (!settled || known.includes(i)) && l.indexOf(i) === n)
-        if (o.dock === "bar") r.dock.edge = r.bar.edge
-        else if (edges.includes(o.dock)) r.dock.edge = o.dock
-        if (["dot", "line", "bar", "ring", "diamond"].includes(o.dockMark)) r.dock.mark = o.dockMark
-        if (["edge", "inner", "left"].includes(o.dockMarkSide)) r.dock.markSide = o.dockMarkSide
+        applyBar(r, o)
+        // the one layout you set for every theme (Settings > Menu Bar) goes over the theme's own and its adjustments
+        if (layout && Object.keys(layout).length)
+            applyBar(r, { barEdge: layout.edge, barSize: layout.size, barFloating: layout.floating, barItems: layout, dock: layout.dock })
         return r
     }
     // WCAG relative luminance and contrast ratio

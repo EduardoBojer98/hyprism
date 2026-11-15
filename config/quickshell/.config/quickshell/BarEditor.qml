@@ -3,22 +3,21 @@ import QtQuick.Layouts
 
 // The menu bar's items, edited by hand: a copy of the bar in the theme's own colours with its three
 // sections side by side. Drag an item to another place in the bar, drag one in from the tray of unused
-// items below, drag one back to the tray (or press its ×) to take it off. Every change saves at once, for
-// the active theme only (Themes.adjust "barItems"), and the real bar follows. "Apps" is the dock itself:
-// adding it puts the dock in the bar; it leaves the bar only by moving the dock (Settings > Dock).
-// With a preset chosen (Config.bar.preset) it edits that preset's three lists instead of the theme's.
+// items below (or click it), drag one back to the tray (or press its ×) to take it off. Every change saves at
+// once and the real bar follows. By default it edits the one layout every screen and theme shares (Theme.setLayout);
+// with `screen` set it edits that screen's own list (Config.bar.monitors). "Apps" is the dock itself: adding it
+// puts the dock in the bar; it leaves the bar only by moving the dock (Settings > Dock).
 ColumnLayout {
     id: ed
     spacing: 14
 
     property Item floatOn                         // where a carried item floats (the Settings page's parent)
     property string selected                      // the item whose settings the page shows; a click on the bar picks it
-    readonly property string preset: Config.bar.preset
-    readonly property bool onPreset: preset !== "theme" && Config.bar.presets?.[preset] !== undefined
-    readonly property var layout: {
-        const p = onPreset ? Config.bar.presets[preset] : undefined
-        return p ? { start: Array.from(p.start ?? []), center: Array.from(p.center ?? []), end: Array.from(p.end ?? []) } : Theme.barLayout
-    }
+    property string screen                        // "" = every screen; a screen's name = that screen's own list
+    readonly property var own: screen !== "" ? Config.bar.monitors?.[screen] : undefined
+    readonly property bool onScreen: own !== undefined && own !== null && typeof own === "object"
+    readonly property var layout: onScreen ? { start: Array.from(own.start ?? []), center: Array.from(own.center ?? []), end: Array.from(own.end ?? []) }
+                                           : Theme.barLayout
     readonly property var keys: ["start", "center", "end"]
     readonly property var names: ({ start: Theme.barVertical ? "Top" : "Left", center: "Middle", end: Theme.barVertical ? "Bottom" : "Right" })
     readonly property var used: [].concat(Array.from(layout.start), Array.from(layout.center), Array.from(layout.end))
@@ -33,11 +32,12 @@ ColumnLayout {
     function lists() {
         return { start: Array.from(layout.start), center: Array.from(layout.center), end: Array.from(layout.end) }
     }
-    readonly property bool edited: ((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).barItems !== undefined
-    function save(l) {
-        if (!onPreset) { Themes.adjust("barItems", l); return }
-        const all = JSON.parse(JSON.stringify(Config.bar.presets)); all[preset] = l
-        Config.set("bar", "presets", all)
+    // extra: geometry that goes with the change (the dock into the bar); it is global even on a screen's own list
+    function save(l, extra) {
+        if (!onScreen) { Theme.setLayout(Object.assign({}, l, extra ?? {})); return }
+        const all = JSON.parse(JSON.stringify(Config.bar.monitors ?? {})); all[screen] = l
+        Config.set("bar", "monitors", all)
+        if (extra) Theme.setLayout(extra)
     }
     // payload: { id, from: section key or "tray" }; drop it into `section` at `index` (-1: the end)
     function drop(p, section, index) {
@@ -52,8 +52,7 @@ ColumnLayout {
         if (section === "tray") { save(l); return }
         if (index < 0 || index > l[section].length) index = l[section].length
         l[section].splice(index, 0, p.id)
-        save(l)
-        if (p.id === "apps" && !Theme.dockInBar) Themes.adjust("dock", "bar")
+        save(l, p.id === "apps" && !Theme.dockInBar ? { dock: "bar" } : undefined)
     }
 
     // ---- the bar ------------------------------------------------------------------------------------
@@ -83,7 +82,8 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         text: "Drag items to move them; drop one on the tray to take it off. Click one for its settings.\n"
-              + (ed.onPreset ? "Editing the preset \u201c" + ed.preset + "\u201d." : ed.edited ? "Your layout for " + Theme.current.name + "." : "The layout " + Theme.current.name + " came with.")
+              + (ed.onScreen ? "Editing the bar on " + ed.screen + " only."
+                 : "Editing the bar on every screen" + (Theme.hasLayout ? ", in every theme." : ": for now it is " + Theme.current.name + "'s own, your first change makes it yours."))
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
@@ -207,7 +207,7 @@ ColumnLayout {
                 width: 16; height: 16; radius: 8
                 color: Theme.error
                 Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.errorText; font { family: Theme.iconFont; pixelSize: 10 } }
-                MouseArea { anchors { fill: parent; margins: -3 } Accessible.role: Accessible.Button; Accessible.name: "Remove from tray"; cursorShape: Qt.PointingHandCursor; onClicked: ed.drop({ id: chip.itemId, from: chip.from }, "tray", -1) }
+                MouseArea { anchors { fill: parent; margins: -3 } Accessible.role: Accessible.Button; Accessible.name: "Take off the bar"; cursorShape: Qt.PointingHandCursor; onClicked: ed.drop({ id: chip.itemId, from: chip.from }, "tray", -1) }
             }
         }
         // on the tray a click adds it to the end of the bar's last section

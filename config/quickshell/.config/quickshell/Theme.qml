@@ -8,7 +8,7 @@ import QtQuick
 // Ghostty and the wallpaper. Personal knobs on top: Config.appearance.fontScale and .animations.
 Singleton {
     readonly property var a: Config.appearance
-    readonly property var current: Themes.resolve(a.theme, a.custom, a.mode)   // the theme plus your adjustments
+    readonly property var current: Themes.resolve(a.theme, a.custom, a.mode, Config.bar.layout)   // the theme, your adjustments, and your one bar layout
     readonly property var c: current.colour
     readonly property bool light: !current.dark
 
@@ -117,15 +117,35 @@ Singleton {
         return l
     }
     readonly property var barLayout: withDock({ start: Array.from(barStyle.start), center: Array.from(barStyle.center), end: Array.from(barStyle.end) })
-    // the layout one screen's bar uses: its preset in Config.bar.monitors, else Config.bar.preset, else (also for
-    // "theme" or a name that isn't there) the theme's own. Unknown ids are skipped once the item folders are read.
+    // the layout one screen's bar uses: its own (Config.bar.monitors[screen] = { start, center, end }), else the
+    // global one (barLayout: bar.layout over the theme). Older settings named a preset instead: a screen's name
+    // for one, or bar.preset while bar.layout is empty; both still read. Unknown ids are skipped once the item folders are read.
     function barLayoutFor(screenName) {
-        const p = cb.presets?.[cb.monitors?.[screenName] || cb.preset]
+        const m = cb.monitors?.[screenName]
+        const p = m && typeof m === "object" ? m : cb.presets?.[m || (hasLayout ? "" : cb.preset)]
         if (!p || typeof p !== "object") return barLayout
         const l = {}
         for (const k of ["start", "center", "end"])
             l[k] = Array.from(p[k] ?? []).filter((i, n, a) => (!BarItems.ready || BarItems.has(i)) && a.indexOf(i) === n)
         return withDock(l)
+    }
+    // the one global layout: { edge, size, floating, dock, start, center, end } in Config.bar.layout, empty while
+    // the theme's own is in use. The first edit copies what is on screen now, so nothing jumps.
+    readonly property bool hasLayout: Object.keys(cb.layout ?? {}).length > 0
+    function layoutNow() {
+        return { edge: barEdge, size: barSize, floating: barFloating, dock: dockMode,
+                 start: Array.from(barStyle.start), center: Array.from(barStyle.center), end: Array.from(barStyle.end) }
+    }
+    function setLayout(patch) {   // "" when saved, else why not
+        const l = Object.assign(layoutNow(), patch)
+        if (patch.edge && patch.edge !== barEdge && !patch.size && (patch.edge === "left" || patch.edge === "right") !== barVertical)
+            l.size = barVertical ? Math.min(barSize, 44) : Math.max(barSize, 44)   // a rail's width is not a strip's height
+        return Config.set("bar", "layout", l)
+    }
+    // back to the active theme's own bar: drops the global layout and this theme's old per-theme bar adjustments
+    function useThemeLayout() {
+        for (const k of ["barEdge", "barSize", "barFloating", "barItems", "dock"]) Themes.adjust(k, undefined)
+        Config.set("bar", "layout", {})
     }
     readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
     readonly property color barInk: barStyle.fill === "ink" ? base : text    // text on the bar's own ground

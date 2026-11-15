@@ -2,34 +2,48 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Menu Bar: which preset of items the bar uses and what each screen shows, where the bar sits, its size and
-// shape, which items each of its three sections holds, and each item's own settings. Place, shape and
-// theme-layout items are saved for the active theme only (each theme keeps
-// its own; "Default" puts the theme's own back); every option works in every theme and on every edge.
+// Menu Bar: one bar for every screen and theme: its items, where it sits, its size and shape (all saved in
+// Config.bar.layout by the first change; "Use the theme's" puts the theme's own back), a list of its own or no
+// bar per screen, and each item's own settings.
 ColumnLayout {
     id: page
     spacing: 20
 
     readonly property var b: Config.bar
 
-    SettingsBarLayout { Layout.fillWidth: true; editor: barEditor }
+    SettingsBarLayout { id: layoutPane; Layout.fillWidth: true; editor: barEditor }
 
     SettingGroup {
         title: "Place"
         SettingRow {
             label: "Position"
-            hint: "The " + Theme.current.name + " theme puts it at the " + Themes.get(Config.appearance.theme).bar.edge
-            ThemeChoice { key: "barEdge"; values: ["theme", "top", "bottom", "left", "right"]; labels: ["Default", "Top", "Bottom", "Left", "Right"] }
+            hint: "For every screen and theme"
+            Choice {
+                readonly property var values: ["top", "bottom", "left", "right"]
+                options: ["Top", "Bottom", "Left", "Right"]
+                index: values.indexOf(Theme.barEdge)
+                onPicked: i => Theme.setLayout({ edge: values[i] })
+            }
         }
         SettingRow {
             label: "Size"
             hint: Theme.barSize + " px across"
-            ThemeChoice { key: "barSize"; values: [0, 26, 34, 44, 56]; labels: ["Default", "Slim", "Regular", "Tall", "Huge"] }
+            Choice {
+                readonly property var values: [26, 34, 44, 56]
+                options: ["Slim", "Regular", "Tall", "Huge"]
+                index: values.indexOf(Theme.barSize)
+                extra: index < 0 ? Theme.barSize + " px" : ""
+                onPicked: i => Theme.setLayout({ size: values[i] })
+            }
         }
         SettingRow {
             label: "Shape"
             hint: "Floating keeps a gap to the screen edges"
-            ThemeChoice { key: "barFloating"; values: ["theme", true, false]; labels: ["Default", "Floating", "Attached"] }
+            Choice {
+                options: ["Floating", "Attached"]
+                index: Theme.barFloating ? 0 : 1
+                onPicked: i => Theme.setLayout({ floating: i === 0 })
+            }
         }
         SettingRow {
             visible: Theme.barFloating
@@ -49,9 +63,10 @@ ColumnLayout {
             floatOn: page.parent
         }
         SettingRow {
-            visible: !barEditor.onPreset && ((Config.appearance.custom ?? {})[Config.appearance.theme] ?? {}).barItems !== undefined
-            label: "Back to the theme's items"
-            PillButton { text: "Use the theme's"; onClicked: Themes.adjust("barItems", undefined) }
+            visible: barEditor.onScreen
+            label: "Same items as every screen"
+            hint: barEditor.screen + " has a list of its own"
+            PillButton { text: "Use the shared list"; onClicked: layoutPane.setScreen(barEditor.screen, "Same as every screen") }
         }
         SaveTheme {}
     }
@@ -90,6 +105,6 @@ ColumnLayout {
         }
     }
 
-    // Reset: the theme's place, shape and items again (and the clock's defaults)
+    // Reset: the clock's and the bar's defaults; the layout goes back to the theme's own
     ResetGroup { sections: ["bar"] }
 }
