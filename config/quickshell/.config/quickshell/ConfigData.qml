@@ -125,7 +125,7 @@ JsonAdapter {
         property bool focusOnActivate: false    // apps may bring themselves to the front
         property bool warpCursor: true          // pointer jumps to the window focused from the keyboard
         property bool backAndForth: false       // the current desktop's shortcut goes back to the last one
-        property real inactiveOpacity: 0.96
+        property real inactiveOpacity: 1
         property bool dimInactive: false
         property real dimStrength: 0.2
         property bool resizeOnBorder: true

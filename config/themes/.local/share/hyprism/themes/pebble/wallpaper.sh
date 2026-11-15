@@ -26,7 +26,7 @@ stones() {
 
 wallpaper() {
     case $1 in
-        pebble) stones '#171918' '#232724' '#0b0c0b' '#343a35' '#46553a' 0.10 "$2" ;;
+        pebble) stones '#1c1f1d' '#363c37' '#0c0e0d' '#525a53' '#55663f' 0.10 "$2" ;;
         pebble-light) stones '#dfe2dc' '#e6e8e3' '#b9beb6' '#f3f4f0' '#b9caa2' 0.05 "$2" ;;
         *) return 1 ;;
     esac

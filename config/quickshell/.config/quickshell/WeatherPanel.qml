@@ -7,6 +7,8 @@ import QtQuick.Shapes
 // place here is not saved; Settings > Weather sets the places and the default (the first).
 ColumnLayout {
     id: panel
+    // rain in the second accent when it is a cool colour; a warm one (Monolith's orange) reads as an alarm, so then the "ok" colour
+    readonly property color rain: Theme.accent2.hslHue > 0.15 && Theme.accent2.hslHue < 0.85 ? Theme.accent2 : Theme.ok
     signal settings()
 
     readonly property var f: Weather.view
@@ -22,7 +24,7 @@ ColumnLayout {
              : id === "wind" ? ["\u{F059D}", "Wind", Math.round(f.wind) + " " + Weather.windUnit]
              : id === "uv" ? ["\u{F0599}", "UV index", d ? Math.round(d.uv) : "–"]
              : id === "rain" ? ["\u{F0597}", "Rain", d ? d.rain + "%" : "–"]
-             : id === "sun" ? ["\u{F059C}", "Sun", d ? d.sunrise + " · " + d.sunset : "–"] : null
+             : id === "sun" ? ["\u{F059C}", "Sun", d ? d.sunrise + "–" + d.sunset : "–"] : null
     }
 
     // no place yet
@@ -222,13 +224,13 @@ ColumnLayout {
                             anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: Theme.fontCaption + Theme.spaceXs }
                             width: 4; height: Math.max(2, hr.modelData.rain / 100 * Theme.spaceL)
                             radius: 2
-                            color: Theme.accent2
+                            color: panel.rain
                             visible: hr.modelData.rain >= 5
                         }
                         Text {
                             anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom }
                             text: hr.modelData.rain >= 20 ? hr.modelData.rain + "%" : ""
-                            color: Theme.accent2
+                            color: panel.rain
                             font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; features: { "tnum": 1 } }
                         }
                     }
@@ -280,7 +282,7 @@ ColumnLayout {
                         anchors { left: dayIcon.right; verticalCenter: parent.verticalCenter }
                         width: 34
                         text: dayRow.modelData.rain >= 20 ? dayRow.modelData.rain + "%" : ""
-                        color: Theme.accent2
+                        color: panel.rain
                         font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; features: { "tnum": 1 } }
                     }
                     Text {

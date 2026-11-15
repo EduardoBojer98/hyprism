@@ -160,7 +160,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `focusOnActivate` | `bool` | `false` | apps may bring themselves to the front |
 | `warpCursor` | `bool` | `true` | pointer jumps to the window focused from the keyboard |
 | `backAndForth` | `bool` | `false` | the current desktop's shortcut goes back to the last one |
-| `inactiveOpacity` | `real` | `0.96` |  |
+| `inactiveOpacity` | `real` | `1` |  |
 | `dimInactive` | `bool` | `false` |  |
 | `dimStrength` | `real` | `0.2` |  |
 | `resizeOnBorder` | `bool` | `true` |  |

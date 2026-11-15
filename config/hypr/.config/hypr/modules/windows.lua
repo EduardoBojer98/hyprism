@@ -6,7 +6,7 @@
 -- Defaults for a fresh install, the same as the Settings app's (quickshell ConfigData.qml)
 WINDOWS = { layout = "dwindle", newSplit = 0, smartSplit = false, masterNew = "slave", masterSide = "left",
             columnWidth = 0.5, followMouse = true, focusOnActivate = false, warpCursor = true,
-            backAndForth = false, inactiveOpacity = 0.96, dimInactive = false, dimStrength = 0.2,
+            backAndForth = false, inactiveOpacity = 1, dimInactive = false, dimStrength = 0.2,
             resizeOnBorder = true, snap = false, hideCursorTyping = false, apps = {}, titleBars = true }
 local ok, saved = pcall(require, "settings.windows")
 if ok and type(saved) == "table" then for k, v in pairs(saved) do WINDOWS[k] = v end end

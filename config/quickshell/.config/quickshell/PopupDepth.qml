@@ -30,10 +30,10 @@ Item {
         radius: depth.radius
         color: Qt.alpha(Theme.accent, 0.22)
     }
-    Rectangle {   // hard: an offset block in the ink colour (Poster)
+    Rectangle {   // hard: an offset block in the second accent (Poster's cobalt): ink would vanish on its charcoal ground
         visible: !depth.over && Theme.depth === "hard"
         anchors { fill: parent; leftMargin: 7; topMargin: 7; rightMargin: -7; bottomMargin: -7 }
-        color: Theme.stroke
+        color: Theme.accent2
     }
     Rectangle {   // topline: the accent along the top edge, like a focused terminal pane (Monolith)
         visible: depth.over && Theme.current.popup.decor === "topline"

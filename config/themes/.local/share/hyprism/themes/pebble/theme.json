@@ -4,10 +4,10 @@
   "order": 1,
   "dark": true,
   "colour": {
-    "ground": "#171918",
-    "surface": "#1f2220",
-    "raised": "#292d2a",
-    "line": "#383d39",
+    "ground": "#1c1f1d",
+    "surface": "#232624",
+    "raised": "#2d312e",
+    "line": "#3d433f",
     "text": "#e9ece6",
     "muted": "#b0b7b0",
     "faint": "#7f8780",
@@ -66,7 +66,7 @@
       "active": [
         "4d6a35cc"
       ],
-      "inactive": "c3c8c100"
+      "inactive": "c3c8c1ff"
     }
   },
   "font": {
@@ -158,7 +158,7 @@
     "active": [
       "b9cf8fcc"
     ],
-    "inactive": "383d3900",
+    "inactive": "3d433fff",
     "shadow": "soft",
     "blur": false,
     "motion": "ease",
