@@ -149,7 +149,7 @@ Singleton {
         name: "weather"
         placement: "top"
         boxWidth: 360
-        boxHeight: Math.min(panel.implicitHeight + Theme.spaceL * 2, popup.maxHeight)
+        boxHeight: panel.implicitHeight + Theme.spaceL * 2
         onOpened: if (Date.now() - root.updated.getTime() > 10 * 60 * 1000 || root.stale) root.refresh()
 
         Glass {
