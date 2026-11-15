@@ -41,7 +41,7 @@ ColumnLayout {
     }
     Text {
         Layout.fillWidth: true; Layout.margins: 16; Layout.bottomMargin: 4
-        text: "Readings: click to switch one on or off. A computer without one skips it."
+        text: "Readings to show. A computer without one skips it."
         color: Theme.subtext; wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
     }
@@ -72,6 +72,7 @@ ColumnLayout {
                             icon: Metrics.registry[modelData].glyph ?? ""
                             label: Metrics.registry[modelData].name
                             active: si.picked.includes(modelData)
+                            iconColor: active ? Theme.accent : Theme.text
                             Accessible.name: label
                             onClicked: si.toggle(modelData)
                         }
@@ -104,9 +105,26 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true; Layout.margins: 16; Layout.bottomMargin: 4
         visible: si.picked.length > 0
-        text: "Levels per reading. Warn: amber and a !. Critical: red and !!. Only above: hide it below that number. Empty: the reading's own. Press Enter to apply"
+        text: "Levels per reading. Warn: amber and a !. Critical: red and !!. Hide below: shown only from that number. Empty uses the reading's own; Enter applies"
         color: Theme.subtext; wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
+    }
+    RowLayout {   // the columns' names
+        visible: si.picked.length > 0
+        Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.bottomMargin: 2
+        spacing: 6
+        Item { Layout.fillWidth: true }
+        Repeater {
+            model: ["Warn", "Critical", "Hide below"]
+            Text {
+                required property string modelData
+                Layout.preferredWidth: 76
+                horizontalAlignment: Text.AlignHCenter
+                text: modelData
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
+        }
     }
     Repeater {
         model: si.picked.filter(id => Metrics.registry[id] !== undefined)
@@ -119,7 +137,7 @@ ColumnLayout {
             Text { Layout.fillWidth: true; elide: Text.ElideRight; text: lv.entry.name; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
             LevelField { rid: lv.modelData; map: "thresholds"; sub: "warn"; label: "warn"; shown: lv.entry.warn }
             LevelField { rid: lv.modelData; map: "thresholds"; sub: "critical"; label: "critical"; shown: lv.entry.critical }
-            LevelField { rid: lv.modelData; map: "onlyAbove"; sub: ""; label: "only above"; shown: undefined }
+            LevelField { rid: lv.modelData; map: "onlyAbove"; sub: ""; label: "hide below"; shown: undefined }
         }
     }
 
@@ -132,8 +150,8 @@ ColumnLayout {
         property string label
         property var shown                       // the reading's own level, shown as the hint
         readonly property var stored: sub === "" ? si.item.merged[map]?.[rid] : si.item.merged[map]?.[rid]?.[sub]
-        width: 70
-        placeholder: shown === undefined ? label : String(shown)
+        width: 76
+        placeholder: shown === undefined ? "–" : String(shown)
         Accessible.name: (Metrics.registry[rid]?.name ?? rid) + " " + label
         invalid: text.trim() !== "" && isNaN(Number(text))
         onAccepted: if (!invalid) si.setLevel(map, rid, sub, text)

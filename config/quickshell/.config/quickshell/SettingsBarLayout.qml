@@ -67,7 +67,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Keep this layout as a starting point"
-            hint: lay.message || "The three lists shown below, kept under a name"
+            hint: lay.message || "The three lists above, kept under a name"
             Row {
                 spacing: 8
                 TextField { id: newName; width: 150; placeholder: "my-layout"; invalid: lay.message !== ""; onAccepted: saveBtn.clicked() }
