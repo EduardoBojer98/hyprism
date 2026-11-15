@@ -92,7 +92,7 @@ Scope {
     }
     readonly property string hyprLua: `{ theme = ${q(current.id)}, gaps_in = ${n(h.gapsIn)}, gaps_out = ${n(h.gapsOut)}, border_size = ${n(h.border)}, `
         + `rounding = ${n(h.rounding)}, active = { ${borderActive.map(q).join(", ")} }, border_loop = ${rainbowLoops}, border_speed = ${n(Config.windows.rainbowSpeed)}, inactive = ${q(h.inactive)}, `
-        + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.motionLevel === "full" ? h.motion : Theme.motionLevel === "reduced" ? "instant" : "off")}, accent = ${q(hex(Theme.accent))}, `
+        + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.hyprMotion)}, accent = ${q(hex(Theme.accent))}, `
         + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)} }`
 
     // Qt apps (qt6ct), btop and the starship prompt: texts built from the same tokens, written only when they change.

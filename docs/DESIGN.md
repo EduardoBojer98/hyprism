@@ -69,8 +69,10 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
 4. **Type does the work.** One UI face, at most one display face; tabular figures for numbers.
 5. **Motion confirms, never delays.** Panels open out of the trigger's side on the theme's curve, exit
    faster than they enter, animate only transform and opacity, and take input from the first frame; a
-   closing panel takes none. Keyboard-opened panels have no travel worth waiting for. Settings →
-   Animations: Full (the theme's), Reduced (90 ms fades, nothing moves), Off.
+   closing panel takes none. Keyboard-opened panels have no travel worth waiting for. Settings → Themes →
+   Motion: a look (the theme's own, Smooth, Snappy, Springy or Minimal, `appearance.motionStyle`, Theme.qml
+   `looks`) sets the panel tokens and the Hyprland preset together, each with a live preview; Animations:
+   Full (the look), Reduced (90 ms fades, nothing moves), Off.
 6. **Depth belongs to the world.** Soft shadows only in Pebble, the hard offset block only in
    Poster (the one neo-brutalist world), frames, magenta corner brackets and a faint accent glow in Monolith.
 7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0;
