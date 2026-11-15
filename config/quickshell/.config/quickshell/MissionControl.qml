@@ -121,6 +121,7 @@ Singleton {
         WlrLayershell.namespace: "qs-overview"
         WlrLayershell.layer: WlrLayer.Overlay
         WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+        onVisibleChanged: if (visible) stage.forceActiveFocus()
 
         Item {
             id: stage
@@ -163,8 +164,8 @@ Singleton {
                 saturation: 0.15 * root.t   // a little richer, as frosted glass reads
             }
             Rectangle { anchors.fill: parent; color: Theme.backdrop; opacity: root.t }
-            // empty space does nothing on its own: Esc, a window or a desktop are what close this
-            MouseArea { anchors.fill: parent; Accessible.ignored: true }
+            // a click on empty space closes, like every other sheet (a window or a desktop closes it too)
+            MouseArea { anchors.fill: parent; Accessible.ignored: true; onClicked: root.hide() }
 
             // ---- desktops: a glass bar along the top ----
             Glass {
@@ -429,5 +430,12 @@ Singleton {
                 }
             }
         }
+    }
+
+    // a click on another screen closes it too
+    HyprlandFocusGrab {
+        windows: [win]
+        active: root.open
+        onCleared: root.hide()
     }
 }
