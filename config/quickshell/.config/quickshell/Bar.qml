@@ -79,7 +79,8 @@ Scope {
                 height: root.vertical ? parent.height : root.st.line
             }
 
-            readonly property int pad: root.segmented ? 0 : root.vertical ? 10 : (root.st.ws === "blocks" ? 0 : 12)
+            // blocks and a block clock run flush to the screen's edges, like tmux's status line
+            readonly property int pad: root.segmented ? 0 : root.vertical ? 10 : (root.st.ws === "blocks" || root.st.clock === "block" && !root.floating ? 0 : 12)
             readonly property real length: (root.vertical ? height : width) - pad * 2 - 12
             // too many items: the end (status, clock) keeps its room, the start gets the rest, the middle
             // what's between them; whatever doesn't fit is cut off rather than drawn over a neighbour

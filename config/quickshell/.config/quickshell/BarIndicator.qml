@@ -28,6 +28,8 @@ BarItem {
                                          + (alarm === 2 ? " !!" : alarm === 1 ? " !" : "")
     property bool asWords: bar.words || (bar.mixed && textual && !bar.vertical)
     property color ink: alarm === 2 ? Theme.error : alarm === 1 ? Theme.warning : bar.tone
+    // theme bar.dimLabels: the word or glyph in front of a value reads as its label, dimmed ("cpu 7%")
+    readonly property bool dimLabel: Theme.barStyle.dimLabels === true && valueText.visible && shownValue !== ""
 
     actions: cfg
     Accessible.name: ((word !== "" ? word + " " : "") + value).trim() !== "" ? ((word !== "" ? word + " " : "") + value).trim() : tip
@@ -36,12 +38,22 @@ BarItem {
     Text {
         visible: !ind.asWords && ind.shownGlyph !== ""
         text: ind.shownGlyph
-        color: ind.ink
+        color: ind.dimLabel && ind.alarm === 0 ? ind.bar.dim : ind.ink
         font { family: Theme.iconFont; pixelSize: 16 }
     }
+    Text {   // dimLabels: the word on its own, one mono cell before the value
+        visible: ind.dimLabel && ind.asWords && ind.word !== ""
+        text: ind.bar.say(ind.word)
+        rightPadding: ind.bar.vertical ? 0 : 3
+        color: ind.bar.dim
+        font { family: ind.bar.family; pixelSize: Theme.fontLabel; letterSpacing: ind.bar.voice === "caps" ? 1 : 0 }
+    }
     Text {
+        id: valueText
         visible: ind.asWords || ((ind.showValue || ind.bar.mixed || ind.alarm > 0) && ind.shownValue !== "" && !(ind.bar.mixed && ind.bar.vertical))
-        text: ind.asWords ? ind.bar.say(ind.word + (ind.shownValue !== "" ? (ind.bar.vertical ? "\n" : " ") + ind.shownValue : "")) : ind.shownValue
+        text: !ind.asWords ? ind.shownValue
+              : ind.dimLabel && ind.word !== "" ? ind.bar.say(ind.shownValue)
+              : ind.bar.say(ind.word + (ind.shownValue !== "" ? (ind.bar.vertical ? "\n" : " ") + ind.shownValue : ""))
         horizontalAlignment: Text.AlignHCenter
         color: ind.ink
         font { family: ind.bar.family; pixelSize: Theme.fontLabel; letterSpacing: ind.bar.voice === "caps" ? 1 : 0; features: { "tnum": 1 } }

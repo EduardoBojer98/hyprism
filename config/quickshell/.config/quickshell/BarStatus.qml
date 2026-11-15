@@ -23,6 +23,8 @@ BarItem {
     readonly property bool mixed: mode === "mixed"
     readonly property bool caps: mode === "caps"
     function say(s) { return caps ? s.toUpperCase() : s }
+    // theme bar.dimLabels: a glyph with its number beside it is that number's label, dimmed
+    readonly property color labelTone: Theme.barStyle.dimLabels === true && mixed && !vertical ? Theme.barDim : tone
     readonly property string netText: Sys.wired ? say("eth") : !Sys.wifiOn ? say("wifi off") : Sys.signal < 0 ? say("offline") : say("wifi ") + Sys.signal
     readonly property string volText: Sys.muted ? say("muted") : say("vol ") + Math.round(Sys.volume * 100)
     readonly property string batText: say("bat ") + Sys.batteryPct + "%" + (Sys.charging ? "+" : "")
@@ -52,10 +54,10 @@ BarItem {
     }
 
     // ---- icons ----
-    Text { id: netIcon; visible: !st.words; text: Sys.networkGlyph; color: Sys.signal < 0 && !Sys.wired ? Theme.barDim : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { id: netIcon; visible: !st.words; text: Sys.networkGlyph; color: Sys.signal < 0 && !Sys.wired ? Theme.barDim : Sys.wired ? st.tone : st.labelTone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Num { visible: st.mixed && !st.vertical && !Sys.wired && Sys.signal >= 0; text: Sys.signal }
     Text { visible: !st.words && Sys.btOn; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
-    Text { visible: !st.words; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.volumeGlyph; color: Sys.muted ? Theme.barDim : st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { visible: !st.words; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.volumeGlyph; color: Sys.muted ? Theme.barDim : st.labelTone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Num { visible: st.mixed && !st.vertical && !Sys.muted; text: Math.round(Sys.volume * 100) }
     BarBattery {   // a gap before it in mixed mode, like the other glyph + value pairs
         visible: !st.words && Sys.hasBattery
