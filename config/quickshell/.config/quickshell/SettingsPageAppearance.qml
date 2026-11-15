@@ -23,7 +23,38 @@ ColumnLayout {
     readonly property var swatches: [
         "#ff9e7a", "#ffb000", "#b6ff3b", "#9fd18b", "#5ad1c2", "#5b9cff", "#3584e4", "#8ab4ff", "#c7a3ff", "#ff6b8a", "#ff3b1f", "#e30613", "#f2d48a", "#e8e8ea", "#1a1a1a"]   // palette
 
+    // second colours: neon, cool and warm partners for any accent
+    readonly property var swatches2: [
+        "#ff4ad8", "#00e5ff", "#5ad1c2", "#5b9cff", "#8ab4ff", "#c7a3ff", "#9d7bff", "#ff6b8a", "#ff5f2e", "#ffb000", "#f2d48a", "#9fd18b", "#b6ff3b", "#e8e8ea", "#1a1a1a"]
+
     function adjust(key, value) { return Themes.adjust(key, value) }
+
+    // the theme's own colour first (marked), then the palette; picking the first goes back to the theme's
+    component Swatches: Flow {
+        id: sws
+        property string key
+        property string name
+        property string own
+        property color current
+        property var colours: []
+        width: 8 * 28
+        spacing: 4
+        Repeater {
+            model: [sws.own].concat(sws.colours.filter(c => c !== sws.own))
+            Rectangle {
+                id: sw
+                required property string modelData
+                required property int index
+                readonly property bool chosen: String(sws.current).slice(0, 7) === modelData
+                width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall + 4)
+                color: modelData
+                border { color: chosen ? Theme.text : Theme.stroke; width: chosen ? 2 : 1 }
+                Text { visible: sw.index === 0; anchors.centerIn: parent; text: "\u{F0674}"; color: Themes.textOn(sw.modelData, page.base.colour); font { family: Theme.iconFont; pixelSize: 11 } }
+                MouseArea { id: swArea; Accessible.role: Accessible.Button; Accessible.name: sws.name + " " + (sw.index === 0 ? "default" : sw.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.adjust(sws.key, sw.index === 0 ? undefined : sw.modelData) }
+                ToolTipText { shown: swArea.containsMouse; text: sw.index === 0 ? "The theme's own" : sw.modelData }
+            }
+        }
+    }
     function hex(t) {
         let h = String(t).trim().replace(/^#/, "")
         if (/^[0-9a-fA-F]{3}$/.test(h)) h = h.split("").map(ch => ch + ch).join("")
@@ -82,25 +113,7 @@ ColumnLayout {
         SettingRow {
             label: "Accent colour"
             hint: "Workspaces, selection, toggles and the window frame"
-            Flow {
-                width: 8 * 28
-                spacing: 4
-                Repeater {
-                    model: [page.base.colour.accent].concat(page.swatches.filter(c => c !== page.base.colour.accent))
-                    Rectangle {
-                        id: sw
-                        required property string modelData
-                        required property int index
-                        readonly property bool chosen: String(Theme.accent).slice(0, 7) === modelData
-                        width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall + 4)
-                        color: modelData
-                        border { color: chosen ? Theme.text : Theme.stroke; width: chosen ? 2 : 1 }
-                        Text { visible: sw.index === 0; anchors.centerIn: parent; text: "\u{F0674}"; color: Themes.textOn(sw.modelData, page.base.colour); font { family: Theme.iconFont; pixelSize: 11 } }
-                        MouseArea { id: swArea; Accessible.role: Accessible.Button; Accessible.name: "Accent colour " + (sw.index === 0 ? "default" : sw.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.adjust("accent", sw.index === 0 ? undefined : sw.modelData) }
-                        ToolTipText { shown: swArea.containsMouse; text: sw.index === 0 ? "The theme's own" : sw.modelData }
-                    }
-                }
-            }
+            Swatches { key: "accent"; name: "Accent colour"; own: page.base.colour.accent; current: Theme.accent; colours: page.swatches }
             TextField {
                 width: 88
                 placeholder: "#hex"
@@ -113,7 +126,7 @@ ColumnLayout {
         SettingRow {
             label: "Second colour"
             hint: "Window frame gradients, glows and highlights (" + page.base.colour.accent2 + " by default)"
-            Rectangle { width: 24; height: 24; radius: Theme.radiusSmall; color: Theme.accent2; border { color: Theme.stroke; width: 1 } }
+            Swatches { key: "accent2"; name: "Second colour"; own: page.base.colour.accent2; current: Theme.accent2; colours: page.swatches2 }
             TextField {
                 width: 88
                 placeholder: "#hex"
