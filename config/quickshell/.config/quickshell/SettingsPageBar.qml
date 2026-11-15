@@ -2,16 +2,33 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Menu Bar: one bar for every screen and theme: its items, where it sits, its size and shape (all saved in
-// Config.bar.layout by the first change; "Use the theme's" puts the theme's own back), a list of its own or no
-// bar per screen, and each item's own settings.
+// Menu Bar: one bar for every screen and theme. First its items and the picked item's own settings, then where it
+// sits, its size and shape (all saved in Config.bar.layout by the first change; "Use the theme's" puts the theme's
+// own back), starting points, and a list of its own or no bar per screen.
 ColumnLayout {
     id: page
     spacing: 20
 
     readonly property var b: Config.bar
 
-    SettingsBarLayout { id: layoutPane; Layout.fillWidth: true; editor: barEditor }
+    // ---- items: a copy of the bar to drag them around on ------------------------------------------------
+    SettingGroup {
+        title: "Items"
+        BarEditor {
+            id: barEditor
+            Layout.fillWidth: true
+            Layout.margins: 12
+            floatOn: page.parent
+        }
+        SettingRow {
+            visible: barEditor.onScreen
+            label: "Same items as every screen"
+            hint: barEditor.screen + " has a list of its own"
+            PillButton { text: "Use the shared list"; onClicked: layoutPane.setScreen(barEditor.screen, "Same as every screen") }
+        }
+    }
+
+    SettingsBarItem { editor: barEditor }
 
     SettingGroup {
         title: "Place"
@@ -53,56 +70,7 @@ ColumnLayout {
         }
     }
 
-    // ---- items: a copy of the bar to drag them around on ------------------------------------------------
-    SettingGroup {
-        title: "Items"
-        BarEditor {
-            id: barEditor
-            Layout.fillWidth: true
-            Layout.margins: 14
-            floatOn: page.parent
-        }
-        SettingRow {
-            visible: barEditor.onScreen
-            label: "Same items as every screen"
-            hint: barEditor.screen + " has a list of its own"
-            PillButton { text: "Use the shared list"; onClicked: layoutPane.setScreen(barEditor.screen, "Same as every screen") }
-        }
-    }
-
-    SettingsBarItem { editor: barEditor }
-
-    SettingGroup {
-        title: "Battery"
-        SettingRow {
-            label: "Battery percentage"
-            hint: "In every theme: in the battery icon, beside it, or not shown"
-            ConfigChoice { section: "bar"; key: "batteryPercent"; values: ["inside", "beside", "off"]; labels: ["Inside", "Beside", "Off"] }
-        }
-    }
-
-    SettingGroup {
-        title: "Clock"
-        SettingRow {
-            label: "24-hour time"
-            hint: Config.bar.clock24 ? "14:40" : "2:40 PM"
-            ConfigToggle { section: "bar"; key: "clock24" }
-        }
-        SettingRow {
-            label: "Show seconds"
-            ConfigToggle { section: "bar"; key: "seconds" }
-        }
-        SettingRow {
-            label: "Date"
-            hint: "Beside the time, where there's room"
-            ConfigChoice { section: "bar"; key: "date"; values: ["full", "short", "none"]; labels: ["Fri 30 Oct", "30 Oct", "None"] }
-        }
-        SettingRow {
-            label: "Window title"
-            hint: "After the app's name in the Active window item"
-            ConfigToggle { section: "bar"; key: "windowTitle" }
-        }
-    }
+    SettingsBarLayout { id: layoutPane; Layout.fillWidth: true; editor: barEditor }
 
     // Reset: the clock's and the bar's defaults; the layout goes back to the theme's own
     ResetGroup { sections: ["bar"] }
