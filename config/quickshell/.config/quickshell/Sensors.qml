@@ -73,7 +73,7 @@ Singleton {
         id: popup
         name: "system"
         placement: "topRight"
-        boxWidth: 340
+        boxWidth: Theme.panelWidth
         boxHeight: body.implicitHeight + Theme.spaceM * 2
 
         Glass {
@@ -120,7 +120,7 @@ Singleton {
                 Section_ {
                     visible: Metrics.has("ram") || Metrics.has("swap")
                     title: "Memory"
-                    value: Metrics.has("ram") ? Metrics.text("ram") : ""
+                    value: Metrics.has("ram") ? ((root.d.ram?.used ?? 0) / 1024).toFixed(1) + " GB" : ""
                     Meter_ { visible: Metrics.has("ram"); label: "RAM"; rid: "ram"; used: (root.d.ram?.used ?? 0) / 1024; total: (root.d.ram?.total ?? 0) / 1024 }
                     Meter_ { visible: Metrics.has("swap") && (root.d.swap?.total ?? 0) > 0; label: "Swap"; rid: "swap"; used: (root.d.swap?.used ?? 0) / 1024; total: (root.d.swap?.total ?? 0) / 1024 }
                 }
@@ -128,28 +128,36 @@ Singleton {
                 Section_ {
                     visible: Metrics.has("gpu") || Metrics.has("gpu_temp") || Metrics.has("dgpu")
                     title: "Graphics"
-                    // built-in card: load, temperature, power; shared memory is a use, never a percentage
-                    Facts_ {
-                        visible: Metrics.has("gpu") || Metrics.has("gpu_temp")
-                        lead: "Built-in"
-                        items: [
-                            Metrics.has("gpu") ? { k: "Load", v: Metrics.text("gpu") + root.flag("gpu") } : null,
-                            Metrics.has("gpu_temp") ? { k: "Temp", v: Metrics.text("gpu_temp") + root.flag("gpu_temp") } : null,
-                            Metrics.has("gpu_power") ? { k: "Power", v: Metrics.text("gpu_power") } : null,
-                            Metrics.has("gpu_vram") ? { k: "Shared", v: Metrics.text("gpu_vram") } : null
-                        ]
-                    }
-                    // second card: "Sleeping" while powered down; numbers only while it is awake (and the panel is open)
-                    Facts_ {
-                        visible: Metrics.has("dgpu")
-                        lead: "Discrete"
-                        sleeping: !root.d.dgpu_live
-                        status: ({ suspended: "Sleeping", suspending: "Sleeping", resuming: "Waking", active: "Awake" })[root.d.dgpu?.state] ?? (root.d.dgpu?.state ?? "")
-                        items: !root.d.dgpu_live ? [] : [
-                            { k: "Load", v: Metrics.text("dgpu") + root.flag("dgpu") },
-                            Metrics.has("dgpu_temp") ? { k: "Temp", v: Metrics.text("dgpu_temp") + root.flag("dgpu_temp") } : null,
-                            Metrics.has("dgpu_power") ? { k: "Power", v: Metrics.text("dgpu_power") } : null
-                        ]
+                    // one row per card in fixed columns (the label column, then tabular values); shared memory is a use, never a percentage
+                    GridLayout {
+                        Layout.fillWidth: true
+                        columns: 5
+                        columnSpacing: Theme.spaceS
+                        rowSpacing: 4
+                        Item { Layout.preferredWidth: 72 }
+                        Repeater {
+                            model: ["Load", "Temp", "Power", "Shared"]
+                            Text { required property string modelData; Layout.fillWidth: true; Layout.preferredWidth: 1; horizontalAlignment: Text.AlignRight; text: modelData; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                        }
+                        Text { visible: Metrics.has("gpu") || Metrics.has("gpu_temp"); Layout.preferredWidth: 72; text: "Built-in"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
+                        Repeater {
+                            model: [Metrics.has("gpu") ? Metrics.text("gpu") + root.flag("gpu") : "–", Metrics.has("gpu_temp") ? Metrics.text("gpu_temp") + root.flag("gpu_temp") : "–",
+                                    Metrics.has("gpu_power") ? Metrics.text("gpu_power") : "–", Metrics.has("gpu_vram") ? Metrics.text("gpu_vram") : "–"]
+                            Text { required property string modelData; visible: Metrics.has("gpu") || Metrics.has("gpu_temp"); Layout.fillWidth: true; Layout.preferredWidth: 1; horizontalAlignment: Text.AlignRight; text: modelData; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
+                        }
+                        // second card: "Sleeping" while powered down; numbers only while it is awake (and the panel is open)
+                        Text { visible: Metrics.has("dgpu"); Layout.preferredWidth: 72; text: "Discrete"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
+                        Text {
+                            visible: Metrics.has("dgpu") && !root.d.dgpu_live
+                            Layout.columnSpan: 4; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight
+                            text: ({ suspended: "Sleeping", suspending: "Sleeping", resuming: "Waking", active: "Awake" })[root.d.dgpu?.state] ?? (root.d.dgpu?.state ?? "")
+                            color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontLabel }
+                        }
+                        Repeater {
+                            model: !root.d.dgpu_live ? [] : [Metrics.text("dgpu") + root.flag("dgpu"), Metrics.has("dgpu_temp") ? Metrics.text("dgpu_temp") + root.flag("dgpu_temp") : "–",
+                                    Metrics.has("dgpu_power") ? Metrics.text("dgpu_power") : "–", "–"]
+                            Text { required property string modelData; visible: Metrics.has("dgpu"); Layout.fillWidth: true; Layout.preferredWidth: 1; horizontalAlignment: Text.AlignRight; text: modelData; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
+                        }
                     }
                     Meter_ { visible: Metrics.has("dgpu_vram") && (root.d.dgpu_live?.vram_total ?? 0) > 0; label: "Video memory"; rid: "dgpu_vram"; used: (root.d.dgpu_live?.vram_used ?? 0) / 1024; total: (root.d.dgpu_live?.vram_total ?? 0) / 1024 }
                 }
@@ -157,7 +165,7 @@ Singleton {
                 Section_ {
                     visible: Metrics.has("disk") || Metrics.has("disk_io")
                     title: "Storage"
-                    value: Metrics.has("disk_temp") ? Metrics.text("disk_temp") + root.flag("disk_temp") : ""
+                    value: Metrics.has("disk_temp") ? "Disk " + Metrics.text("disk_temp") + root.flag("disk_temp") : ""
                     Repeater {
                         model: Metrics.has("disk") ? root.d.disk : []
                         Meter_ { required property var modelData; label: modelData.mount; rid: "disk"; used: modelData.used; total: modelData.total }
@@ -183,7 +191,7 @@ Singleton {
                     }
                     Row {   // the last readings of the download rate, scaled to the busiest of them
                         readonly property var h: Metrics.history["net_down"] ?? []
-                        visible: h.length > 1
+                        visible: h.length >= 20
                         Layout.fillWidth: true
                         height: 14
                         spacing: 2

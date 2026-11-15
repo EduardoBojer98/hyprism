@@ -155,7 +155,7 @@ Singleton {
         id: popup
         name: "calendar"
         placement: "top"
-        boxWidth: 340
+        boxWidth: Theme.panelWide
         boxHeight: body.implicitHeight + Theme.spaceL * 2
         onOpened: root.goToday()
 
@@ -273,9 +273,8 @@ Singleton {
                                         height: 30; verticalAlignment: Text.AlignVCenter
                                         text: cell.day.getDate()
                                         color: cell.isToday ? Theme.accentText : !cell.inMonth ? Theme.muted
-                                             : cell.events.some(e => e.kind === "holiday") ? Theme.error
-                                             : cell.weekend ? Theme.subtext : Theme.text
-                                        opacity: cell.inMonth || cell.isToday ? 1 : 0.6
+                                             : Theme.text
+                                        opacity: cell.isToday ? 1 : !cell.inMonth || cell.weekend ? 0.6 : 1   // Saturday and Sunday dimmed alike in every theme; holidays are the dot below
                                         font { family: Theme.font; pixelSize: Theme.fontSize; weight: cell.isToday ? Font.Bold : Font.Normal; features: { "tnum": 1 } }
                                     }
                                     Row {   // one dot per event, up to three
