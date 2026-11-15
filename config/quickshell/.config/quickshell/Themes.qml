@@ -17,7 +17,7 @@ import QtQuick
 //          edge top|bottom|left|right, size px, floating (away from the edges), segmented (one pill per
 //          section), fill glass|surface|ground|ink|none, line (edge line px), voice icons|mixed (icon + value)|words|caps,
 //          mono (status in the mono face), ws (workspace style, BarWs.qml), clock plain|accent|display|block|split,
-//          decor (brackets), sep (a rule between items), sepStyle line|slash (that rule upright or leaning), dimLabels (a readout's word and glyph dimmed, its value
+//          decor (brackets), sep (a rule between items), sepStyle line|slash|pip (that rule upright or leaning), dimLabels (a readout's word and glyph dimmed, its value
 //          in ink: "cpu 7%"), start / center / end: the items (BarWidget.qml ids)
 // dock     edge (the theme's place for it; the same edge as the bar puts it inside the bar),
 //          shape pill|tile|block, hover lift|grow|plate, mark line|dot|bar, fill glass|surface|ink
