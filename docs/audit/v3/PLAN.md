@@ -112,3 +112,67 @@ copies, the four overlay copies, `Choice`/`ControlCenterSegmented` duplicate, le
 - Border: accent / gradient / rainbow apply live; rainbow stops looping on battery when set so.
 - Screenshots: region, window, screen, annotate, copy, save to the chosen folder; recording with chosen audio.
 - `tests/all.sh` green; `tests/performance.sh` idle CPU and memory not worse than 0.37 % / 299 MB.
+
+## 6. Revisions after the independent review ([REVIEW.md](REVIEW.md))
+
+Accepted (must-fix 1-9): merge procedure (stop `qs`, merge, `./install.sh update` relinks, migration removes dead
+theme links, start `qs`); every old theme id maps straight to its final theme in `Config.repair()`, custom
+adjustments merged key by key, orphans dropped; the `status` item gets one flyout per icon; Control Center state
+moves into services before flyouts reuse its modules; `nvidia-smi` only while the System panel is open, at most
+every 10 s, and the card must suspend again within 30 s; scrolling is built into `CursorPopup` (no per-panel
+adoption); new Settings pages are registered by the lead only; a Dock phase is added; the test desktop gets a second
+screen (1.2 + 1.0); a `shape.density` token (compact / regular / roomy) scales spacing (done in `Theme.qml`).
+
+Accepted (should): battery estimate root-caused before fixing, none below 1 W, 30 s average; iGPU shared memory
+shown without a percentage or warning (warnings only for real dGPU VRAM); performance run with the owner's layout
+and with the rainbow on; rainbow turns only with motion Full and power mode not Silent, otherwise a still rainbow;
+recording audio: none / desktop / mic (no "both"); capture: freeze while selecting, drag an area or click a window,
+a capture bar popup (area / window / screen, delay, record, audio); weather: no `current` index, the first place is
+the default, panel chips are not saved, last result cached in `~/.cache`, one request for all places; launcher
+"at the pointer" turns every style into a floating panel at the pointer, "theme's place" keeps strips and edges;
+bar geometry (items, edge, size, floating, Dock place) becomes one global layout after the first edit, a theme can
+offer "use this theme's layout" when you switch, per-screen layouts store their own items; notifications: keyboard
+reachable, history kept in `~/.local/state`; Pebble re-specified (below); Monolith takes opt-in parts from Console
+and Reactor (HUD brackets, rainbow border by default on AC); agent load rebalanced.
+
+Accepted (consider): cut the Theme Builder and "Save as a theme" (three themes, per-theme Adjust stays).
+Declined: launcher style count cut (it is user customisation, already works); moving caffeine / launcher usage state
+out of settings.json (harmless, no user-visible gain); login-screen theming (greetd runs before login; noted).
+
+### Theme personalities (not only colour)
+
+| | Pebble: calm | Poster: loud | Monolith: immersive |
+|---|---|---|---|
+| Audience | wants quiet, elegant, out of the way | wants colour and character | lives in the terminal, keyboard first |
+| Colour | warm neutral greys, one muted accent, no second accent | paper + ink + three primaries as state colours | near-black, one acid accent, wallpaper-tinted option |
+| Type | Archivo text, big light-weight numerals | Archivo Black display, heavy | JetBrains Mono everywhere |
+| Material | matte surfaces, hairline rims, blur only on popups and none on battery | flat paper, 3 px ink lines, hard offset shadow | frames only, accent top lines, HUD brackets |
+| Density | roomy | regular | compact |
+| Shape | r14 panels, pill chips | square | square |
+| Bar | floating pill bar | paper strip, big workspace blocks | tmux status line with apps inside |
+| Motion | 220 ms ease-out, no overshoot | slam 200 ms expo-out, 28 px | instant 90 ms fades |
+| Border | thin accent | thick ink, accent when focused | rainbow by default on AC |
+
+### Agent assignments (no shared files)
+
+- **A, popups and notifications:** `CursorPopup` (focus, Escape, built-in scroll body, edge/monitor checks),
+  one `MenuList` for UtilityMenu / TrayMenu / WindowMenu / Keyboard, one `Overlay` for PowerMenu / Cheatsheet /
+  Welcome (MissionControl only gets Esc and outside click), `Dropdown` and `TrayMenu` take theme depth, Calendar
+  overflow, notification keyboard access and history in `~/.local/state`, then services out of Control Center and
+  flyouts for volume / network / Bluetooth / brightness / battery-power / media / the `status` icons.
+- **B, metrics and capture:** `metrics`, `Metrics.qml`, `Sensors.qml` (system panel), cpu/gpu/memory/sysinfo items,
+  `tests/metrics.sh`, `tests/performance.sh`; then `screenshot`, `record`, capture bar popup, `binds.lua` capture
+  binds, rainbow border in `animations.lua` / `look.lua` and the `ThemeSync.hyprLua` border part.
+- **C, weather, launcher, bar, dock:** `Weather.qml`, weather item, `SettingsPageWeather.qml`; launcher pointer
+  placement, Clipboard height; global bar layout in `Themes.qml` / `Theme.qml` bar part, `BarEditor`,
+  `SettingsPageBar`, `SettingsBarLayout`; Dock keyboard, `DockMenu` Esc/outside click, Dock settings audit.
+- **Lead:** themes (`themes/`, theme parts of `Themes.qml`/`Config.qml` after C), Settings navigation and pages not
+  owned above, page registration in `SettingsApp.qml`, test desktop second screen, visual QA, merge.
+
+### Settings navigation target (P4)
+
+Look: Themes · Wallpaper · Menu Bar · Dock · Windows (behaviour + borders + animations) · Lock Screen ·
+Notifications · Launcher & Search. System: Displays · Sound · Network · Bluetooth · Power (modes, battery, caffeine,
+lock and sleep) · Input · Keyboard Shortcuts · Language. Apps: Default Apps · Startup · App Rules · Installed.
+Tools: Weather · Calendar · Clipboard · Screenshots · Control Center · Hot Corners · System Monitor. About.
+A lint test checks every `ConfigData` key has a control and a consumer or is marked as state.

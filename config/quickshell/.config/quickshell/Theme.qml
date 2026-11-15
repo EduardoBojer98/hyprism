@@ -90,13 +90,15 @@ Singleton {
     readonly property int radiusLarge: current.shape.radius === 0 ? 0 : current.shape.radius + 2
     readonly property int radiusPanel: current.shape.radius === 0 ? 0 : current.shape.radius + 6   // panels and sheets; square themes stay square
     readonly property real radiusScale: 1
+    // density (theme.json shape.density): compact | regular | roomy scales padding, gaps and row heights
+    readonly property real density: ({ compact: 0.85, roomy: 1.2 })[current.shape.density] ?? 1
     readonly property int spaceXs: 4
-    readonly property int spaceS: 8
-    readonly property int spaceM: 12
-    readonly property int spaceL: 16
-    readonly property int spaceXl: 24
-    readonly property int rowHeight: 34
-    readonly property int controlHeight: 28
+    readonly property int spaceS: Math.round(8 * density)
+    readonly property int spaceM: Math.round(12 * density)
+    readonly property int spaceL: Math.round(16 * density)
+    readonly property int spaceXl: Math.round(24 * density)
+    readonly property int rowHeight: Math.round(34 * Math.sqrt(density))
+    readonly property int controlHeight: Math.round(28 * Math.sqrt(density))
     readonly property int hit: Inputs.tablet ? 40 : 0   // smallest touch target in tablet mode (0: none, desktop sizes)
     readonly property int popupGap: 8
 
