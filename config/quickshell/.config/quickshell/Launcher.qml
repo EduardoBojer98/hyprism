@@ -49,10 +49,13 @@ Singleton {
     readonly property var rl: preset ?? Theme.current.launcher
     readonly property real screenW: popup.targetScreen?.width ?? 1600
     readonly property real screenH: popup.targetScreen?.height ?? 1000
+    // "pointer" (the default): every style floats around the mouse pointer, kept on its screen; "theme": the style's own place
+    readonly property bool pointer: Config.launcher.position === "pointer"
+    property bool fromClick: false   // opened by clicking a bar item: then it stays beside that item
     readonly property var look: Object.assign({}, Config.launcher, {
-        placement: rl.placement,
+        placement: pointer ? "cursor" : rl.placement,
         style: preset ? (preset.split ? "split" : "unified") : Theme.glassy && rl.placement === "center" ? "split" : "unified",
-        width: rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
+        width: pointer ? Math.min(rl.width > 0 ? rl.width : 680, 900, screenW - Theme.spaceL * 2) : rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
              : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
              : rl.placement === "fullscreen" ? Math.min(rl.width, screenW - 80)
              : Math.min(rl.width, screenW - Theme.spaceL * 2),
@@ -60,8 +63,8 @@ Singleton {
         corners: preset && preset.corners !== "theme" ? preset.corners : Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
         selection: "accent",
         // a light dim behind it, never a blur (Hyprland skips blur under see-through layers, rules.lua)
-        dim: preset?.dim ?? ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18,
-        fill: preset?.fill ?? 0,
+        dim: pointer ? 0.12 : preset?.dim ?? ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18,
+        fill: pointer ? Math.min(preset?.fill ?? 0, 0.6) : preset?.fill ?? 0,
         columns: preset?.columns ?? Config.launcher.columns,
         icon: preset?.icon ?? Theme.iconApp,
         startView: rl.view === "grid" || rl.view === "start" ? "apps" : rl.view === "inline" ? "search" : "home"
@@ -112,6 +115,7 @@ Singleton {
         homeIndex = 0
         Calendar.now = new Date()
         Clipboard.prepare()
+        fromClick = Anchor.fresh
         popup.show()
     }
     function close() { popup.hide() }
@@ -188,6 +192,7 @@ Singleton {
         boxHeight: pill.height + (panel.visible ? panel.height + panel.anchors.topMargin : 0)
         dim: root.look.dim
         focusItem: field
+        onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens at the pointer, not beside the bar item
         onClosed: { field.text = ""; root.confirmFor = null }
 
         // unified: one card behind the search field and the results, a hairline between them
