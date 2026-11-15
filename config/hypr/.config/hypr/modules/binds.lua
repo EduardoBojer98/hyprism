@@ -110,6 +110,7 @@ end
 
 -- Keyboard access to the bar (Quickshell BarFocus)
 add("focus-bar", "Desktop", "Move the keyboard to the bar (arrows, Enter, Esc)", key("F6"), exec("qs ipc call bar focus"))
+add("focus-dock", "Desktop", "Move the keyboard to the dock (arrows, Enter, menu key, Esc)", key("SHIFT + F6"), exec("qs ipc call dock focus"))
 
 -- Session
 add("lock",  "Session", "Lock the screen",  key("L"), exec("loginctl lock-session"))

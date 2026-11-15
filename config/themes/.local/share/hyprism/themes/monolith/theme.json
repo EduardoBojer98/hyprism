@@ -163,7 +163,8 @@
     "inactive": "2a2d27ff",
     "shadow": "none",
     "blur": false,
-    "motion": "instant"
+    "motion": "instant",
+    "frame": "accent"
   },
   "lock": {
     "clock": "terminal",

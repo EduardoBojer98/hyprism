@@ -206,7 +206,7 @@ Singleton {
                             Metrics.has("battery") ? { k: "Battery", v: Metrics.text("battery") + " " + (root.d.battery?.state ?? "") } : null,
                             Metrics.has("battery_power") && Metrics.value("battery_power") >= 1 ? { k: root.d.battery?.state === "charging" ? "In" : "Draw", v: Metrics.text("battery_power") } : null,
                             Metrics.has("battery_time") ? { k: root.d.battery?.state === "charging" ? "To full" : "Left", v: Metrics.text("battery_time") } : null,
-                            Metrics.has("profile") ? { k: "Mode", v: ({ "low-power": "Quiet", quiet: "Quiet", balanced: "Balanced", performance: "Performance" })[Metrics.text("profile")] ?? Metrics.text("profile") } : null,
+                            Metrics.has("profile") ? { k: "Mode", v: ({ "low-power": "Silent", quiet: "Silent", balanced: "Balanced", performance: "Performance" })[Metrics.text("profile")] ?? Metrics.text("profile") } : null,
                             Metrics.has("fans") ? { k: "Fans", v: (root.d.fans ?? []).map(f => f > 0 ? f : "off").join(" / ") } : null,
                             Metrics.has("uptime") ? { k: "Up", v: Metrics.text("uptime") } : null
                         ]
