@@ -160,7 +160,7 @@ ColumnLayout {
         }
         SettingRow {   // the same setting as the bar clock's, here too so it is reachable with no clock on the bar
             label: "24-hour time"
-            hint: (Config.bar.clock24 ? "14:40" : "2:40 PM") + ". The menu bar's clock follows"
+            hint: (Config.bar.clock24 ? "14:40" : "2:40 PM") + ". Bar clocks follow it unless set otherwise in their own settings"
             ConfigToggle { section: "bar"; key: "clock24" }
         }
     }
