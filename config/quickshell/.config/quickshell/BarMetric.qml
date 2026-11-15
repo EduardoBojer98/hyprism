@@ -9,16 +9,18 @@ BarIndicator {
     readonly property var entry: Metrics.registry[metric] ?? null
 
     property string asked: ""
+    property int askedSecs: 2
     property bool built: false               // `bar` and `metric` are both set only once the item is complete
     function ask() {
         if (!built) return
-        if (asked !== "") Metrics.unwant([asked])
+        if (asked !== "") Metrics.unwant([asked], askedSecs)
         asked = entry ? metric : ""
-        if (asked !== "") Metrics.want([asked], Number(cfg.interval) || 2)
+        askedSecs = Number(cfg.interval) || 2
+        if (asked !== "") Metrics.want([asked], askedSecs)
     }
     Component.onCompleted: { built = true; ask() }
     onMetricChanged: ask()
-    Component.onDestruction: if (asked !== "") Metrics.unwant([asked])
+    Component.onDestruction: if (asked !== "") Metrics.unwant([asked], askedSecs)
 
     shown: entry !== null && Metrics.has(metric)     // a computer without this reading shows nothing
     textual: true

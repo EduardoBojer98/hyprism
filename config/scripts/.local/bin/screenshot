@@ -1,43 +1,55 @@
 #!/usr/bin/env bash
-# Screenshots: grim captures, slurp picks the area, Satty annotates. Wayland-native, works across
-# both monitors at different scales (grim captures at the sharpest scale of the screens it covers).
+# Screenshots: grim captures, slurp picks, Satty annotates. Wayland-native, works across both monitors at
+# different scales (grim captures at the sharpest scale of the screens it covers).
 #
-#   screenshot [area]     pick an area (drag; touch works too) -> editor
+#   screenshot [area]     the screen freezes; drag an area or click a window -> editor
 #   screenshot screen     the monitor under the mouse          -> editor
-#   screenshot window     the focused window                   -> editor
+#   screenshot window     the screen freezes; click a window   -> editor
 #   screenshot all        every monitor                        -> editor
 #   screenshot delay [N]  wait N seconds (default 5), then the monitor under the mouse -> editor
 #                         (for menus and tooltips: open them during the countdown, crop in the editor)
 #   screenshot pin [area] pick an area and keep it floating on top of the screen (no editor, no file in Pictures);
 #                         on the pin: drag moves it, scroll zooms, middle or double click closes, right click copies
-#   add --copy to any of these to skip the editor: copied and saved straight away
+#   --edit | --copy | --save   what happens after (default: Settings > Screenshots, "edit"): annotate in Satty,
+#                         clipboard only, or save to the folder and copy
+#   --delay N             wait N seconds first, to open a menu (default: Settings, 0) (default: Settings, 0)
 #
+# Settings (Config.capture in ~/.config/quickshell/settings.json): folder, after, delay, notify.
 # In the editor (Satty): Enter copies and saves, Ctrl+S saves, Ctrl+C copies, Esc cancels,
 # Ctrl+Z / Ctrl+Y undo / redo. Tools and colours: config/satty/.config/satty/config.toml.
-# Files: ~/Pictures/Screenshots/Screenshot_YYYY-MM-DD_HH-MM-SS.png. A notification with a preview
-# follows; click it to open the picture ("Show folder" opens the folder).
+# Files: <folder>/Screenshot_YYYY-MM-DD_HH-MM-SS.png. A notification with the picture follows; click it to open it
+# ("Show folder" opens the folder).
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 
-dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots"
-mkdir -p "$dir"
+# shellcheck source=config/scripts/.local/lib/hyprism/capture.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/capture.sh"
+
+dir=$(folder folder "$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")/Screenshots")
 file="$dir/Screenshot_$(date +%F_%H-%M-%S).png"
 tmp=$(mktemp --suffix=.png)
-trap 'rm -f "$tmp"' EXIT
+trap 'rm -f "$tmp"; pick_done' EXIT
 
 mode=area
-delay=5
-copy=false
-for a in "$@"; do
+delay=$(cap delay)
+delay=${delay:-0}
+after=$(cap after)
+after=${after:-edit}
+quiet=$([[ $(cap notify) == false ]] && echo true || echo false)
+for ((i = 1; i <= $#; i++)); do
+    a=${!i}
     case $a in
-        --copy) copy=true ;;
+        --edit) after=edit ;;
+        --copy) after=copy ;;
+        --save) after=save ;;
+        --delay) i=$((i + 1)) delay=${!i:-0} ;;
         area) [[ $mode == pin ]] || mode=area ;; # `pin area` is `pin`
         screen | window | all | delay | pin) mode=$a ;;
         *)
             if [[ $a =~ ^[0-9]+$ ]]; then
-                delay=$a
+                [[ $mode == delay ]] && delay=$a
             else
                 echo "screenshot: unknown option '$a'" >&2
                 usage 2 >&2
@@ -45,13 +57,22 @@ for a in "$@"; do
             ;;
     esac
 done
+[[ $mode == delay && $delay == 0 ]] && delay=5
+[[ $after =~ ^(edit|copy|save)$ ]] || after=edit
+[[ $delay =~ ^[0-9]+$ ]] || delay=0
 fail() {
     notify-send -a Screenshot -u critical "Screenshot failed" "$1"
     exit 1
 }
-
-# selection colours follow the desktop theme (accent from Settings > Appearance)
-accent=$(grep -oE 'accent = "[0-9a-fA-F]{6}"' "$HOME/.config/hypr/settings/theme.lua" 2>/dev/null | grep -oE '[0-9a-fA-F]{6}' || echo ff9e7a)
+countdown() {
+    local i
+    for ((i = delay; i > 0; i--)); do
+        notify-send -a Screenshot -t 700 -h string:x-canonical-private-synchronous:screenshot "Screenshot in $i…"
+        sleep 1
+    done
+    ((delay > 0)) && sleep 0.3 # let the last countdown bubble fade out of the shot
+    return 0
+}
 
 # Output name under the mouse, else the focused one. Rotated by 90/270 (tablet mode) = width/height swap.
 monitor_under_mouse() {
@@ -67,64 +88,72 @@ monitor_under_mouse() {
 
 case $mode in
     area)
-        # slurp -d shows the size while dragging; Esc or a right click cancels (exit quietly)
-        geo=$(slurp -d -c "${accent}ff" -b 0b0d0a66 -s "${accent}1f" -w 2 -B 00000000) || exit 0
-        sleep 0.15 # one more beat for the picker's layer to leave the screen (Hyprland rule: no fade)
-        grim -g "$geo" "$tmp" || fail "grim couldn't capture that area"
+        countdown
+        # the screen is frozen; the freeze is lifted after grim has taken the picture. Esc or a right click cancels.
+        pick || exit 0
+        geo=$PICKED
+        grim -g "$geo" "$tmp" || fail "grim couldn't capture that selection"
+        pick_done
         ;;
     pin)
-        geo=$(slurp -d -c "${accent}ff" -b 0b0d0a66 -s "${accent}1f" -w 2 -B 00000000) || exit 0
-        sleep 0.15
+        pick || exit 0
+        geo=$PICKED
         pins="${XDG_RUNTIME_DIR:?}/hyprism-pins"
         mkdir -p "$pins"
         chmod 700 "$pins"
         pinfile=$(mktemp -p "$pins" pin-XXXXXX.png)
         grim -g "$geo" "$pinfile" || {
             rm -f "$pinfile"
-            fail "grim couldn't capture that area"
+            fail "grim couldn't capture that selection"
         }
+        pick_done
         # slurp prints "x,y WxH" in layout coordinates: the shell puts the pin exactly there
         IFS=', x' read -r px py pw ph <<<"$geo"
         qs ipc call pins add "$pinfile" "$px" "$py" "$pw" "$ph" || fail "the shell could not show the pin"
         exit 0
         ;;
-    screen) grim -o "$(monitor_under_mouse)" "$tmp" || fail "grim couldn't capture the screen" ;;
-    window)
-        geo=$(hyprctl -j activewindow | jq -r 'if .at then "\(.at[0]),\(.at[1]) \(.size[0])x\(.size[1])" else empty end')
-        [[ -n $geo ]] || {
-            notify-send -a Screenshot "No focused window to capture"
-            exit 1
-        }
-        grim -g "$geo" "$tmp" || fail "grim couldn't capture the window"
-        ;;
-    all) grim "$tmp" || fail "grim couldn't capture the screens" ;;
-    delay)
-        for ((i = delay; i > 0; i--)); do
-            notify-send -a Screenshot -t 700 -h string:x-canonical-private-synchronous:screenshot "Screenshot in $i…"
-            sleep 1
-        done
-        sleep 0.3 # let the last countdown bubble fade out of the shot
+    screen | delay)
+        countdown
         grim -o "$(monitor_under_mouse)" "$tmp" || fail "grim couldn't capture the screen"
+        ;;
+    window)
+        countdown
+        pick windows || exit 0 # click a window
+        grim -g "$PICKED" "$tmp" || fail "grim couldn't capture that window"
+        pick_done
+        ;;
+    all)
+        countdown
+        grim "$tmp" || fail "grim couldn't capture the screens"
         ;;
 esac
 
-if $copy; then
-    cp "$tmp" "$file"
-    wl-copy --type image/png <"$file"
-else
-    # Satty writes $file only if you save (Enter or Ctrl+S); Esc leaves nothing behind
-    satty --filename "$tmp" --output-filename "$file" \
-        --actions-on-enter save-to-clipboard,save-to-file,exit --actions-on-escape exit \
-        --copy-command wl-copy --disable-notifications --no-window-decoration --initial-tool arrow || true
-fi
+shown=$file
+case $after in
+    copy) # clipboard only: no file in the folder; the notification shows a copy kept in the runtime dir
+        shown="${XDG_RUNTIME_DIR:-/tmp}/hyprism-last-screenshot.png"
+        cp "$tmp" "$shown"
+        wl-copy --type image/png <"$shown"
+        ;;
+    save)
+        cp "$tmp" "$file"
+        wl-copy --type image/png <"$file"
+        ;;
+    edit)
+        # Satty writes $file only if you save (Enter or Ctrl+S); Esc leaves nothing behind
+        satty --filename "$tmp" --output-filename "$file" \
+            --actions-on-enter save-to-clipboard,save-to-file,exit --actions-on-escape exit \
+            --copy-command wl-copy --disable-notifications --no-window-decoration --initial-tool arrow || true
+        ;;
+esac
 
-# A preview notification; clicking it opens the picture. Runs on after this script exits.
-if [[ -f $file ]]; then
+# A notification with the picture; clicking it opens the picture. Runs on after this script exits.
+if [[ -f $shown ]] && ! $quiet; then
     (
-        action=$(notify-send -a Screenshot -i "$file" -h "string:image-path:$file" \
-            -A default=Open -A folder="Show folder" "$($copy && echo "Screenshot saved and copied" || echo "Screenshot saved")" "${file/#$HOME/\~}" --wait || true)
+        action=$(notify-send -a Screenshot -i "$shown" -h "string:image-path:$shown" \
+            -A default=Open -A folder="Show folder" "$([[ $after == copy ]] && echo "Screenshot copied" || echo "Screenshot saved")" "${shown/#$HOME/\~}" --wait || true)
         case $action in
-            default) xdg-open "$file" ;;
+            default) xdg-open "$shown" ;;
             folder) xdg-open "$dir" ;;
         esac
     ) >/dev/null 2>&1 &

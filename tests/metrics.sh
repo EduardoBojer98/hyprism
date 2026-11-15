@@ -125,6 +125,52 @@ if [[ $down =~ ^[0-9]+$ ]] && ((down > 50000 && down < 200000)); then echo "ok: 
 fi
 expect "cpu load follows the counters" '.cpu.pct' 100
 
+# --- battery: no estimate under 1 W (a firmware that reports 15 mW once gave 32248 minutes) or when not (dis)charging
+put "$r" /sys/class/power_supply/BAT1/power_now 15000
+json=$(HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml bash "$m" once battery)
+expect "battery: no minutes below 1 W" '.battery.minutes' null
+put "$r" /sys/class/power_supply/BAT1/power_now 12000000
+put "$r" /sys/class/power_supply/BAT1/status "Not charging"
+json=$(HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml bash "$m" once battery)
+expect "battery: no minutes unless charging or discharging" '.battery.minutes' null
+put "$r" /sys/class/power_supply/BAT1/status Charging
+json=$(HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml bash "$m" once battery)
+expect "battery: minutes to full while charging" '.battery.minutes' 120
+put "$r" /sys/class/power_supply/BAT1/status Discharging
+# watts are an average: 12 W then 4 W gives something in between
+json=$(
+    (
+        sleep 1.4
+        put "$r" /sys/class/power_supply/BAT1/power_now 4000000
+    ) &
+    HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml timeout 2.6 bash "$m" watch battery 1 | tail -1
+)
+expect "battery: watts are averaged over the last 30 s" '.battery.watts > 4 and .battery.watts < 12' true
+
+# --- an awake NVIDIA card: dgpu never calls nvidia-smi, dgpu_live calls it at most every 10 s
+put "$r" /sys/bus/pci/devices/0000:01:00.0/power/runtime_status active
+mkdir -p "$t/bin"
+cat >"$t/bin/smi" <<EOF
+#!/bin/sh
+echo x >>"$t/smi.calls"
+echo "7, 45, 300, 4096, 12.5"
+EOF
+chmod +x "$t/bin/smi"
+json=$(HYPRISM_NVIDIA_SMI=$t/bin/smi HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml bash "$m" once dgpu)
+expect "dgpu: awake shows state only" '.dgpu | keys | join(",")' state
+if [[ ! -e $t/smi.calls ]]; then echo "ok: dgpu alone never runs nvidia-smi"; else
+    echo "xx dgpu ran nvidia-smi"
+    fail=1
+fi
+json=$(HYPRISM_NVIDIA_SMI=$t/bin/smi HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml timeout 3.5 bash "$m" watch dgpu_live 1 | tail -1)
+expect "dgpu_live: numbers from nvidia-smi" '.dgpu_live.vram_total' 4096
+calls=$(wc -l <"$t/smi.calls")
+if ((calls <= 2)); then echo "ok: nvidia-smi asked at most every 10 s ($calls calls in 3.5 s)"; else
+    echo "xx nvidia-smi called $calls times in 3.5 s"
+    fail=1
+fi
+put "$r" /sys/bus/pci/devices/0000:01:00.0/power/runtime_status suspended
+
 # --- a bare desktop: Intel CPU, no battery, no fans, one card with no readings
 r=$t/desktop
 put "$r" /proc/stat "cpu  1 0 1 8 0 0 0 0"
@@ -149,7 +195,7 @@ out=$(HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/desktop.toml bash "$m" once nosuch 2>&
     fail=1
 }
 [[ $out == *"no such metric"* ]] && echo "ok: an unknown metric is refused by name"
-if [[ $(bash "$m" list | wc -l) == 16 ]]; then echo "ok: metrics list names all 16"; else
+if [[ $(bash "$m" list | wc -l) == 17 ]]; then echo "ok: metrics list names all 17"; else
     echo "xx metrics list"
     fail=1
 fi

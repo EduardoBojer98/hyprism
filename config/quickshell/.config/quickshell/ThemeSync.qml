@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.UPower
 import QtQuick
 
 // Carries the active theme (Theme / Themes.qml) to the parts of the desktop Quickshell can't draw:
@@ -73,8 +74,24 @@ Scope {
     // can't put code into Hyprland's config.
     function q(v) { return JSON.stringify(String(v)) }
     function n(v) { const x = Number(v); return isFinite(x) ? x : 0 }
+    // The focused window's frame: Config.windows.border = theme (the theme's own hypr.frame, accent when it has none) |
+    // accent | gradient (accent to accent2) | rainbow (a quiet multi-stop wheel, tuned to the theme's light or dark).
+    // The loop turns only with motion Full, power mode not Quiet and on AC (unless rainbowOnBattery); else a still rainbow.
+    // Unfocused windows keep the theme's inactive colour.
+    readonly property string frameStyle: { const s = Config.windows.border; return s !== "theme" ? s : (h.frame ?? "accent") }
+    readonly property bool rainbowLoops: frameStyle === "rainbow" && Theme.motionLevel === "full" && PowerMode.profile !== 0
+                                         && (!UPower.onBattery || Config.windows.rainbowOnBattery)
+    readonly property var borderActive: {
+        const a = hex(Theme.accent) + "ff", b = hex(Theme.accent2) + "ff"
+        if (frameStyle === "accent") return [a]
+        if (frameStyle === "gradient") return [a, b]
+        if (frameStyle !== "rainbow") return h.active
+        // hues spread over the wheel; muted so it reads as a finish, not neon. The first stop repeats at the end so the loop has no seam.
+        const l = Theme.light ? 0.46 : 0.62, stops = [0, 40, 95, 165, 215, 270, 320].map(d => hex(Qt.hsla(d / 360, 0.58, l, 1)) + "ff")
+        return stops.concat([stops[0]])
+    }
     readonly property string hyprLua: `{ theme = ${q(current.id)}, gaps_in = ${n(h.gapsIn)}, gaps_out = ${n(h.gapsOut)}, border_size = ${n(h.border)}, `
-        + `rounding = ${n(h.rounding)}, active = { ${h.active.map(q).join(", ")} }, inactive = ${q(h.inactive)}, `
+        + `rounding = ${n(h.rounding)}, active = { ${borderActive.map(q).join(", ")} }, border_loop = ${rainbowLoops}, border_speed = ${n(Config.windows.rainbowSpeed)}, inactive = ${q(h.inactive)}, `
         + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.motionLevel === "full" ? h.motion : Theme.motionLevel === "reduced" ? "instant" : "off")}, accent = ${q(hex(Theme.accent))}, `
         + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)} }`
 

@@ -1,32 +1,46 @@
 #!/usr/bin/env bash
 # Screen recording with wf-recorder: one key starts, the same key (or the bar's red dot) stops.
-#   record [screen]    the screen under the mouse        record area   pick an area (slurp)
+#   record [screen]    the screen under the mouse        record area   drag an area or click a window (screen frozen)
 #   record stop        stop and save                     record status prints "on" or "off"
-#   add --audio to record what you hear (the default output's monitor), --mic for the microphone
-#   (wf-recorder takes one --audio device, so --audio and --mic are exclusive: the last one wins)
-# Files: ~/Videos/Recordings/Recording_YYYY-MM-DD_HH-MM-SS.mp4. GPU encoding when available, else software.
+#   --audio[=none|desktop|mic]  what to record: what you hear (the default output's monitor, bare --audio), the
+#                      microphone, or nothing; --mic is --audio=mic. Default: Settings > Screenshots (capture.audio;
+#                      the old "both" means desktop: wf-recorder takes one audio device)
+#   --delay N          count down N seconds first
+# Files: <capture.recordFolder>/Recording_YYYY-MM-DD_HH-MM-SS.mp4 (default ~/Videos/Recordings). GPU encoding when available, else software.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+# shellcheck source=config/scripts/.local/lib/hyprism/capture.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/capture.sh"
 case ${1:-} in -h | --help) usage ;; esac
 
 pidfile="${XDG_RUNTIME_DIR:-/tmp}/record.pid"
-dir="$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")/Recordings"
+dir=$(folder recordFolder "$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")/Recordings")
+trap pick_done EXIT
 # shortcut: a pid reused after a crash would look like a running recorder; checked by name too
 running() { [[ -f $pidfile ]] && [[ $(ps -o comm= -p "$(cat "$pidfile")" 2>/dev/null) == wf-recorder ]]; }
 tell_shell() { qs ipc call recorder recording "$1" >/dev/null 2>&1 || true; }
 
-mode=screen audio=""
-for a in "$@"; do
+mode=screen audio=$(cap audio) delay=0
+audio=${audio:-none}
+for ((i = 1; i <= $#; i++)); do
+    a=${!i}
     case $a in
         screen | area | stop | status) mode=$a ;;
-        --audio) audio="--audio=$(pactl get-default-sink 2>/dev/null).monitor" ;;
-        --mic) audio="--audio=$(pactl get-default-source 2>/dev/null)" ;;
-        *)
-            usage 2 >&2
-            ;;
+        --audio) audio=desktop ;;
+        --audio=*) audio=${a#--audio=} ;;
+        --mic) audio=mic ;;
+        --delay) i=$((i + 1)) delay=${!i:-0} ;;
+        *) usage 2 >&2 ;;
     esac
 done
+[[ $audio == both ]] && audio=desktop # one device only
+[[ $delay =~ ^[0-9]+$ ]] || delay=0
+case $audio in
+    desktop) audio="--audio=$(pactl get-default-sink 2>/dev/null).monitor" ;;
+    mic) audio="--audio=$(pactl get-default-source 2>/dev/null)" ;;
+    *) audio="" ;;
+esac
 
 if [[ $mode == status ]]; then
     running && echo on || echo off
@@ -46,8 +60,9 @@ mkdir -p "$dir"
 file="$dir/Recording_$(date +%F_%H-%M-%S).mp4"
 case $mode in
     area)
-        geo=$(slurp -d) || exit 0
-        target=(-g "$geo")
+        pick || exit 0
+        pick_done # the recorder films the live screen, not the freeze
+        target=(-g "$PICKED")
         ;;
     screen)
         IFS=', ' read -r x y < <(hyprctl cursorpos)
@@ -56,6 +71,10 @@ case $mode in
         target=(-o "${out:-$(hyprctl -j monitors | jq -r '.[] | select(.focused) | .name')}")
         ;;
 esac
+for ((i = delay; i > 0; i--)); do
+    notify-send -a Recording -t 700 -h string:x-canonical-private-synchronous:recording "Recording in $i…"
+    sleep 1
+done
 # hardware encoding through VA-API on the GPU that draws the desktop; software x264 when there is none or it fails to start
 soft=(-c libx264 -p preset=veryfast -p crf=23)
 node=$(gpu_render_node "$(hw gpu.primary_pci)")

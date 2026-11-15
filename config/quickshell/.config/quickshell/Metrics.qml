@@ -20,20 +20,35 @@ Singleton {
     property var data: ({})          // the latest line from the script
     property var history: ({})       // registry id -> its last numbers, oldest first
     readonly property int keep: 24   // how many the sparkline shows
-    property int interval: 2         // seconds between readings (the fastest any reader asked for)
+    // seconds between readings: the fastest of the readers that are live now, so it rises again when a fast one leaves
+    readonly property int interval: { let m = 0; for (const l of Object.values(secs)) for (const v of l) m = m === 0 ? v : Math.min(m, v); return m || 2 }
+    property var secs: ({})          // registry id -> the seconds each live reader asked for
 
     // --- who is reading: registry ids, counted, so two bars asking for cpu still mean one measurement
     property var wanted: ({})
-    function want(ids, seconds) {
-        const w = Object.assign({}, wanted)
-        for (const id of ids) if (registry[id]) w[id] = (w[id] ?? 0) + 1
+    // `live` readings (dgpu_*: nvidia-smi can keep the second card awake) are measured only for a caller that says live,
+    // i.e. the System panel while it is open; a bar item that asks for one just gets no value.
+    function want(ids, seconds, live) {
+        const w = Object.assign({}, wanted), s = Object.assign({}, secs)
+        for (const id of ids) {
+            if (!registry[id] || (registry[id].live && !live)) continue
+            w[id] = (w[id] ?? 0) + 1
+            s[id] = (s[id] ?? []).concat([Math.max(1, Math.round(seconds || 2))])
+        }
         wanted = w
-        if (seconds >= 1) interval = Math.min(interval, Math.round(seconds))
+        secs = s
     }
-    function unwant(ids) {
-        const w = Object.assign({}, wanted)
-        for (const id of ids) if (w[id]) { w[id]--; if (w[id] <= 0) delete w[id] }
+    function unwant(ids, seconds) {   // the same seconds that were asked with (2 when none)
+        const w = Object.assign({}, wanted), s = Object.assign({}, secs)
+        for (const id of ids) {
+            if (!w[id]) continue
+            w[id]--
+            const l = (s[id] ?? []).slice(), i = l.indexOf(Math.max(1, Math.round(seconds || 2)))
+            l.splice(i >= 0 ? i : 0, 1)
+            if (w[id] <= 0) { delete w[id]; delete s[id] } else s[id] = l
+        }
         wanted = w
+        secs = s
     }
     readonly property var sources: Array.from(new Set(Object.keys(wanted).map(id => registry[id].from))).sort()
     readonly property string sourceList: sources.join(",")
@@ -103,23 +118,25 @@ Singleton {
                      value: d => d.gpu?.pct, text: d => d.gpu.pct + "%", detail: d => root.card(d.gpu, "GPU") },
         gpu_temp:  { category: "Graphics", from: "gpu", name: "Graphics temperature", word: "gtmp", glyph: "\u{F0FB2}", top: 100, warn: 85, critical: 95,
                      value: d => d.gpu?.temp, text: d => Math.round(d.gpu.temp) + "°" },
-        gpu_vram:  { category: "Graphics", from: "gpu", name: "Graphics memory", word: "vram", glyph: "\u{F08AE}", top: 100, warn: 90, critical: 97,
-                     value: d => d.gpu?.vram_total ? Math.round(100 * d.gpu.vram_used / d.gpu.vram_total) : undefined,
-                     text: d => (d.gpu.vram_used / 1024).toFixed(1) + "G" },
+        // the built-in card's memory is shared system RAM (already inside the Memory figure): shown as a use, with no
+        // percentage and no warning. Only a real card's own VRAM (dgpu_vram) warns.
+        gpu_vram:  { category: "Graphics", from: "gpu", name: "Graphics memory (shared)", word: "vram", glyph: "\u{F08AE}",
+                     value: d => d.gpu?.gtt_used, text: d => (d.gpu.gtt_used / 1024).toFixed(1) + "G" },
         gpu_power: { category: "Graphics", from: "gpu", name: "Graphics power", word: "gpow", glyph: "\u{F140B}",
                      value: d => d.gpu?.watts, text: d => d.gpu.watts.toFixed(1) + "W" },
         // the second card: asleep it shows "off"; its numbers appear only while something is using it
+        // the second card: asleep it shows "off"; its numbers (dgpu_live) exist only while the System panel is open
         dgpu:      { category: "Graphics", from: "dgpu", name: "Second graphics card", word: "dgpu", glyph: "\u{F08AE}", top: 100, warn: 85, critical: 95,
-                     value: d => d.dgpu ? (d.dgpu.pct ?? 0) : undefined,
-                     text: d => d.dgpu.pct !== undefined ? d.dgpu.pct + "%" : d.dgpu.state === "suspended" ? "off" : d.dgpu.state,
-                     detail: d => root.card(d.dgpu, "Second GPU") + (d.dgpu.state === "suspended" ? " (powered off)" : "") },
-        dgpu_temp: { category: "Graphics", from: "dgpu", name: "Second card temperature", word: "dtmp", glyph: "\u{F0FB2}", top: 100, warn: 85, critical: 95,
-                     value: d => d.dgpu?.temp, text: d => Math.round(d.dgpu.temp) + "°" },
-        dgpu_vram: { category: "Graphics", from: "dgpu", name: "Second card memory", word: "dvrm", glyph: "\u{F08AE}", top: 100, warn: 90, critical: 97,
-                     value: d => d.dgpu?.vram_total ? Math.round(100 * d.dgpu.vram_used / d.dgpu.vram_total) : undefined,
-                     text: d => (d.dgpu.vram_used / 1024).toFixed(1) + "G" },
-        dgpu_power: { category: "Graphics", from: "dgpu", name: "Second card power", word: "dpow", glyph: "\u{F140B}",
-                     value: d => d.dgpu?.watts, text: d => Number(d.dgpu.watts).toFixed(1) + "W" },
+                     value: d => d.dgpu ? (d.dgpu_live?.pct ?? d.dgpu.pct ?? 0) : undefined,
+                     text: d => d.dgpu_live ? d.dgpu_live.pct + "%" : d.dgpu.pct !== undefined ? d.dgpu.pct + "%" : d.dgpu.state === "suspended" ? "Sleeping" : d.dgpu.state,
+                     detail: d => root.card(d.dgpu_live ?? d.dgpu, "Second GPU") + (d.dgpu.state === "suspended" ? " (sleeping)" : "") },
+        dgpu_temp: { category: "Graphics", from: "dgpu_live", live: true, name: "Second card temperature", word: "dtmp", glyph: "\u{F0FB2}", top: 100, warn: 85, critical: 95,
+                     value: d => d.dgpu_live?.temp, text: d => Math.round(d.dgpu_live.temp) + "°" },
+        dgpu_vram: { category: "Graphics", from: "dgpu_live", live: true, name: "Second card memory", word: "dvrm", glyph: "\u{F08AE}", top: 100, warn: 90, critical: 97,
+                     value: d => d.dgpu_live?.vram_total ? Math.round(100 * d.dgpu_live.vram_used / d.dgpu_live.vram_total) : undefined,
+                     text: d => (d.dgpu_live.vram_used / 1024).toFixed(1) + "G" },
+        dgpu_power: { category: "Graphics", from: "dgpu_live", live: true, name: "Second card power", word: "dpow", glyph: "\u{F140B}",
+                     value: d => d.dgpu_live?.watts, text: d => Number(d.dgpu_live.watts).toFixed(1) + "W" },
         ram:       { category: "Memory & storage", from: "ram", name: "Memory", word: "mem", glyph: "\u{F035B}", top: 100, warn: 85, critical: 95,
                      value: d => d.ram?.pct, text: d => (d.ram.used / 1024).toFixed(1) + "G",
                      detail: d => "Memory  " + (d.ram.used / 1024).toFixed(1) + " of " + (d.ram.total / 1024).toFixed(1) + " GB  (" + d.ram.pct + "%)" },
