@@ -3,14 +3,17 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Weather: the city the bar shows (Open-Meteo geocoding, no account) and what the forecast
-// dropdown (click the temperature in the bar) contains. Saved in Config.weather; applied live.
+// Weather: the places (Open-Meteo geocoding, no account), which one is the default, and what the forecast
+// panel (click the temperature in the bar) shows. Saved in Config.weather; applied live.
 ColumnLayout {
     id: page
     spacing: 20
 
     property var results: []
     property string status: ""
+    readonly property var places: Config.weather.locations ?? []
+    readonly property var allDetails: ["feels", "humidity", "wind", "uv", "rain", "sun"]
+    readonly property var detailNames: ["Feels like", "Humidity", "Wind", "UV index", "Rain chance", "Sunrise and sunset"]
 
     function search(q) {
         status = "Searching…"
@@ -32,36 +35,75 @@ ColumnLayout {
         }
     }
 
-    function choose(r) {
-        Config.set("weather", "city", r.name)
-        Config.set("weather", "latitude", r.latitude)
-        Config.set("weather", "longitude", r.longitude)
+    function save(list) {
+        const err = Config.set("weather", "locations", list)
+        if (err) status = err
+    }
+    function add(r) {
+        if (places.some(p => p.latitude === r.latitude && p.longitude === r.longitude)) { status = r.name + " is already in the list"; return }
+        save(places.concat([{ name: r.name, region: r.admin1 ?? "", country: r.country ?? "", latitude: r.latitude, longitude: r.longitude }]))
         results = []
         field.text = ""
     }
+    function rename(i, name) {
+        if (!name.trim()) return
+        save(places.map((p, k) => k === i ? Object.assign({}, p, { name: name.trim() }) : p))
+    }
+    function move(i, d) {
+        const l = Array.from(places), j = i + d
+        if (j < 0 || j >= l.length) return
+        l.splice(j, 0, l.splice(i, 1)[0])
+        save(l)
+    }
+    function remove(i) { save(places.filter((p, k) => k !== i)) }
+    function toggleDetail(id) {
+        const on = Config.weather.details
+        Config.set("weather", "details", allDetails.filter(d => d === id ? !on.includes(d) : on.includes(d)))
+    }
 
     SettingGroup {
+        title: "Places"
         SettingRow {
-            label: "Current location"
-            hint: Weather.ready ? Math.round(Weather.temperature) + "° · " + Weather.condition : "Loading…"
-            Text { text: Weather.city; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+            label: "Add a place"
+            hint: page.status !== "" ? page.status : "Type a city, press Enter, then pick it from the results"
+            TextField {
+                id: field
+                placeholder: "City"
+                onAccepted: if (text.trim().length > 1) page.search(text.trim())
+            }
+            PillButton { text: "Search"; onClicked: if (field.text.trim().length > 1) page.search(field.text.trim()) }
+        }
+        Repeater {
+            model: page.results
+            SettingRow {
+                required property var modelData
+                label: modelData.name
+                hint: [modelData.admin1, modelData.country].filter(x => x).join(", ")
+                PillButton { text: "Add"; primary: true; onClicked: page.add(modelData) }
+            }
         }
         SettingRow {
-            label: "Change city"
-            hint: page.status
-            Rectangle {
-                width: 260; height: 30; radius: 10
-                color: Theme.fill
-                border { color: field.activeFocus ? Theme.accent : Theme.stroke; width: 1 }
-                TextInput {
-                    id: field
-                    anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                    verticalAlignment: TextInput.AlignVCenter
-                    color: Theme.text
-                    font { family: Theme.font; pixelSize: Theme.fontSize }
-                    onAccepted: if (text.trim().length > 1) page.search(text.trim())
-                    Text { visible: !field.text; text: "Type a city and press Enter"; color: Theme.muted; font: field.font; anchors.verticalCenter: parent.verticalCenter }
+            visible: page.places.length === 0
+            label: "No places yet"
+            hint: "The weather panel and the bar stay empty until you add one"
+        }
+        Repeater {
+            model: page.places
+            SettingRow {
+                id: row
+                required property var modelData
+                required property int index
+                label: modelData.name
+                hint: [index === 0 ? "Default (the bar shows this one)" : "", modelData.region, modelData.country].filter(x => x).join(" · ")
+                TextField {
+                    width: 150
+                    placeholder: "Rename"
+                    accessibleName: "Rename " + row.modelData.name
+                    onAccepted: { page.rename(row.index, text); text = "" }
                 }
+                ArrowButton { glyph: "\u{F0143}"; tip: "Move up"; enabled: row.index > 0; onClicked: page.move(row.index, -1) }
+                ArrowButton { glyph: "\u{F0140}"; tip: "Move down"; enabled: row.index < page.places.length - 1; onClicked: page.move(row.index, 1) }
+                ArrowButton { glyph: "\u{F0156}"; tip: "Remove " + row.modelData.name; onClicked: page.remove(row.index) }
             }
         }
     }
@@ -70,34 +112,38 @@ ColumnLayout {
         title: "Forecast"
         SettingRow {
             label: "Days"
-            hint: "How many days the dropdown lists"
-            ConfigChoice { section: "weather"; key: "days"; values: [3, 5, 7, 10, 14]; labels: ["3", "5", "7", "10", "14"] }
+            hint: "Rows in the daily list; none hides it"
+            ConfigChoice { section: "weather"; key: "days"; values: [0, 3, 5, 7, 10, 14]; labels: ["None", "3", "5", "7", "10", "14"] }
         }
         SettingRow {
-            label: "Next 12 hours"
-            ConfigToggle { section: "weather"; key: "showHourly" }
-        }
-        SettingRow {
-            label: "Details"
-            hint: "Feels like, humidity, wind, UV index, sunrise and sunset"
-            ConfigToggle { section: "weather"; key: "showDetails" }
+            label: "Hours"
+            hint: "Columns in the hourly strip; none hides it"
+            ConfigChoice { section: "weather"; key: "hours"; values: [0, 6, 12, 24, 48]; labels: ["None", "6", "12", "24", "48"] }
         }
         SettingRow {
             label: "Units"
             ConfigChoice { section: "weather"; key: "units"; values: ["celsius", "fahrenheit"]; labels: ["°C, km/h", "°F, mph"] }
         }
+        SettingRow {
+            label: "Update every"
+            hint: "Minutes between updates"
+            ConfigChoice { section: "weather"; key: "refreshMin"; values: [10, 15, 30, 60]; labels: ["10", "15", "30", "60"] }
+        }
     }
 
     SettingGroup {
-        title: "Results"
-        visible: page.results.length > 0
+        title: "Details under the current weather"
         Repeater {
-            model: page.results
+            model: page.allDetails
             SettingRow {
-                required property var modelData
-                label: modelData.name
-                hint: [modelData.admin1, modelData.country].filter(x => x).join(", ")
-                PillButton { text: "Use"; primary: true; onClicked: page.choose(modelData) }
+                id: dr
+                required property string modelData
+                required property int index
+                label: page.detailNames[index]
+                Toggle {
+                    checked: Config.weather.details.includes(dr.modelData)
+                    onToggled: page.toggleDetail(dr.modelData)
+                }
             }
         }
     }
