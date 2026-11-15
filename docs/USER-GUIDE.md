@@ -41,10 +41,12 @@ and resize. A three-finger swipe sideways switches workspace. The full list: `Su
 
 ### Screenshots
 
-`Alt+Shift+S` (or `Print`): drag an area (works across screens, and with touch), then annotate (arrow, shapes, pen,
-highlighter, text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** saves, **Esc** cancels.
-Files land in `~/Pictures/Screenshots/`. In a terminal: `screenshot area|screen|window|all|delay N`; add `--copy`
-to skip the editor.
+`Alt+Shift+S`: the screen freezes (menus and tooltips stay); drag an area or click a window, then annotate (arrow, shapes,
+pen, highlighter, text, numbered markers, blur, crop). **Enter** copies and saves, **Ctrl+S** saves, **Esc** cancels.
+`Print` opens the capture bar: Area / Window / Screen, a delay, Record (area or screen) and the sound to record
+(none, desktop, microphone). After a capture the picture is annotated, copied, or saved and copied, as set in
+`capture.after`; folders, delay and sound are `capture.*` in settings.json. Files land in `~/Pictures/Screenshots/`.
+In a terminal: `screenshot area|screen|window|all|delay N`; add `--edit`, `--copy` (clipboard only) or `--save`.
 
 `Super+Ctrl+S` (or `screenshot pin`): drag an area and it stays on top of the screen. Drag it to move, scroll to zoom,
 middle or double click to close, right click to copy. Up to 12 pins; the menu has "Remove all pinned screenshots".

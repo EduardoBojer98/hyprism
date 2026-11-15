@@ -59,7 +59,11 @@ function apply_motion(name)
     hl.config({ animations = { enabled = name ~= "off" } })
     set("global", 10, "default")
     set("border", 5.39, "easeOutQuint")
-    hl.animation({ leaf = "borderangle", enabled = false, speed = 1, bezier = "linear" })
+    -- the rainbow border turns only when the shell says so (THEME.border_loop: motion Full, not Quiet, on AC or allowed on
+    -- battery). "loop" makes Hyprland draw every frame, so it is off in every other case. speed: 1 slow (20 s a turn) .. 10 fast (2 s)
+    local loop = THEME.border_loop == true
+    hl.animation({ leaf = "borderangle", enabled = loop, speed = loop and math.max(10, math.floor(200 / math.max(1, math.min(10, THEME.border_speed or 5)))) or 1,
+                   bezier = "linear", style = loop and "loop" or nil })
     ;(PRESETS[name] or PRESETS.ease)()
     set("fadeIn", 1.73, "almostLinear"); set("fadeOut", 1.46, "almostLinear")
     -- The shell's bar, panels, menus and notifications are layers. The shell animates them itself
