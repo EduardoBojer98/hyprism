@@ -21,9 +21,14 @@ ColumnLayout {
     GridLayout {
         id: grid
         Layout.fillWidth: true
-        // equal tiles, never a stretched orphan: up to four in one row, else rows of four or three, whichever
-        // leaves the fuller last row (5: 3+2, 6: 3+3, 7: 4+3)
-        columns: count <= 4 ? Math.max(1, count) : count % 4 === 0 || count % 4 === 3 ? 4 : 3
+        // up to four in one row, else rows of four or three, whichever leaves the fuller last row (5: 3+2, 6: 3+3,
+        // 7: 4+3); the last row's tiles share the full width. 12 grid columns: every row count divides it.
+        columns: 12
+        readonly property int perRow: count <= 4 ? Math.max(1, count) : count % 4 === 0 || count % 4 === 3 ? 4 : 3
+        readonly property int lastRow: Math.floor((count - 1) / perRow)
+        function row(id) { return Math.floor(idx(id) / perRow) }
+        function span(id) { const r = row(id); return 12 / (r < lastRow ? perRow : count - lastRow * perRow) }
+        function col(id) { return (idx(id) % perRow) * span(id) }
         readonly property var ids: ControlCenter.shownToggles.filter(id => id !== "touchpad" || Inputs.touchpadName !== "")   // what is actually drawn
         readonly property int count: ids.length
         function idx(id) { return Math.max(0, ids.indexOf(id)) }
@@ -31,7 +36,7 @@ ColumnLayout {
         rowSpacing: ControlCenter.gap
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("caffeine")
-            Layout.row: Math.floor(grid.idx("caffeine") / grid.columns); Layout.column: grid.idx("caffeine") % grid.columns
+            Layout.row: grid.row("caffeine"); Layout.column: grid.col("caffeine"); Layout.columnSpan: grid.span("caffeine"); Layout.preferredWidth: grid.span("caffeine"); Layout.horizontalStretchFactor: grid.span("caffeine")
             glyph: "\u{F0176}"
             label: "Caffeine"
             status: Caffeine.active ? Caffeine.remaining(ControlCenter.now.getTime()) : "Off"
@@ -44,7 +49,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
             visible: ControlCenter.shownToggles.includes("monitor")
-            Layout.row: Math.floor(grid.idx("monitor") / grid.columns); Layout.column: grid.idx("monitor") % grid.columns
+            Layout.row: grid.row("monitor"); Layout.column: grid.col("monitor"); Layout.columnSpan: grid.span("monitor"); Layout.preferredWidth: grid.span("monitor"); Layout.horizontalStretchFactor: grid.span("monitor")
             readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
             glyph: "\u{F0379}"
             label: "Monitor"
@@ -55,7 +60,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("keylight")
-            Layout.row: Math.floor(grid.idx("keylight") / grid.columns); Layout.column: grid.idx("keylight") % grid.columns
+            Layout.row: grid.row("keylight"); Layout.column: grid.col("keylight"); Layout.columnSpan: grid.span("keylight"); Layout.preferredWidth: grid.span("keylight"); Layout.horizontalStretchFactor: grid.span("keylight")
             glyph: ControlCenter.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
             label: "Key light"
             status: ["Off", "Low", "Medium", "High"][ControlCenter.kbdLight]
@@ -65,7 +70,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("keyboard")
-            Layout.row: Math.floor(grid.idx("keyboard") / grid.columns); Layout.column: grid.idx("keyboard") % grid.columns
+            Layout.row: grid.row("keyboard"); Layout.column: grid.col("keyboard"); Layout.columnSpan: grid.span("keyboard"); Layout.preferredWidth: grid.span("keyboard"); Layout.horizontalStretchFactor: grid.span("keyboard")
             glyph: "\u{F030C}"
             label: "Keyboard"
             status: Osk.visible ? "Shown" : "Hidden"
@@ -75,7 +80,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("touchpad") && Inputs.touchpadName !== ""
-            Layout.row: Math.floor(grid.idx("touchpad") / grid.columns); Layout.column: grid.idx("touchpad") % grid.columns
+            Layout.row: grid.row("touchpad"); Layout.column: grid.col("touchpad"); Layout.columnSpan: grid.span("touchpad"); Layout.preferredWidth: grid.span("touchpad"); Layout.horizontalStretchFactor: grid.span("touchpad")
             glyph: Inputs.touchpad ? "\u{F0E40}" : "\u{F0E41}"
             label: "Touchpad"
             status: Inputs.touchpad ? "On" : "Off"
@@ -85,7 +90,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("touchscreen")
-            Layout.row: Math.floor(grid.idx("touchscreen") / grid.columns); Layout.column: grid.idx("touchscreen") % grid.columns
+            Layout.row: grid.row("touchscreen"); Layout.column: grid.col("touchscreen"); Layout.columnSpan: grid.span("touchscreen"); Layout.preferredWidth: grid.span("touchscreen"); Layout.horizontalStretchFactor: grid.span("touchscreen")
             glyph: "\u{F0741}"
             label: "Touch"
             status: Inputs.touchscreen ? "On" : "Off"
@@ -95,7 +100,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("record")
-            Layout.row: Math.floor(grid.idx("record") / grid.columns); Layout.column: grid.idx("record") % grid.columns
+            Layout.row: grid.row("record"); Layout.column: grid.col("record"); Layout.columnSpan: grid.span("record"); Layout.preferredWidth: grid.span("record"); Layout.horizontalStretchFactor: grid.span("record")
             glyph: "\u{F044A}"
             label: "Record"
             status: Sys.recording ? "Recording" : "Off"
