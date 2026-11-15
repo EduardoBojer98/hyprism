@@ -1,72 +1,73 @@
 {
   "name": "Monolith",
-  "about": "The desktop as a TUI: one status line with your apps, mono type with Martian numerals, an acid accent in reverse video, corner brackets instead of shadows, a monolith at dawn",
+  "about": "The desktop as a neon terminal: a tmux status line with your workspaces as tabs, mono type, acid lime and a magenta second light, HUD brackets, a monolith on a scanned grid",
   "order": 3,
   "dark": true,
   "colour": {
-    "ground": "#090a08",
-    "surface": "#121410",
-    "raised": "#1c1f19",
-    "line": "#383e33",
-    "text": "#dde3d2",
-    "muted": "#959e89",
-    "faint": "#6b7462",
+    "ground": "#07080b",
+    "surface": "#0d0f14",
+    "raised": "#171b22",
+    "line": "#2b313c",
+    "text": "#e3e8ef",
+    "muted": "#929cab",
+    "faint": "#687282",
     "accent": "#b6ff3b",
-    "onAccent": "#090a08",
-    "accent2": "#ff6a3d",
-    "ok": "#5ad1c2",
+    "onAccent": "#07080b",
+    "accent2": "#ff4ad8",
+    "ok": "#39e1d0",
     "warn": "#ffb547",
-    "err": "#ff5f5f"
+    "err": "#ff5a4f"
   },
   "alt": {
     "dark": false,
     "term": {
       "palette": [
-        "#1d2118",
+        "#1a1f27",
         "#c42b2b",
-        "#4a7d00",
-        "#a35f00",
-        "#2f5fb3",
-        "#8a3a9c",
-        "#0f7f72",
-        "#848a78",
-        "#565d4d",
-        "#9c2222",
-        "#3a6300",
-        "#824b00",
-        "#254c8f",
-        "#6e2e7d",
-        "#0b665b",
-        "#f6f7f2"
+        "#3f7a00",
+        "#9a5a00",
+        "#1f5fbf",
+        "#a3168f",
+        "#0b7569",
+        "#7c8591",
+        "#555d69",
+        "#a52222",
+        "#346500",
+        "#7f4a00",
+        "#1a4f9e",
+        "#87127a",
+        "#095f55",
+        "#f3f5f7"
       ],
-      "background": "#e8eae1",
-      "foreground": "#191c15",
-      "cursor": "#22300a",
+      "background": "#e4e7eb",
+      "foreground": "#10141a",
+      "cursor": "#10141a",
       "cursorText": "#b6ff3b",
-      "selection": "#d6e3bd",
-      "selectionText": "#191c15"
+      "selection": "#efc6e8",
+      "selectionText": "#10141a"
     },
     "wall": "monolith-light",
     "colour": {
-      "ground": "#e8eae1",
-      "surface": "#f4f5ef",
-      "raised": "#dfe2d6",
-      "line": "#c2c7b6",
-      "text": "#191c15",
-      "muted": "#4f5646",
-      "faint": "#7a8170",
-      "accent": "#22300a",
+      "ground": "#e4e7eb",
+      "surface": "#f3f5f7",
+      "raised": "#dadfe5",
+      "line": "#c0c7d0",
+      "text": "#0f1318",
+      "muted": "#48505b",
+      "faint": "#6c7581",
+      "accent": "#10141a",
       "onAccent": "#b6ff3b",
-      "accent2": "#c2410c",
-      "ok": "#0f7f72",
-      "warn": "#a35f00",
+      "accent2": "#b0179a",
+      "ok": "#0b7569",
+      "warn": "#9a5a00",
       "err": "#c42b2b"
     },
     "hypr": {
       "active": [
-        "22300aff"
+        "10141aff",
+        "b0179aff"
       ],
-      "inactive": "c7cbbdff"
+      "inactive": "c9cfd7ff"
     }
   },
   "font": {
@@ -85,25 +86,26 @@
   },
   "bar": {
     "edge": "top",
-    "size": 34,
+    "size": 32,
     "floating": false,
     "segmented": false,
     "fill": "surface",
     "line": 1,
     "voice": "mixed",
     "mono": true,
-    "ws": "filled",
-    "clock": "block",
+    "ws": "tabs",
+    "clock": "split",
     "decor": "",
     "sep": true,
     "dimLabels": true,
     "start": [
       "controls",
       "workspaces",
-      "apps",
       "window"
     ],
-    "center": [],
+    "center": [
+      "apps"
+    ],
     "end": [
       "media",
       "tray",
@@ -114,7 +116,8 @@
       "notifications",
       "weather",
       "clock"
-    ]
+    ],
+    "sepStyle": "slash"
   },
   "dock": {
     "edge": "top",
@@ -124,8 +127,9 @@
     "fill": "surface"
   },
   "popup": {
-    "depth": "none",
+    "depth": "glow",
     "decor": "brackets",
+    "decorColour": "accent2",
     "tiles": "solid"
   },
   "motion": {
@@ -159,13 +163,14 @@
     "border": 2,
     "rounding": 0,
     "active": [
-      "b6ff3bff"
+      "b6ff3bff",
+      "ff4ad8ff"
     ],
-    "inactive": "262a22ff",
+    "inactive": "1f242cff",
     "shadow": "none",
     "blur": false,
     "motion": "snappy",
-    "frame": "rainbow"
+    "frame": "gradient"
   },
   "lock": {
     "clock": "terminal",
@@ -173,29 +178,29 @@
   },
   "term": {
     "palette": [
-      "#1c1f1a",
-      "#ff5f5f",
+      "#161a21",
+      "#ff5a4f",
       "#b6ff3b",
       "#ffb547",
-      "#7fb2d6",
-      "#d69be0",
-      "#5ad1c2",
-      "#8b9480",
-      "#5f6858",
-      "#ff8787",
-      "#c8ff6c",
+      "#6cb6ff",
+      "#ff4ad8",
+      "#39e1d0",
+      "#9aa4b2",
+      "#5d6675",
+      "#ff8077",
+      "#ccff73",
       "#ffc875",
-      "#9fc5e0",
-      "#e0b4e8",
-      "#83dcd1",
-      "#d7ddcc"
+      "#99ccff",
+      "#ff85e6",
+      "#7debe0",
+      "#e3e8ef"
     ],
-    "background": "#090a08",
-    "foreground": "#d7ddcc",
+    "background": "#07080b",
+    "foreground": "#dfe5ec",
     "cursor": "#b6ff3b",
-    "cursorText": "#090a08",
-    "selection": "#3b5018",
-    "selectionText": "#d7ddcc"
+    "cursorText": "#07080b",
+    "selection": "#3b1636",
+    "selectionText": "#e3e8ef"
   },
   "wall": "monolith"
 }
