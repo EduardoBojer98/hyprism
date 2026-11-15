@@ -77,10 +77,40 @@ m_cpu_freq() { # average of the cores, MHz
     done
     ((n)) && printf '"cpu_freq":%s' $((sum / n / 1000))
 }
+# A card's name, chip and driver: from the PCI ids database (sysfs ids, never the card itself, so a sleeping card
+# stays asleep). "GA107M [GeForce RTX 3050 Mobile]" -> name "NVIDIA GeForce RTX 3050 Mobile", chip "GA107M".
+# Read once per PCI address (watch mode keeps the answer).
+declare -A IDENT=()
+ident() { # ident PCI -> '"name":"…","chip":"…","driver":"…"' (empty when unknown)
+    [[ -n ${IDENT[$1]+x} ]] && { printf '%s' "${IDENT[$1]}"; return 0; }
+    local d=/sys/bus/pci/devices/$1 ven dev db="" line name chip brand drv out=""
+    ven=$(rd "$d/vendor") dev=$(rd "$d/device")
+    ven=${ven#0x} dev=${dev#0x}
+    for db in "$R/usr/share/hwdata/pci.ids" "$R/usr/share/misc/pci.ids"; do [[ -r $db ]] && break; done
+    if [[ -n $ven && -n $dev && -r $db ]]; then
+        line=$(awk -v v="$ven" -v d="$dev" '$0 ~ "^"v" " { inv = 1; next } inv && /^[0-9a-f]/ { exit } inv && $0 ~ "^\t"d" " { sub("^\t"d"  *", ""); print; exit }' "$db")
+        if [[ $line == *"["*"]"* ]]; then
+            chip=${line%% \[*} name=${line#*\[} name=${name%\]*} name=${name##* / }
+        else
+            name=$line
+        fi
+        case $ven in 1002) brand=AMD ;; 10de) brand=NVIDIA ;; 8086) brand=Intel ;; *) brand="" ;; esac
+        [[ -n $name && -n $brand && $name != "$brand"* ]] && name="$brand $name"
+        name=${name//[\"\\]/} chip=${chip//[\"\\]/}
+        [[ -n $name ]] && out="\"name\":\"$name\""
+        [[ -n $chip ]] && out+="${out:+,}\"chip\":\"$chip\""
+    fi
+    drv=$(readlink "$R$d/driver" 2>/dev/null) && out+="${out:+,}\"driver\":\"${drv##*/}\""
+    IDENT[$1]=$out
+    printf '%s' "$out"
+}
 card() { # card NAME PCI: load, temperature, memory and power from a card's own files (AMD and Intel expose different ones)
     local d=/sys/bus/pci/devices/$2 out="" v u t h
+    out=$(ident "$2")
     v=$(rd "$d/gpu_busy_percent")
-    [[ -n $v ]] && out+="\"pct\":$v"
+    [[ -n $v ]] && out+="${out:+,}\"pct\":$v"
+    v=$(awk '/\*/ { gsub(/[^0-9]/, "", $2); print $2; exit }' "$R$d/pp_dpm_sclk" 2>/dev/null) # the current shader clock (AMD)
+    [[ $v =~ ^[0-9]+$ ]] && out+="${out:+,}\"mhz\":$v"
     u=$(rd "$d/mem_info_vram_used") t=$(rd "$d/mem_info_vram_total")
     [[ -n $u && -n $t ]] && out+="${out:+,}\"vram_used\":$((u / 1048576)),\"vram_total\":$((t / 1048576))"
     v=$(rd "$d/mem_info_gtt_used") # shared graphics memory (system RAM the card uses): a use, not a capacity
@@ -116,7 +146,9 @@ m_dgpu() { # the second card: its power state only
             return 0
         }
     fi
-    printf '"dgpu":{"state":"%s"}' "$state"
+    local id
+    id=$(ident "$pci")
+    printf '"dgpu":{"state":"%s"%s}' "$state" "${id:+,$id}"
 }
 SMI_T=0 SMI_OUT=""
 m_dgpu_live() { # an awake NVIDIA card's numbers, asked at most every 10 s (nvidia-smi can keep a card from suspending)
@@ -128,15 +160,16 @@ m_dgpu_live() { # an awake NVIDIA card's numbers, asked at most every 10 s (nvid
     }
     t=$(now_ms)
     if ((t - SMI_T >= 10000)); then
-        local smi=${HYPRISM_NVIDIA_SMI:-nvidia-smi} q pct temp used total watts
+        local smi=${HYPRISM_NVIDIA_SMI:-nvidia-smi} q pct temp used total watts mhz
         SMI_T=$t SMI_OUT=""
         [[ -n $R && -z ${HYPRISM_NVIDIA_SMI:-} ]] && return 0
         command -v "$smi" >/dev/null || return 0
-        q=$("$smi" --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total,power.draw --format=csv,noheader,nounits 2>/dev/null | head -1) || q=""
-        IFS=', ' read -r pct temp used total watts <<<"$q"
+        q=$("$smi" --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total,power.draw,clocks.gr --format=csv,noheader,nounits 2>/dev/null | head -1) || q=""
+        IFS=', ' read -r pct temp used total watts mhz <<<"$q"
         if [[ $pct =~ ^[0-9]+$ && $temp =~ ^[0-9.]+$ && $used =~ ^[0-9]+$ && $total =~ ^[0-9]+$ ]]; then
             [[ $watts =~ ^[0-9.]+$ ]] || watts="" # many laptops answer [N/A] for power
-            SMI_OUT=$(printf '"dgpu_live":{"pct":%s,"temp":%s,"vram_used":%s,"vram_total":%s%s}' "$pct" "$temp" "$used" "$total" "${watts:+,\"watts\":$watts}")
+            [[ $mhz =~ ^[0-9]+$ ]] || mhz=""
+            SMI_OUT=$(printf '"dgpu_live":{"pct":%s,"temp":%s,"vram_used":%s,"vram_total":%s%s%s}' "$pct" "$temp" "$used" "$total" "${watts:+,\"watts\":$watts}" "${mhz:+,\"mhz\":$mhz}")
         fi
     fi
     printf '%s' "$SMI_OUT"

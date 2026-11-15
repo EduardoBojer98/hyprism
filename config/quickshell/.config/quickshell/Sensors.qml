@@ -128,36 +128,26 @@ Singleton {
                 Section_ {
                     visible: Metrics.has("gpu") || Metrics.has("gpu_temp") || Metrics.has("dgpu")
                     title: "Graphics"
-                    // one row per card in fixed columns (the label column, then tabular values); shared memory is a use, never a percentage
-                    GridLayout {
-                        Layout.fillWidth: true
-                        columns: 5
-                        columnSpacing: Theme.spaceS
-                        rowSpacing: 4
-                        Item { Layout.preferredWidth: 72 }
-                        Repeater {
-                            model: ["Load", "Temp", "Power", "Shared"]
-                            Text { required property string modelData; Layout.fillWidth: true; Layout.preferredWidth: 1; horizontalAlignment: Text.AlignRight; text: modelData; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
-                        }
-                        Text { visible: Metrics.has("gpu") || Metrics.has("gpu_temp"); Layout.preferredWidth: 72; text: "Built-in"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
-                        Repeater {
-                            model: [Metrics.has("gpu") ? Metrics.text("gpu") + root.flag("gpu") : "–", Metrics.has("gpu_temp") ? Metrics.text("gpu_temp") + root.flag("gpu_temp") : "–",
-                                    Metrics.has("gpu_power") ? Metrics.text("gpu_power") : "–", Metrics.has("gpu_vram") ? Metrics.text("gpu_vram") : "–"]
-                            Text { required property string modelData; visible: Metrics.has("gpu") || Metrics.has("gpu_temp"); Layout.fillWidth: true; Layout.preferredWidth: 1; horizontalAlignment: Text.AlignRight; text: modelData; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
-                        }
-                        // second card: "Sleeping" while powered down; numbers only while it is awake (and the panel is open)
-                        Text { visible: Metrics.has("dgpu"); Layout.preferredWidth: 72; text: "Discrete"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
-                        Text {
-                            visible: Metrics.has("dgpu") && !root.d.dgpu_live
-                            Layout.columnSpan: 4; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight
-                            text: ({ suspended: "Sleeping", suspending: "Sleeping", resuming: "Waking", active: "Awake" })[root.d.dgpu?.state] ?? (root.d.dgpu?.state ?? "")
-                            color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontLabel }
-                        }
-                        Repeater {
-                            model: !root.d.dgpu_live ? [] : [Metrics.text("dgpu") + root.flag("dgpu"), Metrics.has("dgpu_temp") ? Metrics.text("dgpu_temp") + root.flag("dgpu_temp") : "–",
-                                    Metrics.has("dgpu_power") ? Metrics.text("dgpu_power") : "–", "–"]
-                            Text { required property string modelData; visible: Metrics.has("dgpu"); Layout.fillWidth: true; Layout.preferredWidth: 1; horizontalAlignment: Text.AlignRight; text: modelData; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
-                        }
+                    // each card by its real name (PCI ids), its chip and driver, then its numbers in fixed columns;
+                    // shared memory is a use, never a percentage. The second card shows only its name while asleep.
+                    Card_ {
+                        visible: Metrics.has("gpu") || Metrics.has("gpu_temp")
+                        info: root.d.gpu ?? ({})
+                        fallback: "Built-in graphics"
+                        status: root.d.gpu?.mhz ? root.d.gpu.mhz + " MHz" : ""
+                        values: [Metrics.has("gpu") ? Metrics.text("gpu") + root.flag("gpu") : "–", Metrics.has("gpu_temp") ? Metrics.text("gpu_temp") + root.flag("gpu_temp") : "–",
+                                 Metrics.has("gpu_power") ? Metrics.text("gpu_power") : "–", Metrics.has("gpu_vram") ? Metrics.text("gpu_vram") : "–"]
+                        heads: ["Load", "Temp", "Power", "Shared"]
+                    }
+                    Card_ {
+                        visible: Metrics.has("dgpu")
+                        info: root.d.dgpu ?? ({})
+                        fallback: "Second graphics card"
+                        status: root.d.dgpu_live?.mhz ? root.d.dgpu_live.mhz + " MHz"
+                            : (({ suspended: "Sleeping", suspending: "Sleeping", resuming: "Waking", active: "Awake" })[root.d.dgpu?.state] ?? (root.d.dgpu?.state ?? ""))
+                        values: !root.d.dgpu_live ? [] : [Metrics.text("dgpu") + root.flag("dgpu"), Metrics.has("dgpu_temp") ? Metrics.text("dgpu_temp") + root.flag("dgpu_temp") : "–",
+                                 Metrics.has("dgpu_power") ? Metrics.text("dgpu_power") : "–", (root.d.dgpu_live.vram_total / 1024).toFixed(0) + " GB"]
+                        heads: ["Load", "Temp", "Power", "VRAM"]
                     }
                     Meter_ { visible: Metrics.has("dgpu_vram") && (root.d.dgpu_live?.vram_total ?? 0) > 0; label: "Video memory"; rid: "dgpu_vram"; used: (root.d.dgpu_live?.vram_used ?? 0) / 1024; total: (root.d.dgpu_live?.vram_total ?? 0) / 1024 }
                 }
@@ -314,6 +304,47 @@ Singleton {
             implicitHeight: 4; radius: 2
             color: Theme.fill
             Rectangle { width: Math.max(4, parent.width * meter.f); height: parent.height; radius: 2; color: root.levelColour(meter.f); Behavior on width { NumberAnimation { duration: Theme.anim } } }
+        }
+    }
+
+    // one graphics card: real name and its state on one line, chip and driver under it, then its numbers (id: not `gc`, a JavaScript global)
+    component Card_: ColumnLayout {
+        id: gcard
+        property var info: ({})
+        property string fallback
+        property string status
+        property var values: []
+        property var heads: []
+        Layout.fillWidth: true
+        Layout.topMargin: 2
+        spacing: 2
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Theme.spaceS
+            Text { Layout.fillWidth: true; text: gcard.info.name ?? gcard.fallback; elide: Text.ElideRight; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
+            Text { text: gcard.status; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
+        }
+        Text {
+            visible: text !== ""
+            text: [gcard.info.chip, gcard.info.driver].filter(x => x).join(" · ")
+            color: Theme.subtext
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
+        }
+        GridLayout {
+            visible: gcard.values.length > 0
+            Layout.fillWidth: true
+            Layout.topMargin: 2
+            columns: 4
+            columnSpacing: Theme.spaceS
+            rowSpacing: 0
+            Repeater {
+                model: gcard.values.length ? gcard.heads : []
+                Text { required property string modelData; Layout.fillWidth: true; Layout.preferredWidth: 1; text: modelData; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+            }
+            Repeater {
+                model: gcard.values
+                Text { required property string modelData; Layout.fillWidth: true; Layout.preferredWidth: 1; text: modelData; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
+            }
         }
     }
 }
