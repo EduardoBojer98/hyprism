@@ -25,9 +25,10 @@ Rectangle {
     Layout.preferredWidth: 1
     Layout.preferredHeight: Math.max(ControlCenter.style === "compact" ? 44 : 52, Theme.hit)
     radius: ControlCenter.style === "borderless" ? Theme.radiusSmall : Theme.radius
-    color: conn.isExpanded || rowHover.containsMouse ? Theme.fillHover
+    color: conn.active ? Theme.tileOn
+         : conn.isExpanded || rowHover.containsMouse ? Theme.fillHover
          : ControlCenter.style === "borderless" ? "transparent" : Theme.fill
-    border { color: conn.isExpanded ? Theme.strokeStrong : ControlCenter.style === "borderless" ? Theme.stroke : "transparent"; width: 1 }
+    border { color: conn.isExpanded ? Theme.strokeStrong : conn.active ? Theme.tileOnBorder : ControlCenter.style === "borderless" ? Theme.stroke : "transparent"; width: 1 }
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
     MouseArea {
@@ -43,8 +44,7 @@ Rectangle {
         id: disc
         anchors { left: parent.left; leftMargin: 9; verticalCenter: parent.verticalCenter }
         width: 32; height: 32; radius: Theme.radius === 0 ? 0 : 16
-        color: conn.active ? Theme.tileOn : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
-        border { width: conn.active && Theme.washTiles ? 1 : 0; color: Theme.tileOnBorder }
+        color: conn.active ? Qt.alpha(Theme.tileOnText, discArea.containsMouse ? 0.22 : 0.14) : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
         scale: discArea.pressed ? 0.92 : 1
         Behavior on color { ColorAnimation { duration: Theme.anim } }
         Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
@@ -58,8 +58,8 @@ Rectangle {
     }
     Column {
         anchors { left: disc.right; leftMargin: 9; right: chev.visible ? chev.left : parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
-        Text { width: parent.width; text: conn.title; color: Theme.text; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
-        Text { width: parent.width; text: conn.subtitle; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+        Text { width: parent.width; text: conn.title; color: conn.active ? Theme.tileOnText : Theme.text; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+        Text { width: parent.width; text: conn.subtitle; color: conn.active ? Theme.tileOnText : Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
     }
-    Chevron { id: chev; visible: conn.expandable; open: conn.isExpanded; size: 12; anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter } }
+    Chevron { id: chev; visible: conn.expandable; open: conn.isExpanded; size: 12; color: conn.active ? Theme.tileOnText : Theme.text; anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter } }
 }
