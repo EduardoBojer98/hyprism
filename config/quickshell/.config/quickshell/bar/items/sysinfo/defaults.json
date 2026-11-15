@@ -4,10 +4,8 @@
   "category": "System",
   "settings": {
     "metrics": [
-      "cpu",
       "cpu_temp",
-      "ram",
-      "net"
+      "gpu_temp"
     ],
     "mode": "compact",
     "sparkline": true,

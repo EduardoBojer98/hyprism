@@ -23,9 +23,9 @@ Scope {
     readonly property var current: Theme.current
     readonly property var h: current.hypr
     readonly property bool light: Theme.light
-    readonly property string iconTheme: Theme.iconTheme === "Papirus-Dark" && light ? "Papirus-Light" : Theme.iconTheme
-    // only plain folder names reach the shell commands below
-    readonly property string cursorTheme: /^[A-Za-z0-9._+ -]+$/.test(Config.appearance.cursorTheme) ? Config.appearance.cursorTheme : ""
+    readonly property string iconTheme: Theme.iconTheme === "Papirus" || (Theme.iconTheme === "Papirus-Dark" && light) ? (light ? "Papirus-Light" : "Papirus-Dark") : Theme.iconTheme
+    // only plain folder names reach the shell commands below (a missing one: apps fall back to the system's)
+    readonly property string cursorTheme: /^[A-Za-z0-9._+ -]+$/.test(Theme.cursorTheme) ? Theme.cursorTheme : ""
     readonly property int cursorSize: Config.appearance.cursorSize
     readonly property bool animate: Theme.animate
     function hex(c) { return c.toString().slice(1, 7) }

@@ -7,7 +7,7 @@ the longer line for each reading and its recent trend.
 
 | Setting | Default | What it does |
 |---|---|---|
-| `metrics` | `["cpu", "cpu_temp", "ram", "net"]` | Which readings, in this order |
+| `metrics` | `["cpu_temp", "gpu_temp"]` | Which readings, in this order |
 | `mode` | `"compact"` | `"compact"`: icon and number (Settings: Icons). `"detailed"`: short name and number, no icon ("cpu 12%", Settings: Labels). Either way, whatever the theme's bar voice |
 | `sparkline` | `true` | The recent trend in the tooltip |
 | `interval` | `2` | Seconds between readings |

@@ -13,7 +13,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `version` | `int` | `3` | settings format; Config.repair() upgrades older files |
+| `version` | `int` | `4` | settings format; Config.repair() upgrades older files |
 
 ## appearance
 
@@ -28,9 +28,9 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `fontScale` | `real` | `1` |  |
 | `motion` | `string` | `"full"` | full (the theme's own motion) \| reduced (short fades, nothing moves) \| off |
 | `motionStyle` | `string` | `"theme"` | the motion look (Theme.qml looks): theme (its own) \| smooth \| snappy \| springy \| minimal |
-| `iconTheme` | `string` | `"Papirus-Dark"` |  |
+| `iconTheme` | `string` | `"theme"` | theme (the theme's own) \| a folder in ~/.local/share/icons or /usr/share/icons |
 | `monoTray` | `bool` | `true` | tray icons in the bar's ink (off: the apps' own colours) |
-| `cursorTheme` | `string` | `"default"` | a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons; "default" = the system's cursor |
+| `cursorTheme` | `string` | `"theme"` | theme (the theme's own) \| a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons \| default (the system's) |
 | `cursorSize` | `int` | `24` |  |
 
 ## dock

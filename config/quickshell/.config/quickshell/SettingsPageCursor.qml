@@ -30,12 +30,14 @@ ColumnLayout {
     SettingGroup {
         SettingRow {
             label: "Cursor theme"
-            hint: Config.appearance.cursorTheme === "default" ? "default is your system's cursor" : page.themes.includes(Config.appearance.cursorTheme) ? "" : Config.appearance.cursorTheme + " isn't installed, so apps use the default cursor"
+            hint: Theme.cursorTheme === "default" ? (Config.appearance.cursorTheme === "theme" ? Theme.current.name + " uses your system's cursor" : "default is your system's cursor")
+                : !page.themes.includes(Theme.cursorTheme) ? Theme.cursorTheme + " isn't installed, so apps use the default cursor (Add theme… below)"
+                : Config.appearance.cursorTheme === "theme" ? Theme.current.name + " uses " + Theme.cursorTheme : ""
             Dropdown {
                 width: 240
-                options: page.themes
-                current: Config.appearance.cursorTheme
-                onPicked: v => Config.set("appearance", "cursorTheme", v)
+                options: ["Theme's own"].concat(page.themes)
+                current: Config.appearance.cursorTheme === "theme" ? "Theme's own" : Config.appearance.cursorTheme
+                onPicked: v => Config.set("appearance", "cursorTheme", v === "Theme's own" ? "theme" : v)
             }
         }
         SettingRow {
