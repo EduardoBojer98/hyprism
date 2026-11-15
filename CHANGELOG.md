@@ -6,6 +6,24 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Desktop v3: three themes, one bar layout, one popup framework.
+  - Themes: Pebble (calm, the default for new installs), Poster (loud) and Monolith (terminal). Theme token
+    `shape.density` (`compact`, `regular`, `roomy`) scales spacing; `hypr.frame` (`accent`, `gradient`, `rainbow`) names the window frame.
+  - Bar: one layout for every theme (`bar.layout`, empty = the theme's own); presets are "Start from" buttons;
+    per-screen items in `bar.monitors`. New readings: per-core CPU, frequency, load, swap, disk I/O, shared GPU
+    memory, dGPU state (a sleeping card is never woken), battery watts.
+  - Popups: `Shift+F6` moves the keyboard to the dock. Panels open on the monitor of the item you clicked.
+  - Weather: several saved places (Settings → Weather: search, add, rename, reorder, remove; the first is the
+    default), a chip per place in the panel, a cache, an offline and stale state. Open-Meteo, no key.
+  - System panel: real CPU, memory, GPU (iGPU and dGPU), storage, network and processes.
+  - Screenshots: `Print` opens a capture bar (area, window, screen, delay, record with sound); new Settings →
+    Screenshots page (after-capture action, folder, delay, notification, recording sound and folder). grim, slurp and
+    Satty stay; Flameshot is not used because its single overlay window misbehaves with mixed scaling such as 1.2 + 1.0.
+  - Window border colour (Settings → Window Look): Theme's, Accent, Gradient or Rainbow. Rainbow turns only with
+    animations Full, power mode not Silent and on AC unless allowed on battery.
+  - The launcher opens at the mouse pointer by default (Settings → Search & Launcher → Open). Default terminal in
+    Settings → Default Apps.
+
 - Bar item flyouts: volume, network, Bluetooth, brightness and media open a small panel with that one Control
   Center section; battery and power profile open a battery flyout (charge, draw, time left on battery, CPU
   temperature, fans, Silent / Balanced / Performance, Caffeine). The `status` item opens the flyout of the icon
@@ -83,6 +101,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- Power modes are named Silent, Balanced and Performance everywhere in Settings.
 - The power-profile item opens the battery flyout instead of cycling blind; the power modes read Silent, Balanced,
   Performance (the asusctl id stays `quiet`). The battery item opens its flyout instead of Settings → Power; the
   media item's click opens the player (middle-click pauses or plays).
@@ -134,6 +153,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Removed
 
+- Themes Atlas, Console, Glass and Reactor, the Theme Builder and "Save as a theme". Old ids map on their own
+  (glass to Pebble, atlas to Poster, console and reactor to Monolith; `Config.qml` `renamedThemes`); migration 0006
+  removes their links. Per-theme Adjust and a theme folder of your own still work.
 - `StatusGlyph.qml` (unused); the private menu rows of UtilityMenu, TrayMenu, Keyboard and WindowMenu (replaced by
   `MenuRow` / `PillButton`).
 

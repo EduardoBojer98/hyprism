@@ -8,11 +8,11 @@ Each entry gives the Settings way (`Super+I`, then page → row) and the file or
 A one-line way to set a key from a terminal: `qs ipc call config set SECTION KEY 'JSON'`, for example
 `qs ipc call config set bar hiddenOn '["DP-1"]'`.
 
-`<theme>` below means the id of the theme in use, for example `reactor`.
+`<theme>` below means the id of the theme in use, for example `pebble`.
 
 ## Look
 
-**The theme.** Settings → Appearance → Themes. Or `theme` (lists them) and `theme atlas`. File: `appearance.theme`.
+**The theme.** Settings → Appearance → Themes. Or `theme` (lists them) and `theme poster`. File: `appearance.theme`.
 
 **Light or dark.** Settings → Appearance → Themes → Light or dark. File: `appearance.mode` = `"theme"` (each theme's
 own), `"light"` or `"dark"`.
@@ -20,7 +20,7 @@ own), `"light"` or `"dark"`.
 **The accent colour.** Settings → Appearance → Themes → Adjust → Accent colour. File:
 `appearance.custom.<theme>.accent` = `"#ff9e7a"`. It is kept per theme.
 
-**My own theme.** Settings → Appearance → Theme Builder (no files). Or copy a folder:
+**My own theme.** Copy a folder:
 `cp -r ~/.local/share/hyprism/themes/_template ~/.config/hyprism/themes/mine`, edit `theme.json`, run `theme mine`.
 See [THEMES.md](THEMES.md).
 

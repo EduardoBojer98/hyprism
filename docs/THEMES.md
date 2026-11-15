@@ -1,7 +1,11 @@
 # Themes
 
-A theme is a whole desktop design: colours, fonts, corners, the bar and dock layout, how panels open, the lock
+A theme is a whole desktop design: colours, fonts, corners, spacing, the bar and dock look, how panels open, the lock
 screen, the terminal colours and the wallpaper. Every theme has a dark and a light half.
+
+Three ship: **Pebble** (calm, the default for new installs), **Poster** (loud) and **Monolith** (terminal). Atlas,
+Console, Glass and Reactor were removed; if you used one, you get its successor (glass to Pebble, atlas to Poster,
+console and reactor to Monolith) with your adjustments moved over.
 
 ## Switch
 
@@ -9,7 +13,7 @@ screen, the terminal colours and the wallpaper. Every theme has a dark and a lig
 theme
 ```
 
-lists them. `theme atlas` switches. Or Settings → Appearance → Themes, which shows a preview of each. It applies
+lists them. `theme poster` switches. Or Settings → Appearance → Themes, which shows a preview of each. It applies
 at once, with no logout: Hyprland's borders and gaps, the bar and dock, menus, notifications, the lock screen,
 GTK apps, the terminal and the wallpaper all follow.
 
@@ -21,9 +25,9 @@ its files. **Light or dark** picks each theme's own default, or one mode for all
 Each theme is one folder:
 
 ```
-themes/reactor/
+themes/pebble/
   theme.json      every value of the design
-  wallpaper.sh    how its two wallpapers are drawn (or pictures: reactor.png, reactor-light.png)
+  wallpaper.sh    how its two wallpapers are drawn (or pictures: pebble.png, pebble-light.png)
 ```
 
 | Folder | Whose |
@@ -49,8 +53,8 @@ theme mine
 get wrong, falls back to a safe value instead of breaking the desktop. Text placed on your accent colour is
 corrected to stay readable.
 
-For a quick variation without files, use Settings → Appearance → Theme Builder: it saves the difference from an
-existing theme in `settings.json`.
+For a quick variation without files, use Settings → Appearance → Themes → Adjust. It changes one theme's accent,
+corners, gaps, font and motion and is kept in `settings.json`; there is no builder.
 
 ## What is in theme.json
 
@@ -61,13 +65,13 @@ existing theme in `settings.json`.
 | `colour` | 13 colours: `ground` (desktop, bar), `surface` (panels), `raised` (controls), `line`, `text`, `muted`, `faint`, `accent`, `onAccent` (text on the accent), `accent2`, `ok`, `warn`, `err` |
 | `alt` | The other half: its `dark`, `colour`, `term`, `wall`, and window border colours (`hypr.active`, `hypr.inactive`) |
 | `font` | `ui`, `display` (clocks, big numbers), `mono`, `size` in px, `displayWeight` |
-| `shape` | `radius`, `radiusSmall`, `line` (panel border px), `material`: `solid` or `glass` |
+| `shape` | `radius`, `radiusSmall`, `line` (panel border px), `material`: `solid` or `glass`, `density`: `compact`, `regular` or `roomy` (spacing everywhere; default `regular`) |
 | `bar` | Edge, size, floating or attached, fill, how items speak (`voice`: `icons`, `mixed`, `words`, `caps`), workspace style, and the items in `start`, `center`, `end` |
 | `dock` | Edge, shape, hover effect, running mark, fill |
 | `popup` | Panel depth (`soft`, `hard`, `glow`, `none`), decoration, tile style |
 | `motion` | How panels open: `enter` and `exit` in ms, `curve`, `travel`, `scale`, `press` |
 | `launcher`, `notify` | Launcher placement and look; where notifications appear and their shape |
-| `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset |
+| `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset, `frame`: `accent`, `gradient` or `rainbow` (the focused window's frame) |
 | `lock` | Lock screen clock style and alignment |
 | `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, and `palette` (16 colours) |
 | `wall` | The wallpaper's name: a picture `<wall>.png` in the folder, or a recipe with that name in `wallpaper.sh` |

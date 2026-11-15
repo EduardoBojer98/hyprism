@@ -8,7 +8,7 @@ its own small folder, and each has its own settings.
 | What | Where |
 |---|---|
 | An item | `config/quickshell/.config/quickshell/bar/items/<id>/` |
-| Which items are in the bar, and in which section | Settings → Menu Bar (kept per theme in `settings.json`, `appearance.custom`) |
+| Which items are in the bar, and in which section | Settings → Menu Bar (`bar.layout` in `settings.json`; the theme's own list until you edit) |
 | Your settings for one item | `~/.config/quickshell/settings.json`, under `bar` → `items` → `<id>` |
 | An item's default settings | its `defaults.json` |
 
@@ -76,20 +76,20 @@ qs ipc call config set bar items '{"weather":{"warn":30}}'
 
 The `sysinfo` item shows any readings you pick, in your order: see
 [its README](../config/quickshell/.config/quickshell/bar/items/sysinfo/README.md) for the list and its settings.
-`cpu`, `memory` and `gpu` are single-reading items on the same service; `sysinfo` combines them and more (its settings page has a switch, order and warn / only-above levels per reading). Readings come from one small program,
+Readings: per-core CPU, frequency, load, temperature, memory, swap, disk space and disk I/O, network, GPU use, shared GPU memory (an integrated GPU's memory is shown without a warning), dGPU state (a sleeping card shows "Sleeping" and is never woken), battery watts, fans (`metrics list` prints the names). `cpu`, `memory` and `gpu` are single-reading items on the same service; `sysinfo` combines them and more (its settings page has a switch, order and warn / only-above levels per reading). Readings come from one small program,
 `metrics` (`metrics once` prints them all as JSON), which runs only while a bar shows one of them.
 
 ## One layout, starting points and screens
 
-The bar is one layout for every screen and every theme: `bar.layout` holds its items, edge, size, shape and the
+The bar is one layout for every screen and every theme: `bar.layout` holds its items, edge, size, floating and the
 dock's place. Until you change something it is empty and the bar follows the theme; your first edit in
 Settings → Menu Bar (or Settings → Dock → Position) copies what is on screen into it. "Use the theme's" empties it again.
 
 | Key (`bar` in `settings.json`) | What it does |
 |---|---|
-| `layout` | `{ "edge": "top", "size": 34, "floating": true, "dock": "bar", "start": [ids], "center": [ids], "end": [ids] }`; `{}` = the theme's own. `dock` is `bar` or an edge |
-| `presets` | "Start from" buttons: name → `{ "start": [ids], "center": [ids], "end": [ids] }`. A click copies the items into the layout; nothing stays linked |
-| `monitors` | screen name → `{ "start": [ids], "center": [ids], "end": [ids] }`, that screen's own items ("Its own items" in Settings → Screens). Older files named a preset here; that still reads |
+| `layout` | `{ "edge": "top", "size": 34, "floating": true, "dock": "bar", "start": [ids], "center": [ids], "end": [ids] }`; `{}` = the theme's own. `dock` is `bar` or an edge. It survives theme switches |
+| `presets` | the "Start from" buttons in Settings → Menu Bar: name → `{ "start": [ids], "center": [ids], "end": [ids] }`. A click copies the items into the layout; nothing stays linked |
+| `monitors` | screen name → `{ "start": [ids], "center": [ids], "end": [ids] }`, that screen's own items (`bar.monitors`) ("Its own items" in Settings → Screens). Older files named a preset here; that still reads |
 | `hiddenOn` | screens without a bar ("No bar" in Settings → Screens) |
 
 Built in (an older file gets any that are missing back; one you edited is never overwritten):

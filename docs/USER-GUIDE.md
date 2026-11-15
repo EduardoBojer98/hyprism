@@ -51,6 +51,40 @@ In a terminal: `screenshot area|screen|window|all|delay N`; add `--edit`, `--cop
 `Super+Ctrl+S` (or `screenshot pin`): drag an area and it stays on top of the screen. Drag it to move, scroll to zoom,
 middle or double click to close, right click to copy. Up to 12 pins; the menu has "Remove all pinned screenshots".
 
+Settings → Screenshots: what happens after a capture, the folder, the delay, the notification, and the recording's
+sound and folder. Screenshots use grim, slurp and Satty. Flameshot is not used: its single overlay window
+misbehaves with mixed scaling such as 1.2 next to 1.0 (see `docs/audit/v3/research.md`).
+
+### Panels, menus and flyouts
+
+- Every panel closes on Escape and on a click outside it. It opens on the monitor of the item you clicked.
+- A panel taller than the room scrolls inside its frame, with a fade at the cut edge.
+- Menus follow Up, Down, Home, End and Enter.
+- Volume, network, Bluetooth, brightness, media and battery / power items open a small flyout with just that
+  control. The status item opens the flyout of the icon you click. Battery shows charge, draw in watts, time left,
+  CPU temperature, fans, the power mode (Silent / Balanced / Performance) and Caffeine.
+- `F6` moves the keyboard to the bar, `Shift+F6` to the dock.
+- The notification history is kept in `~/.local/state/hyprism/notifications.json` and survives a restart.
+
+### Weather
+
+Settings → Weather: search a place, add it, rename, reorder or remove it. The first place is the default. The panel
+shows a chip per place. The last answer is cached, so with no network the panel shows it marked as old. Data comes
+from Open-Meteo; no key needed.
+
+### System panel
+
+Click the CPU, memory or GPU item (or open the System panel). It shows real CPU use per core, frequency and load,
+memory and swap, the integrated GPU and a separate GPU (shown as "Sleeping" while it is off; it is never woken to
+look), storage, disk reads and writes, network and the top processes.
+
+### Window frame and launcher
+
+Settings → Window Look → Border: Theme's, Accent, Gradient or Rainbow. Rainbow turns only with animations on Full,
+the power mode not Silent, and on AC unless you allow it on battery; otherwise it stands still.
+Spotlight opens at the mouse pointer by default (Settings → Search & Launcher → Open); choose the theme's place to
+get strips and edges back. Settings → Default Apps picks the default terminal.
+
 ## Settings
 
 `Super+I` (or from the Control Center). The search field finds a page by its name or by words like "dark",
@@ -59,11 +93,11 @@ change a choice or a slider.
 
 | Group (sidebar) | Pages |
 |---|---|
-| **Appearance** | Themes, Theme Builder, Wallpaper, Icons, Cursor |
+| **Appearance** | Themes, Wallpaper, Icons, Cursor |
 | **Menu Bar** | Menu Bar |
 | **Dock** | Dock |
 | **Lock Screen** | Lock Screen |
-| **Desktop & Widgets** | Control Center, Notifications, Search & Launcher, Clipboard, Weather, Calendar, Hot Corners |
+| **Desktop & Widgets** | Control Center, Notifications, Search & Launcher, Clipboard, Weather, Calendar, Screenshots, Hot Corners |
 | **Windows** | Window Behaviour, Window Look, App Rules |
 | **Displays** | Screens, Shared Monitor |
 | **Input** | Keyboard & Touchpad, Keyboard Shortcuts |
