@@ -37,17 +37,19 @@ Loader {
     onKindChanged: load()
     Connections { target: BarItems; function onDefsChanged() { w.load() } }
     // the separator sits in the gap before the item, outside it (the grid's spacing holds it);
-    // theme bar.sepStyle "slash" leans it like a HUD's segment cut (horizontal bars only)
+    // theme bar.sepStyle "slash" leans it like a HUD's segment cut (horizontal bars only), "pip" is a small square
     Rectangle {
         readonly property bool slash: Theme.barStyle.sepStyle === "slash" && !w.vertical
-        visible: w.separated && w.visible
-        color: Qt.alpha(w.tone, slash ? 0.34 : 0.28)
+        readonly property bool pip: Theme.barStyle.sepStyle === "pip"
+        // a clock on its own plate (block, split) is already set apart: no pip before it
+        visible: w.separated && w.visible && !(pip && w.kind === "clock" && ["block", "split"].includes(Theme.barStyle.clock))
+        color: Qt.alpha(w.tone, slash ? 0.34 : pip ? 0.4 : 0.28)
         antialiasing: slash
         rotation: slash ? 22 : 0
-        width: w.vertical ? Math.min(14, w.thickness * 0.45) : 1
-        height: w.vertical ? 1 : Math.min(slash ? 18 : 14, w.thickness * (slash ? 0.56 : 0.45))
-        x: w.vertical ? (w.width - width) / 2 : -8
-        y: w.vertical ? -8 : (w.height - height) / 2
+        width: pip ? 3 : w.vertical ? Math.min(14, w.thickness * 0.45) : 1
+        height: pip ? 3 : w.vertical ? 1 : Math.min(slash ? 18 : 14, w.thickness * (slash ? 0.56 : 0.45))
+        x: w.vertical ? (w.width - width) / 2 : -8 - Math.floor(width / 2)
+        y: w.vertical ? -8 - Math.floor(height / 2) : (w.height - height) / 2
     }
     // an item with nothing to show takes no space (e.g. media with no player). Items say so with
     // `shown` (not `visible`, which follows this Loader and would never come back)

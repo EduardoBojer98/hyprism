@@ -1,6 +1,6 @@
 {
   "name": "Monolith",
-  "about": "The desktop as a neon terminal: a tmux status line with your workspaces as tabs, mono type, acid lime and a magenta second light, HUD brackets, a monolith on a scanned grid",
+  "about": "The desktop as a neon terminal: a floating mono status line, workspaces locked in HUD corner marks, acid lime and an electric-blue second light, a monolith on a scanned grid",
   "order": 3,
   "dark": true,
   "colour": {
@@ -13,7 +13,7 @@
     "faint": "#687282",
     "accent": "#b6ff3b",
     "onAccent": "#07080b",
-    "accent2": "#ff4ad8",
+    "accent2": "#4f8cff",
     "ok": "#39e1d0",
     "warn": "#ffb547",
     "err": "#ff5a4f"
@@ -43,7 +43,7 @@
       "foreground": "#10141a",
       "cursor": "#10141a",
       "cursorText": "#b6ff3b",
-      "selection": "#efc6e8",
+      "selection": "#c9d8f3",
       "selectionText": "#10141a"
     },
     "wall": "monolith-light",
@@ -57,7 +57,7 @@
       "faint": "#6c7581",
       "accent": "#10141a",
       "onAccent": "#b6ff3b",
-      "accent2": "#b0179a",
+      "accent2": "#1f5fbf",
       "ok": "#0b7569",
       "warn": "#9a5a00",
       "err": "#c42b2b"
@@ -65,7 +65,7 @@
     "hypr": {
       "active": [
         "10141aff",
-        "b0179aff"
+        "1f5fbfff"
       ],
       "inactive": "c9cfd7ff"
     }
@@ -86,14 +86,14 @@
   },
   "bar": {
     "edge": "top",
-    "size": 32,
-    "floating": false,
+    "size": 26,
+    "floating": true,
     "segmented": false,
     "fill": "surface",
     "line": 1,
     "voice": "mixed",
     "mono": true,
-    "ws": "tabs",
+    "ws": "reticle",
     "clock": "split",
     "decor": "",
     "sep": true,
@@ -101,23 +101,21 @@
     "start": [
       "controls",
       "workspaces",
-      "window"
-    ],
-    "center": [
       "apps"
     ],
+    "center": [
+      "media"
+    ],
     "end": [
-      "media",
       "tray",
+      "sysinfo",
       "keyboard",
-      "cpu",
-      "memory",
       "status",
       "notifications",
       "weather",
       "clock"
     ],
-    "sepStyle": "slash"
+    "sepStyle": "pip"
   },
   "dock": {
     "edge": "top",
@@ -164,7 +162,7 @@
     "rounding": 0,
     "active": [
       "b6ff3bff",
-      "ff4ad8ff"
+      "4f8cffff"
     ],
     "inactive": "1f242cff",
     "shadow": "none",
@@ -199,7 +197,7 @@
     "foreground": "#dfe5ec",
     "cursor": "#b6ff3b",
     "cursorText": "#07080b",
-    "selection": "#3b1636",
+    "selection": "#16274a",
     "selectionText": "#e3e8ef"
   },
   "wall": "monolith",

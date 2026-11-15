@@ -9,7 +9,8 @@ import QtQuick
 //   numbers  numbers in a recessed pill with the current one filled (Glass)
 //   blocks   huge numbers filling the bar, the current one a solid accent block (Poster)
 //   squares  outlined squares, the current one filled (Atlas)
-//   tabs     tmux's window list: number and app ("2 firefox"), the current one an accent block the bar's height (Monolith)
+//   tabs     tmux's window list: number and app ("2 firefox"), the current one an accent block the bar's height
+//   reticle  mono numbers; HUD corner marks lock onto the current one over a faint accent wash (Monolith)
 // Click goes there, scroll steps through them.
 Item {
     id: ws
@@ -57,7 +58,7 @@ Item {
         anchors.centerIn: parent
         // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
         columns: ws.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
-        spacing: ({ dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0, tabs: 0 })[ws.style] ?? 4
+        spacing: ({ dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0, tabs: 0, reticle: 2 })[ws.style] ?? 4
         verticalItemAlignment: Grid.AlignVCenter
         horizontalItemAlignment: Grid.AlignHCenter
 
@@ -73,9 +74,10 @@ Item {
 
                 // along the bar (main) and across it (cross); a dot stretches along the bar when current
                 readonly property real main: s === "dots" ? (on ? 20 : 8) : s === "blocks" ? ws.thickness * 0.95
-                    : s === "squares" ? 34 : s === "numbers" ? 22 : Math.max(label.implicitWidth + (s === "tabs" ? 20 : 12), 20)
+                    : s === "squares" ? 34 : s === "numbers" ? 22 : s === "reticle" ? Math.max(label.implicitWidth + 14, 22)
+                    : Math.max(label.implicitWidth + (s === "tabs" ? 20 : 12), 20)
                 readonly property real cross: s === "dots" ? 8 : s === "blocks" ? ws.thickness : s === "squares" ? 34 : s === "numbers" ? 20
-                    : s === "tabs" ? ws.thickness - 1 : 20
+                    : s === "tabs" ? ws.thickness - 1 : s === "reticle" ? Math.min(ws.thickness - 6, 22) : 20
                 implicitWidth: ws.vertical ? cross : main
                 implicitHeight: ws.vertical ? main : cross
                 Behavior on implicitWidth { enabled: !ws.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
@@ -84,11 +86,34 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     radius: cell.s === "dots" || cell.s === "numbers" ? Math.min(width, height) / 2 : 0
-                    color: cell.on ? Theme.accent
+                    color: cell.on ? (cell.s === "reticle" ? Qt.alpha(Theme.accent, 0.14) : Theme.accent)
                          : cell.s === "dots" ? (cell.busy ? ws.dim : Qt.alpha(ws.dim, 0.45))
                          : area.containsMouse ? Qt.alpha(ws.tone, 0.11) : "transparent"
                     border { color: cell.s === "squares" && !cell.on ? ws.tone : "transparent"; width: cell.s === "squares" ? 2 : 0 }
                     Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                }
+                Item {   // reticle: four corner marks, closing in from a little outside when this one becomes current
+                    id: marks
+                    visible: cell.s === "reticle"
+                    anchors.fill: parent
+                    anchors.margins: cell.on ? 0 : -4
+                    opacity: cell.on ? 1 : 0
+                    Behavior on anchors.margins { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                    Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                    Repeater {
+                        model: 4
+                        Item {
+                            id: corner
+                            required property int index
+                            readonly property bool atRight: index % 2 === 1
+                            readonly property bool atLow: index > 1
+                            x: atRight ? marks.width - width : 0
+                            y: atLow ? marks.height - height : 0
+                            width: 5; height: 5
+                            Rectangle { width: 5; height: 1; y: corner.atLow ? 4 : 0; color: Theme.accent }
+                            Rectangle { width: 1; height: 5; x: corner.atRight ? 4 : 0; color: Theme.accent }
+                        }
+                    }
                 }
                 Text {
                     id: label
@@ -98,10 +123,10 @@ Item {
                     textFormat: cell.s === "tabs" ? Text.StyledText : Text.PlainText
                     text: cell.s === "tabs" && !cell.on && ws.app(cell.modelData) !== "" && !ws.vertical
                           ? `<font color="${ws.dim}">${cell.modelData.id}</font> ${ws.app(cell.modelData)}` : ws.label(cell.modelData)
-                    color: cell.on ? Theme.accentText
+                    color: cell.on ? (cell.s === "reticle" ? Theme.accent : Theme.accentText)
                          : cell.modelData.urgent ? Theme.warning : cell.busy || area.containsMouse ? ws.tone : ws.dim
                     font {
-                        family: cell.s === "blocks" ? Theme.displayFont : cell.s === "filled" || cell.s === "tabs" ? Theme.monoFont : Theme.font
+                        family: cell.s === "blocks" ? Theme.displayFont : cell.s === "filled" || cell.s === "tabs" || cell.s === "reticle" ? Theme.monoFont : Theme.font
                         pixelSize: cell.s === "blocks" ? Math.min(ws.thickness * 0.72, 40) : cell.s === "squares" ? Theme.fontTitle : Theme.fontLabel
                         weight: cell.s === "blocks" ? Theme.displayWeight : cell.s === "squares" ? Font.ExtraBold : cell.on || cell.busy ? Font.DemiBold : Font.Normal
                         features: { "tnum": 1 }

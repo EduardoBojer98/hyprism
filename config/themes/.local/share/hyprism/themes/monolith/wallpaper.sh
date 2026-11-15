@@ -39,13 +39,13 @@ monolith_draw() {
 
 wallpaper() {
     case $1 in
-        monolith) # night: a black slab between a lime dawn and a magenta rim light, scanned cells in the dark
-            monolith_draw '#06070a' '#0d1016' '#05060a' '#161a22' '#00000066' '#262c37' '#1b2a0a-black' '#2a0d27-black' \
-                '#030406' '#1b2029' '#b6ff3b' '#ff4ad8' '#3a4250' '#545d6c' '#b6ff3b' "$2" screen
+        monolith) # night: a black slab between a lime dawn and an electric-blue rim light, scanned cells in the dark
+            monolith_draw '#06070a' '#0d1016' '#05060a' '#161a22' '#00000066' '#262c37' '#1b2a0a-black' '#0b1830-black' \
+                '#030406' '#1b2029' '#b6ff3b' '#4f8cff' '#3a4250' '#545d6c' '#b6ff3b' "$2" screen
             ;;
         monolith-light) # day: the same slab in ink on cool paper, its edges still lit
-            monolith_draw '#eef0f3' '#e1e5ea' '#e5e8ec' '#d2d7de' '#ffffff59' '#bfc6cf' '#e2ead2-white' '#f1d7ec-white' \
-                '#10141a' '#10141a' '#b6ff3b' '#b0179a' '#a3abb6' '#6c7581' '#10141a' "$2" multiply
+            monolith_draw '#eef0f3' '#e1e5ea' '#e5e8ec' '#d2d7de' '#ffffff59' '#bfc6cf' '#e2ead2-white' '#d8e3f7-white' \
+                '#10141a' '#10141a' '#b6ff3b' '#1f5fbf' '#a3abb6' '#6c7581' '#10141a' "$2" multiply
             ;;
         *) return 1 ;;
     esac
