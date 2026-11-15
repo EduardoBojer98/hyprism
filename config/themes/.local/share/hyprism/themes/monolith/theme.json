@@ -1,6 +1,6 @@
 {
   "name": "Monolith",
-  "about": "The desktop as tmux: one status line with your apps, mono type, an acid accent, frames instead of shadows, instant motion",
+  "about": "The desktop as tmux: one status line with your apps, mono type, an acid accent, corner brackets instead of shadows, a turning rainbow frame on AC, instant motion",
   "order": 3,
   "dark": true,
   "colour": {
@@ -124,7 +124,7 @@
   },
   "popup": {
     "depth": "none",
-    "decor": "topline",
+    "decor": "brackets",
     "tiles": "wash"
   },
   "motion": {
@@ -164,7 +164,7 @@
     "shadow": "none",
     "blur": false,
     "motion": "instant",
-    "frame": "accent"
+    "frame": "rainbow"
   },
   "lock": {
     "clock": "terminal",

@@ -9,6 +9,7 @@
   - the terminal palette is complete; its text is 7:1 on its background and the six colours 3:1
   - the wallpaper exists (a picture in the folder, or a recipe in wallpaper.sh)
   - the first-login defaults in Hyprland's look.lua match the default theme
+  - every key a theme sets is known to the safe theme in Themes.qml (a theme is laid over it; unknown keys are dropped)
 
 Run by tests/lint.sh (CI) or by hand: python3 tests/themes.py
 """
@@ -21,6 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 THEMES = ROOT / "config/themes/.local/share/hyprism/themes"
 LOOK = ROOT / "config/hypr/.config/hypr/modules/look.lua"
 CONFIG = ROOT / "config/quickshell/.config/quickshell/ConfigData.qml"
+THEMES_QML = ROOT / "config/quickshell/.config/quickshell/Themes.qml"
 
 KEYS = ["ground", "surface", "raised", "line", "text", "muted", "faint", "accent", "onAccent", "accent2", "ok", "warn", "err"]
 TEXT = {"text": 7.0, "muted": 4.5, "faint": 3.0}      # must be readable
@@ -102,8 +104,22 @@ def check_half(name, c, term, wall, folder, bar_fill, problems):
         problems.append(f"{name}: no wallpaper '{wall}' (a picture {wall}.png in the folder, or a recipe in wallpaper.sh)")
 
 
+def unknown(t, safe, path=()):
+    """Keys of t that Themes.merge() would drop because the safe theme has no such key."""
+    out = []
+    for k, v in t.items():
+        if not path and k in ("id", "name", "about", "base", "user"):
+            continue
+        if k not in safe:
+            out.append(".".join(path + (k,)))
+        elif isinstance(v, dict) and isinstance(safe[k], dict):
+            out += unknown(v, safe[k], path + (k,))
+    return out
+
+
 def main():
     problems, count, themes = [], 0, {}
+    safe = json.loads(re.search(r"readonly property var safe: \((\{.*\})\)\s*$", THEMES_QML.read_text(), re.M).group(1))
     for folder in sorted(THEMES.iterdir()):
         if not (folder / "theme.json").is_file():
             continue
@@ -115,6 +131,8 @@ def main():
         if folder.name.startswith("_"):
             continue                       # the template must parse; it isn't a theme
         themes[folder.name] = t
+        for k in unknown(t, safe):
+            problems.append(f"{folder.name}: \"{k}\" is not in the safe theme (Themes.qml), so it is ignored")
         if not re.match(r"^[a-z0-9]+(-[a-z0-9]+)*$", folder.name):
             problems.append(f"{folder.name}: folder names are lower-case letters, digits and dashes")
         for part in ("name", "about", "colour", "alt", "font", "shape", "bar", "dock", "popup", "motion", "launcher", "notify", "hypr", "lock", "term", "wall"):

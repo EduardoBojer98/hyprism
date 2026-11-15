@@ -8,7 +8,7 @@ import QtQuick.Shapes
 ColumnLayout {
     id: panel
     // rain in the second accent when it is a cool colour; a warm one (Monolith's orange) reads as an alarm, so then the "ok" colour
-    readonly property color rain: Theme.accent2.hslHue > 0.15 && Theme.accent2.hslHue < 0.85 ? Theme.accent2 : Theme.ok
+    readonly property color rain: Theme.accent2.hslHue > 0.15 && Theme.accent2.hslHue < 0.85 ? Theme.accent2 : Theme.success
     signal settings()
 
     readonly property var f: Weather.view

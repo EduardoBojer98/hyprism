@@ -67,6 +67,12 @@ ColumnLayout {
                 }
             }
         }
+        SettingRow {   // your bar layout outlives a theme switch; this offers the new theme's own
+            visible: Theme.hasLayout
+            label: "Use " + page.base.name + "'s own bar"
+            hint: "Your bar layout is kept when you switch theme"
+            PillButton { text: "Use the theme's"; onClicked: Theme.useThemeLayout() }
+        }
     }
 
     // ---- adjust the active theme ---------------------------------------------------------------------

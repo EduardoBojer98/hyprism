@@ -76,7 +76,7 @@ Scope {
     function n(v) { const x = Number(v); return isFinite(x) ? x : 0 }
     // The focused window's frame: Config.windows.border = theme (the theme's own hypr.frame, accent when it has none) |
     // accent | gradient (accent to accent2) | rainbow (a quiet multi-stop wheel, tuned to the theme's light or dark).
-    // The loop turns only with motion Full, power mode not Quiet and on AC (unless rainbowOnBattery); else a still rainbow.
+    // The loop turns only with motion Full, power mode not Silent and on AC (unless rainbowOnBattery); else a still rainbow.
     // Unfocused windows keep the theme's inactive colour.
     readonly property string frameStyle: { const s = Config.windows.border; return s !== "theme" ? s : (h.frame ?? "accent") }
     readonly property bool rainbowLoops: frameStyle === "rainbow" && Theme.motionLevel === "full" && PowerMode.profile !== 0
