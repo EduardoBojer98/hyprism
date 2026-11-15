@@ -7,6 +7,7 @@
 #   tests/nested.sh ipc ARGS...    qs ipc call ARGS... in the test shell (e.g. ipc config set appearance theme atlas)
 #   tests/nested.sh hypr ARGS...   hyprctl ARGS... in the test session
 #   tests/nested.sh key NAMES...   press keys in the test desktop (xkb names: Tab, Next, Return…)
+#   tests/nested.sh screens2       add a second screen like the laptop panel (1600x1000 logical at scale 1.2)
 #   tests/nested.sh errors         the test shell's warnings and errors (nothing printed = clean)
 #   tests/nested.sh stop           close the window and delete the throwaway home
 #
@@ -127,6 +128,16 @@ case ${1:-} in
         need_running
         shift
         for k in "$@"; do inside wtype -k "$k"; done # key names as in xkb: Tab, Next (Page Down), Return, Escape…
+        ;;
+    screens2)
+        need_running
+        # the window's own screen stays at 1.0 (an external monitor); a second, invisible screen plays the laptop
+        # panel: 1920x1200 at 1.2 = 1600x1000 logical. `shot` captures both side by side.
+        w=$(inside hyprctl monitors -j | jq -r '.[0].width')
+        inside hyprctl output create headless TEST-2 >/dev/null
+        inside hyprctl eval "hl.monitor({ output = \"TEST-2\", mode = \"1920x1200@60\", position = \"${w}x0\", scale = 1.2 })" >/dev/null
+        sleep 2
+        inside hyprctl monitors -j | jq -r '.[] | "\(.name) \(.width)x\(.height) scale \(.scale) at \(.x),\(.y)"'
         ;;
     errors)
         need_running

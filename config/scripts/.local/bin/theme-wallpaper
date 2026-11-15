@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Makes a theme's wallpaper (once; later calls reuse it) and prints its path.
-#   theme-wallpaper reactor         the theme's own half     -> ~/.cache/hyprism/wallpapers/reactor-v8.png
-#   theme-wallpaper reactor-light   its other half ("-light" or "-dark")
+#   theme-wallpaper pebble          the theme's own half     -> ~/.cache/hyprism/wallpapers/pebble-v10.png
+#   theme-wallpaper pebble-light    its other half ("-light" or "-dark")
 #   theme-wallpaper --all           make every one (to look at them)
 # A theme folder (~/.config/hyprism/themes/<id> or ~/.local/share/hyprism/themes/<id>) brings either a picture
-# named like the wallpaper (reactor.png, reactor-light.jpg…) or wallpaper.sh, a recipe ImageMagick draws on a
+# named like the wallpaper (pebble.png, pebble-light.jpg…) or wallpaper.sh, a recipe ImageMagick draws on a
 # 2560x1600 sheet. The result is scaled to fill the largest connected screen (3840x2400 without Hyprland).
 # Bump VERSION after changing a recipe so the cached pictures are made again.
 set -euo pipefail
@@ -13,7 +13,7 @@ set -euo pipefail
 case ${1:-} in -h | --help) usage ;; esac
 command -v magick >/dev/null || die "needs ImageMagick (magick)"
 
-VERSION=9
+VERSION=10
 out_dir="${XDG_CACHE_HOME:-$HOME/.cache}/hyprism/wallpapers"
 mkdir -p "$out_dir"
 W=2560 H=1600
