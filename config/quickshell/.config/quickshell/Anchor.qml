@@ -37,6 +37,7 @@ Singleton {
     function closed(name) { if (openOn[name] === undefined) return; const o = Object.assign({}, openOn); delete o[name]; openOn = o }
 
     property var triggers: []                  // bar items that open a panel: { name, item }
+    property var by: ({})                      // panel name -> the item that opened it last: of two copies only it lights up
     function register(name, item) { triggers = triggers.concat([{ name: name, item: item }]) }
     function unregister(item) { triggers = triggers.filter(t => t.item !== item) }
     // the item on this screen that opens panel `name` (shown, in a window that is up), as placeOf() gives it
@@ -44,7 +45,7 @@ Singleton {
         for (const t of triggers) {
             if (t.name !== name || !t.item.visible || t.item.width <= 0) continue
             const p = placeOf(t.item, t.item.edge, t.item.origin)
-            if (p && p.screen === screen && t.item.QsWindow.window.visible) return p
+            if (p && p.screen === screen && t.item.QsWindow.window.visible) { by = Object.assign({}, by, { [name]: t.item }); return p }
         }
         return null
     }

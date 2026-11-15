@@ -22,6 +22,7 @@ Rectangle {
     property string opens: ""               // the panel it opens (CursorPopup name): from a shortcut it opens here too
     property string panel: opens            // the panel whose being open lights it up: only on the screen it is open on
     readonly property bool lit: active && (panel === "" || Anchor.openOn[panel] === undefined || Anchor.openOn[panel] === QsWindow.window?.screen)
+                                && (opens === "" || (Anchor.by[opens] ?? item) === item)   // two copies: the one that opened it
     Component.onCompleted: if (opens !== "") Anchor.register(opens, item)
     Component.onDestruction: if (opens !== "") Anchor.unregister(item)
     property var actions: null              // your settings for this item (BarItems.settings): click, rightClick, scroll, tooltip
@@ -33,6 +34,7 @@ Rectangle {
     // what a click does, from the mouse or the keyboard
     function activate(button) {
         Anchor.take(item, item.edge, item.origin)
+        if (opens !== "") Anchor.by = Object.assign({}, Anchor.by, { [opens]: item })
         const mine = button === Qt.RightButton ? item.actions?.rightClick : item.actions?.click
         if (!BarActions.run(mine)) item.pressed(button)
     }
