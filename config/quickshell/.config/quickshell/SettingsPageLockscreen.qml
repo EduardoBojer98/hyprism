@@ -6,7 +6,7 @@ import QtQuick.Layouts
 // Lock Screen: the theme's design (hypr/lockscreens/<theme.lock>.conf) and your background: the desktop wallpaper
 // or any picture from the wallpaper folders, with blur and brightness. Saved in Config.lockscreen;
 // ThemeSync writes hypr/settings/hyprlock-theme.conf, read the next time the screen locks.
-// The clock follows the menu bar's 24-hour setting; fonts and colours come from the theme.
+// The 24-hour setting is shared with the menu bar's clock; fonts and colours come from the theme.
 ColumnLayout {
     id: page
     spacing: 20
@@ -158,13 +158,18 @@ ColumnLayout {
             hint: "Darker keeps the clock easy to read on bright pictures"
             ConfigSlider { section: "lockscreen"; key: "brightness"; from: 0.3; to: 1; step: 0.02; format: v => Math.round(v * 100) + "%" }
         }
+        SettingRow {   // the same setting as the bar clock's, here too so it is reachable with no clock on the bar
+            label: "24-hour time"
+            hint: (Config.bar.clock24 ? "14:40" : "2:40 PM") + ". The menu bar's clock follows"
+            ConfigToggle { section: "bar"; key: "clock24" }
+        }
     }
 
     ResetGroup { sections: ["lockscreen"] }
 
     Text {
         Layout.fillWidth: true
-        text: "The clock follows the menu bar's 24-hour setting; fonts and colours come from the theme."
+        text: "Fonts and colours come from the theme."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }
