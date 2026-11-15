@@ -69,7 +69,7 @@ Singleton {
                    followMouse: "bool", focusOnActivate: "bool", warpCursor: "bool", backAndForth: "bool",
                    inactiveOpacity: [0.6, 1], dimInactive: "bool", dimStrength: [0.05, 0.6], resizeOnBorder: "bool",
                    snap: "bool", hideCursorTyping: "bool", titleBars: "bool", apps: "list",
-                   border: ["accent", "gradient", "rainbow"], rainbowSpeed: [1, 10], rainbowOnBattery: "bool" },
+                   border: ["theme", "accent", "gradient", "rainbow"], rainbowSpeed: [1, 10], rainbowOnBattery: "bool" },
         calendar: { holidays: "bool", country: "string", localNames: "bool", observances: "bool", moon: "bool",
                     weekNumbers: "bool", firstDay: ["monday", "sunday"] },
         language: { languages: "list", formats: "string" },
@@ -178,8 +178,10 @@ Singleton {
     // After every load: carry old names forward, then put back the default for anything missing or
     // out of range, so a hand edit, an old file or a half-written one never breaks the desktop.
     // A file that isn't JSON at all is kept as settings.json.broken and replaced by the defaults.
-    readonly property var renamedThemes: ({ workstation: "glass", canvas: "glass", noir: "console", garden: "pebble",
-                                            zen: "glass", mist: "atlas", halo: "pebble" })   // themes removed 2026-11
+    // every theme that ever shipped -> the one of today's three closest to it (2026-11-15 kept three)
+    readonly property var renamedThemes: ({ workstation: "pebble", canvas: "pebble", zen: "pebble", halo: "pebble", garden: "pebble",
+                                            glass: "pebble", noir: "monolith", console: "monolith", reactor: "monolith",
+                                            mist: "poster", atlas: "poster" })
     // The saved theme must exist. Only judged once the theme folders are read (Themes.ready), or every
     // theme would look missing during the first moments and your choice would be lost.
     function checkTheme() {
@@ -205,6 +207,17 @@ Singleton {
         const oldTheme = raw?.appearance?.rice   // settings from before "rices" were called themes
         if (typeof oldTheme === "string") a.theme = renamedThemes[oldTheme] ?? oldTheme
         checkTheme()
+        // adjustments saved for a removed theme move to its successor, unless the successor has its own
+        const oldCustom = a.custom ?? {}
+        if (Object.keys(oldCustom).some(k => renamedThemes[k] !== undefined)) {
+            const kept = {}
+            for (const k of Object.keys(oldCustom)) if (renamedThemes[k] === undefined) kept[k] = oldCustom[k]
+            for (const k of Object.keys(oldCustom)) {
+                const to = renamedThemes[k]
+                if (to !== undefined && kept[to] === undefined) kept[to] = oldCustom[k]
+            }
+            a.custom = JSON.parse(JSON.stringify(kept))
+        }
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
         // format 1 (before 2026-11-05) saved the dock's place as "bottom" for everyone: follow the theme now
         // format 2 kept one bar layout and dock place for every theme, so an edit made in one theme broke the

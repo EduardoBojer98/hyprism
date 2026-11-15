@@ -1,42 +1,198 @@
 {
   "name": "Pebble",
-  "about": "Soft and round: floating glass pills, stretching dots, a pill dock that lifts its icons",
+  "about": "Calm and matte: river-stone greys, one lichen accent, light numerals, room to breathe; it stays out of the way",
   "order": 1,
   "dark": true,
-  "colour": {"ground": "#16141f", "surface": "#221f2e", "raised": "#2d2a3b", "line": "#3a3650", "text": "#ece8f6", "muted": "#b9b3cc", "faint": "#7f7895", "accent": "#ff9e7a", "onAccent": "#1a1220", "accent2": "#9ad1c0", "ok": "#7fdc9a", "warn": "#ffd27a", "err": "#ff6b8a"},
+  "colour": {
+    "ground": "#171918",
+    "surface": "#1f2220",
+    "raised": "#292d2a",
+    "line": "#383d39",
+    "text": "#e9ece6",
+    "muted": "#b0b7b0",
+    "faint": "#7f8780",
+    "accent": "#b9cf8f",
+    "onAccent": "#171918",
+    "accent2": "#8fa8a3",
+    "ok": "#8fd19e",
+    "warn": "#e8c170",
+    "err": "#ef8a80"
+  },
   "alt": {
     "dark": false,
     "term": {
-      "palette": ["#221d2e", "#c8324f", "#23864a", "#9a6400", "#3a5fc8", "#8a3fb0", "#2f8f78", "#8d86a0", "#5b5370", "#a8283f", "#1b6b3b", "#7a4f00", "#2e4ca0", "#6e3290", "#24715f", "#fbf9fd"],
-      "background": "#f3eff8",
-      "foreground": "#221d2e",
-      "cursor": "#d9572f",
-      "cursorText": "#f3eff8",
-      "selection": "#f2d2c6",
-      "selectionText": "#221d2e"
+      "palette": [
+        "#1b1e1c",
+        "#a8352c",
+        "#3f6b2c",
+        "#8a6100",
+        "#2f5f86",
+        "#7d4a86",
+        "#2c6d66",
+        "#4b524d",
+        "#737a74",
+        "#c0473d",
+        "#4f8038",
+        "#a07400",
+        "#3e73a0",
+        "#94599e",
+        "#37837a",
+        "#f2f3f0"
+      ],
+      "background": "#eef0eb",
+      "foreground": "#1b1e1c",
+      "cursor": "#4d6a35",
+      "cursorText": "#ffffff",
+      "selection": "#c9d6b8",
+      "selectionText": "#1b1e1c"
     },
     "wall": "pebble-light",
-    "colour": {"ground": "#f3eff8", "surface": "#fbf9fd", "raised": "#ebe6f2", "line": "#d6cfe2", "text": "#221d2e", "muted": "#5b5370", "faint": "#8d86a0", "accent": "#d9572f", "onAccent": "#ffffff", "accent2": "#2f8f78", "ok": "#23864a", "warn": "#9a6400", "err": "#c8324f"},
-    "hypr": {"active": ["d9572fcc", "2f8f78cc"], "inactive": "d6cfe200"}
+    "colour": {
+      "ground": "#e4e6e1",
+      "surface": "#f2f3f0",
+      "raised": "#d9dcd6",
+      "line": "#c3c8c1",
+      "text": "#1b1e1c",
+      "muted": "#4b524d",
+      "faint": "#6b726c",
+      "accent": "#4d6a35",
+      "onAccent": "#ffffff",
+      "accent2": "#4d6f6b",
+      "ok": "#2d7a45",
+      "warn": "#8a6100",
+      "err": "#b23a32"
+    },
+    "hypr": {
+      "active": [
+        "4d6a35cc"
+      ],
+      "inactive": "c3c8c100"
+    }
   },
-  "font": {"ui": "Outfit", "display": "Outfit", "mono": "JetBrainsMono Nerd Font", "size": 14, "displayWeight": 500},
-  "shape": {"radius": 18, "radiusSmall": 12, "line": 1, "material": "glass"},
-  "bar": {"edge": "top", "size": 36, "floating": true, "segmented": true, "fill": "glass", "line": 0, "voice": "icons", "mono": false, "ws": "dots", "clock": "plain", "decor": "", "sep": false, "start": ["controls", "launcher", "workspaces"], "center": ["clock"], "end": ["weather", "media", "tray", "keyboard", "notifications", "status"]},
-  "dock": {"edge": "bottom", "shape": "pill", "hover": "lift", "mark": "line", "fill": "glass"},
-  "popup": {"depth": "soft", "decor": "", "tiles": "solid"},
-  "motion": {"enter": 240, "exit": 150, "curve": [0.3, 1.25, 0.5, 1], "travel": 10, "scale": 0.94, "press": 0.95},
-  "launcher": {"placement": "center", "view": "home", "header": "none", "width": 640, "select": "wash", "prompt": ""},
-  "notify": {"corner": "top-right", "kind": "bubble"},
-  "hypr": {"gapsIn": 7, "gapsOut": 14, "border": 2, "rounding": 18, "active": ["ff9e7acc", "9ad1c0cc"], "inactive": "3a365000", "shadow": "soft", "blur": true, "motion": "spring"},
-  "lock": {"clock": "big", "align": "center"},
+  "font": {
+    "ui": "Archivo",
+    "display": "Archivo",
+    "mono": "JetBrainsMono Nerd Font",
+    "size": 14,
+    "displayWeight": 300
+  },
+  "shape": {
+    "radius": 14,
+    "radiusSmall": 9,
+    "line": 1,
+    "material": "solid",
+    "density": "roomy"
+  },
+  "bar": {
+    "edge": "top",
+    "size": 38,
+    "floating": true,
+    "segmented": false,
+    "fill": "surface",
+    "line": 1,
+    "voice": "icons",
+    "mono": false,
+    "ws": "dots",
+    "clock": "plain",
+    "decor": "",
+    "sep": false,
+    "start": [
+      "controls",
+      "launcher",
+      "workspaces"
+    ],
+    "center": [
+      "clock"
+    ],
+    "end": [
+      "weather",
+      "media",
+      "tray",
+      "keyboard",
+      "notifications",
+      "status"
+    ]
+  },
+  "dock": {
+    "edge": "bottom",
+    "shape": "pill",
+    "hover": "lift",
+    "mark": "dot",
+    "fill": "surface"
+  },
+  "popup": {
+    "depth": "soft",
+    "decor": "",
+    "tiles": "wash"
+  },
+  "motion": {
+    "enter": 220,
+    "exit": 140,
+    "curve": [
+      0.22,
+      1,
+      0.36,
+      1
+    ],
+    "travel": 6,
+    "scale": 0.98,
+    "press": 0.97
+  },
+  "launcher": {
+    "placement": "center",
+    "view": "home",
+    "header": "none",
+    "width": 640,
+    "select": "wash",
+    "prompt": ""
+  },
+  "notify": {
+    "corner": "top-right",
+    "kind": "card"
+  },
+  "hypr": {
+    "gapsIn": 8,
+    "gapsOut": 16,
+    "border": 2,
+    "rounding": 14,
+    "active": [
+      "b9cf8fcc"
+    ],
+    "inactive": "383d3900",
+    "shadow": "soft",
+    "blur": false,
+    "motion": "ease",
+    "frame": "accent"
+  },
+  "lock": {
+    "clock": "big",
+    "align": "center"
+  },
   "term": {
-    "palette": ["#221f2e", "#ff6b8a", "#7fdc9a", "#ffd27a", "#8fb4ff", "#c7a3ff", "#9ad1c0", "#b9b3cc", "#7f7895", "#ff90a7", "#9fe5b3", "#ffdd9b", "#abc7ff", "#d5baff", "#b3dcd0", "#ece8f6"],
-    "background": "#16141f",
-    "foreground": "#ece8f6",
-    "cursor": "#ff9e7a",
-    "cursorText": "#16141f",
-    "selection": "#573b38",
-    "selectionText": "#ece8f6"
+    "palette": [
+      "#292d2a",
+      "#e58a80",
+      "#a9c98a",
+      "#e2c27a",
+      "#8fb0c9",
+      "#c5a3c9",
+      "#8fc4bb",
+      "#b0b7b0",
+      "#5d645e",
+      "#f0a59c",
+      "#bfd9a2",
+      "#ecd296",
+      "#a9c3d8",
+      "#d6bad9",
+      "#a8d6ce",
+      "#e9ece6"
+    ],
+    "background": "#171918",
+    "foreground": "#e9ece6",
+    "cursor": "#b9cf8f",
+    "cursorText": "#171918",
+    "selection": "#3a4232",
+    "selectionText": "#e9ece6"
   },
   "wall": "pebble"
 }

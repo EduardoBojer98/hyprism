@@ -5,7 +5,7 @@ import Quickshell.Io
 JsonAdapter {
     property int version: 3                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
-        property string theme: "reactor"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
+        property string theme: "pebble"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property var userThemes: ({})           // your own themes (Theme builder): { "custom-name": { name, base, ...parts } }
         property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)
         property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
@@ -133,7 +133,7 @@ JsonAdapter {
         property bool snap: false               // floating windows snap to edges and each other
         property bool hideCursorTyping: false
         property bool titleBars: true           // hyprbars: title bar with buttons on apps that draw none
-        property string border: "accent"        // focused window's frame: accent (the theme's) | gradient (accent to accent2) | rainbow
+        property string border: "theme"         // focused window's frame: theme (its own) | accent | gradient (accent to accent2) | rainbow
         property int rainbowSpeed: 5            // rainbow: 1 slow .. 10 fast
         property bool rainbowOnBattery: false   // rainbow keeps turning on battery (it redraws every frame); off = still rainbow
         property var apps: []                   // [{ id, name, class (regex), open: normal|float|pin|maximize|fullscreen, workspace: 0 = any }]

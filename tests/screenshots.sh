@@ -52,7 +52,7 @@ for dir in themes/*/; do
 done
 
 # Features: Reactor dark
-$n ipc config set appearance theme reactor >/dev/null
+$n ipc config set appearance theme pebble >/dev/null
 $n ipc config set appearance mode dark >/dev/null
 sleep 3
 
@@ -83,7 +83,7 @@ panel power "power toggle" "power toggle"
 panel cheatsheet "cheatsheet toggle" "cheatsheet toggle"
 
 # the bar with the system-info item, cropped to the top 120 px
-$n ipc config set appearance custom '{"reactor":{"barItems":{"start":["launcher","workspaces"],"center":["clock"],"end":["sysinfo","weather","status"]}}}' >/dev/null
+$n ipc config set appearance custom '{"pebble":{"barItems":{"start":["launcher","workspaces"],"center":["clock"],"end":["sysinfo","weather","status"]}}}' >/dev/null
 $n ipc config set bar items '{"sysinfo":{"metrics":["cpu","cpu_temp","ram","net"]}}' >/dev/null
 sleep 3
 snap bar-sysinfo features -crop 100%x120+0+0 +repage
