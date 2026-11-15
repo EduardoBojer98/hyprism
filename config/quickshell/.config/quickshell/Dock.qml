@@ -29,8 +29,24 @@ PanelWindow {
     readonly property int cellCross: iconSize + 8     // and across it (room for the mark)
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
+    // the keyboard is here (DockFocus, or its menu is open): the dock shows itself and takes the keys
+    readonly property bool hasKeys: DockFocus.active && DockFocus.screen?.name === screen?.name || menu.entry !== null
+    onHasKeysChanged: if (hasKeys && !menu.entry) takeFocus.restart()
+    Timer { id: takeFocus; interval: 80; onTriggered: if (root.hasKeys && !menu.entry) launcherPart.forceActiveFocus() }   // the compositor hands over the keys a moment after
     readonly property bool shown: !Config.dock.autoHide || hover.hovered || hideTimer.running || emptyWorkspace
-                                  || menu.entry !== null || dragId !== ""
+                                  || hasKeys || dragId !== ""
+    // keys on an icon: Left / Right (Up / Down on a vertical dock) or Tab move, Enter / Space does what a click does,
+    // Menu or Shift+F10 opens its menu, Escape leaves
+    function key(e, item, activate, openMenu) {
+        const next = vertical ? Qt.Key_Down : Qt.Key_Right, prev = vertical ? Qt.Key_Up : Qt.Key_Left
+        if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter || e.key === Qt.Key_Space) { activate(); DockFocus.leave() }
+        else if (e.key === Qt.Key_Menu || (e.key === Qt.Key_F10 && (e.modifiers & Qt.ShiftModifier))) openMenu()
+        else if (e.key === Qt.Key_Escape) DockFocus.leave()
+        else if (e.key === next) item.nextItemInFocusChain(true).forceActiveFocus()
+        else if (e.key === prev) item.nextItemInFocusChain(false).forceActiveFocus()
+        else return
+        e.accepted = true
+    }
 
     // app list size: lookups below re-run once it has loaded (it is empty for a moment at login)
     readonly property int appCount: DesktopEntries.applications.values.length
@@ -138,6 +154,7 @@ PanelWindow {
     color: "transparent"
     WlrLayershell.namespace: "qs-dock"
     WlrLayershell.layer: WlrLayer.Top
+    WlrLayershell.keyboardFocus: hasKeys ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     // Only the visible island (or a thin strip at the bottom edge when hidden) takes input
     mask: Region { item: root.shown ? island : edgeStrip; Region { item: menu.entry ? menu : null } Region { item: preview.visible ? preview : null } }
@@ -207,7 +224,7 @@ PanelWindow {
             verticalItemAlignment: Grid.AlignVCenter
 
             // App menu / Spotlight-style launcher
-            DockLauncher { dock: root }
+            DockLauncher { id: launcherPart; dock: root }
 
             DockSeparator { dock: root }
 

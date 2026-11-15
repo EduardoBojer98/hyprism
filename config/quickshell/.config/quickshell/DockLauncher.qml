@@ -11,6 +11,11 @@ import QtQuick.Effects
 Item {
     required property var dock
     id: launcher
+    readonly property real radius: Theme.radius   // for the focus ring
+    function activate() { Anchor.take(launcher, dock.edge, dock.origin()); Launcher.toggle() }
+    activeFocusOnTab: true
+    Keys.onPressed: e => dock.key(e, launcher, launcher.activate, () => {})
+    FocusRing {}
     readonly property real mid: (dock.vertical ? height : width) / 2
     width: dock.vertical ? dock.cellCross : dock.slot
     height: dock.vertical ? dock.slot : dock.cellCross
@@ -71,6 +76,6 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onContainsMouseChanged: dock.hovering(launcher, "Apps & search", containsMouse)
-        onClicked: { Anchor.take(launcher, dock.edge, dock.origin()); Launcher.toggle() }
+        onClicked: launcher.activate()
     }
 }

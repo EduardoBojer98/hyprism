@@ -79,17 +79,17 @@ The `sysinfo` item shows any readings you pick, in your order: see
 `cpu`, `memory` and `gpu` are single-reading items on the same service; `sysinfo` combines them and more (its settings page has a switch, order and warn / only-above levels per reading). Readings come from one small program,
 `metrics` (`metrics once` prints them all as JSON), which runs only while a bar shows one of them.
 
-## Presets and screens
+## One layout, starting points and screens
 
-A preset is a named layout: which items sit in `start`, `center` and `end`. Settings → Menu Bar → Layout picks one,
-and "Save current layout as…" keeps the layout shown in the editor under a name of your own (letters, digits and
-dashes). With a preset chosen, the editor changes that preset; with "Theme's own" it changes the theme's layout.
+The bar is one layout for every screen and every theme: `bar.layout` holds its items, edge, size, shape and the
+dock's place. Until you change something it is empty and the bar follows the theme; your first edit in
+Settings → Menu Bar (or Settings → Dock → Position) copies what is on screen into it. "Use the theme's" empties it again.
 
 | Key (`bar` in `settings.json`) | What it does |
 |---|---|
-| `preset` | `"theme"` (default): the theme's own layout. Any other value names an entry of `presets` |
-| `presets` | name → `{ "start": [ids], "center": [ids], "end": [ids] }` |
-| `monitors` | screen name → preset name. A screen not listed, or set to `""`, follows `preset` |
+| `layout` | `{ "edge": "top", "size": 34, "floating": true, "dock": "bar", "start": [ids], "center": [ids], "end": [ids] }`; `{}` = the theme's own. `dock` is `bar` or an edge |
+| `presets` | "Start from" buttons: name → `{ "start": [ids], "center": [ids], "end": [ids] }`. A click copies the items into the layout; nothing stays linked |
+| `monitors` | screen name → `{ "start": [ids], "center": [ids], "end": [ids] }`, that screen's own items ("Its own items" in Settings → Screens). Older files named a preset here; that still reads |
 | `hiddenOn` | screens without a bar ("No bar" in Settings → Screens) |
 
 Built in (an older file gets any that are missing back; one you edited is never overwritten):
@@ -105,10 +105,9 @@ An id that isn't an item is skipped. Example, a laptop with an external monitor:
 
 ```json
 "bar": {
-  "preset": "laptop",
-  "monitors": { "DP-1": "external" }
+  "monitors": { "DP-1": { "start": ["launcher", "workspaces"], "center": ["clock"], "end": ["tray"] } }
 }
 ```
 
-`eDP-1` follows `preset` (`laptop`); `DP-1` shows `external`. Settings → Menu Bar → Item settings edits the settings
+`DP-1` shows its own three lists; every other screen follows `layout`. Settings → Menu Bar → Item settings edits the settings
 above for any item in the layout.

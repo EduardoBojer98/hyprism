@@ -54,8 +54,13 @@ ColumnLayout {
         SettingRow {
             visible: Config.dock.enabled
             label: "Position"
-            hint: Theme.current.name + " puts it " + (Theme.dockInBar ? "inside the menu bar" : "at the " + Theme.dockEdge) + "; a choice here is kept for " + Theme.current.name + " only"
-            ThemeChoice { key: "dock"; values: ["theme", "bar", "bottom", "left", "right", "top"]; labels: ["Default", "In the bar", "Bottom", "Left", "Right", "Top"] }
+            hint: (Theme.dockInBar ? "Inside the menu bar" : "At the " + Theme.dockEdge + " of the screen") + "; saved with the menu bar layout, for every theme"
+            Choice {
+                readonly property var values: ["bar", "bottom", "left", "right", "top"]
+                options: ["In the bar", "Bottom", "Left", "Right", "Top"]
+                index: Math.max(0, values.indexOf(Theme.dockMode))
+                onPicked: i => Theme.setLayout({ dock: values[i] })
+            }
         }
         SettingRow {
             visible: Config.dock.enabled && !page.inBar

@@ -67,7 +67,8 @@ Singleton {
         id: popup
         name: "clipboard"
         boxWidth: 400
-        boxHeight: Math.min(540, popup.maxHeight)
+        // as tall as the history needs (a small box when it is empty), up to 540
+        boxHeight: Math.min(540, popup.maxHeight, Theme.spaceM * 2 + header.height + Theme.spaceS * 2 + Math.max(clipView.list.contentHeight, 64))
         focusItem: search
         onOpened: { root.filter = ""; search.text = ""; clipView.reset(); root.expandedId = ""; root.reload(); focused.running = true }
 

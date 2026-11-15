@@ -2,30 +2,36 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
-import QtQuick.Layouts
 
-// Weather from Open-Meteo (free, no account), refreshed every 15 minutes: the bar shows the current
-// temperature; clicking it opens the forecast under it (now, the next 12 hours, the next days).
-// Place, number of days, units and which parts show come from Config.weather (Settings > Weather).
+// Weather from Open-Meteo (free, no account): one request for every saved place, refreshed every
+// Config.weather.refreshMin minutes. The last answer is kept in ~/.cache/hyprism/weather.json and shown (marked
+// stale) when offline or right after a restart. The bar shows the first place, the default; clicking it opens the
+// panel (WeatherPanel.qml), which can look at the others without saving the choice.
 Singleton {
     id: root
 
     readonly property var c: Config.weather
-    readonly property string city: c.city
-    readonly property real latitude: c.latitude
-    readonly property real longitude: c.longitude
+    readonly property var places: c.locations ?? []
+    readonly property bool hasPlace: places.length > 0
     readonly property bool open: popup.open
-    property real temperature: NaN
-    property int code: -1
-    property bool isDay: true
-    property real feelsLike: NaN
-    property int humidity: 0
-    property real wind: 0
-    property var hours: []      // [{ time, temp, code, rain, day }]
-    property var days: []       // [{ date, code, max, min, rain, uv, sunrise, sunset }]
-    property date updated
-    readonly property bool ready: !isNaN(temperature)
+    property var forecasts: []          // one per place: { temperature, code, isDay, feelsLike, humidity, wind, hours, days }
+    property int viewIndex: 0           // the chip the panel shows (not saved)
+    property bool loading: false
+    property bool failed: false         // the last request did not get through
+    property bool stale: false          // what is shown comes from the cache
+    property date updated               // when the shown data was fetched
+    readonly property bool ready: forecasts.length > 0 && !isNaN(forecasts[0].temperature)
+    readonly property var view: forecasts[Math.min(viewIndex, forecasts.length - 1)] ?? null
     readonly property string windUnit: c.units === "fahrenheit" ? "mph" : "km/h"
+
+    // the default place (the first) feeds the bar, the dock tile and the launcher
+    readonly property string city: places[0]?.name ?? ""
+    readonly property real temperature: forecasts[0]?.temperature ?? NaN
+    readonly property int code: forecasts[0]?.code ?? -1
+    readonly property bool isDay: forecasts[0]?.isDay ?? true
+    readonly property real feelsLike: forecasts[0]?.feelsLike ?? NaN
+    readonly property string condition: conditionOf(code)
+    readonly property string glyph: glyphOf(code, isDay)
 
     function conditionOf(k) {
         return ({
@@ -45,56 +51,91 @@ Singleton {
             : k >= 71 && k <= 77 || k === 85 || k === 86 ? "\u{F0598}"
             : k >= 95 ? "\u{F0593}" : "\u{F0590}"
     }
-    readonly property string condition: conditionOf(code)
-    readonly property string glyph: glyphOf(code, isDay)
 
     function toggle() { popup.toggle() }
+    function show(i) { viewIndex = i ?? 0; popup.show() }
+
+    readonly property string url: !hasPlace ? "" : "https://api.open-meteo.com/v1/forecast?latitude="
+        + places.map(p => p.latitude).join(",") + "&longitude=" + places.map(p => p.longitude).join(",")
+        + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day"
+        + (c.hours > 0 ? "&hourly=temperature_2m,weather_code,precipitation_probability,is_day&forecast_hours=" + c.hours : "")
+        + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max"
+        + "&forecast_days=" + Math.max(1, c.days)   // today's range, sun and UV feed the details even with no daily list
+        + (c.units === "fahrenheit" ? "&temperature_unit=fahrenheit&wind_speed_unit=mph" : "")
+        + "&timezone=auto"
+
+    // Output: "<FRESH|STALE> <fetched at, epoch>", the request's URL, then Open-Meteo's JSON. With $2 = fetch the
+    // request is made first; if it fails, the cached file is what comes back (STALE).
+    readonly property string script: 'd="$HOME/.cache/hyprism"; f="$d/weather.json"; mkdir -p "$d"; s=STALE; '
+        + 'if [ "$2" = fetch ] && curl -sf --max-time 10 "$1" -o "$f.tmp" && [ -s "$f.tmp" ]; then '
+        + '{ echo "$1"; cat "$f.tmp"; } > "$f"; s=FRESH; fi; rm -f "$f.tmp"; '
+        + '[ -f "$f" ] && echo "$s $(stat -c %Y "$f")" && cat "$f"'
+
     function refresh() {
+        if (!hasPlace) { forecasts = []; return }
+        loading = true
         fetch.running = false
-        fetch.command = ["curl", "-sf", "--max-time", "10",
-            "https://api.open-meteo.com/v1/forecast?latitude=" + latitude + "&longitude=" + longitude
-            + "&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day"
-            + "&hourly=temperature_2m,weather_code,precipitation_probability,is_day&forecast_hours=12"
-            + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max"
-            + "&forecast_days=" + c.days
-            + (c.units === "fahrenheit" ? "&temperature_unit=fahrenheit&wind_speed_unit=mph" : "")
-            + "&timezone=auto"]
+        fetch.command = ["sh", "-c", script, "weather", url, "fetch"]
         fetch.running = true
     }
-
-    onLatitudeChanged: refreshSoon.restart()
-    onLongitudeChanged: refreshSoon.restart()
-    Connections {
-        target: Config.weather
-        function onDaysChanged() { refreshSoon.restart() }
-        function onUnitsChanged() { refreshSoon.restart() }
+    function parse(text) {
+        const nl = text.indexOf("\n"), nl2 = text.indexOf("\n", nl + 1)
+        if (nl < 0 || nl2 < 0) return false
+        const head = text.slice(0, nl).split(" ")
+        if (text.slice(nl + 1, nl2) !== url) return false   // a cache for other places or units
+        try {
+            const d = JSON.parse(text.slice(nl2 + 1))
+            root.forecasts = (Array.isArray(d) ? d : [d]).map(p => {
+                const n = p.current, h = p.hourly, y = p.daily
+                return {
+                    temperature: n.temperature_2m, code: n.weather_code, isDay: n.is_day === 1,
+                    feelsLike: n.apparent_temperature, humidity: n.relative_humidity_2m, wind: n.wind_speed_10m,
+                    hours: !h ? [] : h.time.map((t, i) => ({ time: t.slice(11, 16), temp: h.temperature_2m[i], code: h.weather_code[i],
+                                                             rain: h.precipitation_probability[i] ?? 0, day: h.is_day[i] === 1 })),
+                    days: y.time.map((t, i) => ({ date: new Date(t + "T12:00"), code: y.weather_code[i],
+                                                  max: y.temperature_2m_max[i], min: y.temperature_2m_min[i],
+                                                  rain: y.precipitation_probability_max[i] ?? 0, uv: y.uv_index_max[i] ?? 0,
+                                                  sunrise: (y.sunrise[i] ?? "").slice(11, 16), sunset: (y.sunset[i] ?? "").slice(11, 16) }))
+                }
+            })
+            root.stale = head[0] !== "FRESH"
+            root.updated = new Date(Number(head[1]) * 1000)
+            return true
+        } catch (e) { return false }
     }
-    Timer { id: refreshSoon; interval: 200; running: true; onTriggered: root.refresh() }
-    Timer { interval: 15 * 60 * 1000; running: true; repeat: true; onTriggered: root.refresh() }
+
+    onUrlChanged: { viewIndex = 0; refreshSoon.restart() }
+    property bool started: false
+    Timer {
+        id: refreshSoon
+        interval: 200
+        running: true
+        onTriggered: {
+            if (!root.started && root.hasPlace) {   // show the last answer at once; the fresh one follows
+                root.started = true
+                cached.command = ["sh", "-c", root.script, "weather", root.url, "load"]
+                cached.running = true
+            }
+            root.refresh()
+        }
+    }
+    Timer { interval: Math.max(5, root.c.refreshMin) * 60 * 1000; running: root.hasPlace; repeat: true; onTriggered: root.refresh() }
 
     Process {
         id: fetch
         stdout: StdioCollector {
             onStreamFinished: {
-                try {
-                    const d = JSON.parse(text)
-                    const n = d.current, h = d.hourly, y = d.daily
-                    root.temperature = n.temperature_2m
-                    root.code = n.weather_code
-                    root.isDay = n.is_day === 1
-                    root.feelsLike = n.apparent_temperature
-                    root.humidity = n.relative_humidity_2m
-                    root.wind = n.wind_speed_10m
-                    root.hours = h.time.map((t, i) => ({ time: t.slice(11, 16), temp: h.temperature_2m[i], code: h.weather_code[i],
-                                                         rain: h.precipitation_probability[i] ?? 0, day: h.is_day[i] === 1 }))
-                    root.days = y.time.map((t, i) => ({ date: new Date(t + "T12:00"), code: y.weather_code[i],
-                                                        max: y.temperature_2m_max[i], min: y.temperature_2m_min[i],
-                                                        rain: y.precipitation_probability_max[i] ?? 0, uv: y.uv_index_max[i] ?? 0,
-                                                        sunrise: (y.sunrise[i] ?? "").slice(11, 16), sunset: (y.sunset[i] ?? "").slice(11, 16) }))
-                    root.updated = new Date()
-                } catch (e) {}
+                root.loading = false
+                const ok = root.parse(text)
+                root.failed = !ok || root.stale
+                if (!ok) root.forecasts = []
             }
         }
+    }
+
+    Process {
+        id: cached
+        stdout: StdioCollector { onStreamFinished: if (!root.ready) root.parse(text) }
     }
 
     IpcHandler {
@@ -107,229 +148,19 @@ Singleton {
         id: popup
         name: "weather"
         placement: "top"
-        boxWidth: 340
-        boxHeight: Math.min(body.implicitHeight + Theme.spaceL * 2, popup.maxHeight)   // the calendar's padding
-        onOpened: if (Date.now() - root.updated.getTime() > 10 * 60 * 1000) root.refresh()
+        boxWidth: 360
+        boxHeight: Math.min(panel.implicitHeight + Theme.spaceL * 2, popup.maxHeight)
+        onOpened: if (Date.now() - root.updated.getTime() > 10 * 60 * 1000 || root.stale) root.refresh()
 
         Glass {
             anchors.fill: parent
             strong: true
             radius: Theme.radiusPanel
 
-            Flickable {
+            WeatherPanel {
+                id: panel
                 anchors { fill: parent; margins: Theme.spaceL }
-                contentHeight: body.implicitHeight
-                clip: true
-                boundsBehavior: Flickable.StopAtBounds
-
-                ColumnLayout {
-                    id: body
-                    width: parent.width
-                    spacing: 8
-
-                    // now: place, big temperature, condition, today's range
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 4
-                        Layout.rightMargin: 4
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 0
-                            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: root.city; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold } }
-                            Text {
-                                text: root.ready ? Math.round(root.temperature) + "°" : "–"
-                                color: Theme.text
-                                font { family: Theme.displayFont; pixelSize: Theme.fontHero; weight: Theme.displayWeight; features: { "tnum": 1 } }
-                            }
-                        }
-                        ColumnLayout {
-                            Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                            spacing: 2
-                            Text { Layout.alignment: Qt.AlignRight; text: root.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 30 } }
-                            Text { Layout.alignment: Qt.AlignRight; text: root.condition; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
-                            Text {
-                                Layout.alignment: Qt.AlignRight
-                                visible: root.days.length > 0
-                                text: root.days.length ? `H ${Math.round(root.days[0].max)}°  L ${Math.round(root.days[0].min)}°` : ""
-                                color: Theme.subtext
-                                font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
-                            }
-                        }
-                    }
-
-                    // details: feels like, humidity, wind, UV, sun
-                    GridLayout {
-                        visible: root.c.showDetails && root.ready
-                        Layout.fillWidth: true
-                        columns: 3
-                        columnSpacing: 6
-                        rowSpacing: 6
-                        Repeater {
-                            model: root.days.length ? [
-                                ["\u{F050F}", "Feels like", Math.round(root.feelsLike) + "°"],
-                                ["\u{F058E}", "Humidity", root.humidity + "%"],
-                                ["\u{F059D}", "Wind", Math.round(root.wind) + " " + root.windUnit],
-                                ["\u{F0599}", "UV index", Math.round(root.days[0].uv)],
-                                ["\u{F059C}", "Sunrise", root.days[0].sunrise],
-                                ["\u{F059B}", "Sunset", root.days[0].sunset]
-                            ] : []
-                            Rectangle {
-                                required property var modelData
-                                Layout.fillWidth: true
-                                Layout.preferredWidth: 1
-                                implicitHeight: 48
-                                radius: Theme.radius
-                                color: Theme.fill
-                                Column {
-                                    anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                                    spacing: 1
-                                    Row {
-                                        spacing: 4
-                                        Text { text: modelData[0]; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: 11 } }
-                                        Text { text: modelData[1]; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium } }
-                                    }
-                                    Text { text: modelData[2]; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold; features: { "tnum": 1 } } }
-                                }
-                            }
-                        }
-                    }
-
-                    // next 12 hours
-                    Rectangle {
-                        visible: root.c.showHourly && root.hours.length > 0
-                        Layout.fillWidth: true
-                        implicitHeight: hourRow.implicitHeight + 16   // sized by its content so nothing gets clipped
-                        radius: Theme.radius
-                        color: Theme.fill
-                        Flickable {
-                            anchors { fill: parent; margins: 8 }
-                            contentWidth: hourRow.implicitWidth
-                            clip: true
-                            boundsBehavior: Flickable.StopAtBounds
-                            flickableDirection: Flickable.HorizontalFlick
-                            Row {
-                                id: hourRow
-                                spacing: 0
-                                Repeater {
-                                    model: root.hours
-                                    Column {
-                                        required property var modelData
-                                        required property int index
-                                        width: 44
-                                        spacing: 3
-                                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: index === 0 ? "Now" : modelData.time.slice(0, 2); color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } } }
-                                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.glyphOf(modelData.code, modelData.day); color: Theme.text; font { family: Theme.iconFont; pixelSize: 17 } }
-                                        Text {
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            text: modelData.rain >= 30 ? modelData.rain + "%" : " "
-                                            color: Theme.accent2
-                                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
-                                        }
-                                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: Math.round(modelData.temp) + "°"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // next days: name, icon, rain chance, low, range bar, high
-                    Rectangle {
-                        id: dayBox
-                        visible: root.days.length > 0
-                        Layout.fillWidth: true
-                        implicitHeight: dayList.implicitHeight + 8
-                        radius: Theme.radius
-                        color: Theme.fill
-                        readonly property real lo: Math.min(...root.days.map(d => d.min))
-                        readonly property real hi: Math.max(...root.days.map(d => d.max))
-                        Column {
-                            id: dayList
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 4; leftMargin: 12; rightMargin: 12 }
-                            Repeater {
-                                model: root.days
-                                Item {
-                                    id: dayRow
-                                    required property var modelData
-                                    required property int index
-                                    width: dayList.width
-                                    height: 32
-                                    Text {
-                                        id: dayName
-                                        anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                                        width: 46
-                                        text: dayRow.index === 0 ? "Today" : Qt.locale("en_GB").toString(dayRow.modelData.date, "ddd")
-                                        color: Theme.text
-                                        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
-                                    }
-                                    Text {
-                                        id: dayIcon
-                                        anchors { left: dayName.right; verticalCenter: parent.verticalCenter }
-                                        width: 24
-                                        text: root.glyphOf(dayRow.modelData.code, true)
-                                        color: Theme.text
-                                        font { family: Theme.iconFont; pixelSize: 16 }
-                                    }
-                                    Text {
-                                        id: dayRain
-                                        anchors { left: dayIcon.right; verticalCenter: parent.verticalCenter }
-                                        width: 34
-                                        text: dayRow.modelData.rain >= 20 ? dayRow.modelData.rain + "%" : ""
-                                        color: Theme.accent2
-                                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; features: { "tnum": 1 } }
-                                    }
-                                    Text {
-                                        id: dayMin
-                                        anchors { left: dayRain.right; verticalCenter: parent.verticalCenter }
-                                        width: 32
-                                        horizontalAlignment: Text.AlignRight
-                                        text: Math.round(dayRow.modelData.min) + "°"
-                                        color: Theme.subtext
-                                        font { family: Theme.font; pixelSize: Theme.fontLabel; features: { "tnum": 1 } }
-                                    }
-                                    Rectangle {   // this day's range on the scale of the whole forecast
-                                        id: track
-                                        anchors { left: dayMin.right; leftMargin: 8; right: dayMax.left; rightMargin: 8; verticalCenter: parent.verticalCenter }
-                                        height: 4; radius: 2
-                                        color: Theme.fill
-                                        readonly property real span: Math.max(1, dayBox.hi - dayBox.lo)
-                                        Rectangle {
-                                            x: (dayRow.modelData.min - dayBox.lo) / track.span * track.width
-                                            width: Math.max(height, (dayRow.modelData.max - dayRow.modelData.min) / track.span * track.width)
-                                            height: parent.height; radius: 2
-                                            gradient: Gradient {
-                                                orientation: Gradient.Horizontal
-                                                GradientStop { position: 0; color: Theme.accent2 }
-                                                GradientStop { position: 1; color: Theme.accent }
-                                            }
-                                        }
-                                    }
-                                    Text {
-                                        id: dayMax
-                                        anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-                                        width: 32
-                                        horizontalAlignment: Text.AlignRight
-                                        text: Math.round(dayRow.modelData.max) + "°"
-                                        color: Theme.text
-                                        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // footer
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 4
-                        Text {
-                            Layout.fillWidth: true
-                            text: root.ready ? "Updated " + Qt.formatTime(root.updated, "HH:mm") + " · Open-Meteo" : "Loading…"
-                            color: Theme.muted
-                            font { family: Theme.font; pixelSize: Theme.fontCaption }
-                        }
-                        Chip { label: "Settings"; onClicked: { popup.hide(); SettingsApp.show("weather") } }
-                    }
-                }
+                onSettings: { popup.hide(); SettingsApp.show("weather") }
             }
         }
     }

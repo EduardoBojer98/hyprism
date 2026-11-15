@@ -10,6 +10,7 @@ import QtQuick.Effects
 Item {
     required property var dock
     id: app
+    readonly property real radius: Theme.radius   // for the focus ring
     required property DesktopEntry modelData
     required property int index
     readonly property bool pinned: dock.pinnedIds.includes(modelData?.id ?? "")
@@ -18,6 +19,24 @@ Item {
     readonly property var visibleWindows: windows.filter(t => !dock.isMinimised(t))
     property bool launching: false
     onWindowsChanged: if (windows.length) launching = false
+
+    // Left: focus the app (cycling through its windows), bring back minimised ones, or start it.
+    // Middle: always a new window. Right: windows and pin / minimise / quit (dock.menuBox). Enter does Left.
+    function activate(button) {
+        if (button === Qt.RightButton) { dock.menuBox.openFor(app); return }
+        const w = app.visibleWindows
+        if (button === Qt.MiddleButton || app.windows.length === 0) {
+            app.launching = app.windows.length === 0
+            app.modelData.execute()
+            return
+        }
+        if (w.length === 0) { for (const t of app.windows) dock.restore(t); return }
+        const i = w.findIndex(t => t.activated)
+        w[(i + 1) % w.length].wayland.activate()
+    }
+    activeFocusOnTab: true
+    Keys.onPressed: e => dock.key(e, app, () => app.activate(Qt.LeftButton), () => dock.menuBox.openFor(app))
+    FocusRing {}
 
     width: dock.vertical ? dock.cellCross : dock.slot
     height: dock.vertical ? dock.slot : dock.cellCross
@@ -101,18 +120,6 @@ Item {
         onCanceled: if (app.dragged) dock.endDrag()
         // Left: focus the app (cycling through its windows), bring back minimised ones, or start it.
         // Middle: always a new window. Right: windows and pin / minimise / quit dock.menuBox.
-        onClicked: mouse => {
-            if (!app.modelData || moved) return   // delegate is being replaced / was a drag
-            if (mouse.button === Qt.RightButton) { dock.menuBox.openFor(app); return }
-            const w = app.visibleWindows
-            if (mouse.button === Qt.MiddleButton || app.windows.length === 0) {
-                app.launching = app.windows.length === 0
-                app.modelData.execute()
-                return
-            }
-            if (w.length === 0) { for (const t of app.windows) dock.restore(t); return }
-            const i = w.findIndex(t => t.activated)
-            w[(i + 1) % w.length].wayland.activate()
-        }
+        onClicked: mouse => { if (app.modelData && !moved) app.activate(mouse.button) }
     }
 }
