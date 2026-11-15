@@ -91,7 +91,6 @@ JsonAdapter {
     // go at the end) and what's hidden; edited in Settings > Control Center
     property JsonObject controlCenter: JsonObject {
         property bool showHardware: true
-        property bool slidersOpen: true
         property string style: "panel"          // panel (current), compact (denser), borderless (flat tiles, no outlines)
         property int width: 330                 // panel width in px (280..460)
         property list<string> sections: []

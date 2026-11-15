@@ -123,7 +123,6 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `showHardware` | `bool` | `true` |  |
-| `slidersOpen` | `bool` | `true` |  |
 | `style` | `string` | `"panel"` | panel (current), compact (denser), borderless (flat tiles, no outlines) |
 | `width` | `int` | `330` | panel width in px (280..460) |
 | `sections` | `list<string>` | `[]` |  |
