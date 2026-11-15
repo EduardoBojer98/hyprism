@@ -66,7 +66,7 @@ corners, gaps, font and motion and is kept in `settings.json`; there is no build
 | `alt` | The other half: its `dark`, `colour`, `term`, `wall`, and window border colours (`hypr.active`, `hypr.inactive`) |
 | `font` | `ui`, `display` (clocks, big numbers), `mono`, `size` in px, `displayWeight` |
 | `shape` | `radius`, `radiusSmall`, `line` (panel border px), `material`: `solid` or `glass`, `density`: `compact`, `regular` or `roomy` (spacing everywhere; default `regular`) |
-| `bar` | Edge, size, floating or attached, fill, how items speak (`voice`: `icons`, `mixed`, `words`, `caps`), workspace style, `sep` (rules between items), `sepStyle` (`line`, or `slash`: the rule leans like a HUD segment cut), `dimLabels` (a readout's word or glyph dimmed, its value in ink), and the items in `start`, `center`, `end` |
+| `bar` | Edge, size, floating or attached, fill, how items speak (`voice`: `icons`, `mixed`, `words`, `caps`), workspace style, `sep` (rules between items), `sepStyle` (`line`; `slash`: the rule leans like a HUD segment cut; `pip`: a small square), `dimLabels` (a readout's word or glyph dimmed, its value in ink), and the items in `start`, `center`, `end` |
 | `dock` | Edge, shape, hover effect, running mark, fill |
 | `popup` | Panel depth (`soft`, `hard`, `glow`, `none`), decoration, `decorColour` (`accent` or `accent2`: the colour of that decoration), tile style |
 | `motion` | How panels open: `enter` and `exit` in ms, `curve`, `travel`, `scale`, `press` |

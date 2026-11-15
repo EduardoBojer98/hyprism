@@ -26,7 +26,7 @@ over ornament, one icon language, motion that confirms an action and never makes
 | `colour` | ground, surface, raised, line, text, muted, faint, accent, onAccent, accent2, ok, warn, err |
 | `font` | ui, display (clocks, big numbers), mono, size (body px), displayWeight |
 | `shape` | radius, radiusSmall, line (panel border px), material: `solid` or `glass`, density: `compact`, `regular` or `roomy` (spacing in bars, panels and lists) |
-| `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, sep (rules between items), sepStyle (line, slash), voice (icons, words, mixed, caps), mono, ws (dots, filled, text, numbers, blocks, squares, tabs), clock (plain, accent, display, block, split), decor (brackets), start / center / end items |
+| `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, sep (rules between items), sepStyle (line, slash, pip), voice (icons, words, mixed, caps), mono, ws (dots, filled, text, numbers, blocks, squares, tabs, reticle), clock (plain, accent, display, block, split), decor (brackets), start / center / end items |
 | `dock` | edge (its own place; the bar's edge puts it inside the bar), shape (pill, tile, block), hover (lift, grow, plate), mark (line, dot, bar), fill |
 | `popup` | depth: soft (blurred shadow), hard (offset block), glow (accent haze), none (frame only); decor: brackets, topline, in decorColour (accent or accent2); tiles: solid or wash (Control Center tiles that are on) |
 | `motion` | enter / exit ms, curve (cubic bezier), travel px out of the trigger's side, start scale, press scale |
@@ -45,15 +45,15 @@ Pebble, atlas to Poster, console and reactor to Monolith) and migration 0006 rem
 
 | | Pebble: calm | Poster: loud | Monolith: terminal |
 |---|---|---|---|
-| Ground / text / accent | `#171918` / `#e9ece6` / `#b9cf8f` (+ `#8fa8a3`) | `#141414` / ink `#141414` on paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | `#07080b` / `#e3e8ef` / `#b6ff3b` (+ magenta `#ff4ad8`) |
+| Ground / text / accent | `#171918` / `#e9ece6` / `#b9cf8f` (+ `#8fa8a3`) | `#141414` / ink `#141414` on paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | `#07080b` / `#e3e8ef` / `#b6ff3b` (+ electric blue `#4f8cff`) |
 | Type | Archivo, light numerals (weight 300), 14 px | Archivo Black + Archivo, 14 px | JetBrains Mono, Martian Mono numerals (700), 13 px |
-| Shape · depth | r14, 1 px lines, solid · soft shadow | r0, 3 px lines · hard offset block | r0, 1 px lines · faint accent glow; magenta corner brackets on panels |
+| Shape · depth | r14, 1 px lines, solid · soft shadow | r0, 3 px lines · hard offset block | r0, 1 px lines · faint accent glow; blue corner brackets on panels |
 | Density | roomy | regular | regular |
-| Bar | top, 38 px, floating, dots, plain clock | top, 52 px, attached paper strip, workspace blocks, big clock | top, 32 px, attached tmux status line: workspaces as tabs ("2 firefox", the current one a lime block), slashed rules, dim labels with bright values, launchers centred, date on a raised step then the time in a lime block flush right |
+| Bar | top, 38 px, floating, dots, plain clock | top, 52 px, attached paper strip, workspace blocks, big clock | top, 26 px, floating mono status line: quick tools, workspace numbers with lime HUD corner marks locked on the current one, then the dock's launchers on the left; media centred; small square pips between items, dim labels with bright values, weather then the date on a raised step and the time in a lime block flush right |
 | Dock | bottom, pill, icons lift | bottom, block, hard shadow, lift | inside the top bar |
 | Motion | 220/140 ms ease-out, 6 px, scale 0.98 | 200/110 ms expo-out, 28 px slam | 140/90 ms expo-out, 4 px |
 | Windows | gaps 8/16, 2 px, r14, soft shadow, ease | gaps 8/16, 3 px, r0, hard shadow, slam | gaps 4/8, 2 px, r0, no shadow, snappy |
-| Window frame | accent | accent | gradient (lime to magenta) |
+| Window frame | accent | accent | gradient (lime to electric blue) |
 
 Contrast (WCAG 2): body text on surfaces 13.2:1 or more; secondary text 5.9:1 or more; text on an accent
 fill is forced to 4.5:1 or more by `Themes.resolve`.
@@ -74,7 +74,7 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
    `looks`) sets the panel tokens and the Hyprland preset together, each with a live preview; Animations:
    Full (the look), Reduced (90 ms fades, nothing moves), Off.
 6. **Depth belongs to the world.** Soft shadows only in Pebble, the hard offset block only in
-   Poster (the one neo-brutalist world), frames, magenta corner brackets and a faint accent glow in Monolith.
+   Poster (the one neo-brutalist world), frames, blue corner brackets and a faint accent glow in Monolith.
 7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0;
    panels are capped to the room between bar and dock and kept on their monitor.
 
@@ -88,7 +88,7 @@ the terminal, window frames, the lock screen and the wallpaper follow.
 | Theme | Other half: ground / text / accent | Wallpaper |
 |---|---|---|
 | Pebble | light `#e4e6e1` / `#1b1e1c` / `#4d6a35` | pebble-light |
-| Monolith | light `#e4e7eb` / `#0f1318` / ink `#10141a` with lime `#b6ff3b` on it (reverse video), magenta `#b0179a` | monolith-light |
+| Monolith | light `#e4e7eb` / `#0f1318` / ink `#10141a` with lime `#b6ff3b` on it (reverse video), blue `#1f5fbf` | monolith-light |
 | Poster | dark `#141414` / `#f4f1ea` / `#ff4a2e` | poster |
 
 ## Your own themes
