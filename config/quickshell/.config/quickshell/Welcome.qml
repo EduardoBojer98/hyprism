@@ -124,10 +124,18 @@ Singleton {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: Theme.spaceM
-                    ConfigChoice {
-                        section: "bar"; key: "preset"
-                        values: ["theme", "minimal", "full", "laptop", "external"]
-                        labels: ["Theme's own", "Minimal", "Full", "Laptop", "External"]
+                    Choice {   // a starting point: copies a preset's items into your layout (Settings > Menu Bar changes it later)
+                        id: startFrom
+                        readonly property var names: ["theme", "minimal", "full", "laptop", "external"]
+                        property int chosen: Theme.hasLayout ? -1 : 0
+                        options: ["Theme's own", "Minimal", "Full", "Laptop", "External"]
+                        index: chosen
+                        onPicked: i => {
+                            chosen = i
+                            if (i === 0) { Theme.useThemeLayout(); return }
+                            const p = Config.bar.presets[names[i]]
+                            Theme.setLayout({ start: Array.from(p.start), center: Array.from(p.center), end: Array.from(p.end) })
+                        }
                         Accessible.name: "Bar layout"
                         Accessible.role: Accessible.ComboBox
                     }

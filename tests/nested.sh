@@ -106,6 +106,9 @@ case ${1:-} in
         printf 'T=%q\nSIG=%q\nSOCK=%q\n' "$T" "$SIG" "$SOCK" >"$state/env"
         park
         sleep 4 # the shell needs a moment to draw
+        # Hyprland's automatic scale picks 2 for the test window on some setups: pin 1 so pictures are comparable
+        first=$(inside hyprctl monitors -j | jq -r '.[0].name')
+        inside hyprctl eval "hl.monitor({ output = \"$first\", mode = \"preferred\", position = \"0x0\", scale = 1 })" >/dev/null || true
         echo "test session up: home $T, display $SOCK"
         ;;
     shot)
