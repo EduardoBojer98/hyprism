@@ -10,7 +10,7 @@ ColumnLayout {
     property var host: null   // the panel it sits in (PanelState): ControlCenter.view or a Flyout's
     required property var modelData
     readonly property bool secured: modelData.security !== WifiSecurityType.Open
-    readonly property bool failed: wr.host?.wifiFailed === modelData.name
+    readonly property bool failed: (wr.host?.wifiFailed ?? "") === modelData.name   // parenthesised: V4 short-circuits a bare ?. through the ===
     Layout.fillWidth: true
     spacing: 2
 
@@ -37,7 +37,7 @@ ColumnLayout {
         function onConnectionFailed() { wr.host.wifiFailed = wr.modelData.name; if (wr.secured) wr.host.passwordFor = wr.modelData }
     }
     RowLayout {   // password, under the network it's for
-        visible: wr.host?.passwordFor === wr.modelData
+        visible: (wr.host?.passwordFor ?? null) === wr.modelData
         Layout.fillWidth: true
         Layout.leftMargin: 44
         Layout.rightMargin: 6
