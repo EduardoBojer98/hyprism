@@ -50,6 +50,7 @@ Singleton {
         id: media
         name: "media"
         ControlCenterMedia { host: media.host }
+        ControlCenterEmpty { shown: Sys.player === null; text: "Nothing is playing. Start music or a video and its controls show up here." }
     }
     Flyout {
         id: battery
