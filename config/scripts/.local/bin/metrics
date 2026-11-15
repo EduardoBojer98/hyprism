@@ -292,6 +292,8 @@ case ${1:-} in
             secs=${3:-2}
             [[ $secs =~ ^[0-9]+$ && $secs -ge 1 ]] || die "SECONDS must be a whole number, 1 or more"
             emit "${want[@]}" >/dev/null
+            sleep 0.3 # a first full reading right away, so a panel that just opened is filled at once
+            emit "${want[@]}"
             while sleep "$secs"; do emit "${want[@]}"; done
         fi
         ;;
