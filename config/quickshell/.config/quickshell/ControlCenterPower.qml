@@ -10,55 +10,25 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center part: the power mode choice.
-// Used by ControlCenter.qml; reads the panel's state from the ControlCenter singleton.
+// Used by ControlCenter.qml and Flyouts.qml; the panel's own state comes from `host`.
 ColumnLayout {
     Layout.fillWidth: true
-    Layout.row: Math.max(0, ControlCenter.shownSections.indexOf("power"))
-    visible: ControlCenter.shownSections.includes("power")
+    property var host: null   // the panel it sits in (PanelState): ControlCenter.view or a Flyout's
     spacing: ControlCenter.gap
 
     // ---- power mode ---------------------------------------------------------------------
     ControlCenterModule {
         title: "Power mode"
-        detail: Config.controlCenter.showHardware ? `CPU ${Math.round(Sensors.cpu)}°` : ""
+        detail: Config.controlCenter.showHardware && !isNaN(Sensors.cpu) ? `CPU ${Math.round(Sensors.cpu)}°` : ""
         warn: Sensors.cpu >= 90
-        onDetailClicked: { ControlCenter.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
+        onDetailClicked: { host.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
 
-        Rectangle {
+        Choice {   // the asusctl / power-profiles id stays "quiet"; people read Silent
             Layout.fillWidth: true
-            Layout.preferredHeight: Theme.controlHeight
-            radius: Theme.radiusSmall + 1
-            color: Theme.fill
-
-            Rectangle {
-                width: (parent.width - 6) / 3
-                height: parent.height - 6
-                y: 3
-                x: 3 + PowerMode.profile * width
-                radius: Theme.radiusSmall - 1
-                color: Theme.thumb
-                Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-            }
-            Row {
-                anchors { fill: parent; margins: 3 }
-                Repeater {
-                    model: ["Quiet", "Balanced", "Performance"]
-                    Item {
-                        required property string modelData
-                        required property int index
-                        readonly property bool on: PowerMode.profile === index
-                        width: parent.width / 3
-                        height: parent.height
-                        Text {
-                            anchors.centerIn: parent
-                            text: modelData
-                            color: parent.on ? Theme.thumbText : Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
-                        }
-                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: PowerMode.set(index); Accessible.role: Accessible.Button; Accessible.name: modelData; Accessible.onPressAction: PowerMode.set(index) }
-                    }
-                }
-            }
+            options: ["Silent", "Balanced", "Performance"]
+            index: PowerMode.profile
+            accessibleName: "Power mode"
+            onPicked: i => PowerMode.set(i)
         }
     }
 }

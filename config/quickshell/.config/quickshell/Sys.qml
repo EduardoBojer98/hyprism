@@ -21,11 +21,35 @@ Singleton {
     readonly property string volumeGlyph: muted || volume === 0 ? "\u{F075F}" : volume < 0.34 ? "\u{F057F}" : volume < 0.67 ? "\u{F0580}" : "\u{F057E}"
     function nudgeVolume(d) { const a = sink?.audio; if (a) a.volume = Math.max(0, Math.min(1, a.volume + d * 0.05)) }
     function toggleMute() { const a = sink?.audio; if (a) a.muted = !a.muted }
-    PwObjectTracker { objects: [root.sink] }
+    readonly property var source: Pipewire.defaultAudioSource
+    readonly property var streams: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream)   // apps playing
+    PwObjectTracker { objects: [root.sink, root.source].concat(root.streams) }
+    // an audio device's icon, kind and short name: the monitor's own name for HDMI/DP, "Built-in …" for the codec
+    function audioGlyph(n) {
+        const d = n?.description ?? ""
+        if (/HDMI|DisplayPort|\bDP\b/.test(d)) return "\u{F0379}"
+        if (n?.name?.startsWith("bluez") || /Headphone|Headset/i.test(d)) return "\u{F02CB}"
+        return "\u{F04C3}"
+    }
+    function audioKind(n) {
+        const d = n?.description ?? "", name = n?.name ?? ""
+        return name.startsWith("bluez") ? "Bluetooth" : /HDMI|DisplayPort|\bDP\b/.test(d) ? "Screen (HDMI / DisplayPort)"
+             : name.includes("usb") ? "USB" : /Analog/.test(d) ? "Built-in" : ""
+    }
+    function nodeName(n) {
+        const d = n?.description ?? "", nick = n?.nickname ?? ""
+        if (/HDMI|DisplayPort|\bDP\b/.test(d) && nick) return nick
+        if (/Analog/.test(d) && /Controller/.test(d)) return n.type === PwNodeType.AudioSink ? "Built-in speakers" : "Built-in microphone"
+        return d || nick || n?.name || ""
+    }
 
     // ---- screen brightness (brightnessctl; -1 = no backlight, e.g. a desktop) -------------------------
     property int brightness: -1
     function readBrightness() { brightnessRead.running = true }
+    function setBrightness(percent) {
+        brightness = Math.max(5, Math.min(100, Math.round(percent)))
+        Quickshell.execDetached(["brightnessctl", "-q", "set", brightness + "%"])
+    }
     function nudgeBrightness(d) { Quickshell.execDetached(["sh", "-c", "brightnessctl -q set " + (d > 0 ? "5%+" : "5%-") + " && qs ipc call osd brightness $(brightnessctl -m | cut -d, -f4 | tr -d %)"]) }
     Process {
         id: brightnessRead
@@ -57,6 +81,10 @@ Singleton {
     // ---- Bluetooth -----------------------------------------------------------------------------------
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool btOn: adapter?.enabled ?? false
+    function btGlyph(icon) {
+        return ({ "audio-headset": "\u{F02CE}", "audio-headphones": "\u{F02CB}", "audio-card": "\u{F04C3}", "input-mouse": "\u{F037D}",
+                  "input-keyboard": "\u{F030C}", "input-gaming": "\u{F0297}", "phone": "\u{F011C}", "computer": "\u{F0322}" })[icon] ?? "\u{F00AF}"
+    }
     readonly property bool btLinked: adapter?.devices.values.some(d => d.connected) ?? false
 
     // ---- media ---------------------------------------------------------------------------------------

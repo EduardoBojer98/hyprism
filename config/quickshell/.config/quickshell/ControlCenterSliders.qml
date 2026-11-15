@@ -10,11 +10,16 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center part: the one tile with the Display, Sound and Microphone sliders and their device lists.
-// Used by ControlCenter.qml; reads the panel's state from the ControlCenter singleton.
+// In the Control Center all three; a flyout shows only its `parts`, always unfolded.
 ColumnLayout {
+    id: mod
     Layout.fillWidth: true
-    Layout.row: Math.max(0, ControlCenter.shownSections.indexOf("sliders"))
-    visible: ControlCenter.shownSections.includes("sliders")
+    property var host: null   // the panel it sits in (PanelState): ControlCenter.view or a Flyout's
+    property var parts: ["display", "sound", "mic"]
+    readonly property bool whole: parts.length === 3   // the Control Center's tile: folds to one line
+    readonly property bool hasDisplay: parts.includes("display") && Sys.brightness >= 0
+    readonly property bool hasSound: parts.includes("sound")
+    readonly property bool hasMic: parts.includes("mic")
     spacing: ControlCenter.gap
 
     // ---- display and sound: one tile, three sliders ---------------------------------------
@@ -27,37 +32,36 @@ ColumnLayout {
             spacing: 10
             // the section's title; click it to fold the section down to this one line
             ControlCenterSliderHead {
+                visible: mod.whole
                 title: "Screen · Sound"   // short, so the folded values fit beside it in every face
                 detail: Config.controlCenter.slidersOpen ? "Hide"
-                    : `${Math.round(ControlCenter.brightness * 100)}% · ${ControlCenter.sink?.audio?.muted ? "muted" : Math.round((ControlCenter.sink?.audio?.volume ?? 0) * 100) + "%"}`
+                    : `${Sys.brightness}% · ${Sys.sink?.audio?.muted ? "muted" : Math.round((Sys.sink?.audio?.volume ?? 0) * 100) + "%"}`
                 isExpanded: Config.controlCenter.slidersOpen
                 onClicked: Config.set("controlCenter", "slidersOpen", !Config.controlCenter.slidersOpen)
             }
             ControlCenterReveal {
-                open: Config.controlCenter.slidersOpen
+                open: !mod.whole || Config.controlCenter.slidersOpen
                 spacing: 10
 
-                ControlCenterSliderHead { title: "Display" }
+                ControlCenterSliderHead { visible: mod.hasDisplay; title: "Display" }
                 Text { // names only once there's more than one screen to tell apart
-                    visible: externals.count > 0
+                    visible: mod.hasDisplay && externals.count > 0
                     Layout.bottomMargin: -6
                     text: "Built-in"
                     color: Theme.subtext
                     font { family: Theme.font; pixelSize: Theme.fontCaption }
                 }
                 ControlCenterBar {
+                    visible: mod.hasDisplay
                     icon: "\u{F00DF}"
-                    value: ControlCenter.brightness
-                    onMoved: v => {
-                        ControlCenter.brightness = Math.max(0.05, v)
-                        Quickshell.execDetached(["brightnessctl", "-q", "set", Math.round(ControlCenter.brightness * 100) + "%"])
-                    }
+                    value: Sys.brightness / 100
+                    onMoved: v => Sys.setBrightness(v * 100)
                 }
                 // external monitors over DDC/CI (VCP 0x10); read each time the panel opens, hidden when
                 // a monitor doesn't answer (DDC/CI off in its menu)
                 Repeater {
                     id: externals
-                    model: ControlCenter.open ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP") && Machine.realScreen(m.name)) : []
+                    model: mod.host.open && mod.parts.includes("display") ? Hyprland.monitors.values.filter(m => !m.name.startsWith("eDP") && Machine.realScreen(m.name)) : []
                     ColumnLayout {
                         id: ext
                         required property var modelData
@@ -98,35 +102,37 @@ ColumnLayout {
                 }
 
                 ControlCenterSliderHead {
+                    visible: mod.hasSound
                     title: "Sound"
-                    detail: ControlCenter.nodeName(ControlCenter.sink) || "No output"
-                    isExpanded: ControlCenter.expanded === "out"
-                    onClicked: ControlCenter.toggleExpanded("out")
+                    detail: Sys.nodeName(Sys.sink) || "No output"
+                    isExpanded: mod.host.expanded === "out"
+                    onClicked: mod.host.toggleExpanded("out")
                 }
                 ControlCenterBar {
-                    icon: ControlCenter.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
-                    hint: ControlCenter.sink?.audio?.muted ? "Unmute" : "Mute"
-                    value: ControlCenter.sink?.audio?.muted ? 0 : (ControlCenter.sink?.audio?.volume ?? 0)
-                    onMoved: v => { if (ControlCenter.sink?.audio) { ControlCenter.sink.audio.muted = false; ControlCenter.sink.audio.volume = v } }
-                    onIconClicked: if (ControlCenter.sink?.audio) ControlCenter.sink.audio.muted = !ControlCenter.sink.audio.muted
+                    visible: mod.hasSound
+                    icon: Sys.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
+                    hint: Sys.sink?.audio?.muted ? "Unmute" : "Mute"
+                    value: Sys.sink?.audio?.muted ? 0 : (Sys.sink?.audio?.volume ?? 0)
+                    onMoved: v => { if (Sys.sink?.audio) { Sys.sink.audio.muted = false; Sys.sink.audio.volume = v } }
+                    onIconClicked: if (Sys.sink?.audio) Sys.sink.audio.muted = !Sys.sink.audio.muted
                 }
                 ControlCenterReveal {
-                    open: ControlCenter.expanded === "out"
+                    open: mod.hasSound && mod.host.expanded === "out"
                     ControlCenterSectionLabel { text: "Play sound through" }
                     Repeater {
                         model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSink)
                         ControlCenterDeviceRow {
                             required property var modelData
-                            glyph: ControlCenter.audioGlyph(modelData)
-                            title: ControlCenter.nodeName(modelData)
-                            subtitle: ControlCenter.audioKind(modelData)
-                            selected: modelData === ControlCenter.sink
+                            glyph: Sys.audioGlyph(modelData)
+                            title: Sys.nodeName(modelData)
+                            subtitle: Sys.audioKind(modelData)
+                            selected: modelData === Sys.sink
                             onClicked: Pipewire.preferredDefaultAudioSink = modelData
                         }
                     }
-                    ControlCenterSectionLabel { visible: ControlCenter.streams.length > 0; text: "Apps" }
+                    ControlCenterSectionLabel { visible: Sys.streams.length > 0; text: "Apps" }
                     Repeater {
-                        model: ControlCenter.streams
+                        model: Sys.streams
                         ColumnLayout {
                             id: app
                             required property var modelData
@@ -155,29 +161,31 @@ ColumnLayout {
                 }
 
                 ControlCenterSliderHead {
+                    visible: mod.hasMic
                     title: "Microphone"
-                    detail: ControlCenter.nodeName(ControlCenter.source) || "No input"
-                    isExpanded: ControlCenter.expanded === "in"
-                    onClicked: ControlCenter.toggleExpanded("in")
+                    detail: Sys.nodeName(Sys.source) || "No input"
+                    isExpanded: mod.host.expanded === "in"
+                    onClicked: mod.host.toggleExpanded("in")
                 }
                 ControlCenterBar {
-                    icon: ControlCenter.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
-                    hint: ControlCenter.source?.audio?.muted ? "Unmute" : "Mute"
-                    value: ControlCenter.source?.audio?.muted ? 0 : (ControlCenter.source?.audio?.volume ?? 0)
-                    onMoved: v => { if (ControlCenter.source?.audio) { ControlCenter.source.audio.muted = false; ControlCenter.source.audio.volume = v } }
-                    onIconClicked: if (ControlCenter.source?.audio) ControlCenter.source.audio.muted = !ControlCenter.source.audio.muted
+                    visible: mod.hasMic
+                    icon: Sys.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
+                    hint: Sys.source?.audio?.muted ? "Unmute" : "Mute"
+                    value: Sys.source?.audio?.muted ? 0 : (Sys.source?.audio?.volume ?? 0)
+                    onMoved: v => { if (Sys.source?.audio) { Sys.source.audio.muted = false; Sys.source.audio.volume = v } }
+                    onIconClicked: if (Sys.source?.audio) Sys.source.audio.muted = !Sys.source.audio.muted
                 }
                 ControlCenterReveal {
-                    open: ControlCenter.expanded === "in"
+                    open: mod.hasMic && mod.host.expanded === "in"
                     ControlCenterSectionLabel { text: "Record from" }
                     Repeater {
                         model: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioSource)
                         ControlCenterDeviceRow {
                             required property var modelData
                             glyph: modelData.name.startsWith("bluez") ? "\u{F02CE}" : "\u{F036C}"
-                            title: ControlCenter.nodeName(modelData)
-                            subtitle: ControlCenter.audioKind(modelData)
-                            selected: modelData === ControlCenter.source
+                            title: Sys.nodeName(modelData)
+                            subtitle: Sys.audioKind(modelData)
+                            selected: modelData === Sys.source
                             onClicked: Pipewire.preferredDefaultAudioSource = modelData
                         }
                     }

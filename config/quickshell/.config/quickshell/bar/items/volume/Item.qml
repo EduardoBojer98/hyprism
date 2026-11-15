@@ -1,7 +1,7 @@
 import QtQuick
 import qs
 
-// The output volume. Click opens the sound section of the Control Center, middle-click mutes, scroll changes it.
+// The output volume. Click opens its flyout (sound and microphone), middle-click mutes, scroll changes it.
 BarIndicator {
     glyph: Sys.volumeGlyph
     word: Sys.muted ? "muted" : "vol"
@@ -9,6 +9,8 @@ BarIndicator {
     ink: Sys.muted ? bar.dim : bar.tone
     tip: Sys.muted ? "Volume: muted" : "Volume " + Math.round(Sys.volume * 100) + "%"
     acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-    onPressed: button => button === Qt.MiddleButton ? Sys.toggleMute() : ControlCenter.showSection("out")
+    opens: "volume"
+    active: Flyouts.isOpen("volume")
+    onPressed: button => button === Qt.MiddleButton ? Sys.toggleMute() : Flyouts.toggle("volume")
     onScrolled: d => Sys.nudgeVolume(d)
 }

@@ -11,7 +11,8 @@ import QtQuick
 // (click the clock, Super+N). Do Not Disturb (Config.notifications.dnd) keeps everything but
 // critical ones out of the banners. A notification leaves the history when you dismiss it or
 // the app withdraws it; the oldest go past Config.notifications.historyMax.
-// shortcut: the history lives in memory, so restarting the shell empties it.
+// The history is saved to ~/.local/state/hyprism/notifications.json, so a shell restart keeps it. A saved
+// one comes back as a plain record (text, icon, time): it can be read and dismissed, its app's buttons are gone.
 Singleton {
     id: root
 
@@ -118,6 +119,46 @@ Singleton {
         const kept = server.trackedNotifications.values.slice().reverse()
         for (const n of kept) n.closed.connect(() => root.forget(n))
         history = kept.filter(n => !n.transient)
+        started = true
+        if (savedText !== null) restore()
+    }
+
+    // ---- saved history ----
+    property bool restored: false   // nothing is written before the saved file is read, so it is never emptied
+    function record(n) {
+        const icon = src => typeof src === "string" && !src.startsWith("image://") ? src : ""   // the server's images don't outlive it
+        return { id: n.id, appName: n.appName ?? "", appIcon: icon(n.appIcon), image: icon(n.image), desktopEntry: n.desktopEntry ?? "",
+                 summary: n.summary ?? "", body: n.body ?? "", urgency: n.urgency ?? 1, time: timeOf(n) }
+    }
+    // merged once both the live notifications (kept over a reload) and the file are in, in whichever order they come
+    property bool started: false
+    property var savedText: null
+    function restore() {
+        let saved = []
+        try { saved = JSON.parse(savedText) } catch (e) {}
+        if (!Array.isArray(saved)) saved = []
+        const t = Object.assign({}, times), out = []
+        const same = (n, r) => n.appName === r.appName && n.summary === r.summary && n.body === r.body
+        saved.forEach((r, i) => {
+            if (typeof r !== "object" || !r) return
+            const live = history.find(n => same(n, r))
+            if (live) { t[live.id] = Number(r.time) || t[live.id]; return }   // kept over a reload: keep its age
+            const n = Object.assign({ actions: [], hints: ({}) }, r, { id: "saved-" + i + "-" + r.time })
+            n.dismiss = () => root.forget(n)
+            t[n.id] = Number(r.time) || Date.now()
+            out.push(n)
+        })
+        times = t
+        history = history.concat(out).sort((a, b) => timeOf(b) - timeOf(a)).slice(0, Config.notifications.historyMax)
+        restored = true
+    }
+    onHistoryChanged: if (restored) saveLater.restart()
+    Timer { id: saveLater; interval: 500; onTriggered: store.setText(JSON.stringify(root.history.map(n => root.record(n)), null, 1)) }
+    FileView {
+        id: store
+        path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/hyprism/notifications.json"
+        onLoaded: { root.savedText = text(); if (root.started) root.restore() }
+        onLoadFailed: { root.savedText = "[]"; if (root.started) root.restore() }
     }
 
     Timer { interval: 30000; running: true; repeat: true; onTriggered: root.now = new Date() }

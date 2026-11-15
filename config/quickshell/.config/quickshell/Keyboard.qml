@@ -72,6 +72,7 @@ Singleton {
         placement: "cursor"
         boxWidth: 236
         boxHeight: menu.implicitHeight + Theme.spaceS * 2
+        focusItem: menu
         onOpened: root.refresh()
 
         Glass {
@@ -79,10 +80,9 @@ Singleton {
             strong: true
             radius: Theme.radiusLarge
 
-            ColumnLayout {
+            MenuList {
                 id: menu
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceS }
-                spacing: 0
 
                 Text {
                     Layout.margins: Theme.spaceS
@@ -93,61 +93,30 @@ Singleton {
                 }
                 Repeater {
                     model: root.layouts
-                    Rectangle {
+                    MenuRow {
                         id: row
                         required property var modelData
                         required property int index
-                        readonly property bool current: index === root.active
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: Theme.controlHeight + 2
-                        radius: Theme.radiusSmall - 2
-                        color: area.containsMouse ? Theme.accent : "transparent"
-                        RowLayout {
-                            anchors { fill: parent; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS + 2 }
-                            spacing: Theme.spaceS + 2
-                            Rectangle { // the same keycap as in the bar
-                                Layout.preferredWidth: 26; Layout.preferredHeight: 16
-                                radius: 4
-                                color: "transparent"
-                                border { color: Qt.alpha(area.containsMouse ? Theme.accentText : Theme.text, 0.45); width: 1 }
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: row.modelData.code.toUpperCase()
-                                    color: area.containsMouse ? Theme.accentText : Theme.text
-                                    font { family: Theme.font; pixelSize: 9; weight: Font.Bold; letterSpacing: 0.3 }
-                                }
-                            }
+                        label: modelData.name
+                        checked: index === root.active
+                        bold: checked
+                        onClicked: { root.use(index); popup.hide() }
+                        Rectangle {   // the same keycap as in the bar
+                            width: Theme.iconSmall + 10; height: Theme.iconSmall
+                            radius: Math.min(4, Theme.radiusSmall)
+                            color: "transparent"
+                            border { color: Qt.alpha(row.ink, 0.45); width: 1 }
                             Text {
-                                Layout.fillWidth: true
-                                text: row.modelData.name
-                                elide: Text.ElideRight
-                                color: area.containsMouse ? Theme.accentText : Theme.text
-                                font { family: Theme.font; pixelSize: Theme.fontSize; weight: row.current ? Font.DemiBold : Font.Normal }
-                            }
-                            Text {
-                                visible: row.current
-                                text: "\u{F012C}"
-                                color: area.containsMouse ? Theme.accentText : Theme.accent
-                                font { family: Theme.iconFont; pixelSize: 14 }
+                                anchors.centerIn: parent
+                                text: row.modelData.code.toUpperCase()
+                                color: row.ink
+                                font { family: Theme.font; pixelSize: Theme.fontCaption - 2; weight: Font.Bold; letterSpacing: 0.3 }
                             }
                         }
-                        MouseArea { id: area; Accessible.role: Accessible.Button; Accessible.name: row.modelData.name; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { root.use(row.index); popup.hide() } }
                     }
                 }
-                Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; Layout.topMargin: Theme.spaceXs; Layout.bottomMargin: Theme.spaceXs; color: Theme.stroke }
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: Theme.controlHeight
-                    radius: Theme.radiusSmall - 2
-                    color: setArea.containsMouse ? Theme.accent : "transparent"
-                    Text {
-                        anchors { left: parent.left; leftMargin: Theme.spaceS + 2; verticalCenter: parent.verticalCenter }
-                        text: "Add or remove layouts…"
-                        color: setArea.containsMouse ? Theme.accentText : Theme.text
-                        font { family: Theme.font; pixelSize: Theme.fontSize }
-                    }
-                    MouseArea { id: setArea; Accessible.role: Accessible.Button; Accessible.name: "Add or remove layouts"; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { popup.hide(); SettingsApp.show("input") } }
-                }
+                MenuDivider {}
+                MenuRow { label: "Add or remove layouts…"; onClicked: { popup.hide(); SettingsApp.show("input") } }
             }
         }
     }

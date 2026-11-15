@@ -6,6 +6,17 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Bar item flyouts: volume, network, Bluetooth, brightness and media open a small panel with that one Control
+  Center section; battery and power profile open a battery flyout (charge, draw, time left on battery, CPU
+  temperature, fans, Silent / Balanced / Performance, Caffeine). The `status` item opens the flyout of the icon
+  clicked. `panel:volume` (and network, bluetooth, brightness, media, battery) is a new click action;
+  `qs ipc call flyout toggle <name>`.
+- Keyboard everywhere in the panels: Escape closes every panel, menus (utility, tray, keyboard layout, dropdown
+  lists) follow Up / Down / Home / End / Enter, notification cards take focus (Enter opens, Delete dismisses).
+- Panels taller than the screen scroll inside their frame with a scroll bar and a fade at the cut edge
+  (Calendar's "Coming up" no longer runs under the dock). Mission Control closes on a click on empty space.
+- The notification history is kept in `~/.local/state/hyprism/notifications.json` and survives a shell restart.
+
 - Full or base setup: the first install asks; `--profile full|base` changes it. Full adds the themed apps and
   login screen; base sets up only the desktop and keeps your own apps and login screen.
 - Everyday apps that follow the theme (GTK4/libadwaita): Nautilus replaces Dolphin, plus Text Editor, Loupe,
@@ -72,6 +83,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- The power-profile item opens the battery flyout instead of cycling blind; the power modes read Silent, Balanced,
+  Performance (the asusctl id stays `quiet`). The battery item opens its flyout instead of Settings → Power; the
+  media item's click opens the player (middle-click pauses or plays).
+- One shared piece each for the popup frame and depth (`CursorPopup`, `PopupDepth`, now also on tray menus and
+  dropdowns), menus (`MenuList`, `MenuRow`) and full-screen sheets (`Overlay`: power menu, cheat sheet, welcome).
+
 - On Arch, packages the setup needs are marked as explicitly installed, so removing another desktop (KDE) can't
   take them along as its dependencies (ddcutil, iio-sensor-proxy, libqalculate did).
 - `tests/hypr-config.sh` says "skipped" when Hyprland 0.57's `--verify-config` crashes, and checks the running
@@ -116,6 +133,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - README pictures retaken from the current code (`tests/screenshots.sh`): all seven themes in dark and light, plus the welcome panel, menu, system panel, bar system-info item and notification centre.
 
 ### Removed
+
+- `StatusGlyph.qml` (unused); the private menu rows of UtilityMenu, TrayMenu, Keyboard and WindowMenu (replaced by
+  `MenuRow` / `PillButton`).
 
 - The emoji picker's use of KDE Plasma's emoji file. It reads Unicode's own list (package `unicode-emoji`).
 

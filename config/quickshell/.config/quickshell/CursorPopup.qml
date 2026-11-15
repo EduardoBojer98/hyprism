@@ -3,6 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Effects
 
 // The one popup framework: a floating panel that opens right beside the bar or dock item that was
@@ -12,7 +13,7 @@ import QtQuick.Effects
 // input: it takes clicks and keys from the first frame, and lets go of them the moment it closes. It takes the keyboard while
 // open; Esc or a click outside closes it, on any monitor. Used by the launcher, clipboard, and other quick panels.
 //
-//   CursorPopup { id: p; name: "launcher"; boxWidth: 640; boxHeight: content.implicitHeight
+//   CursorPopup { id: p; name: "launcher"; boxWidth: 640; boxHeight: content.implicitHeight   (its natural height)
 //                 SomeContent { id: content; anchors.fill: parent } }
 //   p.show() / p.hide() / p.toggle()
 Scope {
@@ -29,7 +30,7 @@ Scope {
     property real cursorX: 0                   // pointer, in the target monitor's logical pixels
     property real cursorY: 0
     property Item focusItem                    // gets keyboard focus on open
-    default property alias content: box.data
+    default property alias content: scroll.flickableData
     readonly property alias box: box
 
     signal opened()
@@ -46,7 +47,8 @@ Scope {
     property var anchorRect: null
     property string anchorEdge: barEdge
     readonly property string fromEdge: anchorRect ? anchorEdge : barEdge   // the side it moves out of
-    // tallest a panel can be on its screen, between the bar and dock (callers cap boxHeight with it)
+    // tallest a panel can be on its screen, between the bar and dock. Callers needn't cap boxHeight with it:
+    // a taller panel scrolls inside its frame (scroll bar, a fade at the cut edge, the focused control kept in view)
     readonly property int maxHeight: (targetScreen?.height ?? 1000) - Theme.reserveTop - Theme.reserveBottom - edge * 2
     // Where the box goes. "top" / "topLeft" / "topRight" mean "beside the bar": under a top bar,
     // above a bottom bar, next to a side rail (Left = its top end, Right = its bottom end).
@@ -83,6 +85,15 @@ Scope {
         return [Math.max(l, Math.min(cursorX - w / 2, r)), Math.max(t, Math.min(cursorY - 28, b))]
     }
 
+    // [x, y, height]: place() for a height capped to the room between bar and dock, kept on the screen
+    function frame(w, h, W, H) {
+        const flush = ["strip", "half", "column", "fullscreen"].includes(placement)   // edge-to-edge layouts
+        const lo = Theme.reserveTop, hi = H - Theme.reserveBottom - (flush ? 0 : edge)
+        h = Math.min(h, hi - lo - (flush ? 0 : edge))
+        const at = place(w, h, W, H), y = Math.max(lo, at[1])
+        return [Math.max(0, Math.min(at[0], W - w)), y, Math.max(0, Math.min(h, hi - y))]
+    }
+
     function show() {
         if (Anchor.fresh && Anchor.screen) {   // clicked in the bar or dock: open there, now
             targetScreen = Anchor.screen
@@ -99,8 +110,9 @@ Scope {
     function hide() { if (open) { open = false; closed() } }
     onOpenChanged: {
         if (open) Anchor.opened(name, targetScreen); else Anchor.closed(name)
-        if (open && focusItem) focusItem.forceActiveFocus()
+        if (open) { scroll.contentY = 0; takeFocus() }
     }
+    function takeFocus() { (focusItem ?? box).forceActiveFocus() }
     onTargetScreenChanged: if (open) Anchor.opened(name, targetScreen)
     function toggle() { if (open) hide(); else show() }
 
@@ -161,10 +173,14 @@ Scope {
         Item {
             id: box
             width: popup.boxWidth
-            height: popup.boxHeight
-            readonly property var at: popup.place(width, height, win.width, win.height)
+            readonly property var at: popup.frame(width, popup.boxHeight, win.width, win.height)
             x: at[0]
             y: at[1]
+            height: at[2]
+            // taller than the room: the content scrolls inside the panel's frame, with a fade at the cut edge
+            readonly property bool overflow: popup.boxHeight > height + 1
+            // the panel surface's own corner (its first child, usually a Glass)
+            readonly property real radius: scroll.contentItem.children[0]?.radius ?? Theme.radiusPanel
             // out of the trigger's side: travel + start scale + fade on the theme's curve; out faster than in.
             // Only transform and opacity move, so it stays on the compositor's fast path at 120 Hz.
             property real t: popup.open ? 1 : 0
@@ -187,57 +203,63 @@ Scope {
                 }
             ]
 
-            MouseArea { anchors.fill: parent; z: -1 }   // clicks inside don't close
-            // depth, the theme's way (Theme.depth): a soft shadow, a hard offset block, or the frame alone
-            RectangularShadow {
-                visible: Theme.depth === "soft"
+            MouseArea { anchors.fill: parent; z: -2 }   // clicks inside don't close
+            PopupDepth { anchors.fill: parent; z: -1; radius: box.radius }
+
+            Item {
                 anchors.fill: parent
-                z: -2
-                offset.y: 10
-                blur: 28
-                spread: -4
-                radius: Theme.radiusLarge
-                color: Theme.shadow
-            }
-            RectangularShadow {   // glow: a haze in the accent around the panel (Console's phosphor)
-                visible: Theme.depth === "glow"
-                anchors.fill: parent
-                z: -2
-                blur: 34
-                spread: 2
-                radius: Theme.radiusLarge
-                color: Qt.alpha(Theme.accent, 0.22)
-            }
-            Rectangle {   // topline: the accent along the panel's top edge, like a focused terminal pane (Monolith)
-                visible: Theme.current.popup.decor === "topline"
-                z: 10
-                width: box.width; height: 2
-                color: Theme.accent
-            }
-            Repeater {   // brackets: accent corner marks over the panel's frame (Console)
-                model: Theme.current.popup.decor === "brackets" ? [[0, 0], [1, 0], [0, 1], [1, 1]] : []
-                Item {
-                    id: mark
-                    required property var modelData
-                    z: 10
-                    width: 14; height: 14
-                    x: modelData[0] ? box.width - width + 2 : -2
-                    y: modelData[1] ? box.height - height + 2 : -2
-                    Rectangle { width: parent.width; height: 2; color: Theme.accent; y: mark.modelData[1] ? parent.height - 2 : 0 }
-                    Rectangle { width: 2; height: parent.height; color: Theme.accent; x: mark.modelData[0] ? parent.width - 2 : 0 }
+                // cut to the panel's rounded shape while it scrolls (a plain clip would square the corners)
+                layer.enabled: box.overflow && box.radius > 0
+                layer.effect: MultiEffect { maskEnabled: true; maskSource: shape; maskThresholdMin: 0.5; maskSpreadAtMin: 1 }
+
+                Flickable {
+                    id: scroll
+                    anchors.fill: parent
+                    contentWidth: width
+                    contentHeight: popup.boxHeight
+                    clip: box.overflow
+                    interactive: box.overflow
+                    boundsBehavior: Flickable.StopAtBounds
+                    ScrollBar.vertical: GlassScrollBar {}
+                }
+                MoreBelow { flick: scroll; anchors { left: parent.left; right: parent.right; bottom: parent.bottom } height: Theme.spaceXl }
+                MoreBelow {   // and "more above", the same fade turned over
+                    flick: scroll
+                    visible: scroll.contentY > 1
+                    rotation: 180
+                    anchors { left: parent.left; right: parent.right; top: parent.top }
+                    height: Theme.spaceXl
                 }
             }
-            Rectangle {
-                visible: Theme.depth === "hard"
+            Rectangle { id: shape; anchors.fill: parent; radius: box.radius; visible: false; layer.enabled: box.overflow }
+            Rectangle {   // the frame's edge where the content is cut off
+                visible: box.overflow
                 anchors.fill: parent
-                anchors { leftMargin: 7; topMargin: 7; rightMargin: -7; bottomMargin: -7 }
-                z: -2
-                color: Theme.stroke
+                z: 5
+                radius: box.radius
+                color: "transparent"
+                border { color: Theme.stroke; width: Theme.line }
+            }
+            PopupDepth { anchors.fill: parent; z: 10; over: true }
+
+            // keep the keyboard's place in view: Tab or the arrows into a row below the cut scroll to it
+            readonly property Item focused: Window.activeFocusItem
+            onFocusedChanged: {
+                let p = focused
+                while (p && p !== box) p = p.parent
+                // the focused row was rebuilt or removed (a list changed): back to the panel, so Escape still works
+                if (!p) { if (popup.open) Qt.callLater(popup.takeFocus); return }
+                if (!overflow) return
+                const y = focused.mapToItem(scroll.contentItem, 0, 0).y, pad = Theme.spaceXl
+                if (y < scroll.contentY + pad) scroll.contentY = Math.max(0, y - pad)
+                else if (y + focused.height > scroll.contentY + height - pad)
+                    scroll.contentY = Math.min(scroll.contentHeight - height, y + focused.height - height + pad)
             }
             Keys.onEscapePressed: popup.hide()
         }
 
-        onVisibleChanged: if (visible && popup.focusItem) popup.focusItem.forceActiveFocus()
+        // the keyboard goes into the panel on open, so Escape always reaches the box
+        onVisibleChanged: if (visible) popup.takeFocus()
     }
 
     // the catcher above only covers this monitor; Hyprland reports clicks on the others

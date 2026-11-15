@@ -1,8 +1,6 @@
 pragma Singleton
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Controls as QQC
 import QtQuick.Layouts
@@ -73,123 +71,95 @@ Singleton {
         }
     }
 
-    PanelWindow {
-        id: win
-        screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
-        visible: root.open || stage.opacity > 0
-        anchors { top: true; bottom: true; left: true; right: true }
-        exclusionMode: ExclusionMode.Ignore
-        color: "transparent"
-        WlrLayershell.namespace: "qs-cheatsheet"
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: root.open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    Overlay {
+        id: card
+        name: "cheatsheet"
+        open: root.open
+        cardWidth: 1180
+        cardHeight: content.implicitHeight + pad * 2
+        readonly property int pad: Theme.spaceXl
+        onDismissed: root.hide()
+        // typing filters; Esc clears the filter first, then closes; Super+/ toggles from Hyprland
+        onKeyPressed: event => {
+            if (event.key === Qt.Key_Escape) { if (root.filter) root.filter = ""; else root.hide() }
+            else if (event.key === Qt.Key_Backspace) root.filter = root.filter.slice(0, -1)
+            else if (event.text && event.text.trim() && !(event.modifiers & Qt.MetaModifier)) root.filter += event.text
+            else return
+            event.accepted = true
+        }
 
-        Item {
-            id: stage
-            anchors.fill: parent
-            opacity: root.open ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-            focus: root.open
+        MoreBelow { z: 1; flick: sheet; anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: card.pad } }
+        Flickable {   // scrolls on short screens (the laptop at 1.2 scale, tablet mode)
+            id: sheet
+            anchors { fill: parent; margins: card.pad }
+            QQC.ScrollBar.vertical: GlassScrollBar {}
+            contentHeight: content.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
 
-            // typing filters; Esc clears the filter first, then closes; Super+/ toggles from Hyprland
-            Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) { if (root.filter) root.filter = ""; else root.hide() }
-                else if (event.key === Qt.Key_Backspace) root.filter = root.filter.slice(0, -1)
-                else if (event.text && event.text.trim() && !(event.modifiers & Qt.MetaModifier)) root.filter += event.text
-                else return
-                event.accepted = true
-            }
+            ColumnLayout {
+                id: content
+                width: parent.width - Theme.spaceM   // room for the scroll bar, so it never covers the key caps
+                spacing: Theme.spaceL
 
-            Rectangle { anchors.fill: parent; color: Theme.backdrop }
-            MouseArea { anchors.fill: parent; onClicked: root.hide(); Accessible.ignored: true }
+                RowLayout {
+                    Layout.fillWidth: true
+                    Text { text: "Keyboard shortcuts"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontHeading; weight: Font.DemiBold } }
+                    Item { Layout.fillWidth: true }
+                    Text {
+                        text: root.filter ? "Filter: " + root.filter : "Type to filter · Esc closes · change keys in Settings › Keyboard Shortcuts"
+                        color: root.filter ? Theme.accent : Theme.subtext
+                        font { family: Theme.font; pixelSize: Theme.fontLabel }
+                    }
+                }
 
-            Glass {
-                id: card
-                readonly property int margin: Math.max(Theme.spaceL, Math.min(win.width, win.height) * 0.04)
-                readonly property int pad: Theme.spaceXl
-                width: Math.min(1180, win.width - margin * 2)
-                height: Math.min(content.implicitHeight + pad * 2, win.height - margin * 2)
-                anchors.centerIn: parent
-                strong: true
-                radius: Theme.radiusPanel
-                scale: root.open ? 1 : 0.97
-                Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-                MouseArea { anchors.fill: parent }   // clicks on the card don't close it
+                Flow {   // groups as columns that wrap to the card width
+                    id: flow
+                    Layout.fillWidth: true
+                    spacing: Theme.spaceXl
+                    readonly property int cols: Math.max(1, Math.floor((width + spacing) / (330 + spacing)))
+                    readonly property real colWidth: (width - spacing * (cols - 1)) / cols
 
-                MoreBelow { z: 1; flick: sheet; anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: card.pad } }
-                Flickable {   // scrolls on short screens (the laptop at 1.2 scale, tablet mode)
-                    id: sheet
-                    anchors { fill: parent; margins: card.pad }
-                    QQC.ScrollBar.vertical: GlassScrollBar {}
-                    contentHeight: content.implicitHeight
-                    clip: true
-                    boundsBehavior: Flickable.StopAtBounds
-
-                    ColumnLayout {
-                        id: content
-                        width: parent.width
-                        spacing: Theme.spaceL
-
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Text { text: "Keyboard shortcuts"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontHeading; weight: Font.DemiBold } }
-                            Item { Layout.fillWidth: true }
+                    Repeater {
+                        model: root.groups
+                        ColumnLayout {
+                            required property var modelData
+                            width: flow.colWidth
+                            spacing: 2
                             Text {
-                                text: root.filter ? "Filter: " + root.filter : "Type to filter · Esc closes · change keys in Settings › Keyboard Shortcuts"
-                                color: root.filter ? Theme.accent : Theme.subtext
-                                font { family: Theme.font; pixelSize: Theme.fontLabel }
+                                text: modelData.name.toUpperCase()
+                                color: Theme.accent
+                                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Bold; letterSpacing: 1.2 }
+                                Layout.bottomMargin: Theme.spaceXs
                             }
-                        }
-
-                        Flow {   // groups as columns that wrap to the card width
-                            id: flow
-                            Layout.fillWidth: true
-                            spacing: Theme.spaceXl
-                            readonly property int cols: Math.max(1, Math.floor((width + spacing) / (330 + spacing)))
-                            readonly property real colWidth: (width - spacing * (cols - 1)) / cols
-
                             Repeater {
-                                model: root.groups
-                                ColumnLayout {
+                                model: modelData.items
+                                RowLayout {
                                     required property var modelData
-                                    width: flow.colWidth
-                                    spacing: 2
+                                    Layout.fillWidth: true
+                                    Layout.minimumHeight: 26
+                                    spacing: Theme.spaceS
                                     Text {
-                                        text: modelData.name.toUpperCase()
-                                        color: Theme.accent
-                                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Bold; letterSpacing: 1.2 }
-                                        Layout.bottomMargin: Theme.spaceXs
+                                        Layout.fillWidth: true
+                                        text: modelData.label
+                                        color: Theme.text
+                                        wrapMode: Text.Wrap   // two lines rather than a word cut off
+                                        maximumLineCount: 2
+                                        elide: Text.ElideRight
+                                        font { family: Theme.font; pixelSize: Theme.fontSize }
                                     }
-                                    Repeater {
-                                        model: modelData.items
-                                        RowLayout {
-                                            required property var modelData
-                                            Layout.fillWidth: true
-                                            Layout.minimumHeight: 26
-                                            spacing: Theme.spaceS
-                                            Text {
-                                                Layout.fillWidth: true
-                                                text: modelData.label
-                                                color: Theme.text
-                                                wrapMode: Text.Wrap   // two lines rather than a word cut off
-                                                maximumLineCount: 2
-                                                elide: Text.ElideRight
-                                                font { family: Theme.font; pixelSize: Theme.fontSize }
-                                            }
-                                            Rectangle {   // keycap
-                                                implicitWidth: cap.implicitWidth + 12
-                                                implicitHeight: 22
-                                                radius: Theme.radiusSmall - 2
-                                                color: Theme.fill
-                                                border { color: Theme.strokeStrong; width: 1 }
-                                                Text {
-                                                    id: cap
-                                                    anchors.centerIn: parent
-                                                    text: modelData.keys
-                                                    color: Theme.text
-                                                    font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
-                                                }
-                                            }
+                                    Rectangle {   // keycap
+                                        implicitWidth: cap.implicitWidth + 12
+                                        implicitHeight: 22
+                                        radius: Theme.radiusSmall - 2
+                                        color: Theme.fill
+                                        border { color: Theme.strokeStrong; width: 1 }
+                                        Text {
+                                            id: cap
+                                            anchors.centerIn: parent
+                                            text: modelData.keys
+                                            color: Theme.text
+                                            font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
                                         }
                                     }
                                 }

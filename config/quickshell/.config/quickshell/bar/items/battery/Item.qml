@@ -1,14 +1,16 @@
 import QtQuick
 import qs
 
-// The battery: a gauge (words in word themes); hidden without a battery. Click opens Settings > Power.
+// The battery: a gauge (words in word themes); hidden without a battery. Click opens its flyout (charge, draw, time left, power mode, Caffeine).
 BarItem {
     required property var bar
     actions: bar.cfg
     shown: Sys.hasBattery
     vertical: bar.vertical
     tip: "Battery " + Sys.batteryPct + "%" + (Sys.charging ? ", charging" : "")
-    onPressed: SettingsApp.show("power")
+    opens: "battery"
+    active: Flyouts.isOpen("battery")
+    onPressed: Flyouts.toggle("battery")
     BarBattery { visible: !bar.words; tone: bar.tone; family: bar.family; vertical: bar.vertical }
     Text {
         visible: bar.words
