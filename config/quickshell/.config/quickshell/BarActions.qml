@@ -7,7 +7,8 @@ import QtQuick
 //   "default"            the item's own behaviour (same as leaving it out)
 //   "none"               nothing
 //   "panel:<name>"       open or close a panel: controlcenter, launcher, notifications, calendar, weather,
-//                        system, power, clipboard, cheatsheet
+//                        system, power, clipboard, cheatsheet, and the flyouts volume, network, bluetooth,
+//                        brightness, media, battery
 //   "settings:<page>"    open Settings on that page (e.g. settings:power)
 //   "volume" / "brightness"   scroll changes it
 //   "run:<command>"      run a command of yours (it is your settings file, so it runs as you typed it)
@@ -16,7 +17,9 @@ Singleton {
         controlcenter: () => ControlCenter.toggle(), launcher: () => Launcher.toggle(),
         notifications: () => NotificationCenter.toggle(), calendar: () => Calendar.toggle(),
         weather: () => Weather.toggle(), system: () => Sensors.toggle(), power: () => PowerMenu.toggle(),
-        clipboard: () => Clipboard.toggle(), cheatsheet: () => Cheatsheet.toggle()
+        clipboard: () => Clipboard.toggle(), cheatsheet: () => Cheatsheet.toggle(),
+        volume: () => Flyouts.toggle("volume"), network: () => Flyouts.toggle("network"), bluetooth: () => Flyouts.toggle("bluetooth"),
+        brightness: () => Flyouts.toggle("brightness"), media: () => Flyouts.toggle("media"), battery: () => Flyouts.toggle("battery")
     })
     readonly property var names: ["default", "none", "volume", "brightness"].concat(Object.keys(panels).map(p => "panel:" + p))
 

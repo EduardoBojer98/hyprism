@@ -23,6 +23,6 @@ ColumnLayout {
             color: Theme.text
             font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
-        MouseArea { id: linkArea; Accessible.role: Accessible.Button; Accessible.name: link.label; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { ControlCenter.hide(); SettingsApp.show(link.page) } }
+        MouseArea { id: linkArea; Accessible.role: Accessible.Button; Accessible.name: link.label; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { Flyouts.hideAll(); SettingsApp.show(link.page) } }
     }
 }

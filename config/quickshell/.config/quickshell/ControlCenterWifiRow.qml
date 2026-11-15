@@ -7,9 +7,10 @@ import QtQuick.Layouts
 // A Wi-Fi network row; a secured network you haven't joined asks for its password right under it
 ColumnLayout {
     id: wr
+    property var host: null   // the panel it sits in (PanelState): ControlCenter.view or a Flyout's
     required property var modelData
     readonly property bool secured: modelData.security !== WifiSecurityType.Open
-    readonly property bool failed: ControlCenter.wifiFailed === modelData.name
+    readonly property bool failed: wr.host.wifiFailed === modelData.name
     Layout.fillWidth: true
     spacing: 2
 
@@ -25,18 +26,18 @@ ColumnLayout {
         selected: wr.modelData.connected
         action: wr.modelData.connected ? "Disconnect" : "Join"
         onClicked: {
-            ControlCenter.wifiFailed = ""
+            wr.host.wifiFailed = ""
             if (wr.modelData.connected) wr.modelData.disconnect()
             else if (wr.modelData.known || !wr.secured) wr.modelData.connect()
-            else ControlCenter.passwordFor = wr.modelData
+            else wr.host.passwordFor = wr.modelData
         }
     }
     Connections {
         target: wr.modelData
-        function onConnectionFailed() { ControlCenter.wifiFailed = wr.modelData.name; if (wr.secured) ControlCenter.passwordFor = wr.modelData }
+        function onConnectionFailed() { wr.host.wifiFailed = wr.modelData.name; if (wr.secured) wr.host.passwordFor = wr.modelData }
     }
     RowLayout {   // password, under the network it's for
-        visible: ControlCenter.passwordFor === wr.modelData
+        visible: wr.host.passwordFor === wr.modelData
         Layout.fillWidth: true
         Layout.leftMargin: 44
         Layout.rightMargin: 6
@@ -57,8 +58,8 @@ ColumnLayout {
                 font { family: Theme.font; pixelSize: Theme.fontSize }
                 focus: parent.parent.visible
                 onAccepted: join()
-                Keys.onEscapePressed: ControlCenter.passwordFor = null
-                function join() { if (!text) return; ControlCenter.wifiFailed = ""; wr.modelData.connectWithPsk(text); text = ""; ControlCenter.passwordFor = null }
+                Keys.onEscapePressed: wr.host.passwordFor = null
+                function join() { if (!text) return; wr.host.wifiFailed = ""; wr.modelData.connectWithPsk(text); text = ""; wr.host.passwordFor = null }
                 Text { visible: !psk.text; anchors.verticalCenter: parent.verticalCenter; text: "Password"; color: Theme.muted; font: psk.font }
             }
         }

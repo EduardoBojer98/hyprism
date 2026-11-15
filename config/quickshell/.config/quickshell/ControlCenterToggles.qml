@@ -32,9 +32,9 @@ ColumnLayout {
             hint: "Keep awake · chevron to choose how long"
             active: Caffeine.active
             expandable: true
-            isExpanded: ControlCenter.expanded === "caffeine"
+            isExpanded: ControlCenter.view.expanded === "caffeine"
             onToggled: Caffeine.toggle()
-            onExpand: ControlCenter.toggleExpanded("caffeine")
+            onExpand: ControlCenter.view.toggleExpanded("caffeine")
         }
         ControlCenterQuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
             visible: ControlCenter.shownToggles.includes("monitor")
@@ -100,7 +100,7 @@ ColumnLayout {
     }
 
     ControlCenterDrop {
-        open: ControlCenter.expanded === "caffeine"
+        open: ControlCenter.view.expanded === "caffeine"
         title: "Caffeine"
         switchOn: Caffeine.active
         onSwitched: Caffeine.toggle()

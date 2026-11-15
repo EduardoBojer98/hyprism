@@ -2,10 +2,6 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
-import Quickshell.Services.Pipewire
-import Quickshell.Services.Mpris
-import Quickshell.Networking
-import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -17,9 +13,10 @@ import QtQuick.Layouts
 //   shortcuts (screenshot, settings, lock, power). Notifications have their own panel (NotificationCenter.qml).
 // A tile's round icon toggles it; the rest of the tile (or a chevron) opens its list underneath.
 // The battery lives in the bar, so it isn't repeated here.
-// This file holds the state, the header and the tooltip. Each section is a ControlCenter<Section>.qml
+// This file holds the layout, the header and the tooltip. Each section is a ControlCenter<Section>.qml
 // (Connections, Toggles, Media, Sliders, Power, Shortcuts); the tiles and rows they use are ControlCenter<Block>.qml.
-// The parts read the panel's state (expanded, adapter, sink ...) from this singleton by name.
+// Sections read the system from services (Sys, PowerMode, Sensors) and this panel's state from `host`
+// (a PanelState), so the same section also works in a bar item's flyout (Flyouts.qml).
 Singleton {
     id: cc
 
@@ -40,12 +37,15 @@ Singleton {
         switch (id) {
         case "monitor": return Machine.monitorSwitch
         case "keylight": return Machine.kbdDevice !== ""
-        case "media": return player !== null
+        case "media": return Sys.player !== null
         default: return true
         }
     }
     function shown(group) { return order(group).filter(id => !Config.controlCenter.hidden.includes(id) && available(id)) }
     readonly property var shownSections: shown("sections")
+    // a section's place and whether it shows (Settings > Control Center); the shared modules don't know about it
+    function row(id) { return Math.max(0, shownSections.indexOf(id)) }
+    function shows(id) { return shownSections.includes(id) }
     readonly property var shownTiles: shown("tiles")
     readonly property var shownToggles: shown("toggles")
     // Settings, Lock and Power sit in the header; the shortcuts row keeps the rest
@@ -81,18 +81,10 @@ Singleton {
         mission: { glyph: "\u{F0570}", label: "Windows", run: () => MissionControl.toggle() }
     })
 
-    property string expanded: ""     // "", "wifi", "bt", "caffeine", "out", "in"
-    property var passwordFor: null   // Wi-Fi network waiting for a password
-    property string wifiFailed: ""   // name of the network that just failed to connect
-    property real brightness: 0
+    // what the sections share while the panel is open (folded-out list, Wi-Fi password, tooltip); flyouts have their own
+    readonly property PanelState view: PanelState { popup: popup }
     property int kbdLight: 0           // 0-3
     property date now: new Date()
-
-    readonly property var wifi: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
-    readonly property var adapter: Bluetooth.defaultAdapter
-    readonly property var sink: Pipewire.defaultAudioSink
-    readonly property var source: Pipewire.defaultAudioSource
-    readonly property var player: Mpris.players.values.find(p => p.isPlaying) ?? Mpris.players.values[0] ?? null
 
     readonly property string style: Config.controlCenter.style || "panel"
     readonly property int customWidth: Config.controlCenter.width || 330
@@ -100,36 +92,14 @@ Singleton {
     readonly property int pad: style === "compact" ? 6 : 10         // panel padding
 
 
-    readonly property var streams: Pipewire.nodes.values.filter(n => n.type === PwNodeType.AudioOutStream)   // apps playing
-    PwObjectTracker { objects: [cc.sink, cc.source].concat(cc.streams) }
-
-    // icon and kind for an audio device / a Bluetooth device's icon name
-    function audioGlyph(n) {
-        const d = n?.description ?? ""
-        if (/HDMI|DisplayPort|\bDP\b/.test(d)) return "\u{F0379}"
-        if (n?.name?.startsWith("bluez") || /Headphone|Headset/i.test(d)) return "\u{F02CB}"
-        return "\u{F04C3}"
-    }
-    function audioKind(n) {
-        const d = n?.description ?? "", name = n?.name ?? ""
-        return name.startsWith("bluez") ? "Bluetooth" : /HDMI|DisplayPort|\bDP\b/.test(d) ? "Screen (HDMI / DisplayPort)"
-             : name.includes("usb") ? "USB" : /Analog/.test(d) ? "Built-in" : ""
-    }
-    function btGlyph(icon) {
-        return ({ "audio-headset": "\u{F02CE}", "audio-headphones": "\u{F02CB}", "audio-card": "\u{F04C3}", "input-mouse": "\u{F037D}",
-                  "input-keyboard": "\u{F030C}", "input-gaming": "\u{F0297}", "phone": "\u{F011C}", "computer": "\u{F0322}" })[icon] ?? "\u{F00AF}"
-    }
-
     function toggle() { popup.toggle() }
-    function showSection(name) { if (!popup.open) popup.show(); cc.expanded = name }   // a bar item opens its own part
+    function showSection(name) { if (!popup.open) popup.show(); view.expanded = name }   // a bar item opens its own part
     // the bell / Super+N: open (or close) scrolled down to the notifications
     function toggleNotifications() { NotificationCenter.toggle() }   // old entry point; notifications have their own panel
 
     // One tooltip for the whole panel, drawn above the scroll area so it is never clipped
-    property Item hintItem: null
-    property string hintText: ""
-    function hint(item, text) { hintText = text; hintItem = item }
-    function unhint(item) { if (hintItem === item) hintItem = null }
+    function hint(item, text) { view.hint(item, text) }
+    function unhint(item) { view.unhint(item) }
     function hide() { popup.hide() }
 
     IpcHandler {
@@ -137,7 +107,7 @@ Singleton {
         function toggle(): void { cc.toggle() }
         function close(): void { popup.hide() }
         // open with a dropdown showing: wifi, bt, caffeine, out (sound), in (microphone)
-        function expand(name: string): void { if (!popup.open) popup.show(); cc.expanded = name }
+        function expand(name: string): void { cc.showSection(name) }
     }
 
     Connections {
@@ -145,19 +115,14 @@ Singleton {
         function onOpenChanged() { cc.opened(popup.open) }
     }
     function opened(visible) {
-        if (wifi) wifi.scannerEnabled = visible
+        if (Sys.wifi) Sys.wifi.scannerEnabled = visible
         if (visible) {
-            brightnessRead.running = true; Hyprland.refreshMonitors(); kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
+            Sys.readBrightness(); Hyprland.refreshMonitors(); kbdRead.running = Machine.kbdDevice !== ""; now = new Date()
             Notifications.now = new Date()
         }
-        else { expanded = ""; passwordFor = null; hintItem = null }
+        else view.reset()
     }
 
-    Process {
-        id: brightnessRead
-        command: ["brightnessctl", "-m"]   // amdgpu_bl1,backlight,123,48%,255
-        stdout: StdioCollector { onStreamFinished: cc.brightness = parseInt(text.split(",")[3]) / 100 }
-    }
     Process {
         id: kbdRead
         command: ["brightnessctl", "-m", "-d", Machine.kbdDevice]   // asus::kbd_backlight,leds,1,33%,3
@@ -165,14 +130,6 @@ Singleton {
     }
     Timer { interval: 30000; repeat: true; running: popup.open; onTriggered: cc.now = new Date() }
 
-    // short device names: the monitor's own name for HDMI/DP audio, "Built-in …" for the laptop's codec
-    function nodeName(n) {
-        const d = n?.description ?? "", nick = n?.nickname ?? ""
-        if (/HDMI|DisplayPort|\bDP\b/.test(d) && nick) return nick
-        if (/Analog/.test(d) && /Controller/.test(d)) return n.type === PwNodeType.AudioSink ? "Built-in speakers" : "Built-in microphone"
-        return d || nick || n?.name || ""
-    }
-    function toggleExpanded(name) { expanded = expanded === name ? "" : name; passwordFor = null; wifiFailed = "" }
     function setKbd(level) {
         kbdLight = level
         Quickshell.execDetached(["brightnessctl", "-q", "-d", Machine.kbdDevice, "set", String(level)])
@@ -256,11 +213,11 @@ Singleton {
         columns: 1
         rowSpacing: cc.gap
 
-        ControlCenterConnections {}
+        ControlCenterConnections { host: cc.view; tiles: cc.shownTiles; Layout.row: cc.row("connections"); visible: cc.shows("connections") }
         ControlCenterToggles {}
-        ControlCenterMedia {}
-        ControlCenterSliders {}
-        ControlCenterPower {}
+        ControlCenterMedia { host: cc.view; Layout.row: cc.row("media"); visible: cc.shows("media") }
+        ControlCenterSliders { host: cc.view; Layout.row: cc.row("sliders"); visible: cc.shows("sliders") }
+        ControlCenterPower { host: cc.view; Layout.row: cc.row("power"); visible: cc.shows("power") }
         ControlCenterShortcuts {}
 
     }
@@ -268,16 +225,16 @@ Singleton {
 
     Rectangle {   // the shared tooltip (cc.hint), kept inside the panel's edges
         id: hintBox
-        readonly property var at: cc.hintItem ? cc.hintItem.mapToItem(hintBox.parent, 0, 0) : Qt.point(0, 0)
-        readonly property bool fitsBelow: at.y + (cc.hintItem?.height ?? 0) + 6 + height <= hintBox.parent.height - 4
+        readonly property var at: cc.view.hintItem ? cc.view.hintItem.mapToItem(hintBox.parent, 0, 0) : Qt.point(0, 0)
+        readonly property bool fitsBelow: at.y + (cc.view.hintItem?.height ?? 0) + 6 + height <= hintBox.parent.height - 4
         z: 100
-        opacity: cc.hintItem ? 1 : 0
+        opacity: cc.view.hintItem ? 1 : 0
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
         width: Math.min(hintLabel.implicitWidth + Theme.spaceM * 2, hintBox.parent.width - 8)
         height: hintLabel.implicitHeight + Theme.spaceS
-        x: Math.max(4, Math.min(at.x + (cc.hintItem?.width ?? 0) / 2 - width / 2, hintBox.parent.width - width - 4))
-        y: fitsBelow ? at.y + (cc.hintItem?.height ?? 0) + 6 : at.y - height - 6
+        x: Math.max(4, Math.min(at.x + (cc.view.hintItem?.width ?? 0) / 2 - width / 2, hintBox.parent.width - width - 4))
+        y: fitsBelow ? at.y + (cc.view.hintItem?.height ?? 0) + 6 : at.y - height - 6
         radius: Theme.radiusSmall - 2
         color: Theme.menu
         border { color: Theme.stroke; width: 1 }
@@ -285,7 +242,7 @@ Singleton {
             id: hintLabel
             anchors.centerIn: parent
             width: Math.min(implicitWidth, hintBox.parent.width - 8 - Theme.spaceM * 2)
-            text: cc.hintText
+            text: cc.view.hintText
             elide: Text.ElideRight
             color: Theme.text
             font { family: Theme.font; pixelSize: Theme.fontCaption }

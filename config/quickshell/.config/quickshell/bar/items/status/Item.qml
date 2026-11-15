@@ -1,7 +1,7 @@
 import QtQuick
 import qs
 
-// Network, Bluetooth, sound and battery in one item that opens the Control Center. Scroll changes the volume.
+// Network, Bluetooth, sound and battery in one item; a click opens the flyout of the icon clicked. Scroll: volume.
 BarStatus {
     required property var bar
     actions: bar.cfg
