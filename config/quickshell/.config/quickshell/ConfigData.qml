@@ -144,7 +144,7 @@ JsonAdapter {
     property JsonObject weather: JsonObject {
         // saved places, in your order: [{ name, region, country, latitude, longitude }]; Settings > Weather adds them
         // from a search. Empty = the panel asks for a place. Night Light's sunset mode uses the first one.
-        property var locations: []
+        property var locations: []             // saved places [{ name, region, country, latitude, longitude }]; the first is the default
         property string units: "celsius"         // "celsius" (km/h) or "fahrenheit" (mph)
         property int days: 7                     // days in the forecast list (0 = no daily list)
         property int hours: 12                   // hours in the hourly strip (0 = no hourly strip)

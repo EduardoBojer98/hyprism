@@ -182,7 +182,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `locations` | `var` | `[]` |  |
+| `locations` | `var` | `[]` | saved places [{ name, region, country, latitude, longitude }]; the first is the default |
 | `units` | `string` | `"celsius"` | "celsius" (km/h) or "fahrenheit" (mph) |
 | `days` | `int` | `7` | days in the forecast list (0 = no daily list) |
 | `hours` | `int` | `12` | hours in the hourly strip (0 = no hourly strip) |
