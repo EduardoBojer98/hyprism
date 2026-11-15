@@ -45,15 +45,15 @@ Pebble, atlas to Poster, console and reactor to Monolith) and migration 0006 rem
 
 | | Pebble: calm | Poster: loud | Monolith: terminal |
 |---|---|---|---|
-| Ground / text / accent | `#171918` / `#e9ece6` / `#b9cf8f` (+ `#8fa8a3`) | `#141414` / ink `#141414` on paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | `#0b0c0a` / `#d7ddcc` / `#b6ff3b` (+ `#ff5f2e`) |
-| Type | Archivo, light numerals (weight 300), 14 px | Archivo Black + Archivo, 14 px | JetBrains Mono everywhere, 13 px |
-| Shape · depth | r14, 1 px lines, solid · soft shadow | r0, 3 px lines · hard offset block | r0, 1 px lines · none; accent top line on panels |
-| Density | roomy | regular | compact |
-| Bar | top, 38 px, floating, dots, plain clock | top, 52 px, attached paper strip, workspace blocks, big clock | top, 34 px, attached, tmux-style status line with apps inside, rules, inverse lime clock block |
+| Ground / text / accent | `#171918` / `#e9ece6` / `#b9cf8f` (+ `#8fa8a3`) | `#141414` / ink `#141414` on paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | `#090a08` / `#dde3d2` / `#b6ff3b` (+ `#ff6a3d`) |
+| Type | Archivo, light numerals (weight 300), 14 px | Archivo Black + Archivo, 14 px | JetBrains Mono, Martian Mono numerals (700), 13 px |
+| Shape · depth | r14, 1 px lines, solid · soft shadow | r0, 3 px lines · hard offset block | r0, 1 px lines · none; accent corner brackets on panels |
+| Density | roomy | regular | regular |
+| Bar | top, 38 px, floating, dots, plain clock | top, 52 px, attached paper strip, workspace blocks, big clock | top, 34 px, attached, tmux-style status line with apps inside, rules, dim labels with bright values, inverse lime clock block flush right |
 | Dock | bottom, pill, icons lift | bottom, block, hard shadow, lift | inside the top bar |
-| Motion | 220/140 ms ease-out, 6 px, scale 0.98 | 200/110 ms expo-out, 28 px slam | 90/60 ms fade, no travel |
-| Windows | gaps 8/16, 2 px, r14, soft shadow, ease | gaps 8/16, 3 px, r0, hard shadow, slam | gaps 1/2, 2 px, r0, no shadow, instant |
-| Window frame | accent | accent | accent |
+| Motion | 220/140 ms ease-out, 6 px, scale 0.98 | 200/110 ms expo-out, 28 px slam | 140/90 ms expo-out, 4 px |
+| Windows | gaps 8/16, 2 px, r14, soft shadow, ease | gaps 8/16, 3 px, r0, hard shadow, slam | gaps 4/8, 2 px, r0, no shadow, snappy |
+| Window frame | accent | accent | rainbow |
 
 Contrast (WCAG 2): body text on surfaces 13.2:1 or more; secondary text 5.9:1 or more; text on an accent
 fill is forced to 4.5:1 or more by `Themes.resolve`.
@@ -86,7 +86,7 @@ the terminal, window frames, the lock screen and the wallpaper follow.
 | Theme | Other half: ground / text / accent | Wallpaper |
 |---|---|---|
 | Pebble | light `#e4e6e1` / `#1b1e1c` / `#4d6a35` | pebble-light |
-| Monolith | light `#eceee6` / `#1d2118` / `#4a7d00` | monolith-light |
+| Monolith | light `#e8eae1` / `#191c15` / ink `#22300a` with lime `#b6ff3b` on it (reverse video) | monolith-light |
 | Poster | dark `#141414` / `#f4f1ea` / `#ff4a2e` | poster |
 
 ## Your own themes
