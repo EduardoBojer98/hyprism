@@ -2,84 +2,115 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Networking
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center, opened beside its bar item (the quick-settings item, Super+C,
-// `qs ipc call controlcenter toggle`): one panel holding grouped tiles.
-//   Wi-Fi / Bluetooth / Focus / Night Light tiles · Caffeine, shared monitor, key light, on-screen keyboard
-//   media (while something plays) · Display, Sound and Microphone sliders · Power mode
-//   shortcuts (screenshot, settings, lock, power). Notifications have their own panel (NotificationCenter.qml).
-// A tile's round icon toggles it; the rest of the tile (or a chevron) opens its list underneath.
-// The battery lives in the bar, so it isn't repeated here.
-// This file holds the layout, the header and the tooltip. Each section is a ControlCenter<Section>.qml
-// (Connections, Toggles, Media, Sliders, Power, Shortcuts); the tiles and rows they use are ControlCenter<Block>.qml.
-// Sections read the system from services (Sys, PowerMode, Sensors) and this panel's state from `host`
+// `qs ipc call controlcenter toggle`): one panel, most used first.
+//   large tiles (Wi-Fi, Bluetooth) · sliders (screen, sound, microphone) · small buttons (Focus, Night Light,
+//   Caffeine, Record, Screenshot ...) · media (while something plays) · power mode · a footer with the battery,
+//   Arrange, Settings, Lock and Power. Notifications have their own panel (NotificationCenter.qml).
+// Any tile can be large or small (Settings > Control Center drags it between the two): `items` describes each
+// one once and both shapes draw from it. A tile's icon (or a click on a small one) toggles it; a large tile's
+// body or a small one's chevron (right-click) opens its list underneath.
+// The layout lives in ControlCenterBody.qml, so Settings shows the same body as a live preview. Each section is
+// a ControlCenter<Section>.qml (Connections, Toggles, Media, Sliders, Power); tiles and rows are ControlCenter<Block>.qml.
+// Sections read the system from services (Sys, PowerMode, Sensors) and their panel's state from `host`
 // (a PanelState), so the same section also works in a bar item's flyout (Flyouts.qml).
 Singleton {
     id: cc
 
     readonly property bool open: popup.open
     // ---- layout (Settings > Control Center): order of sections and tiles, and what's hidden ----
+    // `tiles` (large) and `toggles` (small) share their ids: an id sits in one of the two
     readonly property var defaults: ({
-        sections: ["connections", "toggles", "media", "sliders", "power", "shortcuts"],
-        tiles: ["wifi", "bt", "focus", "nightlight"],
-        toggles: ["caffeine", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record"],
-        shortcuts: ["screenshot", "settings", "lock", "power", "colorpicker", "mission"]
+        sections: ["connections", "sliders", "toggles", "media", "power"],
+        tiles: ["wifi", "bt"],
+        sliders: ["display", "sound", "mic"],
+        toggles: ["focus", "nightlight", "caffeine", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "colorpicker", "mission"]
     })
-    // the saved order, plus anything newer than the saved list at the end
+    // the saved order; anything never saved goes to its default group, at its default place
     function order(group) {
-        const saved = (Config.controlCenter[group] ?? []).filter(id => defaults[group].includes(id))
-        return saved.concat(defaults[group].filter(id => !saved.includes(id)))
+        const cfg = Config.controlCenter
+        const shared = group === "tiles" || group === "toggles"
+        const known = shared ? defaults.tiles.concat(defaults.toggles) : defaults[group]
+        const out = Array.from(cfg[group] ?? []).filter((id, i, all) => known.includes(id) && all.indexOf(id) === i)
+        const elsewhere = shared ? Array.from(cfg[group === "tiles" ? "toggles" : "tiles"] ?? []) : []
+        defaults[group].forEach((id, i) => { if (!out.includes(id) && !elsewhere.includes(id)) out.splice(Math.min(i, out.length), 0, id) })
+        return out
     }
     function available(id) {
         switch (id) {
         case "monitor": return Machine.monitorSwitch
         case "keylight": return Machine.kbdDevice !== ""
+        case "touchpad": return Inputs.touchpadName !== ""
         case "media": return Sys.player !== null
         default: return true
         }
     }
     function shown(group) { return order(group).filter(id => !Config.controlCenter.hidden.includes(id) && available(id)) }
     readonly property var shownSections: shown("sections")
-    // a section's place and whether it shows (Settings > Control Center); the shared modules don't know about it
+    // a section's place and whether it shows; the shared modules don't know about it
     function row(id) { return Math.max(0, shownSections.indexOf(id)) }
     function shows(id) { return shownSections.includes(id) }
     readonly property var shownTiles: shown("tiles")
     readonly property var shownToggles: shown("toggles")
-    // Settings, Lock and Power sit in the header; the shortcuts row keeps the rest
-    readonly property var shownShortcuts: shown("shortcuts").filter(id => !["settings", "lock", "power"].includes(id))
+    readonly property var shownSliders: shown("sliders")
 
-    // names and icons of everything the layout editor (Settings > Control Center) can move or hide
+    // sections and sliders, for the editor in Settings > Control Center (tiles describe themselves in `items`)
     readonly property var itemInfo: ({
-        connections: { label: "Connections", glyph: "\u{F05A9}", group: "tiles" },
-        toggles: { label: "Quick toggles", glyph: "\u{F0176}", group: "toggles" },
-        media: { label: "Media (while playing)", glyph: "\u{F075A}" },
-        sliders: { label: "Display and sound", glyph: "\u{F00DF}" },
-        power: { label: "Power mode", glyph: "\u{F0079}" },
-        shortcuts: { label: "Shortcuts", glyph: "\u{F0100}", group: "shortcuts" },
-        wifi: { label: "Wi-Fi", glyph: "\u{F05A9}" },
-        bt: { label: "Bluetooth", glyph: "\u{F00AF}" },
-        focus: { label: "Focus", glyph: "\u{F0594}" },
-        nightlight: { label: "Night Light", glyph: "\u{F0599}" },
-        caffeine: { label: "Caffeine", glyph: "\u{F0176}" },
-        monitor: { label: "Shared monitor", glyph: "\u{F0379}" },
-        keylight: { label: "Key light", glyph: "\u{F0E5B}" },
-        keyboard: { label: "On-screen keyboard", glyph: "\u{F030C}" },
-        touchpad: { label: "Touchpad", glyph: "\u{F0E40}" },
-        touchscreen: { label: "Touchscreen", glyph: "\u{F0741}" },
-        record: { label: "Record screen", glyph: "\u{F044A}" }
+        connections: { label: "Large tiles", glyph: "\u{F0570}", group: "tiles", about: "Big tiles with their state; Wi-Fi and Bluetooth open their lists" },
+        sliders: { label: "Sliders", glyph: "\u{F00DF}", group: "sliders", about: "Screen brightness, sound and microphone" },
+        toggles: { label: "Small buttons", glyph: "\u{F0176}", group: "toggles", about: "A compact grid: click to switch, right-click for options" },
+        media: { label: "Media", glyph: "\u{F075A}", about: "Only while something plays" },
+        power: { label: "Power mode", glyph: "\u{F0079}", about: "Silent, Balanced or Performance" },
+        display: { label: "Screen", glyph: "\u{F00DF}" },
+        sound: { label: "Sound", glyph: "\u{F057E}" },
+        mic: { label: "Microphone", glyph: "\u{F036C}" }
     })
-    // shortcut buttons: what each one shows and does (the Settings editor lists them too)
-    readonly property var shortcutInfo: ({
-        screenshot: { glyph: "\u{F0100}", label: "Screenshot", run: () => Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) },
-        settings: { glyph: "\u{F0493}", label: "Settings", run: () => SettingsApp.show("") },
-        lock: { glyph: "\u{F033E}", label: "Lock", run: () => Quickshell.execDetached(["loginctl", "lock-session"]) },
-        power: { glyph: "\u{F0425}", label: "Power", run: () => PowerMenu.show() },
-        colorpicker: { glyph: "\u{F020A}", label: "Colour", run: () => Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprpicker -a"]) },
-        mission: { glyph: "\u{F0570}", label: "Windows", run: () => MissionControl.toggle() }
+    function info(id) { return itemInfo[id] ?? items[id] ?? { label: id, glyph: "" } }
+
+    // Every tile, once: what it shows (glyph, label, status), whether it's on, what a click does and which list
+    // it opens (`list`: a ControlCenterDrops name). `action` tiles run something and are never "on".
+    readonly property var items: ({
+        wifi: { label: "Wi-Fi", glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}", list: "wifi",
+                status: !Networking.wifiEnabled ? "Off" : (Sys.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected"),
+                active: Networking.wifiEnabled, run: () => { Networking.wifiEnabled = !Networking.wifiEnabled } },
+        bt: { label: "Bluetooth", glyph: Sys.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}", list: "bt",
+              status: !Sys.adapter ? "Unavailable" : !Sys.adapter.enabled ? "Off"
+                    : (Sys.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On"),
+              active: Sys.adapter?.enabled ?? false, run: () => { if (Sys.adapter) Sys.adapter.enabled = !Sys.adapter.enabled } },
+        focus: { label: "Focus", glyph: "\u{F0594}", status: Notifications.dndStatus, active: Notifications.dnd,
+                 hint: "Do Not Disturb: only critical notifications pop up", run: () => Notifications.toggleDnd() },
+        nightlight: { label: "Night Light", glyph: "\u{F0599}", active: NightLight.active, run: () => NightLight.toggle(),
+                      status: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode] },
+        caffeine: { label: "Caffeine", glyph: "\u{F0176}", list: "caffeine", status: Caffeine.remaining(cc.now.getTime()),
+                    active: Caffeine.active, hint: "Keeps the screen awake", run: () => Caffeine.toggle() },
+        monitor: { label: "Monitor", glyph: "\u{F0379}", active: cc.monitorHere, status: cc.monitorHere ? "Here" : "Other PC",
+                   hint: cc.monitorHere ? "Shared monitor shows this computer: click to hand it over" : "Shared monitor shows the other computer: click to take it back",
+                   run: () => Quickshell.execDetached(["monswitch", "toggle"]) },
+        keylight: { label: "Key light", glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}", active: cc.kbdLight > 0,
+                    status: ["Off", "Low", "Medium", "High"][cc.kbdLight], hint: "Keyboard backlight: click for the next level",
+                    run: () => cc.setKbd((cc.kbdLight + 1) % 4) },
+        keyboard: { label: "Keyboard", glyph: "\u{F030C}", active: Osk.visible, status: Osk.visible ? "Shown" : "Hidden",
+                    hint: "On-screen keyboard", run: () => Osk.toggle() },
+        touchpad: { label: "Touchpad", glyph: Inputs.touchpad ? "\u{F0E40}" : "\u{F0E41}", active: Inputs.touchpad,
+                    status: Inputs.touchpad ? "On" : "Off", hint: "Back on at the next login", run: () => Inputs.setTouchpad(!Inputs.touchpad) },
+        touchscreen: { label: "Touch", glyph: "\u{F0741}", active: Inputs.touchscreen, status: Inputs.touchscreen ? "On" : "Off",
+                       hint: "Touchscreen and pen; back on at the next login", run: () => Inputs.setTouchscreen(!Inputs.touchscreen) },
+        record: { label: "Record", glyph: "\u{F044A}", active: Sys.recording, status: Sys.recording ? "Recording" : "Off",
+                  hint: "The screen under the mouse (Super+Alt+R)",
+                  run: () => { if (!Sys.recording) cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; record " + (Sys.recording ? "stop" : "screen")]) } },
+        screenshot: { label: "Screenshot", glyph: "\u{F0100}", action: true, status: "", hint: "Opens the screenshot tool",
+                      run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) } },
+        colorpicker: { label: "Colour", glyph: "\u{F020A}", action: true, status: "", hint: "Pick a colour on screen and copy it",
+                       run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprpicker -a"]) } },
+        mission: { label: "Windows", glyph: "\u{F0570}", action: true, status: "", hint: "Every window at a glance",
+                   run: () => { cc.hide(); MissionControl.toggle() } }
     })
+    readonly property bool monitorHere: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
 
     // what the sections share while the panel is open (folded-out list, Wi-Fi password, tooltip); flyouts have their own
     readonly property PanelState view: PanelState { popup: popup }
@@ -136,99 +167,29 @@ Singleton {
         Quickshell.execDetached(["brightnessctl", "-q", "-d", Machine.kbdDevice, "set", String(level)])
     }
 
+    readonly property int panelRadius: style === "compact" ? Theme.radiusLarge : style === "borderless" ? Theme.radius : Theme.radiusPanel
+
     CursorPopup {
     id: popup
     name: "controlcenter"
     placement: "topRight"
     boxWidth: cc.customWidth
-    boxHeight: header.height + cc.groupGap + content.implicitHeight + cc.pad * 2
+    boxHeight: body.implicitHeight + cc.pad * 2
 
     Glass {   // the backdrop every tile sits on
         anchors.fill: parent
         strong: true
-        radius: cc.style === "compact" ? Theme.radiusLarge : cc.style === "borderless" ? Theme.radius : Theme.radiusPanel
+        radius: cc.panelRadius
         border.width: cc.style === "borderless" ? 0 : 1
 
         // empty background, inside the panel: a tile or a toggle above this still gets the click first
         MouseArea { anchors.fill: parent; Accessible.ignored: true; onClicked: popup.hide() }
 
-    // ---- header: the time large in the theme's display face, the date under it; then the battery and the
-    // three things you reach for (Settings, Lock, Power) as buttons in the panel's small radius ----
-    RowLayout {
-        id: header
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: cc.pad; leftMargin: cc.pad + 2 }
-        spacing: Theme.spaceXs
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: 0
-            Text {
-                text: Sys.time()
-                color: Theme.text
-                font { family: Theme.displayFont; pixelSize: Theme.fontDisplay; weight: Theme.displayWeight; letterSpacing: -0.5; features: { "tnum": 1 } }
-            }
-            Text {
-                Layout.fillWidth: true
-                text: Qt.formatDateTime(Sys.now, "dddd, d MMMM")
-                elide: Text.ElideRight
-                color: Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
-            }
+        ControlCenterBody {
+            id: body
+            host: cc.view
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: cc.pad }
         }
-        Row {   // battery, as a readout
-            visible: Sys.hasBattery
-            Layout.alignment: Qt.AlignVCenter
-            Layout.rightMargin: Theme.spaceS
-            spacing: 3
-            Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryGlyph; color: Sys.batteryLow ? Theme.error : Sys.charging ? Theme.success : Theme.subtext
-                   font { family: Theme.iconFont; pixelSize: 16 } }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryPct + "%"; color: Sys.batteryLow ? Theme.error : Theme.text
-                   font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } } }
-        }
-        Repeater {
-            model: [
-                { glyph: "\u{F0493}", tip: "Settings", run: () => { popup.hide(); SettingsApp.show("") } },
-                { glyph: "\u{F033E}", tip: "Lock", run: () => { popup.hide(); Quickshell.execDetached(["loginctl", "lock-session"]) } },
-                { glyph: "\u{F0425}", tip: "Power", run: () => { popup.hide(); PowerMenu.show() } }
-            ]
-            Rectangle {
-                id: hdrBtn
-                required property var modelData
-                Layout.alignment: Qt.AlignVCenter
-                implicitWidth: Theme.ccWell; implicitHeight: Theme.ccWell
-                radius: Theme.radiusSmall
-                color: hdrArea.pressed ? Theme.fillActive : hdrArea.containsMouse ? Theme.fillHover : Theme.fill
-                scale: hdrArea.pressed ? Theme.pressScale : 1
-                activeFocusOnTab: true
-                Keys.onSpacePressed: modelData.run()
-                Keys.onReturnPressed: modelData.run()
-                FocusRing {}
-                Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
-                Text { anchors.centerIn: parent; text: hdrBtn.modelData.glyph; color: hdrBtn.modelData.tip === "Power" ? Theme.error : Theme.text; font { family: Theme.iconFont; pixelSize: 16 } }
-                MouseArea { id: hdrArea; Accessible.role: Accessible.Button; Accessible.name: hdrBtn.modelData.tip; Accessible.onPressAction: hdrBtn.modelData.run(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                            onContainsMouseChanged: containsMouse ? cc.hint(parent, hdrBtn.modelData.tip) : cc.unhint(parent)
-                            onClicked: hdrBtn.modelData.run() }
-            }
-        }
-    }
-
-    // empty background between and around the sections: a tile or a toggle above this still gets its own click first
-    MouseArea { anchors.fill: content; Accessible.ignored: true; onClicked: popup.hide() }
-
-    GridLayout {   // one column; each section takes the row of its place in cc.shownSections
-        id: content
-        anchors { left: parent.left; right: parent.right; top: header.bottom; margins: cc.pad; topMargin: cc.groupGap }
-        columns: 1
-        rowSpacing: cc.groupGap
-
-        ControlCenterConnections { host: cc.view; tiles: cc.shownTiles; Layout.row: cc.row("connections"); visible: cc.shows("connections") }
-        ControlCenterToggles {}
-        ControlCenterMedia { host: cc.view; Layout.row: cc.row("media"); visible: cc.shows("media") }
-        ControlCenterSliders { host: cc.view; Layout.row: cc.row("sliders"); visible: cc.shows("sliders") }
-        ControlCenterPower { host: cc.view; Layout.row: cc.row("power"); visible: cc.shows("power") }
-        ControlCenterShortcuts {}
-
-    }
     }
 
     Rectangle {   // the shared tooltip (cc.hint), kept inside the panel's edges

@@ -6,6 +6,16 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Control Center, rearranged: large tiles (Wi-Fi, Bluetooth), one tile of thick sliders, a grid of same-size small
+  buttons (Focus, Night Light, Caffeine, Record, Screenshot ...), media, power mode, and a footer with the battery,
+  Arrange, Settings, Lock and Power. Any tile can be large or small: Settings → Control Center drags it between the
+  two, reorders and hides sections, tiles and sliders, beside a live preview of the panel. `controlCenter.sliders`
+  is new; `controlCenter.shortcuts` is gone (its buttons are small tiles now).
+- Notifications: six popup styles (card, bubble, line, block, tag, compact) and six places, each picked from a
+  drawing in Settings; a test notification (Settings, or `qs ipc call notifications test` / `testAs low|critical`)
+  sent through the shell's own server; time on screen and sound per urgency; popups on screen at once; group by app
+  (popups and history); app icons on or off; Do Not Disturb on a daily schedule (Focus ends it early).
+
 - Desktop v3: three themes, one bar layout, one popup framework.
   - Themes: Pebble (calm, the default for new installs), Poster (loud) and Monolith (terminal). Theme token
     `shape.density` (`compact`, `regular`, `roomy`) scales spacing; `hypr.frame` (`accent`, `gradient`, `rainbow`) names the window frame.

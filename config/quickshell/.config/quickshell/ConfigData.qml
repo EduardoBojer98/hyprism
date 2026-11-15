@@ -60,9 +60,21 @@ JsonAdapter {
     }
     property JsonObject notifications: JsonObject {
         property bool dnd: false
-        property int timeoutSec: 6
+        property int timeoutSec: 6                       // how long a normal popup stays (s)
+        property int timeoutLowSec: 4                    // how long a low-priority popup stays (s)
+        property int timeoutCriticalSec: 0               // how long a critical popup stays (s); 0 = until dismissed
+        property int maxVisible: 4                       // popups on screen at once; the rest wait in the notification centre
+        property bool groupByApp: true                   // one popup per app (with a count) and the history grouped by app
+        property bool showIcons: true                    // the app's icon or the notification's picture
+        property string style: "theme"                   // popup look: theme | card | bubble | line | block | tag | compact
+        property string position: "theme"               // theme | top-left | top | top-right | bottom-left | bottom | bottom-right
+        property bool dndSchedule: false                 // Do Not Disturb every day between dndFrom and dndTo
+        property string dndFrom: "22:00"
+        property string dndTo: "07:00"
         property int historyMax: 100
-        property string sound: "message-new-instant"   // a freedesktop sound name (Notifications.sounds), "" = none
+        property string sound: "message-new-instant"   // normal priority: a freedesktop sound name (Notifications.sounds), "" = none
+        property string soundLow: ""                     // low priority sound, "" = none
+        property string soundCritical: "window-attention"   // critical sound, "" = none
         property int volume: 60                          // %
         property list<string> mutedApps: []              // app names that only go to the notification centre
     }
@@ -96,8 +108,8 @@ JsonAdapter {
         property int width: 330                 // panel width in px (280..460)
         property list<string> sections: []
         property list<string> tiles: []
+        property list<string> sliders: []
         property list<string> toggles: []
-        property list<string> shortcuts: []
         property list<string> hidden: ["colorpicker", "mission"]
     }
     // Lock screen: LockScreen.qml lays it out, ThemeSync writes it to hypr/settings/hyprlock-theme.conf
