@@ -19,7 +19,9 @@ Singleton {
     property var history: []     // Notification objects, newest first
     property var popups: []      // the ones showing as banners now
     property var times: ({})     // id -> arrival time (ms)
-    property int unread: 0       // arrived since the notification centre was last opened
+    property real seenAt: 0      // when the notification centre was last open
+    // arrived since then and still in the history: counted from the history, so a dismissed or withdrawn one leaves the count
+    readonly property int unread: NotificationCenter.open ? 0 : history.filter(n => (times[n.id] ?? 0) > seenAt).length
     property date now: new Date()
     readonly property bool dnd: Config.notifications.dnd
     property bool sharing: false   // a screen or window is being shared: no banners for people on the call to read
@@ -81,7 +83,7 @@ Singleton {
         if (!action || n.resident) n.dismiss()
     }
     function clearApp(app) { for (const n of history.filter(x => (x.appName || "Other") === app)) n.dismiss() }
-    function clearAll() { for (const n of history.slice()) n.dismiss(); unread = 0 }
+    function clearAll() { for (const n of history.slice()) n.dismiss() }
     function toggleDnd() { Config.set("notifications", "dnd", !dnd) }
 
     function forget(n) {
@@ -103,7 +105,6 @@ Singleton {
             n.closed.connect(() => root.forget(n))
             if (!n.transient) {
                 root.history = [n].concat(root.history.filter(x => x !== n))
-                if (!NotificationCenter.open) root.unread++
                 for (const old of root.history.slice(Config.notifications.historyMax)) old.dismiss()
             }
             // muted apps, Do Not Disturb and screen sharing (except critical) only go to the notification centre

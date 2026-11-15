@@ -30,7 +30,8 @@ Singleton {
         boxWidth: 380
         boxHeight: column.implicitHeight + Theme.spaceM * 2
         focusItem: column
-        onOpened: { Notifications.unread = 0; Notifications.now = new Date(); root.unfolded = ({}) }
+        onOpened: { Notifications.seenAt = Date.now(); Notifications.now = new Date(); root.unfolded = ({}) }
+        onClosed: Notifications.seenAt = Date.now()   // what arrived while it was open was seen
 
         Glass {
             anchors.fill: parent
