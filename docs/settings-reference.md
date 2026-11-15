@@ -19,7 +19,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `theme` | `string` | `"reactor"` | the whole desktop design (Themes.qml): layout, type, shape, colour, motion |
+| `theme` | `string` | `"pebble"` | the whole desktop design (Themes.qml): layout, type, shape, colour, motion |
 | `userThemes` | `var` | `{}` | your own themes (Theme builder): { "custom-name": { name, base, ...parts } } |
 | `mode` | `string` | `"theme"` | theme (each theme's own) \| light \| dark: every theme has both halves (Themes.qml alt) |
 | `custom` | `var` | `{}` | your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable) |
@@ -65,6 +65,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `recent` | `list<string>` | `[]` | result keys, most recent first, for the home view |
 | `order` | `list<string>` | `["apps", "files", "calc", "settings", "actions", "web"]` |  |
 | `clipboardInside` | `bool` | `true` | Spotlight's clipboard button shows history in the panel |
+| `position` | `string` | `"pointer"` | pointer (opens around the mouse pointer) \| theme (the theme's own place) |
 
 ## clipboard
 
@@ -167,6 +168,9 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `snap` | `bool` | `false` | floating windows snap to edges and each other |
 | `hideCursorTyping` | `bool` | `false` |  |
 | `titleBars` | `bool` | `true` | hyprbars: title bar with buttons on apps that draw none |
+| `border` | `string` | `"theme"` | focused window's frame: theme (its own) \| accent \| gradient (accent to accent2) \| rainbow |
+| `rainbowSpeed` | `int` | `5` | rainbow: 1 slow .. 10 fast |
+| `rainbowOnBattery` | `bool` | `false` | rainbow keeps turning on battery (it redraws every frame); off = still rainbow |
 | `apps` | `var` | `[]` | [{ id, name, class (regex), open: normal\|float\|pin\|maximize\|fullscreen, workspace: 0 = any }] |
 
 ## keybinds
@@ -179,13 +183,13 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `city` | `string` | `"Belgrade"` |  |
-| `latitude` | `real` | `44.82` |  |
-| `longitude` | `real` | `20.46` |  |
-| `days` | `int` | `7` | forecast days in the weather dropdown |
-| `showHourly` | `bool` | `true` | next 12 hours strip |
-| `showDetails` | `bool` | `true` | feels like, humidity, wind, UV, sunrise/sunset |
+| `locations` | `var` | `[]` |  |
+| `current` | `int` | `0` | which saved place the bar shows (index into locations) |
 | `units` | `string` | `"celsius"` | "celsius" (km/h) or "fahrenheit" (mph) |
+| `days` | `int` | `7` | days in the forecast list (0 = no daily list) |
+| `hours` | `int` | `12` | hours in the hourly strip (0 = no hourly strip) |
+| `details` | `list<string>` | `["feels", "humidity", "wind", "uv", "rain", "sun"]` | readings under the current conditions, in order |
+| `refreshMin` | `int` | `15` | minutes between updates |
 
 ## system
 
@@ -312,6 +316,17 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `mode` | `string` | `"dynamic"` | dynamic: made when needed on the screen you're on \| fixed: always there, each on its screen |
 | `count` | `int` | `10` | fixed: how many (Super+1..0 reach the first ten) |
 | `screens` | `var` | `{}` | fixed: workspace number -> output name; missing = the screen you're on |
+
+## capture
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `folder` | `string` | `"~/Pictures/Screenshots"` |  |
+| `recordFolder` | `string` | `"~/Videos/Recordings"` |  |
+| `after` | `string` | `"edit"` | after a region/window/screen capture: edit (annotate in Satty) \| copy \| save (and copy) |
+| `delay` | `int` | `0` | seconds before a full-screen capture |
+| `audio` | `string` | `"none"` | recordings: none \| desktop \| mic \| both |
+| `notify` | `bool` | `true` | a notification with the picture after each capture |
 
 ## apps
 

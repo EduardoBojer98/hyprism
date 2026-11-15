@@ -8,18 +8,18 @@
 # $1 ground, $2 stone, $3 shadow, $4 light, $5 lichen, $6 grain, $7 out
 stones() {
     local s=(-draw 'ellipse 1800,1100 520,330 -12,360' -draw 'ellipse 625,1285 330,210 8,360'
-             -draw 'ellipse 2220,400 250,170 20,360' -draw 'ellipse 1165,545 170,120 -25,360')
+        -draw 'ellipse 2220,400 250,170 20,360' -draw 'ellipse 1165,545 170,120 -25,360')
     local hi=(-draw 'ellipse 1640,980 380,190 -12,360' -draw 'ellipse 540,1210 230,120 8,360'
-              -draw 'ellipse 2150,340 170,95 20,360' -draw 'ellipse 1120,505 110,65 -25,360')
+        -draw 'ellipse 2150,340 170,95 20,360' -draw 'ellipse 1120,505 110,65 -25,360')
     magick \( -size ${W}x${H} xc:black -fill white "${s[@]}" -blur 0x1.5 -write mpr:mask +delete \) \
         -size ${W}x${H} xc:"$1" \
         \( xc:"$3" \( mpr:mask -roll +36+52 -blur 0x42 -evaluate multiply 0.8 \) -alpha off -compose CopyOpacity -composite \) \
         -compose Over -composite \
         \( xc:"$2" mpr:mask -alpha off -compose CopyOpacity -composite \) -compose Over -composite \
         \( xc:"$4" \( -size ${W}x${H} xc:black -fill white "${hi[@]}" -blur 0x60 mpr:mask -compose Multiply -composite \) \
-           -alpha off -compose CopyOpacity -composite \) -compose Over -composite \
+        -alpha off -compose CopyOpacity -composite \) -compose Over -composite \
         \( xc:"$5" \( -size ${W}x${H} xc:black -fill white -draw 'ellipse 1190,575 150,100 -25,360' -blur 0x40 \
-           mpr:mask -compose Multiply -composite -evaluate multiply 0.85 \) -alpha off -compose CopyOpacity -composite \) \
+        mpr:mask -compose Multiply -composite -evaluate multiply 0.85 \) -alpha off -compose CopyOpacity -composite \) \
         -compose Over -composite \
         -attenuate "$6" +noise Gaussian -colorspace sRGB "$7"
 }
