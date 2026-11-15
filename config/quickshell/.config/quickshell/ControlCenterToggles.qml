@@ -19,13 +19,19 @@ ColumnLayout {
 
     // ---- quick toggles: name, then what it's doing ---------------------------------------
     GridLayout {
+        id: grid
         Layout.fillWidth: true
-        columns: 4
+        columns: 12   // four tiles of three; a short last row shares the whole width
+        readonly property var ids: ControlCenter.shownToggles.filter(id => id !== "touchpad" || Inputs.touchpadName !== "")   // what is actually drawn
+        readonly property int count: ids.length
+        function idx(id) { return Math.max(0, ids.indexOf(id)) }
+        function span(id) { const rem = count % 4; return idx(id) >= count - rem && rem > 0 ? 12 / rem : 3 }
+        function col(id) { const rem = count % 4; return idx(id) >= count - rem && rem > 0 ? (idx(id) % 4) * (12 / rem) : (idx(id) % 4) * 3 }
         columnSpacing: ControlCenter.gap
         rowSpacing: ControlCenter.gap
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("caffeine")
-            Layout.row: Math.floor(Math.max(0, ControlCenter.shownToggles.indexOf("caffeine")) / 4); Layout.column: Math.max(0, ControlCenter.shownToggles.indexOf("caffeine")) % 4
+            Layout.row: Math.floor(grid.idx("caffeine") / 4); Layout.column: grid.col("caffeine"); Layout.columnSpan: grid.span("caffeine")
             glyph: "\u{F0176}"
             label: "Caffeine"
             status: Caffeine.active ? Caffeine.remaining(ControlCenter.now.getTime()) : "Off"
@@ -38,7 +44,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle { // shared monitor (monswitch), only when ~/.config/monswitch.conf exists
             visible: ControlCenter.shownToggles.includes("monitor")
-            Layout.row: Math.floor(Math.max(0, ControlCenter.shownToggles.indexOf("monitor")) / 4); Layout.column: Math.max(0, ControlCenter.shownToggles.indexOf("monitor")) % 4
+            Layout.row: Math.floor(grid.idx("monitor") / 4); Layout.column: grid.col("monitor"); Layout.columnSpan: grid.span("monitor")
             readonly property bool ours: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
             glyph: "\u{F0379}"
             label: "Monitor"
@@ -49,7 +55,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("keylight")
-            Layout.row: Math.floor(Math.max(0, ControlCenter.shownToggles.indexOf("keylight")) / 4); Layout.column: Math.max(0, ControlCenter.shownToggles.indexOf("keylight")) % 4
+            Layout.row: Math.floor(grid.idx("keylight") / 4); Layout.column: grid.col("keylight"); Layout.columnSpan: grid.span("keylight")
             glyph: ControlCenter.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}"
             label: "Key light"
             status: ["Off", "Low", "Medium", "High"][ControlCenter.kbdLight]
@@ -59,7 +65,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("keyboard")
-            Layout.row: Math.floor(Math.max(0, ControlCenter.shownToggles.indexOf("keyboard")) / 4); Layout.column: Math.max(0, ControlCenter.shownToggles.indexOf("keyboard")) % 4
+            Layout.row: Math.floor(grid.idx("keyboard") / 4); Layout.column: grid.col("keyboard"); Layout.columnSpan: grid.span("keyboard")
             glyph: "\u{F030C}"
             label: "Keyboard"
             status: Osk.visible ? "Shown" : "Hidden"
@@ -69,7 +75,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("touchpad") && Inputs.touchpadName !== ""
-            Layout.row: Math.floor(Math.max(0, ControlCenter.shownToggles.indexOf("touchpad")) / 4); Layout.column: Math.max(0, ControlCenter.shownToggles.indexOf("touchpad")) % 4
+            Layout.row: Math.floor(grid.idx("touchpad") / 4); Layout.column: grid.col("touchpad"); Layout.columnSpan: grid.span("touchpad")
             glyph: Inputs.touchpad ? "\u{F0E40}" : "\u{F0E41}"
             label: "Touchpad"
             status: Inputs.touchpad ? "On" : "Off"
@@ -79,7 +85,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("touchscreen")
-            Layout.row: Math.floor(Math.max(0, ControlCenter.shownToggles.indexOf("touchscreen")) / 4); Layout.column: Math.max(0, ControlCenter.shownToggles.indexOf("touchscreen")) % 4
+            Layout.row: Math.floor(grid.idx("touchscreen") / 4); Layout.column: grid.col("touchscreen"); Layout.columnSpan: grid.span("touchscreen")
             glyph: "\u{F0741}"
             label: "Touch"
             status: Inputs.touchscreen ? "On" : "Off"
@@ -89,7 +95,7 @@ ColumnLayout {
         }
         ControlCenterQuickToggle {
             visible: ControlCenter.shownToggles.includes("record")
-            Layout.row: Math.floor(Math.max(0, ControlCenter.shownToggles.indexOf("record")) / 4); Layout.column: Math.max(0, ControlCenter.shownToggles.indexOf("record")) % 4
+            Layout.row: Math.floor(grid.idx("record") / 4); Layout.column: grid.col("record"); Layout.columnSpan: grid.span("record")
             glyph: "\u{F044A}"
             label: "Record"
             status: Sys.recording ? "Recording" : "Off"

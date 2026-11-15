@@ -73,7 +73,7 @@ ColumnLayout {
                     required property string modelData
                     section: modelData
                     Layout.fillWidth: true
-                    Layout.preferredWidth: modelData === "center" ? 2 : 3
+                    Layout.preferredWidth: 40 + ed.layout[modelData].length * 64   // a busy zone gets more room, an empty one little
                     Layout.fillHeight: true
                 }
             }
@@ -183,9 +183,9 @@ ColumnLayout {
         key: "baritem"
         payload: ({ id: itemId, from: from })
         floatOn: ed.floatOn
-        // on the bar: just the icon, like the real bar (its name shows on hover); in the tray: icon and name
-        width: onBar ? 34 : label.implicitWidth + 40
-        height: onBar ? 34 : 30
+        // on the bar: the icon with its short name under it; in the tray: icon and name side by side
+        width: onBar ? 60 : label.implicitWidth + 40
+        height: onBar ? 46 : 30
         radius: Theme.radiusSmall
 
         Rectangle {
@@ -193,8 +193,15 @@ ColumnLayout {
             radius: chip.radius
             color: chip.onBar ? Qt.alpha(ed.ink, chip.hovered ? 0.16 : 0.09) : (chip.hovered ? Theme.fillHover : Theme.raised)
             border { color: chip.onBar && chip.itemId === ed.selected ? Theme.accent : chip.onBar ? Qt.alpha(ed.ink, 0.2) : Theme.stroke; width: chip.onBar && chip.itemId === ed.selected ? 2 : 1 }
+            Text {   // on the bar the name sits under the icon, so cpu and memory can be told apart
+                visible: chip.onBar
+                anchors { left: parent.left; right: parent.right; bottom: parent.bottom; bottomMargin: 4; leftMargin: 2; rightMargin: 2 }
+                horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight
+                text: chip.info.name; color: Qt.alpha(ed.ink, 0.75)
+                font { family: Theme.font; pixelSize: Theme.fontCaption - 2 }
+            }
             Row {
-                anchors { left: parent.left; leftMargin: chip.onBar ? 10 : 8; verticalCenter: parent.verticalCenter }
+                anchors { left: chip.onBar ? undefined : parent.left; horizontalCenter: chip.onBar ? parent.horizontalCenter : undefined; top: chip.onBar ? parent.top : undefined; topMargin: 6; leftMargin: 8; verticalCenter: chip.onBar ? undefined : parent.verticalCenter }
                 spacing: 6
                 Text { anchors.verticalCenter: parent.verticalCenter; text: chip.info.glyph; color: chip.onBar ? ed.ink : Theme.text; font { family: Theme.iconFont; pixelSize: 14 } }
                 Text { id: label; visible: !chip.onBar; anchors.verticalCenter: parent.verticalCenter; text: chip.info.name; color: chip.onBar ? ed.ink : Theme.text

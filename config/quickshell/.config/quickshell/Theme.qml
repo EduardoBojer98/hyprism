@@ -62,6 +62,11 @@ Singleton {
     readonly property color tileOnText: washTiles ? text : accentText
     readonly property color tileOnIcon: washTiles ? accent : accentText
     readonly property color tileOnBorder: washTiles ? Qt.alpha(accent, 0.85) : "transparent"
+    // themes with a solid "inverse" selection (Poster, Monolith) show a picked segment in reverse video:
+    // Monolith in the accent, Poster in ink on paper
+    readonly property bool selectInverse: current.launcher.select === "inverse"
+    readonly property color segOn: a.theme === "monolith" ? accent : text
+    readonly property color segOnText: a.theme === "monolith" ? accentText : surfaceColor
     readonly property color thumb: light ? "#ffffff" : c.text
     readonly property color onImage: "#f5f5f7"   // text over a photo (lock screen on a picture): light, whatever the theme
     readonly property color thumbText: light ? c.text : c.ground   // text on a thumb: white thumbs in light themes
@@ -85,6 +90,8 @@ Singleton {
     readonly property int fontHero: Math.round((body + 28) * fontScale)   // the one big number in a panel (date, temperature)
 
     // ---- shape and space ---------------------------------------------------------------------------
+    readonly property int panelWidth: 336   // standard panel: Control Center, flyouts, System
+    readonly property int panelWide: 368    // wide panel: Weather, Calendar
     readonly property int radiusSmall: current.shape.radiusSmall
     readonly property int radius: current.shape.radius
     readonly property int radiusLarge: current.shape.radius === 0 ? 0 : current.shape.radius + 2

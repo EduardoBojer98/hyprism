@@ -87,7 +87,7 @@ Singleton {
     property date now: new Date()
 
     readonly property string style: Config.controlCenter.style || "panel"
-    readonly property int customWidth: Config.controlCenter.width || 330
+    readonly property int customWidth: Config.controlCenter.width || Theme.panelWidth
     readonly property int gap: style === "compact" ? 4 : 8          // between tiles
     readonly property int pad: style === "compact" ? 6 : 10         // panel padding
 

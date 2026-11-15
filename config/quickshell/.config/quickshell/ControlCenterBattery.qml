@@ -17,7 +17,6 @@ ColumnLayout {
     readonly property var facts: [
         Metrics.has("battery_power") && Metrics.value("battery_power") >= 1 ? ["Draw", Metrics.text("battery_power")] : null,
         mod.draining && Metrics.has("battery_time") ? ["Left", Metrics.text("battery_time")] : null,
-        !isNaN(Sensors.cpu) ? ["CPU", Math.round(Sensors.cpu) + "°"] : null,
         Metrics.has("fans") ? ["Fans", Metrics.text("fans")] : null
     ].filter(f => f)
 

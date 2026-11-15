@@ -148,7 +148,7 @@ Singleton {
         id: popup
         name: "weather"
         placement: "top"
-        boxWidth: 360
+        boxWidth: Theme.panelWide
         boxHeight: panel.implicitHeight + Theme.spaceL * 2
         onOpened: if (Date.now() - root.updated.getTime() > 10 * 60 * 1000 || root.stale) root.refresh()
 
