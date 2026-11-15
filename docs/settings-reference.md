@@ -27,6 +27,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `wallpaperColours` | `bool` | `false` | the accents follow your own wallpaper (WallpaperColours.qml); off = the theme's own |
 | `fontScale` | `real` | `1` |  |
 | `motion` | `string` | `"full"` | full (the theme's own motion) \| reduced (short fades, nothing moves) \| off |
+| `motionStyle` | `string` | `"theme"` | the motion look (Theme.qml looks): theme (its own) \| smooth \| snappy \| springy \| minimal |
 | `iconTheme` | `string` | `"Papirus-Dark"` |  |
 | `monoTray` | `bool` | `true` | tray icons in the bar's ink (off: the apps' own colours) |
 | `cursorTheme` | `string` | `"default"` | a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons; "default" = the system's cursor |

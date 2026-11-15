@@ -207,20 +207,33 @@ Singleton {
     readonly property real shadowBlur: depth === "soft" ? 0.6 : 0
     readonly property int shadowOffset: 4
 
-    // ---- motion: the theme's character (Themes.qml motion), or less of it (Settings > Themes) -----------
-    //   full     the theme's own: enter / exit times, its curve, travel from the trigger side, start scale
+    // ---- motion: a look (Settings > Themes > Motion), then how much of it (Animations) -------------------
+    //   look     "theme" is the theme's own (Themes.qml motion + hypr.motion); the others are the same everywhere.
+    //            Each sets the panels (enter / exit ms, curve, travel px from the trigger side, start and press
+    //            scale) and the Hyprland preset for windows (modules/animations.lua) in one go.
+    //   full     the look as it is
     //   reduced  short fades only, nothing travels or scales (Hyprland: quick fades)
     //   off      instant
+    readonly property var looks: ({
+        smooth:  { name: "Smooth",  about: "Long, soft glides that settle gently",       enter: 260, exit: 160, curve: [0.32, 0.72, 0, 1],   travel: 12, scale: 0.96, press: 0.97, hypr: "ease" },
+        snappy:  { name: "Snappy",  about: "Quick and crisp, no overshoot",              enter: 150, exit: 90,  curve: [0.23, 1, 0.32, 1],   travel: 6,  scale: 0.98, press: 0.96, hypr: "snappy" },
+        springy: { name: "Springy", about: "A little bounce as things land",             enter: 300, exit: 140, curve: [0.34, 1.56, 0.64, 1], travel: 16, scale: 0.92, press: 0.94, hypr: "spring" },
+        minimal: { name: "Minimal", about: "Fades only; nothing slides or grows",        enter: 140, exit: 90,  curve: [0.23, 1, 0.32, 1],   travel: 0,  scale: 1,    press: 0.98, hypr: "minimal" }
+    })
+    readonly property var lookIds: ["theme"].concat(Object.keys(looks))
+    function look(id) { return looks[id] ?? Object.assign({ name: current.name + "'s own", about: "Follows the theme, and changes with it", hypr: current.hypr.motion }, current.motion) }
     readonly property string motionLevel: a.motion
     readonly property bool animate: motionLevel !== "off"
     readonly property bool moves: motionLevel === "full"
-    readonly property var m: current.motion
+    readonly property var m: look(a.motionStyle)
     readonly property int enter: motionLevel === "full" ? m.enter : motionLevel === "reduced" ? 90 : 0
     readonly property int exit: motionLevel === "full" ? m.exit : motionLevel === "reduced" ? 60 : 0
-    readonly property var curve: m.curve.concat([1, 1])                    // for easing.bezierCurve
+    // for easing.bezierCurve; reduced motion never overshoots
+    readonly property var curve: (moves ? m.curve : [0.23, 1, 0.32, 1]).concat([1, 1])
     readonly property int travel: moves ? m.travel : 0
     readonly property real startScale: moves ? m.scale : 1
     readonly property real pressScale: moves ? m.press : 1
+    readonly property string hyprMotion: moves ? m.hypr : motionLevel === "reduced" ? "minimal" : "off"
     // small state changes (hover, colour, a toggle): short and the same feel everywhere
     readonly property int animFast: animate ? Math.min(120, Math.max(60, m.enter / 2)) : 0
     readonly property int anim: animate ? Math.min(220, m.enter) : 0

@@ -13,6 +13,7 @@ JsonAdapter {
         property bool wallpaperColours: false   // the accents follow your own wallpaper (WallpaperColours.qml); off = the theme's own
         property real fontScale: 1
         property string motion: "full"          // full (the theme's own motion) | reduced (short fades, nothing moves) | off
+        property string motionStyle: "theme"    // the motion look (Theme.qml looks): theme (its own) | smooth | snappy | springy | minimal
         property string iconTheme: "Papirus-Dark"
         property bool monoTray: true            // tray icons in the bar's ink (off: the apps' own colours)
         property string cursorTheme: "default"   // a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons; "default" = the system's cursor

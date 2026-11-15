@@ -1,12 +1,14 @@
--- Motion, by preset: each theme names one (Quickshell Themes.qml, hypr.motion), apply_motion() sets it.
---   instant  barely there: near-immediate, no pop (Monolith)
---   crisp    fast and linear-ish, a quick fade (Console)
---   snappy   short slides, no overshoot (Atlas)
+-- Motion, by preset: the shell names one (ThemeSync: the motion look, or the theme's own hypr.motion), apply_motion()
+-- sets it. Settings > Themes > Motion previews each one's window open (MotionPreview.qml mirrors windowsIn / windowsOut).
+--   instant  barely there: near-immediate, no pop
+--   crisp    fast and linear-ish, a quick fade
+--   snappy   short slides, no overshoot (Monolith, look Snappy)
 --   slam     fast in with a hard stop, windows drop in from slightly larger (Poster)
---   ease     calm, damped, nothing bouncy (Glass, Canvas, Workstation, Zen, Mist)
---   spring   soft springs with a small pop-in (Pebble, Garden, Halo)
---   fade     slow cross-fades, workspaces dissolve instead of sliding (Noir)
---   off      animations off (Settings > Themes > Animations)
+--   ease     calm, damped, nothing bouncy (Pebble, look Smooth)
+--   spring   soft springs with a small pop-in (look Springy)
+--   fade     slow cross-fades, workspaces dissolve instead of sliding
+--   minimal  quick fades only, nothing slides or grows (look Minimal, Animations: Reduced)
+--   off      animations off (Animations: Off)
 hl.config({ animations = { enabled = true } })
 
 hl.curve("easeOutQuint", { type = "bezier", points = { {0.23, 1},   {0.32, 1} } })
@@ -26,32 +28,36 @@ end
 
 local PRESETS = {
     instant = function()
-        set("windows", 1.5, "quick"); set("windowsIn", 1.2, "quick", "popin 98%"); set("windowsOut", 1, "linear", "popin 98%")
-        set("fade", 1.5, "quick"); set("layers", 1.2, "quick", "fade"); set("workspaces", 1.2, "quick", "fade")
+        set("windows", 1.5, "quick"); set("windowsIn", 1.2, "quick", "popin 98%"); set("windowsOut", 1, "easeOutQuint", "popin 98%")
+        set("fade", 1.5, "quick"); set("workspaces", 1.2, "quick", "fade")
     end,
     crisp = function()
-        set("windows", 2.2, "quick"); set("windowsIn", 2, "quick", "popin 96%"); set("windowsOut", 1.4, "linear", "popin 96%")
-        set("fade", 2, "quick"); set("layers", 1.8, "quick", "fade"); set("workspaces", 1.8, "quick", "fade")
+        set("windows", 2.2, "quick"); set("windowsIn", 2, "quick", "popin 96%"); set("windowsOut", 1.4, "easeOutQuint", "popin 96%")
+        set("fade", 2, "quick"); set("workspaces", 1.8, "quick", "fade")
     end,
     snappy = function()
-        set("windows", 3, "easeOutQuint"); set("windowsIn", 2.6, "easeOutQuint", "slide"); set("windowsOut", 1.6, "linear", "popin 95%")
-        set("fade", 2.4, "quick"); set("layers", 2.4, "easeOutQuint", "slide"); set("workspaces", 2.6, "easeOutQuint", "slide")
+        set("windows", 3, "easeOutQuint"); set("windowsIn", 2.6, "easeOutQuint", "slide"); set("windowsOut", 1.6, "easeOutQuint", "popin 95%")
+        set("fade", 2.4, "quick"); set("workspaces", 2.6, "easeOutQuint", "slide")
     end,
     slam = function()
-        set("windows", 2.6, "easeOutExpo"); set("windowsIn", 2.4, "easeOutExpo", "popin 108%"); set("windowsOut", 1.4, "linear", "popin 92%")
-        set("fade", 2, "quick"); set("layers", 2.2, "easeOutExpo", "slide"); set("workspaces", 2.4, "easeOutExpo", "slidevert")
+        set("windows", 2.6, "easeOutExpo"); set("windowsIn", 2.4, "easeOutExpo", "popin 108%"); set("windowsOut", 1.4, "easeOutQuint", "popin 92%")
+        set("fade", 2, "quick"); set("workspaces", 2.4, "easeOutExpo", "slidevert")
     end,
     ease = function()
         set("windows", 4.79, "easy"); set("windowsIn", 4.1, "easy", "popin 92%"); set("windowsOut", 1.6, "almostLinear", "popin 94%")
-        set("fade", 3.03, "quick"); set("layers", 3.81, "easeOutQuint", "fade"); set("workspaces", 3.2, "easeOutQuint", "slidefade 12%")
+        set("fade", 3.03, "quick"); set("workspaces", 3.2, "easeOutQuint", "slidefade 12%")
     end,
     spring = function()
         set("windows", 5, "bouncy"); set("windowsIn", 4.4, "bouncy", "popin 86%"); set("windowsOut", 1.8, "almostLinear", "popin 90%")
-        set("fade", 3, "quick"); set("layers", 4, "bouncy", "popin 90%"); set("workspaces", 3.6, "easy", "slidefade 18%")
+        set("fade", 3, "quick"); set("workspaces", 3.6, "easy", "slidefade 18%")
+    end,
+    minimal = function()
+        set("windows", 1.8, "easeOutQuint"); set("windowsIn", 1.5, "easeOutQuint", "popin 100%"); set("windowsOut", 1.2, "easeOutQuint", "popin 100%")
+        set("fade", 1.5, "easeOutQuint"); set("workspaces", 1.5, "easeOutQuint", "fade")
     end,
     fade = function()
         set("windows", 6, "easeOutQuint"); set("windowsIn", 6, "easeOutQuint", "popin 99%"); set("windowsOut", 4, "almostLinear", "popin 99%")
-        set("fade", 6, "almostLinear"); set("layers", 5, "almostLinear", "fade"); set("workspaces", 6, "almostLinear", "fade")
+        set("fade", 6, "almostLinear"); set("workspaces", 6, "almostLinear", "fade")
     end,
 }
 

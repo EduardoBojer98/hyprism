@@ -135,7 +135,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Window motion"
-            hint: "How windows and workspaces move (panels follow the theme's own motion)"
+            hint: page.a.motionStyle === "theme" ? "How windows and workspaces move in this theme" : "Used when Motion below is " + page.r.name + "'s own (it is " + Theme.m.name + " now)"
             Choice {
                 readonly property var values: ["instant", "crisp", "snappy", "ease", "spring", "slam", "fade"]
                 options: ["Instant", "Crisp", "Snappy", "Ease", "Spring", "Slam", "Fade"]
@@ -182,11 +182,46 @@ ColumnLayout {
             hint: "On top of the theme's text size, on every screen"
             ConfigSlider { section: "appearance"; key: "fontScale"; from: 0.85; to: 1.25; step: 0.05; format: v => Math.round(v * 100) + "%" }
         }
+    }
+
+    // ---- motion: one look for panels and windows, kept whatever the theme -------------------------------
+    SettingGroup {
+        title: "Motion"
         SettingRow {
             label: "Animations"
             hint: Config.appearance.motion === "reduced" ? "Short fades only; nothing slides, scales or bounces"
-                : Config.appearance.motion === "off" ? "Everything appears at once" : "Each theme's own motion"
+                : Config.appearance.motion === "off" ? "Everything appears at once" : "The look below, as it is"
             ConfigChoice { section: "appearance"; key: "motion"; values: ["full", "reduced", "off"]; labels: ["Full", "Reduced", "Off"] }
+        }
+        Text {
+            Layout.fillWidth: true
+            Layout.margins: 16
+            Layout.bottomMargin: 0
+            text: Theme.moves ? "How panels, menus, toggles and windows move. Point at a look to play it."
+                              : "How panels, menus, toggles and windows move. The looks play and apply with Animations on Full."
+            color: Theme.subtext
+            wrapMode: Text.Wrap
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
+        }
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.margins: 12
+            columns: Math.max(2, Math.floor((width + columnSpacing) / (190 + columnSpacing)))
+            columnSpacing: 14
+            rowSpacing: 16
+            Repeater {
+                model: Theme.lookIds
+                MotionPreview {
+                    required property string modelData
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignTop
+                    spec: Theme.look(modelData)
+                    label: spec.name
+                    about: spec.about
+                    chosen: (page.a.motionStyle ?? "theme") === modelData
+                    onPicked: Config.set("appearance", "motionStyle", modelData)
+                }
+            }
         }
     }
 

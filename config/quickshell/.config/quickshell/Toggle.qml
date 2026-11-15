@@ -32,7 +32,7 @@ Rectangle {
         anchors.verticalCenter: parent.verticalCenter
         x: toggle.checked ? parent.width - width - 3 : 3
         color: Theme.selectInverse ? Theme.text : Theme.thumb
-        Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+        Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve } }   // the look's curve: Springy lands with a bounce
     }
 
     MouseArea {   // a finger-sized target in tablet mode, the switch itself unchanged
