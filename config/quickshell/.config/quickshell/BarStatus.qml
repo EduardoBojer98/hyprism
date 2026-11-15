@@ -22,6 +22,7 @@ BarItem {
     readonly property bool words: mode === "words" || mode === "caps"
     readonly property bool mixed: mode === "mixed"
     readonly property bool caps: mode === "caps"
+    readonly property int pairGap: mixed && !vertical ? 8 : 0   // extra room before the next glyph + number pair
     function say(s) { return caps ? s.toUpperCase() : s }
     // theme bar.dimLabels: a glyph with its number beside it is that number's label, dimmed
     readonly property color labelTone: Theme.barStyle.dimLabels === true && mixed && !vertical ? Theme.barDim : tone
@@ -39,8 +40,9 @@ BarItem {
         SequentialAnimation on opacity { running: Sys.recording && Theme.animate; loops: Animation.Infinite; NumberAnimation { to: 0.35; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
         MouseArea { anchors.fill: parent; anchors.margins: -6; Accessible.role: Accessible.Button; Accessible.name: "Stop recording"; Accessible.onPressAction: Quickshell.execDetached(["record", "stop"]); cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["record", "stop"]) }
     }
-    Text { visible: Notifications.dnd; text: "\u{F009B}"; color: Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
-    Text { visible: Caffeine.active; text: "\u{F06CA}"; color: st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }   // outline cup: the filled one is a blot at bar size
+    // mixed: a mode's glyph keeps the same distance to the next glyph as a glyph + number pair does (rightPadding)
+    Text { visible: Notifications.dnd; rightPadding: st.pairGap; text: "\u{F009B}"; color: Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }
+    Text { visible: Caffeine.active; rightPadding: st.pairGap; text: "\u{F0176}"; color: st.tone; font { family: Theme.iconFont; pixelSize: st.glyphSize - 1 } }   // the Control Center's cup; an outline one reads as a screen at bar size
 
     // ---- words ----
     Repeater {
@@ -56,12 +58,12 @@ BarItem {
     // ---- icons ----
     Text { id: netIcon; visible: !st.words; text: Sys.networkGlyph; color: Sys.signal < 0 && !Sys.wired ? Theme.barDim : Sys.wired ? st.tone : st.labelTone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Num { visible: st.mixed && !st.vertical && !Sys.wired && Sys.signal >= 0; text: Sys.signal }
-    Text { visible: !st.words && Sys.btOn; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
-    Text { visible: !st.words; leftPadding: st.mixed && !st.vertical ? 8 : 0; text: Sys.volumeGlyph; color: Sys.muted ? Theme.barDim : st.labelTone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { visible: !st.words && Sys.btOn; leftPadding: st.pairGap; text: Sys.btLinked ? "\u{F00B1}" : "\u{F00AF}"; color: Sys.btLinked ? st.tone : Theme.barDim; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
+    Text { visible: !st.words; leftPadding: st.pairGap; text: Sys.volumeGlyph; color: Sys.muted ? Theme.barDim : st.labelTone; font { family: Theme.iconFont; pixelSize: st.glyphSize } }
     Num { visible: st.mixed && !st.vertical && !Sys.muted; text: Math.round(Sys.volume * 100) }
     BarBattery {   // a gap before it in mixed mode, like the other glyph + value pairs
         visible: !st.words && Sys.hasBattery
-        leftPadding: st.mixed && !st.vertical ? 8 : 0
+        leftPadding: st.pairGap
         tone: st.tone; family: st.family; vertical: st.vertical
     }
 
