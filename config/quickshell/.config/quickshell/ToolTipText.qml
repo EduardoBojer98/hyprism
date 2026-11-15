@@ -19,7 +19,7 @@ Item {
         anchor.margins.top: host.gap
         implicitWidth: box.width
         implicitHeight: box.height
-        visible: box.opacity > 0
+        visible: box.opacity > 0 && label.text !== ""
         color: "transparent"
         mask: Region {}
 
