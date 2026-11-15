@@ -30,7 +30,8 @@ Item {
         clip: true
         border { color: card.chosen ? Theme.accent : area.containsMouse ? Theme.strokeStrong : Theme.stroke; width: card.chosen ? 2 : 1 }
 
-        Image { anchors.fill: parent; anchors.margins: 1; source: "file://" + card.wall; fillMode: Image.PreserveAspectCrop; asynchronous: true; sourceSize.width: 400 }
+        // Monolith's wallpaper carries a big hostname watermark along its foot: show only the upper part, so it never reads as clipped text
+        Image { x: 1; y: 1; width: parent.width - 2; height: (parent.height - 2) * (card.theme.wall.startsWith("monolith") ? 1.5 : 1); source: "file://" + card.wall; fillMode: Image.PreserveAspectCrop; asynchronous: true; sourceSize.width: 400 }
 
         // a window, in the theme's frame and corners, clear of the bar
         Rectangle {

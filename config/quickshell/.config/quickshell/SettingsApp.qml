@@ -374,7 +374,7 @@ Singleton {
                     ]
                     Rectangle {
                         required property var modelData
-                        width: 24; height: 24; radius: 12
+                        width: 24; height: 24; radius: Theme.radiusSmall
                         color: btnArea.pressed ? Theme.fillActive : btnArea.containsMouse ? Theme.fillHover : Theme.fill
                         border { color: Theme.stroke; width: 1 }
                         Text {

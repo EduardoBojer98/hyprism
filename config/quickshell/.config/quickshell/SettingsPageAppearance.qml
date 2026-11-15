@@ -37,7 +37,7 @@ ColumnLayout {
         title: "Theme"
         SettingRow {
             label: "Light or dark"
-            hint: page.a.mode === "theme" ? "Each theme's own (" + page.base.name + " is " + (page.base.dark ? "dark" : "light") + "); every theme has both"
+            hint: page.a.mode === "theme" ? "Follows the theme: " + page.base.name + " starts " + (page.base.dark ? "dark" : "light") + ". Every theme has a light and a dark version."
                 : "Every theme in its " + page.a.mode + " version; windows, apps, terminal and wallpaper follow"
             ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark"]; labels: ["Default", "Light", "Dark"] }
         }
