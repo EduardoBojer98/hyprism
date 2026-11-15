@@ -12,6 +12,13 @@ for _, link in ipairs({ "/dev/dri/igpu", "/dev/dri/amd-igpu" }) do -- the second
     end
 end
 
+-- Hyprism's commands (screenshot, record, theme-wallpaper, ...) live in ~/.local/bin. A login manager starts
+-- Hyprland without your shell's PATH (greetd/regreet, SDDM), so binds and the shell would not find them.
+local home, path = os.getenv("HOME") or "", os.getenv("PATH") or "/usr/local/bin:/usr/bin"
+if home ~= "" and not (":" .. path .. ":"):find(":" .. home .. "/.local/bin:", 1, true) then
+    hl.env("PATH", home .. "/.local/bin:" .. path)
+end
+
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VS Code, Chrome and other Electron apps run natively on Wayland
 -- Qt apps: qt6ct where installed (ThemeSync writes its colour scheme, so they follow the theme); else KDE's
 -- platform theme where Plasma's integration is installed; else Qt's own GTK3 theme (follows ThemeSync's GTK light/dark)
