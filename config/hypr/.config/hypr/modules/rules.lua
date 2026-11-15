@@ -25,6 +25,7 @@ hl.layer_rule({
     blur         = true,
     blur_popups  = true,   -- Control Center and menus are popups of the bar
     ignore_alpha = 0.5,   -- blur behind glass surfaces only, never behind a panel's see-through dim of the desktop
+    no_anim      = true,  -- the shell animates its own layers (Settings > Appearance > Motion); a Hyprland fade on top doubled it
 })
 
 -- slurp's area picker (~/.local/bin/screenshot): no fade-out, so the dimmed veil and the accent

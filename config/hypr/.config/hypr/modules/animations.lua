@@ -72,8 +72,8 @@ function apply_motion(name)
                    bezier = "linear", style = loop and "loop" or nil })
     ;(PRESETS[name] or PRESETS.ease)()
     set("fadeIn", 1.73, "almostLinear"); set("fadeOut", 1.46, "almostLinear")
-    -- The shell's bar, panels, menus and notifications are layers. The shell animates them itself
-    -- (a short drop from the bar), so Hyprland only fades them, in every theme: no pop, no slide.
+    -- Layers: the shell's own (qs-*) skip these (no_anim in rules.lua: it animates them itself); other apps'
+    -- layers (launchers, pickers) only fade, in every theme: no pop, no slide.
     set("layers", 2, "easeOutQuint", "fade"); set("layersIn", 2, "easeOutQuint", "fade"); set("layersOut", 1.5, "linear", "fade")
     set("fadeLayersIn", 2, "easeOutQuint"); set("fadeLayersOut", 1.5, "linear")
 end
