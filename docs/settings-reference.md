@@ -20,7 +20,6 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `theme` | `string` | `"pebble"` | the whole desktop design (Themes.qml): layout, type, shape, colour, motion |
-| `userThemes` | `var` | `{}` | your own themes (Theme builder): { "custom-name": { name, base, ...parts } } |
 | `mode` | `string` | `"theme"` | theme (each theme's own) \| light \| dark: every theme has both halves (Themes.qml alt) |
 | `custom` | `var` | `{}` | your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable) |
 | `terminal` | `bool` | `true` | Ghostty follows the theme (ThemeSync writes ghostty/theme.conf) |

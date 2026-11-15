@@ -40,7 +40,7 @@ Singleton {
     readonly property string ownDir: (Quickshell.env("XDG_CONFIG_HOME") || Quickshell.env("HOME") + "/.config") + "/hyprism/themes"
     property bool ready: false           // false for the first moments, while the folders are read
     property var builtIn: [safe]         // the folder themes; until they are read, only the one below
-    readonly property var list: builtIn.concat(userList)
+    readonly property var list: builtIn
     readonly property var ids: list.map(r => r.id)
     // The one theme that lives in code, so the shell still starts when no theme folder can be read.
     // Every folder theme is laid over a copy of it, so a theme.json with a part missing still works.
@@ -82,21 +82,8 @@ Singleton {
         }
     }
 
-    // Your own themes: Config.appearance.userThemes = { "custom-<name>": { name, base: "<theme id>", <any part of a
-    // theme, e.g. colour: { accent: "#..." }, bar: { edge: "bottom" }> } }. Each is its base theme with your parts laid
-    // over it; a part with the wrong type or a bad colour is ignored, so a hand edit can't break the desktop.
-    readonly property var userList: Object.entries(Config.appearance.userThemes ?? {}).map(([id, u]) => makeUser(id, u)).filter(t => t)
-    function makeUser(id, u) {
-        if (!/^custom-[a-z0-9-]{1,40}$/.test(id) || typeof u !== "object" || !u) return null
-        const base = builtIn.find(b => b.id === u.base) ?? builtIn[0]
-        const t = merge(JSON.parse(JSON.stringify(base)), u)
-        t.id = id
-        t.name = typeof u.name === "string" && u.name.trim() ? u.name.trim().slice(0, 32) : "My theme"
-        t.about = "Your own theme, made from " + base.name
-        t.base = base.id
-        t.user = true
-        return t
-    }
+    // a theme folder laid over the safe theme part by part: a part with the wrong type or a bad colour is ignored,
+    // so a hand edit can't break the desktop
     function merge(into, over) {
         for (const k of Object.keys(over ?? {})) {
             if (["id", "name", "about", "base", "user"].includes(k)) continue
@@ -143,40 +130,6 @@ Singleton {
         return Config.set("appearance", "custom", all)
     }
 
-    // Save the active theme with all your adjustments as a theme of your own (Config.appearance.userThemes),
-    // stored as only the parts that differ from its base. `into` = an existing own theme to overwrite.
-    // The adjustments move into it, so the theme you started from goes back to how it was.
-    function saveAs(name, into) {
-        const a = Config.appearance, from = a.theme
-        const r = resolve(from, a.custom, a.mode), base = r.user ? r.base : r.id
-        const parts = diff(r, resolve(base, {}))
-        for (const k of ["id", "name", "about", "base", "user"]) delete parts[k]
-        const all = JSON.parse(JSON.stringify(a.userThemes ?? {}))
-        let id = into
-        if (!id) {
-            const slug = "custom-" + (String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32) || "theme")
-            id = slug
-            for (let n = 2; all[id] || builtIn.some(b => b.id === id); n++) id = slug + "-" + n
-        }
-        all[id] = Object.assign({ name: String(name).trim() || all[id]?.name || "My theme", base: base }, parts)
-        Config.set("appearance", "userThemes", all)
-        const custom = JSON.parse(JSON.stringify(a.custom ?? {}))
-        delete custom[from]; delete custom[id]
-        Config.set("appearance", "custom", custom)
-        Config.set("appearance", "theme", id)
-        return id
-    }
-    // the parts of `a` that differ from `b` (objects compared key by key, lists and values whole)
-    function diff(a, b) {
-        const out = {}
-        for (const k of Object.keys(a)) {
-            const x = a[k], y = b?.[k]
-            if (JSON.stringify(x) === JSON.stringify(y)) continue
-            if (x && typeof x === "object" && !Array.isArray(x) && y && typeof y === "object") out[k] = diff(x, y)
-            else out[k] = x
-        }
-        return out
-    }
     // the bar and dock parts of an adjustment object (Settings > Menu Bar / Dock), each checked and laid over r
     function applyBar(r, o) {
         const num = (v, lo, hi) => typeof v === "number" && v >= lo && v <= hi

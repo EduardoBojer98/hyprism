@@ -68,7 +68,6 @@ ColumnLayout {
             hint: barEditor.screen + " has a list of its own"
             PillButton { text: "Use the shared list"; onClicked: layoutPane.setScreen(barEditor.screen, "Same as every screen") }
         }
-        SaveTheme {}
     }
 
     SettingsBarItem { editor: barEditor }

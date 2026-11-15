@@ -156,7 +156,6 @@ ColumnLayout {
             hint: Object.keys(page.mine).length ? Object.keys(page.mine).length + (Object.keys(page.mine).length === 1 ? " change" : " changes") + " from the original" : "No changes"
             PillButton { text: "Reset"; enabled: Object.keys(page.mine).length > 0; onClicked: Config.set("appearance", "custom", Object.fromEntries(Object.entries(page.a.custom ?? {}).filter(([k]) => k !== page.a.theme))) }
         }
-        SaveTheme {}
     }
 
     // ---- personal: kept whatever the theme ---------------------------------------------------------

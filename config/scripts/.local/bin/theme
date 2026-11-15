@@ -22,7 +22,7 @@ if [[ $# -eq 0 ]]; then
     done <<<"$themes"
     exit 0
 fi
-# your own themes (Settings > Theme Builder) are custom-<name>; the shell checks every id
+# a theme folder of your own in ~/.config/hyprism/themes/<id>/ works too; the shell checks every id
 [[ $1 =~ ^[a-z0-9-]+$ ]] || {
     echo "theme: unknown theme '$1' (run 'theme' for the list)" >&2
     exit 2

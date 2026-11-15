@@ -12,7 +12,7 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 QS = ROOT / "config/quickshell/.config/quickshell"
 # kept by the shell itself, never set from a page
-STATE = {"appearance.userThemes", "launcher.usage", "launcher.recent", "system.welcomed", "caffeine.on", "caffeine.minutes",
+STATE = {"launcher.usage", "launcher.recent", "system.welcomed", "caffeine.on", "caffeine.minutes",
          "caffeine.endsAt", "idle.imported", "input.imported", "displays.imported", "monitorShare.imported", "version",
          "startup.apps", "bar.presets", "controlCenter.slidersOpen",
          "language.languages"}   # the Language page writes hypr/settings/language.lua itself

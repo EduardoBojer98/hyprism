@@ -99,7 +99,6 @@ ColumnLayout {
             hint: "Edge: the side toward the screen edge. Inner: the other side. Left: beside the icon (the top on a vertical bar or dock)"
             ThemeChoice { key: "dockMarkSide"; values: ["theme", "edge", "inner", "left"]; labels: ["Default", "Edge", "Inner", "Left"] }
         }
-        SaveTheme {}
     }
 
     SettingGroup {
