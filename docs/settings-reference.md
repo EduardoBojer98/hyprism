@@ -64,7 +64,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `recent` | `list<string>` | `[]` | result keys, most recent first, for the home view |
 | `order` | `list<string>` | `["apps", "files", "calc", "settings", "actions", "web"]` |  |
 | `clipboardInside` | `bool` | `true` | Spotlight's clipboard button shows history in the panel |
-| `position` | `string` | `"pointer"` | pointer (opens around the mouse pointer) \| theme (the theme's own place) |
+| `position` | `string` | `"center"` | center (middle of the screen) \| pointer (around the mouse pointer) \| theme (the theme's own place) |
 
 ## clipboard
 

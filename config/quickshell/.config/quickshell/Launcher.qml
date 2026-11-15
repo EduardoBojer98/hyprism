@@ -4,7 +4,7 @@ import Quickshell.Io
 import Quickshell.Widgets
 import QtQuick
 
-// Spotlight (Super): centred on the screen under the pointer, or at the pointer (Settings >
+// Spotlight (Super): centred on the screen under the pointer (default), at the pointer, or the style's own place (Settings >
 // Search & Launcher). A search pill plus four round buttons, like macOS Tahoe:
 //   Search    opens on the apps grid; typing switches to results ranked by group in the order set
 //             in Settings (default: apps, files, calculator, settings, actions, web)
@@ -49,11 +49,12 @@ Singleton {
     readonly property var rl: preset ?? Theme.current.launcher
     readonly property real screenW: popup.targetScreen?.width ?? 1600
     readonly property real screenH: popup.targetScreen?.height ?? 1000
-    // "pointer" (the default): every style floats around the mouse pointer, kept on its screen; "theme": the style's own place
-    readonly property bool pointer: Config.launcher.position === "pointer"
+    // "center" (the default): every style floats in the middle of the screen under the pointer; "pointer": around
+    // the mouse pointer, kept on its screen; "theme": the style's own place (strips and edges included)
+    readonly property bool pointer: Config.launcher.position !== "theme"
     property bool fromClick: false   // opened by clicking a bar item: then it stays beside that item
     readonly property var look: Object.assign({}, Config.launcher, {
-        placement: pointer ? "cursor" : rl.placement,
+        placement: Config.launcher.position === "center" ? "center" : pointer ? "cursor" : rl.placement,
         style: preset ? (preset.split ? "split" : "unified") : Theme.glassy && rl.placement === "center" ? "split" : "unified",
         width: pointer ? Math.min(rl.width > 0 ? rl.width : 680, 900, screenW - Theme.spaceL * 2) : rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
              : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
@@ -192,7 +193,7 @@ Singleton {
         boxHeight: pill.height + (panel.visible ? panel.height + panel.anchors.topMargin : 0)
         dim: root.look.dim
         focusItem: field
-        onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens at the pointer, not beside the bar item
+        onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens centred or at the pointer, not beside the bar item
         onClosed: { field.text = ""; root.confirmFor = null }
 
         // unified: one card behind the search field and the results, a hairline between them

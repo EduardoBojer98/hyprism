@@ -58,9 +58,10 @@ ColumnLayout {
         title: "Style"
         SettingRow {
             label: "Open"
-            hint: Config.launcher.position === "pointer" ? "Super opens it around the mouse pointer, on the screen you're working on"
+            hint: Config.launcher.position === "center" ? "Super opens it in the middle of the screen you're working on, in every style"
+                : Config.launcher.position === "pointer" ? "Super opens it around the mouse pointer, on the screen you're working on"
                 : "Where the style puts it: centred, or along a screen edge"
-            ConfigChoice { section: "launcher"; key: "position"; values: ["pointer", "theme"]; labels: ["At the pointer", "Style's place"] }
+            ConfigChoice { section: "launcher"; key: "position"; values: ["center", "pointer", "theme"]; labels: ["Middle", "At the pointer", "Style's place"] }
         }
         Text {
             Layout.fillWidth: true

@@ -47,7 +47,7 @@ JsonAdapter {
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
         property bool clipboardInside: true     // Spotlight's clipboard button shows history in the panel
-        property string position: "pointer"     // pointer (opens around the mouse pointer) | theme (the theme's own place)
+        property string position: "center"      // center (middle of the screen) | pointer (around the mouse pointer) | theme (the theme's own place)
     }
     property JsonObject clipboard: JsonObject {
         property int maxItems: 300
