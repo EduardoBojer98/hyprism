@@ -71,10 +71,10 @@ ColumnLayout {
                 radius: Theme.radius
                 color: Theme.fill
                 SequentialAnimation on opacity {
-                    running: Theme.animate
+                    running: Theme.animate && visible   // a hidden panel's pulse would still tick every frame
                     loops: Animation.Infinite
-                    NumberAnimation { to: 0.5; duration: 700 }
-                    NumberAnimation { to: 1; duration: 700 }
+                    NumberAnimation { to: 0.5; duration: 700; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: 1; duration: 700; easing.type: Easing.InOutSine }
                 }
             }
         }

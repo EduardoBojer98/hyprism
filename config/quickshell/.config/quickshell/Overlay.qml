@@ -16,7 +16,6 @@ Scope {
     property bool open: false
     property int cardWidth: 600               // widest the card gets; never wider than the screen minus a margin
     property int cardHeight: 400              // its natural height, capped the same way
-    property real startScale: 0.97
     default property alias content: card.data
     readonly property alias card: card
     readonly property int margin: Math.max(Theme.spaceL, Math.min(win.width, win.height) * 0.04)
@@ -42,7 +41,8 @@ Scope {
             id: stage
             anchors.fill: parent
             opacity: overlay.open ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+            // in on the look's enter time, out faster; the card grows from the look's start scale (a modal: from its centre)
+            Behavior on opacity { NumberAnimation { duration: overlay.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
             focus: overlay.open
 
             Keys.onPressed: event => {
@@ -61,8 +61,9 @@ Scope {
                 anchors.centerIn: parent
                 strong: true
                 radius: Theme.radiusPanel
-                scale: overlay.open ? 1 : overlay.startScale
-                Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                scale: overlay.open ? 1 : Theme.startScale
+                Behavior on scale { NumberAnimation { duration: overlay.open ? Theme.enter : Theme.exit
+                                                      easing.type: overlay.open ? Easing.BezierSpline : Easing.OutCubic; easing.bezierCurve: Theme.curve } }
                 MouseArea { anchors.fill: parent; z: -1 }   // clicks on the card don't close it
             }
         }
