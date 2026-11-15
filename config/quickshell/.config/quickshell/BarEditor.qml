@@ -3,7 +3,7 @@ import QtQuick.Layouts
 
 // The menu bar's items, edited by hand: a small copy of the bar in its own colours, and under it the bar's
 // three sections as lists. Drag an item to another place, drag one in from "Add to the bar" (or click it), drag
-// one back there (or press its ×) to take it off; by keyboard, Alt+arrows move the focused item and Delete takes
+// one back there (or press its ×) to take it off, or its eye to hide it in place; by keyboard, Alt+arrows move the focused item and Delete takes
 // it off. Every change saves at once and the real bar follows. By default it edits the one layout every screen
 // and theme shares (Theme.setLayout); with `screen` set it edits that screen's own list (Config.bar.monitors).
 // "Apps" is the dock itself: adding it puts the dock in the bar; it leaves the bar only by moving the dock
@@ -148,7 +148,7 @@ ColumnLayout {
     }
     Text {
         Layout.fillWidth: true
-        text: "Drag to arrange. Keyboard: Alt+arrows move the focused item, Delete takes it off."
+        text: "Drag to arrange; the eye hides an item but keeps its place. Keyboard: Alt+arrows move, H hides, Delete takes it off."
               + (ed.onScreen ? " Editing " + ed.screen + " only."
                  : Theme.hasLayout ? "" : " This is " + Theme.current.name + "'s own bar until your first change.")
         color: Theme.subtext
@@ -264,7 +264,16 @@ ColumnLayout {
         }
     }
 
-    // one item: on the bar a full-width row (handle, icon, name, ×); in the tray a pill with a +
+    // hidden: still in its place on the bar, but the bar leaves it out (bar.items[id].enabled = false)
+    function isHidden(id) { return Config.bar.items?.[id]?.enabled === false }
+    function setHidden(id, hide) {
+        const all = JSON.parse(JSON.stringify(Config.bar.items ?? {})), o = all[id] ?? {}
+        if (hide) o.enabled = false; else delete o.enabled
+        if (Object.keys(o).length) all[id] = o; else delete all[id]
+        Config.set("bar", "items", all)
+    }
+
+    // one item: on the bar a full-width row (handle, icon, name, eye, ×); in the tray a pill with a +
     component Chip: DragItem {
         id: chip
         property string itemId
@@ -273,6 +282,12 @@ ColumnLayout {
         readonly property var info: BarItems.info(itemId)
         readonly property bool picked: onBar && itemId === ed.current
         readonly property bool removable: onBar && itemId !== "apps"
+        readonly property bool hiddenItem: onBar && ed.isHidden(itemId)
+        // the row's hover from a handler: the buttons' own MouseAreas can't take it away (a MouseArea hover did,
+        // so the × hid itself as the pointer reached it, then came back: a flicker)
+        readonly property bool over: rowHover.hovered
+        readonly property bool showButtons: onBar && (over || picked || activeFocus === true)
+        HoverHandler { id: rowHover }
         signal droppedHere(var p, bool after)
         key: "baritem"
         payload: ({ id: itemId, from: from })
@@ -296,6 +311,7 @@ ColumnLayout {
                 ed.focusId = l[at + 1] ?? l[at - 1] ?? ""
                 ed.drop({ id: itemId, from: from }, "tray", -1)
             }
+            else if (e.key === Qt.Key_H && !alt) ed.setHidden(itemId, !hiddenItem)
             else if (alt && e.key === Qt.Key_Up) ed.step(itemId, from, -1)
             else if (alt && e.key === Qt.Key_Down) ed.step(itemId, from, 1)
             else if (alt && e.key === Qt.Key_Left) ed.hop(itemId, from, -1)
@@ -309,7 +325,7 @@ ColumnLayout {
         Rectangle {
             anchors.fill: parent
             radius: chip.radius
-            color: chip.picked ? Theme.accentWash : chip.hovered ? Theme.fillHover : chip.onBar ? Theme.raised : "transparent"
+            color: chip.picked ? Theme.accentWash : chip.over ? Theme.fillHover : chip.onBar ? Theme.raised : "transparent"
             border { color: chip.picked ? Theme.accent : Theme.stroke; width: chip.picked ? 2 : 1 }
             Rectangle {   // keyboard focus
                 anchors { fill: parent; margins: -3 }
@@ -325,7 +341,7 @@ ColumnLayout {
                 visible: chip.onBar
                 anchors { left: parent.left; leftMargin: 4; verticalCenter: parent.verticalCenter }
                 text: "\u{F01DD}"
-                color: Qt.alpha(Theme.text, chip.hovered ? 0.5 : 0.28)
+                color: Qt.alpha(Theme.text, chip.over ? 0.5 : 0.28)
                 font { family: Theme.iconFont; pixelSize: 14 }
             }
             Text {
@@ -336,15 +352,40 @@ ColumnLayout {
                 horizontalAlignment: Text.AlignHCenter
                 text: chip.info.glyph
                 color: chip.picked ? Theme.accent : Theme.text
+                opacity: chip.hiddenItem ? 0.4 : 1
                 font { family: Theme.iconFont; pixelSize: 15 }
             }
             Text {
                 visible: chip.onBar
-                anchors { left: glyph.right; leftMargin: 8; right: chip.removable ? cross.left : parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+                anchors { left: glyph.right; leftMargin: 8; right: eye.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
-                text: chip.info.name
-                color: Theme.text
+                text: chip.info.name + (chip.hiddenItem ? " · hidden" : "")
+                color: chip.hiddenItem ? Theme.subtext : Theme.text
                 font { family: Theme.font; pixelSize: Theme.fontLabel; weight: chip.picked ? Font.DemiBold : Font.Normal }
+            }
+            Rectangle {   // hide it without taking it off: it keeps its place and settings (shown while hidden, so you can bring it back)
+                id: eye
+                visible: chip.onBar
+                anchors { right: chip.removable ? cross.left : parent.right; rightMargin: chip.removable ? 2 : 4; verticalCenter: parent.verticalCenter }
+                width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall)
+                color: eyeArea.containsMouse ? Theme.fillHover : "transparent"
+                opacity: chip.showButtons || chip.hiddenItem ? 1 : 0
+                Text {
+                    anchors.centerIn: parent
+                    text: chip.hiddenItem ? "\u{F0209}" : "\u{F0208}"   // eye-off / eye
+                    color: eyeArea.containsMouse || chip.hiddenItem ? Theme.text : Theme.subtext
+                    font { family: Theme.iconFont; pixelSize: 14 }
+                }
+                MouseArea {
+                    id: eyeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    Accessible.role: Accessible.Button
+                    Accessible.name: (chip.hiddenItem ? "Show " : "Hide ") + chip.info.name
+                    onClicked: ed.setHidden(chip.itemId, !chip.hiddenItem)
+                }
+                ToolTipText { shown: eyeArea.containsMouse; text: chip.hiddenItem ? "Show it on the bar" : "Hide it (keeps its place)" }
             }
             Rectangle {   // take it off the bar without dragging
                 id: cross
@@ -352,7 +393,7 @@ ColumnLayout {
                 anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
                 width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall)
                 color: crossArea.containsMouse ? Qt.alpha(Theme.error, 0.18) : "transparent"
-                opacity: chip.hovered || chip.picked || chip.activeFocus === true ? 1 : 0
+                opacity: chip.showButtons ? 1 : 0
                 Text {
                     anchors.centerIn: parent
                     text: "\u{F0156}"
@@ -362,7 +403,6 @@ ColumnLayout {
                 MouseArea {
                     id: crossArea
                     anchors.fill: parent
-                    enabled: parent.opacity > 0
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     Accessible.role: Accessible.Button
