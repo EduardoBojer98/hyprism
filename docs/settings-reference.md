@@ -236,6 +236,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `items` | `var` | `{}` |  |
 | `preset` | `string` | `"theme"` |  |
 | `presets` | `var` | `{ minimal: { start: ["controls", "launcher", "workspaces"...` |  |
+| `layout` | `var` | `{}` |  |
 | `monitors` | `var` | `{}` | screen name (e.g. "eDP-1") -> preset name; unlisted or "" follows `preset` |
 
 ## battery

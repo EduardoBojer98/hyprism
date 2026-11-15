@@ -79,7 +79,7 @@ Singleton {
                      source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
                clock24: "bool", seconds: "bool", date: ["full", "short", "none"],
-               windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object" },
+               windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object", layout: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { locations: "places", units: ["celsius", "fahrenheit"], days: [0, 16], hours: [0, 48],
@@ -217,6 +217,25 @@ Singleton {
                 if (to !== undefined && kept[to] === undefined) kept[to] = oldCustom[k]
             }
             a.custom = JSON.parse(JSON.stringify(kept))
+        }
+        // before 2026-11-15 the bar's place and items were kept per theme (or as a named preset): the active
+        // theme's become your one layout, and the per-theme copies go
+        if (!Object.keys(adapter.bar.layout ?? {}).length) {
+            const all = JSON.parse(JSON.stringify(a.custom ?? {})), m = all[a.theme] ?? {}
+            const preset = adapter.bar.preset !== "theme" ? adapter.bar.presets?.[adapter.bar.preset] : undefined
+            const l = {}
+            if (m.barEdge) l.edge = m.barEdge
+            if (m.barSize) l.size = m.barSize
+            if (m.barFloating !== undefined) l.floating = m.barFloating
+            if (m.dock) l.dock = m.dock
+            const it = m.barItems ?? preset
+            if (it) Object.assign(l, { start: it.start ?? [], center: it.center ?? [], end: it.end ?? [] })
+            if (Object.keys(l).length) {
+                adapter.bar.layout = l
+                for (const t of Object.keys(all)) for (const k of ["barEdge", "barSize", "barFloating", "barItems", "dock"]) delete all[t][k]
+                a.custom = all
+                adapter.bar.preset = "theme"
+            }
         }
         if (adapter.launcher.startView === "rice") adapter.launcher.startView = "theme"
         // format 1 (before 2026-11-05) saved the dock's place as "bottom" for everyone: follow the theme now

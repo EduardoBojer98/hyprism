@@ -56,6 +56,12 @@ ColumnLayout {
     // Style: the theme's own launcher or one of Launcher.styles, each drawn in the active theme's colours
     SettingGroup {
         title: "Style"
+        SettingRow {
+            label: "Open"
+            hint: Config.launcher.position === "pointer" ? "Super opens it around the mouse pointer, on the screen you're working on"
+                : "Where the style puts it: centred, or along a screen edge"
+            ConfigChoice { section: "launcher"; key: "position"; values: ["pointer", "theme"]; labels: ["At the pointer", "Style's place"] }
+        }
         Text {
             Layout.fillWidth: true
             Layout.margins: 16

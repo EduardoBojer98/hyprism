@@ -200,6 +200,9 @@ JsonAdapter {
             external: { start: ["controls", "launcher", "workspaces", "window"], center: ["clock", "date"],
                         end: ["sysinfo", "weather", "media", "tray", "notifications", "status", "power"] }
         })
+        // your bar: { edge, size, floating, dock ("bar" or an edge), start, center, end }. Empty = the theme's own;
+        // the first change in Settings > Menu Bar copies the theme's into it, and it then stays when you switch theme
+        property var layout: ({})
         property var monitors: ({})             // screen name (e.g. "eDP-1") -> preset name; unlisted or "" follows `preset`
     }
     property JsonObject battery: JsonObject {
