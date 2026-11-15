@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 
 MAX_CPU=2.0 # idle CPU, percent of one core over 30 s: an idle bar must not keep a core warm
 MAX_MB=450  # resident memory of the shell (qs), in MB
-MAX_WATCH=0 # `metrics watch` processes: the default theme's bar has no item that needs one
+MAX_WATCH=0 # `metrics watch` processes: the default theme's bar has no item that needs one (the sysinfo run allows 1)
 
 export HYPRISM_TEST_NAME=p
 nested=tests/nested.sh
@@ -34,25 +34,31 @@ done
 }
 
 ticks() { awk '{ sub(/^.*\) /, ""); print $12 + $13 }' "/proc/$pid/stat"; } # utime + stime, after the command's ")"
-t0=$(ticks)
-sleep 30
-t1=$(ticks)
-cpu=$(awk -v d=$((t1 - t0)) -v hz="$(getconf CLK_TCK)" 'BEGIN { printf "%.2f", d / (30 * hz) * 100 }')
-mb=$(awk '/^VmRSS:/ { printf "%d", $2 / 1024 }' "/proc/$pid/status")
-
 # every process below the shell: `metrics watch`, sleep, sh -c
 descendants() { ps -eo pid=,ppid= | awk -v root="$pid" '{ p[$1] = $2 } END { for (c in p) { x = c; while (x in p) { if (p[x] == root) { print c; break } x = p[x] } } }'; }
-helpers=$(for c in $(descendants); do tr '\0' ' ' <"/proc/$c/cmdline" 2>/dev/null && echo; done)
-watch=$(grep -c 'metrics watch' <<<"$helpers" || true)
-other=$(grep -cE '(^| )(sleep|sh -c)( |$)' <<<"$helpers" || true)
-
 fail=0
 verdict() { if awk -v a="$2" -v b="$3" 'BEGIN { exit !(a <= b) }'; then echo "ok: $1 $2 (budget $3)"; else
     echo "xx $1 $2 (budget $3)"
     fail=1
 fi; }
-verdict "idle CPU, % of one core:" "$cpu" "$MAX_CPU"
-verdict "resident memory, MB:" "$mb" "$MAX_MB"
-verdict "metrics watch processes:" "$watch" "$MAX_WATCH"
-echo "info: sleep / sh -c helpers running: $other"
+measure() { # measure LABEL MAX_WATCH: 30 s of CPU, memory and helpers
+    local t0 t1 cpu mb helpers watch other
+    t0=$(ticks)
+    sleep 30
+    t1=$(ticks)
+    cpu=$(awk -v d=$((t1 - t0)) -v hz="$(getconf CLK_TCK)" 'BEGIN { printf "%.2f", d / (30 * hz) * 100 }')
+    mb=$(awk '/^VmRSS:/ { printf "%d", $2 / 1024 }' "/proc/$pid/status")
+    helpers=$(for c in $(descendants); do tr '\0' ' ' <"/proc/$c/cmdline" 2>/dev/null && echo; done)
+    watch=$(grep -c 'metrics watch' <<<"$helpers" || true)
+    other=$(grep -cE '(^| )(sleep|sh -c)( |$)' <<<"$helpers" || true)
+    verdict "$1 idle CPU, % of one core:" "$cpu" "$MAX_CPU"
+    verdict "$1 resident memory, MB:" "$mb" "$MAX_MB"
+    verdict "$1 metrics watch processes:" "$watch" "$2"
+    echo "info: $1 sleep / sh -c helpers running: $other"
+}
+measure "default bar," "$MAX_WATCH"
+# the owner's case: a bar with the always-on system-info item (one metrics watch, df every 30 s, no nvidia-smi)
+$nested ipc config set bar preset '"laptop"' >/dev/null 2>&1 || true
+sleep 10
+measure "sysinfo bar," 1
 exit "$fail"
