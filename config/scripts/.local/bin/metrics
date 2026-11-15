@@ -82,7 +82,10 @@ m_cpu_freq() { # average of the cores, MHz
 # Read once per PCI address (watch mode keeps the answer).
 declare -A IDENT=()
 ident() { # ident PCI -> '"name":"…","chip":"…","driver":"…"' (empty when unknown)
-    [[ -n ${IDENT[$1]+x} ]] && { printf '%s' "${IDENT[$1]}"; return 0; }
+    [[ -n ${IDENT[$1]+x} ]] && {
+        printf '%s' "${IDENT[$1]}"
+        return 0
+    }
     local d=/sys/bus/pci/devices/$1 ven dev db="" line name chip brand drv out=""
     ven=$(rd "$d/vendor") dev=$(rd "$d/device")
     ven=${ven#0x} dev=${dev#0x}
