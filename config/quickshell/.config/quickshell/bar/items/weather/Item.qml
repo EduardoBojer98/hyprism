@@ -6,8 +6,8 @@ BarIndicator {
     shown: Weather.ready || !Weather.hasPlace
     glyph: Weather.glyph
     word: "wx"
-    value: Math.round(Weather.temperature) + "°"
-    showValue: true
+    value: Weather.ready ? Math.round(Weather.temperature) + "°" : ""
+    showValue: Weather.ready
     level: Weather.temperature
     tip: "Weather"
     active: Weather.open

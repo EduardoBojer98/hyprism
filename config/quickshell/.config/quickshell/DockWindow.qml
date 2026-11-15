@@ -10,12 +10,22 @@ import QtQuick.Effects
 Item {
     required property var dock
     id: win
+    readonly property real radius: Theme.radius   // for the focus ring
     required property var modelData           // HyprlandToplevel
     readonly property var entry: dock.entryFor(modelData.wayland?.appId ?? "")
     readonly property bool minimised: dock.isMinimised(modelData)
     readonly property bool focused: modelData.activated
     readonly property real mid: (dock.vertical ? height : width) / 2   // tooltip / menu centre
     readonly property var windows: [modelData]
+    function activate(button) {
+        if (button === Qt.RightButton) dock.menuBox.openFor(win, win.entry)
+        else if (button === Qt.MiddleButton) dock.close(win.modelData)
+        else if (win.focused && !win.minimised) dock.minimise(win.modelData)
+        else dock.focus(win.modelData)
+    }
+    activeFocusOnTab: true
+    Keys.onPressed: e => dock.key(e, win, () => win.activate(Qt.LeftButton), () => win.activate(Qt.RightButton))
+    FocusRing {}
     // the window's shape (from its picture once there is one), fitted into the tile
     readonly property real aspect: shot.hasContent && shot.sourceSize.height > 0
         ? Math.max(0.5, Math.min(2.4, shot.sourceSize.width / shot.sourceSize.height)) : 1.6
@@ -105,11 +115,6 @@ Item {
         onContainsMouseChanged: dock.hovering(win, (win.modelData.title || win.entry?.name || "") + (win.minimised ? "  (minimised)" : ""), containsMouse)
         // Left: bring it up (or minimise it when it already is the front window).
         // Middle: close. Right: dock.menuBox.
-        onClicked: mouse => {
-            if (mouse.button === Qt.RightButton) dock.menuBox.openFor(win, win.entry)
-            else if (mouse.button === Qt.MiddleButton) dock.close(win.modelData)
-            else if (win.focused && !win.minimised) dock.minimise(win.modelData)
-            else dock.focus(win.modelData)
-        }
+        onClicked: mouse => win.activate(mouse.button)
     }
 }
