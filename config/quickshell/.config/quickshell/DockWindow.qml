@@ -5,7 +5,8 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Effects
 
-// Dock part: one open window (separate mode): a live picture with the app's icon in the corner.
+// Dock part: one open window (separate mode): a live picture with the app's icon in the corner, or (Settings >
+// Dock > Open windows as names, dock.nameOnly) just the app's name on a plate.
 // Used by Dock.qml, which passes itself in as `dock`.
 Item {
     required property var dock
@@ -17,6 +18,8 @@ Item {
     readonly property bool focused: modelData.activated
     readonly property real mid: (dock.vertical ? height : width) / 2   // tooltip / menu centre
     readonly property var windows: [modelData]
+    readonly property bool nameOnly: Config.dock.nameOnly
+    readonly property string appName: entry?.name || modelData.wayland?.appId || "Window"
     function activate(button) {
         if (button === Qt.RightButton) dock.menuBox.openFor(win, win.entry)
         else if (button === Qt.MiddleButton) dock.close(win.modelData)
@@ -41,8 +44,10 @@ Item {
         }
     }
 
-    width: dock.vertical ? dock.cellCross : dock.thumbWidth
-    height: dock.vertical ? Math.round(dock.iconSize * 0.9) : dock.cellCross
+    // a name sizes its tile to the text, up to four icons long (turned on its side on a vertical dock)
+    readonly property real nameLength: Math.max(dock.iconSize, Math.min(nameText.implicitWidth + 28, dock.iconSize * 4))
+    width: dock.vertical ? dock.cellCross : nameOnly ? nameLength : dock.thumbWidth
+    height: dock.vertical ? (nameOnly ? nameLength : Math.round(dock.iconSize * 0.9)) : dock.cellCross
 
     Rectangle {   // hover plate
         anchors { fill: parent; margins: -1 }
@@ -61,10 +66,11 @@ Item {
         property real raise: dock.hoverStyle === "lift" && winArea.containsMouse && Theme.moves ? -5 * dock.sign : 0
         transform: Translate { x: dock.vertical ? frame.raise : 0; y: dock.vertical ? 0 : frame.raise }
         Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
-        height: dock.vertical ? Math.min(win.height - 6, (dock.iconSize - 4) / win.aspect) : Math.min(boxH, (win.width - 6) / win.aspect)
-        width: height * win.aspect
+        height: win.nameOnly ? (dock.vertical ? win.height - 6 : Math.round(dock.iconSize * 0.66))
+              : dock.vertical ? Math.min(win.height - 6, (dock.iconSize - 4) / win.aspect) : Math.min(boxH, (win.width - 6) / win.aspect)
+        width: win.nameOnly ? (dock.vertical ? Math.round(dock.iconSize * 0.66) : win.width - 6) : height * win.aspect
         radius: Theme.radiusSmall - 2
-        color: Qt.alpha(dock.ink, 0.07)
+        color: win.nameOnly && win.focused ? Qt.alpha(Theme.accent, 0.14) : Qt.alpha(dock.ink, 0.07)
         border { color: win.focused ? Theme.accent : Qt.alpha(dock.ink, 0.2); width: win.focused ? 2 : 1 }
         opacity: win.minimised ? 0.55 : 1
         transformOrigin: dock.edgeOrigin
@@ -76,7 +82,7 @@ Item {
             id: shot
             anchors { fill: parent; margins: frame.border.width }
             // only while the dock can be seen: each live picture costs a little GPU
-            captureSource: dock.shown && Config.dock.thumbnails && dock.captureReady && !win.retrying ? win.modelData.wayland : null
+            captureSource: dock.shown && Config.dock.thumbnails && !win.nameOnly && dock.captureReady && !win.retrying ? win.modelData.wayland : null
             live: dock.liveShots && !win.minimised   // a minimised window keeps its last picture
             // a capture can fail (e.g. right at login); start it again a moment later
             onStopped: { win.retrying = true; retry.restart() }
@@ -84,15 +90,26 @@ Item {
             onHasContentChanged: if (!hasContent && captureSource) { win.retrying = true; retry.restart() }
         }
         Timer { id: retry; interval: 600; onTriggered: win.retrying = false }
+        Text {   // name only: the app's name, set like the dock's tooltip
+            id: nameText
+            anchors.centerIn: parent
+            visible: win.nameOnly
+            width: Math.min(implicitWidth, (dock.vertical ? parent.height : parent.width) - 12)
+            rotation: dock.vertical ? (dock.edge === "right" ? 90 : -90) : 0
+            text: win.appName
+            elide: Text.ElideRight
+            color: Qt.alpha(dock.ink, win.focused ? 1 : 0.78)
+            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: win.focused ? Font.DemiBold : Font.Medium }
+        }
         IconImage {   // no picture (yet): the app's icon fills in
             anchors.centerIn: parent
-            visible: !shot.hasContent
+            visible: !shot.hasContent && !win.nameOnly
             implicitSize: Math.round(frame.height * 0.72)
             source: Quickshell.iconPath(win.entry?.icon ?? "", "application-x-executable")
         }
     }
     IconImage {   // whose window it is
-        visible: shot.hasContent
+        visible: shot.hasContent && !win.nameOnly
         anchors { right: frame.right; bottom: frame.bottom; rightMargin: -4; bottomMargin: -5 }
         implicitSize: Math.round(dock.iconSize * 0.42)
         source: Quickshell.iconPath(win.entry?.icon ?? "", "application-x-executable")
