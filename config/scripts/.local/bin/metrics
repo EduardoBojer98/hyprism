@@ -7,16 +7,17 @@
 #   metrics once [NAMES]              one JSON object (NAMES: comma list; default: all)
 #   metrics watch [NAMES] [SECONDS]   one JSON line every SECONDS (default 2), until stopped
 #
-# Names: cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio disk_temp net battery fans profile uptime load
-# The second graphics card (dgpu) is only asked for numbers while it is already awake, so reading it never
-# wakes it. Adding a metric: one m_<name> function below, its name in ALL, and a line in docs/bar.md.
+# Names: cpu cpu_temp cpu_freq gpu dgpu dgpu_live ram swap disk diskio disk_temp net battery fans profile uptime load
+# The second graphics card: dgpu is its power state only (a sysfs read, never wakes it). dgpu_live adds its numbers
+# from nvidia-smi, only while it is already awake and at most every 10 s, so it can suspend again between asks;
+# the caller asks for dgpu_live only while a panel that shows it is open. Adding a metric: one m_<name> function below, its name in ALL, and a line in docs/bar.md.
 set -euo pipefail
 # shellcheck source=config/scripts/.local/lib/hyprism/common.sh
 . "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
 case ${1:-} in -h | --help) usage ;; esac
 
 R=${HYPRISM_ROOT:-} # tests point this at a made-up /proc and /sys
-ALL=(cpu cpu_temp cpu_freq gpu dgpu ram swap disk diskio disk_temp net battery fans profile uptime load)
+ALL=(cpu cpu_temp cpu_freq gpu dgpu dgpu_live ram swap disk diskio disk_temp net battery fans profile uptime load)
 declare -A PREV=() # last tick's counters, for the readings that are rates
 
 rd() { [[ -r $R$1 ]] && head -n1 "$R$1" 2>/dev/null || true; } # a missing file = this computer has no such reading
@@ -82,6 +83,8 @@ card() { # card NAME PCI: load, temperature, memory and power from a card's own 
     [[ -n $v ]] && out+="\"pct\":$v"
     u=$(rd "$d/mem_info_vram_used") t=$(rd "$d/mem_info_vram_total")
     [[ -n $u && -n $t ]] && out+="${out:+,}\"vram_used\":$((u / 1048576)),\"vram_total\":$((t / 1048576))"
+    v=$(rd "$d/mem_info_gtt_used") # shared graphics memory (system RAM the card uses): a use, not a capacity
+    [[ -n $v ]] && out+="${out:+,}\"gtt_used\":$((v / 1048576))"
     for h in "$R$d"/hwmon/hwmon*; do
         [[ -d $h ]] || continue
         v=$(milli "$(rd "${h#"$R"}/temp1_input")")
@@ -99,23 +102,14 @@ m_gpu() { # the card that draws the desktop
     [[ -n $pci ]] && card gpu "$pci"
     return 0
 }
-m_dgpu() { # the second card: its power state always; numbers only while it is awake
-    local pci state vendor q
+m_dgpu() { # the second card: its power state only
+    local pci state
     pci=$(hw gpu.discrete_pci)
     [[ -n $pci ]] || return 0
     state=$(rd "/sys/bus/pci/devices/$pci/power/runtime_status")
     [[ -n $state ]] || state=unknown
-    vendor=$(hw gpu.discrete)
-    if [[ $state == active && $vendor == nvidia && -z $R ]] && command -v nvidia-smi >/dev/null; then
-        q=$(nvidia-smi --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total,power.draw --format=csv,noheader,nounits 2>/dev/null | head -1) || q=""
-        local pct temp used total watts
-        IFS=', ' read -r pct temp used total watts <<<"$q"
-        if [[ $pct =~ ^[0-9]+$ && $temp =~ ^[0-9.]+$ && $used =~ ^[0-9]+$ && $total =~ ^[0-9]+$ ]]; then
-            [[ $watts =~ ^[0-9.]+$ ]] || watts="" # many laptops answer [N/A] for power
-            printf '"dgpu":{"state":"active","pct":%s,"temp":%s,"vram_used":%s,"vram_total":%s%s}' "$pct" "$temp" "$used" "$total" "${watts:+,\"watts\":$watts}"
-            return 0
-        fi
-    elif [[ $state == active && $vendor != nvidia ]]; then
+    if [[ $state == active && $(hw gpu.discrete) != nvidia ]]; then # AMD / Intel cards answer from sysfs without a cost
+        local q
         q=$(card x "$pci")
         [[ -n $q ]] && {
             printf '"dgpu":{"state":"active",%s' "${q#\"x\":\{}"
@@ -123,6 +117,29 @@ m_dgpu() { # the second card: its power state always; numbers only while it is a
         }
     fi
     printf '"dgpu":{"state":"%s"}' "$state"
+}
+SMI_T=0 SMI_OUT=""
+m_dgpu_live() { # an awake NVIDIA card's numbers, asked at most every 10 s (nvidia-smi can keep a card from suspending)
+    local pci t
+    pci=$(hw gpu.discrete_pci)
+    [[ -n $pci && $(rd "/sys/bus/pci/devices/$pci/power/runtime_status") == active && $(hw gpu.discrete) == nvidia ]] || {
+        SMI_OUT="" SMI_T=0
+        return 0
+    }
+    t=$(now_ms)
+    if ((t - SMI_T >= 10000)); then
+        local smi=${HYPRISM_NVIDIA_SMI:-nvidia-smi} q pct temp used total watts
+        SMI_T=$t SMI_OUT=""
+        [[ -n $R && -z ${HYPRISM_NVIDIA_SMI:-} ]] && return 0
+        command -v "$smi" >/dev/null || return 0
+        q=$("$smi" --query-gpu=utilization.gpu,temperature.gpu,memory.used,memory.total,power.draw --format=csv,noheader,nounits 2>/dev/null | head -1) || q=""
+        IFS=', ' read -r pct temp used total watts <<<"$q"
+        if [[ $pct =~ ^[0-9]+$ && $temp =~ ^[0-9.]+$ && $used =~ ^[0-9]+$ && $total =~ ^[0-9]+$ ]]; then
+            [[ $watts =~ ^[0-9.]+$ ]] || watts="" # many laptops answer [N/A] for power
+            SMI_OUT=$(printf '"dgpu_live":{"pct":%s,"temp":%s,"vram_used":%s,"vram_total":%s%s}' "$pct" "$temp" "$used" "$total" "${watts:+,\"watts\":$watts}")
+        fi
+    fi
+    printf '%s' "$SMI_OUT"
 }
 meminfo() { awk -v k="$1:" '$1 == k { print $2; exit }' "$R/proc/meminfo"; } # kB
 m_ram() {
@@ -138,10 +155,18 @@ m_swap() {
 }
 m_disk() {                  # every real filesystem: where it is mounted, GB used and total
     [[ -z $R ]] || return 0 # df reads the real computer
-    local out
-    out=$(df -P -B1 -x tmpfs -x devtmpfs -x overlay -x squashfs -x efivarfs -x ramfs 2>/dev/null |
+    local out t
+    t=$(now_ms)
+    if ((t - ${DISK_T:-0} < 30000)); then # sizes change slowly: df (a fork) every 30 s, not every tick
+        printf '%s' "$DISK_OUT"
+        return 0
+    fi
+    DISK_T=$t
+    out=$(df -P -B1 -x tmpfs -x devtmpfs -x overlay -x squashfs -x efivarfs -x ramfs -x fuse.portal -x fuse.gvfsd-fuse 2>/dev/null |
         awk 'NR > 1 && !seen[$1]++ { printf "%s{\"mount\":\"%s\",\"used\":%.1f,\"total\":%.1f,\"pct\":%d}", (n++ ? "," : ""), $6, $3 / 1e9, $2 / 1e9, $5 }') || out=""
-    [[ -n $out ]] && printf '"disk":[%s]' "$out"
+    DISK_OUT=""
+    [[ -n $out ]] && DISK_OUT=$(printf '"disk":[%s]' "$out")
+    printf '%s' "$DISK_OUT"
 }
 m_diskio() { # bytes per second read and written, whole disks only
     local r w
@@ -171,8 +196,9 @@ m_net() { # bytes per second down and up over real interfaces, and the one the d
     rate net.tx "$tx"
     printf '"net":{"down":%s,"up":%s,"iface":"%s"}' "$rx" "$RATE" "$iface"
 }
-m_battery() { # percent, state, watts in or out, minutes left (to empty, or to full while charging)
-    local b d pct status uw now full mins=""
+BATP=() # recent power samples "ms:microwatts", for a ~30 s average (the instantaneous figure jumps)
+m_battery() { # percent, state, watts in or out (30 s average), minutes left (none below 1 W, or unless charging/discharging)
+    local b d pct status uw now full mins="" t s sum=0 n=0 keep=()
     b=$(hw power.battery)
     [[ -n $b ]] || return 0
     d=/sys/class/power_supply/$b
@@ -185,11 +211,22 @@ m_battery() { # percent, state, watts in or out, minutes left (to empty, or to f
         ua=$(rd "$d/current_now") uv=$(rd "$d/voltage_now")
         [[ -n $ua && -n $uv ]] && uw=$((ua * uv / 1000000)) # microamps x microvolts -> microwatts
     fi
+    uw=${uw:-0}
+    t=$(now_ms)
+    [[ ${PREV[bat_st]:-} == "$status" ]] || BATP=() # a new state starts a new average
+    PREV[bat_st]=$status
+    BATP+=("$t:$uw")
+    for s in "${BATP[@]}"; do
+        ((t - ${s%%:*} <= 30000)) && keep+=("$s") && sum=$((sum + ${s#*:})) && n=$((n + 1))
+    done
+    BATP=("${keep[@]}")
+    uw=$((sum / n))
     now=$(rd "$d/energy_now") full=$(rd "$d/energy_full")
-    if [[ -n ${uw:-} && $uw -gt 0 && -n $now && -n $full ]]; then
+    # Root cause of the old 32248 min: firmware gave power_now=15000 (0.015 W as microwatts), so energy / power was huge.
+    if ((uw >= 1000000)) && [[ -n $now && -n $full ]]; then
         if [[ $status == Discharging ]]; then mins=$((now * 60 / uw)); elif [[ $status == Charging ]]; then mins=$(((full - now) * 60 / uw)); fi
     fi
-    printf '"battery":{"pct":%s,"state":"%s","watts":%s%s}' "$pct" "${status,,}" "$(milli $((${uw:-0} / 1000)))" "${mins:+,\"minutes\":$mins}"
+    printf '"battery":{"pct":%s,"state":"%s","watts":%s%s}' "$pct" "${status,,}" "$(milli $((uw / 1000)))" "${mins:+,\"minutes\":$mins}"
 }
 m_fans() { # every fan this computer reports, in RPM
     local f v out=""
