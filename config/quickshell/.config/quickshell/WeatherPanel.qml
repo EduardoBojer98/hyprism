@@ -118,7 +118,9 @@ ColumnLayout {
             Text { Layout.alignment: Qt.AlignRight; text: f ? Weather.conditionOf(f.code) : ""; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
             Text {
                 Layout.alignment: Qt.AlignRight
-                text: f ? "Feels like " + Math.round(f.feelsLike) + "°" + (f.days.length ? "  ·  H " + Math.round(f.days[0].max) + "°  L " + Math.round(f.days[0].min) + "°" : "") : ""
+                // feels-like goes here only when it isn't one of the readings below
+                text: f ? [Array.from(Config.weather.details ?? []).includes("feels") ? "" : "Feels like " + Math.round(f.feelsLike) + "°",
+                           f.days.length ? "H " + Math.round(f.days[0].max) + "°  L " + Math.round(f.days[0].min) + "°" : ""].filter(x => x).join("  ·  ") : ""
                 color: Theme.subtext
                 font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
             }
