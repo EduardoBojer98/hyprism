@@ -84,7 +84,14 @@ Settings > Apps now has a Terminal row.
   - CPU, memory, swap.
   - A graphics grid with one row per GPU (Load, Temp, Power, Shared). The dGPU shows "Sleeping" when it is.
   - Disk temperature, network sparkline, battery, top processes.
-- **Control Center:** a 12-column tile grid, so a short last row fills the width; one "on" style.
+- **Control Center (redesigned after the first merge):**
+  - Header with time, battery, and Settings / Lock / Power reachable by Tab.
+  - Connection tiles: an icon well that toggles, a chevron that opens the list.
+  - Quick toggles in equal rows of 3 or 4; the last row shares the full width.
+  - Sliders with a handle, a mute well and a device chevron.
+  - A full-width power-mode control.
+  - Spacing comes from density tokens (`Theme.qml`, "Control Center tokens").
+  - Clicking the bar's quick-settings cluster opens the whole Control Center, not one flyout per icon.
 - **Bar editor:** chips with names; zones sized by item count.
 - **Dock:** reachable from the keyboard with Shift+F6.
 - **Settings:** new Screenshots page, border colour rows, "Open: at the pointer" row for the Launcher.
@@ -96,7 +103,7 @@ Settings > Apps now has a Terminal row.
 |---|---|---|
 | **Pebble** (default) | elegant, calm | sage on charcoal, Archivo light, roomy, r14, soft motion, river-stone wallpaper |
 | **Poster** | expressive, colourful | red/cobalt/yellow on paper, hard cobalt shadow, reverse-video segments |
-| **Monolith** | experimental, terminal | mono, compact, accent on black, inverse selection |
+| **Monolith** (redesigned) | experimental, crafted TUI | olive-tinted grey layers, JetBrains Mono UI + Martian Mono numbers, status line with dim labels (`bar.dimLabels`), inverse lime clock block, corner-bracket panels, rainbow frame on AC, 140/90 ms expo motion, monolith-at-dawn wallpaper; the light half keeps lime as reverse video |
 
 All three have a light and a dark half. The old themes map to these:
 
@@ -119,7 +126,8 @@ All three have a light and a dark half. The old themes map to these:
   - the power mode is not Silent;
   - the laptop is on AC, unless you allow it on battery.
 - **Launcher and clipboard:**
-  - The launcher opens at the pointer on Super.
+  - The launcher opens in the middle of the screen in every style (the default, at the owner's request);
+    "At the pointer" and "Style's place" stay as choices.
   - The clipboard opens near the pointer.
 - **Power:**
   - Power modes are named Silent / Balanced / Performance.
@@ -156,6 +164,9 @@ different scales: this desktop mixes 1.2 and 1.0.
   - The dGPU is `suspended`.
   - The bar is on both monitors.
   - The weather panel, Control Center and capture bar render.
+- **Bug found in the re-check:** `shape.density` and `hypr.frame` never took effect in any theme. Themes are
+  merged over the built-in safe theme, which lacked both keys. Fixed, and `tests/themes.py` now fails on any theme
+  key the safe theme lacks.
 - **Problem found in the live merge:** the shell reloaded by itself when the links changed. That left a second
   instance and a crash dialog, and `qs kill` stopped only one of them. The second instance was stopped by hand.
   `install.sh update` now stops every instance, up to 3.
@@ -171,7 +182,13 @@ different scales: this desktop mixes 1.2 and 1.0.
 - **Not re-checked after the polish pass:**
   - The Poster cheatsheet against the bar clock.
   - The bar editor's final chip widths.
-- **Open:** Monolith app icons stay in colour.
+- **Not checked by click:** the bar's quick-settings cluster opening the Control Center (the test desktop cannot
+  click); a brightness slider in the Control Center (the test desktop has no backlight); the Control Center's fit
+  at scale 1.2 (estimated about 810 px of 1000).
+- **Plan items changed on purpose:** Settings keeps 13 sidebar groups rather than the PLAN's Look / System / Apps /
+  Tools headings (every page is reachable and searchable); tile state text stays short ("MKhome 5G", "On"), as
+  "On · MKhome 5G" did not fit 60 px.
+- **Open:** Monolith app icons stay in colour; the calendar's "today" marker is round in every theme.
 - **Wallpaper art:** Poster's paper square under the bar is part of the wallpaper; change `themes/poster/wallpaper.sh` if it should go.
 - **Owner's checklist:**
   - Log out and in once.
