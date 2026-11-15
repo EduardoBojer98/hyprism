@@ -89,9 +89,9 @@ ColumnLayout {
         title: "Performance"
         SettingRow {
             label: "Power mode"
-            hint: "Plugging in picks Balanced, unplugging picks Quiet"
+            hint: "Silent keeps fans low and saves battery; Performance lets the computer run hot and loud. Plugging in picks Balanced, unplugging picks Silent"
             Choice {
-                options: ["Quiet", "Balanced", "Performance"]
+                options: ["Silent", "Balanced", "Performance"]
                 index: PowerMode.profile
                 onPicked: i => PowerMode.set(i)
             }

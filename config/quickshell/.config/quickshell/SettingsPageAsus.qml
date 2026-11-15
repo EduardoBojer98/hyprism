@@ -117,9 +117,9 @@ ColumnLayout {
         title: "Power mode"
         SettingRow {
             label: "Mode"
-            hint: "Changes power limits and fans only. Plugging in switches to Balanced, battery to Quiet."
+            hint: "Changes power limits and fans only. Plugging in switches to Balanced, battery to Silent."
             Choice {
-                options: page.profiles
+                options: ["Silent", "Balanced", "Performance"]
                 index: PowerMode.profile
                 onPicked: i => PowerMode.set(i)
             }
@@ -131,7 +131,7 @@ ColumnLayout {
         title: "Fan curves"
         SettingRow {
             label: "Mode"
-            Choice { options: page.profiles; index: page.profileIndex; onPicked: i => { page.dirty = false; page.profileIndex = i } }
+            Choice { options: ["Silent", "Balanced", "Performance"]; index: page.profileIndex; onPicked: i => { page.dirty = false; page.profileIndex = i } }
         }
         SettingRow {
             label: "Fan"
