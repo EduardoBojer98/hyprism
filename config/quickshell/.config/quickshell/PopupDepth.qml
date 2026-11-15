@@ -11,6 +11,8 @@ Item {
     property real radius: Theme.radiusLarge
     property bool over: false   // true: the decor over the frame; false: the depth under it
     // room a shadow needs outside the box, for windows sized to their box
+    // popup.decorColour: the topline and brackets in the accent or the second accent (Monolith's neon pair)
+    readonly property color mark: Theme.current.popup.decorColour === "accent2" ? Theme.accent2 : Theme.accent
     readonly property int room: Theme.depth === "soft" || Theme.depth === "glow" ? 36 : Theme.depth === "hard" ? 8 : 2
 
     RectangularShadow {
@@ -38,7 +40,7 @@ Item {
     Rectangle {   // topline: the accent along the top edge, like a focused terminal pane (Monolith)
         visible: depth.over && Theme.current.popup.decor === "topline"
         width: parent.width; height: 2
-        color: Theme.accent
+        color: depth.mark
     }
     Repeater {   // brackets: accent corner marks over the frame
         model: depth.over && Theme.current.popup.decor === "brackets" ? [[0, 0], [1, 0], [0, 1], [1, 1]] : []
@@ -48,8 +50,8 @@ Item {
             width: 14; height: 14
             x: modelData[0] ? depth.width - width + 2 : -2
             y: modelData[1] ? depth.height - height + 2 : -2
-            Rectangle { width: parent.width; height: 2; color: Theme.accent; y: mark.modelData[1] ? parent.height - 2 : 0 }
-            Rectangle { width: 2; height: parent.height; color: Theme.accent; x: mark.modelData[0] ? parent.width - 2 : 0 }
+            Rectangle { width: parent.width; height: 2; color: depth.mark; y: mark.modelData[1] ? parent.height - 2 : 0 }
+            Rectangle { width: 2; height: parent.height; color: depth.mark; x: mark.modelData[0] ? parent.width - 2 : 0 }
         }
     }
 }

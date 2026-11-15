@@ -9,6 +9,7 @@ import QtQuick
 //   numbers  numbers in a recessed pill with the current one filled (Glass)
 //   blocks   huge numbers filling the bar, the current one a solid accent block (Poster)
 //   squares  outlined squares, the current one filled (Atlas)
+//   tabs     tmux's window list: number and app ("2 firefox"), the current one an accent block the bar's height (Monolith)
 // Click goes there, scroll steps through them.
 Item {
     id: ws
@@ -21,7 +22,12 @@ Item {
     readonly property var list: Sys.workspacesOf(monitor)
     readonly property int current: list.findIndex(w => w.active)
     function step(d) { const next = list[current + (d < 0 ? 1 : -1)]; if (next) next.activate() }
-    function label(w) { return String(w.id) }
+    function label(w) { return String(w.id) + (style === "tabs" && !vertical && app(w) !== "" ? " " + app(w) : "") }
+    // tabs: the workspace's app, short like tmux's process name ("com.mitchellh.ghostty" -> "ghostty")
+    function app(w) {
+        const t = w.toplevels.values, top = t.find(x => x.activated) ?? t[t.length - 1]
+        return String(top?.wayland?.appId ?? top?.lastIpcObject?.class ?? "").split(".").pop().toLowerCase().slice(0, 12)
+    }
 
     visible: style !== "none"
     implicitWidth: style === "text" ? textLabel.implicitWidth : flow.implicitWidth
@@ -51,7 +57,7 @@ Item {
         anchors.centerIn: parent
         // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
         columns: ws.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
-        spacing: ({ dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0 })[ws.style] ?? 4
+        spacing: ({ dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0, tabs: 0 })[ws.style] ?? 4
         verticalItemAlignment: Grid.AlignVCenter
         horizontalItemAlignment: Grid.AlignHCenter
 
@@ -67,8 +73,9 @@ Item {
 
                 // along the bar (main) and across it (cross); a dot stretches along the bar when current
                 readonly property real main: s === "dots" ? (on ? 20 : 8) : s === "blocks" ? ws.thickness * 0.95
-                    : s === "squares" ? 34 : s === "numbers" ? 22 : Math.max(label.implicitWidth + 12, 20)
-                readonly property real cross: s === "dots" ? 8 : s === "blocks" ? ws.thickness : s === "squares" ? 34 : s === "numbers" ? 20 : 20
+                    : s === "squares" ? 34 : s === "numbers" ? 22 : Math.max(label.implicitWidth + (s === "tabs" ? 20 : 12), 20)
+                readonly property real cross: s === "dots" ? 8 : s === "blocks" ? ws.thickness : s === "squares" ? 34 : s === "numbers" ? 20
+                    : s === "tabs" ? ws.thickness - 1 : 20
                 implicitWidth: ws.vertical ? cross : main
                 implicitHeight: ws.vertical ? main : cross
                 Behavior on implicitWidth { enabled: !ws.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
@@ -87,11 +94,14 @@ Item {
                     id: label
                     visible: cell.s !== "dots"
                     anchors.centerIn: parent
-                    text: ws.label(cell.modelData)
+                    // tabs: the number dimmed before the app's name, except on the current tab's block
+                    textFormat: cell.s === "tabs" ? Text.StyledText : Text.PlainText
+                    text: cell.s === "tabs" && !cell.on && ws.app(cell.modelData) !== "" && !ws.vertical
+                          ? `<font color="${ws.dim}">${cell.modelData.id}</font> ${ws.app(cell.modelData)}` : ws.label(cell.modelData)
                     color: cell.on ? Theme.accentText
                          : cell.modelData.urgent ? Theme.warning : cell.busy || area.containsMouse ? ws.tone : ws.dim
                     font {
-                        family: cell.s === "blocks" ? Theme.displayFont : cell.s === "filled" ? Theme.monoFont : Theme.font
+                        family: cell.s === "blocks" ? Theme.displayFont : cell.s === "filled" || cell.s === "tabs" ? Theme.monoFont : Theme.font
                         pixelSize: cell.s === "blocks" ? Math.min(ws.thickness * 0.72, 40) : cell.s === "squares" ? Theme.fontTitle : Theme.fontLabel
                         weight: cell.s === "blocks" ? Theme.displayWeight : cell.s === "squares" ? Font.ExtraBold : cell.on || cell.busy ? Font.DemiBold : Font.Normal
                         features: { "tnum": 1 }
