@@ -9,30 +9,43 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-// Control Center part: two tiles, Screen (brightness, external monitors over DDC/CI) and Sound (output and
-// microphone, each with its device list). In the Control Center all of it; a flyout shows only its `parts`.
-ColumnLayout {
+// Control Center part: one card of sliders, in the order of `parts`: the screen (brightness, external monitors over
+// DDC/CI), sound and microphone (each with its device list). The Control Center uses two cards, Screen (["display"])
+// and Sound (["sound", "mic"]), each under its short `title`; a chevron opens a device list. A flyout shows only its
+// `parts`, each headed by its device name.
+ControlCenterTile {
     id: mod
     Layout.fillWidth: true
+    Layout.preferredHeight: rows.implicitHeight + Theme.ccInset * 2
     property var host: null   // the panel it sits in (PanelState): ControlCenter.view or a Flyout's
     property var parts: ["display", "sound", "mic"]
-    readonly property bool whole: parts.length === 3   // the Control Center (a flyout names each slider's device)
+    property bool inPanel: false
+    property string title: ""   // the card's label in the Control Center
+    readonly property bool whole: inPanel   // older name
     readonly property bool hasDisplay: parts.includes("display") && Sys.brightness >= 0
     readonly property bool hasSound: parts.includes("sound")
     readonly property bool hasMic: parts.includes("mic")
     property int ddcShown: 0   // external monitors that answered DDC/CI (each shows a slider)
-    spacing: ControlCenter.gap
+    // anything to show: counts the DDC monitors that answered, never `visible` (false while this card is hidden)
+    readonly property bool hasAny: hasDisplay || ddcShown > 0 || hasSound || hasMic
+    readonly property int first: inPanel && title !== "" ? 1 : 0   // rows below the card's label
+    visible: hasAny
+
+    GridLayout {
+        id: rows
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset }
+        columns: 1
+        rowSpacing: Theme.spaceS
+
+        ControlCenterSliderHead { visible: mod.first === 1; Layout.row: 0; title: mod.title }
 
     // ---- screen ------------------------------------------------------------------------------
-    ControlCenterTile {
-        visible: mod.hasDisplay || mod.ddcShown > 0
-        Layout.fillWidth: true
-        Layout.preferredHeight: screenCol.implicitHeight + Theme.ccInset * 2
         ColumnLayout {
-            id: screenCol
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset }
+            visible: mod.hasDisplay || mod.ddcShown > 0
+            Layout.row: mod.first + Math.max(0, mod.parts.indexOf("display"))
+            Layout.fillWidth: true
             spacing: Theme.spaceS
-            ControlCenterSliderHead { title: "Screen" }
+            ControlCenterSliderHead { visible: !mod.inPanel; title: "Screen" }
             Text { // names only once there's more than one screen to tell apart
                 visible: mod.hasDisplay && externals.count > 0
                 Layout.bottomMargin: -6
@@ -93,20 +106,14 @@ ColumnLayout {
                     }
                 }
             }
-
         }
-    }
 
     // ---- sound -------------------------------------------------------------------------------
-    ControlCenterTile {
-        visible: mod.hasSound || mod.hasMic
-        Layout.fillWidth: true
-        Layout.preferredHeight: soundCol.implicitHeight + Theme.ccInset * 2
         ColumnLayout {
-            id: soundCol
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset }
+            visible: mod.hasSound
+            Layout.row: mod.first + Math.max(0, mod.parts.indexOf("sound"))
+            Layout.fillWidth: true
             spacing: Theme.spaceS
-            ControlCenterSliderHead { visible: mod.whole; title: "Sound" }   // a flyout names the device instead
             ControlCenterSliderHead {
                 visible: mod.hasSound && !mod.whole
                 title: "Sound"
@@ -171,9 +178,16 @@ ColumnLayout {
                 }
                 ControlCenterSettingsLink { label: "Sound Settings…"; page: "sound" }
             }
+        }
 
+    // ---- microphone --------------------------------------------------------------------------
+        ColumnLayout {
+            visible: mod.hasMic
+            Layout.row: mod.first + Math.max(0, mod.parts.indexOf("mic"))
+            Layout.fillWidth: true
+            spacing: Theme.spaceS
             ControlCenterSliderHead {
-                visible: mod.hasMic && !mod.whole
+                visible: !mod.whole
                 title: "Microphone"
                 detail: Sys.nodeName(Sys.source) || "No input"
                 isExpanded: mod.host.expanded === "in"

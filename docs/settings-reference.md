@@ -83,9 +83,21 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `dnd` | `bool` | `false` |  |
-| `timeoutSec` | `int` | `6` |  |
+| `timeoutSec` | `int` | `6` | how long a normal popup stays (s) |
+| `timeoutLowSec` | `int` | `4` | how long a low-priority popup stays (s) |
+| `timeoutCriticalSec` | `int` | `0` | how long a critical popup stays (s); 0 = until dismissed |
+| `maxVisible` | `int` | `4` | popups on screen at once; the rest wait in the notification centre |
+| `groupByApp` | `bool` | `true` | one popup per app (with a count) and the history grouped by app |
+| `showIcons` | `bool` | `true` | the app's icon or the notification's picture |
+| `style` | `string` | `"theme"` | popup look: theme \| card \| bubble \| line \| block \| tag \| compact |
+| `position` | `string` | `"theme"` | theme \| top-left \| top \| top-right \| bottom-left \| bottom \| bottom-right |
+| `dndSchedule` | `bool` | `false` | Do Not Disturb every day between dndFrom and dndTo |
+| `dndFrom` | `string` | `"22:00"` |  |
+| `dndTo` | `string` | `"07:00"` |  |
 | `historyMax` | `int` | `100` |  |
-| `sound` | `string` | `"message-new-instant"` | a freedesktop sound name (Notifications.sounds), "" = none |
+| `sound` | `string` | `"message-new-instant"` | normal priority: a freedesktop sound name (Notifications.sounds), "" = none |
+| `soundLow` | `string` | `""` | low priority sound, "" = none |
+| `soundCritical` | `string` | `"window-attention"` | critical sound, "" = none |
 | `volume` | `int` | `60` | % |
 | `mutedApps` | `list<string>` | `[]` | app names that only go to the notification centre |
 
@@ -128,8 +140,8 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `width` | `int` | `330` | panel width in px (280..460) |
 | `sections` | `list<string>` | `[]` |  |
 | `tiles` | `list<string>` | `[]` |  |
+| `sliders` | `list<string>` | `[]` |  |
 | `toggles` | `list<string>` | `[]` |  |
-| `shortcuts` | `list<string>` | `[]` |  |
 | `hidden` | `list<string>` | `["colorpicker", "mission"]` |  |
 
 ## lockscreen

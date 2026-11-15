@@ -6,10 +6,11 @@ import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import QtQuick
 
-// Notification server (replaces mako). New notifications pop up as banners in the top-right
-// corner of the focused screen and stay in the history, which the notification centre shows
-// (click the clock, Super+N). Do Not Disturb (Config.notifications.dnd) keeps everything but
-// critical ones out of the banners. A notification leaves the history when you dismiss it or
+// Notification server (replaces mako). New notifications pop up as banners on the focused screen, in the
+// theme's corner and look unless Settings > Notifications picks others (position, style), and stay in the
+// history, which the notification centre shows (the bell, Super+N). Do Not Disturb (on by hand, or on a daily
+// schedule) keeps everything but critical ones out of the banners. Each urgency has its own time on screen
+// and sound. `qs ipc call notifications test` sends one through this server, the way an app would. A notification leaves the history when you dismiss it or
 // the app withdraws it; the oldest go past Config.notifications.historyMax.
 // The history is saved to ~/.local/state/hyprism/notifications.json, so a shell restart keeps it. A saved
 // one comes back as a plain record (text, icon, time): it can be read and dismissed, its app's buttons are gone.
@@ -23,7 +24,15 @@ Singleton {
     // arrived since then and still in the history: counted from the history, so a dismissed or withdrawn one leaves the count
     readonly property int unread: NotificationCenter.open ? 0 : history.filter(n => (times[n.id] ?? 0) > seenAt).length
     property date now: new Date()
-    readonly property bool dnd: Config.notifications.dnd
+    readonly property var c: Config.notifications
+    // the banners' look and place: Settings, or the theme's (Themes.qml notify.kind / corner)
+    readonly property string kind: c.style === "theme" ? Theme.current.notify.kind : c.style
+    readonly property string corner: c.position === "theme" ? Theme.current.notify.corner : c.position
+    // Do Not Disturb: on by hand, or inside the daily schedule (unless turned off for the rest of this window)
+    readonly property bool scheduled: c.dndSchedule && inWindow(now, c.dndFrom, c.dndTo) && now.getTime() >= skipUntil
+    readonly property bool dnd: c.dnd || scheduled
+    readonly property string dndStatus: c.dnd ? "On" : scheduled ? "Until " + c.dndTo : "Off"
+    property real skipUntil: 0     // the schedule was turned off by hand until then (ms)
     property bool sharing: false   // a screen or window is being shared: no banners for people on the call to read
 
     // Hyprland sends "screencast>>1,<owner>" when a share starts and "screencast>>0,<owner>" when it stops
@@ -38,9 +47,10 @@ Singleton {
         }
     }
 
-    // history by app, the app with the newest notification first
+    // history by app, the app with the newest notification first; not grouping: each one on its own, newest first
     readonly property var groups: {
         const out = []
+        if (!Config.notifications.groupByApp) return history.map(n => ({ app: n.appName || "Other", items: [n] }))
         for (const n of history) {
             const app = n.appName || "Other"
             let g = out.find(x => x.app === app)
@@ -84,7 +94,54 @@ Singleton {
     }
     function clearApp(app) { for (const n of history.filter(x => (x.appName || "Other") === app)) n.dismiss() }
     function clearAll() { for (const n of history.slice()) n.dismiss() }
-    function toggleDnd() { Config.set("notifications", "dnd", !dnd) }
+    function minutes(hhmm) { const p = String(hhmm).split(":"); return Number(p[0]) * 60 + Number(p[1]) }
+    // from-to on the clock, across midnight when `to` is earlier (22:00-07:00)
+    function inWindow(d, from, to) {
+        const t = d.getHours() * 60 + d.getMinutes(), a = minutes(from), b = minutes(to)
+        return a === b ? false : a < b ? t >= a && t < b : t >= a || t < b
+    }
+    function windowEnd() {   // the next time the schedule ends
+        const end = new Date(); end.setHours(0, minutes(c.dndTo), 0, 0)
+        if (end.getTime() <= Date.now()) end.setDate(end.getDate() + 1)
+        return end.getTime()
+    }
+    function toggleDnd() {
+        now = new Date()
+        if (dnd) { if (scheduled) skipUntil = windowEnd(); if (c.dnd) Config.set("notifications", "dnd", false) }
+        else { skipUntil = 0; Config.set("notifications", "dnd", true) }
+    }
+    function timeoutOf(n) {   // ms on screen; 0 = until dismissed. An app's own timeout wins, except for critical ones
+        if (n?.urgency === NotificationUrgency.Critical) return c.timeoutCriticalSec * 1000
+        if ((n?.expireTimeout ?? 0) > 0) return n.expireTimeout * 1000
+        return (n?.urgency === NotificationUrgency.Low ? c.timeoutLowSec : c.timeoutSec) * 1000
+    }
+    function soundOf(n) { return n.urgency === NotificationUrgency.Critical ? c.soundCritical : n.urgency === NotificationUrgency.Low ? c.soundLow : c.sound }
+    function appOf(n) { return n?.appName || "Other" }
+    function groupOf(n) { return n?.urgency === NotificationUrgency.Critical ? "!" + n.id : appOf(n) }   // critical ones never fold
+
+    // the banners on screen: the newest first, one per app when grouped (with how many more it holds)
+    readonly property var shown: (c.groupByApp ? popups.filter((n, i) => popups.findIndex(x => groupOf(x) === groupOf(n)) === i) : popups).slice(0, c.maxVisible)
+    function waiting(n) { return c.groupByApp ? popups.filter(x => x !== n && groupOf(x) === groupOf(n)).length : 0 }
+    // a banner's time is up: grouped, its app's older banners go with it (they are in the history)
+    function expire(n) {
+        popups = popups.filter(x => x !== n && !(c.groupByApp && groupOf(x) === groupOf(n)))
+        if (n?.transient) n.expire()
+    }
+
+    // A test notification, sent over D-Bus to this server like any app's (Settings > Notifications, IPC)
+    function test(urgency) {
+        const u = ({ low: 0, normal: 1, critical: 2 })[urgency] ?? 1
+        const text = [
+            ["Low priority test", `Low-priority notifications stay for ${c.timeoutLowSec} s` + (c.soundLow ? " and play their own sound." : " and make no sound.")],
+            ["Test notification", `This is how notifications look with your settings. It stays for ${c.timeoutSec} s.`],
+            ["Critical test", c.timeoutCriticalSec > 0 ? `Critical notifications stay for ${c.timeoutCriticalSec} s, even during Do Not Disturb.`
+                                                      : "Critical notifications stay until you dismiss them, even during Do Not Disturb."]
+        ][u]
+        Quickshell.execDetached(["gdbus", "call", "--session", "--dest", "org.freedesktop.Notifications",
+            "--object-path", "/org/freedesktop/Notifications", "--method", "org.freedesktop.Notifications.Notify",
+            // "--": the -1 timeout at the end is a value, not an option
+            "--", "Hyprism", "0", "preferences-desktop-notification", text[0], text[1], "[]", `{'urgency': <byte ${u}>}`, "-1"])
+    }
 
     function forget(n) {
         history = history.filter(x => x !== n)
@@ -110,7 +167,7 @@ Singleton {
             // muted apps, Do Not Disturb and screen sharing (except critical) only go to the notification centre
             if (!root.muted(n) && (!(root.dnd || root.sharing) || n.urgency === NotificationUrgency.Critical)) {
                 root.popups = [n].concat(root.popups.filter(x => x !== n))
-                if (!n.hints?.["suppress-sound"]) root.playSound(Config.notifications.sound)
+                if (!n.hints?.["suppress-sound"]) root.playSound(root.soundOf(n))
             } else if (n.transient) n.expire()
         }
     }
@@ -170,19 +227,22 @@ Singleton {
         function dnd(): void { root.toggleDnd() }
         function clear(): void { root.clearAll() }
         function status(): string { return JSON.stringify({ count: root.history.length, unread: root.unread, dnd: root.dnd }) }
+        // a test notification through this server: normal, or `testAs low|normal|critical`
+        function test(): void { root.test("normal") }
+        function testAs(urgency: string): void { root.test(urgency) }
     }
 
     // Banners
     PanelWindow {
         screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
-        // the theme's corner (Themes.qml notify.corner), kept clear of its bar
-        readonly property string place: Theme.current.notify.corner
+        // the corner (or edge centre) from Settings or the theme, kept clear of the bar
+        readonly property string place: root.corner
         readonly property bool atBottom: place.startsWith("bottom")
         exclusionMode: ExclusionMode.Ignore
-        anchors { top: !atBottom; bottom: atBottom; right: place.endsWith("right"); left: place.endsWith("left") }
+        anchors { top: !atBottom; bottom: atBottom; right: place.endsWith("right"); left: place.endsWith("left") }   // neither: centred
         margins { top: Theme.reserveTop + 10; bottom: Theme.reserveBottom + 10; right: Theme.reserveRight + 12; left: Theme.reserveLeft + 12 }
         implicitWidth: 344
-        implicitHeight: Math.max(1, list.contentHeight)
+        implicitHeight: Math.max(1, list.contentHeight + (root.c.groupByApp ? 14 : 0))   // grouped: the last stack's peek
         exclusiveZone: 0
         color: "transparent"
         // held while the Control Center or the notification centre is open: they'd land on it, and the
@@ -194,14 +254,14 @@ Singleton {
         ListView {
             id: list
             anchors.fill: parent
-            spacing: 8
+            spacing: root.c.groupByApp ? 14 : 8   // grouped: room for a folded stack peeking out underneath
             interactive: false
-            model: ScriptModel { values: root.popups.slice(0, 5) }
+            model: ScriptModel { values: root.shown }
 
             // drop in from the corner's edge with a fade (down at the top, up at the bottom), fade out in place
             // in from the corner's edge the theme's way (Theme.travel, its curve), out with a quick fade
             add: Transition { ParallelAnimation {
-                NumberAnimation { property: "y"; from: (Theme.current.notify.corner.startsWith("bottom") ? 1 : -1) * Theme.travel; duration: Theme.enter
+                NumberAnimation { property: "y"; from: (root.corner.startsWith("bottom") ? 1 : -1) * Theme.travel; duration: Theme.enter
                                   easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve }
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Easing.OutCubic }
             } }
@@ -214,15 +274,13 @@ Singleton {
                 width: list.width
                 notification: modelData
                 banner: true
+                stacked: root.waiting(modelData)
 
                 Timer {
-                    readonly property int app: banner.modelData?.expireTimeout ?? 0
-                    running: banner.modelData?.urgency !== NotificationUrgency.Critical && !banner.hovered
-                    interval: app > 0 ? app * 1000 : Config.notifications.timeoutSec * 1000
-                    onTriggered: {
-                        root.hidePopup(banner.modelData)
-                        if (banner.modelData?.transient) banner.modelData.expire()
-                    }
+                    readonly property int ms: root.timeoutOf(banner.modelData)
+                    running: ms > 0 && !banner.hovered
+                    interval: Math.max(1, ms)
+                    onTriggered: root.expire(banner.modelData)
                 }
             }
         }
