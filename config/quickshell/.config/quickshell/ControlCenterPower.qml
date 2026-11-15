@@ -23,10 +23,9 @@ ColumnLayout {
         warn: Sensors.cpu >= 90
         onDetailClicked: { host.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
 
-        Choice {   // the asusctl / power-profiles id stays "quiet"; people read Silent
-            Layout.fillWidth: true
+        ControlCenterSegmented {   // the asusctl / power-profiles id stays "quiet"; people read Silent
             options: ["Silent", "Balanced", "Performance"]
-            index: PowerMode.profile
+            current: PowerMode.profile
             accessibleName: "Power mode"
             onPicked: i => PowerMode.set(i)
         }

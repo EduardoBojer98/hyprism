@@ -25,25 +25,26 @@ ColumnLayout {
     // ---- display and sound: one tile, three sliders ---------------------------------------
     ControlCenterTile {
         Layout.fillWidth: true
-        Layout.preferredHeight: sliders.implicitHeight + 22
+        Layout.preferredHeight: sliders.implicitHeight + Theme.ccInset * 2
         ColumnLayout {
             id: sliders
-            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
-            spacing: 10
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset }
+            spacing: Theme.spaceS
             // the section's title; click it to fold the section down to this one line
             ControlCenterSliderHead {
                 visible: mod.whole
-                title: "Screen · Sound"   // short, so the folded values fit beside it in every face
+                title: mod.hasDisplay ? "Display & sound" : "Sound"
                 detail: Config.controlCenter.slidersOpen ? "Hide"
-                    : `${Sys.brightness}% · ${Sys.sink?.audio?.muted ? "muted" : Math.round((Sys.sink?.audio?.volume ?? 0) * 100) + "%"}`
+                    : (mod.hasDisplay ? `${Sys.brightness}% · ` : "") + (Sys.sink?.audio?.muted ? "muted" : Math.round((Sys.sink?.audio?.volume ?? 0) * 100) + "%")
                 isExpanded: Config.controlCenter.slidersOpen
                 onClicked: Config.set("controlCenter", "slidersOpen", !Config.controlCenter.slidersOpen)
             }
             ControlCenterReveal {
                 open: !mod.whole || Config.controlCenter.slidersOpen
-                spacing: 10
+                spacing: Theme.spaceXs
 
-                ControlCenterSliderHead { visible: mod.hasDisplay; title: "Display" }
+                // a flyout names each slider (and its device); the Control Center's rows carry a chevron instead
+                ControlCenterSliderHead { visible: mod.hasDisplay && !mod.whole; title: "Display" }
                 Text { // names only once there's more than one screen to tell apart
                     visible: mod.hasDisplay && externals.count > 0
                     Layout.bottomMargin: -6
@@ -53,6 +54,7 @@ ColumnLayout {
                 }
                 ControlCenterBar {
                     visible: mod.hasDisplay
+                    host: mod.host
                     icon: "\u{F00DF}"
                     value: Sys.brightness / 100
                     onMoved: v => Sys.setBrightness(v * 100)
@@ -102,7 +104,7 @@ ColumnLayout {
                 }
 
                 ControlCenterSliderHead {
-                    visible: mod.hasSound
+                    visible: mod.hasSound && !mod.whole
                     title: "Sound"
                     detail: Sys.nodeName(Sys.sink) || "No output"
                     isExpanded: mod.host.expanded === "out"
@@ -110,6 +112,11 @@ ColumnLayout {
                 }
                 ControlCenterBar {
                     visible: mod.hasSound
+                    host: mod.host
+                    expandable: mod.whole
+                    isExpanded: mod.host.expanded === "out"
+                    expandHint: Sys.nodeName(Sys.sink) || "No output"
+                    onExpand: mod.host.toggleExpanded("out")
                     icon: Sys.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
                     hint: Sys.sink?.audio?.muted ? "Unmute" : "Mute"
                     value: Sys.sink?.audio?.muted ? 0 : (Sys.sink?.audio?.volume ?? 0)
@@ -149,6 +156,7 @@ ColumnLayout {
                                 font { family: Theme.font; pixelSize: Theme.fontCaption }
                             }
                             ControlCenterBar {
+                                host: mod.host
                                 icon: app.modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
                                 hint: app.modelData.audio?.muted ? "Unmute" : "Mute"
                                 value: app.modelData.audio?.muted ? 0 : (app.modelData.audio?.volume ?? 0)
@@ -161,7 +169,7 @@ ColumnLayout {
                 }
 
                 ControlCenterSliderHead {
-                    visible: mod.hasMic
+                    visible: mod.hasMic && !mod.whole
                     title: "Microphone"
                     detail: Sys.nodeName(Sys.source) || "No input"
                     isExpanded: mod.host.expanded === "in"
@@ -169,6 +177,11 @@ ColumnLayout {
                 }
                 ControlCenterBar {
                     visible: mod.hasMic
+                    host: mod.host
+                    expandable: mod.whole
+                    isExpanded: mod.host.expanded === "in"
+                    expandHint: Sys.nodeName(Sys.source) || "No input"
+                    onExpand: mod.host.toggleExpanded("in")
                     icon: Sys.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
                     hint: Sys.source?.audio?.muted ? "Unmute" : "Mute"
                     value: Sys.source?.audio?.muted ? 0 : (Sys.source?.audio?.volume ?? 0)

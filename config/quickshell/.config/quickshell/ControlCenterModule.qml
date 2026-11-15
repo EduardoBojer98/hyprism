@@ -17,12 +17,12 @@ Rectangle {   // same look as Tile
     signal detailClicked()
 
     Layout.fillWidth: true
-    Layout.preferredHeight: inner.implicitHeight + 22
+    Layout.preferredHeight: inner.implicitHeight + Theme.ccInset * 2
 
     ColumnLayout {
         id: inner
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 11; leftMargin: 12; rightMargin: 12 }
-        spacing: 6
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset }
+        spacing: Theme.spaceS
         Item {
             id: header
             visible: mod.title !== ""
