@@ -11,5 +11,5 @@ BarItem {
     panel: "utilitymenu"
     active: UtilityMenu.open
     onPressed: UtilityMenu.toggle()
-    Text { text: "\u{F062E}"; color: Theme.accent; font { family: Theme.iconFont; pixelSize: 18 } }
+    Text { text: "\u{F1355}"; color: Theme.accent; font { family: Theme.iconFont; pixelSize: 18 } }
 }
