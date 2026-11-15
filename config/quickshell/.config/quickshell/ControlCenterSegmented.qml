@@ -15,6 +15,7 @@ Rectangle {
     implicitHeight: Theme.controlHeight + 2
     radius: Theme.radiusSmall + 1
     color: Theme.fill
+    border { color: Theme.stroke; width: Theme.selectInverse ? Math.max(1, Theme.line) : 0 }
     Rectangle {
         visible: seg.current >= 0
         width: (parent.width - 6) / Math.max(1, seg.options.length)
@@ -22,7 +23,7 @@ Rectangle {
         y: 3
         x: 3 + Math.max(0, seg.current) * width
         radius: Theme.radiusSmall - 1
-        color: Theme.thumb
+        color: Theme.selectInverse ? Theme.segOn : Theme.thumb
         Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     }
     Row {
@@ -37,7 +38,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: modelData
-                    color: seg.current === index ? Theme.thumbText : Theme.subtext
+                    color: seg.current === index ? (Theme.selectInverse ? Theme.segOnText : Theme.thumbText) : Theme.subtext
                     font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                 }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: seg.picked(index); Accessible.role: Accessible.Button; Accessible.name: modelData; Accessible.onPressAction: seg.picked(index) }

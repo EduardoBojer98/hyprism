@@ -31,7 +31,7 @@ Rectangle {
         width: 18; height: 18; radius: Theme.radius === 0 ? 0 : 9
         anchors.verticalCenter: parent.verticalCenter
         x: toggle.checked ? parent.width - width - 3 : 3
-        color: Theme.thumb
+        color: Theme.selectInverse ? Theme.text : Theme.thumb
         Behavior on x { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
     }
 

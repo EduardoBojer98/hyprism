@@ -28,7 +28,7 @@ Rectangle {
     implicitHeight: Math.max(28, Theme.hit)
     radius: Theme.radius === 0 ? 0 : height / 2
     color: Theme.fill
-    border { color: Theme.stroke; width: 1 }
+    border { color: Theme.stroke; width: Theme.selectInverse ? Math.max(1, Theme.line) : 1 }
 
     Row {
         id: row
@@ -47,13 +47,13 @@ Rectangle {
                 Accessible.checked: index === choice.current
                 Accessible.focusable: true
                 Accessible.onPressAction: if (index < choice.options.length) choice.picked(index)
-                color: index === choice.current ? Theme.fillActive : area.containsMouse ? Theme.fillHover : "transparent"
-                border { color: index === choice.current ? Theme.stroke : "transparent"; width: 1 }
+                color: index === choice.current ? (Theme.selectInverse ? Theme.segOn : Theme.fillActive) : area.containsMouse ? Theme.fillHover : "transparent"
+                border { color: index === choice.current && !Theme.selectInverse ? Theme.stroke : "transparent"; width: 1 }
                 Text {
                     id: label
                     anchors.centerIn: parent
                     text: modelData
-                    color: index === choice.current ? Theme.text : Theme.subtext
+                    color: index === choice.current ? (Theme.selectInverse ? Theme.segOnText : Theme.text) : Theme.subtext
                     font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
                 }
                 MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (index < choice.options.length) choice.picked(index) }
