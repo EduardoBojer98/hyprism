@@ -257,7 +257,7 @@ Singleton {
             Text { Layout.fillWidth: true; text: sec.title; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; capitalization: Font.AllUppercase; letterSpacing: 0.6 } }
             Text {
                 visible: sec.value !== ""; text: sec.value; color: sec.tone; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold; features: { "tnum": 1 } }
-                MouseArea { anchors.fill: parent; enabled: sec.linkValue; cursorShape: Qt.PointingHandCursor; onClicked: sec.valueClicked() }
+                MouseArea { Accessible.role: Accessible.Button; Accessible.name: sec.value; Accessible.onPressAction: sec.valueClicked(); anchors.fill: parent; enabled: sec.linkValue; cursorShape: Qt.PointingHandCursor; onClicked: sec.valueClicked() }
             }
         }
         ColumnLayout { id: inner; Layout.fillWidth: true; spacing: 6 }

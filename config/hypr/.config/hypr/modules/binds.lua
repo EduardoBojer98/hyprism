@@ -80,11 +80,13 @@ add("send-scratchpad", "Workspaces", "Send window to scratchpad",    key("ALT + 
 
 -- Screenshots (~/.local/bin/screenshot: grim + slurp, edited in Satty) and colour picker.
 -- In the editor: Enter copies and saves, Ctrl+S saves, Esc cancels.
-add("screenshot",          "Screen", "Screenshot an area (editor)", "ALT + SHIFT + S", exec("screenshot"))
-add("screenshot-print",    "Screen", "Screenshot an area (editor)", "Print", exec("screenshot"))
+-- The screen freezes while you pick: drag an area or click a window. What happens next (annotate, copy, save) is
+-- Settings > Screenshots (Config.capture).
+add("screenshot",          "Screen", "Screenshot: drag an area or click a window", "ALT + SHIFT + S", exec("screenshot"))
+add("capture-bar",         "Screen", "Capture bar: area, window, screen, delay, record", "Print", exec("qs ipc call capture toggle"))
 add("screenshot-copy",     "Screen", "Screenshot an area, copy only", "CTRL + Print", exec("screenshot area --copy"))
 add("screenshot-screen",   "Screen", "Screenshot this screen", "SHIFT + Print", exec("screenshot screen"))
-add("screenshot-window",   "Screen", "Screenshot the focused window", key("Print"), exec("screenshot window"))
+add("screenshot-window",   "Screen", "Screenshot a window (click it)", key("Print"), exec("screenshot window"))
 add("screenshot-all",      "Screen", "Screenshot both screens", "CTRL + SHIFT + Print", exec("screenshot all"))
 add("screenshot-delay",    "Screen", "Screenshot in 5 seconds", "ALT + Print", exec("screenshot delay 5"))
 add("screenshot-pin",      "Screen", "Pin an area of the screen on top", key("CTRL + S"), exec("screenshot pin"))

@@ -196,7 +196,7 @@ m_net() { # bytes per second down and up over real interfaces, and the one the d
     rate net.tx "$tx"
     printf '"net":{"down":%s,"up":%s,"iface":"%s"}' "$rx" "$RATE" "$iface"
 }
-BATP=() # recent power samples "ms:microwatts", for a ~30 s average (the instantaneous figure jumps)
+BATP=()       # recent power samples "ms:microwatts", for a ~30 s average (the instantaneous figure jumps)
 m_battery() { # percent, state, watts in or out (30 s average), minutes left (none below 1 W, or unless charging/discharging)
     local b d pct status uw now full mins="" t s sum=0 n=0 keep=()
     b=$(hw power.battery)

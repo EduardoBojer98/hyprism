@@ -158,17 +158,17 @@ EOF
 chmod +x "$t/bin/smi"
 json=$(HYPRISM_NVIDIA_SMI=$t/bin/smi HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml bash "$m" once dgpu)
 expect "dgpu: awake shows state only" '.dgpu | keys | join(",")' state
-[[ ! -e $t/smi.calls ]] && echo "ok: dgpu alone never runs nvidia-smi" || {
+if [[ ! -e $t/smi.calls ]]; then echo "ok: dgpu alone never runs nvidia-smi"; else
     echo "xx dgpu ran nvidia-smi"
     fail=1
-}
+fi
 json=$(HYPRISM_NVIDIA_SMI=$t/bin/smi HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml timeout 3.5 bash "$m" watch dgpu_live 1 | tail -1)
 expect "dgpu_live: numbers from nvidia-smi" '.dgpu_live.vram_total' 4096
 calls=$(wc -l <"$t/smi.calls")
-((calls <= 2)) && echo "ok: nvidia-smi asked at most every 10 s ($calls calls in 3.5 s)" || {
+if ((calls <= 2)); then echo "ok: nvidia-smi asked at most every 10 s ($calls calls in 3.5 s)"; else
     echo "xx nvidia-smi called $calls times in 3.5 s"
     fail=1
-}
+fi
 put "$r" /sys/bus/pci/devices/0000:01:00.0/power/runtime_status suspended
 
 # --- a bare desktop: Intel CPU, no battery, no fans, one card with no readings
