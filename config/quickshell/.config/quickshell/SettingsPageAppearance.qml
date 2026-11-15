@@ -25,7 +25,7 @@ ColumnLayout {
 
     // second colours: neon, cool and warm partners for any accent
     readonly property var swatches2: [
-        "#ff4ad8", "#00e5ff", "#5ad1c2", "#5b9cff", "#8ab4ff", "#c7a3ff", "#9d7bff", "#ff6b8a", "#ff5f2e", "#ffb000", "#f2d48a", "#9fd18b", "#b6ff3b", "#e8e8ea", "#1a1a1a"]
+        "#ff4ad8", "#00e5ff", "#5ad1c2", "#5b9cff", "#8ab4ff", "#c7a3ff", "#9d7bff", "#ff6b8a", "#ff5f2e", "#ffb000", "#f2d48a", "#9fd18b", "#b6ff3b", "#e8e8ea", "#1a1a1a"]   // palette
 
     function adjust(key, value) { return Themes.adjust(key, value) }
 
