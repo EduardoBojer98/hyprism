@@ -23,9 +23,10 @@ Hyprland + a Quickshell shell for Arch, CachyOS and Fedora, switched in one step
   file. Laptop, desktop, NVIDIA, touch screen: each gets the right setup, and nothing for hardware you do not have.
 - **Modules.** Parts for particular hardware or uses (gaming, dev tools, ASUS, tablets) are folders you can switch
   on or off. See [docs/modules.md](docs/modules.md).
-- **Themes are folders.** Three whole-desktop designs, each with a light and a dark half. Make your own by
-  copying one folder. See [docs/THEMES.md](docs/THEMES.md).
-- **The bar is modular.** Each item is its own folder, on any screen edge, with its own settings.
+- **Themes are folders.** Three whole-desktop designs, each with a light and a dark half and its own icons and
+  cursor. Make your own by copying one folder. See [docs/THEMES.md](docs/THEMES.md).
+- **The bar is modular.** Each item is its own folder with its own settings; put one in as often as you like
+  (two clocks, two system readouts).
 - **One settings file.** Everything you change in Settings (`Super+I`) is in `~/.config/quickshell/settings.json`,
   never in the repo.
 - **Free software only.** No paid apps, trials or subscriptions.
@@ -39,7 +40,7 @@ Hyprland + a Quickshell shell for Arch, CachyOS and Fedora, switched in one step
 |---|---|---|---|
 | **Pebble** (default) | calm and matte: river-stone greys, one lichen accent, light numerals, room to breathe | a floating bar at the top | gentle ease-out |
 | **Poster** | loud and graphic: paper and ink, red, cobalt and yellow, heavy type | a paper bar with huge workspace blocks, hard shadows | slams in |
-| **Monolith** | the desktop as tmux: mono type, acid lime, frames instead of shadows | a status line with your apps and an inverse lime clock | near-instant |
+| **Monolith** | a neon terminal HUD: mono type, blue-black, acid lime and an electric-blue second light, corner brackets instead of shadows | a slim floating status line: workspace reticles, your apps, media in the middle | near-instant |
 
 <table>
   <tr>
@@ -57,6 +58,8 @@ Hyprland + a Quickshell shell for Arch, CachyOS and Fedora, switched in one step
 **Adjust** (Settings → Appearance) changes any theme's accent colours, corners, gaps, frame, font, text size, window
 motion, shadow and blur, kept per theme; Reset puts it back. **Animations** is Full, Reduced or Off.
 **Light or dark** picks each theme's default, or Light or Dark for all of them.
+**Window Look** sets the window border (the theme's, accent, gradient, rainbow, neon, your own colours) and the
+title bars, which follow the theme. Each theme brings its own icon and cursor pack; **Icons** and **Cursor** pick another.
 
 ## Features
 
@@ -73,14 +76,14 @@ motion, shadow and blur, kept per theme; Reset puts it back. **Animations** is F
     <td colspan="2"><img src="docs/screenshots/features/settings-bar.webp" alt="Settings app, Menu Bar page with position, size, shape and a drag-and-drop item editor"></td>
   </tr>
   <tr>
-    <td colspan="2"><b>Menu bar</b>: one layout for every theme: any edge, any size, floating or attached, "Start from" presets, per-screen items; drag items between its three zones.</td>
+    <td colspan="2"><b>Menu bar</b>: your items stay the same in every theme; edge, size and floating or attached are kept per theme. "Start from" presets, per-screen items, any item more than once; drag items between its three zones.</td>
   </tr>
   <tr>
     <td><img src="docs/screenshots/features/launcher.webp" alt="Spotlight launcher showing all apps by category"></td>
     <td><img src="docs/screenshots/features/calendar.webp" alt="Calendar panel with a month grid and upcoming holidays"></td>
   </tr>
   <tr>
-    <td><b>Spotlight</b> (tap <code>Super</code>): suggestions, then apps, files, calculator, settings, actions and web; all apps by category.</td>
+    <td><b>Spotlight</b> (tap <code>Super</code>): suggestions, then apps, files, calculator, settings, actions and web; all apps by category. Right-click an app to pin it, show it in Files, see its info or uninstall it.</td>
     <td><b>Calendar</b> (click the clock): public holidays for your country, observances, moon phases, what's coming up.</td>
   </tr>
   <tr>
@@ -88,7 +91,7 @@ motion, shadow and blur, kept per theme; Reset puts it back. **Animations** is F
     <td><img src="docs/screenshots/features/power.webp" alt="Power menu with lock, sleep, hibernate, log out, restart and shut down"></td>
   </tr>
   <tr>
-    <td><b>Control Center</b> (<code>Super+C</code>): Wi-Fi, Bluetooth, Focus, Night Light, Caffeine, touch, recording, sliders, power mode; sections rearrangeable.</td>
+    <td><b>Control Center</b> (<code>Super+C</code>): Wi-Fi, Bluetooth, screen and sound sliders, Focus, Night Light, Caffeine, Dark mode, microphone, recording, power mode. Settings rearranges it: any tile large or small, sections and buttons hidden.</td>
     <td><b>Power menu</b>: lock, sleep, hibernate, log out, restart, shut down.</td>
   </tr>
   <tr>
@@ -113,20 +116,20 @@ motion, shadow and blur, kept per theme; Reset puts it back. **Animations** is F
   </tr>
   <tr>
     <td><b>System-info bar item</b>: pick the metrics it shows.</td>
-    <td><b>Notification centre</b>: everything you missed, in one place.</td>
+    <td><b>Notification centre</b>: everything you missed, in one place. Six popup styles, six places, Do Not Disturb on a schedule.</td>
   </tr>
 </table>
 
 <details>
 <summary><b>Everything else</b></summary>
 
-- **The bar**: one engine for every theme. Items: apps (the dock), apps button, workspaces, active window, clock,
-  date, media player, tray, keyboard layout, notifications, quick settings, network, Bluetooth, volume, brightness,
+- **The bar**: one engine for every theme. Items: apps (the dock), apps button, workspaces, active window, clock
+  (pick what it shows, or a date pattern of your own), date, weather, media player, tray, keyboard layout, notifications, quick settings, network, Bluetooth, volume, brightness,
   battery (percentage inside, beside or off), power profile, CPU, memory, GPU, a system-info item with many readings, recording, power menu. Every item works
-  on a horizontal bar and down a vertical one. The layout is one for every theme; "Start from" buttons copy a preset in. Bar items open flyouts
+  on a horizontal bar and down a vertical one. Your item lists are one for every theme; "Start from" buttons copy a preset in. Bar items open flyouts
   (volume, network, Bluetooth, brightness, media, battery).
 - **The dock**: on the theme's own edge, or in the bar as its Apps item. Size, icon size, auto-hide, pinned apps, open
-  windows, per monitor. Like the Windows taskbar, each open window is its own tile; **Combine** merges them into the
+  windows, per monitor; drag pinned apps to reorder them. Open windows show as icons or as names. Like the Windows taskbar, each open window is its own tile; **Combine** merges them into the
   app icon, with a live preview of each window on hover (click to bring up, middle-click to close).
 - **Notifications** have their own panel from the bell (with the unread count): Do Not Disturb, history grouped by app, Clear all.
 - **Weather** with several saved places, cached for offline use (Open-Meteo, no key).
@@ -224,10 +227,11 @@ one on screen**. Generated from `config/hypr/.config/hypr/modules/binds.lua`.
 
 | Keys | Action |
 |---|---|
-| `Alt+Shift+S`, `Print` | Screenshot an area (editor) |
+| `Print` | Capture bar: area, window, screen, delay, record |
+| `Alt+Shift+S` | Screenshot: drag an area or click a window (editor) |
 | `Ctrl+Print` | Screenshot an area, copy only |
 | `Shift+Print` | Screenshot this screen |
-| `Super+Print` | Screenshot the focused window |
+| `Super+Print` | Screenshot a window (click it) |
 | `Ctrl+Shift+Print` | Screenshot both screens |
 | `Alt+Print` | Screenshot in 5 seconds |
 | `Super+Ctrl+S` | Pin an area of the screen on top |
@@ -243,6 +247,7 @@ one on screen**. Generated from `config/hypr/.config/hypr/modules/binds.lua`.
 |---|---|
 | `Super+F5` | Next power mode (where the computer has power modes) |
 | `Super+F6` | Move the keyboard to the bar (arrows, Enter, Esc) |
+| `Super+Shift+F6` | Move the keyboard to the dock (arrows, Enter, menu key, Esc) |
 | `Super+L` | Lock the screen |
 | `Super+Shift+R` | Reload Hyprland |
 | `Super+Shift+E` | Log out |
