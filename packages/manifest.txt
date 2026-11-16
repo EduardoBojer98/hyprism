@@ -13,6 +13,7 @@ bsdtar                   core      unpacks downloaded icon/cursor themes (theme-
 build-tools              core      compiler + pkg-config to build plugins/ (title-bar minimise) via hypr-plugins
 fish                     core      your login shell
 socat                    core      hands the login password to the keyring (pam_kwallet_init)
+update-check             core      counts the waiting system updates for the bar's Updates item (checkupdates)
 
 # Hyprland session
 hyprland                 desktop   the compositor

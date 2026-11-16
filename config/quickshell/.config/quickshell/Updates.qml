@@ -3,11 +3,64 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Hyprism updates: the channel this copy follows and the new changes on it. Fetches in the background every few
-// hours and when Settings > About opens; it only looks, `./install.sh update` pulls.
+// Updates waiting: Hyprism's (the channel this copy follows and the new changes on it) and the system's (packages,
+// AUR, Flatpak), for Settings > About and the bar's Updates item. It only looks; `./install.sh update` installs.
+// Hyprism: git fetch every 6 hours and when About opens. System: every hour (checkupdates on Arch, which never
+// touches the real package database; dnf check-update on Fedora).
 //   channel: "stable" (branch main), "dev" (branch develop) or "" (another branch, a tag, not a git copy)
+//   qs ipc call updates refresh      look again now (the update terminal calls it when it is done)
 Singleton {
     id: root
+
+    property var packages: []      // "name old -> new" (Arch) or "name.arch version repo" (Fedora)
+    property var aur: []
+    property var flatpaks: []
+    property string systemError: ""
+    readonly property int system: packages.length + aur.length + flatpaks.length
+    readonly property int total: system + count
+    readonly property bool checkingSystem: sysLook.running
+    // one line for a tooltip: "12 packages · 1 AUR · 2 Flatpak · 3 Hyprism changes"
+    readonly property string summary: [[packages.length, "package"], [aur.length, "AUR"], [flatpaks.length, "Flatpak"], [count, "Hyprism change"]]
+        .filter(p => p[0] > 0).map(p => p[0] + " " + p[1] + (p[0] > 1 && p[1].endsWith("e") ? "s" : "")).join(" · ")
+
+    function refreshSystem() { if (!sysLook.running) sysLook.running = true }
+    function refreshAll() { refresh(true); refreshSystem() }
+    // the whole update (system, Flatpak, Hyprism) in a terminal, then a fresh look
+    function install() {
+        Quickshell.execDetached(["ghostty", "+new-window", "-e", "sh", "-c",
+            'cd "$(dirname "$(readlink -f "$HOME/.config/quickshell/shell.qml")")" && cd "$(git rev-parse --show-toplevel)" && ./install.sh update; '
+            + 'qs ipc call updates refresh >/dev/null 2>&1; echo; read -p "Press Enter to close" _'])
+    }
+
+    IpcHandler {
+        target: "updates"
+        function refresh(): void { root.refreshAll() }
+    }
+
+    Process {
+        id: sysLook
+        // one line per update, "pkg=", "aur=" or "flatpak=", or "error=" when a source couldn't be asked
+        command: ["sh", "-c", 'if command -v checkupdates >/dev/null; then u=$(checkupdates 2>/dev/null); [ $? = 1 ] && echo "error=checkupdates failed (offline?)"; '
+            + 'elif command -v dnf >/dev/null; then u=$(dnf check-update -q 2>/dev/null | awk \'NF == 3 && $1 ~ /\\./\'); fi\n'
+            + '[ -n "$u" ] && printf "%s\\n" "$u" | sed "s/^/pkg=/"\n'
+            + 'h=$(command -v paru || command -v yay) && "$h" -Qua 2>/dev/null | sed "s/^/aur=/"\n'
+            + 'command -v flatpak >/dev/null && flatpak remote-ls --updates --columns=application 2>/dev/null | sed "s/^/flatpak=/"\n'
+            + 'true']
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const o = { pkg: [], aur: [], flatpak: [], error: [] }
+                for (const l of text.split("\n")) {
+                    const i = l.indexOf("=")
+                    if (i > 0 && o[l.slice(0, i)]) o[l.slice(0, i)].push(l.slice(i + 1))
+                }
+                root.packages = o.pkg
+                root.aur = o.aur
+                root.flatpaks = o.flatpak
+                root.systemError = o.error.join(". ")
+            }
+        }
+    }
+    Timer { interval: 3600 * 1000; running: true; repeat: true; triggeredOnStart: true; onTriggered: root.refreshSystem() }
 
     property string branch: ""
     readonly property string channel: branch === "main" ? "stable" : branch === "develop" ? "dev" : ""

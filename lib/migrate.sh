@@ -72,6 +72,12 @@ update() {
     fi
     say "Updating the system"
     distro_update || FAILED+=("the system update failed")
+    if command -v flatpak >/dev/null && [[ -n $(flatpak list --columns=application 2>/dev/null) ]]; then
+        say "Updating Flatpak apps"
+        local fy=()
+        $YES && fy=(-y --noninteractive)
+        run flatpak update "${fy[@]}" || FAILED+=("the Flatpak update failed")
+    fi
     migrations
     detect_write
     packages

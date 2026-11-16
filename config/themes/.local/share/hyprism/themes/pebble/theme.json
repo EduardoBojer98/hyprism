@@ -107,6 +107,7 @@
     "end": [
       "weather",
       "media",
+      "updates",
       "tray",
       "keyboard",
       "notifications",

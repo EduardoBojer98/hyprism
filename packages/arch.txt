@@ -9,6 +9,7 @@ stow                     stow                               repo
 curl                     curl                               repo
 jq                       jq                                 repo
 bsdtar                   libarchive                         repo
+update-check             pacman-contrib                     repo
 build-tools              base-devel                         repo
 fish                     fish                               repo
 socat                    socat                              repo

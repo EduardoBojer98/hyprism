@@ -92,8 +92,9 @@ ColumnLayout {
         }
         SettingRow {
             label: "Update everything"
-            hint: "Pulls the latest setup, updates the system (snapshot first on Arch), relinks the configs and runs the doctor"
-            PillButton { enabled: !!page.info.repo; text: "Update"; onClicked: page.inTerminal("./install.sh update") }
+            hint: (Updates.system > 0 ? Updates.summary + " waiting. " : "")
+                + "Pulls the latest setup, updates the system and Flatpak apps (snapshot first on Arch), relinks the configs and runs the doctor"
+            PillButton { enabled: !!page.info.repo; text: "Update"; onClicked: Updates.install() }
         }
         SettingRow {
             label: "Re-run the full install"

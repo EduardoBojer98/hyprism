@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Menu bar item "Updates" (on by default, beside the tray): how many system packages, AUR and Flatpak updates
+  and Hyprism changes are waiting, hidden when none are. Click runs the whole update in a terminal; right-click
+  looks again. Checks hourly with `checkupdates` (Arch, new package `pacman-contrib`) or `dnf check-update`.
+  `./install.sh update` now updates Flatpak apps too.
 - Update channels: stable (branch `main`) and dev (branch `develop`, newest work first). `./install.sh channel dev`
   or Settings → About → Channel switches and updates. Settings → About says when Hyprism has new changes, lists them,
   and puts a dot on About in the sidebar.

@@ -165,10 +165,12 @@ Details, and what each one changes and how to undo it: [modules.md](modules.md).
 ./install.sh update
 ```
 
-It pulls Hyprism (only when the repo has no edited files), updates the whole system, runs new migrations, adds
+It pulls Hyprism (only when the repo has no edited files), updates the whole system and Flatpak apps, runs new migrations, adds
 new packages, relinks, runs module steps that are new or changed (asked first), and ends with the doctor. The same
 thing is **Settings → About → Update**. Settings → About also says when there are new changes (it looks every
-6 hours and when the page opens; About gets a dot in the sidebar) and lists them.
+6 hours and when the page opens; About gets a dot in the sidebar) and lists them. The menu bar's **Updates** item
+counts everything waiting (system packages, AUR, Flatpak, Hyprism), hides when nothing is, and runs this update
+on a click.
 
 ### Channels: stable or dev
 

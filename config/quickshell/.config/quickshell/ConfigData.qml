@@ -214,11 +214,11 @@ JsonAdapter {
         property var presets: ({
             minimal: { start: ["controls", "launcher", "workspaces"], center: ["clock"], end: ["status", "battery", "power"] },
             full: { start: ["controls", "launcher", "workspaces", "window"], center: ["clock", "date", "weather"],
-                    end: ["sysinfo", "media", "tray", "keyboard", "notifications", "status", "battery", "power"] },
+                    end: ["sysinfo", "media", "updates", "tray", "keyboard", "notifications", "status", "battery", "power"] },
             laptop: { start: ["controls", "launcher", "workspaces"], center: ["clock"],
-                      end: ["sysinfo", "brightness", "power-profile", "keyboard", "notifications", "status", "battery"] },
+                      end: ["sysinfo", "brightness", "power-profile", "updates", "keyboard", "notifications", "status", "battery"] },
             external: { start: ["controls", "launcher", "workspaces", "window"], center: ["clock", "date"],
-                        end: ["sysinfo", "weather", "media", "tray", "notifications", "status", "power"] }
+                        end: ["sysinfo", "weather", "media", "updates", "tray", "notifications", "status", "power"] }
         })
         // your bar: { edge, size, floating, dock ("bar" or an edge), start, center, end }. Empty = the theme's own;
         // the first change in Settings > Menu Bar copies the theme's into it, and it then stays when you switch theme

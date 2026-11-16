@@ -30,7 +30,7 @@ SettingGroup {
         network: ["icon", "label", "mouse"], volume: ["icon", "label", "mouse"], brightness: ["icon", "label", "mouse"],
         media: ["icon", "label", "mouse"],
         cpu: ["levels", "icon", "label", "mouse"], gpu: ["levels", "icon", "label", "mouse"], memory: ["levels", "icon", "label", "mouse"],
-        weather: ["levels", "icon", "label", "mouse"]
+        weather: ["levels", "icon", "label", "mouse"], updates: ["icon", "mouse"]
     })
     readonly property var has: kinds[kind] ?? ["levels", "icon", "label", "mouse"]
     // the reading a metric item shows (Metrics.registry), for its own warn / critical levels
@@ -103,6 +103,12 @@ SettingGroup {
             label: "Window title"
             hint: "After the app's name"
             ConfigToggle { section: "bar"; key: "windowTitle" }
+        }
+        SettingRow {
+            visible: g.kind === "updates"
+            label: "Show when nothing is waiting"
+            hint: "Off: the icon appears only when there are updates"
+            Toggle { Accessible.name: "Show when nothing is waiting"; checked: g.merged.always === true; onToggled: on => g.put("always", on ? true : undefined) }
         }
         SettingRow {
             visible: g.kind === "battery" || g.kind === "status"
