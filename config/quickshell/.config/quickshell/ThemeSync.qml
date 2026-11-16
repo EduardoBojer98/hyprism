@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
 import QtQuick
+import "WindowFrames.js" as Frames
 
 // Carries the active theme (Theme / Themes.qml) to the parts of the desktop Quickshell can't draw:
 //   Hyprland   gaps, borders, rounding, shadow, blur, motion preset (live via hyprctl eval, saved to
@@ -75,25 +76,29 @@ Scope {
     function q(v) { return JSON.stringify(String(v)) }
     function n(v) { const x = Number(v); return isFinite(x) ? x : 0 }
     // The focused window's frame: Config.windows.border = theme (the theme's own hypr.frame, accent when it has none) |
-    // accent | gradient (accent to accent2) | rainbow (a quiet multi-stop wheel, tuned to the theme's light or dark).
-    // The loop turns only with motion Full, power mode not Silent and on AC (unless rainbowOnBattery); else a still rainbow.
+    // accent | gradient | neon | mono | rainbow | sunset | ocean | custom; the colours come from WindowFrames.js, which
+    // the Settings previews share. A frame of two or more colours turns only when you ask (Config.windows.borderAnimate),
+    // with motion Full, power mode not Silent and on AC (unless rainbowOnBattery); else it stands still at your angle.
     // Unfocused windows keep the theme's inactive colour.
     readonly property string frameStyle: { const s = Config.windows.border; return s !== "theme" ? s : (h.frame ?? "accent") }
-    readonly property bool rainbowLoops: frameStyle === "rainbow" && Theme.motionLevel === "full" && PowerMode.profile !== 0
-                                         && (!UPower.onBattery || Config.windows.rainbowOnBattery)
-    readonly property var borderActive: {
-        const a = hex(Theme.accent) + "ff", b = hex(Theme.accent2) + "ff"
-        if (frameStyle === "accent") return [a]
-        if (frameStyle === "gradient") return [a, b]
-        if (frameStyle !== "rainbow") return h.active
-        // hues spread over the wheel; muted so it reads as a finish, not neon. The first stop repeats at the end so the loop has no seam.
-        const l = Theme.light ? 0.46 : 0.62, stops = [0, 40, 95, 165, 215, 270, 320].map(d => hex(Qt.hsla(d / 360, 0.58, l, 1)) + "ff")
-        return stops.concat([stops[0]])
-    }
+    readonly property var borderActive: Frames.colours(frameStyle, { accent: "#" + hex(Theme.accent), accent2: "#" + hex(Theme.accent2),
+        text: "#" + hex(Theme.text), light: Theme.light, own: h.active, custom: Config.windows.borderColors })
+    readonly property bool borderLoops: borderActive.length > 1 && Config.windows.borderAnimate && Theme.motionLevel === "full"
+                                        && PowerMode.profile !== 0 && (!UPower.onBattery || Config.windows.rainbowOnBattery)
+    // neon: a glow in the frame's colour around the focused window (look.lua tints Hyprland's shadow); "" = the theme's shadow
+    readonly property string glow: frameStyle === "neon" ? borderActive[0].slice(0, 6) : ""
+    // Title bars (hyprbars, hypr/modules/plugins.lua): the theme's panel surface, its text and type; unfocused windows'
+    // titles in the secondary text and their buttons in the raised tone. Height follows the theme's density
+    // (Settings > Windows can pick a size instead).
+    readonly property int barHeight: Math.round(28 * Math.sqrt(Theme.density))
     readonly property string hyprLua: `{ theme = ${q(current.id)}, gaps_in = ${n(h.gapsIn)}, gaps_out = ${n(h.gapsOut)}, border_size = ${n(h.border)}, `
-        + `rounding = ${n(h.rounding)}, active = { ${borderActive.map(q).join(", ")} }, border_loop = ${rainbowLoops}, border_speed = ${n(Config.windows.rainbowSpeed)}, inactive = ${q(h.inactive)}, `
+        + `rounding = ${n(h.rounding)}, active = { ${borderActive.map(q).join(", ")} }, border_loop = ${borderLoops}, border_speed = ${n(Config.windows.rainbowSpeed)}, `
+        + `border_angle = ${n(Config.windows.borderAngle)}, glow = ${q(glow)}, inactive = ${q(h.inactive)}, `
         + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.hyprMotion)}, accent = ${q(hex(Theme.accent))}, `
-        + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)} }`
+        + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)}, `
+        + `bar = ${q(hex(Theme.surfaceColor) + (Theme.glassy ? "e6" : "ff"))}, bar_text = ${q(hex(Theme.text) + "ff")}, `
+        + `bar_text_dim = ${q(hex(Theme.subtext) + "ff")}, bar_buttons_dim = ${q(hex(Theme.raised) + "ff")}, `
+        + `bar_font = ${q(safeFont(Theme.font))}, bar_height = ${n(barHeight)}, bar_blur = ${Theme.glassy} }`
 
     // Qt apps (qt6ct), btop and the starship prompt: texts built from the same tokens, written only when they change.
     // Colours are checked as #rrggbb before they go into a file.
@@ -247,7 +252,8 @@ Scope {
     // the fields hypr/modules/windows.lua reads
     readonly property string windowsLua: {
         const w = Config.windows, t = {}
-        for (const k of Object.keys(Config.schema.windows)) if (k !== "apps") t[k] = w[k]
+        // borderColors goes with the theme (hyprLua), not here
+        for (const k of Object.keys(Config.schema.windows)) if (k !== "apps" && k !== "borderColors") t[k] = w[k]
         t.apps = (w.apps ?? []).filter(a => typeof a?.class === "string" && a.class !== "")
             .map(a => ({ class: a.class, open: String(a.open ?? "normal"), workspace: Number(a.workspace) || 0, pin: a.pin === true }))
         return SettingsApp.lua(t)

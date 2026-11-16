@@ -3,7 +3,7 @@ import Quickshell.Io
 // Defaults for every desktop option (Config.qml). A key missing from settings.json takes the
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
-    property int version: 4                     // settings format; Config.repair() upgrades older files
+    property int version: 5                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
         property string theme: "pebble"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)
@@ -144,9 +144,15 @@ JsonAdapter {
         property bool snap: false               // floating windows snap to edges and each other
         property bool hideCursorTyping: false
         property bool titleBars: true           // hyprbars: title bar with buttons on apps that draw none
-        property string border: "theme"         // focused window's frame: theme (its own) | accent | gradient (accent to accent2) | rainbow
-        property int rainbowSpeed: 5            // rainbow: 1 slow .. 10 fast
-        property bool rainbowOnBattery: false   // rainbow keeps turning on battery (it redraws every frame); off = still rainbow
+        property string titleBarSize: "theme"   // title bar height: theme (its density) | small | medium | large
+        property string titleButtons: "right"   // title bar buttons on the right or left (close outermost)
+        property string titleAlign: "center"    // window title in the bar: center | left
+        property string border: "theme"         // focused window's frame: theme (its own) | accent | gradient (accent to accent2) | neon (accent with a glow) | mono (text colour) | rainbow | sunset | ocean | custom (borderColors)
+        property int borderAngle: 45            // direction of a frame of several colours, in degrees
+        property list<string> borderColors: ["#ff7a59", "#7a5cff"]   // custom frame: two or three colours like "#ff7a59"
+        property bool borderAnimate: false      // a frame of several colours turns (needs animations on Full; costs battery)
+        property int rainbowSpeed: 5            // turning frame: 1 slow .. 10 fast
+        property bool rainbowOnBattery: false   // a turning frame keeps turning on battery (it redraws every frame); off = it stands still
         property var apps: []                   // [{ id, name, class (regex), open: normal|float|pin|maximize|fullscreen, workspace: 0 = any }]
     }
     property JsonObject keybinds: JsonObject {
