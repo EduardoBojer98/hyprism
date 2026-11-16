@@ -19,24 +19,22 @@ Singleton {
 
     // placement, view, header, width, select, prompt: as in a theme's launcher block (Themes.qml). The style's own:
     // split (search pill and buttons as separate glass), corners (theme | sharp | round), field (search height px),
-    // dim, fill (the panel's share of the free height; 0 = as tall as its content), columns and icon (apps grid),
-    // mono (rows and typing in the mono face). Config.launcher.style names one, or "theme".
+    // dim, fill (the panel's share of the free height; 0 = as tall as its content), icon (apps grid),
+    // mono (rows and typing in the mono face). Config.launcher.style names one, or "theme". A theme's block adds
+    // labels (plain | rule: section headings as a ruled line). Apps per row is yours (Config.launcher.columns).
     readonly property var styles: ({
         spotlight: { name: "Spotlight", about: "A floating search pill with round buttons beside it, suggestions below",
                      placement: "center", view: "home", header: "none", width: 640, select: "wash", prompt: "",
                      split: true, corners: "round", field: 54, dim: 0.14 },
-        command:   { name: "Command bar", about: "A slim bar across the top edge; results drop down as you type",
-                     placement: "strip", view: "inline", header: "none", width: 0, select: "inverse", prompt: "",
-                     split: false, corners: "sharp", field: 46, dim: 0.16 },
         launchpad: { name: "Launchpad", about: "A big sheet over a dark screen that opens on every app",
                      placement: "fullscreen", view: "grid", header: "query", width: 1180, select: "wash", prompt: "",
-                     split: false, corners: "round", field: 72, dim: 0.55, fill: 0.86, columns: 8, icon: 60 },
+                     split: false, corners: "round", field: 72, dim: 0.55, fill: 0.86, icon: 60 },
         drawer:    { name: "Drawer", about: "Rises from the bottom like a phone's app drawer, apps first",
                      placement: "island", view: "grid", header: "none", width: 720, select: "wash", prompt: "",
-                     split: false, corners: "round", field: 50, dim: 0.22, fill: 0.78, columns: 6 },
+                     split: false, corners: "round", field: 50, dim: 0.22, fill: 0.78 },
         sidebar:   { name: "Sidebar", about: "A full-height column on the left edge, everything as a list",
                      placement: "column", view: "home", header: "none", width: 440, select: "inverse", prompt: "",
-                     split: false, corners: "sharp", field: 52, dim: 0.2, fill: 1, columns: 4 },
+                     split: false, corners: "sharp", field: 52, dim: 0.2, fill: 1 },
         terminal:  { name: "Terminal", about: "A square prompt in the mono face, a solid block on the selection",
                      placement: "center", view: "inline", header: "query", width: 720, select: "inverse", prompt: "❯",
                      split: false, corners: "sharp", field: 60, dim: 0.24, mono: true },
@@ -66,12 +64,14 @@ Singleton {
         // a light dim behind it, never a blur (Hyprland skips blur under see-through layers, rules.lua)
         dim: pointer ? 0.12 : preset?.dim ?? ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18,
         fill: pointer ? Math.min(preset?.fill ?? 0, 0.6) : preset?.fill ?? 0,
-        columns: preset?.columns ?? Config.launcher.columns,
+        columns: Config.launcher.columns,
         icon: preset?.icon ?? Theme.iconApp,
         startView: rl.view === "grid" || rl.view === "start" ? "apps" : rl.view === "inline" ? "search" : "home"
     })
     readonly property bool unified: look.style === "unified"
-    readonly property bool bigQuery: rl.header === "query"   // Console, Poster, Atlas, Noir: the query set large
+    readonly property bool bigQuery: rl.header === "query"   // Poster: the query set large
+    // Monolith: section headings as a ruled line in accent2; the theme's type, so it holds in every style
+    readonly property bool ruled: (Theme.current.launcher.labels ?? "plain") === "rule"
     readonly property string rowFont: preset?.mono ? Theme.monoFont : Theme.font
     readonly property color surface: Theme.surface("glass")
     readonly property real corner: look.corners === "sharp" ? 0 : look.corners === "round" ? Math.max(Theme.radiusLarge, 18) : Theme.radiusLarge

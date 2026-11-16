@@ -5,7 +5,7 @@ import QtQuick.Layouts
 // Dock: on or off, where it sits and on which monitors, how it behaves, and its pinned apps
 // (dock.pinned, app ids) and widgets (dock.widgets). Its look comes from the theme; every option works in
 // every theme, and a dock on the same edge as the bar sits beside it. Inside the menu bar the dock is the bar's
-// "apps" item: only what applies there is shown (icon size, hiding, previews and widgets are the floating dock's).
+// "apps" item: only what applies there is shown (size, hiding, previews and widgets are the floating dock's).
 ColumnLayout {
     id: page
     spacing: 20
@@ -62,6 +62,21 @@ ColumnLayout {
                 onPicked: i => Theme.setLayout({ dock: values[i] })
             }
         }
+        SettingRow {   // the named sizes over a slider for any size between: a size of your own lights no preset
+            visible: Config.dock.enabled && !page.inBar
+            label: "Size"
+            hint: Config.dock.iconSize + " px icons" + (dockSize.values.includes(Config.dock.iconSize) ? "" : ", your own size")
+            PresetSlider {
+                id: dockSize
+                values: [36, 44, 52, 60]
+                options: ["Small", "Medium", "Large", "Huge"]
+                from: 24; to: 72
+                value: Config.dock.iconSize
+                unit: "px"
+                accessibleName: "Dock size"
+                onPicked: v => Config.set("dock", "iconSize", Math.round(v))
+            }
+        }
         SettingRow {
             visible: Config.dock.enabled && !page.inBar
             label: "Spacing"
@@ -82,7 +97,13 @@ ColumnLayout {
             }
         }
         SettingRow {
-            visible: Config.dock.enabled && page.inBar
+            visible: Config.dock.enabled && Config.dock.showRunning && !Config.dock.combine
+            label: "Open windows as names"
+            hint: "Each open window shows just its app's name, without an icon" + (page.inBar ? " or title" : ", picture or title")
+            ConfigToggle { section: "dock"; key: "nameOnly" }
+        }
+        SettingRow {
+            visible: Config.dock.enabled && page.inBar && !(Config.dock.nameOnly && Config.dock.showRunning && !Config.dock.combine)
             label: "Open windows"
             hint: "An icon, or with its name or title beside it"
             ConfigChoice { section: "dock"; key: "barLabels"; values: ["icon", "name", "title"]; labels: ["Icon", "App name", "Window title"] }
@@ -104,11 +125,6 @@ ColumnLayout {
     SettingGroup {
         visible: Config.dock.enabled
         title: "Behaviour"
-        SettingRow {
-            visible: !page.inBar
-            label: "Icon size"
-            ConfigChoice { section: "dock"; key: "iconSize"; values: [36, 44, 52, 60]; labels: ["Small", "Medium", "Large", "Huge"] }
-        }
         SettingRow {
             visible: !page.inBar
             label: "Hide automatically"
@@ -133,7 +149,7 @@ ColumnLayout {
             ConfigToggle { section: "dock"; key: "showRunning" }
         }
         SettingRow {
-            visible: Config.dock.showRunning && !Config.dock.combine && !page.inBar
+            visible: Config.dock.showRunning && !Config.dock.combine && !Config.dock.nameOnly && !page.inBar
             label: "Window pictures"
             hint: "A picture of each window, live while the pointer is on the dock. Off: just the app icon"
             ConfigToggle { section: "dock"; key: "thumbnails" }
@@ -143,7 +159,7 @@ ColumnLayout {
             readonly property var presets: [30, 60, 300, 900]
             property bool custom: !presets.includes(Config.dock.thumbRefresh)
             property string error: ""
-            visible: Config.dock.showRunning && Config.dock.thumbnails && !Config.dock.combine && !page.inBar
+            visible: Config.dock.showRunning && Config.dock.thumbnails && !Config.dock.combine && !Config.dock.nameOnly && !page.inBar
             label: "Refresh pictures"
             hint: error !== "" ? error : "How often the pictures update while the pointer is elsewhere"
             Choice {
@@ -245,7 +261,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: page.inBar ? "In the bar: click an open app to bring it up, middle-click for a new window. Icon size, hiding, previews and widgets are for a dock of its own: choose another place above."
+        text: page.inBar ? "In the bar: click an open app to bring it up, middle-click for a new window. Size, hiding, previews and widgets are for a dock of its own: choose another place above."
                          : "In the dock: drag an icon along it to reorder, right-click it to pin, unpin, minimise or quit."
         color: Theme.subtext
         wrapMode: Text.Wrap

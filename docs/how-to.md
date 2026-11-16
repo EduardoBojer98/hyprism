@@ -36,10 +36,12 @@ See [THEMES.md](THEMES.md).
 
 **How Spotlight looks.** Settings → Search & Launcher → Style (a picture of each). File: `launcher.style` =
 `"theme"` (the theme's own, the default), `"spotlight"` (a floating search pill with round buttons),
-`"command"` (a slim bar across the top), `"launchpad"` (a big sheet of every app over a dark screen), `"drawer"`
+`"launchpad"` (a big sheet of every app over a dark screen), `"drawer"`
 (rises from the bottom, apps first), `"sidebar"` (a full-height column on the left) or `"terminal"` (a square
-prompt in the mono face). A style picks only the place and shape; colours and fonts stay the theme's. What it shows
-before you type: `launcher.startView`. From a terminal: `qs ipc call config set launcher style '"drawer"'`.
+prompt in the mono face). A style picks only the place and shape; colours and fonts stay the theme's. It opens in the
+middle of the screen unless `launcher.position` is `"theme"` (the style's own place). What it shows before you type:
+`launcher.startView`, suggestions (`"home"`) by default in every theme; apps per row: `launcher.columns`. From a
+terminal: `qs ipc call config set launcher style '"drawer"'`.
 The styles are data in `Launcher.qml` (`styles`).
 
 ## The bar and the dock
@@ -73,6 +75,9 @@ All keys: [bar.md](bar.md).
 `dock.pinned` (desktop entry ids), `dock.hiddenOn` (screens without a dock), `dock.autoHide`. Its place:
 `appearance.custom.<theme>.dock` = `"bar"`, `"bottom"`, `"left"`, `"right"` or `"top"`.
 Inside the bar only Open windows, Combine, Show open apps and Pinned apps apply; Settings → Dock hides the rest.
+**Dock size and open windows.** Settings → Dock → Size: Small, Medium, Large, Huge, or drag the slider for any size
+between (`dock.iconSize`, 24 to 72 px). Open windows as names (`dock.nameOnly`) shows each open window as its app's
+name only, without an icon, picture or title, in the dock and in the bar.
 **Dock widgets.** Settings → Dock → Widgets (floating dock only). File: `dock.widgets`, ids in order: `clock`, `date`,
 `weather`, `media`, `volume`, `battery`, `load`, `network`, `screenshot`, `trash` (right-click twice to empty),
 `downloads`. Each reads only while it is on the dock.

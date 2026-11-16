@@ -40,10 +40,11 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `enabled` | `bool` | `true` | every theme has a dock; off hides it everywhere |
 | `size` | `string` | `"regular"` | compact \| regular \| roomy: the padding around the icons |
 | `hiddenOn` | `list<string>` | `[]` | monitor names (e.g. "eDP-1") without a dock |
-| `iconSize` | `int` | `44` |  |
+| `iconSize` | `int` | `44` | the dock's size: Settings presets 36 / 44 / 52 / 60, or any size 24-72 on its slider |
 | `autoHide` | `bool` | `false` | visible by default; true slides it away until the pointer reaches its edge |
 | `showRunning` | `bool` | `true` |  |
 | `barLabels` | `string` | `"icon"` | open windows in the dock inside the bar: icon \| name (app name) \| title (window title) |
+| `nameOnly` | `bool` | `false` | open windows show just their app's name, no icon, picture or title (dock and bar) |
 | `combine` | `bool` | `false` | like Windows' "combine taskbar buttons": open apps share their icon |
 | `previews` | `bool` | `true` | combined: hover an open app for a picture of each window |
 | `thumbnails` | `bool` | `true` | off: open windows show only their app icon |
@@ -59,9 +60,9 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `showFiles` | `bool` | `true` |  |
 | `actions` | `list<var>` | `[]` |  |
 | `usage` | `var` | `{}` | launch counts, for ranking |
-| `style` | `string` | `"theme"` | theme (the theme's own) \| spotlight \| command \| launchpad \| drawer \| sidebar \| terminal (Launcher.qml styles) |
-| `columns` | `int` | `7` | apps per row in the apps grid |
-| `startView` | `string` | `"theme"` | theme (the theme's own) \| home (suggestions until you type) \| apps (grid) \| search (empty pill) |
+| `style` | `string` | `"theme"` | theme (the theme's own) \| spotlight \| launchpad \| drawer \| sidebar \| terminal (Launcher.qml styles) |
+| `columns` | `int` | `7` | apps per row in the apps grid (fewer when the panel is too narrow) |
+| `startView` | `string` | `"home"` | home (suggestions until you type, every theme) \| apps (grid) \| search (empty field) \| theme (the style's own) |
 | `recent` | `list<string>` | `[]` | result keys, most recent first, for the home view |
 | `order` | `list<string>` | `["apps", "files", "calc", "settings", "actions", "web"]` |  |
 | `clipboardInside` | `bool` | `true` | Spotlight's clipboard button shows history in the panel |

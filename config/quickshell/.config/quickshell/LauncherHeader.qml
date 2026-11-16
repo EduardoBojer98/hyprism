@@ -32,6 +32,23 @@ Item {
             anchors { left: lens.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
             color: Theme.text
             selectionColor: Theme.accent
+            selectedTextColor: Theme.accentText
+            // behind a typed prompt (Monolith) a terminal's block caret in the accent; otherwise a thin line
+            cursorDelegate: Rectangle {
+                width: Launcher.prompt !== "" ? Math.round(field.font.pixelSize * 0.6) : 1
+                height: field.cursorRectangle.height
+                color: Launcher.prompt !== "" ? Qt.alpha(Theme.accent, 0.75) : Theme.text
+                visible: field.activeFocus
+                SequentialAnimation on opacity {
+                    running: field.activeFocus && Theme.animate
+                    loops: Animation.Infinite
+                    onRunningChanged: if (!running) parent.opacity = 1
+                    PropertyAction { value: 1 }
+                    PauseAnimation { duration: 530 }
+                    PropertyAction { value: 0 }
+                    PauseAnimation { duration: 530 }
+                }
+            }
             font {
                 family: Launcher.preset?.mono ? Theme.monoFont : Launcher.bigQuery ? Theme.displayFont : Theme.font
                 pixelSize: Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : 0.38))
@@ -43,7 +60,8 @@ Item {
             }
             Text {
                 visible: !field.text
-                width: parent.width
+                x: Launcher.prompt !== "" ? Math.round(field.font.pixelSize * 0.6) + Theme.spaceS : 0   // after the block caret
+                width: parent.width - x
                 elide: Text.ElideRight
                 anchors.verticalCenter: parent.verticalCenter
                 text: Launcher.mode === "search" ? (Launcher.bigQuery || Launcher.look.width < 560 ? "Search" : "Search apps, files, settings and more") : Launcher.modes.find(m => m.id === Launcher.mode)?.hint ?? ""

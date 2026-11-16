@@ -31,9 +31,11 @@ Item {
         id: gridView
         anchors { left: parent.left; right: parent.right; top: rule.bottom; bottom: parent.bottom; margins: Theme.spaceS }
         clip: true
-        cellWidth: Math.floor(width / Launcher.look.columns)
+        // your apps per row (Settings), fewer when the panel is too narrow for them
+        readonly property int cols: Math.max(2, Math.min(Launcher.look.columns, Math.floor(width / (Launcher.look.icon + 44))))
+        cellWidth: Math.floor(width / cols)
         cellHeight: Launcher.look.icon + 58
-        leftMargin: (width - cellWidth * Launcher.look.columns) / 2   // the cells centred, not the remainder on the right
+        leftMargin: (width - cellWidth * cols) / 2   // the cells centred, not the remainder on the right
         topMargin: Theme.spaceXs
         model: Launcher.appGrid
         boundsBehavior: Flickable.StopAtBounds

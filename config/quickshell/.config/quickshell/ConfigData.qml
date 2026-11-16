@@ -23,10 +23,11 @@ JsonAdapter {
         property bool enabled: true             // every theme has a dock; off hides it everywhere
         property string size: "regular"         // compact | regular | roomy: the padding around the icons
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a dock
-        property int iconSize: 44
+        property int iconSize: 44               // the dock's size: Settings presets 36 / 44 / 52 / 60, or any size 24-72 on its slider
         property bool autoHide: false           // visible by default; true slides it away until the pointer reaches its edge
         property bool showRunning: true
         property string barLabels: "icon"       // open windows in the dock inside the bar: icon | name (app name) | title (window title)
+        property bool nameOnly: false           // open windows show just their app's name, no icon, picture or title (dock and bar)
         property bool combine: false            // like Windows' "combine taskbar buttons": open apps share their icon
         property bool previews: true            // combined: hover an open app for a picture of each window
         property bool thumbnails: true          // off: open windows show only their app icon
@@ -41,9 +42,9 @@ JsonAdapter {
         property list<var> actions: []
         property var usage: ({})                // launch counts, for ranking
         // look (Search & Launcher > Style)
-        property string style: "theme"          // theme (the theme's own) | spotlight | command | launchpad | drawer | sidebar | terminal (Launcher.qml styles)
-        property int columns: 7                 // apps per row in the apps grid
-        property string startView: "theme"       // theme (the theme's own) | home (suggestions until you type) | apps (grid) | search (empty pill)
+        property string style: "theme"          // theme (the theme's own) | spotlight | launchpad | drawer | sidebar | terminal (Launcher.qml styles)
+        property int columns: 7                 // apps per row in the apps grid (fewer when the panel is too narrow)
+        property string startView: "home"       // home (suggestions until you type, every theme) | apps (grid) | search (empty field) | theme (the style's own)
         property list<string> recent: []        // result keys, most recent first, for the home view
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
