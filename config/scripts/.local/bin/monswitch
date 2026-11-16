@@ -185,11 +185,12 @@ ddc_set() {
 # true while the monitor is this computer's own screen; false while it mirrors another one (handed over) or is gone
 out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o and ((.mirrorOf // "none") == "none"))' >/dev/null; }
 
-save_layout() {
+save_layout() { # the shared monitor's workspaces and the one it shows, and the one the mirrored screen shows
     jq -n \
         --argjson ws "$(hyprctl -j workspaces | jq --arg o "$OUT" '[.[] | select(.monitor == $o and .id > 0) | .id]')" \
-        --argjson active "$(hyprctl -j monitors | jq --arg o "$OUT" '.[] | select(.name == $o) | .activeWorkspace.id')" \
-        '{workspaces: $ws, active: $active}' >"$LAYOUT"
+        --argjson active "$(hyprctl -j monitors | jq --arg o "$OUT" '[.[] | select(.name == $o) | .activeWorkspace.id][0] // null')" \
+        --argjson mine "$(hyprctl -j monitors | jq --arg o "${MIRROR:-}" '[.[] | select(.name == $o) | .activeWorkspace.id][0] // null')" \
+        '{workspaces: $ws, active: $active, mirrorActive: $mine}' >"$LAYOUT"
 }
 
 restore_layout() {
@@ -198,6 +199,9 @@ restore_layout() {
     for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
         hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$OUT\" })" >/dev/null
     done
+    # the mirrored screen shows what it showed before the hand-off, then the shared monitor its own (focused last)
+    id=$(jq -r '.mirrorActive // empty' "$LAYOUT")
+    [[ -n $id && $id -gt 0 ]] && hyprctl dispatch "hl.dsp.focus({ workspace = \"$id\" })" >/dev/null
     id=$(jq -r '.active // empty' "$LAYOUT")
     [[ -n $id ]] && hyprctl dispatch "hl.dsp.focus({ workspace = \"$id\" })" >/dev/null
     return 0
@@ -236,7 +240,26 @@ to_pc() {
         return 1
     }
     sleep 2 # the input change causes a ~1 s HDMI disconnect blip; let it pass
+    # With no picture on the other input, many monitors search and go back to this computer by themselves.
+    # Hand over only while it really shows the other computer; if it comes back within a few seconds, take it
+    # back at once (no mirror left behind, the layout as it was).
+    local now i
+    now=$(ddc_input)
+    if [[ $now == "$LAPTOP" ]]; then
+        notify-send -a monswitch "The other computer isn't sending a picture" "The monitor stayed on this computer"
+        return 0
+    fi
     release
+    for i in 1 2 3 4 5 6 7 8; do
+        sleep 1
+        now=$(ddc_input)
+        [[ $now == "$PC" || -z $now ]] && continue
+        if [[ $now == "$LAPTOP" ]]; then
+            reclaim
+            notify-send -a monswitch "The other computer isn't sending a picture" "The monitor came back to this computer"
+        fi
+        return 0
+    done
 }
 to_laptop() {
     reclaim # send a picture first, so the monitor has a signal to switch to

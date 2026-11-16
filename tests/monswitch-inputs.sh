@@ -83,4 +83,36 @@ echo "$own" >"$sw/monitors.json"
 touch "$sw/refuse"
 toggle
 check "a monitor that refuses the switch is not mirrored" '! grep -q "SHARED =" "$sw/hypr.log"'
+# A monitor with no picture on the other input goes back to this computer by itself. Fakes: each DDC read takes
+# the next line of $sw/reads (11 / 12); hyprctl's SHARED evals switch monitors.json between mirrored and own.
+rm -f "$sw/refuse"
+cat >"$sw/fake/hyprctl" <<FAKE
+#!/usr/bin/env bash
+case "\$*" in
+    "-j monitors") cat "$sw/monitors.json" ;;
+    "-j workspaces") echo '[{"id":3,"monitor":"HDMI-A-1"}]' ;;
+    *"SHARED = {"*) echo '$mirrored' >"$sw/monitors.json"; echo "\$*" >>"$sw/hypr.log" ;;
+    *"SHARED = nil"*) echo '$own' >"$sw/monitors.json"; echo "\$*" >>"$sw/hypr.log" ;;
+    *) echo "\$*" >>"$sw/hypr.log" ;;
+esac
+FAKE
+cat >"$sw/fake/ddcutil" <<FAKE
+#!/usr/bin/env bash
+if [[ "\$*" == *getvcp* ]]; then
+    v=\$(head -1 "$sw/reads" 2>/dev/null); sed -i 1d "$sw/reads" 2>/dev/null
+    [[ -n \$v ]] && echo "VCP 60 SNC x\$v"
+    exit 0
+fi
+echo "\$*" >>"$sw/ddc.log"
+FAKE
+chmod +x "$sw/fake"/*
+echo "$own" >"$sw/monitors.json"
+printf '11\n' >"$sw/reads"
+toggle
+check "no picture on the other input, back at once: never mirrored" '! grep -q "SHARED = {" "$sw/hypr.log"'
+echo "$own" >"$sw/monitors.json"
+printf '12\n12\n11\n' >"$sw/reads"
+toggle
+check "back to this computer a moment after the hand-off: the mirror ends again" 'grep -q "SHARED = {" "$sw/hypr.log" && grep -q "SHARED = nil" "$sw/hypr.log" && [[ ! -e $sw/cfg/hypr/settings/shared.lua ]]'
+
 exit $fail
