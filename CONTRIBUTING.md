@@ -38,7 +38,10 @@ Other test commands:
 
 ## Changes
 
-- Work on a branch, never on `main`.
+- Branches: `develop` is where work lands (the dev channel); `main` is stable (the stable channel, what a fresh
+  clone gets). Work on `develop` or a branch off it, never on `main`. A release fast-forwards `main` to a
+  `develop` commit whose CI passed: `git switch main && git merge --ff-only develop && git push`. A fix that
+  can't wait goes to `develop` first, then the same fast-forward.
 - Use Conventional Commits, one logical change per commit: `feat(bar): …`, `fix(install): …`, `docs: …`.
 - A user-visible change adds a line to [CHANGELOG.md](CHANGELOG.md) under "Unreleased", in the same commit.
 - Where to add things (a package, a setting, a theme, a bar item, a module): see the "How to add things" table in

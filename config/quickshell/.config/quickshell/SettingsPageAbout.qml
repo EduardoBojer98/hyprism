@@ -56,9 +56,40 @@ ColumnLayout {
         }
     }
 
-    // Both run in a terminal so you see what happens (and git or sudo can ask questions)
+    Component.onCompleted: Updates.refresh(false)
+    // what Updates found, in words: the first line is the row's label, the rest its hint
+    readonly property var updateText: {
+        const u = Updates, notes = []
+        if (u.dirty) notes.push("The repo has local edits: Update won't pull until you commit or stash them")
+        if (u.ahead > 0) notes.push(u.ahead + " local commit(s) aren't on the channel: Update can't pull")
+        if (u.error !== "") return ["Hyprism updates", [u.error].concat(notes).join(". ")]
+        if (u.checked === 0) return ["Looking for Hyprism updates…", notes.join(". ")]
+        if (u.count === 0) return ["Hyprism is up to date", ["Checked at " + Qt.formatTime(new Date(u.checked), "HH:mm")].concat(notes).join(". ")]
+        const more = u.count > 3 ? " · and " + (u.count - 3) + " more" : ""
+        return [u.count + (u.count === 1 ? " new change" : " new changes") + " for Hyprism", [u.changes.slice(0, 3).join(" · ") + more].concat(notes).join(". ")]
+    }
+
+    // Switching and updating run in a terminal so you see what happens (and git or sudo can ask questions)
     SettingGroup {
         title: "Update"
+        SettingRow {
+            label: "Channel"
+            hint: "Stable gets tested releases. Dev gets the newest work first and can break; you can switch back any time"
+            Choice {
+                accessibleName: "Update channel"
+                enabled: !!page.info.repo
+                options: ["Stable", "Dev"]
+                index: Updates.channel === "dev" ? 1 : 0
+                extra: Updates.channel === "" && Updates.branch !== "" ? Updates.branch : ""   // another branch: shown, not a choice
+                onPicked: i => { const c = ["stable", "dev"][i]; if (c && c !== Updates.channel) page.inTerminal("./install.sh channel " + c) }
+            }
+        }
+        SettingRow {
+            label: page.updateText[0]
+            hint: page.updateText[1]
+            Value { visible: Updates.count > 0; text: Updates.count + " new"; color: Theme.accent; font.weight: Font.DemiBold }
+            PillButton { enabled: !Updates.checking; text: Updates.checking ? "Checking…" : "Check now"; onClicked: Updates.refresh(true) }
+        }
         SettingRow {
             label: "Update everything"
             hint: "Pulls the latest setup, updates the system (snapshot first on Arch), relinks the configs and runs the doctor"

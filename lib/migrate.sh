@@ -54,13 +54,15 @@ shell_restart() {
 
 update() {
     if [[ -z ${HYPRISM_PULLED:-} ]] && git -C "$REPO" rev-parse -q --verify '@{u}' >/dev/null 2>&1; then # no upstream = nothing to pull
-        if [[ -n $(git -C "$REPO" status --porcelain) ]]; then
+        # untracked files don't count: a pull that would overwrite one stops by itself
+        if [[ -n $(git -C "$REPO" status --porcelain --untracked-files=no) ]]; then
             warn "The repo has local changes: not pulling (commit or stash them)"
         else
             local before
             before=$(git -C "$REPO" rev-parse HEAD)
-            say "Pulling Hyprism"
-            run git -C "$REPO" pull --ff-only
+            say "Pulling Hyprism ($(channel_now) channel)"
+            run git -C "$REPO" pull --ff-only ||
+                FAILED+=("could not pull: this copy has commits the $(channel_now) channel doesn't (git log @{u}..HEAD lists them)")
             if [[ $(git -C "$REPO" rev-parse HEAD) != "$before" ]]; then
                 echo "$before" >"$STATE/previous-commit" # what `rollback` returns to
                 # the pull may have changed this script: carry on with the new one
@@ -78,6 +80,58 @@ update() {
     plugins_build
     module_steps # only new or changed ones; each asks first
     $DRY || doctor || FAILED+=("the doctor found problems (above)")
+}
+
+# Channels: stable follows the branch main (released and tested), dev follows develop (where work lands first;
+# it can break). The channel is simply the branch this copy has checked out.
+channel_branch() { case $1 in stable) echo main ;; dev) echo develop ;; *) return 1 ;; esac }
+channel_now() {
+    case $(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null) in
+        main) echo stable ;;
+        develop) echo dev ;;
+        *) echo none ;;
+    esac
+}
+
+# channel [stable|dev]: print the channel; with a name, switch this copy to it, then update
+channel() {
+    local want=$1 branch now
+    now=$(channel_now)
+    if [[ -z $want ]]; then
+        echo "$now ($(git -C "$REPO" rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'not a git copy'))"
+        return 0
+    fi
+    branch=$(channel_branch "$want")
+    [[ $want != "$now" ]] || return 0 # nothing to switch (./install.sh update pulls)
+    is_checkout || {
+        FAILED+=("this copy isn't a git clone, so it can't switch channels (git clone the repo instead)")
+        return 0
+    }
+    if [[ -n $(git -C "$REPO" status --porcelain --untracked-files=no) ]]; then
+        FAILED+=("the repo has local changes: commit or stash them, then switch")
+        return 0
+    fi
+    say "Switching Hyprism to the $want channel (branch $branch)"
+    [[ $want == stable ]] && echo "   Stable is older than dev: what dev's migrations changed in your settings stays as it is."
+    ask "Switch to $want?" || return 0
+    run git -C "$REPO" fetch -q origin "+refs/heads/$branch:refs/remotes/origin/$branch" || {
+        FAILED+=("could not fetch $branch from origin (offline?)")
+        return 0
+    }
+    if git -C "$REPO" rev-parse -q --verify "refs/heads/$branch" >/dev/null; then
+        run git -C "$REPO" switch -q "$branch"
+        run git -C "$REPO" branch -q -u "origin/$branch"
+    else
+        run git -C "$REPO" switch -q -c "$branch" --track "origin/$branch"
+    fi
+    $DRY && return 0
+    git -C "$REPO" merge -q --ff-only "origin/$branch" ||
+        warn "Your $branch has commits origin/$branch doesn't: left as it is (git log @{u}..HEAD lists them)"
+    rm -f "$STATE/previous-commit" # rollback undoes an update, not a switch: switch back instead
+    # the other branch may have changed this script: the rest of the update runs with its own
+    local pass=()
+    $YES && pass+=(--yes)
+    exec env HYPRISM_PULLED=1 "$REPO/install.sh" update "${pass[@]}"
 }
 
 # Back to the Hyprism version from before the last update. System packages are not touched: for those use your

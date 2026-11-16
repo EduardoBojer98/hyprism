@@ -207,6 +207,7 @@ Then log out and pick **Hyprland** at the login screen (starting it without one:
 | `./install.sh update` | pulls Hyprism, updates the system, runs new migrations, relinks, restarts the shell |
 | `./install.sh detect` | looks at the hardware again |
 | `./install.sh modules` | lists the modules and which are on; `--with NAME` / `--without NAME` override |
+| `./install.sh channel [stable\|dev]` | shows the update channel, or switches to it and updates (stable = `main`, dev = `develop`) |
 | `./install.sh rollback` | goes back to the version before the last update |
 | `./install.sh uninstall` | removes the links, puts backups back, undoes the system changes |
 

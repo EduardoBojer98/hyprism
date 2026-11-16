@@ -4,6 +4,9 @@
 #   ./install.sh              install: looks at the hardware, then packages, links, services and the
 #                             modules this computer needs (asks before every system change)
 #   ./install.sh update       pull Hyprism, update the system, run new migrations, relink, doctor
+#   ./install.sh channel [stable|dev]
+#                             show the update channel, or switch to it and update (stable = branch main,
+#                             released; dev = branch develop, newest work, can break)
 #   ./install.sh doctor       check this computer against the repo; changes nothing
 #   ./install.sh detect       look at the hardware again and print hardware.toml
 #   ./install.sh modules      list the optional modules and which are on
@@ -28,7 +31,7 @@ set -Eeuo pipefail # -E: the failure summary (on_fail) also fires inside functio
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 ARGS=("$@") # kept for update, which re-runs itself after a pull
-DRY=false YES=false ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" PROFILE="" CMD=install
+DRY=false YES=false ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" PROFILE="" CHANNEL="" CMD=install
 usage() {
     awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
     exit "${1:-0}"
@@ -60,6 +63,16 @@ while (($#)); do
             ;;
         install | update | doctor | detect | modules | rollback | backups | uninstall) CMD=$1 ;;
         undo) CMD=uninstall ;; # the name before 2.0
+        channel)
+            CMD=channel
+            if [[ ${2:-} == stable || ${2:-} == dev ]]; then
+                CHANNEL=$2
+                shift
+            elif [[ -n ${2:-} && ${2:-} != -* ]]; then
+                echo "The channels are stable and dev" >&2
+                exit 2
+            fi
+            ;;
         -h | --help) usage ;;
         *)
             echo "Unknown option: $1" >&2
@@ -96,7 +109,7 @@ if $DRY; then # a dry run detects into a throwaway copy, so nothing in ~ changes
     trap 'rm -f "$HW_FILE"' EXIT
     [[ -f $real ]] && cp "$real" "$HW_FILE"
 fi
-case $CMD in install | update | detect) detect_write ;; esac
+case $CMD in install | update | channel | detect) detect_write ;; esac
 [[ -s $HW_FILE || $CMD == doctor ]] || detect_write # the first modules / backups call; the doctor reports a missing file instead
 for m in ${WITH//,/ }; do
     [[ -d $REPO/modules/$m ]] || {
@@ -135,6 +148,16 @@ case $CMD in
         trap 'on_fail $LINENO "$BASH_COMMAND"' ERR
         update
         finish "Updated."
+        ;;
+    channel)
+        if [[ -z $CHANNEL ]]; then
+            channel ""
+        else
+            start_log
+            trap 'on_fail $LINENO "$BASH_COMMAND"' ERR
+            channel "$CHANNEL"
+            finish "Channel: $(channel_now)."
+        fi
         ;;
     install)
         start_log

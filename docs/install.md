@@ -165,9 +165,26 @@ Details, and what each one changes and how to undo it: [modules.md](modules.md).
 ./install.sh update
 ```
 
-It pulls Hyprism (only when the repo has no local changes), updates the whole system, runs new migrations, adds
+It pulls Hyprism (only when the repo has no edited files), updates the whole system, runs new migrations, adds
 new packages, relinks, runs module steps that are new or changed (asked first), and ends with the doctor. The same
-thing is **Settings → About → Update**.
+thing is **Settings → About → Update**. Settings → About also says when there are new changes (it looks every
+6 hours and when the page opens; About gets a dot in the sidebar) and lists them.
+
+### Channels: stable or dev
+
+```bash
+./install.sh channel          # which one this copy follows
+./install.sh channel dev      # switch, then update
+```
+
+| Channel | Branch | What you get |
+|---|---|---|
+| `stable` | `main` | tested releases; a fresh clone starts here |
+| `dev` | `develop` | the newest work, days or weeks before stable; it can break |
+
+Switching asks first, needs a repo with no edited files, and runs a full update. The same switch is **Settings →
+About → Channel**. Going from dev back to stable leaves your settings as dev's migrations left them. `rollback`
+undoes an update, not a switch: to undo a switch, switch back.
 
 A migration is a one-time change that moves your files to a newer layout. Each runs once and is listed before it runs.
 
@@ -175,7 +192,7 @@ A migration is a one-time change that moves your files to a newer layout. Each r
 ./install.sh rollback
 ```
 
-goes back to the Hyprism version from before the last update. It does not touch system packages: on Arch with
+goes back to the Hyprism version from before the last update (on the same channel). It does not touch system packages: on Arch with
 btrfs, use your snapshots for those (the doctor says whether you have them).
 
 ## Removing

@@ -6,6 +6,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Update channels: stable (branch `main`) and dev (branch `develop`, newest work first). `./install.sh channel dev`
+  or Settings → About → Channel switches and updates. Settings → About says when Hyprism has new changes, lists them,
+  and puts a dot on About in the sidebar.
 - Window Look: border styles Neon (accent with a glow), Mono, Sunset, Ocean and your own two or three colours, each with a
   live preview; an angle for frames of several colours and an explicit "Turn the colours" switch (a saved turning
   rainbow keeps turning). Title bars follow the theme (surface, text, type, height from its density, dimmer titles and
@@ -116,6 +119,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- `./install.sh update`: an untracked file in the repo no longer stops the pull, and a copy with commits the channel
+  doesn't have is reported at the end instead of stopping the update.
 - Power modes are named Silent, Balanced and Performance everywhere in Settings.
 - The power-profile item opens the battery flyout instead of cycling blind; the power modes read Silent, Balanced,
   Performance (the asusctl id stays `quiet`). The battery item opens its flyout instead of Settings → Power; the

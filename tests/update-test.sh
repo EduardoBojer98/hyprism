@@ -8,6 +8,8 @@
 #      ~/.config; the doctor is clean; a second run runs no migration
 #   4. rollback: after one more (empty) commit, `rollback --yes` returns to the recorded commit, drops previous-commit,
 #      and the doctor is still clean
+#   5. channels: against a remote with main and develop, `channel dev` switches and updates, `update` pulls a
+#      new develop commit (an untracked file in the way of nothing doesn't stop it), `channel stable` goes back
 #
 # Needs the repo's history and the tag v1.1.0 (CI checks out with fetch-depth: 0 and fetch-tags: true).
 # A git worktree has no history inside the container: the test says so and passes without running.
@@ -68,4 +70,23 @@ as './install.sh rollback --yes' desktop-amd || fail "rollback ended with an err
 [[ $(as 'git rev-parse HEAD') == "$before" ]] || fail "rollback did not return to the recorded commit"
 [[ ! -e $state/previous-commit ]] || fail "rollback left previous-commit behind"
 as './install.sh doctor' desktop-amd || fail "the doctor found problems after the rollback"
+
+echo "===== CHANNELS (stable = main, dev = develop)"
+# a remote of its own: main is this code, develop is one commit further
+remote=/opt/hyprism-remote.git
+git init -q --bare $remote && chown -R tester: $remote
+commit() { as "git -c user.name=t -c user.email=t@t commit-tree HEAD^{tree} -p $1 -m '$2'"; }
+dev=$(commit "$before" "dev work")
+as "git remote set-url origin $remote && git push -q origin $before:refs/heads/main $dev:refs/heads/develop && git fetch -q origin && git branch -q -u origin/main"
+[[ $(as './install.sh channel') == "stable (main)" ]] || fail "channel did not say stable (main)"
+as './install.sh channel dev --yes' desktop-amd || fail "switching to dev ended with an error"
+[[ $(as 'git rev-parse --abbrev-ref HEAD')/$(as 'git rev-parse HEAD') == "develop/$dev" ]] || fail "dev is not develop at its newest commit"
+[[ ! -e $state/previous-commit ]] || fail "a channel switch left a rollback point (rollback is for updates)"
+dev2=$(commit "$dev" "more dev work")
+as "git push -q origin $dev2:refs/heads/develop && touch untracked-file"
+as './install.sh update --yes' desktop-amd || fail "update on dev ended with an error"
+[[ $(as 'git rev-parse HEAD') == "$dev2" ]] || fail "update did not pull develop's new commit (an untracked file must not stop it)"
+[[ $(cat $state/previous-commit) == "$dev" ]] || fail "update did not record the commit before it"
+as './install.sh channel stable --yes' desktop-amd || fail "switching back to stable ended with an error"
+[[ $(as 'git rev-parse --abbrev-ref HEAD')/$(as 'git rev-parse HEAD') == "main/$before" ]] || fail "stable is not main"
 echo "PASSED (update from v1.1.0 to ${new_sha:0:9})"

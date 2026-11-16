@@ -76,7 +76,7 @@ Singleton {
         { id: "apps",          name: "Default Apps",        glyph: "\u{F003B}", keys: "browser mail terminal file manager task manager open with default" },
         { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}", keys: "autostart login start on login" },
         { id: "language",      name: "Language & Region",   glyph: "\u{F05CA}", keys: "locale formats date numbers timezone time zone region clock format" },
-        { id: "about",         name: "About",               glyph: "\u{F02FD}", keys: "system version hardware update upgrade doctor reinstall version repo" },
+        { id: "about",         name: "About",               glyph: "\u{F02FD}", keys: "system version hardware update upgrade doctor reinstall version repo channel stable dev develop beta" },
     ]
     // search: pages whose name, group or words match every word typed
     property string query: ""
@@ -259,6 +259,13 @@ Singleton {
                                                 text: modelData.glyph
                                                 color: current ? Theme.accentText : Theme.text
                                                 font { family: Theme.iconFont; pixelSize: Theme.iconSmall - 2 }
+                                            }
+                                            Rectangle {   // Hyprism has updates (Settings > About says which)
+                                                visible: modelData.id === "system" && Updates.count > 0
+                                                anchors { right: parent.right; top: parent.top; margins: -3 }
+                                                width: 9; height: 9; radius: 4.5
+                                                color: Theme.accent
+                                                border { color: Theme.base; width: 1.5 }
                                             }
                                         }
                                         Text {
