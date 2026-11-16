@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Retakes the README pictures from the current code, in a throwaway nested test desktop (tests/nested.sh, session
 # "r", 2400x1500): docs/screenshots/themes/<id>-<mode>.webp for every theme and both modes (launcher open over
-# the wallpaper), then docs/screenshots/features/*.webp in Pebble dark. Needs ImageMagick (magick).
+# the wallpaper), then docs/screenshots/features/*.webp in Monolith dark. Needs ImageMagick (magick).
 # Hyprland's "started without start-hyprland" banner is gone after one config reload, so the script reloads once.
 # Not part of tests/lint.sh: it opens a window and takes a minute or two. Run by hand: tests/screenshots.sh
 set -euo pipefail
@@ -53,8 +53,8 @@ for dir in themes/*/; do
     done
 done
 
-# Features: Pebble dark
-$n ipc config set appearance theme pebble >/dev/null
+# Features: Monolith dark
+$n ipc config set appearance theme monolith >/dev/null
 $n ipc config set appearance mode dark >/dev/null
 sleep 3
 
