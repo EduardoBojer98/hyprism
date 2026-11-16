@@ -195,9 +195,9 @@ Singleton {
         if (ok(o.shadow)) r.hypr.shadow = o.shadow
         if (ok(o.blur)) r.hypr.blur = o.blur
         applyBar(r, o)
-        // the one layout you set for every theme (Settings > Menu Bar) goes over the theme's own and its adjustments
-        if (layout && Object.keys(layout).length)
-            applyBar(r, { barEdge: layout.edge, barSize: layout.size, barFloating: layout.floating, barItems: layout, dock: layout.dock })
+        // the item lists you set for every theme (Settings > Menu Bar) go over the theme's own; the bar's shape
+        // (edge, size, floating, dock place) stays the theme's, with this theme's own adjustments (above)
+        if (layout && Object.keys(layout).length) applyBar(r, { barItems: layout })
         return r
     }
     // WCAG relative luminance and contrast ratio

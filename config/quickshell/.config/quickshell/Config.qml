@@ -283,6 +283,24 @@ Singleton {
             if (adapter.windows.border === "rainbow") adapter.windows.borderAnimate = true
             adapter.version = 5
         }
+        // format 6 (bar): bar.layout held one bar shape for every theme; now the shape (edge, size, floating, the
+        // dock's place) belongs to each theme and bar.layout keeps only the item lists. The saved shape moves into
+        // the current theme's adjustments, so nothing on screen changes; other themes get their own shape back.
+        if ((raw?.version ?? 1) < 6) {
+            const l = JSON.parse(JSON.stringify(adapter.bar.layout ?? {})), mine = {}
+            if (["top", "bottom", "left", "right"].includes(l.edge)) mine.barEdge = l.edge
+            if (typeof l.size === "number") mine.barSize = l.size
+            if (typeof l.floating === "boolean") mine.barFloating = l.floating
+            if (typeof l.dock === "string" && l.dock !== "") mine.dock = l.dock
+            for (const k of ["edge", "size", "floating", "dock"]) delete l[k]
+            if (Object.keys(mine).length) {
+                const all = JSON.parse(JSON.stringify(a.custom ?? {}))
+                all[a.theme] = Object.assign(all[a.theme] ?? {}, mine)
+                a.custom = all
+            }
+            adapter.bar.layout = l
+            adapter.version = 6
+        }
         // before 2026-11-15 the weather had one place and two switches
         const rw = raw?.weather ?? {}
         if (rw.locations === undefined && typeof rw.city === "string" && typeof rw.latitude === "number" && typeof rw.longitude === "number")

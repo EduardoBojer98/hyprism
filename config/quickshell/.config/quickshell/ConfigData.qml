@@ -3,7 +3,7 @@ import Quickshell.Io
 // Defaults for every desktop option (Config.qml). A key missing from settings.json takes the
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
-    property int version: 5                     // settings format; Config.repair() upgrades older files
+    property int version: 6                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
         property string theme: "pebble"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)

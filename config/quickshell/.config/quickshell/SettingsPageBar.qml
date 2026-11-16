@@ -2,7 +2,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
-// Menu Bar: one bar for every screen and theme. First its items and the picked item's own settings, then where it
+// Menu Bar: the items are one layout for every theme; place, size and shape belong to each theme. First its items and the picked item's own settings, then where it
 // sits, its size and shape (all saved in Config.bar.layout by the first change; "Use the theme's" puts the theme's
 // own back), starting points, and a list of its own or no bar per screen.
 ColumnLayout {
@@ -34,7 +34,7 @@ ColumnLayout {
         title: "Place"
         SettingRow {
             label: "Position"
-            hint: "For every screen and theme"
+            hint: "For " + Theme.current.name + " on every screen: each theme keeps its own place, size and shape"
             Choice {
                 readonly property var values: ["top", "bottom", "left", "right"]
                 options: ["Top", "Bottom", "Left", "Right"]

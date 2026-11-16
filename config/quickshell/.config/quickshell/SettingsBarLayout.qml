@@ -62,7 +62,7 @@ ColumnLayout {
         SettingRow {
             visible: Theme.hasLayout
             label: "Use " + Theme.current.name + "'s own bar"
-            hint: "Your layout is kept when you switch theme. This puts back the items, place, size and shape " + Theme.current.name + " came with"
+            hint: "Your items are kept when you switch theme; place, size and shape follow each theme. This puts back the items, place, size and shape " + Theme.current.name + " came with"
             PillButton { text: "Use the theme's"; onClicked: Theme.useThemeLayout() }
         }
         SettingRow {

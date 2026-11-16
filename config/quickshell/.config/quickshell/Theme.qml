@@ -139,15 +139,29 @@ Singleton {
     // the one global layout: { edge, size, floating, dock, start, center, end } in Config.bar.layout, empty while
     // the theme's own is in use. The first edit copies what is on screen now, so nothing jumps.
     readonly property bool hasLayout: Object.keys(cb.layout ?? {}).length > 0
+    // The item lists are one layout for every theme (bar.layout). The bar's shape (edge, size, floating, the dock's
+    // place) belongs to each theme: a change goes into this theme's adjustments, so switching theme brings its own.
     function layoutNow() {
-        return { edge: barEdge, size: barSize, floating: barFloating, dock: dockMode,
-                 start: Array.from(barStyle.start), center: Array.from(barStyle.center), end: Array.from(barStyle.end) }
+        return { start: Array.from(barStyle.start), center: Array.from(barStyle.center), end: Array.from(barStyle.end) }
     }
     function setLayout(patch) {   // "" when saved, else why not
-        const l = Object.assign(layoutNow(), patch)
-        if (patch.edge && patch.edge !== barEdge && !patch.size && (patch.edge === "left" || patch.edge === "right") !== barVertical)
-            l.size = barVertical ? Math.min(barSize, 44) : Math.max(barSize, 44)   // a rail's width is not a strip's height
-        return Config.set("bar", "layout", l)
+        const p = Object.assign({}, patch)
+        if (p.edge && p.edge !== barEdge && p.size === undefined && (p.edge === "left" || p.edge === "right") !== barVertical)
+            p.size = barVertical ? Math.min(barSize, 44) : Math.max(barSize, 44)   // a rail's width is not a strip's height
+        const shape = { edge: "barEdge", size: "barSize", floating: "barFloating", dock: "dock" }
+        let err = ""
+        if (Object.keys(shape).some(k => p[k] !== undefined)) {   // one write for this theme's adjustments
+            const all = JSON.parse(JSON.stringify(Config.appearance.custom ?? {})), id = Config.appearance.theme, o = all[id] ?? {}
+            for (const k of Object.keys(shape)) if (p[k] !== undefined) o[shape[k]] = p[k]
+            all[id] = o
+            err = Config.set("appearance", "custom", all)
+        }
+        if (["start", "center", "end"].some(k => p[k] !== undefined)) {
+            const l = layoutNow()
+            for (const k of ["start", "center", "end"]) if (p[k] !== undefined) l[k] = Array.from(p[k])
+            err = Config.set("bar", "layout", l) || err
+        }
+        return err
     }
     // back to the active theme's own bar: drops the global layout and this theme's old per-theme bar adjustments
     function useThemeLayout() {
