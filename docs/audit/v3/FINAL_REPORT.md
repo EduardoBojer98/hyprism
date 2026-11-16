@@ -216,3 +216,31 @@ TypeError in `shell.qml`; Wi-Fi row warnings; 24-hour time reachable from the Lo
 
 Not verified by a real pointer: dragging in the bar editor, the quick-settings click, Springy overshoot on real
 panels (checked in the preview cards), an area selection with the mouse.
+
+## 12. Second round of requests (2026-11-15 evening to 2026-11-16)
+
+| Request | Done |
+|---|---|
+| Second colour choices; Monolith's second colour | a palette for the second colour (Settings > Appearance); Monolith's is electric blue `#4f8cff` |
+| Monolith workspaces, Caffeine spacing, dividers, quick tools icon, default layout | reticle workspace marker; Caffeine cup spaced in the status cluster; quiet pips; widgets glyph; the owner's layout is Monolith's default (apps left, no active window) |
+| System info item | CPU and GPU temperature by default; System panel leads with four vitals, graphics cards by real name (PCI ids, a sleeping card is never woken), labelled detail grid |
+| Bar items many times, each independent | `id#n` copies with their own settings; each anchors its own panel |
+| Clock customizer, floating-bar overflow | per-clock time, date parts, order, separator or an own Qt pattern, with preview; a block clock is now exactly the bar's height |
+| Bar and dock size sliders | `PresetSlider.qml`: presets over a slider, a chip lights on an exact match |
+| Dock: names instead of icon + title | `dock.nameOnly`, in the dock and the bar's dock |
+| Control Center redesign | large / small tiles from one tile list, Screen and Sound cards, a live arrange editor; Screen, Sound and Power fold to one line; Dark mode, Microphone, Airplane, Clipboard, Text, Emoji buttons |
+| Notifications page | test buttons, six styles with previews, position, per-urgency timeouts and sounds, max on screen, group by app, icons, a Do Not Disturb schedule |
+| Icon and cursor theme per theme | `icons` / `cursor` in theme.json; Settings "Theme's own" by default |
+| Monolith launcher, launcher options | centred terminal-HUD palette; the full-width style removed; suggestions before you type by default; every option checked |
+| Menu Bar editor hover glitch, hide | a HoverHandler keeps the row hovered; an eye hides an item in place |
+| Title bars fit the theme | colours, font and height from the theme, live; Size / Buttons side / Title alignment settings |
+| Border on/off and more styles | neon, mono, sunset, ocean, custom; angle; "Turn the colours" switch |
+| Shared monitor toggle with no picture on HDMI 2 | the hand-off is checked against the monitor's input; no mirror is left behind |
+
+Bugs found on the way: the notification badge counted dismissed notifications; `~/.local/bin` was not on
+Hyprland's PATH under greetd (screenshots, `hypr-plugins` and `hypr-crashlog` never ran: title-bar plugins were
+not loaded until now); `shell.qml` wrote a read-only property at start.
+
+Not verified with a real pointer or device: mouse drags in the editors, the Screen card's brightness on the
+laptop (seen live only before the redesign), the monitor switch on the real monitor, title-bar buttons after a
+fresh login, notification sounds.
