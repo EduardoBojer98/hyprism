@@ -65,15 +65,16 @@ ColumnLayout {
         SettingRow {   // the named sizes over a slider for any size between: a size of your own lights no preset
             visible: Config.dock.enabled && !page.inBar
             label: "Size"
-            hint: Config.dock.iconSize + " px icons" + (dockSize.custom ? ", your own size" : "")
+            hint: Config.dock.iconSize + " px icons" + (dockSize.values.includes(Config.dock.iconSize) ? "" : ", your own size")
             PresetSlider {
                 id: dockSize
                 values: [36, 44, 52, 60]
-                labels: ["Small", "Medium", "Large", "Huge"]
+                options: ["Small", "Medium", "Large", "Huge"]
                 from: 24; to: 72
                 value: Config.dock.iconSize
+                unit: "px"
                 accessibleName: "Dock size"
-                onPicked: v => Config.set("dock", "iconSize", v)
+                onPicked: v => Config.set("dock", "iconSize", Math.round(v))
             }
         }
         SettingRow {

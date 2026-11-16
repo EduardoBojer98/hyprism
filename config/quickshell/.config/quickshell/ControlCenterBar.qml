@@ -3,9 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center building block (used by ControlCenter.qml and its parts).
-// Slider row: an icon well (click it to mute when there is a hint), a track with a handle, the value, and
-// (expandable) a chevron that opens its device list. The whole row height grabs the track; the wheel and
-// Left / Right (Tab to it) step by 5 %.
+// Slider row: the icon (click it to mute when there is a hint), a thick track whose accent fill carries the
+// handle at its end, the value, and (expandable) a chevron that opens its device list. The whole row height
+// grabs the track; the wheel and Left / Right (Tab to it) step by 5 %.
 Item {
     id: bar
     property real value: 0
@@ -37,7 +37,7 @@ Item {
         id: well
         anchors { left: parent.left; verticalCenter: parent.verticalCenter }
         width: Theme.ccWell; height: Theme.ccWell; radius: Theme.radiusSmall
-        color: wellArea.pressed ? Theme.fillActive : wellArea.containsMouse ? Theme.fillHover : Theme.fill
+        color: wellArea.pressed ? Theme.fillActive : wellArea.containsMouse ? Theme.fillHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.animFast } }
         Text {
             anchors.centerIn: parent
@@ -59,17 +59,17 @@ Item {
         }
     }
 
-    Item {   // the track, with the handle riding on it; the hit area is the whole row height
+    Item {   // the track, with the handle riding at the end of its fill; the hit area is the whole row height
         id: slide
-        anchors { left: well.right; leftMargin: Theme.spaceS + bar.knob / 2; right: valueText.left; rightMargin: Theme.spaceS + bar.knob / 2; top: parent.top; bottom: parent.bottom }
+        anchors { left: well.right; leftMargin: Theme.spaceXs + bar.pad; right: valueText.left; rightMargin: Theme.spaceS + bar.pad; top: parent.top; bottom: parent.bottom }
         Rectangle {
             id: track
-            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: -bar.knob / 2; rightMargin: -bar.knob / 2 }
+            anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: -bar.pad; rightMargin: -bar.pad }
             height: Theme.ccTrack
             radius: bar.round ? height / 2 : 0
             color: Theme.fillActive
-            Rectangle {
-                width: bar.knob / 2 + slide.width * bar.v
+            Rectangle {   // the fill: from the left edge to the handle, with room for the handle at 0 %
+                width: slide.width * bar.v + bar.pad * 2
                 height: parent.height
                 radius: parent.radius
                 color: Theme.selected
@@ -81,24 +81,24 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: bar.knob; height: bar.knob
             radius: bar.round ? width / 2 : 0
-            color: Theme.thumb
-            border { color: Theme.selectInverse ? Theme.selected : Theme.light ? Theme.stroke : "transparent"; width: Theme.selectInverse ? Math.max(2, Theme.line) : 1 }
-            scale: dragArea.pressed ? 1.12 : dragArea.containsMouse || bar.activeFocus ? 1.06 : 1
+            color: Theme.accentText   // reads on the fill it rides on, in every theme
+            scale: dragArea.pressed ? 1.15 : dragArea.containsMouse || bar.activeFocus ? 1.08 : 1
             Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         }
         MouseArea {
             id: dragArea
-            anchors { fill: parent; leftMargin: -bar.knob / 2; rightMargin: -bar.knob / 2 }
+            anchors { fill: parent; leftMargin: -bar.pad; rightMargin: -bar.pad }
             cursorShape: Qt.PointingHandCursor
             hoverEnabled: true
             preventStealing: true
             Accessible.ignored: true
-            function set(x) { bar.moved(Math.max(0, Math.min(1, (x - bar.knob / 2) / slide.width))) }
+            function set(x) { bar.moved(Math.max(0, Math.min(1, (x - bar.pad) / slide.width))) }
             onPressed: mouse => set(mouse.x)
             onPositionChanged: mouse => { if (pressed) set(mouse.x) }
             onWheel: wheel => bar.moved(Math.max(0, Math.min(1, bar.v + (wheel.angleDelta.y > 0 ? 0.05 : -0.05))))
         }
     }
+    readonly property real pad: Theme.ccTrack / 2   // the track's rounded end: the handle's centre stops this far in
     readonly property int knob: Theme.ccKnob
 
     Text {

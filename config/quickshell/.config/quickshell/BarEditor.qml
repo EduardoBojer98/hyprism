@@ -3,11 +3,12 @@ import QtQuick.Layouts
 
 // The menu bar's items, edited by hand: a small copy of the bar in its own colours, and under it the bar's
 // three sections as lists. Drag an item to another place, drag one in from "Add to the bar" (or click it), drag
-// one back there (or press its ×) to take it off; by keyboard, Alt+arrows move the focused item and Delete takes
+// one back there (or press its ×) to take it off, or its eye to hide it in place; by keyboard, Alt+arrows move the focused item and Delete takes
 // it off. Every change saves at once and the real bar follows. By default it edits the one layout every screen
 // and theme shares (Theme.setLayout); with `screen` set it edits that screen's own list (Config.bar.monitors).
 // "Apps" is the dock itself: adding it puts the dock in the bar; it leaves the bar only by moving the dock
-// (Settings > Dock).
+// (Settings > Dock). Every other item can be added again and again: each copy is an instance with settings of its
+// own ("clock", "clock#2", BarItems.newId); a copy's settings go when it leaves the last list it was on.
 ColumnLayout {
     id: ed
     spacing: 10
@@ -25,7 +26,8 @@ ColumnLayout {
     readonly property var used: [].concat(Array.from(layout.start), Array.from(layout.center), Array.from(layout.end))
     // the item the settings below are for: the pick, or the bar's first item
     readonly property string current: used.includes(selected) ? selected : (used[0] ?? "")
-    readonly property var unused: Themes.barItems.filter(it => !used.includes(it.id))
+    // "Add to the bar": every item, always (one already on the bar is added as a new copy); the dock only once
+    readonly property var unused: Themes.barItems.filter(it => it.id !== "apps" || !used.includes("apps"))
     // the tray, one group per category that still has unused items (an item's category is in its defaults.json)
     readonly property var unusedGroups: BarItems.categories.concat(unused.map(it => it.category).filter(c => !BarItems.categories.includes(c)))
         .map(c => ({ name: c, items: unused.filter(it => it.category === c) })).filter(g => g.items.length)
@@ -37,6 +39,15 @@ ColumnLayout {
     function lists() {
         return { start: Array.from(layout.start), center: Array.from(layout.center), end: Array.from(layout.end) }
     }
+    // every id on any list (the shared one and each screen's own): a new copy takes none of them
+    function taken() {
+        const all = [].concat(Array.from(Theme.barLayout.start), Array.from(Theme.barLayout.center), Array.from(Theme.barLayout.end))
+        for (const m of Object.values(Config.bar.monitors ?? {}))
+            if (m && typeof m === "object") for (const k of keys) all.push(...Array.from(m[k] ?? []))
+        return all
+    }
+    // the id an item from the tray gets on this list
+    function fresh(id) { return BarItems.newId(id, used, taken()) }
     // extra: geometry that goes with the change (the dock into the bar); it is global even on a screen's own list
     function save(l, extra) {
         if (!onScreen) { Theme.setLayout(Object.assign({}, l, extra ?? {})); return }
@@ -48,13 +59,21 @@ ColumnLayout {
     function drop(p, section, index) {
         if (p.id === "apps" && section === "tray") return   // the dock: moved on the Dock page
         const l = lists()
-        if (p.from !== "tray") {
+        if (p.from === "tray") p = { id: fresh(p.id), from: "tray" }
+        else {
             const at = l[p.from].indexOf(p.id)
             if (at < 0) return
             l[p.from].splice(at, 1)
             if (p.from === section && index > at) index--
         }
-        if (section === "tray") { save(l); return }
+        if (section === "tray") {
+            save(l)
+            if (p.id.includes("#") && !taken().includes(p.id) && Config.bar.items?.[p.id] !== undefined) {   // a copy gone for good
+                const all = JSON.parse(JSON.stringify(Config.bar.items)); delete all[p.id]
+                Config.set("bar", "items", all)
+            }
+            return
+        }
         if (index < 0 || index > l[section].length) index = l[section].length
         l[section].splice(index, 0, p.id)
         save(l, p.id === "apps" && !Theme.dockInBar ? { dock: "bar" } : undefined)
@@ -96,7 +115,7 @@ ColumnLayout {
                         width: 24; height: 26
                         Text {
                             anchors.centerIn: parent
-                            text: Themes.barItem(parent.modelData).glyph
+                            text: BarItems.info(parent.modelData).glyph
                             color: parent.picked ? Theme.accent : Qt.alpha(ed.ink, 0.8)
                             font { family: Theme.iconFont; pixelSize: 15 }
                         }
@@ -129,7 +148,7 @@ ColumnLayout {
     }
     Text {
         Layout.fillWidth: true
-        text: "Drag to arrange. Keyboard: Alt+arrows move the focused item, Delete takes it off."
+        text: "Drag to arrange; the eye hides an item but keeps its place. Keyboard: Alt+arrows move, H hides, Delete takes it off."
               + (ed.onScreen ? " Editing " + ed.screen + " only."
                  : Theme.hasLayout ? "" : " This is " + Theme.current.name + "'s own bar until your first change.")
         color: Theme.subtext
@@ -156,7 +175,7 @@ ColumnLayout {
                 wrapMode: Text.Wrap
                 textFormat: Text.StyledText
                 text: "<b>Add to the bar</b>&nbsp;&nbsp;<font color='" + Theme.subtext + "'>"
-                      + (ed.unused.length ? "Click one to add it at the end, or drag it into place" : "Every item is on the bar. Drag one here to take it off") + "</font>"
+                      + "Click one to add it at the end, or drag it into place. One already on the bar is added again, with its own settings" + "</font>"
                 color: Theme.text
                 font { family: Theme.font; pixelSize: Theme.fontLabel }
             }
@@ -245,15 +264,30 @@ ColumnLayout {
         }
     }
 
-    // one item: on the bar a full-width row (handle, icon, name, ×); in the tray a pill with a +
+    // hidden: still in its place on the bar, but the bar leaves it out (bar.items[id].enabled = false)
+    function isHidden(id) { return Config.bar.items?.[id]?.enabled === false }
+    function setHidden(id, hide) {
+        const all = JSON.parse(JSON.stringify(Config.bar.items ?? {})), o = all[id] ?? {}
+        if (hide) o.enabled = false; else delete o.enabled
+        if (Object.keys(o).length) all[id] = o; else delete all[id]
+        Config.set("bar", "items", all)
+    }
+
+    // one item: on the bar a full-width row (handle, icon, name, eye, ×); in the tray a pill with a +
     component Chip: DragItem {
         id: chip
         property string itemId
         property string from
         property bool onBar: true
-        readonly property var info: Themes.barItem(itemId)
+        readonly property var info: BarItems.info(itemId)
         readonly property bool picked: onBar && itemId === ed.current
         readonly property bool removable: onBar && itemId !== "apps"
+        readonly property bool hiddenItem: onBar && ed.isHidden(itemId)
+        // the row's hover from a handler: the buttons' own MouseAreas can't take it away (a MouseArea hover did,
+        // so the × hid itself as the pointer reached it, then came back: a flicker)
+        readonly property bool over: rowHover.hovered
+        readonly property bool showButtons: onBar && (over || picked || activeFocus === true)
+        HoverHandler { id: rowHover }
         signal droppedHere(var p, bool after)
         key: "baritem"
         payload: ({ id: itemId, from: from })
@@ -277,6 +311,7 @@ ColumnLayout {
                 ed.focusId = l[at + 1] ?? l[at - 1] ?? ""
                 ed.drop({ id: itemId, from: from }, "tray", -1)
             }
+            else if (e.key === Qt.Key_H && !alt) ed.setHidden(itemId, !hiddenItem)
             else if (alt && e.key === Qt.Key_Up) ed.step(itemId, from, -1)
             else if (alt && e.key === Qt.Key_Down) ed.step(itemId, from, 1)
             else if (alt && e.key === Qt.Key_Left) ed.hop(itemId, from, -1)
@@ -290,7 +325,7 @@ ColumnLayout {
         Rectangle {
             anchors.fill: parent
             radius: chip.radius
-            color: chip.picked ? Theme.accentWash : chip.hovered ? Theme.fillHover : chip.onBar ? Theme.raised : "transparent"
+            color: chip.picked ? Theme.accentWash : chip.over ? Theme.fillHover : chip.onBar ? Theme.raised : "transparent"
             border { color: chip.picked ? Theme.accent : Theme.stroke; width: chip.picked ? 2 : 1 }
             Rectangle {   // keyboard focus
                 anchors { fill: parent; margins: -3 }
@@ -306,7 +341,7 @@ ColumnLayout {
                 visible: chip.onBar
                 anchors { left: parent.left; leftMargin: 4; verticalCenter: parent.verticalCenter }
                 text: "\u{F01DD}"
-                color: Qt.alpha(Theme.text, chip.hovered ? 0.5 : 0.28)
+                color: Qt.alpha(Theme.text, chip.over ? 0.5 : 0.28)
                 font { family: Theme.iconFont; pixelSize: 14 }
             }
             Text {
@@ -317,15 +352,40 @@ ColumnLayout {
                 horizontalAlignment: Text.AlignHCenter
                 text: chip.info.glyph
                 color: chip.picked ? Theme.accent : Theme.text
+                opacity: chip.hiddenItem ? 0.4 : 1
                 font { family: Theme.iconFont; pixelSize: 15 }
             }
             Text {
                 visible: chip.onBar
-                anchors { left: glyph.right; leftMargin: 8; right: chip.removable ? cross.left : parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+                anchors { left: glyph.right; leftMargin: 8; right: eye.left; rightMargin: 4; verticalCenter: parent.verticalCenter }
                 elide: Text.ElideRight
-                text: chip.info.name
-                color: Theme.text
+                text: chip.info.name + (chip.hiddenItem ? " · hidden" : "")
+                color: chip.hiddenItem ? Theme.subtext : Theme.text
                 font { family: Theme.font; pixelSize: Theme.fontLabel; weight: chip.picked ? Font.DemiBold : Font.Normal }
+            }
+            Rectangle {   // hide it without taking it off: it keeps its place and settings (shown while hidden, so you can bring it back)
+                id: eye
+                visible: chip.onBar
+                anchors { right: chip.removable ? cross.left : parent.right; rightMargin: chip.removable ? 2 : 4; verticalCenter: parent.verticalCenter }
+                width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall)
+                color: eyeArea.containsMouse ? Theme.fillHover : "transparent"
+                opacity: chip.showButtons || chip.hiddenItem ? 1 : 0
+                Text {
+                    anchors.centerIn: parent
+                    text: chip.hiddenItem ? "\u{F0209}" : "\u{F0208}"   // eye-off / eye
+                    color: eyeArea.containsMouse || chip.hiddenItem ? Theme.text : Theme.subtext
+                    font { family: Theme.iconFont; pixelSize: 14 }
+                }
+                MouseArea {
+                    id: eyeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    Accessible.role: Accessible.Button
+                    Accessible.name: (chip.hiddenItem ? "Show " : "Hide ") + chip.info.name
+                    onClicked: ed.setHidden(chip.itemId, !chip.hiddenItem)
+                }
+                ToolTipText { shown: eyeArea.containsMouse; text: chip.hiddenItem ? "Show it on the bar" : "Hide it (keeps its place)" }
             }
             Rectangle {   // take it off the bar without dragging
                 id: cross
@@ -333,7 +393,7 @@ ColumnLayout {
                 anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
                 width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall)
                 color: crossArea.containsMouse ? Qt.alpha(Theme.error, 0.18) : "transparent"
-                opacity: chip.hovered || chip.picked || chip.activeFocus ? 1 : 0
+                opacity: chip.showButtons ? 1 : 0
                 Text {
                     anchors.centerIn: parent
                     text: "\u{F0156}"
@@ -343,7 +403,6 @@ ColumnLayout {
                 MouseArea {
                     id: crossArea
                     anchors.fill: parent
-                    enabled: parent.opacity > 0
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     Accessible.role: Accessible.Button
@@ -365,8 +424,9 @@ ColumnLayout {
         }
         // on the bar a click picks it for its settings; in the tray it adds it to the end of the bar's last section
         onClicked: {
-            if (!onBar) { ed.focusId = activeFocus ? itemId : ""; ed.drop({ id: itemId, from: "tray" }, "end", -1) }
-            ed.selected = itemId
+            const id = onBar ? itemId : ed.fresh(itemId)
+            if (!onBar) { ed.focusId = activeFocus ? id : ""; ed.drop({ id: itemId, from: "tray" }, "end", -1) }
+            ed.selected = id
         }
         DropSpot { anchors.fill: parent; key: "baritem"; owner: chip; vertical: true; enabled: chip.onBar && !chip.dragging; onPlaced: (p, after) => chip.droppedHere(p, after) }
     }

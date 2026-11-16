@@ -84,9 +84,21 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `dnd` | `bool` | `false` |  |
-| `timeoutSec` | `int` | `6` |  |
+| `timeoutSec` | `int` | `6` | how long a normal popup stays (s) |
+| `timeoutLowSec` | `int` | `4` | how long a low-priority popup stays (s) |
+| `timeoutCriticalSec` | `int` | `0` | how long a critical popup stays (s); 0 = until dismissed |
+| `maxVisible` | `int` | `4` | popups on screen at once; the rest wait in the notification centre |
+| `groupByApp` | `bool` | `true` | one popup per app (with a count) and the history grouped by app |
+| `showIcons` | `bool` | `true` | the app's icon or the notification's picture |
+| `style` | `string` | `"theme"` | popup look: theme \| card \| bubble \| line \| block \| tag \| compact |
+| `position` | `string` | `"theme"` | theme \| top-left \| top \| top-right \| bottom-left \| bottom \| bottom-right |
+| `dndSchedule` | `bool` | `false` | Do Not Disturb every day between dndFrom and dndTo |
+| `dndFrom` | `string` | `"22:00"` |  |
+| `dndTo` | `string` | `"07:00"` |  |
 | `historyMax` | `int` | `100` |  |
-| `sound` | `string` | `"message-new-instant"` | a freedesktop sound name (Notifications.sounds), "" = none |
+| `sound` | `string` | `"message-new-instant"` | normal priority: a freedesktop sound name (Notifications.sounds), "" = none |
+| `soundLow` | `string` | `""` | low priority sound, "" = none |
+| `soundCritical` | `string` | `"window-attention"` | critical sound, "" = none |
 | `volume` | `int` | `60` | % |
 | `mutedApps` | `list<string>` | `[]` | app names that only go to the notification centre |
 
@@ -129,8 +141,8 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `width` | `int` | `330` | panel width in px (280..460) |
 | `sections` | `list<string>` | `[]` |  |
 | `tiles` | `list<string>` | `[]` |  |
+| `sliders` | `list<string>` | `[]` |  |
 | `toggles` | `list<string>` | `[]` |  |
-| `shortcuts` | `list<string>` | `[]` |  |
 | `hidden` | `list<string>` | `["colorpicker", "mission"]` |  |
 
 ## lockscreen
@@ -228,12 +240,11 @@ Every setting, with its type, default and meaning. This file is generated from `
 | --- | --- | --- | --- |
 | `margin` | `int` | `8` | gap around a floating bar, px |
 | `hiddenOn` | `list<string>` | `[]` | monitor names (e.g. "eDP-1") without a bar |
-| `clock24` | `bool` | `true` |  |
-| `seconds` | `bool` | `false` |  |
-| `date` | `string` | `"full"` | "full" (Fri 30 Oct), "short" (30 Oct) or "none" |
+| `clock24` | `bool` | `true` | 24-hour time: the lock screen's, and a bar clock's until it has its own h24 |
+| `seconds` | `bool` | `false` | seconds: the dock clock's hand, and a bar clock's until it has its own |
 | `batteryPercent` | `string` | `"beside"` | the battery's percentage: inside (the icon) \| beside \| off |
 | `windowTitle` | `bool` | `true` | the focused window's title after the app name |
-| `items` | `var` | `{}` |  |
+| `items` | `var` | `{}` | item or copy ("clock", "clock#2") -> its settings (docs/bar.md) |
 | `preset` | `string` | `"theme"` |  |
 | `presets` | `var` | `{ minimal: { start: ["controls", "launcher", "workspaces"...` |  |
 | `layout` | `var` | `{}` |  |

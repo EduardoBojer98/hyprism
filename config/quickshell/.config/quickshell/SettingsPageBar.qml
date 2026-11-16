@@ -42,15 +42,17 @@ ColumnLayout {
                 onPicked: i => Theme.setLayout({ edge: values[i] })
             }
         }
-        SettingRow {
+        SettingRow {   // the sizes that ship, over a slider for any size between: a size of your own lights no chip
             label: "Size"
-            hint: Theme.barSize + " px across"
-            Choice {
-                readonly property var values: [26, 34, 44, 56]
+            hint: Theme.barSize + " px across" + ([26, 34, 44, 56].includes(Theme.barSize) ? "" : ", your own size")
+            PresetSlider {
+                values: [26, 34, 44, 56]
                 options: ["Slim", "Regular", "Tall", "Huge"]
-                index: values.indexOf(Theme.barSize)
-                extra: index < 0 ? Theme.barSize + " px" : ""
-                onPicked: i => Theme.setLayout({ size: values[i] })
+                from: 24; to: 56                  // below 24 px an item (24 px at least) no longer fits the bar
+                value: Theme.barSize
+                unit: "px"
+                accessibleName: "Size"
+                onPicked: v => Theme.setLayout({ size: v })
             }
         }
         SettingRow {

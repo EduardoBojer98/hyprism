@@ -61,9 +61,21 @@ JsonAdapter {
     }
     property JsonObject notifications: JsonObject {
         property bool dnd: false
-        property int timeoutSec: 6
+        property int timeoutSec: 6                       // how long a normal popup stays (s)
+        property int timeoutLowSec: 4                    // how long a low-priority popup stays (s)
+        property int timeoutCriticalSec: 0               // how long a critical popup stays (s); 0 = until dismissed
+        property int maxVisible: 4                       // popups on screen at once; the rest wait in the notification centre
+        property bool groupByApp: true                   // one popup per app (with a count) and the history grouped by app
+        property bool showIcons: true                    // the app's icon or the notification's picture
+        property string style: "theme"                   // popup look: theme | card | bubble | line | block | tag | compact
+        property string position: "theme"               // theme | top-left | top | top-right | bottom-left | bottom | bottom-right
+        property bool dndSchedule: false                 // Do Not Disturb every day between dndFrom and dndTo
+        property string dndFrom: "22:00"
+        property string dndTo: "07:00"
         property int historyMax: 100
-        property string sound: "message-new-instant"   // a freedesktop sound name (Notifications.sounds), "" = none
+        property string sound: "message-new-instant"   // normal priority: a freedesktop sound name (Notifications.sounds), "" = none
+        property string soundLow: ""                     // low priority sound, "" = none
+        property string soundCritical: "window-attention"   // critical sound, "" = none
         property int volume: 60                          // %
         property list<string> mutedApps: []              // app names that only go to the notification centre
     }
@@ -97,8 +109,8 @@ JsonAdapter {
         property int width: 330                 // panel width in px (280..460)
         property list<string> sections: []
         property list<string> tiles: []
+        property list<string> sliders: []
         property list<string> toggles: []
-        property list<string> shortcuts: []
         property list<string> hidden: ["colorpicker", "mission"]
     }
     // Lock screen: LockScreen.qml lays it out, ThemeSync writes it to hypr/settings/hyprlock-theme.conf
@@ -176,16 +188,17 @@ JsonAdapter {
         // where the bar goes, its size, shape and items are set per theme (Config.appearance.custom, Themes.resolve)
         property int margin: 8                  // gap around a floating bar, px
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a bar
-        // clock and title
-        property bool clock24: true
-        property bool seconds: false
-        property string date: "full"            // "full" (Fri 30 Oct), "short" (30 Oct) or "none"
+        // clock and title. Each clock on the bar has its own time and date settings (bar.items.<id>, see
+        // bar/items/clock/format.js); these two are what a clock uses until it has its own
+        property bool clock24: true             // 24-hour time: the lock screen's, and a bar clock's until it has its own h24
+        property bool seconds: false            // seconds: the dock clock's hand, and a bar clock's until it has its own
         property string batteryPercent: "beside"  // the battery's percentage: inside (the icon) | beside | off
         property bool windowTitle: true          // the focused window's title after the app name
         // your settings per item, over its bar/items/<id>/defaults.json. Every item understands: enabled, icon,
-        // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). Example:
+        // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). A second copy of an item
+        // on the bar is "<id>#2" (then #3…) and has its own entry here. Example:
         //   { "weather": { "click": "panel:calendar" }, "brightness": { "enabled": false } }
-        property var items: ({})
+        property var items: ({})               // item or copy ("clock", "clock#2") -> its settings (docs/bar.md)
         // which items the bar holds: "theme" = the theme's own layout (Settings > Menu Bar, per theme); any other
         // value names an entry of `presets`. A screen listed in `monitors` uses its own preset instead.
         property string preset: "theme"

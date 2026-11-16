@@ -42,7 +42,7 @@ Loader {
         readonly property bool slash: Theme.barStyle.sepStyle === "slash" && !w.vertical
         readonly property bool pip: Theme.barStyle.sepStyle === "pip"
         // a clock on its own plate (block, split) is already set apart: no pip before it
-        visible: w.separated && w.visible && !(pip && w.kind === "clock" && ["block", "split"].includes(Theme.barStyle.clock))
+        visible: w.separated && w.visible && !(pip && BarItems.base(w.kind) === "clock" && ["block", "split"].includes(Theme.barStyle.clock))
         color: Qt.alpha(w.tone, slash ? 0.34 : pip ? 0.4 : 0.28)
         antialiasing: slash
         rotation: slash ? 22 : 0

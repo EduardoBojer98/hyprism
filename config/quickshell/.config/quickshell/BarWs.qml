@@ -76,7 +76,7 @@ Item {
                 readonly property real main: s === "dots" ? (on ? 20 : 8) : s === "blocks" ? ws.thickness * 0.95
                     : s === "squares" ? 34 : s === "numbers" ? 22 : s === "reticle" ? Math.max(label.implicitWidth + 14, 22)
                     : Math.max(label.implicitWidth + (s === "tabs" ? 20 : 12), 20)
-                readonly property real cross: s === "dots" ? 8 : s === "blocks" ? ws.thickness : s === "squares" ? 34 : s === "numbers" ? 20
+                readonly property real cross: s === "dots" ? 8 : s === "blocks" ? ws.thickness - (Theme.barFloating ? 2 * Theme.line : 1) : s === "squares" ? 34 : s === "numbers" ? 20
                     : s === "tabs" ? ws.thickness - 1 : s === "reticle" ? Math.min(ws.thickness - 6, 22) : 20
                 implicitWidth: ws.vertical ? cross : main
                 implicitHeight: ws.vertical ? main : cross

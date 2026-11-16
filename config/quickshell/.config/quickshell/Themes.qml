@@ -144,10 +144,10 @@ Singleton {
         }
         if (num(o.barSize, 20, 96)) r.bar.size = o.barSize
         if (typeof o.barFloating === "boolean") r.bar.floating = o.barFloating
-        const items = o.barItems, known = barItems.map(i => i.id), settled = BarItems.ready   // ids are unknown until the folders are read
+        const items = o.barItems, settled = BarItems.ready   // ids are unknown until the folders are read
         if (items && typeof items === "object")
             for (const k of ["start", "center", "end"])
-                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => (!settled || known.includes(i)) && l.indexOf(i) === n)
+                if (items[k] && typeof items[k].length === "number") r.bar[k] = Array.from(items[k]).filter((i, n, l) => (!settled || BarItems.has(i)) && l.indexOf(i) === n)
         if (o.dock === "bar") r.dock.edge = r.bar.edge
         else if (edges.includes(o.dock)) r.dock.edge = o.dock
         if (["dot", "line", "bar", "ring", "diamond"].includes(o.dockMark)) r.dock.mark = o.dockMark
