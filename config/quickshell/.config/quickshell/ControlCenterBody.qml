@@ -20,7 +20,7 @@ ColumnLayout {
         ControlCenterSliders { host: body.host; inPanel: true; title: "Sound"; parts: ControlCenter.shownSliders; Layout.row: ControlCenter.row("audio"); visible: ControlCenter.shows("audio") && hasAny }
         ControlCenterToggles { host: body.host; ids: ControlCenter.shownToggles; Layout.row: ControlCenter.row("toggles"); visible: ControlCenter.shows("toggles") && ids.length > 0 }
         ControlCenterMedia { host: body.host; Layout.row: ControlCenter.row("media"); visible: ControlCenter.shows("media") }
-        ControlCenterPower { host: body.host; Layout.row: ControlCenter.row("power"); visible: ControlCenter.shows("power") }
+        ControlCenterPower { host: body.host; inPanel: true; Layout.row: ControlCenter.row("power"); visible: ControlCenter.shows("power") }
     }
 
     // ---- footer: the battery as a readout, then the panel's own buttons, quieter than the tiles ----

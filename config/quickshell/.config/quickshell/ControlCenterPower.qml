@@ -13,17 +13,28 @@ import QtQuick.Layouts
 // Used by ControlCenter.qml and Flyouts.qml; the panel's own state comes from `host`.
 ColumnLayout {
     Layout.fillWidth: true
+    id: pw
     property var host: null   // the panel it sits in (PanelState): ControlCenter.view or a Flyout's
+    property bool inPanel: false   // the Control Center: the card folds to one line (Config.controlCenter.folded "power")
+    readonly property bool folded: inPanel && Array.from(Config.controlCenter.folded ?? []).includes("power")
+    readonly property string temp: Config.controlCenter.showHardware && !isNaN(Sensors.cpu) ? `CPU ${Math.round(Sensors.cpu)}°` : ""
     spacing: ControlCenter.gap
 
     // ---- power mode ---------------------------------------------------------------------
     ControlCenterModule {
         title: "Power mode"
-        detail: Config.controlCenter.showHardware && !isNaN(Sensors.cpu) ? `CPU ${Math.round(Sensors.cpu)}°` : ""
+        detail: pw.folded ? ["Silent", "Balanced", "Performance"][PowerMode.profile] + (pw.temp ? " · " + pw.temp : "") : pw.temp
         warn: Sensors.cpu >= 90
-        onDetailClicked: { host.hide(); SettingsApp.show(Machine.asus ? "asus" : "power") }
+        expandable: pw.inPanel
+        isExpanded: !pw.folded
+        onDetailClicked: {
+            if (!pw.inPanel) { host.hide(); SettingsApp.show(Machine.asus ? "asus" : "power"); return }
+            const l = Array.from(Config.controlCenter.folded ?? []).filter(k => k !== "power")
+            Config.set("controlCenter", "folded", pw.folded ? l : l.concat(["power"]))
+        }
 
         ControlCenterSegmented {   // the asusctl / power-profiles id stays "quiet"; people read Silent
+            visible: !pw.folded
             options: ["Silent", "Balanced", "Performance"]
             current: PowerMode.profile
             accessibleName: "Power mode"

@@ -64,7 +64,7 @@ Singleton {
         osd: { timeoutMs: [600, 5000], volume: "bool", brightness: "bool", micMute: "bool", layout: "bool", capsLock: "bool", position: ["bottom", "top", "center"] },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
-        controlCenter: { showHardware: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", sliders: "list", toggles: "list", hidden: "list" },
+        controlCenter: { showHardware: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", sliders: "list", toggles: "list", folded: "list", hidden: "list" },
         keybinds: { overrides: "object" },
         lockscreen: { clock: ["theme", "big", "stacked", "terminal", "readout", "small"], position: ["theme", "center", "top", "bottom", "left"],
                       date: "bool", greeting: "bool", avatar: "string", widgets: "list", wallpaper: "string",

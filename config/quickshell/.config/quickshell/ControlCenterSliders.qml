@@ -28,6 +28,22 @@ ControlCenterTile {
     property int ddcShown: 0   // external monitors that answered DDC/CI (each shows a slider)
     // anything to show: counts the DDC monitors that answered, never `visible` (false while this card is hidden)
     readonly property bool hasAny: hasDisplay || ddcShown > 0 || hasSound || hasMic
+    // in the Control Center a card folds to its title and a one-line summary (Config.controlCenter.folded)
+    readonly property string foldKey: title.toLowerCase()
+    readonly property bool folded: inPanel && title !== "" && Array.from(Config.controlCenter.folded ?? []).includes(foldKey)
+    function toggleFold() {
+        const l = Array.from(Config.controlCenter.folded ?? []).filter(k => k !== foldKey)
+        Config.set("controlCenter", "folded", folded ? l : l.concat([foldKey]))
+    }
+    readonly property string summary: {
+        const vol = n => n?.audio?.muted ? "muted" : Math.round((n?.audio?.volume ?? 0) * 100) + "%"
+        const p = []
+        if (hasDisplay) p.push(Sys.brightness + "%")
+        else if (ddcShown > 0) p.push(ddcShown + (ddcShown === 1 ? " screen" : " screens"))
+        if (hasSound) p.push(vol(Sys.sink))
+        if (hasMic) p.push("mic " + vol(Sys.source))
+        return p.join(" · ")
+    }
     readonly property int first: inPanel && title !== "" ? 1 : 0   // rows below the card's label
     visible: hasAny
 
@@ -37,11 +53,19 @@ ControlCenterTile {
         columns: 1
         rowSpacing: Theme.spaceS
 
-        ControlCenterSliderHead { visible: mod.first === 1; Layout.row: 0; title: mod.title }
+        ControlCenterSliderHead {   // the card's title: click it to fold or open the card
+            visible: mod.first === 1
+            Layout.row: 0
+            title: mod.title
+            detail: mod.folded ? mod.summary : "Hide"
+            isExpanded: !mod.folded
+            onClicked: mod.toggleFold()
+            Accessible.name: (mod.folded ? "Open " : "Fold ") + mod.title
+        }
 
     // ---- screen ------------------------------------------------------------------------------
         ColumnLayout {
-            visible: mod.hasDisplay || mod.ddcShown > 0
+            visible: (mod.hasDisplay || mod.ddcShown > 0) && !mod.folded
             Layout.row: mod.first + Math.max(0, mod.parts.indexOf("display"))
             Layout.fillWidth: true
             spacing: Theme.spaceS
@@ -110,7 +134,7 @@ ControlCenterTile {
 
     // ---- sound -------------------------------------------------------------------------------
         ColumnLayout {
-            visible: mod.hasSound
+            visible: mod.hasSound && !mod.folded
             Layout.row: mod.first + Math.max(0, mod.parts.indexOf("sound"))
             Layout.fillWidth: true
             spacing: Theme.spaceS
@@ -182,7 +206,7 @@ ControlCenterTile {
 
     // ---- microphone --------------------------------------------------------------------------
         ColumnLayout {
-            visible: mod.hasMic
+            visible: mod.hasMic && !mod.folded
             Layout.row: mod.first + Math.max(0, mod.parts.indexOf("mic"))
             Layout.fillWidth: true
             spacing: Theme.spaceS
