@@ -28,6 +28,8 @@ Item {
 
     Glass {
         strong: true
+        Accessible.role: Accessible.PopupMenu
+        Accessible.name: (root.entry?.name ?? "") + " menu"
         radius: Theme.radius
         width: Math.round(230 * Theme.density)
         height: list.implicitHeight + Theme.spaceS * 2
