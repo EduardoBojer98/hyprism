@@ -72,6 +72,21 @@ ColumnLayout {
     }
 
     SettingGroup {
+        title: "Video wallpapers"
+        visible: Wallpapers.images.some(p => Wallpapers.isVideo(p))
+        SettingRow {
+            label: "Pause behind"
+            hint: "A playing video about doubles the power the desktop uses, even behind windows"
+            ConfigChoice { section: "wallpaper"; key: "livePause"; values: ["fullscreen", "windows"]; labels: ["Fullscreen windows", "Any window"] }
+        }
+        SettingRow {
+            label: "Play on battery"
+            hint: "Off: the video stands still on battery"
+            ConfigToggle { section: "wallpaper"; key: "liveOnBattery" }
+        }
+    }
+
+    SettingGroup {
         title: "Colours"
         SettingRow {
             label: "Colours from the wallpaper"
@@ -108,7 +123,7 @@ ColumnLayout {
     Text {
         Layout.fillWidth: true
         visible: Wallpapers.images.length === 0
-        text: "No images found. Add .png, .jpg or .webp files to one of the folders above."
+        text: "No images found. Add .png, .jpg or .webp pictures, or .mp4, .webm, .mkv or .mov videos, to one of the folders above."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontLabel }
@@ -132,7 +147,7 @@ ColumnLayout {
                     clip: true
                     Image {
                         anchors { fill: parent; margins: 2 }
-                        source: "file://" + tile.modelData
+                        source: "file://" + Wallpapers.still(tile.modelData)
                         sourceSize: Qt.size(400, 224)
                         fillMode: Image.PreserveAspectCrop
                         asynchronous: true
@@ -142,6 +157,15 @@ ColumnLayout {
                         Accessible.role: Accessible.Button
                         Accessible.name: "Use " + tile.modelData.split("/").pop() + " as the wallpaper"
                         Accessible.onPressAction: Wallpapers.pick(tile.modelData)
+                    }
+                    Rectangle {   // a video (live wallpaper)
+                        visible: Wallpapers.isVideo(tile.modelData)
+                        anchors { left: parent.left; bottom: parent.bottom; margins: 8 }
+                        width: 24; height: 24; radius: 12
+                        color: Qt.rgba(0, 0, 0, 0.45)
+                        Text { anchors.centerIn: parent; text: "\u{F040A}"; color: "white"; font { family: Theme.iconFont; pixelSize: Theme.iconSmall } }
+                        Accessible.role: Accessible.StaticText
+                        Accessible.name: "Video"
                     }
                     Rectangle {   // slideshow badge
                         visible: page.picking

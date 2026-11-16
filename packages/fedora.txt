@@ -37,6 +37,9 @@ hypridle                 hypridle                           copr:sdegler/hyprlan
 hyprshutdown             hyprshutdown                       copr:sdegler/hyprland
 # hyprpaper 0.8.4-3.fc44
 hyprpaper                hyprpaper                          copr:sdegler/hyprland
+# mpvpaper 1.8-1.fc44. Fedora's ffmpeg-free plays VP9/AV1; H.264/HEVC clips likely need RPM Fusion ffmpeg (untested)
+mpvpaper                 mpvpaper                           copr:sdegler/hyprland
+ffmpeg                   ffmpeg-free                        repo
 # hyprsunset 0.4.0-2.fc44
 hyprsunset               hyprsunset                         copr:sdegler/hyprland
 # hyprpicker 0.4.7-2.fc44

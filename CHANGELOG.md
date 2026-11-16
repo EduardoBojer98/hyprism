@@ -6,6 +6,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Video wallpapers: .mp4, .webm, .mkv and .mov files in the wallpaper folders play with `mpvpaper` (new package,
+  with `ffmpeg`) over a still frame that the lock screen, colours from the wallpaper and Settings use. Hardware
+  decoding on the iGPU without waking a hybrid laptop's NVIDIA card. A playing video about doubles idle power even
+  behind windows, so it pauses behind fullscreen windows (or any window) and on battery; Settings → Wallpaper →
+  Video wallpapers. Measurements: `docs/research/live-wallpapers.md`.
 - Menu bar item "Updates" (on by default, beside the tray): how many system packages, AUR and Flatpak updates
   and Hyprism changes are waiting, hidden when none are. Click runs the whole update in a terminal; right-click
   looks again. Checks hourly with `checkupdates` (Arch, new package `pacman-contrib`) or `dnf check-update`.

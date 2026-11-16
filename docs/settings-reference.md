@@ -285,7 +285,9 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `source` | `string` | `"all"` | "all": every image in the folders, "selected": only picked ones |
 | `selected` | `list<string>` | `[]` | full paths for source "selected" |
 | `order` | `string` | `"shuffle"` | "shuffle" or "name" |
-| `blur` | `int` | `0` | desktop only (a blurred copy in ~/.cache); 0 = sharp |
+| `blur` | `int` | `0` | desktop only (a blurred copy in ~/.cache; for a video its still frame, not the video); 0 = sharp |
+| `livePause` | `string` | `"fullscreen"` | a video wallpaper pauses behind "fullscreen" windows or any "windows" on its workspace |
+| `liveOnBattery` | `bool` | `false` | a video wallpaper plays on battery too (about doubles idle power); off = paused |
 
 ## idle
 

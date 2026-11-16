@@ -131,7 +131,7 @@ live), so those are outputs: edit Settings or `settings.json`, not them.
 | `~/.config/hypr/settings/theme.lua`, `hyprlock-theme.conf` | Hyprland and the lock screen: the theme | Appearance → Themes |
 | `~/.config/hypr/settings/language.lua` | apps' language and formats (next login) | About → Language & Region |
 | `~/.config/ghostty/theme.conf`, `~/.config/fuzzel/theme.ini`, `gtk-3.0/` + `gtk-4.0/hyprism.css` | terminal, emoji picker and GTK apps: the theme's colours | Appearance → Themes |
-| `~/.config/hypr/settings/wallpaper` (a link), `shared.lua` (while a shared monitor is away) | hyprpaper; monitors.lua | Appearance → Wallpaper; Shared Monitor |
+| `~/.config/hypr/settings/wallpaper` (a link; for a video, to its still frame in `~/.cache/hyprism/live`), `shared.lua` (while a shared monitor is away) | hyprpaper and hyprlock (a video plays in mpvpaper over it); monitors.lua | Appearance → Wallpaper; Shared Monitor |
 
 Kept outside `settings.json` on purpose: `~/.config/autostart/*.desktop` (Startup Apps; the standard autostart
 folder) and `~/.local/share/icons/` (Icons and Cursor → Add theme). Your own themes: `~/.config/hyprism/themes/`.

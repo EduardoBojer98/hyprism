@@ -21,6 +21,8 @@ hyprlock                 hyprlock                           repo
 hypridle                 hypridle                           repo
 hyprshutdown             hyprshutdown                       repo
 hyprpaper                hyprpaper                          repo
+mpvpaper                 mpvpaper                           cachyos
+ffmpeg                   ffmpeg                             repo
 hyprsunset               hyprsunset                         repo
 hyprpicker               hyprpicker                         repo
 qt6-wayland              qt6-wayland                        repo

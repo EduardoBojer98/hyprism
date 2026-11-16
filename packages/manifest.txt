@@ -24,6 +24,8 @@ hyprlock                 desktop   lock screen
 hypridle                 desktop   lock / screen off / sleep after idle
 hyprshutdown             desktop   clean log out (Super+Shift+E)
 hyprpaper                desktop   wallpaper
+mpvpaper                 desktop   live (video) wallpapers, drawn over hyprpaper
+ffmpeg                   desktop   the still frame of a live wallpaper (lock screen, colours, Settings)
 hyprsunset               desktop   Night Light
 hyprpicker               desktop   colour picker (Super+Shift+C)
 qt6-wayland              desktop   Qt apps (Quickshell) run natively on Wayland

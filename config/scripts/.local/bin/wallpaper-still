@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Prints the still picture for each wallpaper: a picture is its own still; a video's still is a frame from 1 s in
+# (the first frame for shorter clips), made once into ~/.cache/hyprism/live/<md5 of the path>.jpg.
+#   wallpaper-still FILE...   -> one still path per line, in order ("" when a video gives no frame)
+# hyprpaper, the lock screen, colours from the wallpaper and the Settings tiles show the still; mpvpaper plays the
+# video over it (QS/Wallpapers.qml computes the same name with Qt.md5).
+set -uo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+dir="${XDG_CACHE_HOME:-$HOME/.cache}/hyprism/live"
+for f in "$@"; do
+    case "$f" in
+        *.[mM][pP]4 | *.[wW][eE][bB][mM] | *.[mM][kK][vV] | *.[mM][oO][vV]) ;;
+        *)
+            printf '%s\n' "$f"
+            continue
+            ;;
+    esac
+    out="$dir/$(printf %s "$f" | md5sum | cut -c1-32).jpg"
+    if [[ ! -s $out ]]; then
+        mkdir -p "$dir"
+        for at in 1 0; do
+            ffmpeg -nostdin -loglevel error -y -ss "$at" -i "$f" -frames:v 1 -q:v 3 "$out.tmp.jpg" 2>/dev/null
+            [[ -s $out.tmp.jpg ]] && {
+                mv "$out.tmp.jpg" "$out"
+                break
+            }
+        done
+        rm -f "$out.tmp.jpg"
+    fi
+    [[ -s $out ]] && printf '%s\n' "$out" || echo
+done

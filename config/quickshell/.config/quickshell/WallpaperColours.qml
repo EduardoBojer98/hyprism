@@ -57,7 +57,7 @@ Singleton {
             if (!root.want || !/^#[0-9a-fA-F]{6}$/.test(root.surface)) return
             runner.job = root.job
             runner.running = false
-            runner.command = ["wallpaper-colours", root.cur, Theme.light ? "light" : "dark", root.surface]
+            runner.command = ["wallpaper-colours", Wallpapers.still(root.cur), Theme.light ? "light" : "dark", root.surface]
             runner.running = true
         }
     }

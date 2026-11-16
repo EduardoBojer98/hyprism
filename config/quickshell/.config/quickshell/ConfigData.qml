@@ -245,7 +245,9 @@ JsonAdapter {
         property string source: "all"            // "all": every image in the folders, "selected": only picked ones
         property list<string> selected: []       // full paths for source "selected"
         property string order: "shuffle"         // "shuffle" or "name"
-        property int blur: 0                     // desktop only (a blurred copy in ~/.cache); 0 = sharp
+        property int blur: 0                     // desktop only (a blurred copy in ~/.cache; for a video its still frame, not the video); 0 = sharp
+        property string livePause: "fullscreen"  // a video wallpaper pauses behind "fullscreen" windows or any "windows" on its workspace
+        property bool liveOnBattery: false       // a video wallpaper plays on battery too (about doubles idle power); off = paused
     }
     // Hyprland-side settings: Settings edits these; SettingsSync.qml writes the files Hyprland, hypridle and
     // monswitch read from them. imported: the values were read once from the file written before (no loss).

@@ -12,7 +12,7 @@ ColumnLayout {
     spacing: 20
 
     readonly property var l: Config.lockscreen
-    readonly property string picture: l.wallpaper || Wallpapers.current
+    readonly property string picture: l.wallpaper || Wallpapers.still(Wallpapers.current)
 
     // ---- preview ------------------------------------------------------------------------------
     Rectangle {
@@ -128,7 +128,7 @@ ColumnLayout {
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
                 spacing: 8
                 Repeater {
-                    model: Wallpapers.images
+                    model: Wallpapers.images.filter(p => !Wallpapers.isVideo(p))   // hyprlock shows pictures only
                     Rectangle {
                         id: pic
                         required property string modelData
