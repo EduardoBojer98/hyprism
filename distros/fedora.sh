@@ -10,6 +10,9 @@ distro_supported() {
 
 distro_installed() { rpm -q "$2" >/dev/null 2>&1; }
 
+# distro_unavailable SOURCE PACKAGE: prints why it can't be installed here; nothing is skipped on Fedora (COPR and RPM Fusion get enabled)
+distro_unavailable() { return 1; }
+
 rpmfusion() { # rpmfusion free|nonfree
     rpm -q "rpmfusion-$1-release" >/dev/null 2>&1 && return 0
     echo "   RPM Fusion: a community repo for software Fedora does not ship"

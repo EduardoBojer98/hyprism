@@ -35,7 +35,7 @@ doctor() {
     say "Doctor: Hyprism $(cat "$REPO/VERSION"), $PRETTY_NAME, $(hw_get machine.form) ($(hw_get machine.product))"
     echo "   logs: $STATE/logs/   hardware: $HW_FILE"
     echo "   modules on: $(modules_on | tr '\n' ' ')"
-    local name src pkgs p
+    local name src pkgs p why
     while read -r name; do
         read -r src pkgs <<<"$(lookup "$name")"
         [[ -z ${src:-} ]] && {
@@ -43,7 +43,14 @@ doctor() {
             continue
         }
         [[ $src == none ]] && continue
-        for p in $pkgs; do distro_installed "$src" "$p" || bad "package missing (or only another app's dependency): $p ($name, $src)" "./install.sh --only packages"; done
+        for p in $pkgs; do
+            distro_installed "$src" "$p" && continue
+            why=$(distro_unavailable "$src" "$p") && {
+                warn "package not installed: $p ($name): $why"
+                continue
+            }
+            bad "package missing (or only another app's dependency): $p ($name, $src)" "./install.sh --only packages"
+        done
     done < <(wanted_names)
 
     local srcdir f rel target

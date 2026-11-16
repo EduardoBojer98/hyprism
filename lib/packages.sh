@@ -59,7 +59,7 @@ install_names() {
 packages() {
     say "Packages for $PRETTY_NAME (packages/$DISTRO.txt)"
     declare -A batch=()
-    local name src pkgs p
+    local name src pkgs p why
     while read -r name; do
         read -r src pkgs <<<"$(lookup "$name")"
         [[ -n ${src:-} ]] || {
@@ -71,7 +71,10 @@ packages() {
             warn "$name: no package for $DISTRO (see the comment in packages/$DISTRO.txt)"
             continue
         }
-        for p in $pkgs; do distro_installed "$src" "$p" || batch[$src]+=" $p"; done
+        for p in $pkgs; do
+            distro_installed "$src" "$p" && continue
+            if why=$(distro_unavailable "$src" "$p"); then warn "$p ($name) skipped: $why"; else batch[$src]+=" $p"; fi
+        done
     done < <(wanted_names)
     ((${#batch[@]})) || {
         say "All packages are installed."

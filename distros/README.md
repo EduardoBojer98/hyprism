@@ -6,6 +6,7 @@ CachyOS, EndeavourOS and Manjaro say `ID_LIKE=arch`). A backend only talks to th
 | Function | Does |
 |---|---|
 | `distro_installed SOURCE PKG` | exit 0 if installed (Arch: explicitly, not only as a dependency) |
+| `distro_unavailable SOURCE PKG` | exit 0 and print why when it can't be installed here (Arch: an AUR package without paru or yay); it is then skipped with a note, not reported missing |
 | `distro_prepare SOURCES...` | enable extra repos the sources need (COPR, RPM Fusion, …) |
 | `distro_update` | update the whole system (`./install.sh update`) |
 | `distro_install SOURCE PKGS...` | install a batch from one source; wrap commands in `run` (dry run) |

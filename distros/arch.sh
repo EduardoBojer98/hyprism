@@ -10,6 +10,13 @@ distro_supported() { return 0; }
 # explicitly installed only: one that came in as another app's dependency (e.g. ddcutil with KDE) would go with it
 distro_installed() { pacman -Qqe "$2" >/dev/null 2>&1; }
 
+# distro_unavailable SOURCE PACKAGE: prints why it can't be installed here (so it is skipped, not missing):
+# an AUR package (or a cachyos one on plain Arch) without paru or yay
+distro_unavailable() {
+    [[ $1 == aur || $1 == cachyos ]] && ! aur_helper >/dev/null && ! pacman -Si "$2" >/dev/null 2>&1 &&
+        echo "it needs the AUR, and there is no AUR helper (paru or yay)"
+}
+
 # distro_prepare SOURCES...: nothing to enable on Arch; AUR packages need paru or yay
 distro_prepare() {
     [[ " $* " == *" aur "* || " $* " == *" cachyos "* ]] && ! aur_helper >/dev/null &&
