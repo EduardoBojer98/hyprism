@@ -77,7 +77,11 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onEntered: gridView.currentIndex = cell.index
-                onClicked: { Launcher.close(); Search.remember("app:" + cell.modelData.id); cell.modelData.execute() }
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) Launcher.menuFor(cell.modelData, cellArea, mouse.x, mouse.y)
+                    else { Launcher.close(); Search.remember("app:" + cell.modelData.id); cell.modelData.execute() }
+                }
             }
         }
     }

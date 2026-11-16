@@ -120,7 +120,8 @@ ListView {
                 anchors.fill: parent
                 hoverEnabled: true
                 onEntered: results.currentIndex = row.index
-                onClicked: Launcher.activate(row.modelData)
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => mouse.button === Qt.RightButton ? Launcher.menuFor(row.modelData, rowArea, mouse.x, mouse.y) : Launcher.activate(row.modelData)
             }
         }
     }

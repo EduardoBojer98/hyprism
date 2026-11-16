@@ -181,6 +181,8 @@ Singleton {
         Search.activate(r)
     }
     property var confirmFor: null          // a custom action marked "ask first"
+    // the right-click menu for an app: a DesktopEntry, or a result that carries one (anything else has no menu)
+    function menuFor(r, item, x, y) { const e = r?.entry ?? (r?.execute ? r : null); if (e) menu.openFor(e, item, x, y) }
 
     Connections { target: Clipboard; function onPasted() { popup.hide() } }
 
@@ -194,7 +196,7 @@ Singleton {
         dim: root.look.dim
         focusItem: field
         onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens centred or at the pointer, not beside the bar item
-        onClosed: { field.text = ""; root.confirmFor = null }
+        onClosed: { field.text = ""; root.confirmFor = null; menu.entry = null }
 
         // unified: one card behind the search field and the results, a hairline between them
         Glass {
@@ -217,5 +219,7 @@ Singleton {
             id: panel
             anchors { top: pill.bottom; topMargin: root.unified ? 0 : Theme.spaceS; left: parent.left; right: parent.right }
         }
+
+        LauncherMenu { id: menu; z: 10; width: parent.width; height: popup.boxHeight }
     }
 }

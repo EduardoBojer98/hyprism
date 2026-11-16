@@ -94,7 +94,7 @@ Column {
                     font { family: Launcher.rowFont; pixelSize: Theme.fontLabel }
                 }
                 ToolTipText { gap: -Theme.spaceS; shown: appArea.containsMouse && appName.truncated; text: app.modelData.title }
-                MouseArea { id: appArea; Accessible.role: Accessible.ListItem; Accessible.name: app.modelData.title; Accessible.onPressAction: Launcher.activate(app.modelData); anchors.fill: parent; hoverEnabled: true; onEntered: Launcher.homeIndex = app.index; onClicked: Launcher.activate(app.modelData) }
+                MouseArea { id: appArea; Accessible.role: Accessible.ListItem; Accessible.name: app.modelData.title; Accessible.onPressAction: Launcher.activate(app.modelData); anchors.fill: parent; hoverEnabled: true; onEntered: Launcher.homeIndex = app.index; acceptedButtons: Qt.LeftButton | Qt.RightButton; onClicked: mouse => mouse.button === Qt.RightButton ? Launcher.menuFor(app.modelData, appArea, mouse.x, mouse.y) : Launcher.activate(app.modelData) }
             }
         }
     }

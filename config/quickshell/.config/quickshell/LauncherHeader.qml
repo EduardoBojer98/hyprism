@@ -71,6 +71,14 @@ Item {
 
             Keys.onPressed: event => {
                 const inGrid = Launcher.view === "apps"
+                // Menu key or Shift+F10: the selected app's menu
+                if ((event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) && Launcher.view !== "clip") {
+                    if (Launcher.view === "home") Launcher.menuFor(Launcher.homeItems[Launcher.homeIndex])
+                    else if (inGrid) Launcher.menuFor(Launcher.appGrid[Launcher.grid.currentIndex], Launcher.grid.currentItem)
+                    else Launcher.menuFor(Launcher.listModel[Launcher.results.currentIndex], Launcher.results.currentItem)
+                    event.accepted = true
+                    return
+                }
                 if (Launcher.view === "clip") {
                     if (event.key === Qt.Key_Down) Launcher.clipView.down()
                     else if (event.key === Qt.Key_Up) Launcher.clipView.up()

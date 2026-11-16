@@ -25,5 +25,5 @@ Rectangle {
         Text { width: parent.width; text: hr.item.title; elide: Text.ElideRight; color: hr.current ? Launcher.selText : Theme.text; font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: Font.Medium } }
         Text { width: parent.width; visible: !!hr.item.subtitle; text: hr.item.subtitle ?? ""; elide: Text.ElideMiddle; color: hr.current ? Launcher.selSub : Theme.subtext; font { family: Launcher.rowFont; pixelSize: Theme.fontCaption } }
     }
-    MouseArea { id: hrArea; Accessible.role: Accessible.ListItem; Accessible.name: hr.item.title; Accessible.onPressAction: Launcher.activate(hr.item); anchors.fill: parent; hoverEnabled: true; onEntered: Launcher.homeIndex = hr.at; onClicked: Launcher.activate(hr.item) }
+    MouseArea { id: hrArea; Accessible.role: Accessible.ListItem; Accessible.name: hr.item.title; Accessible.onPressAction: Launcher.activate(hr.item); anchors.fill: parent; hoverEnabled: true; onEntered: Launcher.homeIndex = hr.at; acceptedButtons: Qt.LeftButton | Qt.RightButton; onClicked: mouse => mouse.button === Qt.RightButton ? Launcher.menuFor(hr.item, hrArea, mouse.x, mouse.y) : Launcher.activate(hr.item) }
 }
