@@ -75,7 +75,7 @@ corners, gaps, font and motion and is kept in `settings.json`; there is no build
 | `lock` | Lock screen clock style and alignment |
 | `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, and `palette` (16 colours) |
 | `wall` | The wallpaper's name: a picture `<wall>.png` in the folder, or a recipe with that name in `wallpaper.sh` |
-| `icons` | The icon theme it starts with (a folder name; `Papirus` follows light and dark). Settings > Icons can pick another |
+| `icons` | The icon theme it starts with (a folder name; `Papirus` and `breeze` follow light and dark). Settings > Icons can pick another |
 | `cursor` | The cursor theme it starts with (a folder name; empty = the system's). A missing one falls back to the system cursor. Settings > Cursor can pick another |
 
 The design rules behind the shipped themes are in [DESIGN.md](DESIGN.md).

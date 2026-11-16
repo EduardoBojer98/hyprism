@@ -62,6 +62,9 @@ imagemagick              imagemagick                        repo
 fastfetch                fastfetch                          repo
 adw-gtk-theme            adw-gtk-theme                      repo
 papirus-icons            papirus-icon-theme                 repo
+breeze-icons             breeze-icons                       repo
+cursors-breeze           breeze-cursors                     repo
+cursors-capitaine        capitaine-cursors                  repo
 qt6ct                    qt6ct                              repo
 font-inter               inter-font                         repo
 font-cantarell           cantarell-fonts                    repo

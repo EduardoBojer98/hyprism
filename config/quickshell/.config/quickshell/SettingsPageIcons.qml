@@ -27,7 +27,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.margins: 16
             Layout.bottomMargin: 0
-            text: "App icons in the dock, launcher and lists (Papirus switches to its light set in light themes)"
+            text: "App icons in the dock, launcher and lists (Papirus and breeze switch to their light or dark set with the theme)"
             color: Theme.subtext
             wrapMode: Text.Wrap
             font { family: Theme.font; pixelSize: Theme.fontLabel }

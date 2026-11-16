@@ -82,6 +82,10 @@ imagemagick              ImageMagick                        repo
 fastfetch                fastfetch                          repo
 adw-gtk-theme            adw-gtk3-theme                     repo
 papirus-icons            papirus-icon-theme                 repo
+breeze-icons             breeze-icon-theme                  repo
+cursors-breeze           breeze-cursor-theme                repo
+# la-capitaine-cursor-theme was retired after Fedora 42: Pebble falls back to the system cursor (Settings > Cursor picks another)
+cursors-capitaine        none                               none
 qt6ct                    qt6ct                              repo
 font-inter               rsms-inter-fonts                   repo
 font-cantarell           abattis-cantarell-fonts            repo

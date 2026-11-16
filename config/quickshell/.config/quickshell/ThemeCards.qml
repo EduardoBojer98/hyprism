@@ -156,7 +156,7 @@ ColumnLayout {
             }
             Text {
                 width: parent.width - (trash.visible ? trash.width + 4 : 0)
-                text: card.modelData.own ? Theme.current.name + " uses " + root.own
+                text: card.modelData.own ? (lister.loaded && !root.themes.includes(root.own) ? root.own + " isn't installed" : Theme.current.name + " uses " + root.own)
                     : card.modelData.name === "default" ? "Your system's cursor"
                     : card.modelData.user ? "Added by you" : "System"
                 color: Theme.subtext

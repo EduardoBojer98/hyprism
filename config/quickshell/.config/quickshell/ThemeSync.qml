@@ -24,7 +24,8 @@ Scope {
     readonly property var current: Theme.current
     readonly property var h: current.hypr
     readonly property bool light: Theme.light
-    readonly property string iconTheme: Theme.iconTheme === "Papirus" || (Theme.iconTheme === "Papirus-Dark" && light) ? (light ? "Papirus-Light" : "Papirus-Dark") : Theme.iconTheme
+    readonly property string iconTheme: Theme.iconTheme === "Papirus" || (Theme.iconTheme === "Papirus-Dark" && light) ? (light ? "Papirus-Light" : "Papirus-Dark")
+        : Theme.iconTheme === "breeze" && !light ? "breeze-dark" : Theme.iconTheme
     // only plain folder names reach the shell commands below (a missing one: apps fall back to the system's)
     readonly property string cursorTheme: /^[A-Za-z0-9._+ -]+$/.test(Theme.cursorTheme) ? Theme.cursorTheme : ""
     readonly property int cursorSize: Config.appearance.cursorSize
