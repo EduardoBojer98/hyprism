@@ -18,7 +18,10 @@ Singleton {
     readonly property var c: Config.wallpaper
     readonly property string home: Quickshell.env("HOME")
     property var images: []          // full paths, sorted by name
+    property var skipped: []         // other files in the folders: neither a picture nor a video (Settings names them)
     property string current: ""      // full path shown now
+    property bool userPaused: false  // the video stopped by hand (Settings, `qs ipc call wallpaper playPause`) until the next wallpaper
+    onCurrentChanged: userPaused = false
     // what the slideshow cycles through
     readonly property var pool: c.source === "selected" ? c.selected.filter(p => images.includes(p)) : images
 
@@ -27,6 +30,13 @@ Singleton {
     function isVideo(p) { return /\.(mp4|webm|mkv|mov)$/i.test(p ?? "") }
     // what stands for a wallpaper wherever a picture is needed: itself, or a video's frame (same name as wallpaper-still makes)
     function still(p) { return isVideo(p) ? (Quickshell.env("XDG_CACHE_HOME") || home + "/.cache") + "/hyprism/live/" + Qt.md5(p) + ".jpg" : p }
+    // a picture a theme draws (~/.cache/hyprism/wallpapers) or ships in its folder, not one of yours
+    function isTheme(p) { return p.indexOf("/hyprism/wallpapers/") >= 0 || p.startsWith(Themes.shippedDir + "/") || p.startsWith(Themes.ownDir + "/") }
+    // the file selected in the file manager; without one that answers on D-Bus, its folder opens
+    function reveal(p) {
+        Quickshell.execDetached(["sh", "-c", "dbus-send --session --print-reply --dest=org.freedesktop.FileManager1 /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:\"$2\" string: >/dev/null 2>&1 || xdg-open \"$(dirname \"$1\")\"",
+                                 "sh", p, "file://" + encodeURI(p).replace(/,/g, "%2C")])
+    }
 
     function apply(path) {
         if (!path) return
@@ -73,17 +83,21 @@ Singleton {
     }
 
     // every image and video in the folders (and one level of subfolders), every theme's own wallpaper, plus the one
-    // shown now; each video's still is made first, so its Settings tile has a picture
+    // shown now; each video's still is made first, so its Settings tile has a picture. Other files (not hidden) are
+    // listed apart, so Settings can say why they don't show.
     Process {
         id: lister
-        command: ["sh", "-c", "l=$({ for d in \"$@\"; do [ -d \"$d\" ] && find -L \"$d\" -maxdepth 2 -type f \\( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' -o -iname '*.mp4' -o -iname '*.webm' -o -iname '*.mkv' -o -iname '*.mov' \\); done; theme-wallpaper --all 2>/dev/null; } | sort -u); "
+        command: ["sh", "-c", "re='\\.(png|jpe?g|webp|mp4|webm|mkv|mov)$'; "
+                  + "all=$(for d in \"$@\"; do [ -d \"$d\" ] && find -L \"$d\" -maxdepth 2 -type f ! -name '.*'; done | sort -u); "
+                  + "l=$({ printf '%s\\n' \"$all\" | grep -iE \"$re\"; theme-wallpaper --all 2>/dev/null; } | sort -u); "
                   + "printf '%s\\n' \"$l\" | grep -iE '\\.(mp4|webm|mkv|mov)$' | tr '\\n' '\\0' | xargs -0 -r wallpaper-still >/dev/null; "
-                  + "printf '%s\\n' \"$l\"; echo '--'; readlink -f \"$HOME/.config/hypr/settings/wallpaper\"",
+                  + "printf '%s\\n' \"$l\"; echo '--'; readlink -f \"$HOME/.config/hypr/settings/wallpaper\"; echo '--'; printf '%s\\n' \"$all\" | grep -viE \"$re\"",
                   "sh"].concat(root.c.folders.map(root.expand))
         stdout: StdioCollector {
             onStreamFinished: {
-                const [list, cur] = text.split("--\n")
+                const [list, cur, other] = text.split("--\n")
                 root.images = list.trim().split("\n").filter(x => x)
+                root.skipped = (other ?? "").trim().split("\n").filter(x => x)
                 if (!root.current) {
                     root.current = root.c.current || root.expand((cur ?? "").trim())
                     // shortcut: hyprpaper.conf shows the sharp picture at login until this swaps in the blurred copy
@@ -115,7 +129,7 @@ Singleton {
             required property ShellScreen modelData
             readonly property string sock: Quickshell.env("XDG_RUNTIME_DIR") + "/hyprism-wallpaper-" + modelData.name + ".sock"
             readonly property var ws: Hyprland.monitorFor(modelData)?.activeWorkspace ?? null
-            readonly property bool paused: root.batteryPause
+            readonly property bool paused: root.userPaused || root.batteryPause
                 || (ws !== null && (root.c.livePause === "windows" ? ws.toplevels.values.length > 0 : ws.hasFullscreen))
             function send(cmd) {
                 Quickshell.execDetached(["sh", "-c", "printf '%s\\n' \"$2\" | socat - UNIX-CONNECT:\"$1\" >/dev/null 2>&1", "sh", sock, JSON.stringify({ command: cmd })])
@@ -137,5 +151,6 @@ Singleton {
         target: "wallpaper"
         function next(): void { root.next() }
         function set(path: string): void { root.apply(root.expand(path)) }
+        function playPause(): void { if (root.live) root.userPaused = !root.userPaused }
     }
 }

@@ -63,6 +63,15 @@ hl.window_rule({
     float = true,
 })
 
+-- File pickers (Settings > Wallpaper > Browse…, any app's Open/Save through the GTK portal; zenity hands its picker
+-- to the portal): floating and centred, so they open over the floating Settings window instead of tiling behind it
+hl.window_rule({
+    name   = "file-pickers",
+    match  = { class = "^(zenity|xdg-desktop-portal-gtk)$" },
+    float  = true,
+    center = true,
+})
+
 hl.window_rule({
     name   = "settings-app",
     match  = { class = "^org\\.quickshell$", title = "^Settings$" },

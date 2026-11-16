@@ -11,6 +11,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   decoding on the iGPU without waking a hybrid laptop's NVIDIA card. A playing video about doubles idle power even
   behind windows, so it pauses behind fullscreen windows (or any window) and on battery; Settings → Wallpaper →
   Video wallpapers. Measurements: `docs/research/live-wallpapers.md`.
+- Settings → Wallpaper, redesigned: the wallpaper shown now on top (Next, Pause/Play for a video, Show in Files, why a
+  video is paused); the library filters by All, Pictures, Videos or Themes and by name, tiles fill the row, hover a
+  tile to use it on the lock screen or show it in Files; it rescans whenever the page opens (or Rescan) and names
+  files in the folders it can't use. Folders show what they hold and open in Files. `qs ipc call wallpaper playPause`.
+- File pickers (zenity and the GTK portal's Open/Save) float centred, so Browse… opens over Settings, not behind it.
 - Menu bar item "Updates" (on by default, beside the tray): how many system packages, AUR and Flatpak updates
   and Hyprism changes are waiting, hidden when none are. Click runs the whole update in a terminal; right-click
   looks again. Checks hourly with `checkupdates` (Arch, new package `pacman-contrib`) or `dnf check-update`.

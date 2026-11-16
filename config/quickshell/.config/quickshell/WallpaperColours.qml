@@ -13,8 +13,8 @@ Singleton {
     id: root
 
     readonly property string cur: Wallpapers.current
-    // the pictures themes draw (~/.cache/hyprism/wallpapers) or ship in their folders are not "yours"
-    readonly property bool own: cur !== "" && cur.indexOf("/hyprism/wallpapers/") < 0 && !cur.startsWith(Themes.shippedDir + "/") && !cur.startsWith(Themes.ownDir + "/")
+    // the pictures themes draw or ship are not "yours"
+    readonly property bool own: cur !== "" && !Wallpapers.isTheme(cur)
     readonly property bool want: Config.loaded && Themes.ready && Config.appearance.wallpaperColours && own
     readonly property string theme: Config.appearance.theme
     readonly property string surface: Theme.surfaceColor.toString()
