@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Retakes the README pictures from the current code, in a throwaway nested test desktop (tests/nested.sh, session
 # "r", 2400x1500): docs/screenshots/themes/<id>-<mode>.webp for every theme and both modes (launcher open over
-# the wallpaper), then docs/screenshots/features/*.webp, all in Reactor dark. Needs ImageMagick (magick).
+# the wallpaper), then docs/screenshots/features/*.webp in Pebble dark. Needs ImageMagick (magick).
 # Hyprland's "started without start-hyprland" banner is gone after one config reload, so the script reloads once.
 # Not part of tests/lint.sh: it opens a window and takes a minute or two. Run by hand: tests/screenshots.sh
 set -euo pipefail
@@ -34,15 +34,17 @@ for dir in themes/*/; do
     for mode in dark light; do
         $n ipc config set appearance theme "$id" >/dev/null
         $n ipc config set appearance mode "$mode" >/dev/null
-        for _ in $( # up to 30 s for the theme's own wallpaper
-            seq 60
+        want=$id-v # <id>-v<N>.png, or <id>-light-v<N>.png for light when theme.json names one (Poster has one for both)
+        [[ $mode == light ]] && jq -e --arg w "$id-light" '.wall == $w or .alt.wall == $w' "$dir/theme.json" >/dev/null && want=$id-light-v
+        for _ in $( # up to 60 s for the theme's own wallpaper (drawn on first use)
+            seq 120
         ); do
             wp=$($n ipc config get wallpaper current 2>/dev/null | tr -d '"' || true) # the shell prints it quoted
-            [[ $wp == *"$id"* && -f $wp ]] && break
+            [[ $(basename "$wp") == "$want"* && -f $wp ]] && break
             sleep 0.5
         done
-        [[ $wp == *"$id"* && -f $wp ]] || echo "warning: no wallpaper for $id $mode (got: $wp)" >&2
-        sleep 2
+        [[ $(basename "$wp") == "$want"* && -f $wp ]] || echo "warning: no wallpaper for $id $mode (got: $wp)" >&2
+        sleep 3
         $n ipc launcher toggle >/dev/null
         sleep 1.5
         snap "$id-$mode" themes
@@ -51,7 +53,7 @@ for dir in themes/*/; do
     done
 done
 
-# Features: Reactor dark
+# Features: Pebble dark
 $n ipc config set appearance theme pebble >/dev/null
 $n ipc config set appearance mode dark >/dev/null
 sleep 3
@@ -81,13 +83,16 @@ panel settings-bar "settings open bar" "settings close"
 panel notifications "notifications toggle" "notifications toggle"
 panel power "power toggle" "power toggle"
 panel cheatsheet "cheatsheet toggle" "cheatsheet toggle"
+panel launcher "launcher apps" "launcher toggle"
+panel calendar "calendar toggle" "calendar toggle"
+panel lock-screen "settings open lockscreen" "settings close"
 
 # the bar with the system-info item, cropped to the top 120 px
-$n ipc config set appearance custom '{"pebble":{"barItems":{"start":["launcher","workspaces"],"center":["clock"],"end":["sysinfo","weather","status"]}}}' >/dev/null
+$n ipc config set bar layout '{"start":["launcher","workspaces"],"center":["clock"],"end":["sysinfo","weather","status"]}' >/dev/null
 $n ipc config set bar items '{"sysinfo":{"metrics":["cpu","cpu_temp","ram","net"]}}' >/dev/null
 sleep 3
 snap bar-sysinfo features -crop 100%x120+0+0 +repage
-$n ipc config set appearance custom '{}' >/dev/null
+$n ipc config set bar layout '{}' >/dev/null
 $n ipc config set bar items '{}' >/dev/null
 
 echo "errors:"
