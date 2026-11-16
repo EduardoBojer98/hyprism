@@ -13,7 +13,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `version` | `int` | `5` | settings format; Config.repair() upgrades older files |
+| `version` | `int` | `6` | settings format; Config.repair() upgrades older files |
 
 ## appearance
 
