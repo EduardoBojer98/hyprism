@@ -10,46 +10,41 @@ import QtQuick.Layouts
 ColumnLayout {
     id: page
     spacing: 20
-    property var themes: []
     property string status: ""
 
-    Process {
-        id: lister
-        running: true
-        command: ["sh", "-c", "for d in \"$HOME/.local/share/icons\"/* \"$HOME/.icons\"/* /usr/share/icons/*; do [ -f \"$d/index.theme\" ] && ! [ -d \"$d/cursors\" ] && basename \"$d\"; done | sort -u"]
-        stdout: StdioCollector { onStreamFinished: page.themes = text.trim().split("\n").filter(t => t && t !== "default" && t !== "hicolor" && t !== "locolor") }
-    }
     ThemeAdder {
         id: adder
         kind: "icons"
         onDone: (names, error) => {
             page.status = error || "Added " + names.join(", ")
-            if (names.length) { Config.set("appearance", "iconTheme", names[0]); lister.running = true }
+            if (names.length) { Config.set("appearance", "iconTheme", names[0]); cards.reload() }
         }
     }
 
     SettingGroup {
-        SettingRow {
-            label: "Icon theme"
-            hint: (Config.appearance.iconTheme === "theme" ? Theme.current.name + " uses " + Theme.iconTheme + ". " : "")
-                + "App icons in the dock, launcher and lists (Papirus switches to its light set in light themes)"
-            Dropdown {
-                width: 240
-                options: ["Theme's own"].concat(page.themes)
-                current: Config.appearance.iconTheme === "theme" ? "Theme's own" : Config.appearance.iconTheme
-                onPicked: v => Config.set("appearance", "iconTheme", v === "Theme's own" ? "theme" : v)
-            }
+        title: "Icon theme"
+        Text {
+            Layout.fillWidth: true
+            Layout.margins: 16
+            Layout.bottomMargin: 0
+            text: "App icons in the dock, launcher and lists (Papirus switches to its light set in light themes)"
+            color: Theme.subtext
+            wrapMode: Text.Wrap
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
-        SettingRow {
-            label: "Tray icons in the bar's colour"
-            hint: "Matches the bar's own icons; off keeps each app's colours"
-            ConfigToggle { section: "appearance"; key: "monoTray" }
-        }
+        ThemeCards { id: cards; kind: "icons"; key: "iconTheme"; own: Theme.current.icons || "Papirus" }
         SettingRow {
             label: "Add a theme"
             hint: page.status !== "" ? page.status : "A downloaded .tar.gz, .tar.xz or .zip (e.g. from store.kde.org or gnome-look.org), or an unpacked folder"
             PillButton { text: "From file…"; onClicked: adder.pickFile() }
             PillButton { text: "From folder…"; onClicked: adder.pickFolder() }
+        }
+    }
+    SettingGroup {
+        SettingRow {
+            label: "Tray icons in the bar's colour"
+            hint: "Matches the bar's own icons; off keeps each app's colours"
+            ConfigToggle { section: "appearance"; key: "monoTray" }
         }
     }
     ResetGroup { sections: ["appearance"]; keys: ["iconTheme"] }

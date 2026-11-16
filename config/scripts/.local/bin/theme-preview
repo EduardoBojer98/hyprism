@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# List the installed icon or cursor themes with a few sample pictures of each
+# (Settings > Appearance > Icons / Cursor).
+#
+#   theme-preview icons     one line per icon theme
+#   theme-preview cursors   one line per cursor theme, "default" first
+#
+# Each line: NAME <tab> user|system <tab> FOLDER <tab> PICTURE... (a picture is empty when the theme
+# has none for that sample). Icons are the theme's own files (inherited themes included); cursor
+# shapes are drawn once to PNGs in ~/.cache/hyprism/cursor-previews. Lines come out one theme at a time.
+set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; icons | cursors) ;; *) usage 2 >&2 ;; esac
+need python3
+exec python3 -I -c '
+import configparser, hashlib, os, struct, sys, zlib
+
+kind = sys.argv[1]
+home = os.path.expanduser("~")
+user = [os.path.join(os.environ.get("XDG_DATA_HOME") or home + "/.local/share", "icons"), home + "/.icons"]
+system = [os.path.join(d, "icons") for d in (os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share").split(":") if d]
+bases = user + [b for b in system if b not in user]
+cache = os.path.join(os.environ.get("XDG_CACHE_HOME") or home + "/.cache", "hyprism", "cursor-previews")
+
+def folder(name):   # the first copy wins, as GTK finds it
+    for b in bases:
+        if os.path.isfile(os.path.join(b, name, "index.theme")) or os.path.isdir(os.path.join(b, name, "cursors")):
+            return os.path.join(b, name)
+    return None
+
+def index(name):
+    ix = configparser.ConfigParser(interpolation=None, strict=False)
+    try:
+        ix.read(os.path.join(folder(name) or "/nonexistent", "index.theme"), encoding="utf-8")
+    except (configparser.Error, UnicodeDecodeError):
+        pass
+    return ix
+
+def chain(name):   # the theme, then what it inherits, breadth first
+    seen, todo = [], [name]
+    while todo:
+        t = todo.pop(0)
+        if t in seen or not folder(t):
+            continue
+        seen.append(t)
+        todo += [i.strip() for i in index(t).get("Icon Theme", "Inherits", fallback="").split(",") if i.strip()]
+    return seen
+
+def icon(theme, names, want=48):
+    for t in chain(theme) + ["hicolor"]:
+        ix = index(t)
+        dirs = [d.strip() for d in (ix.get("Icon Theme", "Directories", fallback="") + "," + ix.get("Icon Theme", "ScaledDirectories", fallback="")).split(",") if d.strip()]
+        def distance(d):
+            if not ix.has_section(d): return 999
+            s = ix[d]; size = int(s.get("Size", "0") or 0); scale = int(s.get("Scale", "1") or 1)
+            if s.get("Type", "Threshold") == "Scalable" and int(s.get("MinSize", size) or size) <= want <= int(s.get("MaxSize", size) or size):
+                d = 0
+            else:
+                d = abs(size - want)
+            return d + (500 if scale != 1 else 0)
+        dirs.sort(key=distance)
+        for n in names:
+            for d in dirs:
+                for b in bases:
+                    for ext in (".svg", ".png"):
+                        p = os.path.join(b, t, d, n + ext)
+                        if os.path.isfile(p):
+                            return p
+    return ""
+
+def cursor_png(path, want=48):   # first frame of the nominal size nearest want, as a PNG in the cache
+    st = os.stat(path)
+    out = os.path.join(cache, hashlib.sha1(f"{os.path.realpath(path)}:{st.st_mtime_ns}:{want}".encode()).hexdigest() + ".png")
+    if os.path.isfile(out):
+        return out
+    data = open(path, "rb").read()
+    if data[:4] != b"Xcur":
+        return ""
+    hdr, _, ntoc = struct.unpack_from("<III", data, 4)
+    toc = [struct.unpack_from("<III", data, 16 + 12 * i) for i in range(ntoc)]
+    images = [(abs(sub - want), pos) for typ, sub, pos in toc if typ == 0xFFFD0002]
+    if not images:
+        return ""
+    pos = min(images)[1]
+    w, h = struct.unpack_from("<II", data, pos + 16)
+    if not (0 < w <= 512 and 0 < h <= 512):
+        return ""
+    px = struct.unpack_from(f"<{w * h}I", data, pos + 36)
+    rows = bytearray()
+    for y in range(h):
+        rows.append(0)
+        for p in px[y * w:(y + 1) * w]:
+            a = p >> 24
+            r, g, b = (p >> 16) & 255, (p >> 8) & 255, p & 255
+            if a and a < 255:   # Xcursor pixels are premultiplied
+                r, g, b = min(255, r * 255 // a), min(255, g * 255 // a), min(255, b * 255 // a)
+            rows += bytes((r, g, b, a))
+    def chunk(t, body):
+        return struct.pack(">I", len(body)) + t + body + struct.pack(">I", zlib.crc32(t + body))
+    os.makedirs(cache, exist_ok=True)
+    tmp = out + ".part"
+    with open(tmp, "wb") as f:
+        f.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(bytes(rows))) + chunk(b"IEND", b""))
+    os.replace(tmp, out)
+    return out
+
+def cursor(theme, names):
+    for t in chain(theme):
+        for n in names:
+            p = os.path.join(folder(t), "cursors", n)
+            if os.path.isfile(p):
+                try:
+                    return cursor_png(p)
+                except (OSError, struct.error):
+                    return ""
+    return ""
+
+ICONS = [["folder"], ["user-trash"], ["utilities-terminal", "org.gnome.Terminal", "terminal"],
+         ["web-browser", "firefox", "internet-web-browser"], ["preferences-system", "systemsettings"],
+         ["accessories-text-editor", "text-editor"]]
+CURSORS = [["default", "left_ptr", "arrow"], ["pointer", "hand2", "pointing_hand", "hand1"],
+           ["text", "xterm", "ibeam"], ["wait", "watch"]]
+
+names = sorted({e for b in bases if os.path.isdir(b) for e in os.listdir(b)}, key=str.lower)
+if kind == "cursors":
+    names = ["default"] + [n for n in names if n != "default" and os.path.isdir(os.path.join(folder(n) or "/nonexistent", "cursors"))]
+else:
+    names = [n for n in names if n not in ("default", "hicolor", "locolor") and folder(n)
+             and index(n).get("Icon Theme", "Directories", fallback="").strip()]
+for n in names:
+    f = folder(n) or ""
+    where = "user" if any(f.startswith(b + "/") for b in user) else "system"
+    pics = [cursor(n, c) for c in CURSORS] if kind == "cursors" else [icon(n, i) for i in ICONS]
+    print("\t".join([n, where, f] + pics), flush=True)
+' "$1"
