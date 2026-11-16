@@ -105,7 +105,8 @@ expect "uptime in seconds" '.uptime' 3600
 expect "load average" '.load[0]' 0.50
 expect "no disk list from a made-up root" '.disk' null
 
-# rates: change the counters between two ticks of one run
+# rates: change the counters between two ticks of one run. The highest reading counts: on a slow machine a tick
+# after the change sees unchanged counters again and rightly reads 0.
 json=$(
     (
         sleep 1.4
@@ -116,7 +117,8 @@ h2
 cpu0 150 0 50 350 50 0 0 0
 cpu1 150 0 50 350 50 0 0 0"
     ) &
-    HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml timeout 2.6 bash "$m" watch cpu,net 1 | tail -1
+    HYPRISM_ROOT=$r HYPRISM_HARDWARE=$t/laptop.toml timeout 2.6 bash "$m" watch cpu,net 1 |
+        jq -s '{net: {down: ([.[].net.down] | max)}, cpu: {pct: ([.[].cpu.pct] | max)}}'
 )
 down=$(jq -r '.net.down' <<<"$json")
 if [[ $down =~ ^[0-9]+$ ]] && ((down > 50000 && down < 200000)); then echo "ok: network rate follows the counters ($down B/s)"; else
