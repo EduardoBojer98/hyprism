@@ -80,8 +80,14 @@ look), storage, disk reads and writes, network and the top processes.
 
 ### Window frame and launcher
 
-Settings → Window Look → Border: Theme's, Accent, Gradient or Rainbow. Rainbow turns only with animations on Full,
-the power mode not Silent, and on AC unless you allow it on battery; otherwise it stands still.
+Settings → Window Look → Border: Theme's, Accent, Gradient, Neon (the accent with a glow), Mono, Rainbow, Sunset, Ocean or
+your own two or three colours, each shown as a small preview. A frame of several colours runs at the angle you set, and
+turns only when you switch "Turn the colours" on, with animations on Full, the power mode not Silent, and on AC unless
+you allow it on battery. Its width is the theme's (Themes → Adjust → Window frame).
+Title bars (on apps that draw no buttons of their own) take the theme's surface, text and type; Window Look sets their
+size, which side the buttons sit on and where the title goes. The buttons themselves keep one neutral look in every
+theme: the title-bar plugin can't recolour a button until Hyprland next starts, so they are solid discs that read on
+any bar. Unfocused windows' buttons turn to the theme's quiet tone.
 Spotlight opens at the mouse pointer by default (Settings → Search & Launcher → Open); choose the theme's place to
 get strips and edges back. Settings → Default Apps picks the default terminal.
 

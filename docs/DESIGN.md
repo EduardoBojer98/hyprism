@@ -102,7 +102,7 @@ Settings → Appearance → Themes → Adjust (or `Config.appearance.custom[them
 gapsIn, gapsOut, border, font, size, window motion, shadow, blur. These are kept per theme, so an edit made in one
 theme never changes another. `Themes.resolve` lays them over the theme and ignores a bad value; Reset removes them.
 The bar and dock are not part of Adjust: they are one global layout (`bar.layout`, see [bar.md](bar.md)) that
-survives a theme switch. The window frame colour is Settings → Window Look → Border: Theme's, Accent, Gradient or Rainbow.
+survives a theme switch. The window frame is Settings → Window Look → Border (the styles are in `WindowFrames.js`, shared by ThemeSync and the previews).
 
 ## Where the look reaches
 

@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Window Look: border styles Neon (accent with a glow), Mono, Sunset, Ocean and your own two or three colours, each with a
+  live preview; an angle for frames of several colours and an explicit "Turn the colours" switch (a saved turning
+  rainbow keeps turning). Title bars follow the theme (surface, text, type, height from its density, dimmer titles and
+  buttons on unfocused windows), with a size, button side and title alignment of your own.
 - Control Center, rearranged: large tiles (Wi-Fi, Bluetooth), a Screen card (brightness and DDC monitors, hidden when
   nothing can be dimmed) and a Sound card (output and microphone) with thick sliders, a grid of same-size small
   buttons (Focus, Night Light, Caffeine, Record, Screenshot ...), media, power mode, and a footer with the battery,

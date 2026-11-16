@@ -74,7 +74,9 @@ Singleton {
                    followMouse: "bool", focusOnActivate: "bool", warpCursor: "bool", backAndForth: "bool",
                    inactiveOpacity: [0.6, 1], dimInactive: "bool", dimStrength: [0.05, 0.6], resizeOnBorder: "bool",
                    snap: "bool", hideCursorTyping: "bool", titleBars: "bool", apps: "list",
-                   border: ["theme", "accent", "gradient", "rainbow"], rainbowSpeed: [1, 10], rainbowOnBattery: "bool" },
+                   titleBarSize: ["theme", "small", "medium", "large"], titleButtons: ["right", "left"], titleAlign: ["center", "left"],
+                   border: ["theme", "accent", "gradient", "neon", "mono", "rainbow", "sunset", "ocean", "custom"], borderAngle: [0, 359],
+                   borderColors: "list", borderAnimate: "bool", rainbowSpeed: [1, 10], rainbowOnBattery: "bool" },
         calendar: { holidays: "bool", country: "string", localNames: "bool", observances: "bool", moon: "bool",
                     weekNumbers: "bool", firstDay: ["monday", "sunday"] },
         language: { languages: "list", formats: "string" },
@@ -274,6 +276,12 @@ Singleton {
             if (adapter.appearance.iconTheme === "Papirus-Dark") adapter.appearance.iconTheme = "theme"
             if (adapter.appearance.cursorTheme === "default") adapter.appearance.cursorTheme = "theme"
             adapter.version = 4
+        }
+        // format 5 (windows): a rainbow frame turned on its own; whether a frame turns is now its own switch
+        // (windows.borderAnimate), so a saved rainbow keeps turning
+        if ((raw?.version ?? 1) < 5) {
+            if (adapter.windows.border === "rainbow") adapter.windows.borderAnimate = true
+            adapter.version = 5
         }
         // before 2026-11-15 the weather had one place and two switches
         const rw = raw?.weather ?? {}

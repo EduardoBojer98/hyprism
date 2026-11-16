@@ -7,6 +7,10 @@ local defaults = {
     theme = "pebble", gaps_in = 8, gaps_out = 16, border_size = 2, rounding = 14,
     active = { "b9cf8fcc" }, border_loop = false, border_speed = 5, inactive = "3d433fff",
     shadow = "soft", blur = false, motion = "ease", accent = "b9cf8f", accent2 = "8fa8a3",
+    border_angle = 45, glow = "",
+    -- title bars (plugins.lua): Pebble's surface, text, secondary text and raised tone; height from its density
+    bar = "232624ff", bar_text = "e9ece6ff", bar_text_dim = "b0b7b0ff", bar_buttons_dim = "2d312eff",
+    bar_font = "Archivo", bar_height = 31, bar_blur = false,
 }
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 
@@ -27,10 +31,15 @@ function apply_theme()
     local shadow = SHADOWS[THEME.shadow]
         or { enabled = true, range = 1, render_power = 1, offset = "9 9", sharp = true,
              color = "rgba(" .. THEME.accent .. "ff)", color_inactive = "rgba(000000aa)" }
+    -- the neon frame: a glow in its colour around the focused window only (Hyprland tints the active window's shadow)
+    if THEME.glow ~= "" then
+        shadow = { enabled = true, range = 18, render_power = 2, offset = "0 0", sharp = false,
+                   color = "rgba(" .. THEME.glow .. "99)", color_inactive = "rgba(00000000)" }
+    end
     hl.config({
         general = {
             gaps_in = THEME.gaps_in, gaps_out = THEME.gaps_out, border_size = THEME.border_size,
-            col = { active_border = { colors = colors, angle = 45 }, inactive_border = "rgba(" .. THEME.inactive .. ")" },
+            col = { active_border = { colors = colors, angle = THEME.border_angle }, inactive_border = "rgba(" .. THEME.inactive .. ")" },
         },
         decoration = {
             rounding = THEME.rounding,
@@ -39,6 +48,7 @@ function apply_theme()
         },
     })
     apply_motion(THEME.motion)   -- modules/animations.lua
+    if setup_plugins then setup_plugins() end   -- title bars in the theme's colours (plugins.lua, loaded after this)
 end
 
 hl.config({

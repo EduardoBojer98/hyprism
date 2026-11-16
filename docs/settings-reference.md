@@ -13,7 +13,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `version` | `int` | `4` | settings format; Config.repair() upgrades older files |
+| `version` | `int` | `5` | settings format; Config.repair() upgrades older files |
 
 ## appearance
 
@@ -181,9 +181,15 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `snap` | `bool` | `false` | floating windows snap to edges and each other |
 | `hideCursorTyping` | `bool` | `false` |  |
 | `titleBars` | `bool` | `true` | hyprbars: title bar with buttons on apps that draw none |
-| `border` | `string` | `"theme"` | focused window's frame: theme (its own) \| accent \| gradient (accent to accent2) \| rainbow |
-| `rainbowSpeed` | `int` | `5` | rainbow: 1 slow .. 10 fast |
-| `rainbowOnBattery` | `bool` | `false` | rainbow keeps turning on battery (it redraws every frame); off = still rainbow |
+| `titleBarSize` | `string` | `"theme"` | title bar height: theme (its density) \| small \| medium \| large |
+| `titleButtons` | `string` | `"right"` | title bar buttons on the right or left (close outermost) |
+| `titleAlign` | `string` | `"center"` | window title in the bar: center \| left |
+| `border` | `string` | `"theme"` | focused window's frame: theme (its own) \| accent \| gradient (accent to accent2) \| neon (accent with a glow) \| mono (text colour) \| rainbow \| sunset \| ocean \| custom (borderColors) |
+| `borderAngle` | `int` | `45` | direction of a frame of several colours, in degrees |
+| `borderColors` | `list<string>` | `["#ff7a59", "#7a5cff"]` | custom frame: two or three colours like "#ff7a59" |
+| `borderAnimate` | `bool` | `false` | a frame of several colours turns (needs animations on Full; costs battery) |
+| `rainbowSpeed` | `int` | `5` | turning frame: 1 slow .. 10 fast |
+| `rainbowOnBattery` | `bool` | `false` | a turning frame keeps turning on battery (it redraws every frame); off = it stands still |
 | `apps` | `var` | `[]` | [{ id, name, class (regex), open: normal\|float\|pin\|maximize\|fullscreen, workspace: 0 = any }] |
 
 ## keybinds
