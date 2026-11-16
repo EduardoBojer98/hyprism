@@ -144,7 +144,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `sliders` | `list<string>` | `[]` |  |
 | `toggles` | `list<string>` | `[]` |  |
 | `folded` | `list<string>` | `["screen", "sound", "power"]` | cards folded to one line (click a card's title): screen, sound, power |
-| `hidden` | `list<string>` | `["colorpicker", "mission"]` |  |
+| `hidden` | `list<string>` | `["colorpicker", "mission", "airplane", "clipboard", "ocr"...` |  |
 
 ## lockscreen
 

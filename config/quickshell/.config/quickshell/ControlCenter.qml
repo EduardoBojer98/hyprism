@@ -29,7 +29,7 @@ Singleton {
         sections: ["connections", "screen", "audio", "toggles", "media", "power"],
         tiles: ["wifi", "bt"],
         sliders: ["sound", "mic"],   // the Sound card's rows
-        toggles: ["focus", "nightlight", "caffeine", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "colorpicker", "mission"]
+        toggles: ["focus", "nightlight", "caffeine", "darkmode", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
     })
     // the saved order; anything never saved goes to its default group, at its default place
     function order(group) {
@@ -44,6 +44,7 @@ Singleton {
     function available(id) {
         switch (id) {
         case "monitor": return Machine.monitorSwitch
+        case "micmute": return Sys.source !== null
         case "keylight": return Machine.kbdDevice !== ""
         case "touchpad": return Inputs.touchpadName !== ""
         case "media": return Sys.player !== null
@@ -108,8 +109,24 @@ Singleton {
         colorpicker: { label: "Colour", glyph: "\u{F020A}", action: true, status: "", hint: "Pick a colour on screen and copy it",
                        run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprpicker -a"]) } },
         mission: { label: "Windows", glyph: "\u{F0570}", action: true, status: "", hint: "Every window at a glance",
-                   run: () => { cc.hide(); MissionControl.toggle() } }
+                   run: () => { cc.hide(); MissionControl.toggle() } },
+        darkmode: { label: "Dark mode", glyph: "\u{F050E}", active: !Theme.light, status: Theme.light ? "Light" : "Dark",
+                    hint: "Every theme in its light or dark version", run: () => Config.set("appearance", "mode", Theme.light ? "dark" : "light") },
+        micmute: { label: "Microphone", glyph: Sys.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}", active: !(Sys.source?.audio?.muted ?? true),
+                   status: !Sys.source ? "None" : Sys.source.audio?.muted ? "Muted" : "On", hint: "Mute or unmute the microphone",
+                   run: () => { if (Sys.source?.audio) Sys.source.audio.muted = !Sys.source.audio.muted } },
+        airplane: { label: "Airplane", glyph: "\u{F001D}", active: cc.airplane, status: cc.airplane ? "On" : "Off",
+                    hint: "Wi-Fi and Bluetooth off together (on again together)",
+                    run: () => { const on = cc.airplane; Networking.wifiEnabled = on; if (Sys.adapter) Sys.adapter.enabled = on } },
+        clipboard: { label: "Clipboard", glyph: "\u{F014C}", action: true, status: "", hint: "What you copied (Super+V)",
+                     run: () => { cc.hide(); Clipboard.toggle() } },
+        ocr: { label: "Text", glyph: "\u{F0A3B}", action: true, status: "", hint: "Copy text from the screen: drag over it",
+               run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screentext"]) } },
+        emoji: { label: "Emoji", glyph: "\u{F0785}", action: true, status: "", hint: "Pick an emoji to paste",
+                 run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; emojipick"]) } }
     })
+    // airplane: both radios off (one without an adapter counts as off)
+    readonly property bool airplane: !Networking.wifiEnabled && !(Sys.adapter?.enabled ?? false)
     readonly property bool monitorHere: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
 
     // what the sections share while the panel is open (folded-out list, Wi-Fi password, tooltip); flyouts have their own
