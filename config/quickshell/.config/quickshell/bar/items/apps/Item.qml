@@ -63,6 +63,7 @@ Item {
                 }
                 // words voices (terminal themes) name the apps instead, like tmux's window list
                 readonly property bool asText: apps.bar.words && !apps.bar.vertical
+                readonly property bool nameOnly: win !== null && Config.dock.nameOnly   // Settings > Dock > Open windows as names
                 color: asText && active ? Theme.accent : active ? pressedColor : hovered ? hover : "transparent"
                 radius: asText ? 0 : Theme.radiusSmall
                 Rectangle {   // the rule between launchers and open windows
@@ -71,9 +72,9 @@ Item {
                     height: apps.bar.vertical ? 1 : apps.icon * 0.6
                     color: Qt.alpha(apps.bar.tone, 0.3)
                 }
-                IconImage { visible: !app.rule && !app.asText; implicitSize: apps.icon; source: Quickshell.iconPath(app.entry?.icon ?? "", "application-x-executable") }
+                IconImage { visible: !app.rule && !app.asText && !app.nameOnly; implicitSize: apps.icon; source: Quickshell.iconPath(app.entry?.icon ?? "", "application-x-executable") }
                 // an open window can say what it is (Settings > Dock > Open windows in the bar): its app or its title
-                readonly property string label: !win || apps.bar.vertical ? "" : Config.dock.barLabels === "name" ? (entry?.name ?? win.wayland?.appId ?? "")
+                readonly property string label: !win || apps.bar.vertical ? "" : app.nameOnly || Config.dock.barLabels === "name" ? (entry?.name ?? win.wayland?.appId ?? "")
                                               : Config.dock.barLabels === "title" ? (win.title || entry?.name || "") : ""
                 Text {
                     visible: !app.rule && !app.asText && app.label !== ""
