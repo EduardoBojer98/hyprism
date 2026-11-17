@@ -2,6 +2,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import QtQuick
 
 // The screens: what is connected, the layout being edited, applying it, and the keep-or-revert countdown.
@@ -169,6 +170,37 @@ Singleton {
         edits = e
         return apply(true)
     }
+    // ---- Identify: a big number on each screen for 2 s, in the order of the list on the Settings page ----------
+    property bool identifying: false
+    function identify() { identifying = true; identifyTimer.restart() }
+    function numberOf(name) { return monitors.findIndex(m => m.name === name) + 1 }
+    Timer { id: identifyTimer; interval: 2000; onTriggered: root.identifying = false }
+    Variants {
+        model: Quickshell.screens
+        PanelWindow {
+            required property ShellScreen modelData
+            screen: modelData
+            visible: root.identifying
+            implicitWidth: 300
+            implicitHeight: 300
+            exclusiveZone: 0
+            color: "transparent"
+            WlrLayershell.namespace: "qs-display-identify"
+            WlrLayershell.layer: WlrLayer.Overlay
+            mask: Region {}   // never takes input
+            Glass {
+                anchors.fill: parent
+                strong: true
+                radius: Theme.radiusPanel
+                Column {
+                    anchors.centerIn: parent
+                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.numberOf(modelData.name); color: Theme.text; font { family: Theme.font; pixelSize: 160; weight: Font.Bold } }
+                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontSize } }
+                }
+            }
+        }
+    }
+
     function keep() { countdown.stop(); previous = null }
     function revert() { countdown.stop(); edits = previous; previous = null; apply(false) }
     Timer {
@@ -282,6 +314,8 @@ Singleton {
             if (how.startsWith("only:") && !m) return "No screen " + how.slice(5)
             return root.applyMode(m ? "only:" + m.key : how) || "ok"
         }
+        function identify(): void { root.identify() }
+        function save(name: string): string { return root.saveCurrent(name) || "ok" }
         function list(): string {
             return JSON.stringify({
                 screens: root.monitors.map(m => ({ key: m.key, name: m.name, label: root.label(m), mode: root.edits[m.key]?.mode, on: !root.edits[m.key]?.disabled })),

@@ -57,6 +57,8 @@ ColumnLayout {
         }
     }
 
+    SettingsPageDisplaysPresets {}
+
     // ---- arrangement canvas -----------------------------------------------------------------
     Rectangle {
         Layout.fillWidth: true
@@ -97,7 +99,7 @@ ColumnLayout {
 
                     Column {
                         anchors.centerIn: parent
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: Displays.label(page.monitors.find(m => m.key === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: Displays.numberOf(page.monitors.find(m => m.key === screenRect.modelData)?.name) + " \u00b7 " + Displays.label(page.monitors.find(m => m.key === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.e.mode.replace("@", " · ") + " Hz"; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                     }
 
