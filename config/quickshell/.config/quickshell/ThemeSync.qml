@@ -225,8 +225,9 @@ Scope {
     Connections { target: Themes; function onReadyChanged() { debounce.restart(); wallDebounce.restart() } }
     Connections { target: Config.appearance; function onThemeChanged() { root.lastWall = ""; wallDebounce.restart() } function onModeChanged() { wallDebounce.restart() } function onWallpaperChanged() { root.lastWall = ""; wallDebounce.restart() } }
 
-    // Only key names Hyprland understands get through; anything else is dropped
-    function keybindsLua(o) {
+    // Only key names Hyprland understands get through; anything else is dropped. `custom`: your shortcuts, each
+    // running an action (binds.lua binds them to `qs ipc call actions run <id>`; the name is for the cheat sheet)
+    function keybindsLua(o, custom) {
         const lines = []
         for (const id of Object.keys(o).sort()) {
             if (!/^[a-z0-9-]+$/.test(id)) continue
@@ -234,11 +235,14 @@ Scope {
             if (k === "") lines.push(`    ["${id}"] = false,`)
             else if (/^[A-Za-z0-9_+: ]+$/.test(k)) lines.push(`    ["${id}"] = "${k}",`)
         }
-        return "-- Written by Quickshell from Settings > Keyboard Shortcuts (id = keys, false = off)\nreturn {\n" + lines.join("\n") + "\n}"
+        const mine = Array.from(custom ?? []).filter(c => /^[A-Za-z0-9_+: ]+$/.test(c?.keys ?? "") && /^[a-z0-9][a-z0-9-]*$/.test(c?.action ?? ""))
+            .map(c => `        { keys = "${c.keys}", action = "${c.action}", name = ${JSON.stringify(String(Actions.get(c.action)?.name ?? c.action).replace(/[\x00-\x1f"\\|]/g, ""))} },`)
+        if (mine.length) lines.push("    custom = {\n" + mine.join("\n") + "\n    },")
+        return "-- Written by Quickshell from Settings > Keyboard Shortcuts (id = keys, false = off; custom = your shortcuts)\nreturn {\n" + lines.join("\n") + "\n}"
     }
     property string lastKeybinds: ""
     function applyKeybinds() {
-        const text = keybindsLua(Config.keybinds.overrides)
+        const text = keybindsLua(Config.keybinds.overrides, Config.keybinds.custom)
         if (text === lastKeybinds) return
         const first = lastKeybinds === ""
         lastKeybinds = text
@@ -246,7 +250,7 @@ Scope {
         if (!first) Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprctl reload"])
     }
     Timer { id: keyDebounce; interval: 300; onTriggered: if (Config.loaded && Themes.ready) root.applyKeybinds() }
-    Connections { target: Config.keybinds; function onOverridesChanged() { keyDebounce.restart() } }
+    Connections { target: Config.keybinds; function onOverridesChanged() { keyDebounce.restart() } function onCustomChanged() { keyDebounce.restart() } }
     Connections { target: Config; function onLoadedChanged() { keyDebounce.restart() } }
 
     // Window behaviour, animations and app rules: every option the schema allows, apps reduced to

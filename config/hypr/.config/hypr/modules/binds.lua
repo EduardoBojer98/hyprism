@@ -139,6 +139,18 @@ add("previous",        "Media", "Previous track",  "XF86AudioPrev",         exec
 add("play",            "Media", "Play / pause",    "XF86AudioPlay",         exec("playerctl play-pause"), { locked = true })
 add("pause",           "Media", "Play / pause (pause key)", "XF86AudioPause", exec("playerctl play-pause"), { locked = true })
 
+-- Your shortcuts (Settings > Keyboard Shortcuts > Add shortcut): each runs an action from the shell's registry.
+-- Keys and the action id are plain text only (the same check as the terminal command above).
+if type(overrides.custom) == "table" then
+    for i, c in ipairs(overrides.custom) do
+        if type(c) == "table" and type(c.keys) == "string" and c.keys:match("^[%w_+: ]+$")
+            and type(c.action) == "string" and c.action:match("^[%w-]+$") then
+            local name = type(c.name) == "string" and (c.name:gsub("|", "")) or c.action
+            add("custom-" .. i, "Custom", name, c.keys, exec("qs ipc call actions run " .. c.action))
+        end
+    end
+end
+
 for _, b in ipairs(binds) do
     local keys = b.keys
     local o = overrides[b.id]
