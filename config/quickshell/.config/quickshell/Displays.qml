@@ -170,6 +170,9 @@ Singleton {
         edits = e
         return apply(true)
     }
+    property bool switcherOpen: false
+    DisplaySwitcher {}
+
     // ---- Identify: a big number on each screen for 2 s, in the order of the list on the Settings page ----------
     property bool identifying: false
     function identify() { identifying = true; identifyTimer.restart() }
@@ -315,6 +318,7 @@ Singleton {
             return root.applyMode(m ? "only:" + m.key : how) || "ok"
         }
         function identify(): void { root.identify() }
+        function switcher(): void { root.switcherOpen = !root.switcherOpen }
         function save(name: string): string { return root.saveCurrent(name) || "ok" }
         function list(): string {
             return JSON.stringify({
