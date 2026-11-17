@@ -1,5 +1,4 @@
 import Quickshell
-import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -10,14 +9,14 @@ ColumnLayout {
     id: page
     spacing: 20
 
-    property var monitors: []      // from hyprctl -j monitors all
-    property var edits: ({})       // name -> { mode, x, y, scale, transform, vrr, bitdepth, mirror, disabled }
-    property var saved: ({})       // edits as last loaded, for Revert and the keep-or-revert countdown
-    property var previous: null    // what to go back to while the countdown runs
+    // the logic lives in Displays.qml (also used by the display switcher and presets); this page only shows and edits it
+    readonly property var monitors: Displays.monitors
+    readonly property var edits: Displays.edits
+    readonly property bool dirty: Displays.dirty
     property string selected: ""
-    property bool dirty: false
+    onMonitorsChanged: if (!monitors.some(m => m.key === selected)) selected = monitors[0]?.key ?? ""
 
-    readonly property var sel: monitors.find(m => m.name === selected) ?? null
+    readonly property var sel: monitors.find(m => m.key === selected) ?? null
     readonly property var selEdit: edits[selected] ?? null
     // screens drawn on the canvas: on, and not showing another screen's picture
     readonly property var placed: Object.keys(edits).filter(n => !edits[n].disabled && !edits[n].mirror)
@@ -39,98 +38,7 @@ ColumnLayout {
     readonly property string selRes: selEdit?.mode.split("@")[0] ?? ""
     readonly property int selHz: Number(selEdit?.mode.split("@")[1] ?? 0)
 
-    function label(m) { return m.name.startsWith("eDP") ? "Laptop" : (m.make || m.name).split(" ")[0] }
-    function load() { read.running = true }
-    Component.onCompleted: load()
-
-    Process {
-        id: read
-        // Hyprland reports the live state; adaptive sync's mode (on / fullscreen) only lives in the saved layout
-        command: ["hyprctl", "-j", "monitors", "all"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const list = JSON.parse(text).filter(m => Machine.realScreen(m.name))
-                const e = {}
-                for (const m of list) {
-                    // a screen that's off may report 0x0: its first (preferred) mode then
-                    const first = (m.availableModes?.[0] ?? "1920x1080@60").split("@")
-                    e[m.name] = { mode: m.width ? m.width + "x" + m.height + "@" + Math.round(m.refreshRate) : first[0] + "@" + Math.round(parseFloat(first[1])), x: m.x, y: m.y,
-                                  scale: m.scale, transform: m.transform, vrr: Number(Config.displays.layout[m.name]?.vrr ?? 0),
-                                  bitdepth: /2101010/.test(m.currentFormat) ? 10 : 8,
-                                  mirror: m.mirrorOf && m.mirrorOf !== "none" ? m.mirrorOf : "", disabled: m.disabled === true }
-                }
-                page.monitors = list
-                page.edits = e
-                page.saved = e
-                if (!page.selected && list.length) page.selected = list[0].name
-                page.dirty = false
-            }
-        }
-    }
-
-    function logicalSize(name) {
-        const e = edits[name]
-        if (!e) return { w: 0, h: 0 }
-        const [w, h] = e.mode.split("@")[0].split("x").map(Number)
-        const rotated = e.transform % 2 === 1
-        return { w: Math.round((rotated ? h : w) / e.scale), h: Math.round((rotated ? w : h) / e.scale) }
-    }
-
-    function set(field, value) {
-        const e = Object.assign({}, edits)
-        e[selected] = Object.assign({}, e[selected], { [field]: value })
-        edits = e
-        dirty = true
-    }
-
-    function apply(confirm) {
-        // Normalise so the top-left screen sits at 0,0
-        const names = Object.keys(edits)
-        const shown = names.filter(n => !edits[n].disabled && !edits[n].mirror)
-        const minX = Math.min(...shown.map(n => edits[n].x)), minY = Math.min(...shown.map(n => edits[n].y))
-        const out = {}
-        for (const n of names) {
-            const e = edits[n]
-            if (e.disabled) { out[n] = { disabled: true }; continue }
-            out[n] = { mode: e.mode, position: (e.x - minX) + "x" + (e.y - minY), scale: e.scale, transform: e.transform }
-            if (e.vrr) out[n].vrr = e.vrr
-            if (e.bitdepth === 10) out[n].bitdepth = 10
-            if (e.mirror) out[n].mirror = e.mirror
-        }
-        if (confirm) { previous = saved; countdown.left = 15; countdown.start() }
-        Config.set("displays", "layout", out)   // SettingsSync writes displays.lua and applies it
-        reloadTimer.restart()
-    }
-    Timer { id: reloadTimer; interval: 800; onTriggered: page.load() }
-    // One switch for every screen, like a projector key: extend the desktop, mirror one picture, or one screen only
-    readonly property string arrangement: {
-        const names = Object.keys(edits), on = names.filter(n => !edits[n].disabled)
-        if (on.length === 1 && names.length > 1) return "only:" + on[0]
-        return on.some(n => edits[n].mirror) ? "mirror" : "extend"
-    }
-    function arrange(how) {
-        const names = Object.keys(edits), e = {}
-        // the picture to mirror or the screen kept on: the laptop panel when there is one, else the first screen
-        const main = names.find(n => n.startsWith("eDP")) ?? names[0]
-        let x = 0
-        for (const n of names.slice().sort((a, b) => (a === main ? -1 : b === main ? 1 : 0))) {
-            const one = Object.assign({}, edits[n], { disabled: false, mirror: "" })
-            if (how === "mirror" && n !== main) one.mirror = main
-            if (how.startsWith("only:")) one.disabled = n !== how.slice(5)
-            if (how === "extend") { one.x = x; one.y = 0; x += logicalSize(n).w }   // side by side, main screen first
-            e[n] = one
-        }
-        edits = e
-        apply(true)
-    }
-    function keep() { countdown.stop(); previous = null }
-    function revert() { countdown.stop(); edits = previous; previous = null; apply(false) }
-    Timer {
-        id: countdown
-        property int left: 15
-        interval: 1000; repeat: true
-        onTriggered: if (--left <= 0) page.revert()
-    }
+    function set(field, value) { Displays.set(selected, field, value) }
 
     // ---- several screens: extend, mirror or one only ----------------------------------------
     SettingGroup {
@@ -141,10 +49,10 @@ ColumnLayout {
             hint: "Extend: one desktop across the screens. Mirror: the same picture on all. Only: the others go dark"
             Choice {
                 accessibleName: "Show the desktop"
-                readonly property var keys: ["extend", "mirror"].concat(page.monitors.map(m => "only:" + m.name))
-                options: ["Extend", "Mirror"].concat(page.monitors.map(m => "Only " + page.label(m)))
-                index: Math.max(0, keys.indexOf(page.arrangement))
-                onPicked: i => page.arrange(keys[i])
+                readonly property var keys: ["extend", "mirror"].concat(page.monitors.map(m => "only:" + m.key))
+                options: ["Extend", "Mirror"].concat(page.monitors.map(m => "Only " + Displays.label(m)))
+                index: Math.max(0, keys.indexOf(Displays.arrangement))
+                onPicked: i => Displays.arrange(keys[i])
             }
         }
     }
@@ -165,7 +73,7 @@ ColumnLayout {
                 if (!names.length) return { x: 0, y: 0, w: 1, h: 1 }
                 let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
                 for (const n of names) {
-                    const s = page.logicalSize(n), e = page.edits[n]
+                    const s = Displays.logicalSize(n), e = page.edits[n]
                     x0 = Math.min(x0, e.x); y0 = Math.min(y0, e.y); x1 = Math.max(x1, e.x + s.w); y1 = Math.max(y1, e.y + s.h)
                 }
                 return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
@@ -177,7 +85,7 @@ ColumnLayout {
                 Rectangle {
                     id: screenRect
                     required property string modelData
-                    readonly property var size: page.logicalSize(modelData)
+                    readonly property var size: Displays.logicalSize(modelData)
                     readonly property var e: page.edits[modelData]
                     x: (e.x - stage.bounds.x) * stage.k + (stage.width - stage.bounds.w * stage.k) / 2
                     y: (e.y - stage.bounds.y) * stage.k + (stage.height - stage.bounds.h * stage.k) / 2
@@ -189,7 +97,7 @@ ColumnLayout {
 
                     Column {
                         anchors.centerIn: parent
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: page.label(page.monitors.find(m => m.name === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: Displays.label(page.monitors.find(m => m.key === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.e.mode.replace("@", " · ") + " Hz"; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                     }
 
@@ -204,7 +112,7 @@ ColumnLayout {
                             let ny = Math.round((parent.y - (stage.height - stage.bounds.h * stage.k) / 2) / stage.k + stage.bounds.y)
                             for (const o of page.placed) {
                                 if (o === screenRect.modelData) continue
-                                const oe = page.edits[o], os = page.logicalSize(o), me = screenRect.size, snap = 80
+                                const oe = page.edits[o], os = Displays.logicalSize(o), me = screenRect.size, snap = 80
                                 for (const [a, b] of [[nx, oe.x + os.w], [nx + me.w, oe.x], [nx, oe.x], [nx + me.w, oe.x + os.w], [nx + (me.w - os.w) / 2, oe.x]])
                                     if (Math.abs(a - b) < snap) { nx += b - a; break }
                                 for (const [a, b] of [[ny, oe.y + os.h], [ny + me.h, oe.y], [ny, oe.y], [ny + me.h, oe.y + os.h]])
@@ -227,7 +135,7 @@ ColumnLayout {
 
     // ---- selected screen ---------------------------------------------------------------------
     SettingGroup {
-        title: page.sel ? page.label(page.sel) + " screen" : ""   // the vendor model code says little; the canvas above shows which one
+        title: page.sel ? Displays.label(page.sel) + " screen" : ""   // the vendor model code says little; the canvas above shows which one
         visible: page.sel !== null
 
         SettingRow {
@@ -246,8 +154,8 @@ ColumnLayout {
             Dropdown {
                 width: 200
                 readonly property var others: Object.keys(page.edits).filter(n => n !== page.selected && !page.edits[n].disabled && !page.edits[n].mirror)
-                options: ["Don't mirror"].concat(others.map(n => page.label(page.monitors.find(m => m.name === n))))
-                current: page.selEdit?.mirror ? page.label(page.monitors.find(m => m.name === page.selEdit.mirror)) : "Don't mirror"
+                options: ["Don't mirror"].concat(others.map(n => Displays.label(page.monitors.find(m => m.key === n))))
+                current: page.selEdit?.mirror ? Displays.label(page.monitors.find(m => m.key === page.selEdit.mirror)) : "Don't mirror"
                 onPicked: v => page.set("mirror", v === "Don't mirror" ? "" : others[options.indexOf(v) - 1])
             }
         }
@@ -313,17 +221,17 @@ ColumnLayout {
         Layout.fillWidth: true
         Text {
             Layout.fillWidth: true
-            text: page.dirty ? "Unsaved changes" : "Saved"
-            color: page.dirty ? Theme.yellow : Theme.muted
+            text: Displays.notice || (page.dirty ? "Unsaved changes" : "Saved")
+            color: Displays.notice || page.dirty ? Theme.yellow : Theme.muted
             font { family: Theme.font; pixelSize: Theme.fontLabel }
         }
-        PillButton { text: "Revert"; enabled: page.dirty; onClicked: page.load() }
-        PillButton { text: "Apply"; primary: true; enabled: page.dirty; onClicked: page.apply(true) }
+        PillButton { text: "Revert"; enabled: page.dirty; onClicked: Displays.discard() }
+        PillButton { text: "Apply"; primary: true; enabled: page.dirty; onClicked: Displays.apply(true) }
     }
 
     // after Apply: keep the new settings, or they go back on their own (a mode the screen can't show)
     Rectangle {
-        visible: countdown.running
+        visible: Displays.counting
         Layout.fillWidth: true
         implicitHeight: 52
         radius: Theme.radius
@@ -333,12 +241,12 @@ ColumnLayout {
             anchors { fill: parent; leftMargin: 16; rightMargin: 12 }
             Text {
                 Layout.fillWidth: true
-                text: `Keep these display settings? Going back in ${countdown.left} s`
+                text: `Keep these display settings? Going back in ${Displays.left} s`
                 color: Theme.text
                 font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.Medium }
             }
-            PillButton { text: "Go back"; onClicked: page.revert() }
-            PillButton { text: "Keep"; primary: true; onClicked: page.keep() }
+            PillButton { text: "Go back"; onClicked: Displays.revert() }
+            PillButton { text: "Keep"; primary: true; onClicked: Displays.keep() }
         }
     }
 
