@@ -27,5 +27,5 @@ ShellRoot {
     ThemeSync {}
     SettingsSync {}   // settings.json -> hypridle, input, displays, monswitch files
     // Create the singletons with IPC handlers now, so `qs ipc call …` works before first use
-    Component.onCompleted: { Machine.asus; Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = ""; Caffeine.minutes = 0; NightLight.now = new Date(); ControlCenter.view.reset(); Flyouts.all; UtilityMenu.host; PowerMenu.open; Cheatsheet.open; Welcome.open; Inputs.touchpad; Sys.recording; Notifications.unread; NotificationCenter.unfolded = ({}); MissionControl.selected = -1; Calendar.month = new Date(); Wallpapers.images; WallpaperColours.own; WindowMenu.addr; Pins.maxPins; CapturePanel.open }
+    Component.onCompleted: { Machine.asus; Launcher.category = "All"; SettingsApp.open = false; Clipboard.filter = ""; Caffeine.minutes = 0; NightLight.now = new Date(); ControlCenter.view.reset(); Flyouts.all; UtilityMenu.host; PowerMenu.open; Cheatsheet.open; Welcome.open; Inputs.touchpad; Sys.recording; Notifications.unread; NotificationCenter.unfolded = ({}); MissionControl.selected = -1; Calendar.month = new Date(); Wallpapers.images; WallpaperColours.own; WindowMenu.addr; Pins.maxPins; CapturePanel.open; Actions.all }
 }

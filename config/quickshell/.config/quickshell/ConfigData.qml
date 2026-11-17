@@ -3,7 +3,7 @@ import Quickshell.Io
 // Defaults for every desktop option (Config.qml). A key missing from settings.json takes the
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
-    property int version: 6                     // settings format; Config.repair() upgrades older files
+    property int version: 7                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
         property string theme: "pebble"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)
@@ -38,8 +38,6 @@ JsonAdapter {
     property JsonObject launcher: JsonObject {
         property string webSearch: "https://duckduckgo.com/?q=%s"
         property bool showFiles: true
-        // [{ name, kind: "command"|"terminal"|"open"|"snippet", value, confirm }]
-        property list<var> actions: []
         property var usage: ({})                // launch counts, for ranking
         // look (Search & Launcher > Style)
         property string style: "theme"          // theme (the theme's own) | spotlight | launchpad | drawer | sidebar | terminal (Launcher.qml styles)
@@ -160,6 +158,11 @@ JsonAdapter {
     property JsonObject keybinds: JsonObject {
         // id -> { keys: "SUPER + K" ("" = turned off), label, group, def } (Settings > Keyboard Shortcuts)
         property var overrides: ({})
+        property var custom: []                 // your shortcuts: [{ keys: "SUPER + D", action: "<action id>" }]; each runs `qs ipc call actions run <id>`
+    }
+    // your own buttons and toggles (Settings > Actions, Actions.qml): [{ id, name, icon, kind, run: { type, argv | value }, ... }]
+    property JsonObject actions: JsonObject {
+        property var list: []                   // shown in Spotlight, bar clicks or hot corners; see docs/decisions/0002-action-registry.md
     }
     property JsonObject weather: JsonObject {
         // saved places, in your order: [{ name, region, country, latitude, longitude }]; Settings > Weather adds them

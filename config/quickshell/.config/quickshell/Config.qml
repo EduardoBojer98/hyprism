@@ -21,6 +21,7 @@ Singleton {
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
     readonly property alias keybinds: adapter.keybinds
+    readonly property alias actions: adapter.actions
     readonly property alias windows: adapter.windows
     readonly property alias lockscreen: adapter.lockscreen
     readonly property alias calendar: adapter.calendar
@@ -49,7 +50,7 @@ Singleton {
         },
         dock: { enabled: "bool", size: ["compact", "regular", "roomy"], hiddenOn: "list",
                 iconSize: [24, 72], autoHide: "bool", showRunning: "bool", combine: "bool", barLabels: ["icon", "name", "title"], nameOnly: "bool", previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list", widgets: "list" },
-        launcher: { webSearch: "string", showFiles: "bool", actions: "list", usage: "object",
+        launcher: { webSearch: "string", showFiles: "bool", usage: "object",
                     style: ["theme", "spotlight", "launchpad", "drawer", "sidebar", "terminal"],
                     columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool", position: ["center", "pointer", "theme"] },
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
@@ -65,7 +66,8 @@ Singleton {
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", sliders: "list", toggles: "list", folded: "list", hidden: "list" },
-        keybinds: { overrides: "object" },
+        keybinds: { overrides: "object", custom: "shortcuts" },
+        actions: { list: "actions" },
         lockscreen: { clock: ["theme", "big", "stacked", "terminal", "readout", "small"], position: ["theme", "center", "top", "bottom", "left"],
                       date: "bool", greeting: "bool", avatar: "string", widgets: "list", wallpaper: "string",
                       blur: [0, 6], brightness: [0.3, 1] },
@@ -128,6 +130,12 @@ Singleton {
             && Array.from(value).every(l => typeof l?.name === "string" && l.name.length > 0
                 && typeof l?.latitude === "number" && Math.abs(l.latitude) <= 90
                 && typeof l?.longitude === "number" && Math.abs(l.longitude) <= 180) ? "" : "Up to 20 places, each with a name and coordinates"
+        // your actions: each one checked by Actions.problem (repair() drops a bad one alone, with a warning)
+        if (rule === "actions") return value && typeof value.length === "number" && value.length <= 200
+            && Array.from(value).every((a, i, all) => !Actions.problem(a) && all.findIndex(b => b.id === a.id) === i) ? "" : "Up to 200 valid actions with different ids"
+        // keys and an action id go into hypr/settings/keybinds.lua: plain characters only (binds.lua checks again)
+        if (rule === "shortcuts") return value && typeof value.length === "number" && value.length <= 100
+            && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[a-z0-9][a-z0-9-]*$/.test(c?.action ?? "")) ? "" : "Shortcuts need keys and an action id"
         if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(n => /^[A-Za-z0-9._-]+$/.test(n)) ? "" : "Unknown display names"
         return ""
     }
@@ -301,6 +309,35 @@ Singleton {
             adapter.bar.layout = l
             adapter.version = 6
         }
+        // format 7: your launcher actions (launcher.actions) became actions of the registry (actions.list, Actions.qml),
+        // and the launcher's history names them by id
+        if ((raw?.version ?? 1) < 7) {
+            const ids = {}, list = JSON.parse(JSON.stringify(adapter.actions.list ?? []))
+            for (const c of Array.from(raw?.launcher?.actions ?? [])) {
+                if (typeof c?.name !== "string" || typeof c?.value !== "string" || !c.name.trim() || !c.value.trim()) continue
+                let id = c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "action"
+                while (list.some(a => a.id === id) || Actions.builtinIds.includes(id)) id += "-2"
+                const run = c.kind === "snippet" || c.kind === "open" ? { type: c.kind, value: c.value }
+                          : c.kind === "terminal" ? { type: "terminal", argv: ["sh", "-c", c.value] } : { type: "shell", value: c.value }
+                list.push({ id: id, name: c.name.trim().slice(0, 60), icon: ({ snippet: "\u{F0187}", open: "\u{F024B}" })[c.kind] ?? "\u{F018D}",
+                            kind: "button", run: run, confirm: c.confirm === true, showIn: ["launcher"] })
+                ids["custom:" + c.name] = "action:" + id
+            }
+            adapter.actions.list = list
+            const l = adapter.launcher, usage = {}
+            l.recent = Array.from(l.recent ?? []).map(k => ids[k] ?? k)
+            for (const [k, n] of Object.entries(l.usage ?? {})) usage[ids[k] ?? k] = n
+            l.usage = usage
+            adapter.version = 7
+        }
+        // a bad action is dropped alone, so one typo in settings.json doesn't take the others with it
+        const acts = Array.from(adapter.actions.list ?? [])
+        const good = acts.filter((a, i) => {
+            const why = Actions.problem(a) || (acts.findIndex(b => b?.id === a.id) !== i ? "a second action with this id" : "")
+            if (why) console.warn("settings.json: action " + JSON.stringify(a?.id ?? i) + " dropped: " + why)
+            return !why
+        })
+        if (good.length !== acts.length) adapter.actions.list = JSON.parse(JSON.stringify(good))
         // before 2026-11-15 the weather had one place and two switches
         const rw = raw?.weather ?? {}
         if (rw.locations === undefined && typeof rw.city === "string" && typeof rw.latitude === "number" && typeof rw.longitude === "number")

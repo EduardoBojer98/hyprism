@@ -13,7 +13,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `version` | `int` | `6` | settings format; Config.repair() upgrades older files |
+| `version` | `int` | `7` | settings format; Config.repair() upgrades older files |
 
 ## appearance
 
@@ -58,7 +58,6 @@ Every setting, with its type, default and meaning. This file is generated from `
 | --- | --- | --- | --- |
 | `webSearch` | `string` | `"https://duckduckgo.com/?q=%s"` |  |
 | `showFiles` | `bool` | `true` |  |
-| `actions` | `list<var>` | `[]` |  |
 | `usage` | `var` | `{}` | launch counts, for ranking |
 | `style` | `string` | `"theme"` | theme (the theme's own) \| spotlight \| launchpad \| drawer \| sidebar \| terminal (Launcher.qml styles) |
 | `columns` | `int` | `7` | apps per row in the apps grid (fewer when the panel is too narrow) |
@@ -197,6 +196,13 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `overrides` | `var` | `{}` |  |
+| `custom` | `var` | `[]` | your shortcuts: [{ keys: "SUPER + D", action: "<action id>" }]; each runs `qs ipc call actions run <id>` |
+
+## actions
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `list` | `var` | `[]` | shown in Spotlight, bar clicks or hot corners; see docs/decisions/0002-action-registry.md |
 
 ## weather
 

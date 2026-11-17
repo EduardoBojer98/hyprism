@@ -180,7 +180,9 @@ Singleton {
         popup.hide()
         Search.activate(r)
     }
-    property var confirmFor: null          // a custom action marked "ask first"
+    property var confirmFor: null          // an action marked "ask first"
+    // an action run from elsewhere (a hot corner, a shortcut) that asks first: the launcher opens to ask
+    function ask(r) { if (!popup.open) show("search"); confirmFor = r }
     // the right-click menu for an app: a DesktopEntry, or a result that carries one (anything else has no menu)
     function menuFor(r, item, x, y) { const e = r?.entry ?? (r?.execute ? r : null); if (e) menu.openFor(e, item, x, y) }
 
@@ -197,6 +199,7 @@ Singleton {
         focusItem: field
         onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens centred or at the pointer, not beside the bar item
         onClosed: { field.text = ""; root.confirmFor = null; menu.entry = null }
+        onOpenChanged: Actions.watch("launcher", popup.open)   // toggles show their real state
 
         // unified: one card behind the search field and the results, a hairline between them
         Glass {
