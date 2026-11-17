@@ -36,11 +36,11 @@ wait_for() {
     return 1
 }
 
-ipc config set bar preset minimal >/dev/null
-wait_for 'jq -r .bar.preset "$file"' minimal
-check "a value set in the shell lands in settings.json" '[[ $(jq -r .bar.preset "$file") == minimal ]]'
-in_file .bar.preset '"full"'
-check "a value written into settings.json reaches the shell" 'wait_for "ipc config get bar preset" "\"full\""'
+ipc config set bar windowTitle false >/dev/null
+wait_for 'jq -r .bar.windowTitle "$file"' false
+check "a value set in the shell lands in settings.json" '[[ $(jq -r .bar.windowTitle "$file") == false ]]'
+in_file .bar.windowTitle true
+check "a value written into settings.json reaches the shell" 'wait_for "ipc config get bar windowTitle" true'
 
 ipc config set bar items '{"cpu":{"warn":50}}' >/dev/null
 wait_for 'jq -c .bar.items "$file"' '{"cpu":{"warn":50}}'
