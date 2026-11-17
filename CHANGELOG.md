@@ -6,6 +6,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Displays: layouts are saved by monitor (make, model, serial) instead of port name, so they follow a monitor to
+  any port (settings format 7 renames the old keys). Presets: save, apply, rename, delete, default, and an opt-in
+  auto-switch when exactly a preset's screens are connected (with Undo). Identify, a Super+P display switcher, the
+  `displays` IPC target, and the page updates when a screen is plugged or unplugged. Apply refuses overlapping
+  screens or none left on. See `docs/decisions/0003-monitor-identity.md`.
 - Video wallpapers: .mp4, .webm, .mkv and .mov files in the wallpaper folders play with `mpvpaper` (new package,
   with `ffmpeg`) over a still frame that the lock screen, colours from the wallpaper and Settings use. Hardware
   decoding on the iGPU without waking a hybrid laptop's NVIDIA card. A playing video about doubles idle power even
