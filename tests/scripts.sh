@@ -88,6 +88,13 @@ done
 mkdir -p "$t/clip"
 XDG_DATA_HOME="$t/clip" bash "$bin/clipstore" list >/dev/null 2>&1
 check "clipstore keeps its folder private (700)" '[[ $(stat -c %a "$t/clip/clipboard") == 700 ]]'
+# size cap: 3 MB of unpinned history (plus a pinned 1 MB) is cut to the newest entries under the cap (2.5 MB here); a pinned one stays
+now=$(date +%s%3N)
+for i in 1 2 3 4; do mkdir -p "$t/clip/clipboard/$((now + i))-abc$i" && head -c $((1024 * 1024)) /dev/zero >"$t/clip/clipboard/$((now + i))-abc$i/data"; done
+touch "$t/clip/clipboard/$((now + 1))-abc1/pinned"
+CLIPSTORE_TOTAL_KB=2500 XDG_DATA_HOME="$t/clip" bash "$bin/clipstore" prune >/dev/null 2>&1
+check "clipstore keeps unpinned history under its size cap" '[[ -d $t/clip/clipboard/$((now + 4))-abc4 && -d $t/clip/clipboard/$((now + 3))-abc3 && -d $t/clip/clipboard/$((now + 1))-abc1 && ! -d $t/clip/clipboard/$((now + 2))-abc2 ]]'
+rm -rf "$t/clip/clipboard"/*-abc*
 
 # the emoji picker builds its list from Unicode's own file (no desktop environment's data)
 mkdir -p "$t/emoji"
