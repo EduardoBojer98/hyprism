@@ -78,6 +78,27 @@ Singleton {
     }
     Timer { interval: 5000; running: popup.open; repeat: true; triggeredOnStart: true; onTriggered: psRead.running = true }
 
+    // desktop health: problems only, read once each time the panel opens (nothing runs while it is closed).
+    // Each line: what failed. The section stays hidden while everything is fine. Crashes aren't counted here:
+    // test desktops and config checks leave core dumps too, so the count misleads; Details shows hypr-crashlog.
+    property var problems: []
+    Process {
+        id: healthRead
+        command: ["sh", "-c",
+            "systemctl --user --failed --plain --no-legend 2>/dev/null | awk '{print \"Your service failed: \" $1}'; "
+            + "systemctl --failed --plain --no-legend 2>/dev/null | awk '{print \"System service failed: \" $1}'; "
+            + "e=$(hyprctl configerrors 2>/dev/null | grep -c .); [ \"$e\" -gt 0 ] && echo \"Hyprland config: $e error line(s)\"; "
+            + "true"]
+        stdout: StdioCollector { onStreamFinished: root.problems = text.split("\n").filter(l => l.trim() !== "") }
+    }
+    Connections { target: popup; function onOpenChanged() { if (popup.open) healthRead.running = true } }
+    // the details in a terminal that stays open: failed services and the crash evidence (hypr-crashlog)
+    function healthDetails() {
+        popup.hide()
+        Quickshell.execDetached(["ghostty", "+new-window", "-e", "sh", "-c",
+            "systemctl --user --failed; systemctl --failed; hyprctl configerrors; hypr-crashlog; echo; read -p 'Press Enter to close' _"])
+    }
+
     IpcHandler {
         target: "system"
         function toggle(): void { root.toggle() }
@@ -267,6 +288,25 @@ Singleton {
                             Metrics.has("profile") ? { k: "Power mode", v: ({ "low-power": "Silent", quiet: "Silent", balanced: "Balanced", performance: "Performance" })[Metrics.text("profile")] ?? Metrics.text("profile"), span: 2 } : null,
                             Metrics.has("fans") ? { k: (root.d.fans ?? []).length > 1 ? "Fans, rpm" : "Fan, rpm", v: (root.d.fans ?? []).map(f => f > 0 ? f : "off").join(" · "), span: 2 } : null
                         ]
+                    }
+                }
+
+                // ---- problems with the desktop itself; absent while there are none
+                Section_ {
+                    visible: root.problems.length > 0
+                    title: "Desktop health"
+                    value: "Details"
+                    tone: Theme.accentLikeError ? Theme.text : Theme.accent
+                    linkValue: true
+                    onValueClicked: root.healthDetails()
+                    Repeater {
+                        model: root.problems
+                        Text {
+                            required property string modelData
+                            Layout.fillWidth: true
+                            text: "! " + modelData; wrapMode: Text.Wrap; color: Theme.warning
+                            font { family: Theme.font; pixelSize: Theme.fontLabel }
+                        }
                     }
                 }
 
