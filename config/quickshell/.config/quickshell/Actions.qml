@@ -11,7 +11,7 @@ import QtQuick
 //     its real state), confirm, timeoutSec (0 = no limit), when (Conditions.qml), showIn: ["launcher", "bar", "corner"] }
 // run.type: app (value: desktop id, gtk-launch) · command (argv, no shell) · terminal (argv in a Ghostty window) ·
 //   open (value: path or URL, xdg-open) · snippet (value: text to paste) · shell (value: sh -c, labelled as such) ·
-//   sequence (steps: action ids and { wait: ms }) · preset (value: a display preset; presetRunner) · internal (built-ins)
+//   sequence (steps: action ids and { wait: ms }) · preset (value: a display preset, run by Displays) · internal (built-ins)
 // state.type: internal (built-ins) · unit (unit, system: bool; systemctl is-active) · process (name; pgrep -x) ·
 //   command (argv; exit 0 = on). Checked after a run and when a surface showing it opens; never polled in the
 //   background (state.interval, seconds, only while one is shown).
@@ -27,8 +27,6 @@ Singleton {
     readonly property var surfaces: ["launcher", "bar", "corner", "controlcenter"]
     readonly property var userTypes: ["app", "command", "terminal", "open", "snippet", "shell", "sequence", "preset"]
     readonly property var refused: ["sudo", "su", "doas"]
-    // Phase 2 (display presets) sets this: (presetId) => "" or why it failed
-    property var presetRunner: null
 
     readonly property var user: Array.from(Config.actions.list ?? []).map(a => Object.assign({ kind: "button", showIn: ["launcher"], user: true }, a))
     readonly property var builtinIds: BuiltinActions.list.map(a => a.id)
@@ -107,7 +105,7 @@ Singleton {
         case "command": return spawn(a, r.argv ?? [], cwd, r.detach, done)
         // the window shows what happened; Ghostty may keep running as its own instance, so it isn't timed
         case "terminal": return spawn(a, ["ghostty", "+new-window", "-e", "sh", "-c", '"$@"; echo; read -p "Press Enter to close" _', "sh"].concat(r.argv ?? []), cwd, true, done)
-        case "preset": return root.presetRunner ? (root.presetRunner(r.value) || "") : "Display presets aren't available yet"
+        case "preset": return Displays.run(r.value) || ""   // a preset's id or name; same keep-or-revert countdown as Settings
         case "sequence": return sequence(a, r.steps ?? [], 0, chain.concat([a.id]))
         default: return "Unknown run type " + r?.type
         }

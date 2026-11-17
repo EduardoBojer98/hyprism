@@ -142,7 +142,6 @@ Singleton {
         if (confirm) { previous = saved; countdown.left = 15; countdown.start() }
         notice = ""
         dirty = false
-        Config.checkpoint("displays")
         Config.set("displays", "layout", layoutOf(edits))   // SettingsSync writes displays.lua and applies it
         reloadTimer.restart()
         return ""

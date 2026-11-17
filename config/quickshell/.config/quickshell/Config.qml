@@ -163,6 +163,7 @@ Singleton {
         if (Array.isArray(rule) && typeof rule[0] === "number") value = Number(value)
         const why = problem(rule, value)
         if (why) return why
+        if (["displays", "keybinds", "actions"].includes(section)) checkpoint(section)   // big changes: a restore point first
         adapter[section][key] = value
         return ""
     }
@@ -204,7 +205,7 @@ Singleton {
     Timer { id: reloadLater; interval: 250; onTriggered: file.reload() }
     Timer { id: writeLater; interval: 60; onTriggered: { if (snapshot.running) return; file.ownWriteAt = Date.now(); file.writeAdapter() } }
 
-    // A restore point before a big change (displays, keybinds, actions): call it before set(). The next write
+    // A restore point before a big change (set() calls it for displays, keybinds and actions). The next write
     // waits until the copy is taken, so the copy holds the settings from before the change.
     function checkpoint(reason) { if (!snapshot.running) { snapshot.command = ["settings-snapshot", "take", reason]; snapshot.running = true } }
     Process { id: snapshot; onRunningChanged: if (!running) writeLater.restart() }   // also when it failed to start
