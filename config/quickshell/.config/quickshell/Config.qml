@@ -1,6 +1,7 @@
 pragma Singleton
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import QtQuick
 
 // The one settings source for the desktop: ~/.config/quickshell/settings.json (yours, never in the
@@ -128,7 +129,7 @@ Singleton {
             && Array.from(value).every(l => typeof l?.name === "string" && l.name.length > 0
                 && typeof l?.latitude === "number" && Math.abs(l.latitude) <= 90
                 && typeof l?.longitude === "number" && Math.abs(l.longitude) <= 180) ? "" : "Up to 20 places, each with a name and coordinates"
-        if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(n => /^[A-Za-z0-9._-]+$/.test(n)) ? "" : "Unknown display names"
+        if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(n => /^[^"\\\x00-\x1f]{1,120}$/.test(n)) ? "" : "Unknown display names"   // a connector or a description (make model serial)
         return ""
     }
 
@@ -301,6 +302,24 @@ Singleton {
             adapter.bar.layout = l
             adapter.version = 6
         }
+        // ---- format 7 (displays) -------------------------------------------------------------------------------
+        // Screens were saved by connector (HDMI-A-1); they are now saved by description (make model serial), so a layout
+        // follows a monitor to another port. Only screens connected now are renamed; others keep their connector name.
+        // Waits (and stays at format 6) until Hyprland has listed the screens, so a slow start doesn't skip it.
+        if ((raw?.version ?? 1) < 7 && Hyprland.monitors.values.length > 0) {
+            const key = n => Displays.keyForName(n)
+            const rekey = o => { const out = {}; for (const n of Object.keys(o ?? {})) out[key(n)] = o[n]; return out }
+            const lay = JSON.parse(JSON.stringify(adapter.displays.layout ?? {}))
+            for (const n of Object.keys(lay)) if (lay[n]?.mirror) lay[n].mirror = key(lay[n].mirror)
+            adapter.displays.layout = rekey(lay)
+            const ws = JSON.parse(JSON.stringify(adapter.workspaces.screens ?? {}))
+            for (const n of Object.keys(ws)) ws[n] = key(ws[n])
+            adapter.workspaces.screens = ws
+            adapter.bar.hiddenOn = Array.from(adapter.bar.hiddenOn).map(key)
+            adapter.dock.hiddenOn = Array.from(adapter.dock.hiddenOn).map(key)
+            adapter.version = 7
+        }
+        // ---- end format 7 ----------------------------------------------------------------------------------------
         // before 2026-11-15 the weather had one place and two switches
         const rw = raw?.weather ?? {}
         if (rw.locations === undefined && typeof rw.city === "string" && typeof rw.latitude === "number" && typeof rw.longitude === "number")

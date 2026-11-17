@@ -12,11 +12,34 @@ DISPLAYS = ok and type(saved) == "table" and saved or {}
 local sok, shared = pcall(require, "settings.shared")
 SHARED = sok and type(shared) == "table" and shared or nil
 
-local function monitor(name, overrides)
+-- Saved layouts are keyed by a screen's description ("make model serial"), or by its connector name (HDMI-A-1)
+-- when two screens share a description. Resolve a key to the connector now carrying it. get_monitors() leaves
+-- out screens that are off or mirroring, so those fall back to Hyprland's own "desc:" selector (a key with a
+-- space is a description; a plain word is a connector, which may simply be unplugged).
+local function resolve(key)
+    if key == nil or key == "" then return key end
+    for _, m in ipairs(hl.get_monitors()) do
+        if m.name == key or (m.description ~= "" and m.description == key) then return m.name end
+    end
+    return key:find("[^%w%-_.]") and ("desc:" .. key) or key
+end
+
+-- the key in DISPLAYS for a connector (by its name, or by the description of the screen on it)
+local function key_of(name)
+    if DISPLAYS[name] then return name end
+    for _, m in ipairs(hl.get_monitors()) do
+        if m.name == name and m.description ~= "" and DISPLAYS[m.description] then return m.description end
+    end
+    return name
+end
+
+local function monitor(key, overrides)
+    local name = resolve(key)
     -- mirror and disabled are always said: Hyprland keeps an earlier value (a hand-off, a Mirror setting) otherwise
     local spec = { output = name, mode = "preferred", position = "auto", scale = "auto", mirror = "", disabled = false }
-    for k, v in pairs(DISPLAYS[name] or {}) do spec[k] = v end
+    for k, v in pairs(DISPLAYS[key] or {}) do spec[k] = v end
     for k, v in pairs(overrides or {}) do spec[k] = v end
+    spec.mirror = resolve(spec.mirror)
     if SHARED and SHARED.output == name then
         spec = { output = name, mode = SHARED.mode, position = "auto", scale = 1, mirror = SHARED.mirror, disabled = false }
     end
@@ -31,14 +54,15 @@ local function reannounce()
     local shown = {}
     for _, m in ipairs(hl.get_monitors()) do shown[m.name] = true end
     local names = {}
-    for name, d in pairs(DISPLAYS) do
-        if name:sub(1, 1) ~= "_" and not d.disabled and (d.mirror or "") == "" then names[name] = true end
+    for key, d in pairs(DISPLAYS) do
+        if key:sub(1, 1) ~= "_" and not d.disabled and (d.mirror or "") == "" then names[key] = true end
     end
     if HANDED then names[HANDED] = true end -- the shared monitor, when it isn't in the saved layout
-    for name in pairs(names) do
+    for key in pairs(names) do
+        local name = resolve(key)
         if not shown[name] and not (SHARED and SHARED.output == name) then
             hl.monitor({ output = name, disabled = true })
-            monitor(name)
+            monitor(key)
         end
     end
 end
@@ -54,7 +78,7 @@ function apply_displays()
     for name in pairs(DISPLAYS) do
         if name:sub(1, 1) ~= "_" then monitor(name) end
     end
-    if SHARED and not DISPLAYS[SHARED.output] then monitor(SHARED.output) end
+    if SHARED and not DISPLAYS[key_of(SHARED.output)] then monitor(SHARED.output) end
     -- any other screen: beside the others (Settings > Displays > New screens), or showing the laptop panel's picture
     local new = option("newScreen", "right")
     local fallback = { output = "", mode = option("preferHighRefresh", true) and "highrr" or "preferred", scale = "auto",
@@ -79,8 +103,9 @@ end
 function laptop_panel(transform)
     local panel = HW.display.internal
     if not panel or panel == "" then return end -- a desktop has no panel to turn
-    if DISPLAYS[panel] then DISPLAYS[panel].transform = transform end
-    monitor(panel, { transform = transform })
+    local key = key_of(panel)
+    if DISPLAYS[key] then DISPLAYS[key].transform = transform end
+    monitor(key, { transform = transform })
     hl.config({ input = { touchdevice = { transform = transform }, tablet = { transform = transform } } })
 end
 
@@ -97,6 +122,7 @@ if WORKSPACES.mode == "fixed" then
         local screen = type(WORKSPACES.screens) == "table" and WORKSPACES.screens[tostring(i)] or nil
         local rule = { workspace = tostring(i), persistent = true }
         if type(screen) == "string" and screen ~= "" then
+            screen = resolve(screen)
             rule.monitor = screen
             if not first[screen] then rule.default, first[screen] = true, true end
         end

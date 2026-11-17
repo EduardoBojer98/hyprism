@@ -171,7 +171,7 @@ Singleton {
     readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
     readonly property color barInk: barStyle.fill === "ink" ? base : text    // text on the bar's own ground
     readonly property color barDim: barStyle.fill === "ink" ? Qt.alpha(base, 0.62) : subtext   // secondary text on it
-    function barShownOn(screen) { return !cb.hiddenOn.includes(screen?.name ?? "") }
+    function barShownOn(screen) { return !(screen && cb.hiddenOn.some(k => Displays.matches(k, screen))) }
 
     // ---- the dock: every theme has one; Settings > Dock places it ----------------------------------------
     readonly property var dockStyle: current.dock
@@ -197,7 +197,7 @@ Singleton {
         downloads: { name: "Downloads", about: "Files downloaded today; click to open the folder" }
     })
     readonly property bool dockReserves: Config.dock.enabled && !dockInBar && !Config.dock.autoHide
-    function dockShownOn(screen) { return Config.dock.enabled && !dockInBar && !Config.dock.hiddenOn.includes(screen?.name ?? "") }
+    function dockShownOn(screen) { return Config.dock.enabled && !dockInBar && !(screen && Config.dock.hiddenOn.some(k => Displays.matches(k, screen))) }
 
     // room taken on each side by the bar and a dock that doesn't hide (popups and banners keep clear)
     function reserve(side) {

@@ -13,13 +13,13 @@ ColumnLayout {
     readonly property var c: Config.workspaces
     readonly property bool fixed: c.mode === "fixed"
     // "" = any screen, every connected screen, then screens given workspaces that aren't connected now
-    readonly property var connected: Hyprland.monitors.values.map(m => m.name).filter(n => Machine.realScreen(n))
+    readonly property var connected: Hyprland.monitors.values.filter(m => Machine.realScreen(m.name)).map(m => Displays.keyOf(m, Hyprland.monitors.values))   // saved by description (see Displays.keyOf)
     readonly property var columns: [""].concat(connected, Object.values(c.screens).filter((s, i, all) => s && !connected.includes(s) && all.indexOf(s) === i))
     function label(name) {
         if (name === "") return "Any screen"
         if (!connected.includes(name)) return name + " (not connected)"
-        const m = Hyprland.monitors.values.find(x => x.name === name)
-        return name.startsWith("eDP") ? "Laptop" : ((m?.model || m?.description || name).split(" ")[0] || name)
+        const m = Hyprland.monitors.values.find(x => Displays.matches(name, x))
+        return m?.name.startsWith("eDP") ? "Laptop" : ((m?.model || m?.description || name).split(" ")[0] || name)
     }
     function screenOf(n) { return c.screens[String(n)] ?? "" }
     function assign(n, screen) {

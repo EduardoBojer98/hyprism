@@ -20,7 +20,18 @@ Singleton {
     readonly property bool counting: countdown.running
     property alias left: countdown.left
 
-    function keyOf(m, list) { return m.name }
+    // What a screen is saved under: its description (make model serial), which follows the screen to any port, or
+    // its connector name when it has none or another connected screen has the same one (two identical monitors)
+    function keyOf(m, list) { return m.description && !list.some(o => o !== m && o.description === m.description) ? m.description : m.name }
+    function keyForName(name) {
+        const list = Hyprland.monitors.values, m = list.find(x => x.name === name)
+        return m ? keyOf(m, list) : name
+    }
+    // does a saved key (description or connector name) mean this screen? Takes a HyprlandMonitor or a ShellScreen.
+    function matches(key, screen) {
+        const d = screen.description ?? Hyprland.monitors.values.find(x => x.name === screen.name)?.description ?? ""
+        return key === screen.name || (d !== "" && key === d)
+    }
     function label(m) { return m.name.startsWith("eDP") ? "Laptop" : (m.make || m.name).split(" ")[0] }
     function monitorOf(key) { return monitors.find(m => m.key === key) ?? null }
     function load() { read.running = true }
@@ -134,7 +145,7 @@ Singleton {
     function arrange(how) {
         const names = Object.keys(edits), e = {}
         // the picture to mirror or the screen kept on: the laptop panel when there is one, else the first screen
-        const main = names.find(n => n.startsWith("eDP")) ?? names[0]
+        const main = names.find(n => monitorOf(n)?.name.startsWith("eDP")) ?? names[0]
         let x = 0
         for (const n of names.slice().sort((a, b) => (a === main ? -1 : b === main ? 1 : 0))) {
             const one = Object.assign({}, edits[n], { disabled: false, mirror: "" })

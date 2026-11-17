@@ -13,7 +13,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `version` | `int` | `6` | settings format; Config.repair() upgrades older files |
+| `version` | `int` | `7` | settings format; Config.repair() upgrades older files |
 
 ## appearance
 
@@ -320,7 +320,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
-| `layout` | `var` | `{}` | output -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled } |
+| `layout` | `var` | `{}` | screen (description, or connector when two share one) -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled } |
 | `autoHdr` | `bool` | `false` | switch a screen's colour space on fullscreen video (HDR screens) |
 | `sendContentType` | `bool` | `false` | tell the screen what is playing (some screens blank briefly when it changes) |
 | `xwaylandNativeScale` | `bool` | `true` | old X11 apps draw sharp but small, instead of stretched |

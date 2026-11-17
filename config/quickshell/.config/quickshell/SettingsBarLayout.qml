@@ -36,8 +36,9 @@ ColumnLayout {
         Config.set("bar", "presets", all)
     }
     function setScreen(name, pick) {
-        const hidden = Array.from(b.hiddenOn).filter(n => n !== name), map = clone(b.monitors)
-        if (pick === "No bar") { hidden.push(name); delete map[name] }
+        const key = Displays.keyForName(name)   // hiddenOn keeps the screen's description; the per-screen items stay by connector
+        const hidden = Array.from(b.hiddenOn).filter(n => n !== name && n !== key), map = clone(b.monitors)
+        if (pick === "No bar") { hidden.push(key); delete map[name] }
         else if (pick === "Its own items") map[name] = typeof map[name] === "object" ? map[name] : lists(Theme.barLayout)
         else delete map[name]
         Config.set("bar", "hiddenOn", hidden)
@@ -108,7 +109,7 @@ ColumnLayout {
                 Dropdown {
                     Accessible.name: "Bar on " + modelData.name
                     options: ["Same as every screen", "Its own items", "No bar"]
-                    current: lay.b.hiddenOn.includes(modelData.name) ? "No bar" : typeof lay.b.monitors?.[modelData.name] === "object" ? "Its own items" : "Same as every screen"
+                    current: lay.b.hiddenOn.some(k => Displays.matches(k, modelData)) ? "No bar" : typeof lay.b.monitors?.[modelData.name] === "object" ? "Its own items" : "Same as every screen"
                     onPicked: v => lay.setScreen(modelData.name, v)
                 }
             }

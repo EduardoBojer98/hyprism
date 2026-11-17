@@ -3,7 +3,7 @@ import Quickshell.Io
 // Defaults for every desktop option (Config.qml). A key missing from settings.json takes the
 // value here; Reset in the Settings app copies these back.
 JsonAdapter {
-    property int version: 6                     // settings format; Config.repair() upgrades older files
+    property int version: 7                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
         property string theme: "pebble"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property string mode: "theme"           // theme (each theme's own) | light | dark: every theme has both halves (Themes.qml alt)
@@ -273,7 +273,7 @@ JsonAdapter {
         property bool imported: false
     }
     property JsonObject displays: JsonObject {
-        property var layout: ({})                // output -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled }
+        property var layout: ({})                // screen (description, or connector when two share one) -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled }
         property bool autoHdr: false             // switch a screen's colour space on fullscreen video (HDR screens)
         property bool sendContentType: false     // tell the screen what is playing (some screens blank briefly when it changes)
         property bool xwaylandNativeScale: true  // old X11 apps draw sharp but small, instead of stretched

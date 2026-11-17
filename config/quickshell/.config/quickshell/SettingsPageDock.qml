@@ -90,9 +90,9 @@ ColumnLayout {
                 label: "On " + modelData.name
                 hint: modelData.width + " × " + modelData.height
                 Toggle {
-                    checked: !Config.dock.hiddenOn.includes(modelData.name)
-                    onToggled: on => Config.set("dock", "hiddenOn", on ? Config.dock.hiddenOn.filter(n => n !== modelData.name)
-                                                                        : Array.from(Config.dock.hiddenOn).concat([modelData.name]))
+                    checked: !Config.dock.hiddenOn.some(k => Displays.matches(k, modelData))
+                    onToggled: on => Config.set("dock", "hiddenOn", on ? Config.dock.hiddenOn.filter(k => !Displays.matches(k, modelData))
+                                                                        : Array.from(Config.dock.hiddenOn).concat([Displays.keyForName(modelData.name)]))
                 }
             }
         }
