@@ -217,6 +217,26 @@ Singleton {
         return Themes.ids.includes(want) ? want : Themes.ids[0]
     }
     Connections { target: Themes; function onReadyChanged() { if (file.loaded) root.checkTheme() } }
+    // ---- format 7 (displays) -------------------------------------------------------------------------------
+    // Screens were saved by connector (HDMI-A-1); they are now saved by description (make model serial), so a layout
+    // follows a monitor to another port. Only screens connected now are renamed; others keep their connector name.
+    // Runs on load and again when Hyprland first lists the screens (at login it often hasn't yet), so it isn't skipped.
+    function migrateDisplays() {
+        if (adapter.version >= 7 || Hyprland.monitors.values.length === 0) return
+        const key = n => Displays.keyForName(n)
+        const rekey = o => { const out = {}; for (const n of Object.keys(o ?? {})) out[key(n)] = o[n]; return out }
+        const lay = JSON.parse(JSON.stringify(adapter.displays.layout ?? {}))
+        for (const n of Object.keys(lay)) if (lay[n]?.mirror) lay[n].mirror = key(lay[n].mirror)
+        adapter.displays.layout = rekey(lay)
+        const ws = JSON.parse(JSON.stringify(adapter.workspaces.screens ?? {}))
+        for (const n of Object.keys(ws)) ws[n] = key(ws[n])
+        adapter.workspaces.screens = ws
+        adapter.bar.hiddenOn = Array.from(adapter.bar.hiddenOn).map(key)
+        adapter.dock.hiddenOn = Array.from(adapter.dock.hiddenOn).map(key)
+        adapter.version = 7
+    }
+    // ---- end format 7
+    Connections { target: Hyprland.monitors; function onValuesChanged() { if (file.loaded) root.migrateDisplays() } }
     function repair() {
         let raw
         try { raw = JSON.parse(file.text()) } catch (e) {
@@ -317,24 +337,7 @@ Singleton {
             adapter.bar.layout = l
             adapter.version = 6
         }
-        // ---- format 7 (displays) -------------------------------------------------------------------------------
-        // Screens were saved by connector (HDMI-A-1); they are now saved by description (make model serial), so a layout
-        // follows a monitor to another port. Only screens connected now are renamed; others keep their connector name.
-        // Waits (and stays at format 6) until Hyprland has listed the screens, so a slow start doesn't skip it.
-        if ((raw?.version ?? 1) < 7 && Hyprland.monitors.values.length > 0) {
-            const key = n => Displays.keyForName(n)
-            const rekey = o => { const out = {}; for (const n of Object.keys(o ?? {})) out[key(n)] = o[n]; return out }
-            const lay = JSON.parse(JSON.stringify(adapter.displays.layout ?? {}))
-            for (const n of Object.keys(lay)) if (lay[n]?.mirror) lay[n].mirror = key(lay[n].mirror)
-            adapter.displays.layout = rekey(lay)
-            const ws = JSON.parse(JSON.stringify(adapter.workspaces.screens ?? {}))
-            for (const n of Object.keys(ws)) ws[n] = key(ws[n])
-            adapter.workspaces.screens = ws
-            adapter.bar.hiddenOn = Array.from(adapter.bar.hiddenOn).map(key)
-            adapter.dock.hiddenOn = Array.from(adapter.dock.hiddenOn).map(key)
-            adapter.version = 7
-        }
-        // ---- end format 7 ----------------------------------------------------------------------------------------
+        migrateDisplays()   // format 7 (below)
         // before 2026-11-15 the weather had one place and two switches
         const rw = raw?.weather ?? {}
         if (rw.locations === undefined && typeof rw.city === "string" && typeof rw.latitude === "number" && typeof rw.longitude === "number")
