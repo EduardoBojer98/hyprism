@@ -100,6 +100,7 @@ add("ocr",                 "Screen", "Copy text from the screen",    key("SHIFT 
 add("record",              "Screen", "Record the screen (again: stop)", key("ALT + R"), exec("record screen"))
 add("record-area",         "Screen", "Record an area (again: stop)", key("ALT + SHIFT + R"), exec("record area"))
 add("colour-picker",       "Screen", "Colour picker",                key("SHIFT + C"), exec("hyprpicker -a"))
+add("displays-switch",    "Screen", "Display switcher: extend, mirror, one screen, presets", key("P"), exec("qs ipc call displays switcher"))
 
 -- Shared monitor: hand it to the other computer and back (~/.local/bin/monswitch; off without ~/.config/monswitch.conf)
 if file_exists(config .. "/monswitch.conf") then

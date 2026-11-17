@@ -144,8 +144,15 @@ inside the repo folder.
 ## Screens
 
 - Plug a screen in and it works. Arrange and scale screens in Settings → Displays.
-- Each screen's mode, scale and position are remembered by its output name (for example `DP-1`), so a monitor you
-  plug in again comes back as you left it.
+- Each screen's mode, scale and position are remembered by the monitor itself (its make, model and serial), so it
+  comes back as you left it on any port. Two identical monitors without a serial fall back to the port name.
+- Settings → Displays → Presets: save the layout on screen as a preset, apply it later, mark one as the default,
+  or let it apply itself when exactly its screens are connected (a notice with Undo shows). Quick layouts
+  (Extend, Mirror, Laptop only, External only) are made from what is plugged in. Identify shows a number on each
+  screen. A layout that would leave no screen on, or with overlapping screens, is refused.
+- Super+P opens the display switcher: Extend, Mirror, Only one screen, or a preset. From a terminal:
+  `qs ipc call displays preset <name>`, `displays mode extend|mirror|only:<screen>`, `displays list`,
+  `displays identify`, `displays save <name>`.
 - Settings → Displays → Advanced: adaptive sync (off, on, fullscreen only), start new screens at their highest
   refresh rate, sharp old X11 apps, automatic HDR colour, and telling the screen what is playing. They sit under
   `_options` in `~/.config/hypr/settings/displays.lua`.
