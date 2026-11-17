@@ -356,7 +356,7 @@ ColumnLayout {
         SettingRow { label: "Keyboard layout"; ConfigToggle { section: "osd"; key: "layout" } }
         SettingRow {
             label: "Caps Lock"
-            hint: "Checks the keyboard's light twice a second while on"
+            hint: "Shown when you press Caps Lock, if the keyboard has a Caps Lock light"
             ConfigToggle { section: "osd"; key: "capsLock" }
         }
         SettingRow {

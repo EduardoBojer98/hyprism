@@ -111,7 +111,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `brightness` | `bool` | `true` |  |
 | `micMute` | `bool` | `true` |  |
 | `layout` | `bool` | `true` |  |
-| `capsLock` | `bool` | `true` | polls the keyboard's caps lock light every 500 ms while on (if it has one) |
+| `capsLock` | `bool` | `true` | shows Caps Lock on/off (read from the keyboard light when the key is pressed, if it has one) |
 | `position` | `string` | `"bottom"` | bottom \| top \| center |
 
 ## caffeine

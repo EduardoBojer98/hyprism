@@ -67,13 +67,14 @@ PanelWindow {
         function onShortChanged() { osd.show("layout", "\u{F030C}", 0, Keyboard.short) }
     }
 
-    // caps lock: the keyboard's light, if it has one; read twice a second only while this is switched on
+    // caps lock: the keyboard's light, if it has one. Read when Hyprland reports the key (binds.lua: a
+    // pass-through bind on Caps_Lock's release calls `qs ipc call osd caps`), never on a timer
     property string capsFile: ""
     property int caps: -1
     Process {
         running: true
         command: ["sh", "-c", "ls /sys/class/leds/*capslock/brightness 2>/dev/null | head -1"]
-        stdout: StdioCollector { onStreamFinished: osd.capsFile = text.trim() }
+        stdout: StdioCollector { onStreamFinished: { osd.capsFile = text.trim(); if (osd.capsFile !== "") capsRead.running = true } }   // baseline
     }
     Process {
         id: capsRead
@@ -83,20 +84,16 @@ PanelWindow {
                 const v = parseInt(text)
                 if (isNaN(v)) return
                 const on = v > 0 ? 1 : 0
-                if (osd.caps !== -1 && on !== osd.caps) osd.show("capsLock", "\u{F030C}", 0, on ? "Caps Lock on" : "Caps Lock off")
+                if (osd.caps !== -1 && on !== osd.caps && Config.osd.capsLock) osd.show("capsLock", "\u{F030C}", 0, on ? "Caps Lock on" : "Caps Lock off")
                 osd.caps = on
             }
         }
     }
-    Timer {
-        interval: 500; repeat: true; triggeredOnStart: true
-        running: osd.capsFile !== "" && Config.osd.capsLock
-        onRunningChanged: if (!running) osd.caps = -1   // the next start takes a fresh baseline
-        onTriggered: capsRead.running = true
-    }
+    Timer { id: capsLater; interval: 80; onTriggered: if (osd.capsFile !== "") capsRead.running = true }   // the light changes just after the key
 
     IpcHandler {
         target: "osd"
+        function caps(): void { capsLater.restart() }
         function brightness(percent: int): void { Sys.brightness = percent; osd.show("brightness", "\u{F00DF}", percent / 100) }
         function test(kind: string, text: string): void { if (Config.osd[kind]) osd.present("\u{F030C}", 0, text) }
     }

@@ -85,7 +85,7 @@ JsonAdapter {
         property bool brightness: true
         property bool micMute: true
         property bool layout: true
-        property bool capsLock: true            // polls the keyboard's caps lock light every 500 ms while on (if it has one)
+        property bool capsLock: true            // shows Caps Lock on/off (read from the keyboard light when the key is pressed, if it has one)
         property string position: "bottom"      // bottom | top | center
     }
     property JsonObject caffeine: JsonObject {

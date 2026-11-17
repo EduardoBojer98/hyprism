@@ -72,6 +72,8 @@ for i = 1, 10 do
     add("send-" .. i,      "Workspaces", "Send window to workspace " .. i, key("SHIFT + " .. k), hl.dsp.window.move({ workspace = i }))
 end
 add("workspace-previous", "Workspaces", "Previous workspace",        key("Tab"), hl.dsp.focus({ workspace = "previous" }))
+-- Caps Lock's on-screen note: Hyprland tells the shell when the key is let go (the key still works as usual)
+add("caps-osd", "Keyboard", "Caps Lock note", "Caps_Lock", exec("qs ipc call osd caps"), { release = true, non_consuming = true, fixed = true })
 -- Alt+Tab: hold Alt, Tab through the open windows (most recent first), let go to switch (AltTab.qml)
 add("window-switch",      "Windows", "Switch windows (hold Alt)", "ALT + Tab", exec("qs ipc call alttab next"))
 add("window-switch-back", "Windows", "Switch windows backwards",  "ALT + SHIFT + Tab", exec("qs ipc call alttab prev"))
