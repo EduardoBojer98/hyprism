@@ -321,6 +321,8 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `layout` | `var` | `{}` | screen (description, or connector when two share one) -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled } |
+| `presets` | `var` | `[]` | saved layouts: [{ id, name, auto, outputs: { screen -> as layout } }]; Settings > Displays > Presets |
+| `defaultPreset` | `string` | `""` | id of the preset the display switcher offers first, and `qs ipc call displays preset` with no name applies |
 | `autoHdr` | `bool` | `false` | switch a screen's colour space on fullscreen video (HDR screens) |
 | `sendContentType` | `bool` | `false` | tell the screen what is playing (some screens blank briefly when it changes) |
 | `xwaylandNativeScale` | `bool` | `true` | old X11 apps draw sharp but small, instead of stretched |

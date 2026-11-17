@@ -99,7 +99,7 @@ Singleton {
                  naturalScroll: "bool", tapToClick: "bool", disableWhileTyping: "bool", clickMethod: ["buttonareas", "clickfinger"],
                  scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", imported: "bool" },
         displays: { layout: "displays", autoHdr: "bool", sendContentType: "bool", xwaylandNativeScale: "bool",
-                    vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool",
+                    vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool", presets: "presets", defaultPreset: "string",
                     newScreen: ["right", "left", "above", "below", "mirror"], imported: "bool" },
         workspaces: { mode: ["dynamic", "fixed"], count: [1, 10], screens: "displays" },
         apps: { terminal: "command" },
@@ -129,8 +129,23 @@ Singleton {
             && Array.from(value).every(l => typeof l?.name === "string" && l.name.length > 0
                 && typeof l?.latitude === "number" && Math.abs(l.latitude) <= 90
                 && typeof l?.longitude === "number" && Math.abs(l.longitude) <= 180) ? "" : "Up to 20 places, each with a name and coordinates"
-        if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(n => /^[^"\\\x00-\x1f]{1,120}$/.test(n)) ? "" : "Unknown display names"   // a connector or a description (make model serial)
+        if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(displayKeyOk) ? "" : "Unknown display names"
+        if (rule === "presets") return value && typeof value.length === "number" && value.length <= 20
+            && Array.from(value).every(p => /^[a-z0-9-]{1,40}$/.test(p?.id ?? "") && typeof p.name === "string" && p.name.length > 0 && p.name.length <= 40
+                && !/[\x00-\x1f]/.test(p.name) && typeof p.auto === "boolean" && p.outputs !== null && typeof p.outputs === "object"
+                && Object.keys(p.outputs).length > 0 && Object.keys(p.outputs).every(k => displayKeyOk(k) && displayOutputOk(p.outputs[k]))) ? "" : "Up to 20 presets, each with a name and its screens"
         return ""
+    }
+    // a connector or a description (make model serial)
+    function displayKeyOk(n) { return /^[^"\\\x00-\x1f]{1,120}$/.test(n) }
+    // one screen inside a saved layout or preset
+    function displayOutputOk(o) {
+        return o !== null && typeof o === "object" && (o.mode === undefined || !problem("mode", o.mode))
+            && (o.position === undefined || /^-?\d{1,6}x-?\d{1,6}$/.test(o.position))
+            && (o.scale === undefined || (typeof o.scale === "number" && o.scale >= 0.25 && o.scale <= 10))
+            && (o.transform === undefined || [0, 1, 2, 3, 4, 5, 6, 7].includes(o.transform))
+            && (o.vrr === undefined || [0, 1, 2].includes(o.vrr)) && (o.bitdepth === undefined || [8, 10].includes(o.bitdepth))
+            && (o.mirror === undefined || typeof o.mirror === "string") && (o.disabled === undefined || typeof o.disabled === "boolean")
     }
 
     // Set one option. Returns "" when saved, or the reason it was refused.

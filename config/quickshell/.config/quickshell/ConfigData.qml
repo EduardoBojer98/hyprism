@@ -274,6 +274,8 @@ JsonAdapter {
     }
     property JsonObject displays: JsonObject {
         property var layout: ({})                // screen (description, or connector when two share one) -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled }
+        property var presets: []                 // saved layouts: [{ id, name, auto, outputs: { screen -> as layout } }]; Settings > Displays > Presets
+        property string defaultPreset: ""        // id of the preset the display switcher offers first, and `qs ipc call displays preset` with no name applies
         property bool autoHdr: false             // switch a screen's colour space on fullscreen video (HDR screens)
         property bool sendContentType: false     // tell the screen what is playing (some screens blank briefly when it changes)
         property bool xwaylandNativeScale: true  // old X11 apps draw sharp but small, instead of stretched
