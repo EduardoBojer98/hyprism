@@ -13,5 +13,5 @@ On laptops whose kernel exposes `charge_control_end_threshold` (not ASUS: `asusc
 `20-charge-limit.sh` stops charging at 80%.
 
 - **Adds:** `/etc/tmpfiles.d/hyprism-charge-limit.conf`, applied at every boot.
-- **Change the number:** edit the last field of that file, then `sudo systemd-tmpfiles --create /etc/tmpfiles.d/hyprism-charge-limit.conf`.
+- **Change the number:** Settings > Battery & Power > Charge limit (asks for your password), or edit the last field of that file, then `sudo systemd-tmpfiles --create /etc/tmpfiles.d/hyprism-charge-limit.conf`.
 - **Undo:** `./install.sh uninstall`, or delete the file and run `echo 100 | sudo tee /sys/class/power_supply/BAT*/charge_control_end_threshold`.

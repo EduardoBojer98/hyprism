@@ -4,7 +4,8 @@ import Quickshell.Services.UPower
 import QtQuick
 import QtQuick.Layouts
 
-// Battery & Power: battery state and health, power mode, charge limit (asusctl).
+// Battery & Power: battery state and health, power mode, charge limit (asusctl on ASUS, else the kernel's
+// charge_control_end_threshold through pkexec, which asks for your password).
 // Fans and power limits live on the ASUS Hardware page (asusd); not in ROG Control Center, which
 // changes the same settings behind this setup's back.
 ColumnLayout {
@@ -21,10 +22,11 @@ ColumnLayout {
         command: ["sh", "-c", "for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do [ -r \"$f\" ] && exec cat \"$f\"; done; exit 1"]
         stdout: StdioCollector { onStreamFinished: { const n = parseInt(text); page.limit = isNaN(n) ? -1 : n } }
     }
-    Process {   // the UI follows only once asusctl succeeded
+    Process {   // the UI follows only once the change succeeded
         id: limiter
-        onExited: code => { if (code === 0) page.limit = page.pendingLimit }
+        onExited: code => { if (code === 0) { page.limit = page.pendingLimit; page.limitError = "" } else page.limitError = "Couldn't change the charge limit" + (Machine.asus ? " (asusctl failed)" : " (cancelled or not allowed)") }
     }
+    property string limitError: ""
 
     SettingGroup {
         title: "Battery"
@@ -48,7 +50,8 @@ ColumnLayout {
         SettingRow {
             visible: Machine.asus
             label: "Charge limit"
-            hint: page.limit < 0 ? "Couldn't read the charge limit from this battery"
+            hint: page.limitError !== "" ? page.limitError
+                : page.limit < 0 ? "Couldn't read the charge limit from this battery"
                 : page.limit >= 100 ? "Charges to full; 80% keeps the battery healthier when the laptop is mostly plugged in"
                 : `Stops at ${page.limit}%, which keeps the battery healthy; pick 100% before a day away from a plug`
             Choice {
@@ -59,7 +62,11 @@ ColumnLayout {
                 index: values.indexOf(page.limit)
                 onPicked: i => {
                     page.pendingLimit = values[i]
-                    limiter.command = ["asusctl", "battery", "limit", String(values[i])]
+                    // not ASUS: write the limit now and in the boot-time file modules/laptop writes, as root (asks first);
+                    // the value comes from this fixed list, never typed text
+                    limiter.command = Machine.asus ? ["asusctl", "battery", "limit", String(values[i])]
+                        : ["pkexec", "sh", "-c", 'for f in /sys/class/power_supply/BAT*/charge_control_end_threshold; do [ -w "$f" ] && echo "$1" >"$f"; done; '
+                           + 'printf "w /sys/class/power_supply/BAT*/charge_control_end_threshold - - - - %s\\n" "$1" >/etc/tmpfiles.d/hyprism-charge-limit.conf', "sh", String(values[i])]
                     limiter.running = true
                 }
             }
