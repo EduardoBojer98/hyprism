@@ -12,7 +12,7 @@ core=(install.sh lib config/hypr config/scripts config/fish config/quickshell co
 # One computer's values. Comment lines may use a name as an example; code may not.
 hardware='eDP-[0-9]|HDMI-A-[0-9]|\bDP-[0-9]|0000:[0-9a-f]{2}:[0-9a-f]{2}\.[0-9]|renderD12[89]|\bBAT[0-9]\b|k10temp|iwlwifi|amd-igpu|[Aa]cer|XZ322|Keychron|GV301|[Ff]low ?X13|JuhRadial|juhradial|rog-control|/home/eduardo'
 # The ASUS pages and menu entry name their vendor on purpose; they only show where that hardware is found.
-known='^config/quickshell/.*/(Search|SettingsPageAbout|SettingsPageAsus)\.qml:'
+known='^config/quickshell/.*/(BuiltinActions|SettingsPageAbout|SettingsPageAsus)\.qml:'
 
 # comments may name a device as an example ("e.g. eDP-1"); code may not, so comments are cut off first
 hits=$(grep -rnE "$hardware" "${core[@]}" --exclude='*.md' 2>/dev/null |

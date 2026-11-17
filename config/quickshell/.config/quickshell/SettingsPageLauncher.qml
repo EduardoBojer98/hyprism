@@ -2,32 +2,11 @@ import QtQuick
 import QtQuick.Layouts
 
 // Search & Launcher: Spotlight (tap Super): its style (the theme's own or a preset, drawn as a gallery),
-// how it opens, result order, and your own actions: commands, terminal
-// commands, folders/URLs to open, and text snippets to paste.
+// how it opens and the result order. Your own actions are made in Settings > Actions (SettingsPageActions.qml).
 ColumnLayout {
     id: page
     spacing: 20
 
-    readonly property var kinds: ["command", "terminal", "open", "snippet"]
-    readonly property var kindNames: ["Command", "In terminal", "Open", "Snippet"]
-    property int newKind: 0
-    property bool newConfirm: false
-    property string error: ""
-
-    // Commands that delete, wipe or power off always ask before running
-    function risky(v) { return /\b(rm\s+-[a-z]*[rf]|dd\s|mkfs|shred|wipefs|shutdown|poweroff|reboot|:\(\)\{|chmod\s+-R|chown\s+-R|>\s*\/dev\/sd|git\s+(push\s+--force|reset\s+--hard|clean\s+-f))/.test(v) }
-
-    function add() {
-        const name = nameField.text.trim(), value = valueField.text.trim()
-        if (!name || !value) { error = "Give the action a name and a value"; return }
-        const list = Array.from(Config.launcher.actions ?? [])
-        if (list.some(a => a.name === name)) { error = "An action called “" + name + "” already exists"; return }
-        const kind = kinds[newKind]
-        const confirm = newConfirm || (kind !== "snippet" && kind !== "open" && risky(value))
-        list.push({ name, kind, value, confirm })
-        error = Config.set("launcher", "actions", list)
-        if (!error) { nameField.text = ""; valueField.text = ""; newConfirm = false }
-    }
     // Result groups: drag to reorder, turn on/off (Config.launcher.order lists the ones that are on)
     readonly property var allGroups: ["apps", "files", "calc", "settings", "actions", "web"]
     readonly property var groupRows: Config.launcher.order.concat(allGroups.filter(g => !Config.launcher.order.includes(g)))
@@ -43,15 +22,6 @@ ColumnLayout {
         const o = Array.from(Config.launcher.order)
         Config.set("launcher", "order", o.includes(g) ? o.filter(x => x !== g) : o.concat([g]))
     }
-
-    function remove(i) {
-        const list = Array.from(Config.launcher.actions ?? [])
-        list.splice(i, 1)
-        Config.set("launcher", "actions", list)
-    }
-
-
-
 
     // Style: the theme's own launcher or one of Launcher.styles, each drawn in the active theme's colours
     SettingGroup {
@@ -170,38 +140,9 @@ ColumnLayout {
     SettingGroup {
         title: "Your actions"
         SettingRow {
-            visible: (Config.launcher.actions ?? []).length === 0
-            label: "No actions yet"
-            hint: "Add one below; it shows up in Spotlight when you type its name"
-        }
-        Repeater {
-            model: Config.launcher.actions ?? []
-            SettingRow {
-                required property var modelData
-                required property int index
-                label: modelData.name + (modelData.confirm ? "  · asks first" : "")
-                hint: page.kindNames[page.kinds.indexOf(modelData.kind)] + ": " + modelData.value
-                PillButton { text: "Remove"; onClicked: page.remove(index) }
-            }
-        }
-    }
-
-    SettingGroup {
-        title: "Add an action"
-        SettingRow { label: "Name"; TextField { id: nameField; placeholder: "e.g. Docker containers" } }
-        SettingRow { label: "Type"; Choice { options: page.kindNames; index: page.newKind; onPicked: i => page.newKind = i } }
-        SettingRow {
-            label: page.newKind === 3 ? "Text to paste" : page.newKind === 2 ? "Folder, file or URL" : "Command"
-            TextField { id: valueField; width: 320; placeholder: ["docker ps", "php -v", "~/Documents/projects", "Kind regards, Eduardo"][page.newKind]; onAccepted: page.add() }
-        }
-        SettingRow {
-            label: "Ask before running"
-            hint: "Always on for commands that delete, wipe or power off"
-            Toggle { checked: page.newConfirm; onToggled: on => page.newConfirm = on }
-        }
-        SettingRow {
-            label: page.error
-            PillButton { text: "Add"; primary: true; onClicked: page.add() }
+            label: "Commands, snippets, folders and toggles"
+            hint: "Made in Settings > Actions; the ones set to show in Spotlight come up when you type their name"
+            PillButton { text: "Open Actions"; onClicked: SettingsApp.show("actions") }
         }
     }
 

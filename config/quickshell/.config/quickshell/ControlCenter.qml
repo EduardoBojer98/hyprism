@@ -41,15 +41,18 @@ Singleton {
         defaults[group].forEach((id, i) => { if (!out.includes(id) && !elsewhere.includes(id)) out.splice(Math.min(i, out.length), 0, id) })
         return out
     }
-    function available(id) {
-        switch (id) {
-        case "monitor": return Machine.monitorSwitch
-        case "micmute": return Sys.source !== null
-        case "keylight": return Machine.kbdDevice !== ""
-        case "touchpad": return Inputs.touchpadName !== ""
-        case "media": return Sys.player !== null
-        default: return true
-        }
+    // A tile runs a registry action (Actions.qml): its id, or the one named here where they differ
+    readonly property var actionIds: ({ wifi: "wifi-toggle", record: "record-toggle", monitor: "monswitch", mission: "overview",
+                                        focus: "dnd", screenshot: "shot", colorpicker: "picker" })
+    function actionOf(id) { return Actions.get(actionIds[id] ?? id) }
+    // a section shows when it has something to show; a tile when its action is offered here (its `when`)
+    function available(id) { return id === "media" ? Sys.player !== null : !items[id] || Actions.available(actionOf(id)) }
+    function isOn(id) { return Actions.isOn(actionOf(id)) }
+    // a button closes the panel first (it opens a picker or another panel); a toggle leaves it open
+    function activate(id) {
+        const a = actionOf(id)
+        if (a?.kind !== "toggle") hide()
+        if (a) Actions.run(a.id)
     }
     function shown(group) { return order(group).filter(id => !Config.controlCenter.hidden.includes(id) && available(id)) }
     readonly property var shownSections: shown("sections")
@@ -73,57 +76,36 @@ Singleton {
     })
     function info(id) { return itemInfo[id] ?? items[id] ?? { label: id, glyph: "" } }
 
-    // Every tile, once: what it shows (glyph, label, status), whether it's on, what a click does and which list
-    // it opens (`list`: a ControlCenterDrops name). `action` tiles run something and are never "on".
+    // Every tile, once: what it shows (glyph, label, status) and which list it opens (`list`: a ControlCenterDrops
+    // name). Whether it's on and what a click does come from its action (actionOf); `action` tiles are never "on".
     readonly property var items: ({
         wifi: { label: "Wi-Fi", glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}", list: "wifi",
-                status: !Networking.wifiEnabled ? "Off" : (Sys.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected"),
-                active: Networking.wifiEnabled, run: () => { Networking.wifiEnabled = !Networking.wifiEnabled } },
+                status: !Networking.wifiEnabled ? "Off" : (Sys.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected") },
         bt: { label: "Bluetooth", glyph: Sys.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}", list: "bt",
               status: !Sys.adapter ? "Unavailable" : !Sys.adapter.enabled ? "Off"
-                    : (Sys.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On"),
-              active: Sys.adapter?.enabled ?? false, run: () => { if (Sys.adapter) Sys.adapter.enabled = !Sys.adapter.enabled } },
-        focus: { label: "Focus", glyph: "\u{F0594}", status: Notifications.dndStatus, active: Notifications.dnd,
-                 hint: "Do Not Disturb: only critical notifications pop up", run: () => Notifications.toggleDnd() },
-        nightlight: { label: "Night Light", glyph: "\u{F0599}", active: NightLight.active, run: () => NightLight.toggle(),
+                    : (Sys.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On") },
+        focus: { label: "Focus", glyph: "\u{F0594}", status: Notifications.dndStatus, hint: "Do Not Disturb: only critical notifications pop up" },
+        nightlight: { label: "Night Light", glyph: "\u{F0599}",
                       status: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode] },
-        caffeine: { label: "Caffeine", glyph: "\u{F0176}", list: "caffeine", status: Caffeine.remaining(cc.now.getTime()),
-                    active: Caffeine.active, hint: "Keeps the screen awake", run: () => Caffeine.toggle() },
-        monitor: { label: "Monitor", glyph: "\u{F0379}", active: cc.monitorHere, status: cc.monitorHere ? "Here" : "Other PC",
-                   hint: cc.monitorHere ? "Shared monitor shows this computer: click to hand it over" : "Shared monitor shows the other computer: click to take it back",
-                   run: () => Quickshell.execDetached(["monswitch", "toggle"]) },
-        keylight: { label: "Key light", glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}", active: cc.kbdLight > 0,
-                    status: ["Off", "Low", "Medium", "High"][cc.kbdLight], hint: "Keyboard backlight: click for the next level",
-                    run: () => cc.setKbd((cc.kbdLight + 1) % 4) },
-        keyboard: { label: "Keyboard", glyph: "\u{F030C}", active: Osk.visible, status: Osk.visible ? "Shown" : "Hidden",
-                    hint: "On-screen keyboard", run: () => Osk.toggle() },
-        touchpad: { label: "Touchpad", glyph: Inputs.touchpad ? "\u{F0E40}" : "\u{F0E41}", active: Inputs.touchpad,
-                    status: Inputs.touchpad ? "On" : "Off", hint: "Back on at the next login", run: () => Inputs.setTouchpad(!Inputs.touchpad) },
-        touchscreen: { label: "Touch", glyph: "\u{F0741}", active: Inputs.touchscreen, status: Inputs.touchscreen ? "On" : "Off",
-                       hint: "Touchscreen and pen; back on at the next login", run: () => Inputs.setTouchscreen(!Inputs.touchscreen) },
-        record: { label: "Record", glyph: "\u{F044A}", active: Sys.recording, status: Sys.recording ? "Recording" : "Off",
-                  hint: "The screen under the mouse (Super+Alt+R)",
-                  run: () => { if (!Sys.recording) cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; record " + (Sys.recording ? "stop" : "screen")]) } },
-        screenshot: { label: "Screenshot", glyph: "\u{F0100}", action: true, status: "", hint: "Opens the screenshot tool",
-                      run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) } },
-        colorpicker: { label: "Colour", glyph: "\u{F020A}", action: true, status: "", hint: "Pick a colour on screen and copy it",
-                       run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; hyprpicker -a"]) } },
-        mission: { label: "Windows", glyph: "\u{F0570}", action: true, status: "", hint: "Every window at a glance",
-                   run: () => { cc.hide(); MissionControl.toggle() } },
-        darkmode: { label: "Dark mode", glyph: "\u{F050E}", active: !Theme.light, status: Theme.light ? "Light" : "Dark",
-                    hint: "Every theme in its light or dark version", run: () => Config.set("appearance", "mode", Theme.light ? "dark" : "light") },
-        micmute: { label: "Microphone", glyph: Sys.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}", active: !(Sys.source?.audio?.muted ?? true),
-                   status: !Sys.source ? "None" : Sys.source.audio?.muted ? "Muted" : "On", hint: "Mute or unmute the microphone",
-                   run: () => { if (Sys.source?.audio) Sys.source.audio.muted = !Sys.source.audio.muted } },
-        airplane: { label: "Airplane", glyph: "\u{F001D}", active: cc.airplane, status: cc.airplane ? "On" : "Off",
-                    hint: "Wi-Fi and Bluetooth off together (on again together)",
-                    run: () => { const on = cc.airplane; Networking.wifiEnabled = on; if (Sys.adapter) Sys.adapter.enabled = on } },
-        clipboard: { label: "Clipboard", glyph: "\u{F014C}", action: true, status: "", hint: "What you copied (Super+V)",
-                     run: () => { cc.hide(); Clipboard.toggle() } },
-        ocr: { label: "Text", glyph: "\u{F0A3B}", action: true, status: "", hint: "Copy text from the screen: drag over it",
-               run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; screentext"]) } },
-        emoji: { label: "Emoji", glyph: "\u{F0785}", action: true, status: "", hint: "Pick an emoji to paste",
-                 run: () => { cc.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; emojipick"]) } }
+        caffeine: { label: "Caffeine", glyph: "\u{F0176}", list: "caffeine", status: Caffeine.remaining(cc.now.getTime()), hint: "Keeps the screen awake" },
+        monitor: { label: "Monitor", glyph: "\u{F0379}", status: cc.monitorHere ? "Here" : "Other PC",
+                   hint: cc.monitorHere ? "Shared monitor shows this computer: click to hand it over" : "Shared monitor shows the other computer: click to take it back" },
+        keylight: { label: "Key light", glyph: cc.kbdLight > 0 ? "\u{F0E5B}" : "\u{F0E5A}",
+                    status: ["Off", "Low", "Medium", "High"][cc.kbdLight], hint: "Keyboard backlight: click for the next level" },
+        keyboard: { label: "Keyboard", glyph: "\u{F030C}", status: Osk.visible ? "Shown" : "Hidden", hint: "On-screen keyboard" },
+        touchpad: { label: "Touchpad", glyph: Inputs.touchpad ? "\u{F0E40}" : "\u{F0E41}", status: Inputs.touchpad ? "On" : "Off", hint: "Back on at the next login" },
+        touchscreen: { label: "Touch", glyph: "\u{F0741}", status: Inputs.touchscreen ? "On" : "Off", hint: "Touchscreen and pen; back on at the next login" },
+        record: { label: "Record", glyph: "\u{F044A}", status: Sys.recording ? "Recording" : "Off", hint: "The screen under the mouse (Super+Alt+R)" },
+        screenshot: { label: "Screenshot", glyph: "\u{F0100}", action: true, status: "", hint: "Opens the screenshot tool" },
+        colorpicker: { label: "Colour", glyph: "\u{F020A}", action: true, status: "", hint: "Pick a colour on screen and copy it" },
+        mission: { label: "Windows", glyph: "\u{F0570}", action: true, status: "", hint: "Every window at a glance" },
+        darkmode: { label: "Dark mode", glyph: "\u{F050E}", status: Theme.light ? "Light" : "Dark", hint: "Every theme in its light or dark version" },
+        micmute: { label: "Microphone", glyph: Sys.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}",
+                   status: !Sys.source ? "None" : Sys.source.audio?.muted ? "Muted" : "On", hint: "Mute or unmute the microphone" },
+        airplane: { label: "Airplane", glyph: "\u{F001D}", status: cc.airplane ? "On" : "Off", hint: "Wi-Fi and Bluetooth off together (on again together)" },
+        clipboard: { label: "Clipboard", glyph: "\u{F014C}", action: true, status: "", hint: "What you copied (Super+V)" },
+        ocr: { label: "Text", glyph: "\u{F0A3B}", action: true, status: "", hint: "Copy text from the screen: drag over it" },
+        emoji: { label: "Emoji", glyph: "\u{F0785}", action: true, status: "", hint: "Pick an emoji to paste" }
     })
     // airplane: both radios off (one without an adapter counts as off)
     readonly property bool airplane: !Networking.wifiEnabled && !(Sys.adapter?.enabled ?? false)
@@ -170,6 +152,7 @@ Singleton {
             Notifications.now = new Date()
         }
         else view.reset()
+        Actions.watch("controlcenter", visible)
     }
 
     Process {

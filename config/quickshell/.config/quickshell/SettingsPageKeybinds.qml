@@ -5,8 +5,9 @@ import QtQuick.Layouts
 
 // Keyboard Shortcuts: every Hyprland bind from hypr/modules/binds.lua, grouped, with the keys it
 // uses now. Click the keys to record new ones (Esc cancels); a combination that's already taken
-// is refused. Changes go to Config.keybinds, which ThemeSync writes to hypr/settings/keybinds.lua
-// before reloading Hyprland. Mouse buttons and hardware switches are shown but can't be changed.
+// is offered to Reassign (the other shortcut is turned off or removed). "Your shortcuts" run any action
+// (Actions.qml) on keys you record. Changes go to Config.keybinds, which ThemeSync writes to
+// hypr/settings/keybinds.lua before reloading Hyprland. Mouse buttons and hardware switches are shown but can't be changed.
 ColumnLayout {
     id: page
     spacing: 20
@@ -15,6 +16,17 @@ ColumnLayout {
     property string filter: ""
     property string recording: ""   // id waiting for keys
     property string message: ""
+    property var conflict: null     // { b, keys, taken }: the keys are someone else's; Reassign moves them
+    property string newAction: ""   // the action an "Add shortcut" recording is for
+
+    // your shortcuts, as rows like the built-in ones (custom-<n> matches the id binds.lua gives them)
+    readonly property var custom: Array.from(Config.keybinds.custom ?? []).map((c, i) => ({ id: "custom-" + i, custom: true, index: i, action: c.action,
+        group: "Your shortcuts", label: Actions.get(c.action)?.name ?? c.action + " (missing)", fixed: false, def: "", keys: c.keys }))
+    // every action a shortcut can run; a name two actions share says its id too
+    readonly property var actionChoices: {
+        const list = Actions.all.filter(a => Actions.available(a)).slice().sort((a, b) => a.name.localeCompare(b.name))
+        return list.map(a => ({ id: a.id, label: list.filter(x => x.name === a.name).length > 1 ? a.name + " (" + a.id + ")" : a.name }))
+    }
 
     readonly property var overrides: Config.keybinds.overrides
     readonly property var groups: {
@@ -52,6 +64,14 @@ ColumnLayout {
 
     function load() { reader.running = true }
     function save(b, keys) {
+        if (b.custom) {
+            const list = JSON.parse(JSON.stringify(Config.keybinds.custom ?? []))
+            if (b.id === "custom-new") list.push({ keys: keys, action: page.newAction })
+            else if (keys === "") list.splice(b.index, 1)
+            else list[b.index].keys = keys
+            message = Config.set("keybinds", "custom", list)
+            return
+        }
         const o = Object.assign({}, overrides)
         if (keys === b.def) delete o[b.id]
         else o[b.id] = { keys: keys, label: b.label, group: b.group, def: b.def }
@@ -59,12 +79,29 @@ ColumnLayout {
         refresh.restart()
     }
     function resetAll() { Config.set("keybinds", "overrides", ({})); refresh.restart() }
+    // the keys move to the shortcut being recorded: the one that had them is turned off (yours is removed)
+    function reassign() {
+        const c = conflict
+        conflict = null; message = ""
+        if (!c) return
+        if (c.taken.custom) {
+            const list = JSON.parse(JSON.stringify(Config.keybinds.custom ?? []))
+            if (c.b.custom && c.b.id !== "custom-new") list[c.b.index].keys = c.keys
+            else if (c.b.custom) list.push({ keys: c.keys, action: page.newAction })
+            list.splice(c.taken.index, 1)
+            Config.set("keybinds", "custom", list)
+            if (!c.b.custom) save(c.b, c.keys)
+            return
+        }
+        save(c.taken, "")
+        save(c.b, c.keys)
+    }
 
     function record(b, event) {
         const ignore = [Qt.Key_Shift, Qt.Key_Control, Qt.Key_Alt, Qt.Key_Meta, Qt.Key_Super_L, Qt.Key_Super_R, Qt.Key_AltGr]
         if (ignore.includes(event.key)) return
         event.accepted = true
-        if (event.key === Qt.Key_Escape) { recording = ""; message = ""; return }
+        if (event.key === Qt.Key_Escape) { recording = ""; message = ""; conflict = null; return }
         const key = keyName(event)
         if (!key) { message = "That key can't be used for a shortcut"; return }
         const mods = []
@@ -75,9 +112,10 @@ ColumnLayout {
         const standalone = /^(F\d+|Print|XF86)/.test(key)
         if (!standalone && !mods.some(m => m !== "SHIFT")) { message = "Hold Super, Ctrl or Alt with the key"; return }
         const keys = mods.concat([key]).join(" + ")
-        const taken = binds.find(x => x.id !== b.id && x.keys && norm(x.keys) === norm(keys))
-        if (taken) { message = `${pretty(keys)} is already used by “${taken.label}”`; return }
-        recording = ""; message = ""
+        const taken = binds.concat(custom).find(x => x.id !== b.id && x.keys && norm(x.keys) === norm(keys))
+        recording = ""
+        if (taken) { conflict = { b: b, keys: keys, taken: taken }; message = taken.fixed ? `${pretty(keys)} is fixed for “${taken.label}”` : `${pretty(keys)} is already used by “${taken.label}”`; return }
+        message = ""; conflict = null
         save(b, keys)
     }
     // Turns a Qt key code into the name Hyprland uses. Shifted digits arrive as symbols (US layout).
@@ -121,7 +159,7 @@ ColumnLayout {
                 try {
                     for (const b of JSON.parse(text)) {
                         const d = (b.description ?? "").split("|")
-                        if (d.length < 5) continue
+                        if (d.length < 5 || d[0].startsWith("custom-")) continue   // yours come from Config, below
                         list.push({ id: d[0], group: d[1], label: d[2], fixed: d[3] === "fixed", def: d[4], keys: page.keysOf(b.modmask, b.key) })
                     }
                 } catch (e) { page.message = "Couldn't read the shortcuts from Hyprland" }
@@ -146,13 +184,52 @@ ColumnLayout {
         PillButton { text: "Reset all"; visible: Object.keys(page.overrides).length > 0; onClicked: page.resetAll() }
     }
 
-    Text {
+    RowLayout {
         visible: page.message !== ""
         Layout.fillWidth: true
-        text: page.message
-        color: Theme.warning
-        wrapMode: Text.WordWrap
-        font { family: Theme.font; pixelSize: Theme.fontSize }
+        spacing: Theme.spaceS
+        Text {
+            Layout.fillWidth: true
+            text: page.message
+            color: Theme.warning
+            wrapMode: Text.WordWrap
+            font { family: Theme.font; pixelSize: Theme.fontSize }
+        }
+        PillButton { text: "Reassign"; visible: page.conflict !== null && !page.conflict.taken.fixed; onClicked: page.reassign() }
+    }
+
+    SettingGroup {
+        title: "Your shortcuts"
+        Repeater {
+            model: page.custom
+            SettingRow {
+                id: crow
+                required property var modelData
+                label: modelData.label
+                hint: Actions.get(modelData.action) ? "" : "This action no longer exists"
+                RowLayout {
+                    spacing: Theme.spaceXs
+                    KeysButton { b: crow.modelData }
+                    Chip { icon: "\u{F0156}"; accessibleName: "Remove shortcut"; onClicked: page.save(crow.modelData, ""); ToolTipText { shown: parent.hovered; text: "Remove" } }
+                }
+            }
+        }
+        SettingRow {
+            label: "Add shortcut"
+            hint: "Pick an action (yours from Settings > Actions, or a built-in one), then press the keys"
+            RowLayout {
+                spacing: Theme.spaceXs
+                Dropdown {
+                    id: pick
+                    width: 240
+                    accessibleName: "Action for the new shortcut"
+                    options: page.actionChoices.map(c => c.label)
+                    current: page.actionChoices.find(c => c.id === page.newAction)?.label ?? "Choose an action"
+                    onPicked: v => page.newAction = page.actionChoices.find(c => c.label === v)?.id ?? ""
+                }
+                KeysButton { b: ({ id: "custom-new", custom: true, label: "New shortcut", keys: "" }); enabled: page.newAction !== ""; idleText: "Record keys" }
+            }
+        }
     }
 
     Repeater {
@@ -167,7 +244,6 @@ ColumnLayout {
                     id: row
                     required property var modelData
                     readonly property bool changed: page.overrides[modelData.id] !== undefined
-                    readonly property bool isRecording: page.recording === modelData.id
                     HoverHandler { id: rowHover }   // the turn-off × only shows on the row under the pointer
                     label: modelData.label
                     hint: modelData.fixed ? "Can't be changed here"
@@ -176,37 +252,7 @@ ColumnLayout {
                     RowLayout {
                         spacing: Theme.spaceXs
 
-                        // the keys; click to record new ones
-                        Rectangle {
-                            Layout.preferredHeight: Theme.controlHeight
-                            Layout.preferredWidth: Math.max(110, keysText.implicitWidth + Theme.spaceL * 2)
-                            radius: Theme.radiusSmall
-                            color: row.isRecording ? Theme.accentWash : keyArea.containsMouse && !row.modelData.fixed ? Theme.fillHover : Theme.fillActive
-                            border { color: row.isRecording ? Theme.accent : Theme.stroke; width: 1 }
-                            Text {
-                                id: keysText
-                                anchors.centerIn: parent
-                                text: row.isRecording ? "Press keys…" : row.modelData.keys === "" ? "Off" : page.pretty(row.modelData.keys)
-                                color: row.modelData.keys === "" && !row.isRecording ? Theme.muted : Theme.text
-                                font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
-                            }
-                            MouseArea {
-                                id: keyArea
-                                Accessible.role: Accessible.Button
-                                Accessible.name: "Change shortcut " + row.modelData.id
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                enabled: !row.modelData.fixed
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: { page.recording = row.modelData.id; page.message = ""; catcher.forceActiveFocus() }
-                            }
-                            Item {
-                                id: catcher
-                                focus: row.isRecording
-                                Keys.onPressed: event => page.record(row.modelData, event)
-                                onActiveFocusChanged: if (!activeFocus && row.isRecording) page.recording = ""
-                            }
-                        }
+                        KeysButton { b: row.modelData }
                         Chip {
                             visible: !row.modelData.fixed && row.modelData.keys !== ""
                             opacity: rowHover.hovered || hovered ? 1 : 0   // keeps its room, so the row doesn't shift
@@ -223,6 +269,43 @@ ColumnLayout {
                     }
                 }
             }
+        }
+    }
+
+    // the keys of one shortcut; click to record new ones
+    component KeysButton: Rectangle {
+        id: kb
+        property var b
+        property string idleText: "Off"
+        readonly property bool isRecording: page.recording === b.id
+        Layout.preferredHeight: Theme.controlHeight
+        Layout.preferredWidth: Math.max(110, keysText.implicitWidth + Theme.spaceL * 2)
+        radius: Theme.radiusSmall
+        opacity: enabled ? 1 : 0.5
+        color: isRecording ? Theme.accentWash : keyArea.containsMouse && !b.fixed ? Theme.fillHover : Theme.fillActive
+        border { color: isRecording ? Theme.accent : Theme.stroke; width: 1 }
+        Text {
+            id: keysText
+            anchors.centerIn: parent
+            text: kb.isRecording ? "Press keys…" : kb.b.keys === "" ? kb.idleText : page.pretty(kb.b.keys)
+            color: kb.b.keys === "" && !kb.isRecording ? Theme.muted : Theme.text
+            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+        }
+        MouseArea {
+            id: keyArea
+            Accessible.role: Accessible.Button
+            Accessible.name: "Change shortcut " + kb.b.label
+            anchors.fill: parent
+            hoverEnabled: true
+            enabled: !kb.b.fixed && kb.enabled
+            cursorShape: Qt.PointingHandCursor
+            onClicked: { page.recording = kb.b.id; page.message = ""; page.conflict = null; catcher.forceActiveFocus() }
+        }
+        Item {
+            id: catcher
+            focus: kb.isRecording
+            Keys.onPressed: event => page.record(kb.b, event)
+            onActiveFocusChanged: if (!activeFocus && kb.isRecording) page.recording = ""
         }
     }
 }

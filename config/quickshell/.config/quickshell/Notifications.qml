@@ -137,10 +137,15 @@ Singleton {
             ["Critical test", c.timeoutCriticalSec > 0 ? `Critical notifications stay for ${c.timeoutCriticalSec} s, even during Do Not Disturb.`
                                                       : "Critical notifications stay until you dismiss them, even during Do Not Disturb."]
         ][u]
+        post(text[0], text[1], urgency)
+    }
+    // The desktop's own notification (a failed action, a test), sent over D-Bus to this server like any app's
+    function post(summary, body, urgency, icon) {
+        const u = ({ low: 0, normal: 1, critical: 2 })[urgency] ?? 1
         Quickshell.execDetached(["gdbus", "call", "--session", "--dest", "org.freedesktop.Notifications",
             "--object-path", "/org/freedesktop/Notifications", "--method", "org.freedesktop.Notifications.Notify",
             // "--": the -1 timeout at the end is a value, not an option
-            "--", "Hyprism", "0", "preferences-desktop-notification", text[0], text[1], "[]", `{'urgency': <byte ${u}>}`, "-1"])
+            "--", "Hyprism", "0", icon || "preferences-desktop-notification", summary, body, "[]", `{'urgency': <byte ${u}>}`, "-1"])
     }
 
     function forget(n) {

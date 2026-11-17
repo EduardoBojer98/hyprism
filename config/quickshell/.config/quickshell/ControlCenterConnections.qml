@@ -27,10 +27,10 @@ ColumnLayout {
                 glyph: it.glyph
                 title: it.label
                 subtitle: it.action ? it.hint : it.status
-                active: it.active ?? false
+                active: ControlCenter.isOn(modelData)
                 expandable: it.list !== undefined
                 isExpanded: mod.host.expanded === it.list
-                onToggled: it.run()
+                onToggled: ControlCenter.activate(modelData)
                 onExpand: mod.host.toggleExpanded(it.list)
             }
         }

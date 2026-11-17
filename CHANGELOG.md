@@ -11,6 +11,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   auto-switch when exactly a preset's screens are connected (with Undo). Identify, a Super+P display switcher, the
   `displays` IPC target, and the page updates when a screen is plugged or unplugged. Apply refuses overlapping
   screens or none left on. See `docs/decisions/0003-monitor-identity.md`.
+- Actions: one list of every action the desktop offers, used by Spotlight, bar clicks, hot corners and the Control
+  Center. Settings → Actions makes your own buttons and toggles (a command, app, snippet, link or a chain), tests
+  them and shows which ask for an admin password; toggles show their real state. A failing action shows a
+  notification and every run is logged in `~/.local/state/hyprism/actions.log`. Your launcher actions move there by
+  themselves. Keyboard Shortcuts → Your shortcuts gives any action a key, with a clash check and Reassign.
+  `qs ipc call actions run|toggle|list`.
 - Video wallpapers: .mp4, .webm, .mkv and .mov files in the wallpaper folders play with `mpvpaper` (new package,
   with `ffmpeg`) over a still frame that the lock screen, colours from the wallpaper and Settings use. Hardware
   decoding on the iGPU without waking a hybrid laptop's NVIDIA card. A playing video about doubles idle power even

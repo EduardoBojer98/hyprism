@@ -72,9 +72,11 @@ Put them under `bar.items.<id>` in `settings.json`. Leave one out to keep the it
 | `critical` | a number | At or above it, the item turns red and gains `!!` |
 | `interval` | seconds | How often an item that measures something reads again |
 
-**Actions:** `"default"` (the item's own behaviour), `"none"`, `"panel:<name>"` (`controlcenter`, `launcher`,
-`notifications`, `calendar`, `weather`, `system`, `power`, `clipboard`, `cheatsheet`), `"settings:<page>"`,
-`"volume"`, `"brightness"` (for scroll), and `"run:<command>"` for a command of your own.
+**Actions:** `"default"` (the item's own behaviour), `"none"`, `"action:<id>"` (any action of Settings → Actions:
+a built-in such as `action:dnd` or one of yours), `"panel:<name>"` (`controlcenter`, `launcher`,
+`notifications`, `calendar`, `weather`, `system`, `power`, `clipboard`, `cheatsheet`; same as `action:panel-<name>`),
+`"settings:<page>"`, `"volume"`, `"brightness"` (for scroll), and `"run:<command>"` for a command of your own
+(a failure shows a notification).
 
 Example:
 
