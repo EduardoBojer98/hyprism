@@ -22,6 +22,8 @@ Singleton {
 
     // What a screen is saved under: its description (make model serial), which follows the screen to any port, or
     // its connector name when it has none or another connected screen has the same one (two identical monitors)
+    property var knownSet: null     // the connected screens as of the last load, to notice a change
+
     function keyOf(m, list) { return m.description && !list.some(o => o !== m && o.description === m.description) ? m.description : m.name }
     function keyForName(name) {
         const list = Hyprland.monitors.values, m = list.find(x => x.name === name)
@@ -75,6 +77,9 @@ Singleton {
                         root.notice = gone.length ? `${gone.map(name).join(", ")} left: its changes were dropped` : `${came.map(name).join(", ")} arrived`
                     }
                 } else root.notice = ""
+                const set = list.map(m => m.key).sort().join("\n")
+                if (root.knownSet !== null && set !== root.knownSet) settle.restart()   // a screen came or went
+                root.knownSet = set
                 root.monitors = list
                 root.edits = next
                 root.saved = e
@@ -227,14 +232,32 @@ Singleton {
         return e
     }
     // Through the same apply as the Apply button, so the keep-or-revert countdown covers it. Returns "" or why not.
-    function applyPreset(id) {
+    function applyPreset(id, confirm) {
         const p = presets.find(x => x.id === id)
         if (!p) return "No preset " + id
         const gone = missing(p)
         if (gone.length) return "Needs " + gone.map(k => label(monitorOf(k) ?? { name: k })).join(", ")
         edits = editsOf(p)
-        return apply(true)
+        return apply(confirm !== false)
     }
+    // ---- auto-switch: a preset marked auto applies itself when exactly the screens it names are connected -------
+    // Waits a moment for the screens to settle (a dock brings them up one by one). Never touches unsaved edits or a
+    // running countdown, and applyPreset refuses a layout with no screen on.
+    Timer { id: settle; interval: 1500; onTriggered: root.autoSwitch() }
+    function autoSwitch() {
+        if (counting || dirty) return
+        const now = connectedKeys.slice().sort().join("\n")
+        const hits = presets.filter(p => p.auto && Object.keys(p.outputs).sort().join("\n") === now)
+        if (hits.length !== 1) return
+        const p = hits[0], before = saved
+        if (JSON.stringify(layoutOf(editsOf(p))) === JSON.stringify(layoutOf(saved))) return   // already looks like it
+        if (applyPreset(p.id, false)) return
+        undoTo = before
+        toast.show("Switched to " + p.name)
+    }
+    property var undoTo: null       // the layout the Undo button goes back to
+    DisplayToast { id: toast; onUndone: { if (root.undoTo) { root.edits = root.undoTo; root.undoTo = null; root.apply(false) } } }
+
     // "extend", "mirror", "external", "only:<screen>": from what is live, not from half-made edits
     function applyMode(how) {
         edits = saved
