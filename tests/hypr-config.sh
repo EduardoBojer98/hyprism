@@ -24,9 +24,12 @@ for profile in "$t"/fixtures/*/; do
         ln -s "$PWD/$f" "$home/.config/hypr/hardware/"
         basename "$f" .lua >>"$home/.config/hypr/hardware/index"
     done
+    # hl.timer segfaults --verify-config (Hyprland 0.57: no event loop when only verifying), so a wrapper
+    # stubs it before loading the real config; timers only re-apply things at runtime, nothing to verify
+    printf 'hl.timer = function() end\ndofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")\n' >"$home/.config/hypr/verify.lua"
     rc=0
-    out=$(HOME=$home XDG_CONFIG_HOME=$home/.config hyprland --verify-config -c "$home/.config/hypr/hyprland.lua" 2>&1) || rc=$? # judged by its text below
-    # Hyprland 0.57 crashes in --verify-config with a Lua config: it can't judge, so no verdict
+    out=$(HOME=$home XDG_CONFIG_HOME=$home/.config hyprland --verify-config -c "$home/.config/hypr/verify.lua" 2>&1) || rc=$? # judged by its text below
+    # a crash anyway (a new runtime-only call): no verdict, so say so rather than pass
     if ((rc >= 128)); then
         echo "skipped: hyprland --verify-config crashed on $name (signal $((rc - 128))): Hyprland's bug, not the config"
         crashed=1
