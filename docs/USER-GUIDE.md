@@ -26,6 +26,10 @@ every shortcut. The full key list is in the [README](../README.md#keys).
     Hyprism, Check this computer (doctor), ROG Control Center (ASUS only). Update and doctor open a terminal that
     stays open at the end.
   - **Power**: Lock, Sleep, Hibernate (where it works), Log out, Restart, Shut down, Power menu.
+  - **Your actions**: buttons and toggles you make in Settings → Actions (a command, an app, a snippet to paste, a
+    folder or link to open, a chain of actions). Show them in Spotlight, on a bar click or a hot corner, or give one
+    a key in Keyboard Shortcuts → Your shortcuts. A failing action shows a notification; every run is logged in
+    `~/.local/state/hyprism/actions.log`.
 - **Control Center** (`Super+C`): Wi-Fi, Bluetooth, Focus, Night Light, Caffeine, sliders, power mode.
 - **Notifications** have their own panel from the bell (`Super+N`): Do Not Disturb (`Super+Shift+N`), history by app.
 - **On-screen display**: a small pop-up that confirms volume, brightness, microphone, layout and caps lock changes.
@@ -103,7 +107,7 @@ change a choice or a slider.
 | **Menu Bar** | Menu Bar |
 | **Dock** | Dock |
 | **Lock Screen** | Lock Screen |
-| **Desktop & Widgets** | Control Center, Notifications, Search & Launcher, Clipboard, Weather, Calendar, Screenshots, Hot Corners |
+| **Desktop & Widgets** | Control Center, Notifications, Search & Launcher, Actions, Clipboard, Weather, Calendar, Screenshots, Hot Corners |
 | **Windows** | Window Behaviour, Window Look, App Rules |
 | **Displays** | Screens, Shared Monitor |
 | **Input** | Keyboard & Touchpad, Keyboard Shortcuts |
