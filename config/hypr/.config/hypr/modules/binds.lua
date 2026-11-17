@@ -72,6 +72,9 @@ for i = 1, 10 do
     add("send-" .. i,      "Workspaces", "Send window to workspace " .. i, key("SHIFT + " .. k), hl.dsp.window.move({ workspace = i }))
 end
 add("workspace-previous", "Workspaces", "Previous workspace",        key("Tab"), hl.dsp.focus({ workspace = "previous" }))
+-- Alt+Tab: hold Alt, Tab through the open windows (most recent first), let go to switch (AltTab.qml)
+add("window-switch",      "Windows", "Switch windows (hold Alt)", "ALT + Tab", exec("qs ipc call alttab next"))
+add("window-switch-back", "Windows", "Switch windows backwards",  "ALT + SHIFT + Tab", exec("qs ipc call alttab prev"))
 add("workspace-empty",    "Workspaces", "Next empty workspace",      key("CTRL + down"), hl.dsp.focus({ workspace = "empty" }))
 add("workspace-next-wheel", "Workspaces", "Next workspace (wheel)",  key("mouse_down"), hl.dsp.focus({ workspace = "e+1" }), { fixed = true })
 add("workspace-prev-wheel", "Workspaces", "Previous workspace (wheel)", key("mouse_up"), hl.dsp.focus({ workspace = "e-1" }), { fixed = true })

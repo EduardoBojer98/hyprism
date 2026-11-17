@@ -21,8 +21,10 @@ Scope {
     readonly property int margin: Math.max(Theme.spaceL, Math.min(win.width, win.height) * 0.04)
     readonly property real screenWidth: win.width
 
+    property bool dim: true                   // false: no dimmed backdrop (a quick switcher)
     signal dismissed()
     signal keyPressed(var event)
+    signal keyReleased(var event)             // e.g. letting go of Alt in the window switcher
 
     PanelWindow {
         id: win
@@ -50,8 +52,9 @@ Scope {
                 overlay.keyPressed(event)
                 if (!event.accepted && event.key === Qt.Key_Escape) { overlay.dismissed(); event.accepted = true }
             }
+            Keys.onReleased: event => overlay.keyReleased(event)
 
-            Rectangle { anchors.fill: parent; color: Theme.backdrop }
+            Rectangle { anchors.fill: parent; color: overlay.dim ? Theme.backdrop : "transparent" }
             MouseArea { anchors.fill: parent; onClicked: overlay.dismissed(); Accessible.ignored: true }
 
             Glass {
