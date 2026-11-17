@@ -96,6 +96,19 @@ CLIPSTORE_TOTAL_KB=2500 XDG_DATA_HOME="$t/clip" bash "$bin/clipstore" prune >/de
 check "clipstore keeps unpinned history under its size cap" '[[ -d $t/clip/clipboard/$((now + 4))-abc4 && -d $t/clip/clipboard/$((now + 3))-abc3 && -d $t/clip/clipboard/$((now + 1))-abc1 && ! -d $t/clip/clipboard/$((now + 2))-abc2 ]]'
 rm -rf "$t/clip/clipboard"/*-abc*
 
+# settings-snapshot: a copy only when something changed, restore keeps the current settings first, import checks the file
+snap() { HYPRISM_SETTINGS="$t/snap/settings.json" XDG_STATE_HOME="$t/snap/state" bash "$bin/settings-snapshot" "$@"; }
+mkdir -p "$t/snap" && echo '{"a":1}' >"$t/snap/settings.json"
+snap take start && snap take start
+check "settings-snapshot skips a copy of unchanged settings" '[[ $(snap list | jq length) == 1 ]]'
+first=$(snap list | jq -r '.[0].id')
+echo '{"a":2}' >"$t/snap/settings.json"
+snap restore "$first"
+check "settings-snapshot restore brings the old settings back and keeps the newer ones" '[[ $(jq .a "$t/snap/settings.json") == 1 && $(snap list | jq -r ".[0].reason") == before-restore ]]'
+echo 'not json' >"$t/snap/bad.json"
+check "settings-snapshot import refuses a file that isn't settings" '! snap import "$t/snap/bad.json" 2>/dev/null && [[ $(jq .a "$t/snap/settings.json") == 1 ]]'
+check "settings-snapshot refuses an id outside its folder" '! snap restore "../../etc" 2>/dev/null'
+
 # the emoji picker builds its list from Unicode's own file (no desktop environment's data)
 mkdir -p "$t/emoji"
 printf '%s\n' '# group: Smileys & Emotion' '1F600 ; fully-qualified # 😀 E1.0 grinning face' '263A ; unqualified # ☺ E0.6 smiling face' \

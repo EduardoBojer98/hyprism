@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Restore points for the desktop's settings. Everything Settings changes lives in one file,
+# ~/.config/quickshell/settings.json (Hyprland's settings/*.lua are written from it), so a copy of that
+# file is a complete restore point. The newest 10 are kept in ~/.local/state/hyprism/snapshots.
+#   settings-snapshot take REASON     keep a copy now (skipped when nothing changed since the last one)
+#   settings-snapshot list            JSON, newest first: [{ id, time, reason }]
+#   settings-snapshot restore ID      go back to that copy (the current settings are kept as a copy first)
+#   settings-snapshot export FILE     save the settings to FILE (to move them to another computer)
+#   settings-snapshot import FILE     use FILE's settings (checked first; the current ones are kept as a copy)
+# The shell reloads settings.json by itself when it changes, and fixes or drops values it doesn't accept.
+set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
+
+SETTINGS=${HYPRISM_SETTINGS:-$HOME/.config/quickshell/settings.json}
+DIR=${XDG_STATE_HOME:-$HOME/.local/state}/hyprism/snapshots
+KEEP=10
+
+newest() { find "$DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort -r | head -1; }
+
+take() {
+    local reason=${1:-manual} last id
+    [[ $reason =~ ^[a-z0-9-]{1,32}$ ]] || die "reason: lower-case letters, digits and - only"
+    [[ -s $SETTINGS ]] || exit 0
+    mkdir -p "$DIR"
+    last=$(newest)
+    if [[ -n $last ]] && cmp -s "$SETTINGS" "$DIR/$last/settings.json"; then return 0; fi
+    id=$(date +%Y%m%d-%H%M%S%3N)-$reason # ms: two in the same second still sort newest first
+    mkdir -p "$DIR/$id"
+    cp -- "$SETTINGS" "$DIR/$id/settings.json"
+    find "$DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | tail -n +$((KEEP + 1)) | while read -r old; do
+        rm -rf -- "${DIR:?}/$old"
+    done
+}
+
+valid() { # a settings file: a JSON object (what's inside is checked by the shell when it loads)
+    jq -e 'type == "object"' "$1" >/dev/null 2>&1
+}
+
+case ${1:-list} in
+    take) take "${2:-manual}" ;;
+    list)
+        find "$DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | sort -r |
+            jq -R -s -c 'split("\n") | map(select(length > 0) | capture("^(?<d>[0-9]{8})-(?<t>[0-9]{9})-(?<reason>.+)$") as $m
+                | { id: ., time: ($m.d[0:4] + "-" + $m.d[4:6] + "-" + $m.d[6:8] + " " + $m.t[0:2] + ":" + $m.t[2:4]), reason: $m.reason })'
+        ;;
+    restore)
+        [[ ${2:-} =~ ^[0-9]{8}-[0-9]{9}-[a-z0-9-]+$ && -f $DIR/${2:-}/settings.json ]] || die "no such restore point: ${2:-}"
+        valid "$DIR/$2/settings.json" || die "that restore point isn't a settings file"
+        src=$(mktemp)
+        cp -- "$DIR/$2/settings.json" "$src" # taking a copy below may push this one out of the newest 10
+        take before-restore
+        cp -- "$src" "$SETTINGS"
+        rm -f -- "$src"
+        ;;
+    export)
+        [[ -n ${2:-} ]] || usage 1
+        cp -- "$SETTINGS" "$2"
+        ;;
+    import)
+        [[ -f ${2:-} ]] || die "no such file: ${2:-}"
+        valid "$2" || die "$2 isn't a settings file (a JSON object)"
+        take before-import
+        cp -- "$2" "$SETTINGS"
+        ;;
+    *) usage 1 ;;
+esac

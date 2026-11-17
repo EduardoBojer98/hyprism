@@ -3,7 +3,7 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// About: this machine and the setup that built it.
+// About: this machine, the setup that built it, and restore points for your settings (settings-snapshot).
 ColumnLayout {
     id: page
     spacing: 20
@@ -107,6 +107,61 @@ ColumnLayout {
             PillButton { enabled: !!page.info.repo; text: "Run doctor"; onClicked: page.inTerminal("./install.sh doctor") }
         }
     }
+    // ---- restore points: copies of settings.json (the newest 10), one per shell start when something changed
+    property var points: []
+    property string backupNote: ""
+    Process {
+        id: pointsRead
+        running: true
+        command: ["settings-snapshot", "list"]
+        stdout: StdioCollector { onStreamFinished: { try { page.points = JSON.parse(text) } catch (e) { page.points = [] } } }
+    }
+    Process {   // one change at a time; the list and a short note follow its result
+        id: backup
+        property string done: ""
+        stderr: StdioCollector { id: backupErr }
+        onExited: code => { page.backupNote = code === 0 ? done : backupErr.text.trim().replace(/^settings-snapshot: /, ""); pointsRead.running = true }
+    }
+    function snapshot(args, done) { backup.done = done; backup.command = ["settings-snapshot"].concat(args); backup.running = true }
+    readonly property string exportPath: Quickshell.env("HOME") + "/hyprism-settings.json"
+    readonly property var reasons: ({ start: "Desktop start", manual: "Made by you", "before-restore": "Before a restore",
+                                      "before-import": "Before an import", displays: "Before a display change", keybinds: "Before a shortcut change",
+                                      actions: "Before an action change" })
+
+    SettingGroup {
+        title: "Backups"
+        SettingRow {
+            label: "Restore points"
+            hint: page.backupNote !== "" ? page.backupNote
+                : "Your settings are copied when the desktop starts and before big changes; the newest 10 are kept"
+            PillButton { enabled: !backup.running; text: "Make one now"; onClicked: page.snapshot(["take", "manual"], "Restore point made") }
+        }
+        Repeater {
+            model: page.points
+            SettingRow {
+                required property var modelData
+                label: modelData.time
+                hint: page.reasons[modelData.reason] ?? modelData.reason
+                PillButton { enabled: !backup.running; text: "Restore"; onClicked: page.snapshot(["restore", modelData.id], "Settings from " + modelData.time + " are back") }
+            }
+        }
+        SettingRow {
+            label: "Export"
+            hint: "Saves your settings to " + page.exportPath.replace(Quickshell.env("HOME"), "~") + ", to keep or to use on another computer"
+            PillButton { enabled: !backup.running; text: "Export"; onClicked: page.snapshot(["export", page.exportPath], "Saved to " + page.exportPath.replace(Quickshell.env("HOME"), "~")) }
+        }
+        SettingRow {
+            label: "Import"
+            hint: "Uses the settings in a file you exported; your current ones become a restore point first"
+            TextField { id: importPath; width: 220; placeholder: "~/hyprism-settings.json"; accessibleName: "Settings file to import" }
+            PillButton {
+                enabled: !backup.running && importPath.text.trim() !== ""
+                text: "Import"
+                onClicked: page.snapshot(["import", importPath.text.trim().replace(/^~/, Quickshell.env("HOME"))], "Imported")
+            }
+        }
+    }
+
     function inTerminal(cmd) {
         Quickshell.execDetached(["ghostty", "+new-window", "-e", "sh", "-c", "cd \"$1\" && " + cmd + "; echo; read -p 'Press Enter to close' _", "sh", page.info.repo])
     }
