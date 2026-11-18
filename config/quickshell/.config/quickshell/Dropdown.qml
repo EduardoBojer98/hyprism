@@ -52,6 +52,18 @@ Item {
         MouseArea { id: area; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dd.open = !dd.open }
     }
 
+    // The compositor closes the list only for clicks in other apps; a click anywhere else in this window closes it
+    // too (and does nothing else, like a macOS menu)
+    MouseArea {
+        parent: dd.open && dd.Window.contentItem ? dd.Window.contentItem : dd
+        visible: dd.open
+        anchors.fill: parent
+        z: 1000000
+        acceptedButtons: Qt.AllButtons
+        onPressed: dd.open = false
+        onWheel: wheel => { dd.open = false; wheel.accepted = false }
+    }
+
     // A popup so the list floats above the rows below instead of being covered by them
     // The theme's depth and decor like every popup; the window leaves room around the list for its shadow.
     // Keyboard inside: Up / Down / Home / End, Enter picks, Escape closes.
