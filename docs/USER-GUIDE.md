@@ -38,6 +38,11 @@ every shortcut. The full key list is in the [README](../README.md#keys).
   Settings > Control Center starts from a layout (Classic, Essentials, Mixer, Grid, Minimal, or one you kept),
   then lets you drag sections and tiles; `qs ipc call controlcenter layout <name>` switches layout from a key.
 - **Notifications** have their own panel from the bell (`Super+N`): Do Not Disturb (`Super+Shift+N`), history by app.
+- **Focus modes** (Settings > Focus, the Control Center's Focus tile, launcher actions such as *Focus: Work*):
+  Work, Client call and Sleep to start, and any you add. Each can turn on Do Not Disturb while letting chosen apps
+  through, set a wallpaper, open apps, and turn on Night Light or Caffeine; turning it off puts those back. A mode can
+  run on a schedule (days and times, past midnight too); turned off by hand, it stays off until its next window. The
+  bell shows the mode's icon and name. From a key: `qs ipc call focus set <name>`, `off`, `toggle`, `status`, `list`.
 - **On-screen display**: a small pop-up that confirms volume, brightness, microphone, layout and caps lock changes.
 
 Websites as apps are made in a terminal with `webapp add "Name" https://address`; there is no menu entry yet.

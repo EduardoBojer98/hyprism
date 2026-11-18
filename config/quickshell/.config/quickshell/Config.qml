@@ -20,6 +20,7 @@ Singleton {
     readonly property alias caffeine: adapter.caffeine
     readonly property alias nightLight: adapter.nightLight
     readonly property alias phone: adapter.phone
+    readonly property alias focus: adapter.focus
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
     readonly property alias keybinds: adapter.keybinds
@@ -69,6 +70,7 @@ Singleton {
                          mutedApps: "list" },
         osd: { timeoutMs: [600, 5000], volume: "bool", brightness: "bool", micMute: "bool", layout: "bool", capsLock: "bool", position: ["bottom", "top", "center"] },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
+        focus: { modes: "focusModes", active: "string", last: "string", auto: "bool", restore: "object" },
         phone: { enabled: "bool", device: "string" },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", sliders: "list", toggles: "list", folded: "list", hidden: "list", layouts: "object" },
@@ -143,12 +145,24 @@ Singleton {
         // keys and an action id go into hypr/settings/keybinds.lua: plain characters only (binds.lua checks again)
         if (rule === "shortcuts") return value && typeof value.length === "number" && value.length <= 100
             && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[a-z0-9][a-z0-9-]*$/.test(c?.action ?? "")) ? "" : "Shortcuts need keys and an action id"
+        if (rule === "focusModes") return value && typeof value.length === "number" && value.length <= 20
+            && Array.from(value).every((m, i, all) => focusModeOk(m) && all.findIndex(o => o.id === m.id) === i) ? "" : "Up to 20 modes, each with an id and a name"
         if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(displayKeyOk) ? "" : "Unknown display names"
         if (rule === "presets") return value && typeof value.length === "number" && value.length <= 20
             && Array.from(value).every(p => /^[a-z0-9-]{1,40}$/.test(p?.id ?? "") && typeof p.name === "string" && p.name.length > 0 && p.name.length <= 40
                 && !/[\x00-\x1f]/.test(p.name) && typeof p.auto === "boolean" && p.outputs !== null && typeof p.outputs === "object"
                 && Object.keys(p.outputs).length > 0 && Object.keys(p.outputs).every(k => displayKeyOk(k) && displayOutputOk(p.outputs[k]))) ? "" : "Up to 20 presets, each with a name and its screens"
         return ""
+    }
+    // one Focus mode (Focus.qml)
+    function focusModeOk(m) {
+        const texts = l => l && typeof l.length === "number" && l.length <= 30 && Array.from(l).every(t => typeof t === "string" && t.length <= 200)
+        const s = m?.schedule
+        return /^[a-z0-9-]{1,40}$/.test(m?.id ?? "") && typeof m.name === "string" && m.name.trim().length > 0 && m.name.length <= 40
+            && typeof m.icon === "string" && m.icon.length <= 4 && typeof m.dnd === "boolean" && texts(m.allow) && texts(m.apps)
+            && typeof m.wallpaper === "string" && typeof m.nightLight === "boolean" && typeof m.caffeine === "boolean"
+            && s !== null && typeof s === "object" && typeof s.on === "boolean" && !problem("time", s.from) && !problem("time", s.to)
+            && !!s.days && typeof s.days.length === "number" && Array.from(s.days).every(d => Number.isInteger(d) && d >= 0 && d <= 6)
     }
     // a connector or a description (make model serial)
     function displayKeyOk(n) { return /^[^"\\\x00-\x1f]{1,120}$/.test(n) }

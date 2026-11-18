@@ -109,6 +109,22 @@ JsonAdapter {
         property int minutes: 0                 // length of the current run, 0 = until turned off
         property real endsAt: 0                 // ms since epoch, 0 = until turned off
     }
+    // Focus modes (Focus.qml, Settings > Focus): Do Not Disturb with apps let through, a wallpaper, apps to open,
+    // Night Light and Caffeine, and a schedule (days 0 = Sunday … 6, from-to). One mode is active at a time.
+    property JsonObject focus: JsonObject {
+        property var modes: [
+            { id: "work", name: "Work", icon: "\u{F00D6}", dnd: true, allow: ["Slack", "Microsoft Teams", "Thunderbird"], wallpaper: "", apps: [],
+              nightLight: false, caffeine: false, schedule: { on: false, days: [1, 2, 3, 4, 5], from: "09:00", to: "17:00" } },
+            { id: "call", name: "Client call", icon: "\u{F03F2}", dnd: true, allow: [], wallpaper: "", apps: [],
+              nightLight: false, caffeine: true, schedule: { on: false, days: [1, 2, 3, 4, 5], from: "10:00", to: "11:00" } },
+            { id: "sleep", name: "Sleep", icon: "\u{F02E3}", dnd: true, allow: [], wallpaper: "", apps: [],
+              nightLight: true, caffeine: false, schedule: { on: false, days: [0, 1, 2, 3, 4, 5, 6], from: "22:00", to: "07:00" } }
+        ]
+        property string active: ""              // the mode on now (its id), "" = off
+        property string last: "work"            // the one the Focus tile turns back on
+        property bool auto: false               // the active mode was turned on by its schedule (and ends with it)
+        property var restore: ({})              // what the active mode changed, put back when it ends: { wallpaper, nightLight, caffeine }
+    }
     property JsonObject phone: JsonObject {     // phone link through KDE Connect (Phone.qml, Settings > Phone)
         property bool enabled: true             // off: kdeconnectd is stopped and the shell stops asking
         property string device: ""              // the phone's KDE Connect id; "" = the first paired one

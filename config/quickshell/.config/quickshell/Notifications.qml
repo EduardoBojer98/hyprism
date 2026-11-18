@@ -30,8 +30,8 @@ Singleton {
     readonly property string corner: c.position === "theme" ? Theme.current.notify.corner : c.position
     // Do Not Disturb: on by hand, or inside the daily schedule (unless turned off for the rest of this window)
     readonly property bool scheduled: c.dndSchedule && inWindow(now, c.dndFrom, c.dndTo) && now.getTime() >= skipUntil
-    readonly property bool dnd: c.dnd || scheduled
-    readonly property string dndStatus: c.dnd ? "On" : scheduled ? "Until " + c.dndTo : "Off"
+    readonly property bool dnd: c.dnd || scheduled || Focus.dnd   // a Focus mode can hold notifications too (Focus.qml)
+    readonly property string dndStatus: c.dnd ? "On" : Focus.dnd ? Focus.mode.name : scheduled ? "Until " + c.dndTo : "Off"
     property real skipUntil: 0     // the schedule was turned off by hand until then (ms)
     property bool sharing: false   // a screen or window is being shared: no banners for people on the call to read
 
@@ -107,7 +107,7 @@ Singleton {
     }
     function toggleDnd() {
         now = new Date()
-        if (dnd) { if (scheduled) skipUntil = windowEnd(); if (c.dnd) Config.set("notifications", "dnd", false) }
+        if (dnd) { if (Focus.dnd) Focus.off(); if (scheduled) skipUntil = windowEnd(); if (c.dnd) Config.set("notifications", "dnd", false) }
         else { skipUntil = 0; Config.set("notifications", "dnd", true) }
     }
     function timeoutOf(n) {   // ms on screen; 0 = until dismissed. An app's own timeout wins, except for critical ones
@@ -169,8 +169,10 @@ Singleton {
                 root.history = [n].concat(root.history.filter(x => x !== n))
                 for (const old of root.history.slice(Config.notifications.historyMax)) old.dismiss()
             }
-            // muted apps, Do Not Disturb and screen sharing (except critical) only go to the notification centre
-            if (!root.muted(n) && (!(root.dnd || root.sharing) || n.urgency === NotificationUrgency.Critical)) {
+            // muted apps, Do Not Disturb and screen sharing (except critical) only go to the notification centre;
+            // a Focus mode lets its own apps through
+            const held = root.sharing || root.c.dnd || root.scheduled || (Focus.dnd && !Focus.allows(root.appOf(n)))
+            if (!root.muted(n) && (!held || n.urgency === NotificationUrgency.Critical)) {
                 root.popups = [n].concat(root.popups.filter(x => x !== n))
                 if (!n.hints?.["suppress-sound"]) root.playSound(root.soundOf(n))
             } else if (n.transient) n.expire()

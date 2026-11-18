@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Focus modes: Work, Client call and Sleep, or your own (Settings > Focus). Each sets Do Not Disturb with chosen apps
+  let through, and optionally a wallpaper, apps to open, Night Light and Caffeine, put back when it ends. Switch from
+  the Focus tile, the launcher, a schedule (days and times) or `qs ipc call focus set <name>|off|toggle`; the bell
+  shows the mode on.
 - Phone: link your phone through KDE Connect (Settings > Network & Bluetooth > Phone, a Control Center tile). Battery
   in the tile, ring the phone, send files (also as launcher actions), its notifications through the shell's own,
   clipboard sync and remote control switches, pairing and clear empty states with a one-click Install or Start.

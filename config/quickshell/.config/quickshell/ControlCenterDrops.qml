@@ -16,6 +16,7 @@ ColumnLayout {
     // from the lists' heights, not their `visible` (that reads false while this is hidden)
     visible: ids.includes("wifi") && wifiDrop.shown > 0 || ids.includes("bt") && btDrop.shown > 0 || ids.includes("caffeine") && cafDrop.shown > 0
              || ids.includes("phone") && phoneDrop.shown > 0
+             || ids.includes("focus") && focusDrop.shown > 0
 
     // ---- Wi-Fi and Bluetooth dropdowns, under their tiles ----------------------------------
     ControlCenterDrop {
@@ -110,6 +111,41 @@ ColumnLayout {
             options: Caffeine.choices.map(m => m === 0 ? "Always" : Caffeine.label(m))
             current: Caffeine.active ? Caffeine.choices.indexOf(Caffeine.minutes) : -1
             onPicked: i => { Caffeine.start(Caffeine.choices[i]); ControlCenter.now = new Date() }
+        }
+    }
+
+    // ---- Focus: plain Do Not Disturb and each mode; a click switches, the switch turns all of it off ----
+    ControlCenterDrop {
+        id: focusDrop
+        visible: drops.ids.includes("focus") && shown > 0
+        open: drops.host.expanded === "focus"
+        title: "Focus"
+        switchOn: Focus.mode !== null || Notifications.dnd
+        onSwitched: Focus.toggle()
+        settingsLabel: "Focus Settings…"
+        settingsPage: "focus"
+
+        ControlCenterDeviceRow {
+            readonly property bool on: Notifications.dnd && !Focus.mode
+            glyph: "\u{F009B}"
+            title: "Do Not Disturb"
+            subtitle: on ? Notifications.dndStatus === "On" ? "On until you turn it off" : Notifications.dndStatus : "Only critical notifications pop up"
+            selected: on
+            action: on ? "Turn off" : "Turn on"
+            onClicked: { if (Focus.mode) Focus.off(); Notifications.toggleDnd() }
+        }
+        Repeater {
+            model: Focus.modes
+            ControlCenterDeviceRow {
+                required property var modelData
+                readonly property bool on: Config.focus.active === modelData.id
+                glyph: modelData.icon || "\u{F0594}"
+                title: modelData.name
+                subtitle: on && Config.focus.auto ? "On until " + modelData.schedule.to : Focus.about(modelData) || Focus.summary(modelData)
+                selected: on
+                action: on ? "Turn off" : "Turn on"
+                onClicked: Focus.set(on ? "" : modelData.id)
+            }
         }
     }
 
