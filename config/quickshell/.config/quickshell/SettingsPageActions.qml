@@ -17,7 +17,7 @@ ColumnLayout {
     readonly property var stateTypes: ["process", "unit", "unit-system", "command"]
     readonly property var stateNames: ["A program runs", "A service runs", "A system service runs", "A command succeeds"]
     readonly property var limits: [30, 120, 600, 0]
-    readonly property var places: [["launcher", "Spotlight"], ["bar", "Bar clicks"], ["corner", "Hot corners"]]
+    readonly property var places: [["launcher", "Spotlight"], ["bar", "Bar clicks"], ["corner", "Hot corners"], ["controlcenter", "Control Center"]]
 
     property int editing: -2          // index in `mine` being edited; -1 = a new one; -2 = the editor is closed
     property var draft: ({})          // the form's choices that aren't text fields
@@ -120,7 +120,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: "Your own buttons and toggles. Show them in Spotlight, on a bar click or a hot corner, or give them a key in Keyboard Shortcuts."
+        text: "Your own buttons and toggles. Show them in Spotlight, on a bar click, a hot corner or the Control Center, or give them a key in Keyboard Shortcuts."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontLabel }

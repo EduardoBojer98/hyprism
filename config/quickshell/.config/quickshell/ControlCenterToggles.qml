@@ -28,7 +28,7 @@ ColumnLayout {
             ControlCenterQuickToggle {
                 required property string modelData
                 required property int index
-                readonly property var it: ControlCenter.items[modelData]
+                readonly property var it: ControlCenter.items[modelData] ?? ({ glyph: "", label: "", status: "" })   // your action tiles: for a moment at start
                 readonly property int row: Math.floor(index / grid.perRow)
                 readonly property int inRow: row < grid.rows - 1 ? grid.perRow : grid.count - row * grid.perRow
                 x: (grid.width - inRow * grid.cellW - (inRow - 1) * grid.gap) / 2 + (index % grid.perRow) * (grid.cellW + grid.gap)

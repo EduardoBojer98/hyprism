@@ -30,7 +30,10 @@ Singleton {
         tiles: ["wifi", "bt"],
         sliders: ["sound", "mic"],   // the Sound card's rows
         toggles: ["focus", "nightlight", "caffeine", "darkmode", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
+                 .concat(userTiles.map(a => "action:" + a.id))
     })
+    // your actions shown here (Settings > Actions, "Control Center"): small tiles after the built-in ones, "action:<id>"
+    readonly property var userTiles: Actions.user.filter(a => (a.showIn ?? []).includes("controlcenter") && !Actions.builtinIds.includes(a.id))
     // the saved order; anything never saved goes to its default group, at its default place
     function order(group) {
         const cfg = Config.controlCenter
@@ -44,7 +47,7 @@ Singleton {
     // A tile runs a registry action (Actions.qml): its id, or the one named here where they differ
     readonly property var actionIds: ({ wifi: "wifi-toggle", record: "record-toggle", monitor: "monswitch", mission: "overview",
                                         focus: "dnd", screenshot: "shot", colorpicker: "picker" })
-    function actionOf(id) { return Actions.get(actionIds[id] ?? id) }
+    function actionOf(id) { return Actions.get(id.startsWith("action:") ? id.slice(7) : (actionIds[id] ?? id)) }
     // a section shows when it has something to show; a tile when its action is offered here (its `when`)
     function available(id) { return id === "media" ? Sys.player !== null : !items[id] || Actions.available(actionOf(id)) }
     function isOn(id) { return Actions.isOn(actionOf(id)) }
@@ -78,7 +81,7 @@ Singleton {
 
     // Every tile, once: what it shows (glyph, label, status) and which list it opens (`list`: a ControlCenterDrops
     // name). Whether it's on and what a click does come from its action (actionOf); `action` tiles are never "on".
-    readonly property var items: ({
+    readonly property var items: Object.assign({
         wifi: { label: "Wi-Fi", glyph: Networking.wifiEnabled ? "\u{F05A9}" : "\u{F05AA}", list: "wifi",
                 status: !Networking.wifiEnabled ? "Off" : (Sys.wifi?.networks.values.find(n => n.connected)?.name ?? "Not connected") },
         bt: { label: "Bluetooth", glyph: Sys.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}", list: "bt",
@@ -106,7 +109,9 @@ Singleton {
         clipboard: { label: "Clipboard", glyph: "\u{F014C}", action: true, status: "", hint: "What you copied (Super+V)" },
         ocr: { label: "Text", glyph: "\u{F0A3B}", action: true, status: "", hint: "Copy text from the screen: drag over it" },
         emoji: { label: "Emoji", glyph: "\u{F0785}", action: true, status: "", hint: "Pick an emoji to paste" }
-    })
+    }, userTiles.reduce((m, a) => { m["action:" + a.id] = {
+        label: a.name, glyph: a.icon || "\u{F0E7}", action: a.kind !== "toggle",
+        status: a.kind === "toggle" ? (Actions.isOn(a) ? "On" : "Off") : "", hint: a.description || Actions.summary(a) }; return m }, {}))
     // airplane: both radios off (one without an adapter counts as off)
     readonly property bool airplane: !Networking.wifiEnabled && !(Sys.adapter?.enabled ?? false)
     readonly property bool monitorHere: Hyprland.monitors.values.some(m => m.name === Machine.switchOutput)
