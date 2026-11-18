@@ -14,7 +14,6 @@
 #include <chrono>
 #include <format>
 #include <unordered_map>
-#include <unordered_set>
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/desktop/view/window/Window.hpp>
 #include <hyprland/src/event/EventBus.hpp>
@@ -57,27 +56,13 @@ static int barHeight(PHLWINDOW w) {
     return (int)(r.topLeft.y - r.bottomRight.y);
 }
 
-// windows floated after they opened, or whose own maximise button was used: the maximised look follows their
-// state (dialogs that open floating keep it)
-static std::unordered_set<Desktop::View::CWindow*> g_floated;
-
-static bool shownMaximised(PHLWINDOW w) {
-    return !(g_floated.contains(w.get()) && w->isFloating() && (int)Fullscreen::controller()->getFullscreenModes(w).internal == 0 && barHeight(w) == 0);
-}
-
-static void syncMaximised(PHLWINDOW w) {
-    const auto top = toplevelOf(w);
-    if (top && g_floated.contains(w.get()))
-        top->setMaximized(shownMaximised(w));
-}
-
 static void eval(const std::string& lua) {
     HyprlandAPI::invokeHyprctlCommand("eval", lua);
 }
 
-// an app's own maximise button: maximise_button() decides, then the app is told the outcome. When that isn't
-// what it asked for (Fill the screen on a tiled window), it first sees what it asked for, or Chrome's button
-// waits for that answer forever and stops working
+// an app's own maximise button: maximise_button() decides. Every window stays told it is maximised (Hyprland
+// does that on map): a "restored" Chrome or GTK app draws its own shadow and the border lands outside it. A
+// restore request gets a brief "not maximised" first, or Chrome waits for that answer and its button stops working
 static void maximise(PHLWINDOWREF ref, bool asked) {
     g_pEventLoopManager->doLater([ref, asked] {
         const auto w = ref.lock();
@@ -85,16 +70,14 @@ static void maximise(PHLWINDOWREF ref, bool asked) {
             return;
         const int fs = (int)Fullscreen::controller()->getFullscreenModes(w).internal;
         eval(std::format("maximise_button(\"0x{:x}\", {}, {})", (uintptr_t)w.get(), w->isFloating() ? "true" : "false", fs));
-        g_floated.insert(w.get());
-        syncMaximised(w);
         const auto top = toplevelOf(w);
-        if (!top || shownMaximised(w) == asked)
+        if (!top || asked)
             return;
-        top->setMaximized(asked);
+        top->setMaximized(false);
         g_pEventLoopManager->doLater([ref] {   // the next turn, after that configure went out
             if (const auto w = ref.lock(); w && w->mapped())
                 if (const auto top = toplevelOf(w))
-                    top->setMaximized(shownMaximised(w));
+                    top->setMaximized(true);
         });
     });
 }
@@ -154,7 +137,6 @@ static bool tabDragLive() {
 }
 
 static void closing(PHLWINDOW w) {
-    g_floated.erase(w.get());
     if (!w->isFloating() || barHeight(w) > 0)
         return;
     const auto box = w->layoutBox();
@@ -216,26 +198,20 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
     static auto onOpen    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { watch(w); opened(w); });
     static auto onClose   = Event::bus()->m_events.window.close.listen([](PHLWINDOW w) { closing(w); });
-    static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); g_floated.erase(w.get()); });
-    static auto onFloat   = Event::bus()->m_events.window.floating.listen([](PHLWINDOW w) {
-        if (w->isFloating())
-            g_floated.insert(w.get());
-        syncMaximised(w);   // floating: not maximised; tiled again: the maximised look back
-        if (!w->isFloating())
-            g_floated.erase(w.get());
-    });
-    static auto onFull    = Event::bus()->m_events.window.fullscreen.listen([](PHLWINDOW w) { syncMaximised(w); });
+    static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); });
     static auto onMouse   = Event::bus()->m_events.input.mouse.move.listen([](Vector2D, Event::SCallbackInfo&) { mouseMoved(); });
     static auto onDrag    = g_layoutManager->dragController()->m_events.motion.listen(dragMoved);
     static auto onDrop    = g_layoutManager->dragController()->m_events.ended.listen(dragEnded);
     for (const auto& w : Desktop::windowState()->windows())
-        if (w->mapped())
+        if (w->mapped()) {
             watch(w);
+            if (const auto top = toplevelOf(w))
+                top->setMaximized(true);   // an older build told floating windows otherwise
+        }
 
     return {"minimize", "Title-bar minimise and maximise buttons work, floating windows snap to screen edges", "hyprism", "1.0"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {
     g_listeners.clear();
-    g_floated.clear();
 }
