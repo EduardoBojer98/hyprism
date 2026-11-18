@@ -37,7 +37,7 @@ Item {
         cellHeight: Launcher.look.icon + 58
         leftMargin: (width - cellWidth * cols) / 2   // the cells centred, not the remainder on the right
         topMargin: Theme.spaceXs
-        model: Launcher.appGrid
+        model: Launcher.open ? Launcher.appGrid : []   // icons only while shown (the closed launcher kept ~50 MB)
         boundsBehavior: Flickable.StopAtBounds
         highlightMoveDuration: Theme.animFast
         delegate: Item {

@@ -63,7 +63,7 @@ Column {
         columns: perRow
         z: 1   // name tooltips over the labels below
         Repeater {
-            model: Search.frequentApps
+            model: Launcher.open ? Search.frequentApps : []
             Item {
                 id: app
                 required property var modelData
@@ -101,7 +101,7 @@ Column {
 
     LauncherHomeLabel { visible: Search.recentItems.length > 0; text: "Recent" }
     Repeater {
-        model: Search.recentItems
+        model: Launcher.open ? Search.recentItems : []
         LauncherHomeRow { required property var modelData; required property int index; item: modelData; at: Search.frequentApps.length + index }
     }
 

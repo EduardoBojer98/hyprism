@@ -8,7 +8,7 @@ ListView {
     id: results
     visible: Launcher.view !== "apps" && Launcher.view !== "clip" && Launcher.view !== "home"
     clip: true
-    model: Launcher.listModel
+    model: Launcher.open ? Launcher.listModel : []
     boundsBehavior: Flickable.StopAtBounds
     highlightMoveDuration: Theme.animFast
 

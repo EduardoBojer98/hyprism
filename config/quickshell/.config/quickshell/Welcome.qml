@@ -92,7 +92,7 @@ Singleton {
                     columnSpacing: Theme.spaceS
                     rowSpacing: Theme.spaceM
                     Repeater {
-                        model: Themes.list
+                        model: root.open ? Themes.list : []   // previews only while shown: their wallpapers cost ~30 MB
                         ThemePreview {
                             required property var modelData
                             theme: Themes.resolve(modelData.id, {}, Config.appearance.mode)   // in the light or dark half picked below
