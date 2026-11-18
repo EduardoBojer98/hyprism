@@ -118,6 +118,7 @@ disks                    gnome-disk-utility                 repo
 baobab                   baobab                             repo
 # Not in Fedora 44's repos (checked 2026-11-15); Flathub: flatpak install flathub net.nokyan.Resources
 resources                none                               none
+kdeconnect               kde-connect                        repo
 # starship 1.24.2-1.fc44 (not in Fedora's own repo)
 starship                 starship                           copr:atim/starship
 zoxide                   zoxide                             repo

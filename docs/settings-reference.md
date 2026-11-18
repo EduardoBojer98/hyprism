@@ -143,6 +143,23 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `minutes` | `int` | `0` | length of the current run, 0 = until turned off |
 | `endsAt` | `real` | `0` | ms since epoch, 0 = until turned off |
 
+## focus
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `modes` | `var` | `[ { id: "work", name: "Work", icon: "\u{F00D6}", dnd: tru...` |  |
+| `active` | `string` | `""` | the mode on now (its id), "" = off |
+| `last` | `string` | `"work"` | the one the Focus tile turns back on |
+| `auto` | `bool` | `false` | the active mode was turned on by its schedule (and ends with it) |
+| `restore` | `var` | `{}` | what the active mode changed, put back when it ends: { wallpaper, nightLight, caffeine } |
+
+## phone
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `enabled` | `bool` | `true` | off: kdeconnectd is stopped and the shell stops asking |
+| `device` | `string` | `""` | the phone's KDE Connect id; "" = the first paired one |
+
 ## nightLight
 
 | Setting | Type | Default | What it does |

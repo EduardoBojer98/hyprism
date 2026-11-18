@@ -29,7 +29,7 @@ Singleton {
         sections: ["connections", "screen", "audio", "toggles", "media", "power"],
         tiles: ["wifi", "bt"],
         sliders: ["sound", "mic"],   // the Sound card's rows
-        toggles: ["focus", "nightlight", "caffeine", "darkmode", "floatall", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
+        toggles: ["focus", "nightlight", "caffeine", "phone", "darkmode", "floatall", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
                  .concat(userTiles.map(a => "action:" + a.id))
     })
     // your actions shown here (Settings > Actions, "Control Center"): small tiles after the built-in ones, "action:<id>"
@@ -47,7 +47,7 @@ Singleton {
     }
     // A tile runs a registry action (Actions.qml): its id, or the one named here where they differ
     readonly property var actionIds: ({ wifi: "wifi-toggle", record: "record-toggle", monitor: "monswitch", mission: "overview",
-                                        focus: "dnd", screenshot: "shot", colorpicker: "picker" })
+                                        screenshot: "shot", colorpicker: "picker" })
     function actionOf(id) { return Actions.get(id.startsWith("action:") ? id.slice(7) : (actionIds[id] ?? id)) }
     // a section shows when it has something to show; a tile when its action is offered here (its `when`)
     function available(id) { return id === "media" ? Sys.player !== null : !items[id] || Actions.available(actionOf(id)) }
@@ -139,9 +139,11 @@ Singleton {
         bt: { label: "Bluetooth", glyph: Sys.adapter?.enabled ? "\u{F00AF}" : "\u{F00B2}", list: "bt",
               status: !Sys.adapter ? "Unavailable" : !Sys.adapter.enabled ? "Off"
                     : (Sys.adapter.devices.values.filter(d => d.connected).map(d => d.name).join(", ") || "On") },
-        focus: { label: "Focus", glyph: "\u{F0594}", status: Notifications.dndStatus, hint: "Do Not Disturb: only critical notifications pop up" },
+        focus: { label: Focus.mode?.name ?? "Focus", glyph: Focus.mode?.icon || "\u{F0594}", status: Focus.status, list: "focus",
+                 hint: "Focus modes and Do Not Disturb: click to switch, the arrow for the modes" },
         nightlight: { label: "Night Light", glyph: "\u{F0599}",
                       status: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode] },
+        phone: { label: "Phone", glyph: Phone.glyph, list: "phone", status: Phone.status, hint: "Your phone through KDE Connect: battery, ring, send files" },
         caffeine: { label: "Caffeine", glyph: "\u{F0176}", list: "caffeine", status: Caffeine.remaining(cc.now.getTime()), hint: "Keeps the screen awake" },
         monitor: { label: "Monitor", glyph: "\u{F0379}", status: cc.monitorHere ? "Here" : "Other PC",
                    hint: cc.monitorHere ? "Shared monitor shows this computer: click to hand it over" : "Shared monitor shows the other computer: click to take it back" },
@@ -219,6 +221,7 @@ Singleton {
         }
         else view.reset()
         Actions.watch("controlcenter", visible)
+        Phone.watch(visible)
     }
 
     Process {

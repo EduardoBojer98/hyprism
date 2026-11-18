@@ -45,8 +45,16 @@ Singleton {
         a("wifi-settings", "Network & sound", "Wi-Fi settings", "wifi wi-fi network settings", "\u{F05A9}", fn(() => SettingsApp.show("network")), { when: { hardware: "wifi" } }),
         a("bluetooth-settings", "Network & sound", "Bluetooth settings", "bluetooth settings", "\u{F00AF}", fn(() => SettingsApp.show("bluetooth")), { when: { hardware: "bluetooth" } }),
         a("sound-settings", "Network & sound", "Sound settings", "sound audio settings volume", "\u{F057E}", fn(() => SettingsApp.show("sound"))),
+        a("phone", "Phone", "Phone", "phone kde connect kdeconnect mobile android battery", "\u{F011C}",
+          fn(() => ControlCenter.open ? ControlCenter.view.toggleExpanded("phone") : ControlCenter.showSection("phone")), toggle(() => Phone.ready, { showIn: cc })),
+        a("phone-ring", "Phone", "Ring my phone", "phone find ring lost locate kde connect", "\u{F009E}", fn(() => Phone.ring()), { when: { hardware: "phone" } }),
+        a("phone-send", "Phone", "Send files to my phone", "phone send share file transfer kde connect", "\u{F048A}", fn(() => Phone.pick()), { when: { hardware: "phone" } }),
+        a("phone-settings", "Phone", "Phone settings", "phone kde connect pair settings", "\u{F011C}", fn(() => SettingsApp.show("phone"))),
         a("clipboard", "System", "Clipboard history", "clipboard paste history", "\u{F014C}", fn(() => Clipboard.toggle()), { showIn: cc }),
         a("keys", "System", "Keyboard shortcuts", "shortcuts keys keybinds hotkeys cheat sheet cheatsheet help", "\u{F0313}", fn(() => Cheatsheet.show())),
+        a("focus", "Focus", "Focus", "focus mode work concentrate quiet do not disturb", "\u{F0594}", fn(() => Focus.toggle()),
+          toggle(() => Focus.mode !== null || Notifications.dnd, { showIn: cc })),
+        a("focus-settings", "Focus", "Focus settings", "focus modes schedule edit settings", "\u{F0594}", fn(() => SettingsApp.show("focus"))),
         a("dnd", "System", "Do Not Disturb", "dnd quiet silence notifications mute", "\u{F009B}", fn(() => Notifications.toggleDnd()), toggle(() => Notifications.dnd, { showIn: cc })),
         a("caffeine", "System", "Caffeine: keep awake", "caffeine awake inhibit sleep coffee", "\u{F0176}", fn(() => Caffeine.toggle()), toggle(() => Caffeine.active, { showIn: cc })),
         a("welcome", "System", "Welcome", "welcome first start tour intro help getting started", "\u{F02FD}", fn(() => Welcome.show())),
@@ -119,7 +127,12 @@ Singleton {
         return out
     }
 
-    readonly property var list: appearance.concat(system, tiles, panels)
+    // one action per Focus mode (Settings > Focus), and one to turn Focus off
+    readonly property var focusModes: Focus.modes.map(m => a("focus-" + m.id, "Focus", "Focus: " + m.name, "focus mode " + m.name.toLowerCase(), m.icon || "\u{F0594}",
+                                                              fn(() => Focus.set(m.id)), toggle(() => Config.focus.active === m.id, { off: fn(() => Focus.off()) })))
+        .concat([a("focus-off", "Focus", "Focus: off", "focus mode off end stop", "\u{F0594}", fn(() => Focus.off()))])
+
+    readonly property var list: appearance.concat(system, focusModes, tiles, panels)
 
     // A command from the repo in a terminal that stays open. The shell's files are symlinks into the repo, so
     // the repo is wherever shell.qml really lives (same way as Settings > About).

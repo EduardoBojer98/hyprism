@@ -12,12 +12,12 @@ import QtQuick
 //   wifi: "Home"            connected to that Wi-Fi network
 //   powerMode: "quiet"      the power mode now: quiet | balanced | performance
 //   hardware: "asus"        a hardware flag: asus, nvidia, canHibernate, monitorSwitch, wifi, bluetooth, mic,
-//                           keylight, touchpad
+//                           keylight, touchpad, phone (a paired phone is nearby)
 //   recording: true|false   a screen recording is (not) running
 //   preset: "desk"          that display preset can be applied (every screen it names is connected)
 Singleton {
     readonly property var keys: ["screens", "external", "app", "battery", "wifi", "powerMode", "hardware", "recording", "preset"]
-    readonly property var hardwareFlags: ["asus", "nvidia", "canHibernate", "monitorSwitch", "wifi", "bluetooth", "mic", "keylight", "touchpad"]
+    readonly property var hardwareFlags: ["asus", "nvidia", "canHibernate", "monitorSwitch", "wifi", "bluetooth", "mic", "keylight", "touchpad", "phone"]
 
     function screens() { return Quickshell.screens.filter(s => Machine.realScreen(s.name)) }
     function hardware(flag) {
@@ -27,6 +27,7 @@ Singleton {
         case "mic": return Sys.source !== null
         case "keylight": return Machine.kbdDevice !== ""
         case "touchpad": return Inputs.touchpadName !== ""
+        case "phone": return Phone.ready
         default: return Machine[flag] === true
         }
     }

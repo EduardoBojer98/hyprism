@@ -19,6 +19,14 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   preview over the screen: images, the first PDF pages, a video frame, the first lines of text and code, a folder's
   listing. Arrows move to the next file, Enter opens it, Space or Esc closes. A file manager can call it too:
   `qs ipc call quicklook open PATH`. On/off in Settings > Search & Launcher > Search.
+- Focus modes: Work, Client call and Sleep, or your own (Settings > Focus). Each sets Do Not Disturb with chosen apps
+  let through, and optionally a wallpaper, apps to open, Night Light and Caffeine, put back when it ends. Switch from
+  the Focus tile, the launcher, a schedule (days and times) or `qs ipc call focus set <name>|off|toggle`; the bell
+  shows the mode on.
+- Phone: link your phone through KDE Connect (Settings > Network & Bluetooth > Phone, a Control Center tile). Battery
+  in the tile, ring the phone, send files (also as launcher actions), its notifications through the shell's own,
+  clipboard sync and remote control switches, pairing and clear empty states with a one-click Install or Start.
+  `kdeconnect` joins the apps package group; `qs ipc call phone ...`.
 - Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone
   until you type, Launchpad lays every app on the dimmed screen with no sheet (dark themes), Drawer opens on today at a
   glance with big card rows, Sidebar is a dense one-line list, Terminal has plain text rows with a kind column and no

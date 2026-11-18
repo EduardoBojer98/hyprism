@@ -38,6 +38,11 @@ every shortcut. The full key list is in the [README](../README.md#keys).
   Settings > Control Center starts from a layout (Classic, Essentials, Mixer, Grid, Minimal, or one you kept),
   then lets you drag sections and tiles; `qs ipc call controlcenter layout <name>` switches layout from a key.
 - **Notifications** have their own panel from the bell (`Super+N`): Do Not Disturb (`Super+Shift+N`), history by app.
+- **Focus modes** (Settings > Focus, the Control Center's Focus tile, launcher actions such as *Focus: Work*):
+  Work, Client call and Sleep to start, and any you add. Each can turn on Do Not Disturb while letting chosen apps
+  through, set a wallpaper, open apps, and turn on Night Light or Caffeine; turning it off puts those back. A mode can
+  run on a schedule (days and times, past midnight too); turned off by hand, it stays off until its next window. The
+  bell shows the mode's icon and name. From a key: `qs ipc call focus set <name>`, `off`, `toggle`, `status`, `list`.
 - **On-screen display**: a small pop-up that confirms volume, brightness, microphone, layout and caps lock changes.
 
 Websites as apps are made in a terminal with `webapp add "Name" https://address`; there is no menu entry yet.
@@ -249,6 +254,22 @@ Hardware features appear on their own (`Machine.qml`):
 | ASUS Hardware page, charge limit, ROG action | `asusctl` is installed |
 | Keyboard light button | a `/sys/class/leds/*kbd_backlight` exists |
 | Shared monitor button, `Super+M` | `~/.config/monswitch.conf` exists |
+
+### Your phone
+
+Settings > Network & Bluetooth > **Phone** links an Android phone (or an iPhone) through KDE Connect. Install the
+KDE Connect app on the phone; on this computer `kdeconnect` comes with the full setup, or click **Install** on the
+Phone page or tile. Open the app on the phone on the same Wi-Fi, then **Pair** on either side and accept on the other.
+
+- The Control Center's **Phone** tile shows the phone's battery; its list rings the phone, sends files and has the
+  switches below. The launcher has *Ring my phone* and *Send files to my phone*.
+- **Notifications**: the phone's appear as normal notifications here, so Do Not Disturb and Focus apply to them.
+- **Clipboard**: copy on one, paste on the other. **Remote**: the phone's KDE Connect app plays, pauses and skips
+  this computer's music and video. The phone's own player shows in the Control Center's media card.
+- `qs ipc call phone status | ring | pick | send <file> | refresh`.
+- Phone not found with a firewall on? KDE Connect uses ports **1714-1764, TCP and UDP**. Hyprism doesn't change
+  firewall rules; allow them yourself, e.g. `sudo ufw allow 1714:1764/udp && sudo ufw allow 1714:1764/tcp`, or
+  `sudo firewall-cmd --permanent --add-service=kdeconnect && sudo firewall-cmd --reload`.
 
 ## Recovery
 
