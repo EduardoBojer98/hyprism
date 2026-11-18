@@ -28,10 +28,131 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: "Arrange the Control Center the way you use it. The preview is the real panel; changes apply straight away."
+        text: "Pick a layout to start from, then make it yours below. The preview is the real panel; changes apply straight away."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontLabel }
+    }
+
+    // ---- the gallery: the layouts that ship, the ones you kept, and yours while it matches none ----------
+    readonly property var kept: Config.controlCenter.layouts ?? {}
+    readonly property var cards: (ControlCenter.activeLayout === "" ? [{ id: "", name: "Yours", about: "Not kept yet: keep it below", layout: Config.controlCenter }] : [])
+        .concat(ControlCenter.presets)
+        .concat(Object.keys(kept).map(n => ({ id: n, name: n, about: "A layout you kept", layout: kept[n], mine: true })))
+    property string keepMessage
+
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 8
+        Text {
+            text: "Layouts"
+            leftPadding: 4
+            color: Theme.subtext
+            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+        }
+        GridLayout {
+            id: gallery
+            Layout.fillWidth: true
+            columns: Math.min(page.cards.length, Math.max(2, Math.floor((width + columnSpacing) / (100 + columnSpacing))))
+            columnSpacing: 12
+            rowSpacing: 14
+            Repeater {
+                model: page.cards
+                LayoutCard {}
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: 4
+            spacing: 8
+            Text {
+                Layout.fillWidth: true
+                text: page.keepMessage || (ControlCenter.activeLayout === "" ? "Keep your arrangement to come back to it after trying another" : "Change anything below; a layout you change becomes yours")
+                color: page.keepMessage ? Theme.error : Theme.subtext
+                wrapMode: Text.Wrap
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
+            TextField { id: keepName; Layout.preferredWidth: 150; placeholder: "Layout name"; accessibleName: "Name for this layout"; invalid: page.keepMessage !== ""; onAccepted: keepBtn.clicked() }
+            PillButton { id: keepBtn; text: "Keep"; primary: ControlCenter.activeLayout === ""; onClicked: page.keep(keepName.text.trim()) }
+        }
+    }
+    function keep(name) {
+        if (name === "" || name.length > 30) { keepMessage = "Give it a name of up to 30 characters."; return }
+        if (ControlCenter.presets.some(p => p.name.toLowerCase() === name.toLowerCase())) { keepMessage = "That name is built in."; return }
+        keepMessage = ControlCenter.keepLayout(name) ?? ""
+        if (!keepMessage) keepName.text = ""
+    }
+
+    component LayoutCard: Item {
+        id: card
+        required property var modelData
+        readonly property bool chosen: ControlCenter.activeLayout === modelData.id
+        function pick() { if (!chosen) ControlCenter.applyLayout(modelData.layout) }
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignTop
+        implicitHeight: shot.height + caption.implicitHeight + 10
+        activeFocusOnTab: true
+        Keys.onReturnPressed: pick()
+        Keys.onSpacePressed: pick()
+        Accessible.role: Accessible.RadioButton
+        Accessible.name: "Layout " + modelData.name
+        Accessible.checked: chosen
+        Accessible.onPressAction: pick()
+
+        Rectangle {
+            id: shot
+            width: parent.width
+            height: width * 1.3
+            radius: Theme.radius
+            color: cardArea.containsMouse && !card.chosen ? Theme.fillHover : Theme.fill
+            border { color: card.chosen ? Theme.accent : cardArea.containsMouse ? Theme.strokeStrong : Theme.stroke; width: card.chosen ? 2 : 1 }
+            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+            ControlCenterThumb {
+                anchors { fill: parent; margins: 10 }
+                snap: ControlCenter.resolve(card.modelData.layout)
+            }
+            Rectangle {   // the chosen one's check
+                visible: card.chosen
+                anchors { right: parent.right; top: parent.top; margins: 8 }
+                width: 22; height: 22; radius: 11
+                color: Theme.accent
+                Text { anchors.centerIn: parent; text: "\u{F012C}"; color: Theme.accentText; font { family: Theme.iconFont; pixelSize: 14 } }
+            }
+        }
+        MouseArea { id: cardArea; anchors.fill: shot; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: card.pick() }
+        Rectangle {   // forget a kept layout
+            visible: card.modelData.mine === true && (cardArea.containsMouse || forget.containsMouse)
+            anchors { left: shot.left; top: shot.top; margins: 8 }
+            width: 22; height: 22; radius: 11
+            color: forget.containsMouse ? Theme.error : Theme.glassStrong
+            border { color: Theme.stroke; width: 1 }
+            Text { anchors.centerIn: parent; text: "\u{F0156}"; color: forget.containsMouse ? Theme.accentText : Theme.text; font { family: Theme.iconFont; pixelSize: 13 } }
+            MouseArea { id: forget; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        Accessible.role: Accessible.Button; Accessible.name: "Forget layout " + card.modelData.name
+                        onClicked: ControlCenter.forgetLayout(card.modelData.id) }
+        }
+        Column {
+            id: caption
+            anchors { left: parent.left; right: parent.right; top: shot.bottom; topMargin: 8 }
+            spacing: 2
+            Text {
+                width: parent.width
+                text: card.modelData.name
+                elide: Text.ElideRight
+                color: card.chosen ? Theme.accent : Theme.text
+                font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold }
+            }
+            Text {
+                width: parent.width
+                text: card.modelData.about
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
+        }
+        FocusRing {}
     }
 
     Item {   // wide: the editor, the preview beside it; narrow: the preview under it
@@ -219,15 +340,56 @@ ColumnLayout {
 
     SettingGroup {
         title: "Look"
-        SettingRow {   // the defaults show every tile (Reset below); this is the short one
-            label: "Essentials"
-            hint: "Compact, with only the buttons most people use; your own tiles stay"
-            PillButton { text: "Use"; onClicked: page.essentials() }
-        }
         SettingRow {
             label: "Panel style"
             hint: ({ panel: "Tiles on soft fills, the panel's large corners", compact: "Smaller tiles and tighter spacing", borderless: "Flat tiles with hairline edges, no panel border" })[Config.controlCenter.style] ?? ""
-            ConfigChoice { section: "controlCenter"; key: "style"; values: ["panel", "compact", "borderless"]; labels: ["Panel", "Compact", "Borderless"] }
+        }
+        RowLayout {   // each style drawn with your layout in it
+            Layout.fillWidth: true
+            Layout.margins: 12
+            Layout.topMargin: 0
+            spacing: 12
+            Repeater {
+                model: [{ id: "panel", name: "Panel" }, { id: "compact", name: "Compact" }, { id: "borderless", name: "Borderless" }]
+                Item {
+                    id: st
+                    required property var modelData
+                    readonly property bool chosen: ControlCenter.style === modelData.id
+                    function pick() { Config.set("controlCenter", "style", modelData.id) }
+                    Layout.fillWidth: true
+                    implicitHeight: stShot.height + 26
+                    activeFocusOnTab: true
+                    Keys.onReturnPressed: pick()
+                    Keys.onSpacePressed: pick()
+                    Accessible.role: Accessible.RadioButton
+                    Accessible.name: "Panel style " + modelData.name
+                    Accessible.checked: chosen
+                    Accessible.onPressAction: pick()
+                    Rectangle {
+                        id: stShot
+                        width: parent.width
+                        height: Math.min(150, width * 0.75)
+                        radius: Theme.radiusSmall + 2
+                        color: stArea.containsMouse && !st.chosen ? Theme.fillHover : Theme.fill
+                        border { color: st.chosen ? Theme.accent : stArea.containsMouse ? Theme.strokeStrong : Theme.stroke; width: st.chosen ? 2 : 1 }
+                        clip: true
+                        ControlCenterThumb {   // only the top of the panel: enough to see the corners and spacing
+                            x: 14; y: 12
+                            width: parent.width - 28
+                            height: width * 1.6
+                            snap: Object.assign(ControlCenter.current(), { style: st.modelData.id })
+                        }
+                    }
+                    MouseArea { id: stArea; anchors.fill: stShot; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: st.pick() }
+                    Text {
+                        anchors { left: parent.left; top: stShot.bottom; topMargin: 6 }
+                        text: st.modelData.name
+                        color: st.chosen ? Theme.accent : Theme.text
+                        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: st.chosen ? Font.DemiBold : Font.Normal }
+                    }
+                    FocusRing {}
+                }
+            }
         }
         SettingRow {
             label: "Width"
@@ -239,13 +401,6 @@ ColumnLayout {
             hint: "Shown beside the power mode; click it for the hardware settings"
             ConfigToggle { section: "controlCenter"; key: "showHardware" }
         }
-    }
-
-    function essentials() {
-        const keep = ["focus", "nightlight", "caffeine", "darkmode", "micmute", "airplane", "record", "screenshot"]
-        Config.reset("controlCenter")
-        Config.set("controlCenter", "style", "compact")
-        Config.set("controlCenter", "hidden", ControlCenter.defaults.toggles.filter(id => !keep.includes(id) && !id.startsWith("action:")))
     }
 
     ResetGroup { sections: ["controlCenter"] }

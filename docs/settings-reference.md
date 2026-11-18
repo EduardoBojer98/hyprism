@@ -153,6 +153,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `toggles` | `list<string>` | `[]` |  |
 | `folded` | `list<string>` | `["screen", "sound", "power"]` | cards folded to one line (click a card's title): screen, sound, power |
 | `hidden` | `list<string>` | `["colorpicker", "mission", "airplane", "clipboard", "ocr"...` |  |
+| `layouts` | `var` | `{}` | layouts you kept (Settings > Control Center): name -> { style, width, sections, … } |
 
 ## lockscreen
 

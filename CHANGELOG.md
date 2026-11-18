@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Control Center: a gallery of layouts in Settings > Control Center (Classic, Essentials, Mixer, Grid, Minimal),
+  each drawn from its own sections, tiles and style; pick one, then edit it below. Keep an arrangement under a
+  name (`controlCenter.layouts`); switching away from one you never kept saves it as "Previous" first. The panel
+  styles are picture cards too, and `qs ipc call controlcenter layout <name>` switches layout.
 - Windows: the maximise button (title bar, a double click on it, or an app's own button) floats a tiled window,
   centred, and fills the screen with a floating one, back on the next click; Window Look → Maximise button can make
   it always fill the screen. Drag a floating window to the left or right screen edge to fill that half, into a

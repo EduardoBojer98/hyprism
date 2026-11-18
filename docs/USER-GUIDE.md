@@ -35,6 +35,8 @@ every shortcut. The full key list is in the [README](../README.md#keys).
     a key in Keyboard Shortcuts → Your shortcuts. A failing action shows a notification; every run is logged in
     `~/.local/state/hyprism/actions.log`.
 - **Control Center** (`Super+C`): Wi-Fi, Bluetooth, Focus, Night Light, Caffeine, sliders, power mode.
+  Settings > Control Center starts from a layout (Classic, Essentials, Mixer, Grid, Minimal, or one you kept),
+  then lets you drag sections and tiles; `qs ipc call controlcenter layout <name>` switches layout from a key.
 - **Notifications** have their own panel from the bell (`Super+N`): Do Not Disturb (`Super+Shift+N`), history by app.
 - **On-screen display**: a small pop-up that confirms volume, brightness, microphone, layout and caps lock changes.
 

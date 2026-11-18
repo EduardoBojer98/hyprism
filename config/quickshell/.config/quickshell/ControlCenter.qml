@@ -34,9 +34,10 @@ Singleton {
     })
     // your actions shown here (Settings > Actions, "Control Center"): small tiles after the built-in ones, "action:<id>"
     readonly property var userTiles: Actions.user.filter(a => (a.showIn ?? []).includes("controlcenter") && !Actions.builtinIds.includes(a.id))
-    // the saved order; anything never saved goes to its default group, at its default place
-    function order(group) {
-        const cfg = Config.controlCenter
+    // the saved order (of `cfg`: the settings, or a layout's snapshot); anything never saved goes to its default
+    // group, at its default place
+    function order(group, cfg) {
+        cfg = cfg ?? Config.controlCenter
         const shared = group === "tiles" || group === "toggles"
         const known = shared ? defaults.tiles.concat(defaults.toggles) : defaults[group]
         const out = Array.from(cfg[group] ?? []).filter((id, i, all) => known.includes(id) && all.indexOf(id) === i)
@@ -78,6 +79,57 @@ Singleton {
         mic: { label: "Microphone", glyph: "\u{F036C}" }
     })
     function info(id) { return itemInfo[id] ?? items[id] ?? { label: id, glyph: "" } }
+
+    // ---- layouts (Settings > Control Center gallery): a layout is these keys of Config.controlCenter ----
+    readonly property var layoutKeys: ["style", "width", "sections", "tiles", "sliders", "toggles", "folded", "hidden"]
+    function hideAllBut(keep) { return defaults.toggles.filter(id => !keep.includes(id) && !id.startsWith("action:")) }
+    // the ones that ship; a key a layout leaves out takes its default (ConfigData)
+    readonly property var presets: [
+        { id: "classic", name: "Classic", about: "Everything, the most used first", layout: {} },
+        { id: "essentials", name: "Essentials", about: "Compact, only the everyday buttons",
+          layout: { style: "compact", hidden: hideAllBut(["focus", "nightlight", "caffeine", "darkmode", "micmute", "airplane", "record", "screenshot"]) } },
+        { id: "mixer", name: "Mixer", about: "Sound and media first, sliders open",
+          layout: { sections: ["audio", "media", "screen", "connections", "toggles", "power"], folded: ["power"], width: 360 } },
+        { id: "grid", name: "Grid", about: "Every switch in one flat grid",
+          layout: { style: "borderless", width: 380, sections: ["toggles", "audio", "screen", "media", "power", "connections"],
+                    tiles: [], toggles: ["wifi", "bt"].concat(defaults.toggles.filter(id => !id.startsWith("action:"))), hidden: ["mission", "emoji"] } },
+        { id: "minimal", name: "Minimal", about: "Wi-Fi, Bluetooth and sound",
+          layout: { style: "compact", width: 300, sections: ["connections", "audio", "media", "screen", "toggles", "power"],
+                    hidden: ["screen", "power", "toggles"] } }
+    ]
+    // a full snapshot: the given keys over the defaults (raw values, as Config stores them)
+    function resolve(layout) {
+        const out = {}
+        layoutKeys.forEach(k => { const v = layout?.[k] ?? fresh.controlCenter[k]; out[k] = typeof v === "object" ? Array.from(v) : v })
+        return out
+    }
+    function current() { return resolve(Config.controlCenter) }
+    function same(a, b) { return layoutKeys.every(k => JSON.stringify(a[k]) === JSON.stringify(b[k])) }
+    // the preset or kept layout the settings match now ("" = your own arrangement)
+    readonly property string activeLayout: {
+        const now = current()
+        const p = presets.find(p => same(resolve(p.layout), now))
+        if (p) return p.id
+        const kept = Config.controlCenter.layouts ?? {}
+        return Object.keys(kept).find(n => same(resolve(kept[n]), now)) ?? ""
+    }
+    function applyLayout(layout) {
+        // an arrangement nobody kept is saved as "Previous" first, so a click on a preset never loses it
+        const snap = resolve(layout)   // first: a click on "Previous" itself must not overwrite it
+        if (activeLayout === "") keepLayout("Previous")
+        layoutKeys.forEach(k => Config.set("controlCenter", k, snap[k]))
+    }
+    function keepLayout(name) {
+        const all = JSON.parse(JSON.stringify(Config.controlCenter.layouts ?? {}))
+        all[name] = current()
+        return Config.set("controlCenter", "layouts", all)
+    }
+    function forgetLayout(name) {
+        const all = JSON.parse(JSON.stringify(Config.controlCenter.layouts ?? {}))
+        delete all[name]
+        Config.set("controlCenter", "layouts", all)
+    }
+    ConfigData { id: fresh }   // the defaults, as they ship
 
     // Every tile, once: what it shows (glyph, label, status) and which list it opens (`list`: a ControlCenterDrops
     // name). Whether it's on and what a click does come from its action (actionOf); `action` tiles are never "on".
@@ -146,6 +198,13 @@ Singleton {
         function close(): void { popup.hide() }
         // open with a dropdown showing: wifi, bt, caffeine, out (sound), in (microphone)
         function expand(name: string): void { cc.showSection(name) }
+        // switch to a layout: a preset's id (classic, essentials, mixer, grid, minimal) or a name you kept
+        function layout(name: string): string {
+            const l = cc.presets.find(p => p.id === name)?.layout ?? Config.controlCenter.layouts?.[name]
+            if (!l) return "No layout called " + name
+            cc.applyLayout(l)
+            return ""
+        }
     }
 
     Connections {
