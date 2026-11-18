@@ -117,10 +117,12 @@ let go (Windows → Snap to screen edges). Chrome works the same, dragged by its
 window keeps the gap at the screen edges. To have every new window open floating instead of tiled, use the Control
 Center's Floating tile, add the Floating windows item to the menu bar, or Windows → Open new windows floating.
 Spotlight opens in the middle of the screen by default (Settings → Search & Launcher → Open); choose "Style's place"
-to get strips and edges back. Its styles each work differently: Spotlight (the macOS bar, results once you type),
-Launchpad (every app as big icons on the dimmed screen), Drawer (today at a glance, big rows), Sidebar (a dense
-one-line list), Terminal (plain text rows, no icons). Adjust sets size, row look, corners, the dim behind it, key
-hints and how many results; Suggestions picks what shows before you type. Settings → Default Apps picks the default terminal.
+to get strips and edges back. Its styles each work differently: Spotlight (the macOS bar, one-line results once you type),
+Launchpad (the whole screen darkened, every app as a big icon, category tabs; typing filters the apps), Drawer (today
+at a glance, big rows), Sidebar (a dense one-line list), Terminal (a prompt and mono one-line rows). Every style shows
+app icons; Adjust → Rows → Text gives plain text rows. Adjust also sets size, corners, the dim behind it, key hints and
+how many results; Suggestions picks what shows before you type and which quick actions, in your order (Recent leaves
+them out). Settings → Default Apps picks the default terminal.
 
 ## Settings
 

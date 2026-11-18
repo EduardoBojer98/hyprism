@@ -363,9 +363,18 @@ Singleton {
                     }
 
                     Loader {
+                        id: pageLoader
                         Layout.fillWidth: true
                         active: root.open
                         source: "SettingsPage" + root.pageId.charAt(0).toUpperCase() + root.pageId.slice(1) + ".qml"
+                        // a new page fades in and rises a few pixels, so the swap reads as a change, not a flash
+                        onLoaded: pageIn.restart()
+                        transform: Translate { id: pageShift }
+                        ParallelAnimation {
+                            id: pageIn
+                            NumberAnimation { target: pageLoader; property: "opacity"; from: 0; to: 1; duration: Theme.anim; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: pageShift; property: "y"; from: Theme.moves ? 10 : 0; to: 0; duration: Theme.anim; easing.type: Easing.OutCubic }
+                        }
                     }
                 }
             }

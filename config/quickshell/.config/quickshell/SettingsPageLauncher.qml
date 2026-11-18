@@ -37,7 +37,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.margins: 16
             Layout.bottomMargin: 0
-            text: "Each style is its own way to work: Spotlight is the macOS bar, Launchpad a wall of icons, Drawer a sheet with today at a glance, Sidebar a dense list, Terminal plain text for the keyboard. Colours and fonts follow the theme."
+            text: "Each style is its own way to work: Spotlight is the macOS bar, Launchpad a wall of icons, Drawer a sheet with today at a glance, Sidebar a dense list, Terminal a prompt and mono rows for the keyboard. Colours and fonts follow the theme."
             color: Theme.subtext
             wrapMode: Text.Wrap
             font { family: Theme.font; pixelSize: Theme.fontLabel }
@@ -131,7 +131,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.margins: 16
             Layout.bottomMargin: 4
-            text: "What the suggestions show before you type. A style shows only the parts that suit it (Terminal has no icons to show)."
+            text: "What the suggestions show before you type. A style shows only the parts that suit it."
             color: Theme.subtext
             wrapMode: Text.Wrap
             font { family: Theme.font; pixelSize: Theme.fontLabel }
@@ -151,6 +151,32 @@ ColumnLayout {
                     checked: sug.on
                     accessibleName: sug.modelData.label
                     onToggled: on => Config.set("launcher", "home", on ? Array.from(Config.launcher.home).concat([sug.modelData.id]) : Config.launcher.home.filter(h => h !== sug.modelData.id))
+                }
+            }
+        }
+        Text {
+            Layout.fillWidth: true
+            Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.topMargin: 8
+            text: "Quick actions to show, in the order you pick them. Recent leaves them out."
+            color: Theme.subtext
+            wrapMode: Text.Wrap
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
+        }
+        Flow {
+            Layout.fillWidth: true
+            Layout.margins: 16
+            Layout.topMargin: 8
+            spacing: Theme.spaceS
+            Repeater {
+                model: Actions.all.filter(a => (a.showIn ?? []).includes("launcher") && Actions.available(a))
+                Chip {
+                    required property var modelData
+                    readonly property var picked: Array.from(Config.launcher.quickActions)
+                    icon: modelData.icon || "\u{F018D}"
+                    label: modelData.name
+                    active: picked.includes(modelData.id)
+                    accessibleName: modelData.name
+                    onClicked: Config.set("launcher", "quickActions", active ? picked.filter(id => id !== modelData.id) : picked.concat([modelData.id]))
                 }
             }
         }

@@ -14,6 +14,9 @@ Glass {
     border.width: Launcher.unified || Launcher.bare ? 0 : 1
     radius: Launcher.corner
     visible: Launcher.view !== "search" || Launcher.field.text.trim() !== ""
+    // a new view (suggestions, results, apps, clipboard) fades in instead of snapping; typing alone doesn't replay it
+    Connections { target: Launcher; function onViewChanged() { if (Launcher.open) swap.restart() } }
+    NumberAnimation { id: swap; targets: [homeFlick, clipView, apps, resultsView]; property: "opacity"; from: 0.25; to: 1; duration: Theme.anim; easing.type: Easing.OutCubic }
     // as tall as its content, never past the dock (the home view scrolls then); a style with `fill` keeps one height
     readonly property real natural: keys.height + (Launcher.view === "home" ? home.implicitHeight + Theme.spaceM * 2
           : Launcher.view === "apps" || Launcher.view === "clip" ? 460
@@ -84,7 +87,7 @@ Glass {
     Item {
         id: keys
         anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-        visible: Config.launcher.hints
+        visible: Launcher.hints
         height: visible ? 34 : 0
         Rectangle {   // a hairline over the hints, so they read as the panel's footer
             anchors { top: parent.top; left: parent.left; right: parent.right; leftMargin: Theme.spaceM; rightMargin: Theme.spaceM }

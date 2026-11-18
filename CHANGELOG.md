@@ -12,6 +12,15 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   icons. The style gallery draws each one that way. New Adjust settings: size (80-130 %), rows (standard, compact,
   cards, text), the screen behind it, corners, second lines, key hints and results at most; Suggestions chooses
   glance, frequent apps, recent and quick actions. "Before you type" now follows the style by default.
+- Search & Launcher, round two: Launchpad redone as a full-screen grid on a dark scrim in every theme (light ones too),
+  a small search field, text category tabs, large icons that lift and glow instead of a filled box, a quick wave as
+  it opens and whole rows only; typing filters the apps. Spotlight follows macOS closer: "Spotlight Search", light
+  query text, one-line rows with a larger Top Hit, solid selection, no key hints. Every style shows app icons by
+  default (Terminal included; Rows → Text keeps plain text). Pick your quick actions in Suggestions
+  (`launcher.quickActions`); Recent leaves them out.
+- Motion: popups opened from a shortcut (launcher, Control Center, calendar and the rest) now fade and grow in
+  quickly instead of snapping; the launcher's views and right-click menu fade in, its selection eases, and Settings
+  pages fade up when you switch. "Motion: off" still turns all of it off.
 - Control Center: a gallery of layouts in Settings > Control Center (Classic, Essentials, Mixer, Grid, Minimal),
   each drawn from its own sections, tiles and style; pick one, then edit it below. Keep an arrangement under a
   name (`controlCenter.layouts`); switching away from one you never kept saves it as "Previous" first. The panel

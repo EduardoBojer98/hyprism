@@ -83,6 +83,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `hints` | `bool` | `true` | the key hints under the results |
 | `subtitles` | `bool` | `true` | the second line under a result (path, description) |
 | `maxResults` | `int` | `40` | results listed at most (10..80) |
+| `quickActions` | `list<string>` | `["shot", "ocr", "picker", "overview", "caffeine", "lock"]` | action ids, in order |
 
 ## clipboard
 

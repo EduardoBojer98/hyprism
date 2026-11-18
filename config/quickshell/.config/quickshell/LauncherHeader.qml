@@ -6,13 +6,12 @@ import QtQuick
 // Used by Launcher.qml; reads the panel's state from the Launcher singleton.
 Item {
     property alias input: field
-    width: parent.width
     height: Launcher.look.field
     z: 1   // above the panel, so the mode buttons' tooltips show over it
 
     Glass {
         id: searchBox
-        anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: buttons.left; rightMargin: Launcher.unified ? 0 : Theme.spaceS }
+        anchors { left: parent.left; top: parent.top; bottom: parent.bottom; right: buttons.left; rightMargin: Launcher.unified || !buttons.visible ? 0 : Theme.spaceS }
         strong: true
         flat: Launcher.unified
         color: Launcher.unified ? "transparent" : Launcher.surface
@@ -51,8 +50,8 @@ Item {
             }
             font {
                 family: Launcher.preset?.mono ? Theme.monoFont : Launcher.bigQuery ? Theme.displayFont : Theme.font
-                pixelSize: Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : 0.38))
-                weight: Launcher.bigQuery ? Theme.displayWeight : Font.Normal
+                pixelSize: Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : Launcher.rl.queryLight ? 0.42 : 0.38))
+                weight: Launcher.bigQuery ? Theme.displayWeight : Launcher.rl.queryLight ? Font.Light : Font.Normal
             }
             onTextChanged: {
                 if (Launcher.mode === "clip") { Clipboard.filter = text; Launcher.clipView.reset(); return }
@@ -64,7 +63,7 @@ Item {
                 width: parent.width - x
                 elide: Text.ElideRight
                 anchors.verticalCenter: parent.verticalCenter
-                text: Launcher.mode === "search" ? (Launcher.bigQuery || Launcher.look.width < 560 ? "Search" : "Search apps, files, settings and more") : Launcher.modes.find(m => m.id === Launcher.mode)?.hint ?? ""
+                text: Launcher.mode === "search" ? Launcher.rl.placeholder || (Launcher.bigQuery || Launcher.look.width < 560 ? "Search" : "Search apps, files, settings and more") : Launcher.modes.find(m => m.id === Launcher.mode)?.hint ?? ""
                 color: Theme.muted
                 font: field.font
             }
@@ -125,7 +124,8 @@ Item {
     Glass {
         id: buttons
         anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-        width: modeRow.implicitWidth + 12
+        visible: !Launcher.pad   // Launchpad: just the search field
+        width: visible ? modeRow.implicitWidth + 12 : 0
         radius: Launcher.corner === 0 ? 0 : height / 2
         strong: true
         flat: Launcher.unified

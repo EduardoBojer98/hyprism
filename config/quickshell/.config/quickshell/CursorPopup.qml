@@ -25,6 +25,7 @@ Scope {
     property string placement: "cursor"        // see place() below
     property bool open: false
     property real dim: 0                       // 0..1: darken the rest of the screen while open
+    property bool darkScrim: false             // keep the dim full strength in light themes too (Launchpad)
     readonly property bool visible: open || box.opacity > 0
     property var targetScreen: Quickshell.screens[0]
     property real cursorX: 0                   // pointer, in the target monitor's logical pixels
@@ -168,7 +169,7 @@ Scope {
             anchors.fill: parent
             visible: popup.dim > 0
             color: "black"
-            opacity: popup.open ? popup.dim * (Theme.light ? 0.6 : 1) : 0
+            opacity: popup.open ? popup.dim * (Theme.light && !popup.darkScrim ? 0.6 : 1) : 0
             Behavior on opacity { NumberAnimation { duration: popup.open ? Theme.enter : Theme.exit } }
         }
 
@@ -186,13 +187,16 @@ Scope {
             // out of the trigger's side: travel + start scale + fade on the theme's curve; out faster than in.
             // Only transform and opacity move, so it stays on the compositor's fast path at 120 Hz.
             property real t: popup.open ? 1 : 0
-            // opened from a keyboard shortcut (no clicked item): no motion at all, it's used too often to wait for
-            Behavior on t { NumberAnimation { duration: !popup.anchorRect ? 0 : popup.open ? Theme.enter : Theme.exit
+            // opened from a keyboard shortcut (no clicked item): it's used too often to wait for, so only a quick
+            // fade and a slight grow in place, no travel; motion off still means none
+            readonly property bool keyed: !popup.anchorRect
+            Behavior on t { NumberAnimation { duration: box.keyed ? (popup.open ? Math.min(Theme.enter, 150) : Math.min(Theme.exit, 110))
+                                                        : popup.open ? Theme.enter : Theme.exit
                                               easing.type: popup.open ? Easing.BezierSpline : Easing.OutCubic
                                               easing.bezierCurve: Theme.curve } }
             opacity: Math.min(1, t * 1.6)
-            readonly property real off: (1 - t) * Theme.travel
-            readonly property real sc: Theme.startScale + (1 - Theme.startScale) * t
+            readonly property real off: keyed ? 0 : (1 - t) * Theme.travel
+            readonly property real sc: keyed ? (Theme.moves ? 0.97 + 0.03 * t : 1) : Theme.startScale + (1 - Theme.startScale) * t
             transform: [
                 Scale {
                     origin.x: popup.fromEdge === "left" ? 0 : popup.fromEdge === "right" ? box.width : box.width / 2

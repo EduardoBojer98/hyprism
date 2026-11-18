@@ -65,16 +65,17 @@ ListView {
         // the row's look (Launcher.rows): standard | compact (one line) | cards (tall, big icon) | text (no icon, a kind column)
         readonly property string look: Launcher.rows
         readonly property bool oneLine: look === "compact" || look === "text"
-        readonly property int iconSize: look === "text" ? 0 : look === "compact" ? 18 : look === "cards" ? (topHit ? 48 : 34)
+        readonly property int iconSize: look === "text" ? 0 : look === "compact" ? (topHit ? 28 : 18) : look === "cards" ? (topHit ? 48 : 34)
                                       : topHit ? Theme.iconLarge : Theme.iconMedium + 4
         readonly property bool sub: Config.launcher.subtitles && !!modelData.subtitle
 
         Rectangle {
             width: parent.width
-            height: row.look === "cards" ? (row.topHit ? 72 : 56) : row.oneLine ? Math.max(Theme.hit, Theme.rowHeight - 6) + (row.topHit && row.look === "compact" ? 6 : 0)
+            height: row.look === "cards" ? (row.topHit ? 72 : 56) : row.oneLine ? Math.max(Theme.hit, Theme.rowHeight - 6) + (row.topHit && row.look === "compact" ? 14 : 0)
                   : row.topHit ? 56 : Theme.rowHeight + 4
             radius: Launcher.corner === 0 ? 0 : row.look === "cards" ? Theme.radius : Theme.radiusSmall
             color: row.ListView.isCurrentItem ? Launcher.selection : rowArea.containsMouse ? Theme.fillHover : "transparent"
+            Behavior on color { ColorAnimation { duration: Theme.animFast } }
             LauncherMark { visible: row.ListView.isCurrentItem }
 
             Text {   // text rows: what kind of result, in a fixed column

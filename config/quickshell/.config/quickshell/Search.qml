@@ -212,14 +212,14 @@ Singleton {
         const pinned = Config.dock.pinned.map(n => DesktopEntries.heuristicLookup(n)).filter(e => e).map(e => "app:" + e.id)
         return used.concat(pinned).filter((k, i, a) => a.indexOf(k) === i).map(resolve).filter(r => r).slice(0, 8)
     }
-    // settings pages, actions and files opened lately (apps have their own row)
+    // the quick actions you picked (Settings > Search & Launcher > Suggestions), in your order
+    readonly property var quickKeys: Array.from(Config.launcher.quickActions ?? []).map(id => "action:" + id)
+    readonly property var quickActions: quickKeys.map(resolve).filter(r => r)
+    // settings pages, actions and files opened lately; apps have their own row and quick actions their own
     readonly property var recentItems: {
         DesktopEntries.applications.values.length
-        return (Config.launcher.recent ?? []).filter(k => !k.startsWith("app:")).map(resolve).filter(r => r).slice(0, 4)
+        return (Config.launcher.recent ?? []).filter(k => !k.startsWith("app:") && !quickKeys.includes(k)).map(resolve).filter(r => r).slice(0, 4)
     }
-    // handy actions not already in the recent list
-    readonly property var quickActions: ["action:shot", "action:ocr", "action:picker", "action:overview", "action:caffeine", "action:lock"]
-        .filter(k => !recentItems.some(r => r.key === k)).map(resolve).filter(r => r).slice(0, 6)
 
     // Lists for the launcher's browse modes (no query needed)
     // Typed: best match first. Not typed: the menu, grouped in a fixed order (each group keeps the order of the list above).

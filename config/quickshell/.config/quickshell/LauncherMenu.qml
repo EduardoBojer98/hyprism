@@ -26,8 +26,17 @@ Item {
     // a click (or hover) anywhere else: the menu closes and the rows under it don't react
     MouseArea { anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.AllButtons; onClicked: root.done() }
 
+    onVisibleChanged: if (visible) menuIn.restart()
     Glass {
+        id: menuCard
         strong: true
+        // opens from the pointer: a quick fade and grow out of the corner it was clicked at
+        transformOrigin: Item.TopLeft
+        ParallelAnimation {
+            id: menuIn
+            NumberAnimation { target: menuCard; property: "opacity"; from: 0; to: 1; duration: Math.min(Theme.enter, 160); easing.type: Easing.OutCubic }
+            NumberAnimation { target: menuCard; property: "scale"; from: Theme.moves ? 0.95 : 1; to: 1; duration: Math.min(Theme.enter, 160); easing.type: Easing.OutCubic }
+        }
         Accessible.role: Accessible.PopupMenu
         Accessible.name: (root.entry?.name ?? "") + " menu"
         radius: Theme.radius

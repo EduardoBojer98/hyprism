@@ -14,6 +14,7 @@ Rectangle {
     height: look === "cards" ? 52 : oneLine ? Math.max(Theme.hit, Theme.rowHeight - 6) : Theme.rowHeight + 4
     radius: Launcher.corner === 0 ? 0 : Theme.radiusSmall
     color: current ? Launcher.selection : hrArea.containsMouse ? Theme.fillHover : "transparent"
+    Behavior on color { ColorAnimation { duration: Theme.animFast } }
     LauncherMark { visible: hr.current }
     Item {
         id: hrIcon

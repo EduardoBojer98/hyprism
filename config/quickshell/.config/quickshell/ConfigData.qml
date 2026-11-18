@@ -63,6 +63,7 @@ JsonAdapter {
         property bool hints: true               // the key hints under the results
         property bool subtitles: true           // the second line under a result (path, description)
         property int maxResults: 40             // results listed at most (10..80)
+        property list<string> quickActions: ["shot", "ocr", "picker", "overview", "caffeine", "lock"]   // action ids, in order
     }
     property JsonObject clipboard: JsonObject {
         property int maxItems: 300
