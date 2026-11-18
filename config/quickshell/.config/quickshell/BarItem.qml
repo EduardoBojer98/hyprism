@@ -97,6 +97,6 @@ Rectangle {
     Loader {
         anchors.fill: parent
         active: item.hovered && item.tip !== "" && (item.actions?.tooltip ?? true) !== false
-        sourceComponent: ToolTipText { shown: true; text: item.tip }
+        sourceComponent: ToolTipText { shown: true; text: item.tip ?? "" }   // undefined while the item is torn down
     }
 }
