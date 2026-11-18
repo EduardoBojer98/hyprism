@@ -1,6 +1,7 @@
-// Makes the minimise button in app title bars work. Hyprland receives the request
+// Makes the minimise and maximise buttons in app title bars work. Hyprland receives the request
 // (xdg_toplevel.set_minimized) but drops it, so this listens for it on every window and sends the
 // window to special:minimized, the same place Super+H and the dock use (the dock restores it).
+// Maximise requests go to the Lua maximise_button() (modules/windows.lua) with the window's state.
 // Wayland apps only; XWayland apps still ignore the button. Built and loaded by ~/.local/bin/hypr-plugins.
 #define WLR_USE_UNSTABLE
 #include <format>
@@ -9,6 +10,7 @@
 #include <hyprland/src/desktop/view/window/Window.hpp>
 #include <hyprland/src/event/EventBus.hpp>
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
+#include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
 #include <hyprland/src/protocols/XDGShell.hpp>
 #include <hyprland/src/protocols/core/Compositor.hpp>
@@ -27,6 +29,16 @@ static void minimise(PHLWINDOWREF ref) {
     });
 }
 
+static void maximise(PHLWINDOWREF ref) {
+    g_pEventLoopManager->doLater([ref] {
+        const auto w = ref.lock();
+        if (!w || !w->mapped())
+            return;
+        const int fs = (int)Fullscreen::controller()->getFullscreenModes(w).internal;
+        HyprlandAPI::invokeHyprctlCommand("eval", std::format("maximise_button(\"0x{:x}\", {}, {})", (uintptr_t)w.get(), w->isFloating() ? "true" : "false", fs));
+    });
+}
+
 static void watch(PHLWINDOW w) {
     const auto surface = w->backend().surface();
     const auto role    = surface ? dynamicPointerCast<CXDGSurfaceRole>(surface->m_role) : nullptr;
@@ -39,6 +51,8 @@ static void watch(PHLWINDOW w) {
         // requestsMinimize is only set while this signal fires
         if (t && t->m_state.requestsMinimize.value_or(false))
             minimise(ref);
+        if (t && t->m_state.requestsMaximize.has_value())
+            maximise(ref);
     });
 }
 
@@ -56,7 +70,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         if (w->mapped())
             watch(w);
 
-    return {"minimize", "Title-bar minimise buttons send windows to the dock", "hyprism", "1.0"};
+    return {"minimize", "Title-bar minimise buttons send windows to the dock, maximise buttons float or tile", "hyprism", "1.0"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {

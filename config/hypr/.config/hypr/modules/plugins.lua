@@ -59,7 +59,7 @@ function setup_plugins()
         bar_padding = 10,
         bar_button_padding = 8,
         icon_on_hover = false,
-        on_double_click = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']],
+        on_double_click = [[hyprctl eval 'maximise_button()']],
     } } })
     title_colours()
 
@@ -72,7 +72,7 @@ function setup_plugins()
     bars.add_button({ bg_color = "rgba(ff5f57ff)", fg_color = "rgba(1e1e1eff)", size = 14, icon = "✕",
                       action = "hyprctl dispatch 'hl.dsp.window.close()'" })
     bars.add_button({ bg_color = "rgba(868b92ff)", fg_color = "rgba(1e1e1eff)", size = 14, icon = "□",
-                      action = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']] })
+                      action = [[hyprctl eval 'maximise_button()']] })
     bars.add_button({ bg_color = "rgba(868b92ff)", fg_color = "rgba(1e1e1eff)", size = 14, icon = "–",
                       action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
     -- the window menu (Quickshell WindowMenu.qml): snap layouts, other screen or desktop, float, opacity

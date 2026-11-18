@@ -106,7 +106,9 @@ you allow it on battery. Its width is the theme's (Themes → Adjust → Window 
 Title bars (on apps that draw no buttons of their own) take the theme's surface, text and type; Window Look sets their
 size, which side the buttons sit on and where the title goes. The buttons themselves keep one neutral look in every
 theme: the title-bar plugin can't recolour a button until Hyprland next starts, so they are solid discs that read on
-any bar. Unfocused windows' buttons turn to the theme's quiet tone.
+any bar. Unfocused windows' buttons turn to the theme's quiet tone. The maximise button (and a double click on a
+title bar, and an app's own button) floats a tiled window, centred, and tiles a floating one again; Window Look →
+Maximise button switches it to filling the screen.
 Spotlight opens at the mouse pointer by default (Settings → Search & Launcher → Open); choose the theme's place to
 get strips and edges back. Settings → Default Apps picks the default terminal.
 

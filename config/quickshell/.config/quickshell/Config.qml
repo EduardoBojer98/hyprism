@@ -78,7 +78,7 @@ Singleton {
                    followMouse: "bool", focusOnActivate: "bool", warpCursor: "bool", backAndForth: "bool",
                    inactiveOpacity: [0.6, 1], dimInactive: "bool", dimStrength: [0.05, 0.6], resizeOnBorder: "bool",
                    snap: "bool", hideCursorTyping: "bool", titleBars: "bool", apps: "list",
-                   titleBarSize: ["theme", "small", "medium", "large"], titleButtons: ["right", "left"], titleAlign: ["center", "left"],
+                   titleBarSize: ["theme", "small", "medium", "large"], titleButtons: ["right", "left"], titleAlign: ["center", "left"], maxButton: ["float", "fill"],
                    border: ["theme", "accent", "gradient", "neon", "mono", "rainbow", "sunset", "ocean", "custom"], borderAngle: [0, 359],
                    borderColors: "list", borderAnimate: "bool", rainbowSpeed: [1, 10], rainbowOnBattery: "bool" },
         calendar: { holidays: "bool", country: "string", localNames: "bool", observances: "bool", moon: "bool",

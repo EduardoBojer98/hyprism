@@ -7,12 +7,44 @@
 WINDOWS = { layout = "dwindle", newSplit = 0, smartSplit = false, masterNew = "slave", masterSide = "left",
             columnWidth = 0.5, followMouse = true, focusOnActivate = false, warpCursor = true,
             backAndForth = false, inactiveOpacity = 1, dimInactive = false, dimStrength = 0.2,
-            resizeOnBorder = true, snap = false, hideCursorTyping = false, apps = {}, titleBars = true }
+            resizeOnBorder = true, snap = false, hideCursorTyping = false, apps = {}, titleBars = true, maxButton = "float" }
 local ok, saved = pcall(require, "settings.windows")
 if ok and type(saved) == "table" then for k, v in pairs(saved) do WINDOWS[k] = v end end
 
 -- Rules made from WINDOWS.apps; switched off before they are made again (Hyprland can't delete one)
 local app_rules = {}
+
+-- The maximise button: title bars (plugins.lua), a double click on one, and apps' own buttons (the minimize
+-- plugin passes those on with the window's state). Settings > Windows > Maximise button: "float" floats a tiled
+-- window, centred, like a normal desktop, and tiles a floating one again; "fill" fills the screen and back.
+function maximise_button(addr, floating, fullscreen)
+    local a = hl.get_active_window()
+    if addr == nil then
+        if not a then return end
+        addr, floating, fullscreen = a.address, a.floating, a.fullscreen
+    end
+    if a and a.address ~= addr then a = nil end   -- an app's button on a window that isn't focused: no size to go by
+    local win = "address:" .. addr
+    if (fullscreen or 0) > 0 then   -- maximised or fullscreen: back to a normal window first, either mode
+        hl.dispatch(hl.dsp.window.fullscreen({ action = "toggle", mode = fullscreen == 1 and "maximized" or "fullscreen", window = win }))
+        return
+    end
+    if WINDOWS.maxButton == "fill" then
+        hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle", window = win }))
+    elseif floating then
+        hl.dispatch(hl.dsp.window.float({ action = "disable", window = win }))
+    else
+        -- the size it had tiled, but never close to the whole screen: a window you can see around.
+        -- Read before floating: `a` is live and floating gives it Hyprland's last floating size
+        local m, sx, sy = a and a.monitor, a and a.size and a.size.x, a and a.size and a.size.y
+        hl.dispatch(hl.dsp.window.float({ action = "enable", window = win }))
+        if m and sx then
+            local W, H = m.width / m.scale, m.height / m.scale
+            hl.dispatch(hl.dsp.window.resize({ x = math.floor(math.min(sx, W * 0.7)), y = math.floor(math.min(sy, H * 0.75)), window = win }))
+        end
+        hl.dispatch(hl.dsp.window.center({ window = win }))
+    end
+end
 
 function apply_windows()
     local w = WINDOWS

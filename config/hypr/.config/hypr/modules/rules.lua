@@ -1,7 +1,7 @@
 -- Window rules (Hyprland 0.53+ syntax: a name, a match table, then effects).
 
 hl.window_rule({
-    name  = "suppress-maximize-events", -- apps can't maximize themselves out of the tiling layout
+    name  = "suppress-maximize-events", -- apps can't maximize themselves; the minimize plugin hands their request to maximise_button()
     match = { class = ".*" },
     suppress_event = "maximize",
 })

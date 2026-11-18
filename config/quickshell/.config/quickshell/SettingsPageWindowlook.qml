@@ -243,6 +243,11 @@ ColumnLayout {
             ConfigChoice { section: "windows"; key: "titleButtons"; values: ["left", "right"]; labels: ["Left", "Right"] }
         }
         SettingRow {
+            label: "Maximise button"
+            hint: "Float or tile: a tiled window floats as a normal window and goes back into tiling on the next click. Apps' own buttons do the same"
+            ConfigChoice { section: "windows"; key: "maxButton"; values: ["float", "fill"]; labels: ["Float or tile", "Fill the screen"] }
+        }
+        SettingRow {
             visible: page.w.titleBars
             label: "Title"
             ConfigChoice { section: "windows"; key: "titleAlign"; values: ["left", "center"]; labels: ["Left", "Centre"] }
@@ -275,7 +280,7 @@ ColumnLayout {
                 text: "Reset"
                 onClicked: {
                     Config.reset("windows", ["border", "borderAngle", "borderColors", "borderAnimate", "rainbowSpeed", "rainbowOnBattery",
-                                             "titleBars", "titleBarSize", "titleButtons", "titleAlign",
+                                             "titleBars", "titleBarSize", "titleButtons", "titleAlign", "maxButton",
                                              "inactiveOpacity", "dimInactive", "dimStrength"])
                 }
             }
