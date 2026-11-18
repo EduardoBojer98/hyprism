@@ -15,7 +15,7 @@ PanelWindow {
 
     function show(t) { text = t; open = true; hide.restart() }
 
-    screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
+    screen: Displays.popupScreen   // the main screen (Settings > Displays), else the one you work on
     anchors.top: true
     margins.top: Theme.reserveTop + 24
     implicitWidth: 380

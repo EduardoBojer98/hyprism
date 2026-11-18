@@ -305,6 +305,8 @@ JsonAdapter {
         property string vrr: "off"               // adaptive sync: off | on | fullscreen
         property bool preferHighRefresh: true    // new screens start at their highest refresh rate
         property string newScreen: "right"       // a screen with no saved layout: right | left | above | below (of the others) | mirror
+        property string main: ""                 // the main screen (key as in layout): notifications, OSD, workspace 1 and the pointer start there; "" = the screen you work on
+        property bool barOnMainOnly: false       // the menu bar only on the main screen
         property bool imported: false
     }
     property JsonObject workspaces: JsonObject {   // Settings > Displays > Workspaces (SettingsSync writes hypr/settings/workspaces.lua)

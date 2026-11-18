@@ -182,10 +182,14 @@ inside the repo folder.
 - Settings → Displays → Presets: save the layout on screen as a preset, apply it later, mark one as the default,
   or let it apply itself when exactly its screens are connected (a notice with Undo shows). Quick layouts
   (Extend, Mirror, Laptop only, External only) are made from what is plugged in. Identify shows a number on each
-  screen. A layout that would leave no screen on, or with overlapping screens, is refused.
+  screen. A layout that would leave no screen on, or with overlapping screens, is refused. Screens that don't
+  touch get a warning under the drawing (the pointer can't cross a gap) and a Snap together button.
+- Settings → Displays → Main screen: notifications, volume and brightness messages show there, and workspace 1
+  and the pointer start there at login; "Where I'm working" (the default) follows the focused screen. "Menu bar
+  only on the main screen" gives the others the whole height.
 - Super+P opens the display switcher: Extend, Mirror, Only one screen, or a preset. From a terminal:
   `qs ipc call displays preset <name>`, `displays mode extend|mirror|only:<screen>`, `displays list`,
-  `displays identify`, `displays save <name>`.
+  `displays identify`, `displays save <name>`, `displays snap`.
 - Settings → Displays → Advanced: adaptive sync (off, on, fullscreen only), start new screens at their highest
   refresh rate, sharp old X11 apps, automatic HDR colour, and telling the screen what is playing. They sit under
   `_options` in `~/.config/hypr/settings/displays.lua`.

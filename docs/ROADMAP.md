@@ -4,8 +4,8 @@ What is left, newest decisions first. Done work moves to `CHANGELOG.md`; the rea
 
 ## Open
 
-- Displays: a "Main screen" choice, a check for gaps between screens (overlap is already refused), and the
-  bar's per-screen settings (`bar.monitors`) still keyed by port name.
+- Displays: the bar's per-screen settings (`bar.monitors`) still keyed by port name. The launcher still opens on
+  the focused screen; `Displays.popupScreen` (the main screen, else the focused one) is there for it.
 - Displays: matching by description is untested on real hardware (test desktops have no descriptions).
 - Actions: no check that a command exists (Test shows exit 127); Control Center tiles are small only.
 - Memory: the shell is about 400 MB on a test desktop, mostly Qt and the theme's images; the surfaces are

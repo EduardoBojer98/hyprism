@@ -357,6 +357,8 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `vrr` | `string` | `"off"` | adaptive sync: off \| on \| fullscreen |
 | `preferHighRefresh` | `bool` | `true` | new screens start at their highest refresh rate |
 | `newScreen` | `string` | `"right"` | a screen with no saved layout: right \| left \| above \| below (of the others) \| mirror |
+| `main` | `string` | `""` | the main screen (key as in layout): notifications, OSD, workspace 1 and the pointer start there; "" = the screen you work on |
+| `barOnMainOnly` | `bool` | `false` | the menu bar only on the main screen |
 | `imported` | `bool` | `false` |  |
 
 ## workspaces

@@ -6,6 +6,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Displays: a Main screen choice (notifications, volume and brightness messages, workspace 1 and the pointer
+  start there; optionally the only screen with the menu bar), and a warning with Snap together when screens leave a
+  gap the pointer can't cross (`displays.main`, `displays.barOnMainOnly`, `qs ipc call displays snap`).
 - Settings: Page Up and Page Down scroll the page, wherever the keyboard focus is; `qs ipc call settings scroll`
   takes top, bottom, +N/-N pixels or a group's title. The test desktop (`tests/nested.sh scroll`) uses it.
 - Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone

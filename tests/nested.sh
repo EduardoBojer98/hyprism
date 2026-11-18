@@ -189,6 +189,7 @@ case ${1:-} in
     scroll)
         need_running
         inside qs ipc call settings scroll "${2:?scroll top|bottom|+N|-N|GROUP TITLE}"
+        sleep 0.3 # a frame or two, so a shot right after shows it
         ;;
     screens2)
         need_running

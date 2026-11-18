@@ -171,7 +171,10 @@ Singleton {
     readonly property int barHeight: barSize + barMargin                   // room the bar takes from the screen
     readonly property color barInk: barStyle.fill === "ink" ? base : text    // text on the bar's own ground
     readonly property color barDim: barStyle.fill === "ink" ? Qt.alpha(base, 0.62) : subtext   // secondary text on it
-    function barShownOn(screen) { return !(screen && cb.hiddenOn.some(k => Displays.matches(k, screen))) }
+    function barShownOn(screen) {
+        if (screen && Config.displays.barOnMainOnly && Displays.mainScreen) return screen === Displays.mainScreen
+        return !(screen && cb.hiddenOn.some(k => Displays.matches(k, screen)))
+    }
 
     // ---- the dock: every theme has one; Settings > Dock places it ----------------------------------------
     readonly property var dockStyle: current.dock

@@ -106,7 +106,7 @@ Singleton {
                  scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", imported: "bool" },
         displays: { layout: "displays", autoHdr: "bool", sendContentType: "bool", xwaylandNativeScale: "bool",
                     vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool", presets: "presets", defaultPreset: "string",
-                    newScreen: ["right", "left", "above", "below", "mirror"], imported: "bool" },
+                    newScreen: ["right", "left", "above", "below", "mirror"], main: "string", barOnMainOnly: "bool", imported: "bool" },
         workspaces: { mode: ["dynamic", "fixed"], count: [1, 10], screens: "displays" },
         apps: { terminal: "command" },
         monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", imported: "bool" }
