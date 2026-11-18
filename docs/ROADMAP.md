@@ -14,7 +14,3 @@ What is left, newest decisions first. Done work moves to `CHANGELOG.md`; the rea
   `hyprland.lua` link into the repo), so binds and settings written there can't be tested there yet.
 - `qs ipc call config set … '[…]'`: the command line drops the outer brackets of a list; start the value with a
   space (`' [ … ]'`).
-
-## Later
-
-- Global shortcuts through the portal (XDPH implements it) for apps that ask.

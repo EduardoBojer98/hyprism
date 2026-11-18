@@ -70,7 +70,7 @@ Singleton {
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", sliders: "list", toggles: "list", folded: "list", hidden: "list", layouts: "object" },
-        keybinds: { overrides: "object", custom: "shortcuts" },
+        keybinds: { overrides: "object", custom: "shortcuts", portal: "portalShortcuts" },
         actions: { list: "actions" },
         lockscreen: { clock: ["theme", "big", "stacked", "terminal", "readout", "small"], position: ["theme", "center", "top", "bottom", "left"],
                       date: "bool", greeting: "bool", avatar: "string", widgets: "list", wallpaper: "string",
@@ -141,6 +141,9 @@ Singleton {
         // keys and an action id go into hypr/settings/keybinds.lua: plain characters only (binds.lua checks again)
         if (rule === "shortcuts") return value && typeof value.length === "number" && value.length <= 100
             && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[a-z0-9][a-z0-9-]*$/.test(c?.action ?? "")) ? "" : "Shortcuts need keys and an action id"
+        // a portal shortcut's name ("appid:id", from hyprctl globalshortcuts) goes into keybinds.lua too: no quotes or backslashes
+        if (rule === "portalShortcuts") return value && typeof value.length === "number" && value.length <= 100
+            && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[A-Za-z0-9._:+@ -]{3,160}$/.test(c?.name ?? "") && c.name.includes(":")) ? "" : "Shortcuts need keys and an app's shortcut name"
         if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(displayKeyOk) ? "" : "Unknown display names"
         if (rule === "presets") return value && typeof value.length === "number" && value.length <= 20
             && Array.from(value).every(p => /^[a-z0-9-]{1,40}$/.test(p?.id ?? "") && typeof p.name === "string" && p.name.length > 0 && p.name.length <= 40

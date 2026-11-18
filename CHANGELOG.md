@@ -6,6 +6,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Keyboard Shortcuts: a From apps group lists the shortcuts apps ask for through the desktop portal (OBS,
+  Discord and the like, from `hyprctl globalshortcuts`) and gives each a key that works even when the app is in the
+  background (`keybinds.portal`).
 - Actions: a command's program is checked as you type: one that isn't installed or on PATH shows under its field
   (Command, Turn off with, A command succeeds) with what to do, or "Did you mean" the closest command for a typo,
   instead of exit code 127 later. Save asks once more and then keeps it ("Save anyway").

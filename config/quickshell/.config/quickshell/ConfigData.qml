@@ -179,6 +179,7 @@ JsonAdapter {
         // id -> { keys: "SUPER + K" ("" = turned off), label, group, def } (Settings > Keyboard Shortcuts)
         property var overrides: ({})
         property var custom: []                 // your shortcuts: [{ keys: "SUPER + D", action: "<action id>" }]; each runs `qs ipc call actions run <id>`
+        property var portal: []                 // keys for shortcuts apps ask for through the portal: [{ keys, name: "appid:id", label }]; bound to hl.dsp.global(name)
     }
     // your own buttons and toggles (Settings > Actions, Actions.qml): [{ id, name, icon, kind, run: { type, argv | value }, ... }]
     property JsonObject actions: JsonObject {

@@ -22,6 +22,18 @@ ColumnLayout {
     // your shortcuts, as rows like the built-in ones (custom-<n> matches the id binds.lua gives them)
     readonly property var custom: Array.from(Config.keybinds.custom ?? []).map((c, i) => ({ id: "custom-" + i, custom: true, index: i, action: c.action,
         group: "Your shortcuts", label: Actions.get(c.action)?.name ?? c.action + " (missing)", fixed: false, def: "", keys: c.keys }))
+    // Shortcuts apps ask for through the GlobalShortcuts portal (hyprctl globalshortcuts: "appid:id" + description),
+    // plus any given keys earlier whose app isn't running now. Keys go to Config.keybinds.portal.
+    property var registered: []
+    readonly property var portal: {
+        const saved = Array.from(Config.keybinds.portal ?? [])
+        const names = registered.map(r => r.name).concat(saved.map(c => c.name).filter(n => !registered.some(r => r.name === n)))
+        return names.map(n => {
+            const r = registered.find(x => x.name === n), c = saved.find(x => x.name === n)
+            return { id: "portal:" + n, portal: true, name: n, running: r !== undefined, group: "From apps",
+                     label: r?.description || c?.label || n.slice(n.indexOf(":") + 1), app: n.slice(0, n.indexOf(":")), fixed: false, def: "", keys: c?.keys ?? "" }
+        })
+    }
     // every action a shortcut can run; a name two actions share says its id too
     readonly property var actionChoices: {
         const list = Actions.all.filter(a => Actions.available(a)).slice().sort((a, b) => a.name.localeCompare(b.name))
@@ -64,6 +76,12 @@ ColumnLayout {
 
     function load() { reader.running = true }
     function save(b, keys) {
+        if (b.portal) {
+            const list = Array.from(Config.keybinds.portal ?? []).filter(c => c.name !== b.name)
+            if (keys !== "") list.push({ keys: keys, name: b.name, label: b.label })
+            message = Config.set("keybinds", "portal", list)
+            return
+        }
         if (b.custom) {
             const list = JSON.parse(JSON.stringify(Config.keybinds.custom ?? []))
             if (b.id === "custom-new") list.push({ keys: keys, action: page.newAction })
@@ -112,7 +130,7 @@ ColumnLayout {
         const standalone = /^(F\d+|Print|XF86)/.test(key)
         if (!standalone && !mods.some(m => m !== "SHIFT")) { message = "Hold Super, Ctrl or Alt with the key"; return }
         const keys = mods.concat([key]).join(" + ")
-        const taken = binds.concat(custom).find(x => x.id !== b.id && x.keys && norm(x.keys) === norm(keys))
+        const taken = binds.concat(custom, portal).find(x => x.id !== b.id && x.keys && norm(x.keys) === norm(keys))
         recording = ""
         if (taken) { conflict = { b: b, keys: keys, taken: taken }; message = taken.fixed ? `${pretty(keys)} is fixed for “${taken.label}”` : `${pretty(keys)} is already used by “${taken.label}”`; return }
         message = ""; conflict = null
@@ -147,8 +165,13 @@ ColumnLayout {
     Component.onDestruction: if (recording) Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.submap("reset")'])
     Connections { target: SettingsApp; function onOpenChanged() { if (!SettingsApp.open) page.recording = "" } }
 
-    Component.onCompleted: load()
+    Component.onCompleted: { load(); apps.running = true }
     Timer { id: refresh; interval: 1200; onTriggered: page.load() }
+    Process {
+        id: apps
+        command: ["hyprctl", "-j", "globalshortcuts"]
+        stdout: StdioCollector { onStreamFinished: { try { page.registered = JSON.parse(text) } catch (e) { page.registered = [] } } }
+    }
 
     Process {
         id: reader
@@ -159,7 +182,7 @@ ColumnLayout {
                 try {
                     for (const b of JSON.parse(text)) {
                         const d = (b.description ?? "").split("|")
-                        if (d.length < 5 || d[0].startsWith("custom-")) continue   // yours come from Config, below
+                        if (d.length < 5 || d[0].startsWith("custom-") || d[0].startsWith("portal-")) continue   // yours come from Config, below
                         list.push({ id: d[0], group: d[1], label: d[2], fixed: d[3] === "fixed", def: d[4], keys: page.keysOf(b.modmask, b.key) })
                     }
                 } catch (e) { page.message = "Couldn't read the shortcuts from Hyprland" }
@@ -228,6 +251,34 @@ ColumnLayout {
                     onPicked: v => page.newAction = page.actionChoices.find(c => c.label === v)?.id ?? ""
                 }
                 KeysButton { b: ({ id: "custom-new", custom: true, label: "New shortcut", keys: "" }); enabled: page.newAction !== ""; idleText: "Record keys" }
+            }
+        }
+    }
+
+    SettingGroup {
+        title: "From apps"
+        SettingRow {
+            visible: page.portal.length === 0
+            label: "No app has asked for a shortcut"
+            hint: "Apps that support global shortcuts (OBS, Discord, Telegram…) list theirs here once they are running"
+        }
+        Repeater {
+            model: page.portal
+            SettingRow {
+                id: prow
+                required property var modelData
+                label: modelData.label
+                hint: modelData.app + (modelData.running ? "" : " · not running now")
+                RowLayout {
+                    spacing: Theme.spaceXs
+                    KeysButton { b: prow.modelData }
+                    Chip {
+                        visible: prow.modelData.keys !== ""
+                        icon: "\u{F0156}"; accessibleName: "Remove shortcut"
+                        onClicked: page.save(prow.modelData, "")
+                        ToolTipText { shown: parent.hovered; text: "Remove" }
+                    }
+                }
             }
         }
     }

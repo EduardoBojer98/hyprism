@@ -219,6 +219,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | --- | --- | --- | --- |
 | `overrides` | `var` | `{}` |  |
 | `custom` | `var` | `[]` | your shortcuts: [{ keys: "SUPER + D", action: "<action id>" }]; each runs `qs ipc call actions run <id>` |
+| `portal` | `var` | `[]` | keys for shortcuts apps ask for through the portal: [{ keys, name: "appid:id", label }]; bound to hl.dsp.global(name) |
 
 ## actions
 

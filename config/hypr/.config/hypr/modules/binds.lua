@@ -157,6 +157,19 @@ if type(overrides.custom) == "table" then
     end
 end
 
+-- Shortcuts apps ask for through the GlobalShortcuts portal (xdg-desktop-portal-hyprland registers them; hyprctl
+-- globalshortcuts lists them as "appid:id"). Settings > Keyboard Shortcuts > From apps gives them keys; the bind
+-- hands press and release to the app. Plain text only, like your shortcuts.
+if type(overrides.portal) == "table" then
+    for i, c in ipairs(overrides.portal) do
+        if type(c) == "table" and type(c.keys) == "string" and c.keys:match("^[%w_+: ]+$")
+            and type(c.name) == "string" and c.name:match("^[%w._:+@ -]+$") and c.name:find(":") then
+            local label = type(c.label) == "string" and (c.label:gsub("|", "")) or c.name
+            add("portal-" .. i, "From apps", label, c.keys, hl.dsp.global(c.name))
+        end
+    end
+end
+
 for _, b in ipairs(binds) do
     local keys = b.keys
     local o = overrides[b.id]
