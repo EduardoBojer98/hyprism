@@ -226,6 +226,11 @@ ColumnLayout {
             ConfigToggle { section: "launcher"; key: "showFiles" }
         }
         SettingRow {
+            label: "Quick Look"
+            hint: "Move onto a file with ↑↓ and press Space (or Ctrl+Y) for a large preview. From a file manager: qs ipc call quicklook open PATH"
+            ConfigToggle { section: "launcher"; key: "quickLook" }
+        }
+        SettingRow {
             label: "Forget what you used"
             hint: "Clears the most-used ranking and the Recent list on the suggestions"
             PillButton { text: "Forget"; onClicked: { Config.set("launcher", "usage", {}); Config.set("launcher", "recent", []) } }

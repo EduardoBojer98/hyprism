@@ -124,6 +124,13 @@ app icons; Adjust → Rows → Text gives plain text rows. Adjust also sets size
 how many results; Suggestions picks what shows before you type and which quick actions, in your order (Recent leaves
 them out). Settings → Default Apps picks the default terminal.
 
+**Quick Look.** In Spotlight's results, move onto a file or folder with ↑↓ and press Space (Ctrl+Y works any time):
+a large preview opens (images, the first three PDF pages, a frame of a video, the first lines of text or code, a
+folder's listing). ↑↓ go on to the next result, Enter opens the file, Space or Esc closes. Space only previews after
+you have moved with the arrows, so it still types a space while you search. From a file manager, add a custom action
+that runs `qs ipc call quicklook open %f` (Thunar: Edit → Configure custom actions; Nautilus: a script in
+`~/.local/share/nautilus/scripts`). Turn it off in Search & Launcher → Search.
+
 ## Settings
 
 `Super+I` (or from the Control Center). The search field finds a page by its name or by words like "dark",

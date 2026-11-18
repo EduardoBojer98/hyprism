@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Quick Look: in Spotlight, move onto a file or folder with the arrows and press Space (or Ctrl+Y) for a large
+  preview over the screen: images, the first PDF pages, a video frame, the first lines of text and code, a folder's
+  listing. Arrows move to the next file, Enter opens it, Space or Esc closes. A file manager can call it too:
+  `qs ipc call quicklook open PATH`. On/off in Settings > Search & Launcher > Search.
 - Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone
   until you type, Launchpad lays every app on the dimmed screen with no sheet (dark themes), Drawer opens on today at a
   glance with big card rows, Sidebar is a dense one-line list, Terminal has plain text rows with a kind column and no

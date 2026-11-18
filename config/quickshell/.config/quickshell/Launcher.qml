@@ -207,6 +207,12 @@ Singleton {
         Search.activate(r)
     }
     property var confirmFor: null          // an action marked "ask first"
+    // Quick Look: the selected result's file or folder ("" for anything else); Space opens it once you've moved with the arrows
+    property bool browsed: false
+    function selectedPath() {
+        const r = view === "home" ? homeItems[homeIndex] : view === "search" || view === "files" ? listModel[results.currentIndex] : null
+        return r?.key?.startsWith("file:") ? r.key.slice(5) : ""
+    }
     // an action run from elsewhere (a hot corner, a shortcut) that asks first: the launcher opens to ask
     function ask(r) { if (!popup.open) show("search"); confirmFor = r }
     // the right-click menu for an app: a DesktopEntry, or a result that carries one (anything else has no menu)
@@ -225,7 +231,7 @@ Singleton {
         darkScrim: root.pad
         focusItem: field
         onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens centred or at the pointer, not beside the bar item
-        onClosed: { field.text = ""; root.confirmFor = null; menu.entry = null }
+        onClosed: { field.text = ""; root.confirmFor = null; menu.entry = null; if (QuickLook.inLauncher) QuickLook.close() }
         onOpenChanged: Actions.watch("launcher", popup.open)   // toggles show their real state
 
         // unified: one card behind the search field and the results, a hairline between them
@@ -251,5 +257,26 @@ Singleton {
         }
 
         LauncherMenu { id: menu; z: 10; width: parent.width; height: popup.boxHeight }
+
+        // Quick Look over the launcher, on the whole screen; the search field keeps the keyboard (LauncherHeader)
+        Item {
+            parent: popup.overlay
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: QuickLook.inLauncher ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: QuickLook.inLauncher ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+            Rectangle { anchors.fill: parent; color: "black"; opacity: 0.35 }   // palette: a scrim, the same in every theme
+            MouseArea { Accessible.ignored: true; anchors.fill: parent; enabled: QuickLook.inLauncher; onClicked: QuickLook.close() }   // click beside it: Esc does the same
+            QuickLookView {
+                id: quickSheet
+                width: Math.min(1100, parent.width * 0.72)
+                height: Math.min(820, parent.height * 0.78)
+                anchors.centerIn: parent
+                path: QuickLook.inLauncher ? QuickLook.path : ""
+                scale: QuickLook.inLauncher || !Theme.moves ? 1 : 0.96
+                Behavior on scale { NumberAnimation { duration: Theme.enter; easing.type: Easing.OutCubic } }
+                MouseArea { Accessible.ignored: true; anchors.fill: parent; z: -1 }   // clicks on the sheet don't close it
+            }
+        }
     }
 }
