@@ -15,6 +15,8 @@ Item {
     required property int index
     readonly property bool pinned: dock.pinnedIds.includes(modelData?.id ?? "")
     readonly property bool dragged: dock.dragId !== "" && dock.dragId === modelData?.id
+    readonly property string orderGroup: pinned ? "" : "apps"    // an open app that isn't pinned (dock.dragRunning)
+    readonly property string orderKey: modelData?.id ?? ""
     readonly property var windows: dock.windowsOf(modelData)
     readonly property var visibleWindows: windows.filter(t => !dock.isMinimised(t))
     property bool launching: false
@@ -101,23 +103,24 @@ Item {
         Accessible.name: app.modelData?.name ?? "App"
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: app.dragged ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+        cursorShape: app.dragged || dock.runDrag === app.orderKey && !app.pinned ? Qt.ClosedHandCursor : Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         property real pressX: 0
         property bool moved: false
         onContainsMouseChanged: dock.hovering(app, app.modelData?.name ?? "", containsMouse)
         onPressed: mouse => { pressX = dock.vertical ? mouse.y : mouse.x; moved = false }
-        // drag a pinned icon along the dock to reorder
+        // drag an icon along the dock to reorder: pinned among the pinned (saved), open among the open
         onPositionChanged: mouse => {
-            if (!pressed || pressedButtons !== Qt.LeftButton || !app.pinned) return
+            if (!pressed || pressedButtons !== Qt.LeftButton) return
             const at = dock.vertical ? mouse.y : mouse.x
-            if (!app.dragged && Math.abs(at - pressX) < 8) return
+            if (!moved && !app.dragged && Math.abs(at - pressX) < 8) return
+            if (!app.pinned) { moved = true; const w = mapToItem(dock.contentItem, mouse.x, mouse.y); dock.dragRunning(app, dock.vertical ? w.y : w.x); return }
             if (!app.dragged) { moved = true; dock.dragId = app.modelData.id }
             const p = mapToItem(dock.rowItem, mouse.x, mouse.y)
             dock.dragTo(dock.vertical ? p.y : p.x)
         }
-        onReleased: if (app.dragged) dock.endDrag()
-        onCanceled: if (app.dragged) dock.endDrag()
+        onReleased: { dock.runDrag = ""; if (app.dragged) dock.endDrag() }
+        onCanceled: { dock.runDrag = ""; if (app.dragged) dock.endDrag() }
         // Left: focus the app (cycling through its windows), bring back minimised ones, or start it.
         // Middle: always a new window. Right: windows and pin / minimise / quit dock.menuBox.
         onClicked: mouse => { if (app.modelData && !moved) app.activate(mouse.button) }

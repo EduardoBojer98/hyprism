@@ -18,6 +18,8 @@ Item {
     readonly property bool focused: modelData.activated
     readonly property real mid: (dock.vertical ? height : width) / 2   // tooltip / menu centre
     readonly property var windows: [modelData]
+    readonly property string orderGroup: "windows"   // dragged along the open windows (dock.dragRunning)
+    readonly property string orderKey: dock.address(modelData)
     readonly property bool nameOnly: Config.dock.nameOnly
     readonly property string appName: entry?.name || modelData.wayland?.appId || "Window"
     function activate(button) {
@@ -127,11 +129,23 @@ Item {
         Accessible.name: win.modelData.title || win.entry?.name || "Window"
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: dock.runDrag === win.orderKey ? Qt.ClosedHandCursor : Qt.PointingHandCursor
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+        property real pressAt: 0
+        property bool moved: false
+        onPressed: mouse => { pressAt = dock.vertical ? mouse.y : mouse.x; moved = false }
+        onPositionChanged: mouse => {   // drag along the open windows to reorder them
+            if (!pressed || pressedButtons !== Qt.LeftButton) return
+            if (!moved && Math.abs((dock.vertical ? mouse.y : mouse.x) - pressAt) < 8) return
+            moved = true
+            const w = mapToItem(dock.contentItem, mouse.x, mouse.y)
+            dock.dragRunning(win, dock.vertical ? w.y : w.x)
+        }
+        onReleased: dock.runDrag = ""
+        onCanceled: dock.runDrag = ""
         onContainsMouseChanged: dock.hovering(win, (win.modelData.title || win.entry?.name || "") + (win.minimised ? "  (minimised)" : ""), containsMouse)
         // Left: bring it up (or minimise it when it already is the front window).
         // Middle: close. Right: dock.menuBox.
-        onClicked: mouse => win.activate(mouse.button)
+        onClicked: mouse => { if (!moved) win.activate(mouse.button) }
     }
 }

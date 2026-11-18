@@ -6,23 +6,28 @@ import qs
 
 // The dock inside the bar: pinned apps, then other running ones; a mark under each open app,
 // the accent under the focused one. Click: bring it up (again: its next window) or start it;
-// middle-click: a new window. Drag a pinned app to reorder it.
+// middle-click: a new window; right-click: its windows and actions. Drag any app to reorder it: pinned ones are
+// saved, open ones keep the order for this session (DockOrder: by workspace until then).
 Item {
     id: apps
     required property var bar
     readonly property int count: DesktopEntries.applications.values.length   // lookups re-run once apps have loaded
     function entryFor(appId) { return count ? DesktopEntries.heuristicLookup(appId) : null }
-    readonly property var running: Hyprland.toplevels.values.filter(t => t.wayland && t.workspace?.monitor === bar.monitor)
+    function addr(t) { return "0x" + String(t.address).replace(/^0x/, "") }
+    readonly property var running: DockOrder.sort(Hyprland.toplevels.values.filter(t => t.wayland && t.workspace?.monitor === bar.monitor),
+                                                  "windows", addr, DockOrder.ws)
     // like the floating dock: launchers, then (unless Settings > Dock > Combine) each open window after a rule
     readonly property bool combine: Config.dock.combine
     readonly property var pinned: count ? Array.from(Config.dock.pinned).map(id => DesktopEntries.byId(id)).filter(e => e) : []
     readonly property var cells: {
-        const out = pinned.map(e => ({ entry: e, win: null }))
+        const out = pinned.map(e => ({ key: "p:" + e.id, entry: e, win: null }))
         if (combine) {
-            for (const t of running) { const e = entryFor(t.wayland.appId); if (e && !out.some(x => x.entry.id === e.id)) out.push({ entry: e, win: null }) }
+            const open = []
+            for (const t of running) { const e = entryFor(t.wayland.appId); if (e && !out.some(x => x.entry.id === e.id) && !open.some(x => x.entry.id === e.id)) open.push({ key: "a:" + e.id, entry: e, win: null, w: DockOrder.ws(t) }) }
+            return out.concat(DockOrder.sort(open, "apps", x => x.entry.id, x => x.w))
         } else if (Config.dock.showRunning && running.length) {
-            out.push({ rule: true })
-            for (const t of running) out.push({ entry: entryFor(t.wayland.appId), win: t })
+            out.push({ key: "rule", rule: true })
+            for (const t of running) out.push({ key: "w:" + addr(t), entry: entryFor(t.wayland.appId), win: t })
         }
         return out
     }
@@ -30,6 +35,49 @@ Item {
     function bring(t) {
         if (t.workspace?.name !== "special:minimized") { t.wayland.activate(); return }
         Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.window.move({ workspace = "${bar.monitor?.activeWorkspace?.id ?? 1}", window = "address:0x${String(t.address).replace(/^0x/, "")}" })`])
+    }
+    function minimise(t) { Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.window.move({ workspace = "special:minimized", follow = false, window = "address:${addr(t)}" })`]) }
+    function setPinned(e, pin) {
+        const list = Config.dock.pinned.filter(id => id !== e.id)
+        if (pin) list.push(e.id)
+        Config.set("dock", "pinned", list)
+    }
+    // right-click: the app's windows, then what can be done with it (the floating dock's DockMenu, in the bar's look)
+    function menuFor(cell) {
+        const e = cell.entry, wins = cell.wins, pinned = !!e && Config.dock.pinned.includes(e.id)
+        const min = t => t.workspace?.name === "special:minimized"
+        const list = cell.win ? [] : wins.slice(0, 8).map(t => ({ label: (t.title || e?.name || "Window") + (min(t) ? "  (minimised)" : ""),
+            icon: Quickshell.iconPath(e?.icon ?? "", "application-x-executable"), run: () => apps.bring(t) }))
+        const acts = [
+            e ? { label: "New window", glyph: "\u{F0415}", run: () => e.execute() } : null,
+            wins.some(t => !min(t)) ? { label: "Minimise", glyph: "\u{F05B0}", run: () => wins.filter(t => !min(t)).forEach(apps.minimise) } : null,
+            wins.some(min) ? { label: "Restore", glyph: "\u{F05B2}", run: () => wins.filter(min).forEach(apps.bring) } : null,
+            e ? { label: pinned ? "Unpin from dock" : "Pin to dock", glyph: pinned ? "\u{F0931}" : "\u{F0403}", run: () => apps.setPinned(e, !pinned) } : null,
+            wins.length ? { label: cell.win ? "Close window" : wins.length > 1 ? `Quit (${wins.length} windows)` : "Quit", glyph: "\u{F0156}",
+                            danger: true, run: () => wins.forEach(t => t.wayland?.close()) } : null
+        ].filter(x => x)
+        if (list.length && acts.length) acts[0].sep = true
+        menu.rows = list.concat(acts)
+        menu.anchorItem = cell
+        menu.open = true
+    }
+    ShellMenu { id: menu }
+
+    // an open app or window dragged along its own group takes its place at once (DockOrder)
+    property string runDrag: ""
+    function cellKey(c) { return c.win ? addr(c.win) : c.entry?.id ?? "" }
+    function dragRunning(cell, p) {
+        const group = cell.win ? "windows" : "apps", key = cellKey(cell)
+        runDrag = key
+        const mid = c => bar.vertical ? c.y + c.height / 2 : c.x + c.width / 2
+        const cells = []
+        for (let i = 0; i < cellRepeater.count; i++) {
+            const c = cellRepeater.itemAt(i)
+            if (c && !c.rule && !c.isPinned && (c.win !== null) === (group === "windows")) cells.push(c)
+        }
+        cells.sort((a, b) => mid(a) - mid(b))
+        const before = cells.find(c => cellKey(c) !== key && mid(c) > (bar.vertical ? p.y : p.x))
+        DockOrder.move(group, cells.map(cellKey), key, before ? cellKey(before) : "")
     }
     readonly property int icon: Math.max(16, Math.min(Math.round(bar.thickness * 0.62), 30))
 
@@ -67,7 +115,7 @@ Item {
         horizontalItemAlignment: Grid.AlignHCenter
         Repeater {
             id: cellRepeater
-            model: apps.cells
+            model: ScriptModel { values: apps.cells; objectProp: "key" }   // icons are kept (and moved) while the list changes
             BarItem {
                 id: app
                 required property var modelData
@@ -79,7 +127,7 @@ Item {
                 readonly property var wins: win ? [win] : apps.running.filter(t => entry && apps.entryFor(t.wayland.appId)?.id === entry.id)
                 readonly property bool marked: win !== null || (apps.combine && wins.length > 0)
                 readonly property bool isPinned: !rule && win === null && index < apps.pinned.length
-                opacity: apps.dragId !== "" && apps.dragId === entry?.id && isPinned ? 0.45 : 1
+                opacity: apps.dragId !== "" && apps.dragId === entry?.id && isPinned || apps.runDrag !== "" && apps.runDrag === apps.cellKey(app) ? 0.45 : 1
                 vertical: apps.bar.vertical
                 // a window with its name is a tab: room for the mark on its left and air around the name
                 readonly property bool tab: label !== "" && !asText
@@ -87,8 +135,9 @@ Item {
                 spacing: tab ? 8 : 6
                 interactive: !rule
                 active: marked && wins.some(t => t.activated)
-                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
                 onPressed: button => {
+                    if (button === Qt.RightButton) { apps.menuFor(app); return }
                     if (win) { if (button === Qt.MiddleButton) win.wayland.close(); else apps.bring(win); return }
                     if (button === Qt.MiddleButton || wins.length === 0) { entry?.execute(); return }
                     const i = wins.findIndex(t => t.activated)
@@ -124,23 +173,24 @@ Item {
                     color: app.active ? Theme.accentText : app.marked ? apps.bar.tone : apps.bar.dim
                     font { family: apps.bar.family; pixelSize: Theme.fontLabel; weight: app.active ? Font.Bold : Font.Normal }
                 }
-                MouseArea {   // left button on a pinned app: a click as usual, or a drag to reorder
+                MouseArea {   // left button on an app: a click as usual, or a drag to reorder
                     parent: app
                     anchors.fill: parent
-                    enabled: app.isPinned
+                    enabled: !app.rule
                     acceptedButtons: Qt.LeftButton
-                    cursorShape: apps.dragId !== "" ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+                    cursorShape: apps.dragId !== "" || apps.runDrag !== "" ? Qt.ClosedHandCursor : Qt.PointingHandCursor
                     property real pressAt: 0
                     property bool moved: false
                     onPressed: mouse => { pressAt = apps.bar.vertical ? mouse.y : mouse.x; moved = false }
                     onPositionChanged: mouse => {
                         if (!moved && Math.abs((apps.bar.vertical ? mouse.y : mouse.x) - pressAt) < 8) return
                         moved = true
+                        if (!app.isPinned) { apps.dragRunning(app, mapToItem(grid, mouse.x, mouse.y)); return }
                         apps.dragId = app.entry.id
                         apps.dropAt = apps.dropIndex(mapToItem(grid, mouse.x, mouse.y))
                     }
-                    onReleased: apps.endDrag()
-                    onCanceled: { apps.dragId = ""; apps.dropAt = -1 }
+                    onReleased: { apps.runDrag = ""; apps.endDrag() }
+                    onCanceled: { apps.runDrag = ""; apps.dragId = ""; apps.dropAt = -1 }
                     onClicked: if (!moved) app.activate(Qt.LeftButton)
                 }
                 DockMark {   // open / focused mark, on the screen-edge side (icons only; same look as the floating dock)

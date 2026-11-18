@@ -34,7 +34,7 @@ PanelWindow {
     onHasKeysChanged: if (hasKeys && !menu.entry) takeFocus.restart()
     Timer { id: takeFocus; interval: 80; onTriggered: if (root.hasKeys && !menu.entry) launcherPart.forceActiveFocus() }   // the compositor hands over the keys a moment after
     readonly property bool shown: !Config.dock.autoHide || hover.hovered || hideTimer.running || emptyWorkspace
-                                  || hasKeys || dragId !== ""
+                                  || hasKeys || dragId !== "" || runDrag !== ""
     // keys on an icon: Left / Right (Up / Down on a vertical dock) or Tab move, Enter / Space does what a click does,
     // Menu or Shift+F10 opens its menu, Escape leaves
     function key(e, item, activate, openMenu) {
@@ -83,7 +83,7 @@ PanelWindow {
         if (!combine || !Config.dock.showRunning) return []
         const out = []
         for (const t of openWindows) { const e = entryFor(t.wayland?.appId ?? ""); if (e && !pinnedIds.includes(e.id) && !out.some(x => x.id === e.id)) out.push(e) }
-        return out
+        return DockOrder.sort(out, "apps", e => e.id, e => out.indexOf(e))   // openWindows is by workspace already
     }
     readonly property var widgetIds: Config.dock.widgets.filter((id, i, a) => Theme.dockWidgets[id] !== undefined && a.indexOf(id) === i)
     readonly property var appEntries: pinnedEntries.concat(runningEntries)
@@ -107,11 +107,21 @@ PanelWindow {
     // A minimised window stays on the dock of the monitor it was on (homes: address -> monitor name).
     // shortcut: after a shell restart a minimised window's home is unknown, it goes by Hyprland's monitor until restored.
     property var homes: ({})
-    readonly property var openWindows: Config.dock.showRunning ? Hyprland.toplevels.values.filter(t => {
+    readonly property var openWindows: Config.dock.showRunning ? DockOrder.sort(Hyprland.toplevels.values.filter(t => {
         if (!t.wayland) return false
         if (!isMinimised(t)) { if (t.monitor) homes[t.address] = t.monitor.name; return t.monitor === monitor }
         return (homes[t.address] ?? t.monitor?.name) === monitor?.name
-    }) : []
+    }), "windows", address, DockOrder.ws) : []
+    // an open app or window dragged along its own group takes its place at once (DockOrder, by workspace until then)
+    property string runDrag: ""
+    function dragRunning(item, pos) {   // pos: the pointer along the dock, in window coordinates
+        const group = item.orderGroup, key = item.orderKey
+        runDrag = key
+        const tiles = Array.from(row.children).filter(c => c.visible && c.orderGroup === group && c.orderKey)
+        tiles.sort((a, b) => middleOf(a) - middleOf(b))
+        const before = tiles.find(c => c.orderKey !== key && middleOf(c) > pos)
+        DockOrder.move(group, tiles.map(c => c.orderKey), key, before ? before.orderKey : "")
+    }
     readonly property int thumbWidth: Math.round(iconSize * 1.6)
     // window pictures started while the shell is still starting fail for good; start them a bit later
     property bool captureReady: false
