@@ -39,6 +39,7 @@ function apply_theme()
     hl.config({
         general = {
             gaps_in = THEME.gaps_in, gaps_out = THEME.gaps_out, border_size = THEME.border_size,
+            float_gaps = THEME.gaps_out,   -- a maximised floating window keeps the screen-edge gap, like a tiled one
             col = { active_border = { colors = colors, angle = THEME.border_angle }, inactive_border = "rgba(" .. THEME.inactive .. ")" },
         },
         decoration = {
