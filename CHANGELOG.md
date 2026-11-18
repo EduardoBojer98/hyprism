@@ -6,6 +6,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Actions: a command's program is checked as you type: one that isn't installed or on PATH shows under its field
+  (Command, Turn off with, A command succeeds) with what to do, or "Did you mean" the closest command for a typo,
+  instead of exit code 127 later. Save asks once more and then keeps it ("Save anyway").
 - Displays: a Main screen choice (notifications, volume and brightness messages, workspace 1 and the pointer
   start there; optionally the only screen with the menu bar), and a warning with Snap together when screens leave a
   gap the pointer can't cross (`displays.main`, `displays.barOnMainOnly`, `qs ipc call displays snap`).

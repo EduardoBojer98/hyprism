@@ -1,3 +1,4 @@
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -24,6 +25,64 @@ ColumnLayout {
     property string error: ""
     property string result: ""        // the Test button's report
     property bool showBuiltins: false
+
+    // ---- does the program exist? Checked as you type, so a typo shows here and not later as exit code 127 ----
+    // the first word of each command the form would run (a shell script's too, when it starts with a plain word)
+    function firstWord(line, shell) {
+        const w = shell ? (/^\s*([\w.\/+-]+)(\s|$)/.exec(line)?.[1] ?? "") : split(line)[0] ?? ""
+        return w.includes("=") ? "" : w   // VAR=value: an assignment, not a program
+    }
+    readonly property bool runsProgram: ["command", "terminal", "shell"].includes(draft.type)
+    readonly property string valueProgram: runsProgram ? firstWord(valueText, draft.type === "shell") : ""
+    readonly property string offProgram: runsProgram && draft.kind === "toggle" ? firstWord(offText, draft.type === "shell") : ""
+    readonly property string stateProgram: draft.kind === "toggle" && draft.stateType === "command" ? firstWord(stateText, false) : ""
+    readonly property var programs: [...new Set([valueProgram, offProgram, stateProgram].filter(w => w))]
+    function note(word) { return word ? missing.find(m => m.word === word)?.hint ?? "" : "" }
+    property string valueText: ""; property string offText: ""; property string stateText: ""; property string cwdText: ""
+    property var missing: []          // [{ word, hint }] for programs not found
+    property bool insist: false       // Save pressed once with a missing program: the next press saves anyway
+    onProgramsChanged: { insist = false; error = ""; checkLater.restart() }
+    onCwdTextChanged: checkLater.restart()
+    Timer { id: checkLater; interval: 350; onTriggered: { checker.running = false; if (page.programs.length) checker.running = true; else page.missing = [] } }
+    Process {
+        id: checker
+        // each missing word, then the commands on PATH that start with its letter (for "did you mean")
+        command: ["bash", "-c", 'c="${1/#\~/$HOME}"; shift; [ -n "$c" ] && cd -- "$c" 2>/dev/null; for w; do command -v -- "$w" >/dev/null 2>&1 && continue; printf "\\036%s\\n" "$w"; case $w in */*) ;; *) compgen -c -- "${w:0:1}" | sort -u ;; esac; done',
+                  "check", page.cwdText.trim()].concat(page.programs)
+        stdout: StdioCollector {
+            onStreamFinished: page.missing = text.split("\x1e").slice(1).map(part => {
+                const [word, ...names] = part.trim().split("\n")
+                const near = names.filter(n => n.length > 1).map(n => ({ n: n, d: page.distance(word, n) })).filter(x => x.d <= (word.length >= 8 ? 2 : 1)).sort((a, b) => a.d - b.d)[0]
+                const q = "\u201c" + word + "\u201d"
+                return { word: word,
+                         hint: word.includes("/") ? q + ": nothing to run there. Check the path, and that the file is executable"
+                             : near ? q + " isn't a command here. Did you mean \u201c" + near.n + "\u201d?"
+                             : q + " isn't installed, or isn't on your PATH. Install it (the package often has the same name) or check the name" }
+            })
+        }
+    }
+    // edits between two words, a swap of two neighbours counting as one (dokcer -> docker), for the closest command
+    function distance(a, b) {
+        const d = Array.from({ length: a.length + 1 }, (_, i) => [i])
+        for (let j = 1; j <= b.length; j++) d[0][j] = j
+        for (let i = 1; i <= a.length; i++)
+            for (let j = 1; j <= b.length; j++) {
+                d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
+                if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1)
+            }
+        return d[a.length][b.length]
+    }
+    // a program that isn't there: said right under its field, with what to do about it
+    component Note: RowLayout {
+        property string word
+        readonly property string hint: page.note(word)
+        visible: hint !== "" && page.editing !== -2
+        Layout.fillWidth: true
+        Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.bottomMargin: 10
+        spacing: Theme.spaceS
+        Text { Layout.alignment: Qt.AlignTop; text: "\u{F0028}"; color: Theme.red; font { family: Theme.iconFont; pixelSize: Theme.fontSize } }
+        Text { Layout.fillWidth: true; text: parent.hint; textFormat: Text.PlainText; wrapMode: Text.Wrap; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+    }
 
     Component.onCompleted: Actions.watch("all", true)
     Component.onDestruction: Actions.watch("all", false)
@@ -69,7 +128,7 @@ ColumnLayout {
         nameField.text = a.name ?? ""; iconField.text = a.icon ?? ""; descField.text = a.description ?? ""
         valueField.text = lineOf(a.run); cwdField.text = a.run?.cwd ?? ""; offField.text = lineOf(a.off)
         stateField.text = s.type === "unit" ? s.unit ?? "" : s.type === "process" ? s.name ?? "" : join(s.argv)
-        error = ""; result = ""; editing = i
+        error = ""; result = ""; insist = false; missing = []; editing = i
     }
     function set(key, value) { const d = Object.assign({}, draft); d[key] = value; draft = d }
     // the form as an action; `id` stays what it was (shortcuts and the launcher's history use it)
@@ -94,6 +153,11 @@ ColumnLayout {
         const a = build()
         error = Actions.problem(a)
         if (error) return
+        if (missing.length && !insist) {   // kept possible (a program installed later, a PATH only a login sets), but never by accident
+            error = missing.map(m => "\u201c" + m.word + "\u201d").join(" and ") + (missing.length > 1 ? " aren't" : " isn't") + " found. Save anyway keeps the action as it is"
+            insist = true
+            return
+        }
         const list = JSON.parse(JSON.stringify(mine))
         if (editing >= 0) list[editing] = a; else list.push(a)
         error = Config.set("actions", "list", list)
@@ -188,20 +252,22 @@ ColumnLayout {
         }
         SettingRow {
             label: page.valueLabels[page.types.indexOf(page.draft.type)] ?? "Command"
-            TextField { id: valueField; width: 360; placeholder: page.valueHints[page.types.indexOf(page.draft.type)] ?? "" }
+            TextField { id: valueField; width: 360; placeholder: page.valueHints[page.types.indexOf(page.draft.type)] ?? ""; onTextChanged: page.valueText = text; invalid: page.note(page.valueProgram) !== "" }
         }
+        Note { word: page.valueProgram }
         SettingRow {
             visible: ["command", "terminal", "shell"].includes(page.draft.type)
             label: "Run in folder"
             hint: "Optional; ~ means your home folder"
-            TextField { id: cwdField; width: 320; placeholder: "~" }
+            TextField { id: cwdField; width: 320; placeholder: "~"; onTextChanged: page.cwdText = text }
         }
         SettingRow {
             visible: page.draft.kind === "toggle"
             label: "Turn off with"
             hint: "Runs instead while it is on; empty runs the same as turning on"
-            TextField { id: offField; width: 360; placeholder: page.valueHints[page.types.indexOf(page.draft.type)] ?? "" }
+            TextField { id: offField; width: 360; placeholder: page.valueHints[page.types.indexOf(page.draft.type)] ?? ""; onTextChanged: page.offText = text; invalid: page.note(page.offProgram) !== "" }
         }
+        Note { word: page.offProgram }
         SettingRow {
             visible: page.draft.kind === "toggle"
             label: "It is on when"
@@ -214,9 +280,10 @@ ColumnLayout {
                     current: page.stateNames[page.stateTypes.indexOf(page.draft.stateType)] ?? page.stateNames[0]
                     onPicked: v => page.set("stateType", page.stateTypes[page.stateNames.indexOf(v)])
                 }
-                TextField { id: stateField; width: 180; placeholder: ({ process: "program name", unit: "name.service", "unit-system": "name.service", command: "command" })[page.draft.stateType] ?? "" }
+                TextField { id: stateField; width: 180; placeholder: ({ process: "program name", unit: "name.service", "unit-system": "name.service", command: "command" })[page.draft.stateType] ?? ""; onTextChanged: page.stateText = text; invalid: page.note(page.stateProgram) !== "" }
             }
         }
+        Note { word: page.stateProgram }
         SettingRow {
             label: "Ask before running"
             hint: "Always on for commands that delete, wipe or power off"
@@ -260,7 +327,7 @@ ColumnLayout {
                 spacing: Theme.spaceXs
                 PillButton { text: "Cancel"; onClicked: page.editing = -2 }
                 PillButton { text: "Test"; onClicked: page.test() }
-                PillButton { text: "Save"; primary: true; onClicked: page.save() }
+                PillButton { text: page.insist ? "Save anyway" : "Save"; primary: true; onClicked: page.save() }
             }
         }
     }

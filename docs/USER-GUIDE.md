@@ -33,7 +33,8 @@ every shortcut. The full key list is in the [README](../README.md#keys).
   - **Your actions**: buttons and toggles you make in Settings → Actions (a command, an app, a snippet to paste, a
     folder or link to open, a chain of actions). Show them in Spotlight, on a bar click or a hot corner, or give one
     a key in Keyboard Shortcuts → Your shortcuts. A failing action shows a notification; every run is logged in
-    `~/.local/state/hyprism/actions.log`.
+    `~/.local/state/hyprism/actions.log`. While you type a command, a program that isn't installed (or a typo,
+    with the closest name) shows under the field; Save then asks once more ("Save anyway").
 - **Control Center** (`Super+C`): Wi-Fi, Bluetooth, Focus, Night Light, Caffeine, sliders, power mode.
   Settings > Control Center starts from a layout (Classic, Essentials, Mixer, Grid, Minimal, or one you kept),
   then lets you drag sections and tiles; `qs ipc call controlcenter layout <name>` switches layout from a key.
