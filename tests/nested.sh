@@ -6,7 +6,10 @@
 #   tests/nested.sh shot NAME      screenshot of the test desktop -> prints the PNG's path
 #   tests/nested.sh ipc ARGS...    qs ipc call ARGS... in the test shell (e.g. ipc config set appearance theme atlas)
 #   tests/nested.sh hypr ARGS...   hyprctl ARGS... in the test session
-#   tests/nested.sh key NAMES...   press keys in the test desktop (xkb names: Tab, Next, Return…)
+#   tests/nested.sh key NAMES...   press keys in the test desktop (xkb names: Tab, Next, Return…); in Settings,
+#                                  Next / Prior (Page Down / Up) scroll the page
+#   tests/nested.sh scroll WHERE   scroll the open Settings page: top, bottom, +600 / -600 (pixels), or a group's
+#                                  title (scroll Advanced), so rows below the fold can be shot
 #   tests/nested.sh screens2       add a second screen like the laptop panel (1600x1000 logical at scale 1.2)
 #   tests/nested.sh errors         the test shell's warnings and errors (nothing printed = clean)
 #   tests/nested.sh stop           close the window and delete the throwaway home
@@ -62,6 +65,47 @@ park() {
     hyprctl dispatch "hl.dsp.window.move({ monitor = \"$SCREEN\", follow = false, window = \"address:$win\" })" >/dev/null || true
 }
 
+# The test screens' scales (1 for the window, 1.2 for screens2's panel) must survive a Hyprland reload and
+# apply_displays(): both re-apply modules/monitors.lua, whose rule for unsaved screens says scale = "auto", which
+# picks 2 for the window (the shell's first start writes settings files and reloads, so this happened often).
+# So the pins live in a hardware file of the throwaway home, which Hyprland runs last on every load, and it
+# wraps apply_displays(). A layout saved in Settings (DISPLAYS has the screen) still wins.
+pin() { # pin OUTPUT MODE POSITION SCALE: add a screen to the pinned list and apply it now
+    local f=$T/.config/hypr/hardware/hyprism-test.lua
+    echo "$1 $2 $3 $4" >>"$state/screens"
+    {
+        echo "-- written by tests/nested.sh: the test screens keep their scale through reloads"
+        echo "local screens = {"
+        while read -r o m p s; do echo "    { output = \"$o\", mode = \"$m\", position = \"$p\", scale = $s },"; done <"$state/screens"
+        echo "}"
+        cat <<'LUA'
+local function saved(name)
+    if DISPLAYS[name] then return true end
+    for _, m in ipairs(hl.get_monitors()) do
+        if m.name == name and m.description ~= "" and DISPLAYS[m.description] then return true end
+    end
+end
+local function pin() for _, s in ipairs(screens) do if not saved(s.output) then hl.monitor(s) end end end
+TEST_APPLY_DISPLAYS = TEST_APPLY_DISPLAYS or apply_displays -- once, though this file may be run again
+function apply_displays() TEST_APPLY_DISPLAYS(); pin() end
+pin()
+LUA
+    } >"$f"
+    grep -qx hyprism-test "$T/.config/hypr/hardware/index" 2>/dev/null || echo hyprism-test >>"$T/.config/hypr/hardware/index"
+    inside hyprctl eval "dofile(\"$f\")" >/dev/null
+}
+# every pinned screen at its scale (a layout saved in Settings excepted), or say which is not
+pins_hold() {
+    local now
+    now=$(inside hyprctl monitors -j)
+    while read -r o _ _ s; do
+        jq -e --arg o "$o" --argjson s "$s" '.[] | select(.name == $o) | .scale == $s' <<<"$now" >/dev/null || {
+            echo "$o is at scale $(jq -r --arg o "$o" '.[] | select(.name == $o) | .scale' <<<"$now"), pinned $s" >&2
+            return 1
+        }
+    done <"$state/screens"
+}
+
 case ${1:-} in
     start)
         [[ -n ${WAYLAND_DISPLAY:-} ]] || {
@@ -107,13 +151,23 @@ case ${1:-} in
         park
         sleep 4 # the shell needs a moment to draw
         # Hyprland's automatic scale picks 2 for the test window on some setups: pin 1 so pictures are comparable
-        first=$(inside hyprctl monitors -j | jq -r '.[0].name')
-        inside hyprctl eval "hl.monitor({ output = \"$first\", mode = \"preferred\", position = \"0x0\", scale = 1 })" >/dev/null || true
+        pin "$(inside hyprctl monitors -j | jq -r '.[0].name')" preferred 0x0 1
+        # the check: the pin must outlast a reload (what used to flip the window to scale 2)
+        inside hyprctl reload >/dev/null
+        sleep 1
+        pins_hold || echo "warning: the test screen lost its scale on reload (tests/nested.sh pin)" >&2
+        # a fresh home opens the first-run Welcome, which holds the keyboard (keys never reached Settings):
+        # closed here; `ipc welcome open` brings it back for a picture of it
+        inside qs ipc call welcome close >/dev/null 2>&1 || true
         echo "test session up: home $T, display $SOCK"
         ;;
     shot)
         need_running
         out=$T/${2:-shot}.png
+        pins_hold || { # never a zoomed picture: put the scale back first
+            inside hyprctl eval "dofile(\"$T/.config/hypr/hardware/hyprism-test.lua\")" >/dev/null
+            sleep 1
+        }
         inside grim "$out"
         echo "$out"
         ;;
@@ -132,13 +186,18 @@ case ${1:-} in
         shift
         for k in "$@"; do inside wtype -k "$k"; done # key names as in xkb: Tab, Next (Page Down), Return, Escape…
         ;;
+    scroll)
+        need_running
+        inside qs ipc call settings scroll "${2:?scroll top|bottom|+N|-N|GROUP TITLE}"
+        sleep 0.3 # a frame or two, so a shot right after shows it
+        ;;
     screens2)
         need_running
         # the window's own screen stays at 1.0 (an external monitor); a second, invisible screen plays the laptop
         # panel: 1920x1200 at 1.2 = 1600x1000 logical. `shot` captures both side by side.
         w=$(inside hyprctl monitors -j | jq -r '.[0].width')
         inside hyprctl output create headless TEST-2 >/dev/null
-        inside hyprctl eval "hl.monitor({ output = \"TEST-2\", mode = \"1920x1200@60\", position = \"${w}x0\", scale = 1.2 })" >/dev/null
+        pin TEST-2 1920x1200@60 "${w}x0" 1.2
         sleep 2
         inside hyprctl monitors -j | jq -r '.[] | "\(.name) \(.width)x\(.height) scale \(.scale) at \(.x),\(.y)"'
         ;;

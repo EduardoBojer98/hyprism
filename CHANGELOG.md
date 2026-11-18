@@ -27,6 +27,17 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   in the tile, ring the phone, send files (also as launcher actions), its notifications through the shell's own,
   clipboard sync and remote control switches, pairing and clear empty states with a one-click Install or Start.
   `kdeconnect` joins the apps package group; `qs ipc call phone ...`.
+- Keyboard Shortcuts: a From apps group lists the shortcuts apps ask for through the desktop portal (OBS,
+  Discord and the like, from `hyprctl globalshortcuts`) and gives each a key that works even when the app is in the
+  background (`keybinds.portal`).
+- Actions: a command's program is checked as you type: one that isn't installed or on PATH shows under its field
+  (Command, Turn off with, A command succeeds) with what to do, or "Did you mean" the closest command for a typo,
+  instead of exit code 127 later. Save asks once more and then keeps it ("Save anyway").
+- Displays: a Main screen choice (notifications, volume and brightness messages, workspace 1 and the pointer
+  start there; optionally the only screen with the menu bar), and a warning with Snap together when screens leave a
+  gap the pointer can't cross (`displays.main`, `displays.barOnMainOnly`, `qs ipc call displays snap`).
+- Settings: Page Up and Page Down scroll the page, wherever the keyboard focus is; `qs ipc call settings scroll`
+  takes top, bottom, +N/-N pixels or a group's title. The test desktop (`tests/nested.sh scroll`) uses it.
 - Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone
   until you type, Launchpad lays every app on the dimmed screen with no sheet (dark themes), Drawer opens on today at a
   glance with big card rows, Sidebar is a dense one-line list, Terminal has plain text rows with a kind column and no

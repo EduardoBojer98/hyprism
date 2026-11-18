@@ -69,7 +69,7 @@ end
 
 -- Options live under DISPLAYS._options (Settings > Displays > Advanced); each falls back to the old behaviour.
 local function option(key, default)
-    local o = type(DISPLAYS._options) == "table" and DISPLAYS._options[key]
+    local o = (type(DISPLAYS._options) == "table" and DISPLAYS._options or {})[key] -- a saved false stays false
     if o == nil then return default end
     return o
 end
@@ -85,7 +85,10 @@ function apply_displays()
                        position = ({ right = "auto-right", left = "auto-left", above = "auto-up", below = "auto-down" })[new] or "auto" }
     if new == "mirror" and HW.display.internal and HW.display.internal ~= "" then fallback.mirror = HW.display.internal end
     hl.monitor(fallback)
+    -- the main screen (Settings > Displays): the pointer starts there; workspace 1 too (below, at load)
+    local main = option("main", "")
     hl.config({
+        cursor = { default_monitor = main ~= "" and resolve(main) or "" },
         misc = { vrr = ({ off = 0, on = 1, fullscreen = 2 })[option("vrr", "off")] or 0 },
         -- Auto HDR switches an HDMI screen's colour space on fullscreen video, which can blank some screens
         -- for a few seconds; off keeps the signal the same in and out of fullscreen.
@@ -129,9 +132,16 @@ if WORKSPACES.mode == "fixed" then
         hl.workspace_rule(rule)
     end
 else
-    -- A laptop with another screen: the laptop starts on workspace 1 and the first other screen on 2.
-    -- (Screens plugged in later take the next free workspace by themselves.)
+    -- The main screen (Settings > Displays) starts on workspace 1 and the first other screen on 2; with none
+    -- chosen, a laptop with another screen: the laptop. (Screens plugged in later take the next free workspace.)
     local panel, others = HW.display.internal, HW.display.external or {}
+    local main = option("main", "")
+    if main ~= "" then
+        panel, others = resolve(main), {}
+        for _, m in ipairs(hl.get_monitors()) do
+            if m.name ~= panel then others[#others + 1] = m.name end
+        end
+    end
     if panel and panel ~= "" and others[1] then
         hl.workspace_rule({ workspace = "1", monitor = panel, default = true })
         hl.workspace_rule({ workspace = "2", monitor = others[1], default = true })

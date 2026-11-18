@@ -39,6 +39,11 @@ Singleton {
     function label(m) { return m.name.startsWith("eDP") ? "Laptop" : (m.make || m.name).split(" ")[0] }
     function monitorOf(key) { return monitors.find(m => m.key === key) ?? null }
     function load() { read.running = true }
+
+    // The main screen (Config.displays.main): notifications, the OSD and toasts show there, workspace 1 and the
+    // pointer start there. Unset or unplugged: popups follow the screen you are working on.
+    readonly property var mainScreen: Config.displays.main ? Quickshell.screens.find(s => matches(Config.displays.main, s)) ?? null : null
+    readonly property var popupScreen: mainScreen ?? Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
     Component.onCompleted: load()
 
     // A screen leaving or arriving: refresh Hyprland's list for the bar and dock, and ours for the editor
@@ -117,6 +122,59 @@ Singleton {
         return ""
     }
 
+    // Screens that don't touch leave a gap the pointer can't cross. "" when every shown screen joins the others
+    // edge to edge, else which screens are cut off (a warning: Apply still works, Snap together fixes it)
+    function rectOf(n) { const s = logicalSize(n); return { x: edits[n].x, y: edits[n].y, w: s.w, h: s.h } }
+    function touching(a, b) {
+        const across = a.y < b.y + b.h && b.y < a.y + a.h, along = a.x < b.x + b.w && b.x < a.x + a.w
+        return (across && (a.x + a.w === b.x || b.x + b.w === a.x)) || (along && (a.y + a.h === b.y || b.y + b.h === a.y))
+    }
+    function joined() {   // the screens reachable edge to edge from the main one (or the first)
+        const shown = Object.keys(edits).filter(n => !edits[n].disabled && !edits[n].mirror)
+        if (!shown.length) return { shown: shown, reach: [] }
+        const reach = [shown.includes(Config.displays.main) ? Config.displays.main : shown[0]]
+        for (let i = 0; i < reach.length; i++)
+            for (const n of shown) if (!reach.includes(n) && touching(rectOf(reach[i]), rectOf(n))) reach.push(n)
+        return { shown: shown, reach: reach }
+    }
+    function gap() {
+        const j = joined(), apart = j.shown.filter(n => !j.reach.includes(n))
+        if (!apart.length || problem()) return ""
+        const name = n => label(monitorOf(n) ?? { name: n })
+        if (j.shown.length === 2) return `${name(j.shown[0])} and ${name(j.shown[1])} don't touch: the pointer can't cross the gap`
+        return `${apart.map(name).join(" and ")} ${apart.length > 1 ? "don't" : "doesn't"} touch the other screens: the pointer can't cross the gap`
+    }
+    // move each cut-off screen to the nearest free edge of the joined ones, nearest first
+    function snapTogether() {
+        const j = joined(), reach = j.reach, e = Object.assign({}, edits)
+        let apart = j.shown.filter(n => !reach.includes(n))
+        const R = n => { const s = logicalSize(n); return { x: e[n].x, y: e[n].y, w: s.w, h: s.h } }
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
+        while (apart.length) {
+            let best = null
+            for (const n of apart) {
+                const o = R(n)
+                for (const c of reach.map(R)) {
+                    // keep at least a good stretch of shared edge, so the pointer crosses easily
+                    const ky = Math.min(200, o.h, c.h), kx = Math.min(200, o.w, c.w)
+                    const y = clamp(o.y, c.y - o.h + ky, c.y + c.h - ky), x = clamp(o.x, c.x - o.w + kx, c.x + c.w - kx)
+                    for (const p of [{ x: c.x + c.w, y: y }, { x: c.x - o.w, y: y }, { x: x, y: c.y + c.h }, { x: x, y: c.y - o.h }]) {
+                        const r = { x: p.x, y: p.y, w: o.w, h: o.h }
+                        if (reach.some(m => { const q = R(m); return r.x < q.x + q.w && q.x < r.x + r.w && r.y < q.y + q.h && q.y < r.y + r.h })) continue
+                        const d = Math.hypot(p.x - o.x, p.y - o.y)
+                        if (!best || d < best.d) best = { n: n, p: p, d: d }
+                    }
+                }
+            }
+            if (!best) break
+            e[best.n] = Object.assign({}, e[best.n], { x: best.p.x, y: best.p.y })
+            reach.push(best.n)
+            apart = apart.filter(n => n !== best.n)
+        }
+        edits = e
+        dirty = true
+    }
+
     // edits -> the saved shape (what settings.json and displays.lua hold)
     function layoutOf(e) {
         // Normalise so the top-left screen sits at 0,0
@@ -156,8 +214,8 @@ Singleton {
     }
     function arrange(how) {
         const names = Object.keys(edits), e = {}
-        // the picture to mirror or the screen kept on: the laptop panel when there is one, else the first screen
-        const main = names.find(isInternal) ?? names[0]
+        // the picture to mirror or the screen kept on: the main screen, else the laptop panel, else the first screen
+        const main = names.includes(Config.displays.main) ? Config.displays.main : names.find(isInternal) ?? names[0]
         let x = 0
         for (const n of names.slice().sort((a, b) => (a === main ? -1 : b === main ? 1 : 0))) {
             if (how === "external" && isInternal(n) && names.length > 1) { e[n] = Object.assign({}, edits[n], { disabled: true, mirror: "" }); continue }
@@ -308,7 +366,7 @@ Singleton {
         return b ? applyMode(b.how) : "No preset " + what
     }
 
-    // `qs ipc call displays preset <id|name>` · `mode extend|mirror|only:<screen>` · `list` · `identify`
+    // `qs ipc call displays preset <id|name>` · `mode extend|mirror|only:<screen>` · `list` · `identify` · `snap`
     IpcHandler {
         target: "displays"
         function preset(what: string): string { return root.run(what) || "ok" }
@@ -318,11 +376,13 @@ Singleton {
             return root.applyMode(m ? "only:" + m.key : how) || "ok"
         }
         function identify(): void { root.identify() }
+        function snap(): string { root.snapTogether(); return root.gap() || "ok" }   // edits only: Apply to use them
         function switcher(): void { root.switcherOpen = !root.switcherOpen }
         function save(name: string): string { return root.saveCurrent(name) || "ok" }
         function list(): string {
             return JSON.stringify({
-                screens: root.monitors.map(m => ({ key: m.key, name: m.name, label: root.label(m), mode: root.edits[m.key]?.mode, on: !root.edits[m.key]?.disabled })),
+                screens: root.monitors.map(m => ({ key: m.key, name: m.name, label: root.label(m), mode: root.edits[m.key]?.mode, x: root.edits[m.key]?.x, y: root.edits[m.key]?.y, on: !root.edits[m.key]?.disabled })),
+                gap: root.gap(),
                 arrangement: root.arrangement,
                 presets: root.builtInPresets.map(p => ({ id: p.id, name: p.name, builtin: true, available: true }))
                     .concat(root.presets.map(p => ({ id: p.id, name: p.name, builtin: false, available: root.available(p), auto: p.auto, default: p.id === root.defaultPreset })))

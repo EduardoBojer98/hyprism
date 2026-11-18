@@ -50,7 +50,7 @@ Scope {
     function displaysTable(d) {
         return SettingsApp.lua(Object.assign({}, d.layout, { _options: {
             autoHdr: d.autoHdr, sendContentType: d.sendContentType, xwaylandNativeScale: d.xwaylandNativeScale,
-            vrr: d.vrr, preferHighRefresh: d.preferHighRefresh, newScreen: d.newScreen } }))
+            vrr: d.vrr, preferHighRefresh: d.preferHighRefresh, newScreen: d.newScreen, main: d.main } }))
     }
     function shareText(s) {
         return "# Written by Quickshell from Settings > Shared Monitor (settings.json monitorShare). Read by ~/.local/bin/monswitch.\n"

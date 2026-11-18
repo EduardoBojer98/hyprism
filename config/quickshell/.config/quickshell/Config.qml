@@ -75,7 +75,7 @@ Singleton {
         phone: { enabled: "bool", device: "string" },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", sliders: "list", toggles: "list", folded: "list", hidden: "list", layouts: "object" },
-        keybinds: { overrides: "object", custom: "shortcuts" },
+        keybinds: { overrides: "object", custom: "shortcuts", portal: "portalShortcuts" },
         actions: { list: "actions" },
         lockscreen: { clock: ["theme", "big", "stacked", "terminal", "readout", "small"], position: ["theme", "center", "top", "bottom", "left"],
                       date: "bool", greeting: "bool", avatar: "string", widgets: "list", wallpaper: "string",
@@ -111,7 +111,7 @@ Singleton {
                  scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", imported: "bool" },
         displays: { layout: "displays", autoHdr: "bool", sendContentType: "bool", xwaylandNativeScale: "bool",
                     vrr: ["off", "on", "fullscreen"], preferHighRefresh: "bool", presets: "presets", defaultPreset: "string",
-                    newScreen: ["right", "left", "above", "below", "mirror"], imported: "bool" },
+                    newScreen: ["right", "left", "above", "below", "mirror"], main: "string", barOnMainOnly: "bool", imported: "bool" },
         workspaces: { mode: ["dynamic", "fixed"], count: [1, 10], screens: "displays" },
         apps: { terminal: "command" },
         monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", imported: "bool" }
@@ -148,6 +148,9 @@ Singleton {
             && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[a-z0-9][a-z0-9-]*$/.test(c?.action ?? "")) ? "" : "Shortcuts need keys and an action id"
         if (rule === "focusModes") return value && typeof value.length === "number" && value.length <= 20
             && Array.from(value).every((m, i, all) => focusModeOk(m) && all.findIndex(o => o.id === m.id) === i) ? "" : "Up to 20 modes, each with an id and a name"
+        // a portal shortcut's name ("appid:id", from hyprctl globalshortcuts) goes into keybinds.lua too: no quotes or backslashes
+        if (rule === "portalShortcuts") return value && typeof value.length === "number" && value.length <= 100
+            && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[A-Za-z0-9._:+@ -]{3,160}$/.test(c?.name ?? "") && c.name.includes(":")) ? "" : "Shortcuts need keys and an app's shortcut name"
         if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(displayKeyOk) ? "" : "Unknown display names"
         if (rule === "presets") return value && typeof value.length === "number" && value.length <= 20
             && Array.from(value).every(p => /^[a-z0-9-]{1,40}$/.test(p?.id ?? "") && typeof p.name === "string" && p.name.length > 0 && p.name.length <= 40

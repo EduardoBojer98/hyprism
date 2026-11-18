@@ -55,6 +55,26 @@ ColumnLayout {
                 onPicked: i => Displays.arrange(keys[i])
             }
         }
+        SettingRow {
+            label: "Main screen"
+            hint: Config.displays.main && !Displays.mainScreen ? "Not connected now: notifications follow the screen you work on until it's back"
+                : "Notifications and volume or brightness messages show here; workspace 1 and the pointer start here at login"
+            Dropdown {
+                width: 200
+                readonly property var keys: [""].concat(page.monitors.map(m => m.key))
+                readonly property var names: ["Where I'm working"].concat(page.monitors.map(m => Displays.numberOf(m.name) + " \u00b7 " + Displays.label(m)))
+                options: names
+                accessibleName: "Main screen"
+                current: keys.includes(Config.displays.main) ? names[keys.indexOf(Config.displays.main)] : "A screen not connected"
+                onPicked: v => Config.set("displays", "main", keys[names.indexOf(v)])
+            }
+        }
+        SettingRow {
+            visible: Config.displays.main !== ""
+            label: "Menu bar only on the main screen"
+            hint: "The other screens get the whole height"
+            ConfigToggle { section: "displays"; key: "barOnMainOnly" }
+        }
     }
 
     SettingsPageDisplaysPresets {}
@@ -133,6 +153,24 @@ ColumnLayout {
             color: Theme.subtext
             font { family: Theme.font; pixelSize: Theme.fontCaption }
         }
+    }
+
+    // a gap between screens is a warning, not a refusal (Apply still works): say it under the drawing, offer to close it
+    RowLayout {
+        readonly property string gap: { page.edits; return Displays.gap() }
+        visible: gap !== ""
+        Layout.fillWidth: true
+        Layout.topMargin: -8
+        spacing: Theme.spaceS
+        Text { text: "\u{F0026}"; color: Theme.yellow; font { family: Theme.iconFont; pixelSize: Theme.fontSize } }
+        Text {
+            Layout.fillWidth: true
+            text: parent.gap
+            wrapMode: Text.Wrap
+            color: Theme.text
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
+        }
+        PillButton { text: "Snap together"; onClicked: Displays.snapTogether() }
     }
 
     // ---- selected screen ---------------------------------------------------------------------

@@ -104,6 +104,24 @@ Singleton {
         function open(section: string): void { root.show(section) }
         function toggle(): void { root.open = !root.open }
         function close(): void { root.open = false }
+        // scroll the page: "top", "bottom", "+600"/"-600" (pixels), or a group's title ("Advanced")
+        function scroll(where: string): string { return root.scrollPage(where) }
+    }
+    function scrollPage(where) {
+        const max = Math.max(0, page.contentHeight - page.height)
+        let y = where === "top" ? 0 : where === "bottom" ? max : /^[+-]\d+$/.test(where) ? page.contentY + Number(where) : -1
+        if (y < 0) {   // a group by its title: the first SettingGroup on the page with that title (any case)
+            const find = item => {
+                if (item.title !== undefined && item.rows !== undefined && String(item.title).toLowerCase() === where.toLowerCase()) return item
+                for (const c of item.children) { const f = find(c); if (f) return f }
+                return null
+            }
+            const g = pageLoader.item ? find(pageLoader.item) : null
+            if (!g) return "no group \"" + where + "\" on " + root.pageId
+            y = g.mapToItem(page.contentItem, 0, 0).y - win.pad
+        }
+        page.contentY = Math.max(0, Math.min(y, max))
+        return "scrolled to " + Math.round(page.contentY) + " of " + Math.round(max)
     }
 
     // Lua table literal from a plain JS object (strings, numbers, booleans, nested objects)
@@ -340,6 +358,9 @@ Singleton {
                 QQC.ScrollBar.horizontal: GlassScrollBar {}
 
                 Connections { target: root; function onPageIdChanged() { page.contentY = 0; page.contentX = 0 } }
+                // Page Up / Page Down scroll the page wherever the keyboard focus is (the Flickable has no keys of its own)
+                Shortcut { sequence: "PgDown"; context: Qt.WindowShortcut; onActivated: root.scrollPage("+" + Math.round(page.height * 0.85)) }
+                Shortcut { sequence: "PgUp"; context: Qt.WindowShortcut; onActivated: root.scrollPage("-" + Math.round(page.height * 0.85)) }
 
                 ColumnLayout {
                     id: pageColumn

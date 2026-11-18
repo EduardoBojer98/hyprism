@@ -241,7 +241,7 @@ Singleton {
 
     // Banners
     PanelWindow {
-        screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
+        screen: Displays.popupScreen   // the main screen (Settings > Displays), else the one you work on
         // the corner (or edge centre) from Settings or the theme, kept clear of the bar
         readonly property string place: root.corner
         readonly property bool atBottom: place.startsWith("bottom")

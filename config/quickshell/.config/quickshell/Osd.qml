@@ -34,7 +34,7 @@ PanelWindow {
 
     Timer { running: true; interval: 2500; onTriggered: osd.armed = true }
 
-    screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
+    screen: Displays.popupScreen   // the main screen (Settings > Displays), else the one you work on
     anchors.bottom: pos === "bottom"
     anchors.top: pos === "top"
     // above a bottom bar and the dock (a hiding one too, it shows when the pointer is down there)
