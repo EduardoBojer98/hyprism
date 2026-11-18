@@ -9,10 +9,13 @@ Column {
     visible: Launcher.view === "home" && !Launcher.confirmFor
     anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
     spacing: Theme.spaceS
+    readonly property bool listy: Launcher.rows === "text" || Launcher.rows === "compact"   // frequent apps as rows, not icons
+    function has(h) { return Launcher.homeSections.includes(h) }
 
     // weather, the next calendar event and the last thing copied
     Row {
         id: glance
+        visible: home.has("glance")
         width: parent.width
         spacing: Theme.spaceS
         readonly property var clip: Clipboard.entries.find(e => !e.pinned) ?? null
@@ -51,10 +54,15 @@ Column {
         }
     }
 
-    LauncherHomeLabel { text: "Frequently used" }
+    LauncherHomeLabel { visible: home.has("frequent"); text: "Frequently used" }
+    Repeater {
+        model: Launcher.open && home.has("frequent") && home.listy ? Search.frequentApps : []
+        LauncherHomeRow { required property var modelData; required property int index; item: modelData; at: Launcher.homeOffset("frequent") + index }
+    }
     // a centred row of up to 8 (two rows in a narrow panel); a few apps get wider cells instead of a gap at the end
     Grid {
         id: freq
+        visible: home.has("frequent") && !home.listy
         readonly property int fits: Math.max(3, Math.min(8, Math.floor(home.width / 80)))
         // more than fit: rows of even length (4 + 4, not 7 + 1)
         readonly property int perRow: Math.max(1, Math.ceil(Search.frequentApps.length / Math.max(1, Math.ceil(Search.frequentApps.length / fits))))
@@ -63,7 +71,7 @@ Column {
         columns: perRow
         z: 1   // name tooltips over the labels below
         Repeater {
-            model: Launcher.open ? Search.frequentApps : []
+            model: Launcher.open && freq.visible ? Search.frequentApps : []
             Item {
                 id: app
                 required property var modelData
@@ -99,15 +107,16 @@ Column {
         }
     }
 
-    LauncherHomeLabel { visible: Search.recentItems.length > 0; text: "Recent" }
+    LauncherHomeLabel { visible: home.has("recent") && Search.recentItems.length > 0; text: "Recent" }
     Repeater {
-        model: Launcher.open ? Search.recentItems : []
-        LauncherHomeRow { required property var modelData; required property int index; item: modelData; at: Search.frequentApps.length + index }
+        model: Launcher.open && home.has("recent") ? Search.recentItems : []
+        LauncherHomeRow { required property var modelData; required property int index; item: modelData; at: Launcher.homeOffset("recent") + index }
     }
 
-    LauncherHomeLabel { text: "Quick actions" }
+    LauncherHomeLabel { visible: home.has("quick"); text: "Quick actions" }
     Grid {
         id: quick
+        visible: home.has("quick")
         width: parent.width
         columns: Math.max(1, Math.min(3, Math.floor(home.width / 200)))
         columnSpacing: Theme.spaceXs
@@ -119,7 +128,7 @@ Column {
                 required property int index
                 width: (home.width - Theme.spaceXs * (quick.columns - 1)) / quick.columns
                 item: modelData
-                at: Search.frequentApps.length + Search.recentItems.length + index
+                at: Launcher.homeOffset("quick") + index
             }
         }
     }

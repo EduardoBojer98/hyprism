@@ -116,8 +116,11 @@ quarter, or to the top edge to maximise it, as on Windows or GNOME: an outline s
 let go (Windows → Snap to screen edges). Chrome works the same, dragged by its tab strip or by a tab. A maximised
 window keeps the gap at the screen edges. To have every new window open floating instead of tiled, use the Control
 Center's Floating tile, add the Floating windows item to the menu bar, or Windows → Open new windows floating.
-Spotlight opens at the mouse pointer by default (Settings → Search & Launcher → Open); choose the theme's place to
-get strips and edges back. Settings → Default Apps picks the default terminal.
+Spotlight opens in the middle of the screen by default (Settings → Search & Launcher → Open); choose "Style's place"
+to get strips and edges back. Its styles each work differently: Spotlight (the macOS bar, results once you type),
+Launchpad (every app as big icons on the dimmed screen), Drawer (today at a glance, big rows), Sidebar (a dense
+one-line list), Terminal (plain text rows, no icons). Adjust sets size, row look, corners, the dim behind it, key
+hints and how many results; Suggestions picks what shows before you type. Settings → Default Apps picks the default terminal.
 
 ## Settings
 

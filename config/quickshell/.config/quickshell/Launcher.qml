@@ -22,22 +22,28 @@ Singleton {
     // dim, fill (the panel's share of the free height; 0 = as tall as its content), icon (apps grid),
     // mono (rows and typing in the mono face). Config.launcher.style names one, or "theme". A theme's block adds
     // labels (plain | rule: section headings as a ruled line). Apps per row is yours (Config.launcher.columns).
+    // Each style is its own way of working, not only a place: `rows` (standard | compact: one line, small icons |
+    // cards: tall rows, big icons | text: no icons, a kind column), `home` (the suggestions it shows: glance,
+    // frequent, recent, quick) and `bare` (Launchpad: icons straight on the dimmed screen, no sheet; dark themes).
     readonly property var styles: ({
-        spotlight: { name: "Spotlight", about: "A floating search pill with round buttons beside it, suggestions below",
-                     placement: "center", view: "home", header: "none", width: 640, select: "wash", prompt: "",
-                     split: true, corners: "round", field: 54, dim: 0.14 },
-        launchpad: { name: "Launchpad", about: "A big sheet over a dark screen that opens on every app",
+        spotlight: { name: "Spotlight", about: "Like macOS: one search bar, results only once you type",
+                     placement: "center", view: "inline", header: "none", width: 680, select: "wash", prompt: "",
+                     split: true, corners: "round", field: 56, dim: 0, rows: "standard", home: ["frequent", "recent"] },
+        launchpad: { name: "Launchpad", about: "Every app as big icons over the whole dimmed screen",
                      placement: "fullscreen", view: "grid", header: "query", width: 1180, select: "wash", prompt: "",
-                     split: false, corners: "round", field: 72, dim: 0.55, fill: 0.86, icon: 60 },
-        drawer:    { name: "Drawer", about: "Rises from the bottom like a phone's app drawer, apps first",
-                     placement: "island", view: "grid", header: "none", width: 720, select: "wash", prompt: "",
-                     split: false, corners: "round", field: 50, dim: 0.22, fill: 0.78 },
-        sidebar:   { name: "Sidebar", about: "A full-height column on the left edge, everything as a list",
-                     placement: "column", view: "home", header: "none", width: 440, select: "inverse", prompt: "",
-                     split: false, corners: "sharp", field: 52, dim: 0.2, fill: 1 },
-        terminal:  { name: "Terminal", about: "A square prompt in the mono face, a solid block on the selection",
+                     split: true, bare: true, corners: "round", field: 60, dim: 0.62, fill: 0.86, icon: 68, rows: "cards",
+                     home: ["frequent", "recent", "quick"] },
+        drawer:    { name: "Drawer", about: "A sheet from the bottom: today at a glance, big rows",
+                     placement: "island", view: "home", header: "none", width: 760, select: "wash", prompt: "",
+                     split: false, corners: "round", field: 52, dim: 0.22, fill: 0.78, rows: "cards",
+                     home: ["glance", "frequent", "recent", "quick"] },
+        sidebar:   { name: "Sidebar", about: "A full-height column on the left, a dense one-line list",
+                     placement: "column", view: "home", header: "none", width: 420, select: "inverse", prompt: "",
+                     split: false, corners: "sharp", field: 50, dim: 0.2, fill: 1, rows: "compact",
+                     home: ["recent", "quick", "frequent"] },
+        terminal:  { name: "Terminal", about: "Keyboard first: a prompt, plain text rows, no icons",
                      placement: "center", view: "inline", header: "query", width: 720, select: "inverse", prompt: "❯",
-                     split: false, corners: "sharp", field: 60, dim: 0.24, mono: true },
+                     split: false, corners: "sharp", field: 60, dim: 0.24, mono: true, rows: "text", home: ["recent", "quick"] },
     })
     readonly property var styleIds: Object.keys(styles)
     readonly property var preset: styles[Config.launcher.style] ?? null
@@ -50,22 +56,36 @@ Singleton {
     // "center" (the default): every style floats in the middle of the screen under the pointer; "pointer": around
     // the mouse pointer, kept on its screen; "theme": the style's own place (strips and edges included)
     readonly property bool pointer: Config.launcher.position !== "theme"
+    // your adjustments over the style (Settings > Search & Launcher > Adjust)
+    readonly property real size: (Config.launcher.size || 100) / 100
+    readonly property string rows: Config.launcher.rows !== "style" ? Config.launcher.rows : rl.rows ?? (rl.prompt ? "text" : "standard")
+    readonly property bool bare: (preset?.bare ?? false) && !Theme.light   // icons on the dimmed screen need a dark one
+    readonly property var homeSections: (rl.home ?? ["glance", "frequent", "recent", "quick"]).filter(h => Config.launcher.home.includes(h))
+    readonly property var homeParts: ({ frequent: Search.frequentApps, recent: Search.recentItems, quick: Search.quickActions })
+    // where a home section starts in keyboard order (sections in the order the home view draws them)
+    function homeOffset(h) {
+        let n = 0
+        for (const k of ["frequent", "recent", "quick"]) { if (k === h) return n; if (homeSections.includes(k)) n += homeParts[k].length }
+        return n
+    }
     property bool fromClick: false   // opened by clicking a bar item: then it stays beside that item
     readonly property var look: Object.assign({}, Config.launcher, {
         placement: Config.launcher.position === "center" ? "center" : pointer ? "cursor" : rl.placement,
         style: preset ? (preset.split ? "split" : "unified") : Theme.glassy && rl.placement === "center" ? "split" : "unified",
-        width: pointer ? Math.min(rl.width > 0 ? rl.width : 680, 900, screenW - Theme.spaceL * 2) : rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
+        width: pointer ? Math.min((rl.width > 0 ? rl.width : 680) * size, 1100, screenW - Theme.spaceL * 2) : rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
              : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
-             : rl.placement === "fullscreen" ? Math.min(rl.width, screenW - 80)
-             : Math.min(rl.width, screenW - Theme.spaceL * 2),
-        field: preset?.field ?? (rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5)),
-        corners: preset && preset.corners !== "theme" ? preset.corners : Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
+             : rl.placement === "fullscreen" ? Math.min(rl.width * size, screenW - 80)
+             : Math.min(rl.width * size, screenW - Theme.spaceL * 2),
+        field: Math.round((preset?.field ?? (rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5))) * Math.sqrt(size)),
+        corners: Config.launcher.corners !== "style" ? Config.launcher.corners
+               : preset && preset.corners !== "theme" ? preset.corners : Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
         selection: "accent",
         // a light dim behind it, never a blur (Hyprland skips blur under see-through layers, rules.lua)
-        dim: pointer ? 0.12 : preset?.dim ?? ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18,
+        dim: Config.launcher.dim !== "style" ? ({ none: 0, light: 0.15, dark: 0.45 })[Config.launcher.dim] ?? 0.15
+           : preset?.dim ?? (pointer ? 0.12 : ({ fullscreen: 0.35, half: 0.25, column: 0.2, strip: 0.12, corner: 0, island: 0 })[rl.placement] ?? 0.18),
         fill: pointer ? Math.min(preset?.fill ?? 0, 0.6) : preset?.fill ?? 0,
         columns: Config.launcher.columns,
-        icon: preset?.icon ?? Theme.iconApp,
+        icon: Math.round((preset?.icon ?? Theme.iconApp) * Math.sqrt(size)),
         startView: rl.view === "grid" || rl.view === "start" ? "apps" : rl.view === "inline" ? "search" : "home"
     })
     readonly property bool unified: look.style === "unified"
@@ -99,7 +119,7 @@ Singleton {
     readonly property string startView: Config.launcher.startView === "theme" ? look.startView : Config.launcher.startView
     readonly property string view: mode === "search" && Search.query.trim() === "" && startView !== "search" ? startView : mode
     // home view, in keyboard order: frequent apps, then recent items, then quick actions
-    readonly property var homeItems: Search.frequentApps.concat(Search.recentItems, Search.quickActions)
+    readonly property var homeItems: ["frequent", "recent", "quick"].filter(h => homeSections.includes(h)).reduce((all, h) => all.concat(homeParts[h]), [])
     property int homeIndex: 0
     property string category: "All"
     property bool open: popup.open
@@ -171,7 +191,7 @@ Singleton {
     readonly property var listModel: {
         if (mode === "files") return Search.fileResults(Search.query.trim().toLowerCase())
         if (mode === "actions") return Search.actionList(Search.query.trim())
-        return Search.results.slice(0, 40)
+        return Search.results.slice(0, Config.launcher.maxResults)
     }
 
     function activate(r) {

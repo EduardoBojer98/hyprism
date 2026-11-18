@@ -48,12 +48,21 @@ JsonAdapter {
         // look (Search & Launcher > Style)
         property string style: "theme"          // theme (the theme's own) | spotlight | launchpad | drawer | sidebar | terminal (Launcher.qml styles)
         property int columns: 7                 // apps per row in the apps grid (fewer when the panel is too narrow)
-        property string startView: "home"       // home (suggestions until you type, every theme) | apps (grid) | search (empty field) | theme (the style's own)
+        property string startView: "theme"      // theme (the style's own) | home (suggestions until you type) | apps (grid) | search (empty field)
         property list<string> recent: []        // result keys, most recent first, for the home view
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
         property bool clipboardInside: true     // Spotlight's clipboard button shows history in the panel
         property string position: "center"      // center (middle of the screen) | pointer (around the mouse pointer) | theme (the theme's own place)
+        // your adjustments over the style (Search & Launcher > Adjust); "style" = what the style does
+        property int size: 100                  // percent of the style's width, search height and icons (80..130)
+        property string rows: "style"           // style | standard | compact (one line) | cards (tall, big icons) | text (no icons)
+        property list<string> home: ["glance", "frequent", "recent", "quick"]   // suggestions allowed: glance (weather, next event, last copy), frequent, recent, quick (actions)
+        property string dim: "style"            // style | none | light | dark: the screen behind it
+        property string corners: "style"        // style | sharp | soft | round
+        property bool hints: true               // the key hints under the results
+        property bool subtitles: true           // the second line under a result (path, description)
+        property int maxResults: 40             // results listed at most (10..80)
     }
     property JsonObject clipboard: JsonObject {
         property int maxItems: 300

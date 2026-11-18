@@ -10,8 +10,8 @@ Glass {
     property alias clipView: clipView
     strong: true
     flat: Launcher.unified
-    color: Launcher.unified ? "transparent" : Launcher.surface
-    border.width: Launcher.unified ? 0 : 1
+    color: Launcher.unified || Launcher.bare ? "transparent" : Launcher.surface
+    border.width: Launcher.unified || Launcher.bare ? 0 : 1
     radius: Launcher.corner
     visible: Launcher.view !== "search" || Launcher.field.text.trim() !== ""
     // as tall as its content, never past the dock (the home view scrolls then); a style with `fill` keeps one height
@@ -75,7 +75,7 @@ Glass {
             z: 1
             flick: modelData
             opacity: modelData.visible ? 1 : 0   // only over the view on show (MoreBelow's own visible: more to scroll)
-            ground: Launcher.surface
+            ground: Launcher.bare ? "transparent" : Launcher.surface
             anchors { left: parent.left; right: parent.right; bottom: keys.top; leftMargin: 1; rightMargin: 1 }
         }
     }
@@ -84,7 +84,8 @@ Glass {
     Item {
         id: keys
         anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-        height: 34
+        visible: Config.launcher.hints
+        height: visible ? 34 : 0
         Rectangle {   // a hairline over the hints, so they read as the panel's footer
             anchors { top: parent.top; left: parent.left; right: parent.right; leftMargin: Theme.spaceM; rightMargin: Theme.spaceM }
             height: 1

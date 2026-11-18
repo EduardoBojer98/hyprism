@@ -6,6 +6,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone
+  until you type, Launchpad lays every app on the dimmed screen with no sheet (dark themes), Drawer opens on today at a
+  glance with big card rows, Sidebar is a dense one-line list, Terminal has plain text rows with a kind column and no
+  icons. The style gallery draws each one that way. New Adjust settings: size (80-130 %), rows (standard, compact,
+  cards, text), the screen behind it, corners, second lines, key hints and results at most; Suggestions chooses
+  glance, frequent apps, recent and quick actions. "Before you type" now follows the style by default.
 - Control Center: a gallery of layouts in Settings > Control Center (Classic, Essentials, Mixer, Grid, Minimal),
   each drawn from its own sections, tiles and style; pick one, then edit it below. Keep an arrangement under a
   name (`controlCenter.layouts`); switching away from one you never kept saves it as "Previous" first. The panel

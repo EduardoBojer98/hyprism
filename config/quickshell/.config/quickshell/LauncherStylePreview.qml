@@ -19,6 +19,12 @@ Item {
     readonly property real r: corners === "sharp" ? 0 : 4 * s
     readonly property bool grid: spec.view === "grid" || spec.view === "start"
     readonly property bool inverse: (spec.select ?? "wash") === "inverse"
+    // what makes each style itself: Spotlight is the bar alone until you type, Launchpad has no sheet,
+    // and the rows are drawn the style's way (compact lines, tall cards, text with a kind column)
+    readonly property bool barOnly: spec.view === "inline" && split
+    readonly property bool bare: (spec.bare ?? false) && !Theme.light
+    readonly property string rows: spec.rows ?? ((spec.prompt ?? "") !== "" ? "text" : "standard")
+    readonly property bool glance: spec.view === "home" && (spec.home ?? []).includes("glance")
 
     implicitHeight: shot.height + text.implicitHeight + Theme.spaceS
 
@@ -58,12 +64,12 @@ Item {
                 island: [sw * 0.24, sh * 0.4, sw * 0.52, sh * 0.54],
                 corner: [sw * 0.03, sh * 0.38, sw * 0.4, sh * 0.56],
             })[card.spec.placement] ?? [sw * 0.24, sh * 0.2, sw * 0.52, sh * 0.56]
-            x: at[0]; y: at[1]; width: at[2]; height: at[3]
-            readonly property real fh: Math.max(10 * card.s, height * (card.spec.placement === "fullscreen" ? 0.17 : 0.2))
+            x: at[0]; y: at[1]; width: at[2]; height: card.barOnly ? fh : at[3]
+            readonly property real fh: Math.max(10 * card.s, at[3] * (card.spec.placement === "fullscreen" ? 0.17 : card.barOnly ? 0.26 : 0.2))
             readonly property real gap: card.split ? 3 * card.s : 0
 
             Rectangle {   // one card behind everything (unified)
-                visible: !card.split
+                visible: !card.split && !card.bare
                 anchors.fill: parent
                 radius: card.r
                 color: Theme.glassStrong
@@ -116,13 +122,26 @@ Item {
 
             Rectangle {   // the results panel
                 id: body
+                visible: !card.barOnly
                 y: box.fh + box.gap
                 width: parent.width
                 height: parent.height - y
                 radius: card.r
-                color: card.split ? Theme.glassStrong : "transparent"
-                border { width: card.split ? 1 : 0; color: Theme.stroke }
+                color: card.split && !card.bare ? Theme.glassStrong : "transparent"
+                border { width: card.split && !card.bare ? 1 : 0; color: Theme.stroke }
                 readonly property real pad: 4 * card.s
+                readonly property real listTop: pad + (card.glance ? 13 * card.s : 0)
+
+                Row {   // today at a glance: three small tiles
+                    visible: card.glance
+                    x: body.pad; y: body.pad
+                    spacing: 2 * card.s
+                    Repeater {
+                        model: 3
+                        Rectangle { width: (body.width - body.pad * 2 - 4 * card.s) / 3; height: 10 * card.s; radius: card.r / 2; color: Theme.fill
+                                    Rectangle { x: 2 * card.s; anchors.verticalCenter: parent.verticalCenter; width: 3 * card.s; height: width; radius: width / 2; color: Theme.subtext; opacity: 0.6 } }
+                    }
+                }
 
                 Grid {   // apps first: a grid of icons, the first one selected
                     visible: card.grid
@@ -152,15 +171,18 @@ Item {
                     }
                 }
                 Column {   // a list: the selected row, then a few more
+                    id: list
                     visible: !card.grid
-                    x: body.pad; y: body.pad
+                    x: body.pad; y: body.listTop
                     width: body.width - body.pad * 2
-                    spacing: 2 * card.s
+                    spacing: (card.rows === "cards" ? 2.5 : card.rows === "compact" ? 1 : 2) * card.s
+                    readonly property real rowH: (card.rows === "cards" ? 12 : card.rows === "compact" ? 5 : 7) * card.s
+                    readonly property real icon: (card.rows === "cards" ? 8 : card.rows === "compact" ? 3 : card.rows === "text" ? 0 : 4) * card.s
                     Repeater {
-                        model: Math.max(0, Math.min(6, Math.floor((body.height - body.pad * 2) / (9 * card.s))))
+                        model: Math.max(0, Math.min(card.rows === "compact" ? 10 : 6, Math.floor((body.height - body.listTop - body.pad) / (list.rowH + list.spacing))))
                         Rectangle {
                             required property int index
-                            width: parent.width; height: 7 * card.s
+                            width: parent.width; height: list.rowH
                             radius: card.r / 2
                             color: index === 0 ? (card.inverse ? Theme.accent : Theme.accentWash) : "transparent"
                             Rectangle {   // the accent tick of a soft selection
@@ -169,14 +191,23 @@ Item {
                                 width: Math.max(1, card.s); height: parent.height * 0.5
                                 color: Theme.accent
                             }
-                            Rectangle {
+                            Rectangle {   // the icon (a rounded square on cards), or the kind column of text rows
                                 x: 3 * card.s; anchors.verticalCenter: parent.verticalCenter
-                                width: 4 * card.s; height: width; radius: card.corners === "sharp" ? 0 : width / 2
-                                color: parent.index === 0 && card.inverse ? Theme.accentText : Theme.subtext
-                                opacity: 0.6
+                                width: card.rows === "text" ? 6 * card.s : list.icon; height: card.rows === "text" ? Math.max(2, 1.6 * card.s) : width
+                                radius: card.rows === "text" ? height / 2 : card.corners === "sharp" ? 0 : card.rows === "cards" ? width * 0.25 : width / 2
+                                color: card.rows === "text" ? (parent.index === 0 && card.inverse ? Theme.accentText : Theme.accent)
+                                     : parent.index === 0 && card.inverse ? Theme.accentText : Theme.subtext
+                                opacity: card.rows === "text" ? 0.8 : 0.6
+                            }
+                            Rectangle {   // the second line of a card
+                                visible: card.rows === "cards"
+                                x: 14 * card.s; y: parent.height * 0.6
+                                width: parent.width * 0.22; height: Math.max(2, 1.2 * card.s); radius: height / 2
+                                color: Theme.muted; opacity: 0.6
                             }
                             Rectangle {
-                                x: 10 * card.s; anchors.verticalCenter: parent.verticalCenter
+                                x: (card.rows === "cards" ? 14 : card.rows === "text" ? 12 : card.rows === "compact" ? 8 : 10) * card.s
+                                y: card.rows === "cards" ? parent.height * 0.3 : (parent.height - height) / 2
                                 width: parent.width * [0.42, 0.3, 0.36, 0.26, 0.34, 0.28][parent.index]; height: Math.max(2, 1.6 * card.s)
                                 radius: height / 2
                                 color: parent.index === 0 && card.inverse ? Theme.accentText : Theme.muted

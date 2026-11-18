@@ -70,11 +70,19 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `usage` | `var` | `{}` | launch counts, for ranking |
 | `style` | `string` | `"theme"` | theme (the theme's own) \| spotlight \| launchpad \| drawer \| sidebar \| terminal (Launcher.qml styles) |
 | `columns` | `int` | `7` | apps per row in the apps grid (fewer when the panel is too narrow) |
-| `startView` | `string` | `"home"` | home (suggestions until you type, every theme) \| apps (grid) \| search (empty field) \| theme (the style's own) |
+| `startView` | `string` | `"theme"` | theme (the style's own) \| home (suggestions until you type) \| apps (grid) \| search (empty field) |
 | `recent` | `list<string>` | `[]` | result keys, most recent first, for the home view |
 | `order` | `list<string>` | `["apps", "files", "calc", "settings", "actions", "web"]` |  |
 | `clipboardInside` | `bool` | `true` | Spotlight's clipboard button shows history in the panel |
 | `position` | `string` | `"center"` | center (middle of the screen) \| pointer (around the mouse pointer) \| theme (the theme's own place) |
+| `size` | `int` | `100` | percent of the style's width, search height and icons (80..130) |
+| `rows` | `string` | `"style"` | style \| standard \| compact (one line) \| cards (tall, big icons) \| text (no icons) |
+| `home` | `list<string>` | `["glance", "frequent", "recent", "quick"]` | suggestions allowed: glance (weather, next event, last copy), frequent, recent, quick (actions) |
+| `dim` | `string` | `"style"` | style \| none \| light \| dark: the screen behind it |
+| `corners` | `string` | `"style"` | style \| sharp \| soft \| round |
+| `hints` | `bool` | `true` | the key hints under the results |
+| `subtitles` | `bool` | `true` | the second line under a result (path, description) |
+| `maxResults` | `int` | `40` | results listed at most (10..80) |
 
 ## clipboard
 

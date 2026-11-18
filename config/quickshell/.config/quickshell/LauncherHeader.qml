@@ -93,7 +93,7 @@ Item {
                     return
                 }
                 if (Launcher.view === "home" && !Launcher.confirmFor) {
-                    const n = Launcher.homeItems.length, nA = Search.frequentApps.length, i = Launcher.homeIndex
+                    const n = Launcher.homeItems.length, nA = Launcher.homeSections.includes("frequent") && Launcher.rows !== "text" && Launcher.rows !== "compact" ? Search.frequentApps.length : 0, i = Launcher.homeIndex
                     if (event.key === Qt.Key_Right) Launcher.homeIndex = Math.min(n - 1, i + 1)
                     else if (event.key === Qt.Key_Left) Launcher.homeIndex = Math.max(0, i - 1)
                     else if (event.key === Qt.Key_Down) Launcher.homeIndex = Math.min(n - 1, i < nA ? nA : i + 1)

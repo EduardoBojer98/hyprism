@@ -62,17 +62,35 @@ ListView {
             bottomPad: Theme.spaceXs
         }
 
+        // the row's look (Launcher.rows): standard | compact (one line) | cards (tall, big icon) | text (no icon, a kind column)
+        readonly property string look: Launcher.rows
+        readonly property bool oneLine: look === "compact" || look === "text"
+        readonly property int iconSize: look === "text" ? 0 : look === "compact" ? 18 : look === "cards" ? (topHit ? 48 : 34)
+                                      : topHit ? Theme.iconLarge : Theme.iconMedium + 4
+        readonly property bool sub: Config.launcher.subtitles && !!modelData.subtitle
+
         Rectangle {
             width: parent.width
-            height: row.topHit ? 56 : Theme.rowHeight + 4
-            radius: Launcher.corner === 0 ? 0 : Theme.radiusSmall
+            height: row.look === "cards" ? (row.topHit ? 72 : 56) : row.oneLine ? Math.max(Theme.hit, Theme.rowHeight - 6) + (row.topHit && row.look === "compact" ? 6 : 0)
+                  : row.topHit ? 56 : Theme.rowHeight + 4
+            radius: Launcher.corner === 0 ? 0 : row.look === "cards" ? Theme.radius : Theme.radiusSmall
             color: row.ListView.isCurrentItem ? Launcher.selection : rowArea.containsMouse ? Theme.fillHover : "transparent"
             LauncherMark { visible: row.ListView.isCurrentItem }
 
+            Text {   // text rows: what kind of result, in a fixed column
+                id: kindTag
+                visible: row.look === "text"
+                anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+                width: visible ? 64 : 0
+                text: (Search.groupOf[row.modelData.kind] ?? row.modelData.kind ?? "").replace(/s$/, "")
+                color: row.ListView.isCurrentItem ? Launcher.selSub : Theme.accent
+                font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
+            }
             Item {
                 id: iconBox
-                anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-                width: row.topHit ? Theme.iconLarge : Theme.iconMedium + 4; height: width
+                anchors { left: kindTag.visible ? kindTag.right : parent.left; leftMargin: kindTag.visible ? 0 : Theme.spaceM; verticalCenter: parent.verticalCenter }
+                width: row.iconSize; height: width
+                visible: row.iconSize > 0
                 IconImage {
                     anchors.fill: parent
                     visible: !!row.modelData.icon
@@ -83,24 +101,48 @@ ListView {
                     visible: !row.modelData.icon
                     text: row.modelData.glyph ?? ""
                     color: row.ListView.isCurrentItem ? Launcher.selText : Theme.text
-                    font { family: Theme.iconFont; pixelSize: row.topHit ? Theme.iconLarge - 6 : Theme.iconMedium - 2 }
+                    font { family: Theme.iconFont; pixelSize: Math.max(12, row.iconSize - 6) }
                 }
             }
             Column {
+                visible: !row.oneLine
                 anchors { left: iconBox.right; leftMargin: Theme.spaceM; right: kindLabel.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
                 Text {
                     width: parent.width
                     text: row.modelData.title
                     elide: Text.ElideRight
                     color: row.ListView.isCurrentItem ? Launcher.selText : Theme.text
-                    font { family: Launcher.rowFont; pixelSize: row.topHit ? Theme.fontTitle : Theme.fontSize; weight: row.topHit ? Font.DemiBold : Font.Medium }
+                    font { family: Launcher.rowFont; pixelSize: row.topHit ? Theme.fontTitle : row.look === "cards" ? Theme.fontSize + 1 : Theme.fontSize; weight: row.topHit || row.look === "cards" ? Font.DemiBold : Font.Medium }
                 }
                 Text {
                     width: parent.width
-                    visible: !!row.modelData.subtitle
+                    visible: row.sub
                     text: row.modelData.subtitle ?? ""
                     elide: Text.ElideMiddle
                     color: row.ListView.isCurrentItem ? Launcher.selSub : Theme.subtext
+                    font { family: Launcher.rowFont; pixelSize: Theme.fontCaption }
+                }
+            }
+            Row {   // one line: the title, then the subtitle quieter after it
+                id: line
+                visible: row.oneLine
+                anchors { left: iconBox.visible ? iconBox.right : kindTag.right; leftMargin: iconBox.visible ? Theme.spaceS + 2 : 0; right: kindLabel.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+                spacing: Theme.spaceS
+                Text {
+                    id: lineTitle
+                    width: Math.min(implicitWidth, line.width)
+                    text: row.modelData.title
+                    elide: Text.ElideRight
+                    color: row.ListView.isCurrentItem ? Launcher.selText : Theme.text
+                    font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: row.topHit ? Font.DemiBold : Font.Normal }
+                }
+                Text {
+                    width: Math.max(0, line.width - lineTitle.width - line.spacing)
+                    visible: row.sub && width > 30
+                    anchors.baseline: lineTitle.baseline
+                    text: row.modelData.subtitle ?? ""
+                    elide: Text.ElideMiddle
+                    color: row.ListView.isCurrentItem ? Launcher.selSub : Theme.muted
                     font { family: Launcher.rowFont; pixelSize: Theme.fontCaption }
                 }
             }
