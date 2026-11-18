@@ -24,6 +24,7 @@ Overlay {
             out.push({ name: "Only " + Displays.label(m), hint: m.name, run: () => Displays.applyMode("only:" + m.key) })
         for (const p of Displays.presets.filter(x => Displays.available(x)))
             out.push({ name: p.name, hint: Config.displays.defaultPreset === p.id ? "default preset" : "preset", run: () => Displays.applyPreset(p.id) })
+        out.push({ name: "Display settings…", hint: "", run: () => SettingsApp.show("displays") })
         return out
     }
     function choose(i) {

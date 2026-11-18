@@ -27,7 +27,9 @@ ControlCenterTile {
     readonly property bool hasMic: parts.includes("mic")
     property int ddcShown: 0   // external monitors that answered DDC/CI (each shows a slider)
     // anything to show: counts the DDC monitors that answered, never `visible` (false while this card is hidden)
-    readonly property bool hasAny: hasDisplay || ddcShown > 0 || hasSound || hasMic
+    // more than one screen, or a saved preset: a row that opens the display switcher (Super+P)
+    readonly property bool hasArrange: parts.includes("display") && (Hyprland.monitors.values.length > 1 || Displays.presets.length > 0)
+    readonly property bool hasAny: hasDisplay || ddcShown > 0 || hasArrange || hasSound || hasMic
     // in the Control Center a card folds to its title and a one-line summary (Config.controlCenter.folded)
     readonly property string foldKey: title.toLowerCase()
     readonly property bool folded: inPanel && title !== "" && Array.from(Config.controlCenter.folded ?? []).includes(foldKey)
@@ -40,6 +42,7 @@ ControlCenterTile {
         const p = []
         if (hasDisplay) p.push(Sys.brightness + "%")
         else if (ddcShown > 0) p.push(ddcShown + (ddcShown === 1 ? " screen" : " screens"))
+        else if (hasArrange) p.push(Hyprland.monitors.values.length + (Hyprland.monitors.values.length === 1 ? " screen" : " screens"))
         if (hasSound) p.push(vol(Sys.sink))
         if (hasMic) p.push("mic " + vol(Sys.source))
         return p.join(" · ")
@@ -65,7 +68,7 @@ ControlCenterTile {
 
     // ---- screen ------------------------------------------------------------------------------
         ColumnLayout {
-            visible: (mod.hasDisplay || mod.ddcShown > 0) && !mod.folded
+            visible: (mod.hasDisplay || mod.ddcShown > 0 || mod.hasArrange) && !mod.folded
             Layout.row: mod.first + Math.max(0, mod.parts.indexOf("display"))
             Layout.fillWidth: true
             spacing: Theme.spaceS
@@ -128,6 +131,38 @@ ControlCenterTile {
                         interval: 150
                         onTriggered: Quickshell.execDetached(["ddcutil", "--bus", ext.bus, "--noverify", "setvcp", "10", String(Math.round(ext.value * ext.max))])
                     }
+                }
+            }
+            Rectangle {   // "Displays  Extended ›": opens the switcher (extend, mirror, one screen, presets, settings)
+                visible: mod.hasArrange
+                Layout.fillWidth: true
+                implicitHeight: 34
+                radius: Theme.radiusSmall
+                color: arrangeArea.containsMouse ? Theme.fillHover : "transparent"
+                readonly property string how: {
+                    const a = Displays.arrangement
+                    return a === "mirror" ? "Mirrored" : a.startsWith("only:") ? "Only " + Displays.label(Displays.monitorOf(a.slice(5)) ?? { name: a.slice(5) }) : "Extended"
+                }
+                Row {
+                    anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
+                    spacing: Theme.spaceS
+                    Text { text: "\u{F0379}"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+                    Text { text: "Displays"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+                }
+                Text {
+                    anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                    text: parent.how + "  \u{F0142}"
+                    color: Theme.subtext
+                    font { family: Theme.font; pixelSize: Theme.fontLabel }
+                }
+                MouseArea {
+                    id: arrangeArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    Accessible.role: Accessible.Button
+                    Accessible.name: "Displays: " + parent.how + ". Choose how the screens are used"
+                    onClicked: { Flyouts.hideAll(); ControlCenter.hide(); Displays.switcherOpen = true }
                 }
             }
         }
