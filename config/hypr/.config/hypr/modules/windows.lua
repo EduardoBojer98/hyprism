@@ -8,7 +8,7 @@ WINDOWS = { layout = "dwindle", newSplit = 0, smartSplit = false, masterNew = "s
             columnWidth = 0.5, followMouse = true, focusOnActivate = false, warpCursor = true,
             backAndForth = false, inactiveOpacity = 1, dimInactive = false, dimStrength = 0.2,
             resizeOnBorder = true, snap = false, hideCursorTyping = false, apps = {}, titleBars = true, maxButton = "float",
-            edgeSnap = true }
+            edgeSnap = true, floatAll = false }
 local ok, saved = pcall(require, "settings.windows")
 if ok and type(saved) == "table" then for k, v in pairs(saved) do WINDOWS[k] = v end end
 
@@ -147,6 +147,8 @@ function apply_windows()
 
     for _, r in ipairs(app_rules) do r:set_enabled(false) end
     app_rules = {}
+    -- every new window floating (the Control Center's Floating tile); the per-app rules below still apply
+    if w.floatAll then app_rules[1] = hl.window_rule({ name = "settings-float-all", match = { class = ".*" }, float = true }) end
     -- apps: { class = regex, open = "normal"|"float"|"pin" (floating, on top)|"maximize"|"fullscreen", workspace = 0 (any)..10 }
     for key, a in pairs(w.apps or {}) do
         if type(a) == "table" and type(a.class) == "string" and a.class ~= "" then

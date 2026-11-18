@@ -29,7 +29,7 @@ Singleton {
         sections: ["connections", "screen", "audio", "toggles", "media", "power"],
         tiles: ["wifi", "bt"],
         sliders: ["sound", "mic"],   // the Sound card's rows
-        toggles: ["focus", "nightlight", "caffeine", "darkmode", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
+        toggles: ["focus", "nightlight", "caffeine", "darkmode", "floatall", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
                  .concat(userTiles.map(a => "action:" + a.id))
     })
     // your actions shown here (Settings > Actions, "Control Center"): small tiles after the built-in ones, "action:<id>"
@@ -103,6 +103,8 @@ Singleton {
         colorpicker: { label: "Colour", glyph: "\u{F020A}", action: true, status: "", hint: "Pick a colour on screen and copy it" },
         mission: { label: "Windows", glyph: "\u{F0570}", action: true, status: "", hint: "Every window at a glance" },
         darkmode: { label: "Dark mode", glyph: "\u{F050E}", status: Theme.light ? "Light" : "Dark", hint: "Every theme in its light or dark version" },
+        floatall: { label: "Floating", glyph: Config.windows.floatAll ? "\u{F05B2}" : "\u{F056E}", status: Config.windows.floatAll ? "On" : "Tiling",
+                    hint: "New windows open floating instead of tiled" },
         micmute: { label: "Microphone", glyph: Sys.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}",
                    status: !Sys.source ? "None" : Sys.source.audio?.muted ? "Muted" : "On", hint: "Mute or unmute the microphone" },
         airplane: { label: "Airplane", glyph: "\u{F001D}", status: cc.airplane ? "On" : "Off", hint: "Wi-Fi and Bluetooth off together (on again together)" },

@@ -20,6 +20,11 @@ ColumnLayout {
             ConfigChoice { section: "windows"; key: "layout"; values: ["dwindle", "master", "scrolling"]; labels: ["Split", "Main + stack", "Scrolling"] }
         }
         SettingRow {
+            label: "Open new windows floating"
+            hint: "Instead of tiling them; also in the Control Center and as a menu bar item"
+            ConfigToggle { section: "windows"; key: "floatAll" }
+        }
+        SettingRow {
             visible: page.layout === "dwindle"
             label: "New windows open"
             ConfigChoice { section: "windows"; key: "newSplit"; values: [0, 1, 2]; labels: ["Toward the mouse", "Left or above", "Right or below"] }
@@ -98,6 +103,6 @@ ColumnLayout {
     ResetGroup {
         sections: ["windows"]
         keys: ["layout", "newSplit", "smartSplit", "masterNew", "masterSide", "columnWidth", "followMouse", "focusOnActivate",
-               "warpCursor", "backAndForth", "resizeOnBorder", "snap", "edgeSnap", "hideCursorTyping"]
+               "warpCursor", "backAndForth", "resizeOnBorder", "snap", "edgeSnap", "floatAll", "hideCursorTyping"]
     }
 }

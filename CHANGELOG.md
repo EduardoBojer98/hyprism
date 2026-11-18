@@ -11,7 +11,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   it always fill the screen. Drag a floating window to the left or right screen edge to fill that half, into a
   corner for that quarter, or to the top edge to maximise it, with an outline of where it will land
   (Windows → Snap to screen edges). Chrome's own maximise button works on a floating window, and a Chrome window
-  dragged by its tab snaps too.
+  dragged by its tab snaps too. A maximised floating window keeps the screen-edge gap, like a tiled one.
+- Windows: new windows can open floating instead of tiled: the Control Center's Floating tile, a Floating
+  windows menu bar item, or Windows → Open new windows floating.
 - Menu bar: right-click empty space for a menu: Mission Control, a screenshot, the shortcut list, Do Not
   Disturb, Caffeine, your own actions (Settings > Actions, place "Menu bar right-click"), Show seconds, dock
   auto-hide, and the menu bar, dock and style settings.

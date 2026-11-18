@@ -71,6 +71,8 @@ Singleton {
              fn(() => { if (!Sys.recording) ControlCenter.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; record " + (Sys.recording ? "stop" : "screen")]) }),
              toggle(() => Sys.recording)),
         tile("darkmode", "Dark mode", "\u{F050E}", fn(() => Config.set("appearance", "mode", Theme.light ? "dark" : "light")), toggle(() => !Theme.light)),
+        tile("floatall", "New windows floating or tiled", "\u{F05B2}", fn(() => Config.set("windows", "floatAll", !Config.windows.floatAll)),
+             toggle(() => Config.windows.floatAll)),
         tile("micmute", "Microphone on / off", "\u{F036C}", fn(() => { if (Sys.source?.audio) Sys.source.audio.muted = !Sys.source.audio.muted }),
              toggle(() => !(Sys.source?.audio?.muted ?? true), { when: { hardware: "mic" } })),
         tile("airplane", "Airplane mode", "\u{F001D}", fn(() => { const on = ControlCenter.airplane; Networking.wifiEnabled = on; if (Sys.adapter) Sys.adapter.enabled = on }),
