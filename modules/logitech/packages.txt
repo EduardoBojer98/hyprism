@@ -1,1 +1,1 @@
-openlogi                 Logitech device settings: buttons, gestures, DPI, SmartShift, battery
+solaar                   Logitech device settings: buttons, DPI, battery, MX Master haptics

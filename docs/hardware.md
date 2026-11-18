@@ -61,7 +61,7 @@ an installer dry run and Hyprland's own config check on every one, on Arch and F
 | Touchpad | Tap, natural scroll, three-finger gestures | Input devices with the "pointer" property | — | fixtures `laptop-*` |
 | Touchscreen, 2-in-1 | On-screen keyboard; tablet mode with rotation when folded | Input devices with the "direct" property; a tablet-mode switch; a rotation sensor | `tablet` | fixture `laptop-hybrid-nvidia`; owner's laptop |
 | Any mouse or keyboard | Works through libinput, nothing to set up | — | — | — |
-| Logitech devices | Buttons, gestures, DPI, SmartShift, battery (OpenLogi) | A Logitech HID device (`046D`) | `logitech` | owner's MX Master 4 |
+| Logitech devices | Buttons, DPI, battery, MX Master 4 haptics (Solaar) | A Logitech HID device (`046D`) | `logitech` | owner's MX Master 4 |
 | Bluetooth, Wi-Fi | Service and controls only where there is an adapter | `/sys/class/bluetooth`, `/sys/class/net/*/wireless` | — | fixtures with and without |
 | ASUS laptops | Charge limit, power modes, fan curves, keyboard light (`asusctl`) | DMI vendor | `asus` | owner's laptop |
 | One model's fixes | For example the Flow X13's microphone and fan curves | DMI product name | `quirk-<model>` | owner's laptop |

@@ -151,7 +151,7 @@ lists them as `on` or `off`, and why. Turn one on or off (your choice is remembe
 | `gaming` | Steam with Proton, GameMode, MangoHud | you ask: `--with gaming` |
 | `hibernate` | a swap file and the kernel resume setting | you ask: `--with hibernate` (btrfs only) |
 | `laptop` | sleep on lid close, keep running with an external screen | a laptop |
-| `logitech` | OpenLogi for Logitech mice and keyboards (buttons, gestures) | a Logitech device is plugged in |
+| `logitech` | Solaar for Logitech mice and keyboards | a Logitech device is plugged in |
 | `nvidia` | the NVIDIA driver | an NVIDIA card |
 | `nvidia-hybrid` | desktop on the built-in GPU so the NVIDIA card can power off | laptop with built-in + NVIDIA |
 | `quirk-flow-x13` | microphone and fan fixes for one model | the ASUS ROG Flow X13 (GV301QC) |

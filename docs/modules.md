@@ -24,7 +24,7 @@ Each module has a README in its folder: `modules/<name>/README.md`.
 | `greeter` | themed login screen (greetd + ReGreet) | you ask | `/etc/greetd/*`, `/etc/pam.d/greetd`; disables the old display manager, enables `greetd` | `sudo systemctl disable greetd`, re-enable the old one |
 | `hibernate` | hibernate with a swap file | you ask (btrfs root) | `/etc/fstab`, a swap subvolume, kernel boot arguments | `./install.sh uninstall` restores files, lists the rest |
 | `laptop` | lid: sleep on close, run with an external screen | laptop | `/etc/systemd/logind.conf.d/50-hyprism-lid.conf` | `./install.sh uninstall` |
-| `logitech` | OpenLogi for Logitech devices | a Logitech device | package `openlogi-bin` (AUR); agent started at login | `--without logitech` |
+| `logitech` | Solaar for Logitech devices | a Logitech device | package `solaar`; tray entry at login | `--without logitech` |
 | `nvidia` | the NVIDIA driver | NVIDIA card | the driver, if none is loaded (reboot after) | remove with your package manager |
 | `nvidia-hybrid` | draw on the built-in GPU so the NVIDIA card sleeps | laptop with built-in + NVIDIA | `/etc/udev/rules.d/90-hyprism-igpu.rules`, `/etc/modprobe.d/hyprism-nvidia.conf`, NVIDIA sleep services, masks `nvidia-powerd` | `./install.sh uninstall` |
 | `quirk-flow-x13` | microphone and fan fixes for one model | product name has `GV301QC` | a WirePlumber rule; asusctl power-mode settings | `--without quirk-flow-x13` |

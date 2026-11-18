@@ -48,8 +48,8 @@ Use a VM with 3D acceleration off, 4 GB of memory, one screen.
 
 ## F. Logitech
 
-- [ ] `openlogi-agent` runs after login (`systemctl --user is-active openlogi-agent`) and OpenLogi lists the device.
-- [ ] MX Master 4: a button and a gesture set in OpenLogi work.
+- [ ] Solaar is in the tray after login and lists the device.
+- [ ] MX Master 4: `solaar config 'mx master 4' haptic-play 'HAPPY ALERT'` gives a pulse.
 
 ## G. Updating from 1.1
 
