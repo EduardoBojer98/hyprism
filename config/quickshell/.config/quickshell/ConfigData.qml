@@ -65,6 +65,7 @@ JsonAdapter {
         property int maxResults: 40             // results listed at most (10..80)
         property list<string> quickActions: ["shot", "ocr", "picker", "overview", "caffeine", "lock"]   // action ids, in order
         property bool quickLook: true           // Space on a file result previews it (QuickLook.qml)
+        property bool converters: true          // units, currencies, time zones and dates beside the calculator (Convert.js)
     }
     property JsonObject clipboard: JsonObject {
         property int maxItems: 300

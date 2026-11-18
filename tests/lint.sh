@@ -76,6 +76,8 @@ bash tests/wallpaper-still.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/clock-format.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
+bash tests/converters.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
 python3 tests/settings-reference.py --check || fail=1
 python3 tests/settings-coverage.py >/dev/null || {
     python3 tests/settings-coverage.py

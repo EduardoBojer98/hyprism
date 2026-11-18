@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Converters in Spotlight, beside the calculator: units ("5 km in mi", "70 f to c", "2 gb in mb"), money ("100 eur to
+  ron", rates from the European Central Bank fetched at most once a day and cached; offline it uses the last ones and
+  says how old they are), time zones ("time in new york", "3pm tokyo") and dates ("days until 25 dec", "today + 90
+  days"). Enter copies the answer. On/off and a rates refresh in Settings > Search & Launcher > Search.
 - Quick Look: in Spotlight, move onto a file or folder with the arrows and press Space (or Ctrl+Y) for a large
   preview over the screen: images, the first PDF pages, a video frame, the first lines of text and code, a folder's
   listing. Arrows move to the next file, Enter opens it, Space or Esc closes. A file manager can call it too:

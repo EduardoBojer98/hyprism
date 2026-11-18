@@ -231,6 +231,17 @@ ColumnLayout {
             ConfigToggle { section: "launcher"; key: "quickLook" }
         }
         SettingRow {
+            label: "Converters"
+            hint: "Units, money, time zones and dates as you type: 5 km in mi, 100 eur to ron, 3pm tokyo, days until 25 dec"
+            ConfigToggle { section: "launcher"; key: "converters" }
+        }
+        SettingRow {
+            visible: Config.launcher.converters
+            label: "Exchange rates"
+            hint: (Search.ratesAge || "Fetched the first time you convert money") + ". From the European Central Bank, at most once a day; offline, the last ones"
+            PillButton { text: "Refresh now"; onClicked: Search.refreshRates(true) }
+        }
+        SettingRow {
             label: "Forget what you used"
             hint: "Clears the most-used ranking and the Recent list on the suggestions"
             PillButton { text: "Forget"; onClicked: { Config.set("launcher", "usage", {}); Config.set("launcher", "recent", []) } }

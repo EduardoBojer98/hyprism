@@ -85,6 +85,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `maxResults` | `int` | `40` | results listed at most (10..80) |
 | `quickActions` | `list<string>` | `["shot", "ocr", "picker", "overview", "caffeine", "lock"]` | action ids, in order |
 | `quickLook` | `bool` | `true` | Space on a file result previews it (QuickLook.qml) |
+| `converters` | `bool` | `true` | units, currencies, time zones and dates beside the calculator (Convert.js) |
 
 ## clipboard
 

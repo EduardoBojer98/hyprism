@@ -2,6 +2,7 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "Convert.js" as Convert
 
 // Search engine behind the launcher. Each provider turns the query into results
 //   { key, kind, title, subtitle, icon (theme name) | glyph, score 0..100, run() }
@@ -18,6 +19,25 @@ Singleton {
     property bool fileMode: false   // the launcher's Files mode: search from the first letter, more results
 
     readonly property string home: Quickshell.env("HOME")
+
+    // Converters (Convert.js): units, currencies, dates; time zones through `date` (zoneAnswer). Exchange rates from
+    // the European Central Bank, fetched at most once a day into ~/.cache/hyprism/ecb-rates.xml; offline, the cached ones
+    readonly property var convert: Config.launcher.converters ? Convert.parse(query, new Date(), rates) : null
+    property var zoneAnswer: null
+    property var rates: ({})
+    property string ratesDate: ""        // the ECB's date for them, yyyy-mm-dd
+    property real ratesChecked: 0
+    function refreshRates(force) { ratesChecked = Date.now(); ecb.command = ecb.base.concat([force ? "force" : ""]); ecb.running = true }
+    readonly property string ratesAge: {
+        if (!ratesDate) return ""
+        const d = new Date(ratesDate + "T12:00:00"), days = Math.floor((Date.now() - d) / 86400000)
+        return "ECB rates of " + Qt.formatDate(d, "d MMM") + (days > 3 ? " · offline, " + days + " days old" : "")
+    }
+    function converterItem(c) {
+        return { key: "calc", kind: "Calculator", title: c.title, subtitle: (c.kind === "currency" ? c.subtitle + " · " + ratesAge : c.subtitle) + " — Enter copies it",
+                 glyph: ({ units: "\u{F04E1}", currency: "\u{F01C1}", tz: "\u{F0954}", date: "\u{F00ED}" })[c.kind] ?? "\u{F00EC}", score: 98,
+                 run: () => Quickshell.execDetached(["wl-copy", c.copy]) }
+    }
 
     // ---- providers -----------------------------------------------------------------------------
 
@@ -174,7 +194,10 @@ Singleton {
         if (!q) return []
         if (q.startsWith(">")) return command(raw)
         let out = []
-        if (calc) out.push({ key: "calc", kind: "Calculator", title: calc, subtitle: raw + " — Enter copies it",
+        const c = convert
+        if (c && c.kind === "tz") { if (zoneAnswer) out.push(converterItem(zoneAnswer)) }
+        else if (c && !c.need) out.push(converterItem(c))
+        else if (calc) out.push({ key: "calc", kind: "Calculator", title: calc, subtitle: raw + " — Enter copies it",
                              glyph: "\u{F00EC}", score: 97, run: () => Quickshell.execDetached(["wl-copy", calc]) })
         // a few files only, so they don't push settings and actions out of view (Files mode lists them all)
         out = out.concat(apps(q), settings(q), actions(q, false), fileResults(q).slice(0, 5), web(raw))
@@ -238,7 +261,7 @@ Singleton {
 
     // ---- async providers -------------------------------------------------------------------------
 
-    onQueryChanged: { files = []; calc = ""; slow.restart() }
+    onQueryChanged: { files = []; calc = ""; zoneAnswer = null; slow.restart() }
     onFileModeChanged: { files = []; slow.restart() }
     Timer {
         id: slow
@@ -246,8 +269,11 @@ Singleton {
         onTriggered: {
             const raw = root.query.trim()
             if (raw.startsWith(">") || raw.length === 0) return
+            const c = root.convert
+            if (c?.kind === "tz") { zone.command = zone.base.concat([c.zone, c.city, c.at, c.place]); zone.running = true }
+            else if (c?.kind === "currency" && (c.need || Date.now() - root.ratesChecked > 3600000)) root.refreshRates(false)
             // Calculator: starts like a number or bracket, through qalc (units, %, offline currencies)
-            if (/^[\d(.\-√π]/.test(raw) && /\d/.test(raw)) { qalc.command = ["qalc", "-t", "-set", "upxrates 0", "--", raw]; qalc.running = true }
+            else if (!c && /^[\d(.\-√π]/.test(raw) && /\d/.test(raw)) { qalc.command = ["qalc", "-t", "-set", "upxrates 0", "--", raw]; qalc.running = true }
             // Files: "~/x" or "/x" browse a path; otherwise search home once there are 3+ letters
             let cmd = null
             if (raw.startsWith("~") || raw.startsWith("/")) {
@@ -271,6 +297,34 @@ Singleton {
         onStarted: buffer = []
         stdout: SplitParser { onRead: line => fd.buffer.push(line) }
         onExited: root.files = buffer
+    }
+    // a city -> its zone (zone1970.tab: "tokyo" -> Asia/Tokyo), then the time there now, or what its `at` is here
+    Process {
+        id: zone
+        readonly property var base: ["sh", "-c", "z=$1; [ -n \"$z\" ] || z=$(awk -F'\\t' '!/^#/ {print $3}' /usr/share/zoneinfo/zone1970.tab 2>/dev/null | grep -i -m1 \"/$2\\$\");"
+            + " [ -n \"$z\" ] || exit 1; if [ -z \"$3\" ]; then TZ=\"$z\" date '+%H:%M|%a %-d %b|%Z'; else date -d \"TZ=\\\"$z\\\" $3\" '+%H:%M|%a %-d %b|'\"$(TZ=$z date +%Z)\"; fi", "zone"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const p = text.trim().split("|"), c = root.convert, a = zone.command
+                if (p.length < 3 || c?.kind !== "tz" || c.at !== a[6] || c.city !== a[5]) return   // not found, or the query moved on
+                root.zoneAnswer = a[6]
+                    ? { kind: "tz", title: p[0] + " your time", subtitle: a[6] + " in " + a[7] + " (" + p[2] + ") is " + p[0] + " here, " + p[1], copy: p[0] }
+                    : { kind: "tz", title: p[0] + " in " + a[7], subtitle: p[1] + " · " + p[2], copy: p[0] }
+            }
+        }
+    }
+    Process {
+        id: ecb
+        readonly property string file: root.home + "/.cache/hyprism/ecb-rates.xml"
+        // at most daily (or "force"): fetch to a temporary file, keep the old one if that fails; then print what's cached
+        readonly property var base: ["sh", "-c", "f=$1; mkdir -p \"${f%/*}\"; if [ \"$2\" = force ] || [ -z \"$(find \"$f\" -mmin -1440 2>/dev/null)\" ]; then"
+            + " curl -fsS --max-time 10 https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml -o \"$f.part\" && grep -q \"currency='USD'\" \"$f.part\" && mv \"$f.part\" \"$f\"; rm -f \"$f.part\"; fi; cat \"$f\" 2>/dev/null", "ecb", file]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const r = Convert.parseRates(text)
+                if (r.date) { root.rates = r.rates; root.ratesDate = r.date }
+            }
+        }
     }
     Process {
         id: qalc
