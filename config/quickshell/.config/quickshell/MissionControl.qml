@@ -50,7 +50,7 @@ Singleton {
     function focusWindow(c) { hide(); dispatch(`hl.dsp.focus({ window = "address:${c.address}" })`) }
     // after the overlay lets go of the keyboard: Hyprland then refocuses the last window, which would
     // pull an empty desktop's switch straight back to that window's desktop
-    function goTo(id) { hide(); switchTo.id = id; switchTo.restart() }
+    function goTo(id) { hide(); switchTo.space = id; switchTo.restart() }
     // a workspace clicked above: go there, or (Settings > Mission Control > Click) show its windows first
     function pick(id) {
         if (mc.click !== "browse" || id === viewing) { goTo(id); return }
@@ -90,7 +90,7 @@ Singleton {
         function toggle(): void { root.toggle() }
     }
 
-    Timer { id: switchTo; property int id; interval: 120; onTriggered: root.dispatch(`hl.dsp.focus({ workspace = ${id} })`) }
+    Timer { id: switchTo; property int space; interval: 120; onTriggered: root.dispatch(`hl.dsp.focus({ workspace = ${space} })`) }
     Timer { id: reread; interval: 150; onTriggered: reader.running = true }
     // never wait on the screen copy for long: open over a plain dim if it doesn't come
     Timer { id: snapGuard; interval: 250; onTriggered: if (root.snapping) { root.snapping = false; root.open = true } }
@@ -194,8 +194,8 @@ Singleton {
                 readonly property real groupGap: Theme.spaceXl * 2
                 // the size picked in Settings, smaller when that many don't fit across the screen
                 readonly property real thumbH: Math.min(({ small: 80, medium: 112, large: 148 })[root.mc.size] ?? 112,
-                    (win.width - 160 - Theme.spaceL * root.spaces.length - groupGap * (root.groups.length - 1))
-                    / (root.spaces.reduce((a, s) => a + s.w / s.h, 0) + (root.mc.newTile ? (root.mon?.w ?? 16) / (root.mon?.h ?? 10) : 0)))
+                    (win.width - 160 - Theme.spaceL * root.spaces.length - groupGap * (root.groups.length - 1)) /
+                    (root.spaces.reduce((a, s) => a + s.w / s.h, 0) + (root.mc.newTile ? (root.mon?.w ?? 16) / (root.mon?.h ?? 10) : 0)))
                 anchors { top: parent.top; topMargin: Theme.spaceXl + Theme.spaceS - (root.flies ? (1 - root.t) * (height + Theme.spaceXl) : 0)
                           horizontalCenter: parent.horizontalCenter }
                 opacity: root.t
@@ -229,9 +229,9 @@ Singleton {
                                 Column {
                                     id: space
                                     required property var modelData
-                                    readonly property int id: modelData.id
+                                    readonly property int num: modelData.id
                                     readonly property real s: strip.thumbH / modelData.h
-                                    readonly property bool shown: id === root.viewing
+                                    readonly property bool shown: num === root.viewing
                                     readonly property bool hot: spaceArea.containsMouse || drop.containsDrag
                                     spacing: Theme.spaceS
 
@@ -261,7 +261,7 @@ Singleton {
                                                 asynchronous: true
                                             }
                                             Repeater {
-                                                model: root.clients.filter(c => c.workspace.id === space.id)
+                                                model: root.clients.filter(c => c.workspace.num === space.num)
                                                 ScreencopyView {
                                                     required property var modelData
                                                     x: (modelData.at[0] - space.modelData.x) * space.s
@@ -274,12 +274,12 @@ Singleton {
                                             }
                                         }
                                         Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border { width: 1; color: Theme.stroke } }
-                                        MouseArea { id: spaceArea; Accessible.role: Accessible.Button; Accessible.name: "Workspace " + space.id; Accessible.onPressAction: root.pick(space.id); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.pick(space.id) }
-                                        DropArea { id: drop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, space.id) }
+                                        MouseArea { id: spaceArea; Accessible.role: Accessible.Button; Accessible.name: "Workspace " + space.num; Accessible.onPressAction: root.pick(space.num); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.pick(space.num) }
+                                        DropArea { id: drop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, space.num) }
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "Workspace " + space.id
+                                        text: "Workspace " + space.num
                                         color: space.shown ? Theme.text : Theme.subtext
                                         font { family: Theme.font; pixelSize: Theme.fontCaption; weight: space.shown ? Font.DemiBold : Font.Medium }
                                     }
