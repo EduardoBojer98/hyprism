@@ -16,7 +16,7 @@ the surfaces, user actions and shortcuts share one model?
   A built-in wins over a user action with the same id. Surfaces only list `Actions.forSurface(...)` and call
   `Actions.run(id)`; old ids keep working through `Actions.aliases`.
 - `when` is a structured object checked by `Conditions.qml` (screens, external, app, battery, wifi, powerMode,
-  hardware, recording). No string evaluation; an unknown key never holds.
+  hardware, recording, preset). No string evaluation; an unknown key never holds.
 - One runner for user commands: a managed Process with a 30 s limit (`timeoutSec`, 0 = none; TERM then KILL),
   exit code and the stderr tail, a notification through the shell's own notification server on failure, and a line
   in `~/.local/state/hyprism/actions.log` (kept to 256 KB plus one `.1`). Built-in commands stay detached, as before.

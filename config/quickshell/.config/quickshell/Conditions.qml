@@ -14,8 +14,9 @@ import QtQuick
 //   hardware: "asus"        a hardware flag: asus, nvidia, canHibernate, monitorSwitch, wifi, bluetooth, mic,
 //                           keylight, touchpad
 //   recording: true|false   a screen recording is (not) running
+//   preset: "desk"          that display preset can be applied (every screen it names is connected)
 Singleton {
-    readonly property var keys: ["screens", "external", "app", "battery", "wifi", "powerMode", "hardware", "recording"]
+    readonly property var keys: ["screens", "external", "app", "battery", "wifi", "powerMode", "hardware", "recording", "preset"]
     readonly property var hardwareFlags: ["asus", "nvidia", "canHibernate", "monitorSwitch", "wifi", "bluetooth", "mic", "keylight", "touchpad"]
 
     function screens() { return Quickshell.screens.filter(s => Machine.realScreen(s.name)) }
@@ -39,6 +40,7 @@ Singleton {
         case "powerMode": return PowerMode.names[PowerMode.profile] === v
         case "hardware": return hardware(v)
         case "recording": return Sys.recording === v
+        case "preset": { const p = Displays.presets.find(x => x.id === v); return !!p && Displays.available(p) }
         default: return false   // an unknown test never holds, so a typo hides the action instead of always showing it
         }
     }
@@ -55,7 +57,7 @@ Singleton {
             if (!keys.includes(k)) return "unknown condition " + k
             if (k === "screens" && !(Number.isInteger(v) && v >= 1 && v <= 8)) return "screens: a number 1-8"
             if (["external", "battery", "recording"].includes(k) && typeof v !== "boolean") return k + ": true or false"
-            if (["app", "wifi"].includes(k) && !(typeof v === "string" && v.length > 0 && v.length <= 80)) return k + ": a name"
+            if (["app", "wifi", "preset"].includes(k) && !(typeof v === "string" && v.length > 0 && v.length <= 80)) return k + ": a name"
             if (k === "powerMode" && !PowerMode.names.includes(v)) return "powerMode: " + PowerMode.names.join(", ")
             if (k === "hardware" && !hardwareFlags.includes(v)) return "hardware: " + hardwareFlags.join(", ")
         }
