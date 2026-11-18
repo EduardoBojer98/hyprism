@@ -105,7 +105,7 @@ asusctl                  asusctl                            repo
 rog-control-center       rog-control-center                 repo
 
 # Module extras (modules/<name>/packages.txt)
-solaar                   solaar                             repo
+openlogi                 openlogi-bin                       aur
 iio-sensor-proxy         iio-sensor-proxy                   repo
 mise                     mise                               repo
 docker                   docker                             repo

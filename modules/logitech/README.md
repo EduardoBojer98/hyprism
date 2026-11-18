@@ -1,11 +1,10 @@
 # Module: logitech
 
-Logitech mice and keyboards: buttons, scroll wheel, DPI, battery level and haptics, through Solaar.
+Logitech mice and keyboards: buttons, gestures, scroll wheel, DPI, SmartShift and battery level, through OpenLogi.
 
 - **On when:** a Logitech device or receiver is plugged in (`peripherals.logitech`).
-- **Adds:** Solaar (free, in both distros' own repos), started hidden in the tray at login.
-- **MX Master 4 haptics:** supported by Solaar 1.1.17 and newer. Try one:
-  `solaar config 'mx master 4' haptic-play 'HAPPY ALERT'`. Solaar's rules can play one on any event.
-- **Coming from JuhRadial MX (before 2.0):** it keeps working until you remove it with its own uninstaller.
-  Run only one of the two.
-- **Tested on:** the owner's MX Master 4 (see the checklist in the final report).
+- **Adds:** OpenLogi (`openlogi-bin` from the AUR on Arch; on Fedora install the `.rpm` from
+  https://github.com/AprilNEA/OpenLogi/releases). Its agent (`openlogi-agent.service`) starts at login; open
+  **OpenLogi** from the launcher to set buttons and gestures. Its udev rule gives you the device access, no group needed.
+- **Coming from JuhRadial MX or Solaar:** remove them; run only one tool that grabs the mouse.
+- **Tested on:** the owner's MX Master 4 (Bolt receiver).

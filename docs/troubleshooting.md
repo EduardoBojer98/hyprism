@@ -75,7 +75,7 @@ Needs the `tablet` module and a tablet-mode switch in `hardware.toml` (`input.ta
 ## Logitech device not listed
 
 The `logitech` module is on only when a Logitech device or receiver is plugged in when the installer looks.
-Plug it in, then `./install.sh detect`, or force it: `./install.sh --with logitech`. Solaar starts hidden in the tray.
+Plug it in, then `./install.sh detect`, or force it: `./install.sh --with logitech`. OpenLogi's agent starts at login (`systemctl --user status openlogi-agent`).
 
 ## A theme I made does not show up
 

@@ -155,6 +155,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- Maximise button (title bars, a double click on one, and apps' own buttons): a tiled window floats, centred,
+  and a floating one goes back into tiling, instead of filling the screen. Settings > Windows > Maximise button
+  switches back to "Fill the screen" (`windows.maxButton`). Apps' own buttons need the `minimize` plugin.
+- `logitech` module: OpenLogi (`openlogi-bin` from the AUR) replaces Solaar for buttons, gestures, DPI and
+  SmartShift; its agent starts at login. On Fedora install its `.rpm` from the OpenLogi releases page.
 - Dock (floating and in the menu bar): open apps and windows are ordered by workspace, then as they opened, and
   can be dragged into an order of your own (kept for the session, shared by both docks). The dock in the menu bar
   gets the right-click menu the floating one has: its windows, New window, Minimise / Restore, Pin, Quit.
@@ -241,8 +246,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   install over.
 - `--host` and `steps-done`. Not needed: nothing depends on the hostname any more.
 - KDE Plasma guard and the login-screen preselect. Hyprism no longer keeps a KDE fallback.
-- JuhRadial MX step for Logitech mice. Replaced by the `logitech` module (Solaar, in both distros' repos).
-  An existing JuhRadial install keeps working until you remove it.
+- JuhRadial MX step for Logitech mice. Replaced by the `logitech` module (OpenLogi).
+  Remove an existing JuhRadial install: run only one tool that grabs the mouse.
 - The step that made the LTS kernel the boot default on one laptop (a workaround for a kernel bug). Nothing is
   undone on a computer where it already ran.
 - Upgrading straight from before 1.1 (old whole-folder links). Update to 1.1 first.

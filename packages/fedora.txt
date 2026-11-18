@@ -137,7 +137,8 @@ asusctl                  asusctl                            copr:lukenukem/asus-
 rog-control-center       asusctl-rog-gui                    copr:lukenukem/asus-linux
 
 # Module extras (modules/<name>/packages.txt)
-solaar                   solaar                             repo
+# openlogi is not in Fedora's repos: its author ships an .rpm on https://github.com/AprilNEA/OpenLogi/releases
+openlogi                 none                               none
 iio-sensor-proxy         iio-sensor-proxy                   repo
 # mise is not in Fedora's own repos; this COPR is its author's (checked 2026-11-12)
 mise                     mise                               copr:jdxcode/mise
