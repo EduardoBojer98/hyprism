@@ -90,6 +90,7 @@ calculator               gnome-calculator                   repo
 disks                    gnome-disk-utility                 repo
 baobab                   baobab                             repo
 resources                resources                          repo
+kdeconnect               kdeconnect                         repo
 starship                 starship                           repo
 zoxide                   zoxide                             repo
 fd                       fd                                 repo

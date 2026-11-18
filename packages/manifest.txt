@@ -97,6 +97,7 @@ calculator               apps      calculator with units, currency and programme
 disks                    apps      format USB sticks, partitions, disk health (SMART), disk images
 baobab                   apps      what is filling your disk
 resources                apps      system monitor: CPU, GPU, memory, disks, network, apps and processes
+kdeconnect               apps      phone link: phone notifications, clipboard, files, ring, remote (Settings > Phone)
 
 # Shell (fish config in config/fish uses these) and this repo's secret scan
 starship                 shell     shell prompt

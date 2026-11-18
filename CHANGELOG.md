@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Phone: link your phone through KDE Connect (Settings > Network & Bluetooth > Phone, a Control Center tile). Battery
+  in the tile, ring the phone, send files (also as launcher actions), its notifications through the shell's own,
+  clipboard sync and remote control switches, pairing and clear empty states with a one-click Install or Start.
+  `kdeconnect` joins the apps package group; `qs ipc call phone ...`.
 - Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone
   until you type, Launchpad lays every app on the dimmed screen with no sheet (dark themes), Drawer opens on today at a
   glance with big card rows, Sidebar is a dense one-line list, Terminal has plain text rows with a kind column and no

@@ -19,6 +19,7 @@ Singleton {
     readonly property alias osd: adapter.osd
     readonly property alias caffeine: adapter.caffeine
     readonly property alias nightLight: adapter.nightLight
+    readonly property alias phone: adapter.phone
     readonly property alias controlCenter: adapter.controlCenter
     readonly property alias weather: adapter.weather
     readonly property alias keybinds: adapter.keybinds
@@ -68,6 +69,7 @@ Singleton {
                          mutedApps: "list" },
         osd: { timeoutMs: [600, 5000], volume: "bool", brightness: "bool", micMute: "bool", layout: "bool", capsLock: "bool", position: ["bottom", "top", "center"] },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
+        phone: { enabled: "bool", device: "string" },
         nightLight: { mode: ["off", "on", "sun", "schedule"], temperature: [2500, 6000], from: "time", to: "time" },
         controlCenter: { showHardware: "bool", style: ["panel", "compact", "borderless"], width: [280, 460], sections: "list", tiles: "list", sliders: "list", toggles: "list", folded: "list", hidden: "list", layouts: "object" },
         keybinds: { overrides: "object", custom: "shortcuts" },

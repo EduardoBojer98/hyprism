@@ -15,6 +15,7 @@ ColumnLayout {
     spacing: ControlCenter.gap
     // from the lists' heights, not their `visible` (that reads false while this is hidden)
     visible: ids.includes("wifi") && wifiDrop.shown > 0 || ids.includes("bt") && btDrop.shown > 0 || ids.includes("caffeine") && cafDrop.shown > 0
+             || ids.includes("phone") && phoneDrop.shown > 0
 
     // ---- Wi-Fi and Bluetooth dropdowns, under their tiles ----------------------------------
     ControlCenterDrop {
@@ -109,6 +110,91 @@ ColumnLayout {
             options: Caffeine.choices.map(m => m === 0 ? "Always" : Caffeine.label(m))
             current: Caffeine.active ? Caffeine.choices.indexOf(Caffeine.minutes) : -1
             onPicked: i => { Caffeine.start(Caffeine.choices[i]); ControlCenter.now = new Date() }
+        }
+    }
+
+    // ---- the phone (KDE Connect, Phone.qml): battery, ring, send, and what it may do; an empty state says how to fix it
+    ControlCenterDrop {
+        id: phoneDrop
+        visible: drops.ids.includes("phone") && shown > 0
+        open: drops.host.expanded === "phone"
+        title: "Phone"
+        switchOn: Phone.enabled
+        onSwitched: Phone.setEnabled(!Phone.enabled)
+        settingsLabel: "Phone Settings…"
+        settingsPage: "phone"
+
+        readonly property var d: Phone.phone
+        ControlCenterDeviceRow {
+            visible: Phone.state === "ready" || Phone.state === "away"
+            glyph: Phone.battGlyph(phoneDrop.d) || Phone.glyph
+            title: phoneDrop.d?.name ?? ""
+            subtitle: Phone.state === "away" ? "Not nearby: same Wi-Fi as this computer?" : Phone.status
+            selected: Phone.state === "ready"
+            warn: Phone.state === "away"
+            onClicked: Phone.refresh()
+        }
+        ControlCenterDeviceRow {
+            visible: Phone.ready
+            glyph: "\u{F009E}"
+            title: "Find my phone"
+            subtitle: "Rings it, even on silent"
+            action: "Ring"
+            onClicked: Phone.ring()
+        }
+        ControlCenterDeviceRow {
+            visible: Phone.ready
+            glyph: "\u{F048A}"
+            title: "Send files…"
+            action: "Choose"
+            onClicked: { ControlCenter.hide(); Phone.pick() }
+        }
+        ControlCenterSectionLabel { visible: Phone.ready; text: "Shared with this computer" }
+        Repeater {
+            model: Phone.ready ? [["clipboard", "Clipboard", "Copy on one, paste on the other"],
+                                  ["notifications", "Notifications", "The phone's show up here"],
+                                  ["remote", "Remote", "The phone controls music and video here"]] : []
+            RowLayout {
+                required property var modelData
+                Layout.fillWidth: true
+                Layout.preferredHeight: 40
+                Layout.leftMargin: 6
+                Layout.rightMargin: 4
+                Column {
+                    Layout.fillWidth: true
+                    Text { text: modelData[1]; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize } }
+                    Text { text: modelData[2]; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                }
+                Toggle { checked: phoneDrop.d?.[modelData[0]] ?? false; onToggled: on => Phone.setPlugin(modelData[0], on) }
+            }
+        }
+        // not paired yet: the phones KDE Connect sees, a click pairs
+        ControlCenterSectionLabel { visible: Phone.state === "unpaired"; text: "Nearby" }
+        Repeater {
+            model: Phone.enabled && !Phone.phone ? Phone.nearby : []
+            ControlCenterDeviceRow {
+                required property var modelData
+                glyph: Phone.glyph
+                title: modelData.name
+                subtitle: modelData.requested ? "Accept on the phone…" : "Not paired"
+                action: modelData.requested ? "" : "Pair"
+                onClicked: if (!modelData.requested) Phone.pair(modelData.id)
+            }
+        }
+        ControlCenterEmpty {
+            shown: ["off", "missing", "starting", "none"].includes(Phone.state)
+            text: ({ off: "Phone link is off.",
+                     missing: "Phone link needs KDE Connect on this computer and the KDE Connect app on your phone.",
+                     starting: "KDE Connect isn't answering yet.",
+                     none: "No phone found. Open KDE Connect on your phone, on the same Wi-Fi as this computer." })[Phone.state] ?? ""
+        }
+        ControlCenterDeviceRow {
+            visible: Phone.state === "missing" || Phone.state === "starting"
+            glyph: Phone.state === "missing" ? "\u{F01DA}" : "\u{F040A}"
+            title: Phone.state === "missing" ? "Install KDE Connect" : "Start KDE Connect"
+            subtitle: Phone.state === "missing" ? "Opens a terminal with the installer" : ""
+            action: Phone.state === "missing" ? "Install" : "Start"
+            onClicked: { if (Phone.state === "missing") { ControlCenter.hide(); Phone.install() } else Phone.start() }
         }
     }
 }

@@ -229,6 +229,22 @@ Hardware features appear on their own (`Machine.qml`):
 | Keyboard light button | a `/sys/class/leds/*kbd_backlight` exists |
 | Shared monitor button, `Super+M` | `~/.config/monswitch.conf` exists |
 
+### Your phone
+
+Settings > Network & Bluetooth > **Phone** links an Android phone (or an iPhone) through KDE Connect. Install the
+KDE Connect app on the phone; on this computer `kdeconnect` comes with the full setup, or click **Install** on the
+Phone page or tile. Open the app on the phone on the same Wi-Fi, then **Pair** on either side and accept on the other.
+
+- The Control Center's **Phone** tile shows the phone's battery; its list rings the phone, sends files and has the
+  switches below. The launcher has *Ring my phone* and *Send files to my phone*.
+- **Notifications**: the phone's appear as normal notifications here, so Do Not Disturb and Focus apply to them.
+- **Clipboard**: copy on one, paste on the other. **Remote**: the phone's KDE Connect app plays, pauses and skips
+  this computer's music and video. The phone's own player shows in the Control Center's media card.
+- `qs ipc call phone status | ring | pick | send <file> | refresh`.
+- Phone not found with a firewall on? KDE Connect uses ports **1714-1764, TCP and UDP**. Hyprism doesn't change
+  firewall rules; allow them yourself, e.g. `sudo ufw allow 1714:1764/udp && sudo ufw allow 1714:1764/tcp`, or
+  `sudo firewall-cmd --permanent --add-service=kdeconnect && sudo firewall-cmd --reload`.
+
 ## Recovery
 
 A broken setting or theme never needs a reinstall. More: [troubleshooting.md](troubleshooting.md).

@@ -109,6 +109,10 @@ JsonAdapter {
         property int minutes: 0                 // length of the current run, 0 = until turned off
         property real endsAt: 0                 // ms since epoch, 0 = until turned off
     }
+    property JsonObject phone: JsonObject {     // phone link through KDE Connect (Phone.qml, Settings > Phone)
+        property bool enabled: true             // off: kdeconnectd is stopped and the shell stops asking
+        property string device: ""              // the phone's KDE Connect id; "" = the first paired one
+    }
     property JsonObject nightLight: JsonObject {
         property string mode: "off"             // off | on | sun | schedule
         property int temperature: 4000

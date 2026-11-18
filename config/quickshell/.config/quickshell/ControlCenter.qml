@@ -29,7 +29,7 @@ Singleton {
         sections: ["connections", "screen", "audio", "toggles", "media", "power"],
         tiles: ["wifi", "bt"],
         sliders: ["sound", "mic"],   // the Sound card's rows
-        toggles: ["focus", "nightlight", "caffeine", "darkmode", "floatall", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
+        toggles: ["focus", "nightlight", "caffeine", "phone", "darkmode", "floatall", "micmute", "airplane", "monitor", "keylight", "keyboard", "touchpad", "touchscreen", "record", "screenshot", "clipboard", "ocr", "emoji", "colorpicker", "mission"]
                  .concat(userTiles.map(a => "action:" + a.id))
     })
     // your actions shown here (Settings > Actions, "Control Center"): small tiles after the built-in ones, "action:<id>"
@@ -142,6 +142,7 @@ Singleton {
         focus: { label: "Focus", glyph: "\u{F0594}", status: Notifications.dndStatus, hint: "Do Not Disturb: only critical notifications pop up" },
         nightlight: { label: "Night Light", glyph: "\u{F0599}",
                       status: ({ off: "Off", on: "On", sun: "Sunset to sunrise", schedule: `${Config.nightLight.from}–${Config.nightLight.to}` })[Config.nightLight.mode] },
+        phone: { label: "Phone", glyph: Phone.glyph, list: "phone", status: Phone.status, hint: "Your phone through KDE Connect: battery, ring, send files" },
         caffeine: { label: "Caffeine", glyph: "\u{F0176}", list: "caffeine", status: Caffeine.remaining(cc.now.getTime()), hint: "Keeps the screen awake" },
         monitor: { label: "Monitor", glyph: "\u{F0379}", status: cc.monitorHere ? "Here" : "Other PC",
                    hint: cc.monitorHere ? "Shared monitor shows this computer: click to hand it over" : "Shared monitor shows the other computer: click to take it back" },
@@ -219,6 +220,7 @@ Singleton {
         }
         else view.reset()
         Actions.watch("controlcenter", visible)
+        Phone.watch(visible)
     }
 
     Process {
