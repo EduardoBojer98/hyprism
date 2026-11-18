@@ -193,6 +193,8 @@ Glass {
                     width: parent.width
                     readOnly: true
                     selectByMouse: true
+                    selectionColor: Theme.accent
+                    selectedTextColor: Theme.accentText
                     text: view.body || (view.busy ? "" : "(empty)")
                     wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
                     color: Theme.text
@@ -220,12 +222,27 @@ Glass {
         }
     }
 
-    Text {
+    // what the keys do, as key caps (the launcher's own footer style)
+    Row {
         id: hints
         anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: Theme.spaceM }
-        text: "Enter  open      Space or Esc  close" + (QuickLook.inLauncher ? "      ↑ ↓  next file" : "")
-        color: Theme.muted
-        font { family: Theme.font; pixelSize: Theme.fontCaption }
+        spacing: Theme.spaceL
+        Repeater {
+            model: [["↵", "open"], ["Space", "close"]].concat(QuickLook.inLauncher ? [["↑↓", "next file"]] : [])
+            Row {
+                required property var modelData
+                spacing: Theme.spaceXs + 1
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(height, cap.implicitWidth + 10); height: cap.implicitHeight + 4
+                    radius: Math.min(Theme.radiusSmall, 5)
+                    color: Theme.fill
+                    border { width: 1; color: Theme.stroke }
+                    Text { id: cap; anchors.centerIn: parent; text: modelData[0]; color: Theme.subtext; font { family: Theme.monoFont; pixelSize: Theme.fontCaption - 1 } }
+                }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: modelData[1]; color: Theme.muted; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+            }
+        }
     }
 
     function scroll(dy) { textFlick.contentY = Math.max(0, Math.min(textFlick.contentHeight - textFlick.height, textFlick.contentY + dy)) }

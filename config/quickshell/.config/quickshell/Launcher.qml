@@ -194,6 +194,24 @@ Singleton {
             .sort((a, b) => a.name.localeCompare(b.name))
     }
 
+    // Launchpad's own order: your arrangement (Config.launcher.padLayout: app ids and folders { name, apps: [ids] }),
+    // then the apps it doesn't hold yet, by name. Apps gone are dropped; a folder left with one app is that app.
+    // Entries: { app } or { folder: name, apps: [DesktopEntry] } (LauncherPad.qml)
+    readonly property var padEntries: {
+        const all = DesktopEntries.applications.values.filter(e => !e.noDisplay).sort((a, b) => a.name.localeCompare(b.name))
+        const byId = new Map(all.map(e => [e.id, e])), used = new Set(), out = []
+        const take = id => { const e = byId.get(id); if (!e || used.has(id)) return null; used.add(id); return e }
+        for (const it of Array.from(Config.launcher.padLayout ?? [])) {
+            if (typeof it === "string") { const e = take(it); if (e) out.push({ app: e }) }
+            else if (it) {
+                const apps = Array.from(it.apps ?? []).map(take).filter(e => e)
+                if (apps.length > 1) out.push({ folder: String(it.name || "Folder"), apps: apps })
+                else if (apps.length === 1) out.push({ app: apps[0] })
+            }
+        }
+        return out.concat(all.filter(e => !used.has(e.id)).map(e => ({ app: e })))
+    }
+
     readonly property var listModel: {
         if (mode === "files") return Search.fileResults(Search.query.trim().toLowerCase())
         if (mode === "actions") return Search.actionList(Search.query.trim())

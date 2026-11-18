@@ -86,6 +86,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `quickActions` | `list<string>` | `["shot", "ocr", "picker", "overview", "caffeine", "lock"]` | action ids, in order |
 | `quickLook` | `bool` | `true` | Space on a file result previews it (QuickLook.qml) |
 | `converters` | `bool` | `true` | units, currencies, time zones and dates beside the calculator (Convert.js) |
+| `padLayout` | `var` | `[]` | Launchpad's order: app ids and folders { name, apps: [ids] }; [] = by name |
 
 ## clipboard
 

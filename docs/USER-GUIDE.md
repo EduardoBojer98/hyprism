@@ -131,6 +131,13 @@ you have moved with the arrows, so it still types a space while you search. From
 that runs `qs ipc call quicklook open %f` (Thunar: Edit → Configure custom actions; Nautilus: a script in
 `~/.local/share/nautilus/scripts`). Turn it off in Search & Launcher → Search.
 
+**Launchpad.** The Launchpad style shows your apps in pages; the dots under them say where you are. Turn pages with
+a swipe, the scroll wheel or touchpad, ←→ past a page's edge, PageUp/PageDown, or a click on a dot. On All, with
+nothing typed, the order is yours: hold an icon, then drag it where it should go (towards the screen's left or right
+edge to reach another page). Drop it on another app to make a folder, or on a folder to add it. Click a folder to
+open it, click its name to rename it, drag an app out of it to take it out; Esc closes it. Search & Launcher → Adjust →
+Launchpad arrangement → Reset goes back to A to Z.
+
 **Converters.** Type a conversion and the answer is the top hit; Enter copies it. Units: `5 km in mi`, `70 f to c`,
 `2 gb in mb`, `100 km/h in mph` (length, weight, volume, data, speed, time, area, energy, temperature). Money:
 `100 eur to ron`, `$20 to eur`, with the European Central Bank's daily rates (fetched at most once a day, kept in

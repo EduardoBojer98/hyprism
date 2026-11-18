@@ -66,6 +66,7 @@ JsonAdapter {
         property list<string> quickActions: ["shot", "ocr", "picker", "overview", "caffeine", "lock"]   // action ids, in order
         property bool quickLook: true           // Space on a file result previews it (QuickLook.qml)
         property bool converters: true          // units, currencies, time zones and dates beside the calculator (Convert.js)
+        property var padLayout: []              // Launchpad's order: app ids and folders { name, apps: [ids] }; [] = by name
     }
     property JsonObject clipboard: JsonObject {
         property int maxItems: 300

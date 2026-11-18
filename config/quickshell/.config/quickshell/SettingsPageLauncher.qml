@@ -123,6 +123,12 @@ ColumnLayout {
             label: "Results at most"
             ConfigSlider { section: "launcher"; key: "maxResults"; from: 10; to: 80; step: 5; format: v => String(v) }
         }
+        SettingRow {
+            label: "Launchpad arrangement"
+            hint: (Config.launcher.padLayout ?? []).length ? "Your order and folders. Reset puts every app back by name, with no folders"
+                : "By name. In Launchpad, hold an icon and drag it to move it; drop it on another app to make a folder"
+            PillButton { text: "Reset"; enabled: (Config.launcher.padLayout ?? []).length > 0; onClicked: Config.set("launcher", "padLayout", []) }
+        }
     }
 
     SettingGroup {

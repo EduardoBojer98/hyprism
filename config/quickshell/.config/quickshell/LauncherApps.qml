@@ -2,12 +2,14 @@ import Quickshell
 import Quickshell.Widgets
 import QtQuick
 
-// Launcher part: the Apps view, category chips over an icon grid. Launchpad (`pad`): text tabs and big icons
-// straight on the dark scrim, a lift and glow for the current one, the icons arriving in a quick wave.
+// Launcher part: the Apps view, category chips over an icon grid. Launchpad (`pad`): text tabs over pages of big
+// icons straight on the dark scrim (LauncherPad.qml), the icons arriving in a quick wave.
 // Used by LauncherPanel.qml; reads the panel's state from the Launcher singleton.
 Item {
     id: apps
-    property alias grid: gridView
+    // what the keys move in (LauncherHeader): the grid, or Launchpad's pages
+    readonly property Item grid: pad ? padView : gridView
+    readonly property alias flick: gridView
     readonly property bool pad: Launcher.bare
     visible: Launcher.view === "apps"
     // the wave plays once per open, not on every keystroke that refilters the grid
@@ -34,48 +36,78 @@ Item {
             onClicked: { Launcher.category = modelData; gridView.currentIndex = 0; Launcher.field.forceActiveFocus() }
         }
     }
-    // Launchpad's categories: quiet text tabs, a dot under the one you're on
-    Row {
+    // Launchpad's categories: quiet text tabs, a dot under the one you're on; centred, or scrolled sideways when the
+    // screen is too narrow for all of them (the one you pick is kept in view)
+    ListView {
         id: tabs
         visible: apps.pad
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: Theme.spaceL }
+        width: Math.min(contentWidth, parent.width - Theme.spaceXl * 2)
         height: visible ? 34 : 0
+        orientation: ListView.Horizontal
         spacing: Theme.spaceXl
-        Repeater {
-            model: Launcher.categories
-            Item {
-                id: tab
-                required property string modelData
-                readonly property bool on: Launcher.category === modelData
-                width: tabText.implicitWidth; height: tabs.height
-                Text {
-                    id: tabText
-                    text: tab.modelData
-                    color: "white"
-                    opacity: tab.on ? 1 : tabArea.containsMouse ? 0.85 : 0.55
-                    Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-                    font { family: Theme.font; pixelSize: Theme.fontSize; weight: tab.on ? Font.DemiBold : Font.Normal }
-                }
-                Rectangle {
-                    anchors { horizontalCenter: parent.horizontalCenter; top: tabText.bottom; topMargin: 6 }
-                    width: 5; height: 5; radius: 2.5; color: "white"
-                    scale: tab.on ? 1 : 0
-                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutBack } }
-                }
-                MouseArea {
-                    id: tabArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    Accessible.role: Accessible.PageTab; Accessible.name: tab.modelData
-                    onClicked: { Launcher.category = tab.modelData; gridView.currentIndex = 0; Launcher.field.forceActiveFocus() }
-                }
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        model: Launcher.categories
+        currentIndex: Launcher.categories.indexOf(Launcher.category)
+        highlightFollowsCurrentItem: false
+        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+        delegate: Item {
+            id: tab
+            required property string modelData
+            readonly property bool on: Launcher.category === modelData
+            width: tabText.implicitWidth; height: tabs.height
+            Text {
+                id: tabText
+                text: tab.modelData
+                color: "white"
+                opacity: tab.on ? 1 : tabArea.containsMouse ? 0.85 : 0.55
+                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                font { family: Theme.font; pixelSize: Theme.fontSize; weight: tab.on ? Font.DemiBold : Font.Normal }
+            }
+            Rectangle {
+                anchors { horizontalCenter: parent.horizontalCenter; top: tabText.bottom; topMargin: 6 }
+                width: 5; height: 5; radius: 2.5; color: "white"
+                scale: tab.on ? 1 : 0
+                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutBack } }
+            }
+            MouseArea {
+                id: tabArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                Accessible.role: Accessible.PageTab; Accessible.name: tab.modelData
+                onClicked: { Launcher.category = tab.modelData; padView.currentIndex = 0; Launcher.field.forceActiveFocus() }
             }
         }
+    }
+    // a fade at a cut end says there are more tabs that way
+    Repeater {
+        model: tabs.visible && tabs.contentWidth > tabs.width ? [0, 1] : []
+        Rectangle {
+            required property int modelData
+            readonly property bool more: modelData === 0 ? !tabs.atXBeginning : !tabs.atXEnd
+            x: modelData === 0 ? tabs.x : tabs.x + tabs.width - width
+            y: tabs.y; width: 36; height: tabs.height
+            opacity: more ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0; color: modelData === 0 ? Qt.rgba(0, 0, 0, 0.7) : "transparent" }   // palette: the scrim's tone
+                GradientStop { position: 1; color: modelData === 0 ? "transparent" : Qt.rgba(0, 0, 0, 0.7) }   // palette: the scrim's tone
+            }
+        }
+    }
+    LauncherPad {
+        id: padView
+        visible: apps.pad
+        anchors { left: parent.left; right: parent.right; top: tabs.bottom; bottom: parent.bottom; topMargin: Theme.spaceL; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS }
+        wave: apps.wave
     }
     Rectangle { id: rule; visible: !apps.pad; anchors { left: parent.left; right: parent.right; top: apps.pad ? tabs.bottom : chips.bottom; margins: Theme.spaceM } height: visible ? 1 : 0; color: Theme.stroke }
     GridView {
         id: gridView
+        visible: !apps.pad
         anchors { left: parent.left; right: parent.right; top: rule.bottom; margins: Theme.spaceS; topMargin: apps.pad ? Theme.spaceXl : Theme.spaceS }
         // Launchpad: whole rows only, never an icon cut in half at the bottom (it still scrolls)
         readonly property real room: parent.height - y - Theme.spaceS

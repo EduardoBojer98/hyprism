@@ -93,7 +93,7 @@ Item {
                 // Menu key or Shift+F10: the selected app's menu
                 if ((event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) && Launcher.view !== "clip") {
                     if (Launcher.view === "home") Launcher.menuFor(Launcher.homeItems[Launcher.homeIndex])
-                    else if (inGrid) Launcher.menuFor(Launcher.appGrid[Launcher.grid.currentIndex], Launcher.grid.currentItem)
+                    else if (inGrid) Launcher.menuFor(Launcher.bare ? Launcher.grid.currentEntry : Launcher.appGrid[Launcher.grid.currentIndex], Launcher.grid.currentItem)
                     else Launcher.menuFor(Launcher.listModel[Launcher.results.currentIndex], Launcher.results.currentItem)
                     event.accepted = true
                     return
@@ -129,6 +129,9 @@ Item {
                 else if (event.key === Qt.Key_Up) { inGrid ? Launcher.grid.moveCurrentIndexUp() : Launcher.results.decrementCurrentIndex() }
                 else if (inGrid && event.key === Qt.Key_Right && field.cursorPosition === field.text.length) { Launcher.grid.moveCurrentIndexRight() }
                 else if (inGrid && event.key === Qt.Key_Left && field.cursorPosition === 0) { Launcher.grid.moveCurrentIndexLeft() }
+                else if (Launcher.bare && (event.key === Qt.Key_PageDown || event.key === Qt.Key_PageUp)) { Launcher.grid.turn(event.key === Qt.Key_PageDown ? 1 : -1) }
+                else if (Launcher.bare && event.key === Qt.Key_Escape && Launcher.grid.folder) { Launcher.grid.closeFolder() }
+                else if (Launcher.bare && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && !Launcher.confirmFor) { Launcher.grid.activate() }
                 else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                     if (Launcher.confirmFor) { const r = Launcher.confirmFor; Launcher.confirmFor = null; Launcher.close(); Search.activate(r) }
                     else if (inGrid) { const e = Launcher.appGrid[Launcher.grid.currentIndex]; if (e) { Launcher.close(); Search.remember("app:" + e.id); e.execute() } }
