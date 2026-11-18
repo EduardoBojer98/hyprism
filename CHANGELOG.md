@@ -160,6 +160,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   switches back to "Fill the screen" (`windows.maxButton`). Apps' own buttons need the `minimize` plugin.
 - `logitech` module: OpenLogi (`openlogi-bin` from the AUR) replaces Solaar for buttons, gestures, DPI and
   SmartShift; its agent starts at login. On Fedora install its `.rpm` from the OpenLogi releases page.
+  The module restarts OpenLogi's overlay on a monitor change and caps its journal output (upstream bug #1989).
 - Dock (floating and in the menu bar): open apps and windows are ordered by workspace, then as they opened, and
   can be dragged into an order of your own (kept for the session, shared by both docks). The dock in the menu bar
   gets the right-click menu the floating one has: its windows, New window, Minimise / Restore, Pin, Quit.
