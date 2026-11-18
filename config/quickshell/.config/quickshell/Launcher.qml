@@ -194,6 +194,24 @@ Singleton {
             .sort((a, b) => a.name.localeCompare(b.name))
     }
 
+    // Launchpad's own order: your arrangement (Config.launcher.padLayout: app ids and folders { name, apps: [ids] }),
+    // then the apps it doesn't hold yet, by name. Apps gone are dropped; a folder left with one app is that app.
+    // Entries: { app } or { folder: name, apps: [DesktopEntry] } (LauncherPad.qml)
+    readonly property var padEntries: {
+        const all = DesktopEntries.applications.values.filter(e => !e.noDisplay).sort((a, b) => a.name.localeCompare(b.name))
+        const byId = new Map(all.map(e => [e.id, e])), used = new Set(), out = []
+        const take = id => { const e = byId.get(id); if (!e || used.has(id)) return null; used.add(id); return e }
+        for (const it of Array.from(Config.launcher.padLayout ?? [])) {
+            if (typeof it === "string") { const e = take(it); if (e) out.push({ app: e }) }
+            else if (it) {
+                const apps = Array.from(it.apps ?? []).map(take).filter(e => e)
+                if (apps.length > 1) out.push({ folder: String(it.name || "Folder"), apps: apps })
+                else if (apps.length === 1) out.push({ app: apps[0] })
+            }
+        }
+        return out.concat(all.filter(e => !used.has(e.id)).map(e => ({ app: e })))
+    }
+
     readonly property var listModel: {
         if (mode === "files") return Search.fileResults(Search.query.trim().toLowerCase())
         if (mode === "actions") return Search.actionList(Search.query.trim())
@@ -207,6 +225,12 @@ Singleton {
         Search.activate(r)
     }
     property var confirmFor: null          // an action marked "ask first"
+    // Quick Look: the selected result's file or folder ("" for anything else); Space opens it once you've moved with the arrows
+    property bool browsed: false
+    function selectedPath() {
+        const r = view === "home" ? homeItems[homeIndex] : view === "search" || view === "files" ? listModel[results.currentIndex] : null
+        return r?.key?.startsWith("file:") ? r.key.slice(5) : ""
+    }
     // an action run from elsewhere (a hot corner, a shortcut) that asks first: the launcher opens to ask
     function ask(r) { if (!popup.open) show("search"); confirmFor = r }
     // the right-click menu for an app: a DesktopEntry, or a result that carries one (anything else has no menu)
@@ -225,7 +249,7 @@ Singleton {
         darkScrim: root.pad
         focusItem: field
         onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens centred or at the pointer, not beside the bar item
-        onClosed: { field.text = ""; root.confirmFor = null; menu.entry = null }
+        onClosed: { field.text = ""; root.confirmFor = null; menu.entry = null; if (QuickLook.inLauncher) QuickLook.close() }
         onOpenChanged: Actions.watch("launcher", popup.open)   // toggles show their real state
 
         // unified: one card behind the search field and the results, a hairline between them
@@ -251,5 +275,26 @@ Singleton {
         }
 
         LauncherMenu { id: menu; z: 10; width: parent.width; height: popup.boxHeight }
+
+        // Quick Look over the launcher, on the whole screen; the search field keeps the keyboard (LauncherHeader)
+        Item {
+            parent: popup.overlay
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: QuickLook.inLauncher ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: QuickLook.inLauncher ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+            Rectangle { anchors.fill: parent; color: "black"; opacity: 0.35 }   // palette: a scrim, the same in every theme
+            MouseArea { Accessible.ignored: true; anchors.fill: parent; enabled: QuickLook.inLauncher; onClicked: QuickLook.close() }   // click beside it: Esc does the same
+            QuickLookView {
+                id: quickSheet
+                width: Math.min(1100, parent.width * 0.72)
+                height: Math.min(820, parent.height * 0.78)
+                anchors.centerIn: parent
+                path: QuickLook.inLauncher ? QuickLook.path : ""
+                scale: QuickLook.inLauncher || !Theme.moves ? 1 : 0.96
+                Behavior on scale { NumberAnimation { duration: Theme.enter; easing.type: Easing.OutCubic } }
+                MouseArea { Accessible.ignored: true; anchors.fill: parent; z: -1 }   // clicks on the sheet don't close it
+            }
+        }
     }
 }

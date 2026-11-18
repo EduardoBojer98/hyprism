@@ -123,6 +123,12 @@ ColumnLayout {
             label: "Results at most"
             ConfigSlider { section: "launcher"; key: "maxResults"; from: 10; to: 80; step: 5; format: v => String(v) }
         }
+        SettingRow {
+            label: "Launchpad arrangement"
+            hint: (Config.launcher.padLayout ?? []).length ? "Your order and folders. Reset puts every app back by name, with no folders"
+                : "By name. In Launchpad, hold an icon and drag it to move it; drop it on another app to make a folder"
+            PillButton { text: "Reset"; enabled: (Config.launcher.padLayout ?? []).length > 0; onClicked: Config.set("launcher", "padLayout", []) }
+        }
     }
 
     SettingGroup {
@@ -224,6 +230,22 @@ ColumnLayout {
             label: "Search files in your home folder"
             hint: "Skips node_modules, vendor and hidden folders"
             ConfigToggle { section: "launcher"; key: "showFiles" }
+        }
+        SettingRow {
+            label: "Quick Look"
+            hint: "Move onto a file with ↑↓ and press Space (or Ctrl+Y) for a large preview. From a file manager: qs ipc call quicklook open PATH"
+            ConfigToggle { section: "launcher"; key: "quickLook" }
+        }
+        SettingRow {
+            label: "Converters"
+            hint: "Units, money, time zones and dates as you type: 5 km in mi, 100 eur to ron, 3pm tokyo, days until 25 dec"
+            ConfigToggle { section: "launcher"; key: "converters" }
+        }
+        SettingRow {
+            visible: Config.launcher.converters
+            label: "Exchange rates"
+            hint: (Search.ratesAge || "Fetched the first time you convert money") + ". From the European Central Bank, at most once a day; offline, the last ones"
+            PillButton { text: "Refresh now"; onClicked: Search.refreshRates(true) }
         }
         SettingRow {
             label: "Forget what you used"

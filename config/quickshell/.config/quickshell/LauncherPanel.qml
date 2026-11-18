@@ -72,7 +72,7 @@ Glass {
 
     // a cut-off row fades out instead of showing a sliver of icons
     Repeater {
-        model: [homeFlick, apps.grid, resultsView]
+        model: [homeFlick, apps.flick, resultsView]
         MoreBelow {
             required property var modelData
             z: 1
@@ -101,6 +101,7 @@ Glass {
             Repeater {
                 model: Launcher.view === "clip" ? [["↑↓", "move"], ["↵", "paste"], ["Del", "remove"], ["Ctrl P", "pin"], ["Esc", "close"]]
                      : Launcher.view === "apps" ? [["←→↑↓", "move"], ["↵", "open"], ["Tab", "next mode"], ["Esc", "close"]]
+                     : Config.launcher.quickLook && Launcher.selectedPath() ? [["↑↓", "move"], ["↵", "open"], ["Space", "preview"], ["Esc", "close"]]
                      : [["↑↓", "move"], ["↵", "open"], ["Tab", "apps · files · actions"], ["Esc", "close"]]
                 Row {
                     required property var modelData

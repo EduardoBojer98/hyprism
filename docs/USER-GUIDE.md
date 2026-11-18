@@ -124,6 +124,27 @@ app icons; Adjust → Rows → Text gives plain text rows. Adjust also sets size
 how many results; Suggestions picks what shows before you type and which quick actions, in your order (Recent leaves
 them out). Settings → Default Apps picks the default terminal.
 
+**Quick Look.** In Spotlight's results, move onto a file or folder with ↑↓ and press Space (Ctrl+Y works any time):
+a large preview opens (images, the first three PDF pages, a frame of a video, the first lines of text or code, a
+folder's listing). ↑↓ go on to the next result, Enter opens the file, Space or Esc closes. Space only previews after
+you have moved with the arrows, so it still types a space while you search. From a file manager, add a custom action
+that runs `qs ipc call quicklook open %f` (Thunar: Edit → Configure custom actions; Nautilus: a script in
+`~/.local/share/nautilus/scripts`). Turn it off in Search & Launcher → Search.
+
+**Launchpad.** The Launchpad style shows your apps in pages; the dots under them say where you are. Turn pages with
+a swipe, the scroll wheel or touchpad, ←→ past a page's edge, PageUp/PageDown, or a click on a dot. On All, with
+nothing typed, the order is yours: hold an icon, then drag it where it should go (towards the screen's left or right
+edge to reach another page). Drop it on another app to make a folder, or on a folder to add it. Click a folder to
+open it, click its name to rename it, drag an app out of it to take it out; Esc closes it. Search & Launcher → Adjust →
+Launchpad arrangement → Reset goes back to A to Z.
+
+**Converters.** Type a conversion and the answer is the top hit; Enter copies it. Units: `5 km in mi`, `70 f to c`,
+`2 gb in mb`, `100 km/h in mph` (length, weight, volume, data, speed, time, area, energy, temperature). Money:
+`100 eur to ron`, `$20 to eur`, with the European Central Bank's daily rates (fetched at most once a day, kept in
+`~/.cache/hyprism/ecb-rates.xml`; offline the last ones are used and the result says how old they are). Time zones:
+`time in new york`, `tokyo time`, `3pm tokyo`, `10:30 est`. Dates: `days until 25 dec`, `days since 1 jan 2020`,
+`today + 90 days`, `in 3 months`. Search & Launcher → Search turns them off and refreshes the rates.
+
 ## Settings
 
 `Super+I` (or from the Control Center). The search field finds a page by its name or by words like "dark",

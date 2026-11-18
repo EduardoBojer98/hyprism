@@ -6,6 +6,19 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Launchpad: apps in pages with dots, turned by a swipe, the scroll wheel or touchpad, the arrows or PageUp/PageDown,
+  instead of one long scroll. Hold an icon and drag it to move it; drop it on another app to make a folder (named for
+  what they have in common), on a folder to add it. A click opens a folder in place, where its name can be edited
+  and an app dragged out. Your order and folders are kept; Settings > Search & Launcher > Adjust resets them. The
+  category tabs scroll sideways on a narrow screen, and a short screen gets smaller icons rather than one row.
+- Converters in Spotlight, beside the calculator: units ("5 km in mi", "70 f to c", "2 gb in mb"), money ("100 eur to
+  ron", rates from the European Central Bank fetched at most once a day and cached; offline it uses the last ones and
+  says how old they are), time zones ("time in new york", "3pm tokyo") and dates ("days until 25 dec", "today + 90
+  days"). Enter copies the answer. On/off and a rates refresh in Settings > Search & Launcher > Search.
+- Quick Look: in Spotlight, move onto a file or folder with the arrows and press Space (or Ctrl+Y) for a large
+  preview over the screen: images, the first PDF pages, a video frame, the first lines of text and code, a folder's
+  listing. Arrows move to the next file, Enter opens it, Space or Esc closes. A file manager can call it too:
+  `qs ipc call quicklook open PATH`. On/off in Settings > Search & Launcher > Search.
 - Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone
   until you type, Launchpad lays every app on the dimmed screen with no sheet (dark themes), Drawer opens on today at a
   glance with big card rows, Sidebar is a dense one-line list, Terminal has plain text rows with a kind column and no

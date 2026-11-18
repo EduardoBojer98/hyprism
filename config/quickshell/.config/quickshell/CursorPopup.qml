@@ -33,6 +33,7 @@ Scope {
     property Item focusItem                    // gets keyboard focus on open
     default property alias content: scroll.flickableData
     readonly property alias box: box
+    readonly property alias overlay: overlay
 
     signal opened()
     signal closed()
@@ -264,6 +265,8 @@ Scope {
             Keys.onEscapePressed: popup.hide()
         }
 
+        // over everything, the whole screen: a caller's own layer (the launcher's Quick Look) via `parent: popup.overlay`
+        Item { id: overlay; anchors.fill: parent; z: 50 }
         // the keyboard goes into the panel on open, so Escape always reaches the box
         onVisibleChanged: if (visible) popup.takeFocus()
     }

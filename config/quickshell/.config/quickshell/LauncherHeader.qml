@@ -55,7 +55,7 @@ Item {
             }
             onTextChanged: {
                 if (Launcher.mode === "clip") { Clipboard.filter = text; Launcher.clipView.reset(); return }
-                Search.query = text; Launcher.results.currentIndex = 0; Launcher.grid.currentIndex = 0; Launcher.homeIndex = 0; Launcher.confirmFor = null
+                Search.query = text; Launcher.browsed = false; Launcher.results.currentIndex = 0; Launcher.grid.currentIndex = 0; Launcher.homeIndex = 0; Launcher.confirmFor = null
             }
             Text {
                 visible: !field.text
@@ -70,10 +70,30 @@ Item {
 
             Keys.onPressed: event => {
                 const inGrid = Launcher.view === "apps"
+                // Quick Look over the launcher: ↑↓ move and it follows, Enter opens, Space or Esc close, typing goes on searching
+                if (QuickLook.inLauncher) {
+                    if (event.key === Qt.Key_Down || event.key === Qt.Key_Up) {
+                        if (Launcher.view === "home") Launcher.homeIndex = Math.max(0, Math.min(Launcher.homeItems.length - 1, Launcher.homeIndex + (event.key === Qt.Key_Down ? 1 : -1)))
+                        else if (event.key === Qt.Key_Down) Launcher.results.incrementCurrentIndex(); else Launcher.results.decrementCurrentIndex()
+                        const p = Launcher.selectedPath()
+                        if (p) QuickLook.open(p, true); else QuickLook.close()
+                        event.accepted = true
+                        return
+                    }
+                    QuickLook.close()
+                    if (event.key === Qt.Key_Space || event.key === Qt.Key_Escape) { event.accepted = true; return }
+                } else if (!inGrid && Launcher.view !== "clip" && Launcher.selectedPath()
+                           && ((event.key === Qt.Key_Space && Launcher.browsed && !event.modifiers) || (event.key === Qt.Key_Y && (event.modifiers & Qt.ControlModifier)))) {
+                    // Space once you've moved onto a file with the arrows (so Space still types while you search); Ctrl+Y always
+                    QuickLook.open(Launcher.selectedPath(), true)
+                    event.accepted = true
+                    return
+                }
+                if (event.key === Qt.Key_Down || event.key === Qt.Key_Up) Launcher.browsed = true
                 // Menu key or Shift+F10: the selected app's menu
                 if ((event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) && Launcher.view !== "clip") {
                     if (Launcher.view === "home") Launcher.menuFor(Launcher.homeItems[Launcher.homeIndex])
-                    else if (inGrid) Launcher.menuFor(Launcher.appGrid[Launcher.grid.currentIndex], Launcher.grid.currentItem)
+                    else if (inGrid) Launcher.menuFor(Launcher.bare ? Launcher.grid.currentEntry : Launcher.appGrid[Launcher.grid.currentIndex], Launcher.grid.currentItem)
                     else Launcher.menuFor(Launcher.listModel[Launcher.results.currentIndex], Launcher.results.currentItem)
                     event.accepted = true
                     return
@@ -109,6 +129,9 @@ Item {
                 else if (event.key === Qt.Key_Up) { inGrid ? Launcher.grid.moveCurrentIndexUp() : Launcher.results.decrementCurrentIndex() }
                 else if (inGrid && event.key === Qt.Key_Right && field.cursorPosition === field.text.length) { Launcher.grid.moveCurrentIndexRight() }
                 else if (inGrid && event.key === Qt.Key_Left && field.cursorPosition === 0) { Launcher.grid.moveCurrentIndexLeft() }
+                else if (Launcher.bare && (event.key === Qt.Key_PageDown || event.key === Qt.Key_PageUp)) { Launcher.grid.turn(event.key === Qt.Key_PageDown ? 1 : -1) }
+                else if (Launcher.bare && event.key === Qt.Key_Escape && Launcher.grid.folder) { Launcher.grid.closeFolder() }
+                else if (Launcher.bare && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && !Launcher.confirmFor) { Launcher.grid.activate() }
                 else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                     if (Launcher.confirmFor) { const r = Launcher.confirmFor; Launcher.confirmFor = null; Launcher.close(); Search.activate(r) }
                     else if (inGrid) { const e = Launcher.appGrid[Launcher.grid.currentIndex]; if (e) { Launcher.close(); Search.remember("app:" + e.id); e.execute() } }
