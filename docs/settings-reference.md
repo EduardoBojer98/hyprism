@@ -191,7 +191,8 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `titleBars` | `bool` | `true` | hyprbars: title bar with buttons on apps that draw none |
 | `titleBarSize` | `string` | `"theme"` | title bar height: theme (its density) \| small \| medium \| large |
 | `titleButtons` | `string` | `"right"` | title bar buttons on the right or left (close outermost) |
-| `maxButton` | `string` | `"float"` | title-bar and apps' maximise button: float/tile, or fill the screen |
+| `maxButton` | `string` | `"float"` | title-bar and apps' maximise button: float, maximise a floating window; or fill the screen |
+| `edgeSnap` | `bool` | `true` | a floating window dropped on a screen edge fills that half, top: maximised |
 | `titleAlign` | `string` | `"center"` | window title in the bar: center \| left |
 | `border` | `string` | `"theme"` | focused window's frame: theme (its own) \| accent \| gradient (accent to accent2) \| neon (accent with a glow) \| mono (text colour) \| rainbow \| sunset \| ocean \| custom (borderColors) |
 | `borderAngle` | `int` | `45` | direction of a frame of several colours, in degrees |

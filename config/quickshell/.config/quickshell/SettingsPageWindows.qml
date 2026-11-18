@@ -85,6 +85,11 @@ ColumnLayout {
             ConfigToggle { section: "windows"; key: "snap" }
         }
         SettingRow {
+            label: "Snap to screen edges"
+            hint: "Drop a floating window on the left or right edge to fill that half, on the top edge to maximise it"
+            ConfigToggle { section: "windows"; key: "edgeSnap" }
+        }
+        SettingRow {
             label: "Hide the pointer while typing"
             ConfigToggle { section: "windows"; key: "hideCursorTyping" }
         }
@@ -93,6 +98,6 @@ ColumnLayout {
     ResetGroup {
         sections: ["windows"]
         keys: ["layout", "newSplit", "smartSplit", "masterNew", "masterSide", "columnWidth", "followMouse", "focusOnActivate",
-               "warpCursor", "backAndForth", "resizeOnBorder", "snap", "hideCursorTyping"]
+               "warpCursor", "backAndForth", "resizeOnBorder", "snap", "edgeSnap", "hideCursorTyping"]
     }
 }

@@ -2,13 +2,18 @@
 // (xdg_toplevel.set_minimized) but drops it, so this listens for it on every window and sends the
 // window to special:minimized, the same place Super+H and the dock use (the dock restores it).
 // Maximise requests go to the Lua maximise_button() (modules/windows.lua) with the window's state.
-// Wayland apps only; XWayland apps still ignore the button. Built and loaded by ~/.local/bin/hypr-plugins.
+// Wayland apps only; XWayland apps still ignore the button. A floating window dropped after a drag goes to the
+// Lua edge_snap() with the pointer and its title bar's height (left/right edge: that half, top: maximised).
+// Built and loaded by ~/.local/bin/hypr-plugins.
 #define WLR_USE_UNSTABLE
 #include <format>
 #include <unordered_map>
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/desktop/view/window/Window.hpp>
 #include <hyprland/src/event/EventBus.hpp>
+#include <hyprland/src/layout/LayoutManager.hpp>
+#include <hyprland/src/layout/supplementary/DragController.hpp>
+#include <hyprland/src/render/decorations/DecorationPositioner.hpp>
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
 #include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
@@ -39,6 +44,28 @@ static void maximise(PHLWINDOWREF ref) {
     });
 }
 
+// the window being moved by a drag, set while it moves (a click without a move never gets here)
+static PHLWINDOWREF g_dragged;
+
+static void dragMoved() {
+    const auto& d = g_layoutManager->dragController();
+    const auto  t = d->target();
+    g_dragged     = d->mode() == MBIND_MOVE && !d->draggingTiled() && t ? t->window() : nullptr;
+}
+
+static void dragEnded() {
+    const auto ref = g_dragged;
+    g_dragged.reset();
+    g_pEventLoopManager->doLater([ref] {
+        const auto w = ref.lock();
+        if (!w || !w->mapped() || !w->isFloating())
+            return;
+        const auto at  = g_pInputManager->getMouseCoordsInternal();
+        const auto bar = g_pDecorationPositioner->getWindowDecorationReserved(w).topLeft.y;
+        HyprlandAPI::invokeHyprctlCommand("eval", std::format("edge_snap(\"0x{:x}\", {}, {}, {})", (uintptr_t)w.get(), (int)at.x, (int)at.y, (int)bar));
+    });
+}
+
 static void watch(PHLWINDOW w) {
     const auto surface = w->backend().surface();
     const auto role    = surface ? dynamicPointerCast<CXDGSurfaceRole>(surface->m_role) : nullptr;
@@ -66,11 +93,13 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
     static auto onOpen    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { watch(w); });
     static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); });
+    static auto onDrag    = g_layoutManager->dragController()->m_events.motion.listen(dragMoved);
+    static auto onDrop    = g_layoutManager->dragController()->m_events.ended.listen(dragEnded);
     for (const auto& w : Desktop::windowState()->windows())
         if (w->mapped())
             watch(w);
 
-    return {"minimize", "Title-bar minimise buttons send windows to the dock, maximise buttons float or tile", "hyprism", "1.0"};
+    return {"minimize", "Title-bar minimise and maximise buttons work, floating windows snap to screen edges", "hyprism", "1.0"};
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {

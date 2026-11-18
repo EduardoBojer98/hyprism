@@ -244,8 +244,8 @@ ColumnLayout {
         }
         SettingRow {
             label: "Maximise button"
-            hint: "Float or tile: a tiled window floats as a normal window and goes back into tiling on the next click. Apps' own buttons do the same"
-            ConfigChoice { section: "windows"; key: "maxButton"; values: ["float", "fill"]; labels: ["Float or tile", "Fill the screen"] }
+            hint: "Float: a tiled window floats as a normal window, a floating one fills the screen and comes back on the next click. Apps' own buttons do the same"
+            ConfigChoice { section: "windows"; key: "maxButton"; values: ["float", "fill"]; labels: ["Float", "Fill the screen"] }
         }
         SettingRow {
             visible: page.w.titleBars

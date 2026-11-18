@@ -7,7 +7,8 @@
 WINDOWS = { layout = "dwindle", newSplit = 0, smartSplit = false, masterNew = "slave", masterSide = "left",
             columnWidth = 0.5, followMouse = true, focusOnActivate = false, warpCursor = true,
             backAndForth = false, inactiveOpacity = 1, dimInactive = false, dimStrength = 0.2,
-            resizeOnBorder = true, snap = false, hideCursorTyping = false, apps = {}, titleBars = true, maxButton = "float" }
+            resizeOnBorder = true, snap = false, hideCursorTyping = false, apps = {}, titleBars = true, maxButton = "float",
+            edgeSnap = true }
 local ok, saved = pcall(require, "settings.windows")
 if ok and type(saved) == "table" then for k, v in pairs(saved) do WINDOWS[k] = v end end
 
@@ -16,7 +17,8 @@ local app_rules = {}
 
 -- The maximise button: title bars (plugins.lua), a double click on one, and apps' own buttons (the minimize
 -- plugin passes those on with the window's state). Settings > Windows > Maximise button: "float" floats a tiled
--- window, centred, like a normal desktop, and tiles a floating one again; "fill" fills the screen and back.
+-- window, centred, like a normal desktop, maximises a floating one and brings it back on the next click
+-- (Super+T or the window menu tile it again); "fill" fills the screen and back.
 function maximise_button(addr, floating, fullscreen)
     local a = hl.get_active_window()
     if addr == nil then
@@ -29,10 +31,8 @@ function maximise_button(addr, floating, fullscreen)
         hl.dispatch(hl.dsp.window.fullscreen({ action = "toggle", mode = fullscreen == 1 and "maximized" or "fullscreen", window = win }))
         return
     end
-    if WINDOWS.maxButton == "fill" then
+    if WINDOWS.maxButton == "fill" or floating then   -- a floating window: maximised, the next click brings it back
         hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle", window = win }))
-    elseif floating then
-        hl.dispatch(hl.dsp.window.float({ action = "disable", window = win }))
     else
         -- the size it had tiled, but never close to the whole screen: a window you can see around.
         -- Read before floating: `a` is live and floating gives it Hyprland's last floating size
@@ -43,6 +43,40 @@ function maximise_button(addr, floating, fullscreen)
             hl.dispatch(hl.dsp.window.resize({ x = math.floor(math.min(sx, W * 0.7)), y = math.floor(math.min(sy, H * 0.75)), window = win }))
         end
         hl.dispatch(hl.dsp.window.center({ window = win }))
+    end
+end
+
+-- Edge snap, like Windows and GNOME: a floating window dropped with the pointer on a screen's outer left or right
+-- edge fills that half, on the top edge it is maximised. The minimize plugin calls this when a drag ends, with
+-- the pointer and the window's title bar height. Settings > Windows > Snap to screen edges.
+function edge_snap(addr, x, y, bar)
+    if not WINDOWS.edgeSnap then return end
+    local m = hl.get_monitor_at({ x = x, y = y })
+    if not m then return end
+    local rot = m.transform % 2 == 1
+    local W, H = (rot and m.height or m.width) / m.scale, (rot and m.width or m.height) / m.scale
+    -- an outer edge: no other screen just past it (the pointer stops there instead of crossing)
+    local function outer(px, py)
+        local o = hl.get_monitor_at({ x = px, y = py })
+        local ow, oh = (o.transform % 2 == 1 and o.height or o.width) / o.scale, (o.transform % 2 == 1 and o.width or o.height) / o.scale
+        return not (px >= o.x and px < o.x + ow and py >= o.y and py < o.y + oh)
+    end
+    local e = 3   -- px from the edge that count as on it
+    local side = x <= m.x + e and outer(m.x - 4, y) and 0 or x >= m.x + W - 1 - e and outer(m.x + W + 4, y) and 0.5
+    local win = "address:" .. addr
+    if y <= m.y + e and outer(x, m.y - 4) then
+        hl.dispatch(hl.dsp.window.center({ window = win }))   -- so it comes back centred, not under the bar
+        hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle", window = win }))
+    elseif side then
+        -- that half of the free area, with the theme's gaps, the same as the window menu's Snap (WindowMenu.qml)
+        local r, g, gi = m.reserved, THEME.gaps_out or 0, THEME.gaps_in or 0
+        local ax, ay = m.x + r.left + g, m.y + r.top + g
+        local aw, ah = W - r.left - r.right - 2 * g, H - r.top - r.bottom - 2 * g
+        local x0 = ax + side * aw + (side > 0 and gi or 0)
+        local x1 = ax + (side + 0.5) * aw - (side == 0 and gi or 0)
+        local y0 = ay + (bar or 0)
+        hl.dispatch(hl.dsp.window.resize({ x = math.floor(x1 - x0), y = math.floor(ay + ah - y0), window = win }))
+        hl.dispatch(hl.dsp.window.move({ x = math.floor(x0), y = math.floor(y0), window = win }))
     end
 end
 

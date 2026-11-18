@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Windows: the maximise button (title bar, a double click on it, or an app's own button) floats a tiled window,
+  centred, and fills the screen with a floating one, back on the next click; Window Look → Maximise button can make
+  it always fill the screen. Drag a floating window to the left or right screen edge to fill that half, or to the
+  top edge to maximise it (Windows → Snap to screen edges).
 - Menu bar: right-click empty space for a menu: Mission Control, a screenshot, the shortcut list, Do Not
   Disturb, Caffeine, your own actions (Settings > Actions, place "Menu bar right-click"), Show seconds, dock
   auto-hide, and the menu bar, dock and style settings.

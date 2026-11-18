@@ -107,8 +107,10 @@ Title bars (on apps that draw no buttons of their own) take the theme's surface,
 size, which side the buttons sit on and where the title goes. The buttons themselves keep one neutral look in every
 theme: the title-bar plugin can't recolour a button until Hyprland next starts, so they are solid discs that read on
 any bar. Unfocused windows' buttons turn to the theme's quiet tone. The maximise button (and a double click on a
-title bar, and an app's own button) floats a tiled window, centred, and tiles a floating one again; Window Look →
-Maximise button switches it to filling the screen.
+title bar, and an app's own button) floats a tiled window, centred, and fills the screen with a floating one, which
+the next click brings back; Super+T tiles it again. Window Look → Maximise button switches it to always filling the
+screen. Drag a floating window to the left or right edge of the screen to fill that half, or to the top edge to
+maximise it, as on Windows or GNOME (Windows → Snap to screen edges).
 Spotlight opens at the mouse pointer by default (Settings → Search & Launcher → Open); choose the theme's place to
 get strips and edges back. Settings → Default Apps picks the default terminal.
 
