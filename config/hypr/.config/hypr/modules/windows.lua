@@ -46,38 +46,88 @@ function maximise_button(addr, floating, fullscreen)
     end
 end
 
--- Edge snap, like Windows and GNOME: a floating window dropped with the pointer on a screen's outer left or right
--- edge fills that half, on the top edge it is maximised. The minimize plugin calls this when a drag ends, with
--- the pointer and the window's title bar height. Settings > Windows > Snap to screen edges.
-function edge_snap(addr, x, y, bar)
-    if not WINDOWS.edgeSnap then return end
-    local m = hl.get_monitor_at({ x = x, y = y })
-    if not m then return end
+-- Edge snap, like Windows and GNOME: a floating window dropped with the pointer on a screen's outer edge fills
+-- that half, in a corner that quarter, and on the top edge (away from the corners) it is maximised. The minimize
+-- plugin calls snap_preview() while such a window is dragged near an edge (Quickshell SnapPreview.qml shows the
+-- spot) and edge_snap() when it is dropped, with the pointer and the window's title bar height.
+-- Settings > Windows > Snap to screen edges.
+local SNAP_PARTS = { left = { 0, 0, 0.5, 1 }, right = { 0.5, 0, 0.5, 1 }, max = { 0, 0, 1, 1 },
+                     topleft = { 0, 0, 0.5, 0.5 }, topright = { 0.5, 0, 0.5, 0.5 },
+                     bottomleft = { 0, 0.5, 0.5, 0.5 }, bottomright = { 0.5, 0.5, 0.5, 0.5 } }
+
+local function screen_size(m)
     local rot = m.transform % 2 == 1
-    local W, H = (rot and m.height or m.width) / m.scale, (rot and m.width or m.height) / m.scale
+    return (rot and m.height or m.width) / m.scale, (rot and m.width or m.height) / m.scale
+end
+
+-- the zone under the pointer and the window's box there ({x, y, w, h}, title bar included), or nil
+local function snap_zone(x, y, bar)
+    if not WINDOWS.edgeSnap then return nil end
+    local m = hl.get_monitor_at({ x = x, y = y })
+    if not m then return nil end
+    local W, H = screen_size(m)
     -- an outer edge: no other screen just past it (the pointer stops there instead of crossing)
     local function outer(px, py)
         local o = hl.get_monitor_at({ x = px, y = py })
-        local ow, oh = (o.transform % 2 == 1 and o.height or o.width) / o.scale, (o.transform % 2 == 1 and o.width or o.height) / o.scale
+        local ow, oh = screen_size(o)
         return not (px >= o.x and px < o.x + ow and py >= o.y and py < o.y + oh)
     end
-    local e = 3   -- px from the edge that count as on it
-    local side = x <= m.x + e and outer(m.x - 4, y) and 0 or x >= m.x + W - 1 - e and outer(m.x + W + 4, y) and 0.5
+    local e, cw, ch = 3, math.max(48, W * 0.12), math.max(48, H * 0.15)   -- on the edge; corner reach
+    local L = x <= m.x + e and outer(m.x - 4, y)
+    local R = x >= m.x + W - 1 - e and outer(m.x + W + 4, y)
+    local T = y <= m.y + e and outer(x, m.y - 4)
+    local B = y >= m.y + H - 1 - e and outer(x, m.y + H + 4)
+    local nl, nr, nt, nb = x < m.x + cw, x >= m.x + W - cw, y < m.y + ch, y >= m.y + H - ch
+    local name = (L or T) and nl and nt and "topleft" or (R or T) and nr and nt and "topright"
+        or (L or B) and nl and nb and "bottomleft" or (R or B) and nr and nb and "bottomright"
+        or L and "left" or R and "right" or T and "max" or nil
+    if not name then return nil end
+    -- that part of the free area with the theme's gaps, the same as the window menu's Snap (WindowMenu.qml)
+    local p, r, g, gi = SNAP_PARTS[name], m.reserved, THEME.gaps_out or 0, THEME.gaps_in or 0
+    local ax, ay = m.x + r.left + g, m.y + r.top + g
+    local aw, ah = W - r.left - r.right - 2 * g, H - r.top - r.bottom - 2 * g
+    local x0 = ax + p[1] * aw + (p[1] > 0 and gi or 0)
+    local x1 = ax + (p[1] + p[3]) * aw - (p[1] + p[3] < 0.999 and gi or 0)
+    local y0 = ay + p[2] * ah + (p[2] > 0 and gi or 0)
+    local y1 = ay + (p[2] + p[4]) * ah - (p[2] + p[4] < 0.999 and gi or 0)
+    return name, { x = math.floor(x0), y = math.floor(y0), w = math.floor(x1 - x0), h = math.floor(y1 - y0) }
+end
+
+local preview_shown = nil
+local function show_preview(name, box)
+    local key = name and string.format("%d %d %d %d", box.x, box.y, box.w, box.h) or nil
+    if key == preview_shown then return end
+    preview_shown = key
+    hl.exec_cmd(key and ("qs ipc call snappreview place " .. key) or "qs ipc call snappreview clear")
+end
+
+function snap_preview(x, y, bar)
+    show_preview(snap_zone(x, y, bar))
+end
+
+function edge_snap(addr, x, y, bar)
+    show_preview(nil)
+    local name, box = snap_zone(x, y, bar)
+    if not name then return end
     local win = "address:" .. addr
-    if y <= m.y + e and outer(x, m.y - 4) then
+    if name == "max" then
         hl.dispatch(hl.dsp.window.center({ window = win }))   -- so it comes back centred, not under the bar
         hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle", window = win }))
-    elseif side then
-        -- that half of the free area, with the theme's gaps, the same as the window menu's Snap (WindowMenu.qml)
-        local r, g, gi = m.reserved, THEME.gaps_out or 0, THEME.gaps_in or 0
-        local ax, ay = m.x + r.left + g, m.y + r.top + g
-        local aw, ah = W - r.left - r.right - 2 * g, H - r.top - r.bottom - 2 * g
-        local x0 = ax + side * aw + (side > 0 and gi or 0)
-        local x1 = ax + (side + 0.5) * aw - (side == 0 and gi or 0)
-        local y0 = ay + (bar or 0)
-        hl.dispatch(hl.dsp.window.resize({ x = math.floor(x1 - x0), y = math.floor(ay + ah - y0), window = win }))
-        hl.dispatch(hl.dsp.window.move({ x = math.floor(x0), y = math.floor(y0), window = win }))
+        return
     end
+    bar = bar or 0
+    hl.dispatch(hl.dsp.window.resize({ x = box.w, y = box.h - bar, window = win }))
+    hl.dispatch(hl.dsp.window.move({ x = box.x, y = box.y + bar, window = win }))
+end
+
+-- Chrome's tab drag closes a floating window and opens a new one where the tab is dropped (the minimize plugin
+-- calls this for it): floating again at its old size under the pointer, or snapped if dropped on an edge
+function tab_drop(addr, w, h, x, y)
+    local win = "address:" .. addr
+    hl.dispatch(hl.dsp.window.float({ action = "enable", window = win }))
+    hl.dispatch(hl.dsp.window.resize({ x = w, y = h, window = win }))
+    hl.dispatch(hl.dsp.window.move({ x = math.floor(x - w / 2), y = math.floor(y - 16), window = win }))
+    edge_snap(addr, x, y, 0)
 end
 
 function apply_windows()

@@ -153,7 +153,7 @@ JsonAdapter {
         property string titleBarSize: "theme"   // title bar height: theme (its density) | small | medium | large
         property string titleButtons: "right"   // title bar buttons on the right or left (close outermost)
         property string maxButton: "float"   // title-bar and apps' maximise button: float, maximise a floating window; or fill the screen
-        property bool edgeSnap: true            // a floating window dropped on a screen edge fills that half, top: maximised
+        property bool edgeSnap: true            // a floating window dropped on a screen edge fills that half, a corner a quarter, top: maximised
         property string titleAlign: "center"    // window title in the bar: center | left
         property string border: "theme"         // focused window's frame: theme (its own) | accent | gradient (accent to accent2) | neon (accent with a glow) | mono (text colour) | rainbow | sunset | ocean | custom (borderColors)
         property int borderAngle: 45            // direction of a frame of several colours, in degrees

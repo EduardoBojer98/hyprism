@@ -2,12 +2,19 @@
 // (xdg_toplevel.set_minimized) but drops it, so this listens for it on every window and sends the
 // window to special:minimized, the same place Super+H and the dock use (the dock restores it).
 // Maximise requests go to the Lua maximise_button() (modules/windows.lua) with the window's state.
-// Wayland apps only; XWayland apps still ignore the button. A floating window dropped after a drag goes to the
-// Lua edge_snap() with the pointer and its title bar's height (left/right edge: that half, top: maximised).
+// Wayland apps only; XWayland apps still ignore the button.
+// Edge snap: while a floating window is dragged near a screen edge the Lua snap_preview() shows where it will go,
+// and edge_snap() places it when dropped (modules/windows.lua). Chrome's tab drag closes the window and opens a new
+// one at the drop, so that new window is floated and snapped the same way (tab_drop()).
+// Hyprland tells every app it is maximised (so apps skip their own borders), and an app button that already
+// asked to un-maximise stays dead. A window floated after it opened, without a title bar, is told it isn't, until
+// it is tiled or maximised again, so its own maximise button works.
 // Built and loaded by ~/.local/bin/hypr-plugins.
 #define WLR_USE_UNSTABLE
+#include <chrono>
 #include <format>
 #include <unordered_map>
+#include <unordered_set>
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/desktop/view/window/Window.hpp>
 #include <hyprland/src/event/EventBus.hpp>
@@ -17,7 +24,10 @@
 #include <hyprland/src/managers/eventLoop/EventLoopManager.hpp>
 #include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
 #include <hyprland/src/plugins/PluginAPI.hpp>
+#include <hyprland/src/desktop/state/FocusState.hpp>
+#include <hyprland/src/output/Monitor.hpp>
 #include <hyprland/src/protocols/XDGShell.hpp>
+#include <hyprland/src/protocols/core/DataDevice.hpp>
 #include <hyprland/src/protocols/core/Compositor.hpp>
 
 // one listener per window, dropped when the window closes
@@ -34,52 +44,165 @@ static void minimise(PHLWINDOWREF ref) {
     });
 }
 
-static void maximise(PHLWINDOWREF ref) {
-    g_pEventLoopManager->doLater([ref] {
+static SP<CXDGToplevelResource> toplevelOf(PHLWINDOW w) {
+    const auto surface = w->backend().surface();
+    const auto role    = surface ? dynamicPointerCast<CXDGSurfaceRole>(surface->m_role) : nullptr;
+    const auto xdg     = role ? role->m_xdgSurface.lock() : nullptr;
+    return xdg ? xdg->m_toplevel.lock() : nullptr;   // null: not an xdg-shell toplevel (XWayland, layer surfaces)
+}
+
+// the title bar: what decorations reserve above the window beyond the border (reserved on every side)
+static int barHeight(PHLWINDOW w) {
+    const auto r = g_pDecorationPositioner->getWindowDecorationReserved(w);
+    return (int)(r.topLeft.y - r.bottomRight.y);
+}
+
+// windows floated after they opened, or whose own maximise button was used: the maximised look follows their
+// state (dialogs that open floating keep it)
+static std::unordered_set<Desktop::View::CWindow*> g_floated;
+
+static bool shownMaximised(PHLWINDOW w) {
+    return !(g_floated.contains(w.get()) && w->isFloating() && (int)Fullscreen::controller()->getFullscreenModes(w).internal == 0 && barHeight(w) == 0);
+}
+
+static void syncMaximised(PHLWINDOW w) {
+    const auto top = toplevelOf(w);
+    if (top && g_floated.contains(w.get()))
+        top->setMaximized(shownMaximised(w));
+}
+
+static void eval(const std::string& lua) {
+    HyprlandAPI::invokeHyprctlCommand("eval", lua);
+}
+
+// an app's own maximise button: maximise_button() decides, then the app is told the outcome. When that isn't
+// what it asked for (Fill the screen on a tiled window), it first sees what it asked for, or Chrome's button
+// waits for that answer forever and stops working
+static void maximise(PHLWINDOWREF ref, bool asked) {
+    g_pEventLoopManager->doLater([ref, asked] {
         const auto w = ref.lock();
         if (!w || !w->mapped())
             return;
         const int fs = (int)Fullscreen::controller()->getFullscreenModes(w).internal;
-        HyprlandAPI::invokeHyprctlCommand("eval", std::format("maximise_button(\"0x{:x}\", {}, {})", (uintptr_t)w.get(), w->isFloating() ? "true" : "false", fs));
+        eval(std::format("maximise_button(\"0x{:x}\", {}, {})", (uintptr_t)w.get(), w->isFloating() ? "true" : "false", fs));
+        g_floated.insert(w.get());
+        syncMaximised(w);
+        const auto top = toplevelOf(w);
+        if (!top || shownMaximised(w) == asked)
+            return;
+        top->setMaximized(asked);
+        g_pEventLoopManager->doLater([ref] {   // the next turn, after that configure went out
+            if (const auto w = ref.lock(); w && w->mapped())
+                if (const auto top = toplevelOf(w))
+                    top->setMaximized(shownMaximised(w));
+        });
     });
 }
 
 // the window being moved by a drag, set while it moves (a click without a move never gets here)
 static PHLWINDOWREF g_dragged;
+static bool         g_previewing = false;
+
+// the pointer near a screen edge, or a preview up that must follow or go: ask Lua where it would land
+static void preview(int bar) {
+    const auto at = g_pInputManager->getMouseCoordsInternal();
+    const auto m  = Desktop::focusState()->monitor();
+    if (!m)
+        return;
+    const auto b    = m->logicalBox();
+    const bool near = at.x <= b.x + 4 || at.x >= b.x + b.w - 5 || at.y <= b.y + 4 || at.y >= b.y + b.h - 5;
+    if (!near && !g_previewing)
+        return;
+    g_previewing = near;
+    eval(std::format("snap_preview({}, {}, {})", (int)at.x, (int)at.y, bar));
+}
 
 static void dragMoved() {
     const auto& d = g_layoutManager->dragController();
     const auto  t = d->target();
     g_dragged     = d->mode() == MBIND_MOVE && !d->draggingTiled() && t ? t->window() : nullptr;
+    if (const auto w = g_dragged.lock())
+        preview(barHeight(w));
 }
 
 static void dragEnded() {
     const auto ref = g_dragged;
     g_dragged.reset();
+    if (!ref.lock())
+        return;
+    g_previewing = false;
     g_pEventLoopManager->doLater([ref] {
         const auto w = ref.lock();
-        if (!w || !w->mapped() || !w->isFloating())
+        if (!w || !w->mapped() || !w->isFloating()) {
+            eval("snap_preview()");
             return;
-        const auto at  = g_pInputManager->getMouseCoordsInternal();
-        const auto bar = g_pDecorationPositioner->getWindowDecorationReserved(w).topLeft.y;
-        HyprlandAPI::invokeHyprctlCommand("eval", std::format("edge_snap(\"0x{:x}\", {}, {}, {})", (uintptr_t)w.get(), (int)at.x, (int)at.y, (int)bar));
+        }
+        const auto at = g_pInputManager->getMouseCoordsInternal();
+        eval(std::format("edge_snap(\"0x{:x}\", {}, {}, {})", (uintptr_t)w.get(), (int)at.x, (int)at.y, barHeight(w)));
+    });
+}
+
+// Chrome's tab drag: a floating window that closes as a drag and drop starts comes back as a new window at the drop
+static struct {
+    std::string                           cls;
+    int                                   w = 0, h = 0;
+    std::chrono::steady_clock::time_point seen;   // the drag was last seen going on
+} g_tabDrag;
+
+static bool tabDragLive() {
+    return !g_tabDrag.cls.empty() && std::chrono::steady_clock::now() - g_tabDrag.seen < std::chrono::milliseconds(800);
+}
+
+static void closing(PHLWINDOW w) {
+    g_floated.erase(w.get());
+    if (!w->isFloating() || barHeight(w) > 0)
+        return;
+    const auto box = w->layoutBox();
+    g_tabDrag      = {w->metadata().appID(), (int)box.w, (int)box.h, std::chrono::steady_clock::now()};
+}
+
+static void mouseMoved() {
+    if (g_tabDrag.cls.empty())
+        return;
+    if (!PROTO::data->dndActive()) {
+        if (g_previewing && !tabDragLive()) {
+            g_previewing = false;
+            eval("snap_preview()");
+        }
+        return;
+    }
+    g_tabDrag.seen = std::chrono::steady_clock::now();
+    preview(0);
+}
+
+static void opened(PHLWINDOW w) {
+    if (!tabDragLive() && !(PROTO::data->dndActive() && !g_tabDrag.cls.empty()))
+        return;
+    if (w->metadata().appID() != g_tabDrag.cls)
+        return;
+    const int ww = g_tabDrag.w, wh = g_tabDrag.h;
+    g_tabDrag.cls.clear();
+    g_previewing = false;
+    g_pEventLoopManager->doLater([ref = w->m_self, ww, wh] {
+        const auto w = ref.lock();
+        if (!w || !w->mapped())
+            return;
+        const auto at = g_pInputManager->getMouseCoordsInternal();
+        eval(std::format("tab_drop(\"0x{:x}\", {}, {}, {}, {})", (uintptr_t)w.get(), ww, wh, (int)at.x, (int)at.y));
     });
 }
 
 static void watch(PHLWINDOW w) {
-    const auto surface = w->backend().surface();
-    const auto role    = surface ? dynamicPointerCast<CXDGSurfaceRole>(surface->m_role) : nullptr;
-    const auto xdg     = role ? role->m_xdgSurface.lock() : nullptr;
-    const auto top     = xdg ? xdg->m_toplevel.lock() : nullptr;
+    const auto top = toplevelOf(w);
     if (!top)
-        return;   // not an xdg-shell toplevel (XWayland, layer surfaces)
+        return;
     g_listeners[w.get()] = top->m_events.stateChanged.listen([ref = w->m_self, wtop = WP<CXDGToplevelResource>(top)] {
         const auto t = wtop.lock();
         // requestsMinimize is only set while this signal fires
         if (t && t->m_state.requestsMinimize.value_or(false))
             minimise(ref);
         if (t && t->m_state.requestsMaximize.has_value())
-            maximise(ref);
+            maximise(ref, *t->m_state.requestsMaximize);
     });
 }
 
@@ -91,8 +214,18 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     if (__hyprland_api_get_hash() != std::string(__hyprland_api_get_client_hash()))
         throw std::runtime_error("[minimize] built for another Hyprland version, run hypr-plugins");
 
-    static auto onOpen    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { watch(w); });
-    static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); });
+    static auto onOpen    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { watch(w); opened(w); });
+    static auto onClose   = Event::bus()->m_events.window.close.listen([](PHLWINDOW w) { closing(w); });
+    static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); g_floated.erase(w.get()); });
+    static auto onFloat   = Event::bus()->m_events.window.floating.listen([](PHLWINDOW w) {
+        if (w->isFloating())
+            g_floated.insert(w.get());
+        syncMaximised(w);   // floating: not maximised; tiled again: the maximised look back
+        if (!w->isFloating())
+            g_floated.erase(w.get());
+    });
+    static auto onFull    = Event::bus()->m_events.window.fullscreen.listen([](PHLWINDOW w) { syncMaximised(w); });
+    static auto onMouse   = Event::bus()->m_events.input.mouse.move.listen([](Vector2D, Event::SCallbackInfo&) { mouseMoved(); });
     static auto onDrag    = g_layoutManager->dragController()->m_events.motion.listen(dragMoved);
     static auto onDrop    = g_layoutManager->dragController()->m_events.ended.listen(dragEnded);
     for (const auto& w : Desktop::windowState()->windows())
@@ -104,4 +237,5 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
 APICALL EXPORT void PLUGIN_EXIT() {
     g_listeners.clear();
+    g_floated.clear();
 }

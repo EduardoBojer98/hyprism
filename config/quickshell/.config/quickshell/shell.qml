@@ -23,6 +23,7 @@ ShellRoot {
     }
 
     Osd {}
+    SnapPreview {}   // where a window dragged to a screen edge will land
     BatteryWarning {}
     ThemeSync {}
     SettingsSync {}   // settings.json -> hypridle, input, displays, monswitch files
