@@ -6,7 +6,7 @@ Rectangle {
     required property Flickable flick
     property color ground: Theme.glassStrong
     height: 32
-    visible: flick.contentY < flick.contentHeight - flick.height - 1
+    visible: flick.contentY < flick.contentHeight - flick.height - 2   // the scroll bar's 2 px: fractional scales leave a pixel over
     gradient: Gradient {
         GradientStop { position: 0; color: Qt.alpha(ground, 0) }
         GradientStop { position: 1; color: ground }

@@ -5,7 +5,10 @@ import QtQuick.Controls
 // the pointer, draggable. Attach with ScrollBar.vertical: GlassScrollBar {} (or .horizontal).
 ScrollBar {
     id: bar
-    policy: size < 1 ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+    // pixels that don't fit: fractional scales (1.2, 1.25) leave content a pixel or so taller than its box,
+    // which mustn't show a full-length bar on a popup that does fit
+    readonly property real hidden: size > 0 && parent ? (orientation === Qt.Vertical ? parent.height : parent.width) * (1 / size - 1) : 0
+    policy: hidden > 2 ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
     minimumSize: 0.08
     padding: 2
     implicitWidth: hovered || pressed ? 10 : 7

@@ -88,7 +88,9 @@ Scope {
     // [x, y, height]: place() for a height capped to the room between bar and dock, kept on the screen
     function frame(w, h, W, H) {
         const flush = ["strip", "half", "column", "fullscreen"].includes(placement)   // edge-to-edge layouts
-        const lo = Theme.reserveTop, hi = H - Theme.reserveBottom - (flush ? 0 : edge)
+        // opened from a bottom bar it sits popupGap above the bar, not edge: the cap must leave it that room
+        const below = flush ? 0 : anchorRect && anchorEdge === "bottom" ? Theme.popupGap : edge
+        const lo = Theme.reserveTop, hi = H - Theme.reserveBottom - below
         h = Math.min(h, hi - lo - (flush ? 0 : edge))
         const at = place(w, h, W, H), y = Math.max(lo, at[1])
         return [Math.max(0, Math.min(at[0], W - w)), y, Math.max(0, Math.min(h, hi - y))]
