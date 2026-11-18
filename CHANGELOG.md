@@ -17,6 +17,14 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   notification and every run is logged in `~/.local/state/hyprism/actions.log`. Your launcher actions move there by
   themselves. Keyboard Shortcuts → Your shortcuts gives any action a key, with a clash check and Reassign.
   `qs ipc call actions run|toggle|list`.
+- Control Center: your own actions as small tiles (Settings → Actions → Control Center), a Displays row in the
+  Screen card that opens the display switcher, and an Essentials starting layout in Settings → Control Center.
+  An action can show only while a display preset can be applied (`when: { preset: "<id>" }`), and a preset
+  action runs it with the keep-or-revert countdown.
+- Alt+Tab window switcher: the open windows, most recently used first; let go of Alt to switch.
+- Restore points (Settings → About → Backups, `settings-snapshot`): a copy of `settings.json` at every start and
+  before a display, shortcut or action change, the newest 10 kept; restore, export and import.
+- System panel → Desktop health, shown only when a service failed or the Hyprland config has errors.
 - Video wallpapers: .mp4, .webm, .mkv and .mov files in the wallpaper folders play with `mpvpaper` (new package,
   with `ffmpeg`) over a still frame that the lock screen, colours from the wallpaper and Settings use. Hardware
   decoding on the iGPU without waking a hybrid laptop's NVIDIA card. A playing video about doubles idle power even
@@ -144,6 +152,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- The shell uses about 60 MB less memory at idle: the launcher and the welcome build their lists only while
+  shown.
+- Caps Lock's notice comes from a key bind instead of a check every half second.
+- Clipboard history is capped at 256 MB in all (oldest go first) and skips single items over 20 MB.
+- The charge limit on laptops other than ASUS asks for the admin password (pkexec) once and keeps the limit
+  after a reboot; a refusal shows why.
 - `./install.sh update`: an untracked file in the repo no longer stops the pull, and a copy with commits the channel
   doesn't have is reported at the end instead of stopping the update.
 - Power modes are named Silent, Balanced and Performance everywhere in Settings.
@@ -195,6 +209,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   is installed.
 - State moved from `~/.local/state/linux-setup` to `~/.local/state/hyprism` (migration 0001).
 - README pictures retaken from the current code (`tests/screenshots.sh`): all seven themes in dark and light, plus the welcome panel, menu, system panel, bar system-info item and notification centre.
+
+### Fixed
+
+- The CI config check now verifies every machine profile: `hl.timer` crashed `--verify-config`, so each profile
+  was skipped as "Hyprland's own crash".
 
 ### Removed
 

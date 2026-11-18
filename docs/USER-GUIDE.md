@@ -43,6 +43,9 @@ Keys: `Super+Q` close, `Super+F` fullscreen, `Super+T` float or tile, `Super+H` 
 `Super+Shift+1` to `0` send the window there, `Super+W` Mission Control, `Super+drag` and `Super+right-drag` move
 and resize. A three-finger swipe sideways switches workspace. The full list: `Super+/`.
 
+`Alt+Tab` shows the open windows, most recently used first: hold Alt and press Tab again (Shift+Tab goes back),
+let go of Alt to switch. One Alt+Tab goes back to the window before. Escape or a click outside cancels.
+
 ### Screenshots
 
 `Alt+Shift+S`: the screen freezes (menus and tooltips stay); drag an area or click a window, then annotate (arrow, shapes,
@@ -81,6 +84,9 @@ from Open-Meteo; no key needed.
 Click the CPU, memory or GPU item (or open the System panel). It shows real CPU use per core, frequency and load,
 memory and swap, the integrated GPU and a separate GPU (shown as "Sleeping" while it is off; it is never woken to
 look), storage, disk reads and writes, network and the top processes.
+
+Desktop health shows only when something is wrong: a failed service (yours or the system's) or errors in the
+Hyprland config. Details opens a terminal with the failed services, the config errors and the latest crashes.
 
 ### Window frame and launcher
 
@@ -160,6 +166,8 @@ inside the repo folder.
 - Settings → Displays → Advanced: adaptive sync (off, on, fullscreen only), start new screens at their highest
   refresh rate, sharp old X11 apps, automatic HDR colour, and telling the screen what is playing. They sit under
   `_options` in `~/.config/hypr/settings/displays.lua`.
+- The Control Center's Screen card shows how the screens are used (Extended, Mirrored, Only one) with more than
+  one screen or a saved preset; a click opens the display switcher.
 - Old X11 apps look slightly smaller on scaled screens (`xwayland.force_zero_scaling`); that is on purpose.
 
 ### A monitor shared with another computer
@@ -205,6 +213,7 @@ A broken setting or theme never needs a reinstall. More: [troubleshooting.md](tr
 | What | Do |
 |---|---|
 | The desktop looks wrong or unusable | `desktop-reset` in a terminal (`Super+Return`): your Settings files move to `~/.local/state/hyprism/reset-<time>/` (nothing is deleted), and the shell and Hyprland restart on the defaults. `desktop-reset shell` resets only the bar, dock, theme and panels. Copy a file back to undo. |
+| A settings change went wrong | Settings → About → Backups: restore points are made at every start and before a change of displays, shortcuts or actions (the newest 10 are kept). Restore one, or export your settings to a file and import them on another computer. `settings-snapshot list` / `restore ID` from a terminal. |
 | `settings.json` was damaged | The shell keeps it as `settings.json.broken` and starts on the defaults. Repair it and copy it back, or leave it. |
 | One part is wrong (keys, displays, input, idle) | Delete that file in `~/.config/hypr/settings/`; Settings writes it again. |
 | Hyprland shows a red error bar | `hyprctl configerrors` names the file and line. |

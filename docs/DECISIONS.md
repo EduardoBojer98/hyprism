@@ -12,7 +12,8 @@ Considered: GTK4 (Python/C), a local web app, Quickshell. Quickshell wins:
 - Its "server" is Quickshell's local IPC (`qs ipc`, a Unix socket only you can open), with no network port.
 - Every action it can run is fixed in code. Settings values are checked by `Config.set()` before they are
   saved. Commands get values as separate arguments, never spliced into a shell string.
-- There is no sudo from the UI: commands that need it are shown to copy or run in a visible terminal.
+- There is no sudo from the UI. Admin rights come only from `pkexec`, which asks in its own window, and the
+  Settings row or action that uses it says so (2026-11-17: the charge limit, and your own actions).
 
 A GTK4 rewrite would double the theme work (CSS generated from the same tokens) and gain nothing a user sees.
 
@@ -59,3 +60,19 @@ in KDE Frameworks and look different from the rest of the desktop.
   them: qt6ct plus the Hyprism KDE scheme keep them themed.
 - Login screen: the opt-in `greeter` module (greetd + ReGreet) replaces Plasma Login Manager / SDDM / GDM, with
   the theme's GTK colours and KDE Wallet still unlocked at login.
+
+## Round 3 (decided 2026-11-17)
+
+The audit and its research: `docs/audit/v4/AUDIT.md`.
+
+- One action registry (`Actions.qml`) for Spotlight, bar clicks, hot corners, the Control Center and your own
+  shortcuts: `docs/decisions/0002-action-registry.md`.
+- Displays are saved by monitor (make, model, serial), not by port: `docs/decisions/0003-monitor-identity.md`.
+- Restore points are copies of `settings.json` (it holds every setting), made by `settings-snapshot` before a
+  displays, shortcuts or actions change. The write waits for the copy, so it holds the settings from before.
+- Surfaces build their lists only while shown where that saves real memory (the launcher, the welcome: about
+  60 MB). Measured per surface first; the rest cost under 5 MB each, so they stay as they are.
+- Not done: idle-inhibit for any fullscreen window. It would stop auto-lock for a fullscreen editor, and video
+  players and browsers already inhibit idle while playing.
+- Only one starting Control Center layout (Essentials): the defaults already show every tile, so "Everything"
+  would be Reset under another name.
