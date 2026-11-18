@@ -24,7 +24,7 @@ Singleton {
     // old ids that still work: hot corners saved before the registry, and Control Center tiles that share a launcher action
     readonly property var aliases: ({ mission: "overview", launcher: "panel-launcher", controlcenter: "panel-controlcenter",
                                       notifications: "panel-notifications", focus: "dnd", screenshot: "shot", colorpicker: "picker" })
-    readonly property var surfaces: ["launcher", "bar", "corner", "controlcenter"]
+    readonly property var surfaces: ["launcher", "bar", "corner", "controlcenter", "barmenu"]
     readonly property var userTypes: ["app", "command", "terminal", "open", "snippet", "shell", "sequence", "preset"]
     readonly property var refused: ["sudo", "su", "doas"]
 

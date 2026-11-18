@@ -14,6 +14,8 @@ every shortcut. The full key list is in the [README](../README.md#keys).
 
 - **The bar** holds items (workspaces, clock, tray, battery and more). One engine draws it for every theme, on any
   screen edge. See [bar.md](bar.md).
+- **Right-click empty menu bar space** for quick things (Mission Control, a screenshot, Do Not Disturb, …) and
+  its settings. Add your own there: Settings > Actions, place "Menu bar right-click".
 - **The dock** shows pinned and open apps, on its own edge or inside the bar. Right-click an app for its windows
   and actions (new window, minimise, pin, quit). Drag an app to move it: pinned apps keep their order; open apps
   start in workspace order and keep yours until you log out.

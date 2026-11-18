@@ -17,7 +17,7 @@ ColumnLayout {
     readonly property var stateTypes: ["process", "unit", "unit-system", "command"]
     readonly property var stateNames: ["A program runs", "A service runs", "A system service runs", "A command succeeds"]
     readonly property var limits: [30, 120, 600, 0]
-    readonly property var places: [["launcher", "Spotlight"], ["bar", "Bar clicks"], ["corner", "Hot corners"], ["controlcenter", "Control Center"]]
+    readonly property var places: [["launcher", "Spotlight"], ["bar", "Bar clicks"], ["corner", "Hot corners"], ["controlcenter", "Control Center"], ["barmenu", "Menu bar right-click"]]
 
     property int editing: -2          // index in `mine` being edited; -1 = a new one; -2 = the editor is closed
     property var draft: ({})          // the form's choices that aren't text fields

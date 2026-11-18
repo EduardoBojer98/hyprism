@@ -6,6 +6,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Menu bar: right-click empty space for a menu: Mission Control, a screenshot, the shortcut list, Do Not
+  Disturb, Caffeine, your own actions (Settings > Actions, place "Menu bar right-click"), Show seconds, dock
+  auto-hide, and the menu bar, dock and style settings.
 - Displays: layouts are saved by monitor (make, model, serial) instead of port name, so they follow a monitor to
   any port (settings format 7 renames the old keys). Presets: save, apply, rename, delete, default, and an opt-in
   auto-switch when exactly a preset's screens are connected (with Undo). Identify, a Super+P display switcher, the

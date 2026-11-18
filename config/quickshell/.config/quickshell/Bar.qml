@@ -28,6 +28,26 @@ Scope {
     // items in the mono face for word voices (Monolith, Console)
     readonly property string family: st.mono ? Theme.monoFont : Theme.font
 
+    function menuRows() {
+        const act = id => Actions.all.find(a => a.id === id)
+        const quick = ["overview", "shot", "keys", "dnd", "caffeine"].map(act).filter(a => a && Actions.available(a)).map(a => ({
+            label: a.name, glyph: a.icon, checked: a.kind === "toggle" && a.state?.on?.() === true, run: () => Actions.run(a.id) }))
+        const mine = Actions.forSurface("barmenu").filter(a => !Actions.builtinIds.includes(a.id)).map(a => ({
+            label: a.name, glyph: a.icon ?? "", checked: a.kind === "toggle" && a.state?.on?.() === true, run: () => Actions.run(a.id) }))
+        const set = (k, v) => () => Config.set(...k, v)
+        const settings = [
+            { label: "Show seconds", glyph: "\u{F0954}", checked: Config.bar.seconds, run: set(["bar", "seconds"], !Config.bar.seconds) },
+            Theme.dockInBar ? null : { label: "Hide the dock automatically", glyph: "\u{F0A1F}", checked: Config.dock.autoHide, run: set(["dock", "autoHide"], !Config.dock.autoHide) },
+            { label: "Edit the menu bar…", glyph: "\u{F0E7F}", run: () => SettingsApp.show("bar") },
+            { label: "Dock settings…", glyph: "\u{F0A1F}", run: () => SettingsApp.show("dock") },
+            { label: "Wallpaper & style…", glyph: "\u{F03D8}", run: () => SettingsApp.show("appearance") },
+            { label: "Add your own to this menu…", glyph: "\u{F0415}", run: () => SettingsApp.show("actions") }
+        ].filter(x => x)
+        if (mine.length) mine[0].sep = true
+        settings[0].sep = true
+        return quick.concat(mine, settings)
+    }
+
     PanelWindow {
         id: win
         screen: root.screen
@@ -78,6 +98,18 @@ Scope {
                 width: root.vertical ? root.st.line : parent.width
                 height: root.vertical ? parent.height : root.st.line
             }
+
+            // right-click on empty bar: a few quick things, your own actions (Settings > Actions > "Menu bar
+            // right-click"), then the settings for what you're looking at; the items above take their own clicks
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.RightButton
+                Accessible.role: Accessible.Button
+                Accessible.name: "Menu bar options"
+                Accessible.onPressAction: { barMenu.at = null; barMenu.rows = root.menuRows(); barMenu.open = true }
+                onClicked: mouse => { barMenu.at = { x: mouse.x, y: mouse.y }; barMenu.rows = root.menuRows(); barMenu.open = true }
+            }
+            ShellMenu { id: barMenu; anchorItem: body }
 
             // blocks and a block clock run flush to the screen's edges, like tmux's status line; a floating bar has
             // rounded ends instead, so they keep the usual inset (flush, the end items sat on the corner)
