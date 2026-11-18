@@ -40,6 +40,7 @@ Singleton {
     readonly property alias capture: adapter.capture
     readonly property alias battery: adapter.battery
     readonly property alias hotCorners: adapter.hotCorners
+    readonly property alias missionControl: adapter.missionControl
     readonly property bool loaded: file.loaded
 
     // Allowed values; set() refuses anything else. Numbers are [min, max].
@@ -91,6 +92,7 @@ Singleton {
                clock24: "bool", seconds: "bool",
                windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object", layout: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
+        missionControl: { screens: ["all", "this"], click: ["switch", "browse"], newTile: "bool", size: ["small", "medium", "large"] },
         hotCorners: { topLeft: "string", topRight: "string", bottomLeft: "string", bottomRight: "string" },
         weather: { locations: "places", units: ["celsius", "fahrenheit"], days: [0, 16], hours: [0, 48],
                    details: "list", refreshMin: [10, 180] },

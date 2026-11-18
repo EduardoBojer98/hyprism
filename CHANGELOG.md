@@ -152,8 +152,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
-- Mission Control: the desktop row shows every screen's desktops (each at its screen's shape), floats free of
-  the glass bar, and ends in a "New desktop" tile showing the bare wallpaper, as in GNOME.
+- Mission Control: workspaces (named so, not "desktops") along the top, grouped by screen under each screen's
+  name, each at its screen's shape, free of the glass bar, ending in a "New workspace" tile. A Settings page
+  (Mission Control): every screen or just this one, click to go or to see the windows first, the New tile on or
+  off, picture size.
 - The shell uses about 60 MB less memory at idle: the launcher and the welcome build their lists only while
   shown.
 - Caps Lock's notice comes from a key bind instead of a check every half second.
@@ -214,7 +216,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
-- Mission Control: "New desktop" now goes there. Closing the overview refocused the last window, which pulled
+- Mission Control: "New workspace" now goes there. Closing the overview refocused the last window, which pulled
   Hyprland back to that window's desktop.
 - The CI config check now verifies every machine profile: `hl.timer` crashed `--verify-config`, so each profile
   was skipped as "Hyprland's own crash".

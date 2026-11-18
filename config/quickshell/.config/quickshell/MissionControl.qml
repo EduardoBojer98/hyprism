@@ -22,9 +22,12 @@ Singleton {
 
     property bool open: false
     property var mon: null           // { name, id, x, y, w, h, ws }
-    property var clients: []         // hyprctl clients on this screen's normal desktops
-    property var spaces: []          // { id, x, y, w, h }: each desktop and its screen
-    property int nextSpace: 1        // lowest desktop id no screen is using
+    readonly property var mc: Config.missionControl
+    property var clients: []         // hyprctl clients on the normal workspaces of every screen
+    property var groups: []          // { name, here, spaces }: one per screen shown, left to right
+    property var spaces: []          // { id, x, y, w, h }: every workspace shown, with its screen's place and size
+    property int nextSpace: 1        // lowest workspace id no screen is using
+    property int viewing: 0          // the workspace whose windows are laid out (browse: the one picked above)
     property int selected: -1
     property var dragging: null      // client being dragged
     property string wallpaper: ""    // shown behind the desktop thumbnails
@@ -37,7 +40,7 @@ Singleton {
     readonly property bool flies: Theme.travel > 0   // themes with no travel (and reduced motion) only fade
 
     // most recently used first, like macOS
-    readonly property var current: clients.filter(c => c.workspace.id === mon?.ws).sort((a, b) => a.focusHistoryID - b.focusHistoryID)
+    readonly property var current: clients.filter(c => c.workspace.id === viewing).sort((a, b) => a.focusHistoryID - b.focusHistoryID)
 
     function toggle() { if (open) hide(); else show() }
     function show() { reader.running = true }
@@ -48,6 +51,12 @@ Singleton {
     // after the overlay lets go of the keyboard: Hyprland then refocuses the last window, which would
     // pull an empty desktop's switch straight back to that window's desktop
     function goTo(id) { hide(); switchTo.id = id; switchTo.restart() }
+    // a workspace clicked above: go there, or (Settings > Mission Control > Click) show its windows first
+    function pick(id) {
+        if (mc.click !== "browse" || id === viewing) { goTo(id); return }
+        viewing = id
+        selected = 0
+    }
     function moveTo(c, id) {
         if (c.workspace.id === id) return
         dispatch(`hl.dsp.window.move({ workspace = ${id}, follow = false, window = "address:${c.address}" })`)
@@ -100,11 +109,18 @@ Singleton {
                         return { x: x.x, y: x.y, w: (r ? x.height : x.width) / x.scale, h: (r ? x.width : x.height) / x.scale } }
                     root.mon = Object.assign({ name: m.name, id: m.id, ws: m.activeWorkspace.id }, geo(m))
                     root.clients = d.c.filter(c => c.workspace.id > 0 && c.mapped && !c.hidden)
-                    // every screen's desktops, each drawn at its own screen's shape: one on another screen is a click away too
-                    const screens = d.m.reduce((o, x) => { o[x.id] = geo(x); return o }, {})
-                    const spaces = d.w.filter(w => w.id > 0 && screens[w.monitorID]).map(w => Object.assign({ id: w.id }, screens[w.monitorID]))
-                    if (!spaces.some(w => w.id === m.activeWorkspace.id)) spaces.push(Object.assign({ id: m.activeWorkspace.id }, geo(m)))
-                    root.spaces = spaces.sort((a, b) => a.id - b.id)
+                    root.viewing = m.activeWorkspace.id
+                    // each screen's workspaces, drawn at its shape, screens left to right (or just this one)
+                    const all = root.mc.screens !== "this"
+                    root.groups = d.m.filter(x => x.id === m.id || all && Machine.realScreen(x.name))
+                        .sort((a, b) => a.x - b.x || a.y - b.y).map(x => {
+                            const g = geo(x)
+                            const spaces = d.w.filter(w => w.id > 0 && w.monitorID === x.id).map(w => Object.assign({ id: w.id }, g))
+                            if (x.id === m.id && !spaces.some(w => w.id === x.activeWorkspace.id)) spaces.push(Object.assign({ id: x.activeWorkspace.id }, g))
+                            return { name: x.name.startsWith("eDP") ? "Built-in screen" : (x.model || x.description || x.name),
+                                     here: x.id === m.id, spaces: spaces.sort((a, b) => a.id - b.id) }
+                        }).filter(gr => gr.spaces.length)
+                    root.spaces = root.groups.reduce((a, gr) => a.concat(gr.spaces), [])
                     const used = new Set(d.w.map(w => w.id))
                     let n = 1; while (used.has(n)) n++
                     root.nextSpace = n
@@ -172,129 +188,159 @@ Singleton {
             // a click on empty space closes, like every other sheet (a window or a desktop closes it too)
             MouseArea { anchors.fill: parent; Accessible.ignored: true; onClicked: root.hide() }
 
-            // ---- desktops: every screen's, in a row along the top, then an empty one to start (as GNOME) ----
+            // ---- workspaces: a row along the top, one group per screen (Settings > Mission Control) ----
             Row {
                 id: strip
-                // as tall as fits: a row of many desktops shrinks instead of running off the screen
-                readonly property real thumbH: Math.min(112, (win.width - 160 - spacing * root.spaces.length)
-                    / (root.spaces.reduce((a, s) => a + s.w / s.h, 0) + (root.mon?.w ?? 16) / (root.mon?.h ?? 10)))
+                readonly property real groupGap: Theme.spaceXl * 2
+                // the size picked in Settings, smaller when that many don't fit across the screen
+                readonly property real thumbH: Math.min(({ small: 80, medium: 112, large: 148 })[root.mc.size] ?? 112,
+                    (win.width - 160 - Theme.spaceL * root.spaces.length - groupGap * (root.groups.length - 1))
+                    / (root.spaces.reduce((a, s) => a + s.w / s.h, 0) + (root.mc.newTile ? (root.mon?.w ?? 16) / (root.mon?.h ?? 10) : 0)))
                 anchors { top: parent.top; topMargin: Theme.spaceXl + Theme.spaceS - (root.flies ? (1 - root.t) * (height + Theme.spaceXl) : 0)
                           horizontalCenter: parent.horizontalCenter }
                 opacity: root.t
-                spacing: Theme.spaceL
+                spacing: groupGap
 
                 Repeater {
-                    model: root.spaces
+                    model: root.groups
                     Column {
-                        id: space
+                        id: group
                         required property var modelData
-                        readonly property int id: modelData.id
-                        readonly property real s: strip.thumbH / modelData.h
-                        readonly property bool here: id === root.mon?.ws
-                        readonly property bool hot: spaceArea.containsMouse || drop.containsDrag
+                        required property int index
                         spacing: Theme.spaceS
 
-                        Item {
-                            width: space.modelData.w * space.s
-                            height: strip.thumbH
-                            scale: spaceArea.pressed ? 0.97 : space.hot ? 1.04 : 1
-                            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
-
-                            Rectangle {   // ring outside a small gap: accent on this desktop and under a dragged window
-                                anchors { fill: parent; margins: -4 }
-                                radius: Theme.radius + 4
-                                color: "transparent"
-                                border { width: 2; color: space.here || drop.containsDrag ? Theme.accent : Theme.strokeStrong }
-                                opacity: space.here || space.hot ? 1 : 0
-                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                        Text {   // the screen's name, once there is more than one
+                            visible: root.groups.length > 1
+                            text: group.modelData.name
+                            color: group.modelData.here ? Theme.text : Theme.subtext
+                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; capitalization: Font.AllUppercase; letterSpacing: 0.6 }
+                        }
+                        Row {
+                            spacing: Theme.spaceL
+                            Rectangle {   // a hairline between screens
+                                visible: group.index > 0
+                                x: -strip.groupGap / 2
+                                width: 1; height: strip.thumbH
+                                color: Theme.stroke
                             }
-                            ClippingRectangle {
-                                anchors.fill: parent
-                                radius: Theme.radius
-                                color: Theme.glassStrong
-                                Image {
-                                    anchors.fill: parent
-                                    source: root.wallpaper ? "file://" + root.wallpaper : ""
-                                    sourceSize.width: 400
-                                    fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
-                                }
-                                Repeater {
-                                    model: root.clients.filter(c => c.workspace.id === space.id)
-                                    ScreencopyView {
-                                        required property var modelData
-                                        x: (modelData.at[0] - space.modelData.x) * space.s
-                                        y: (modelData.at[1] - space.modelData.y) * space.s
-                                        width: modelData.size[0] * space.s
-                                        height: modelData.size[1] * space.s
-                                        captureSource: win.visible ? root.toplevel(modelData) : null
-                                        live: false
+
+                            Repeater {
+                                model: group.modelData.spaces
+                                Column {
+                                    id: space
+                                    required property var modelData
+                                    readonly property int id: modelData.id
+                                    readonly property real s: strip.thumbH / modelData.h
+                                    readonly property bool shown: id === root.viewing
+                                    readonly property bool hot: spaceArea.containsMouse || drop.containsDrag
+                                    spacing: Theme.spaceS
+
+                                    Item {
+                                        width: space.modelData.w * space.s
+                                        height: strip.thumbH
+                                        scale: spaceArea.pressed ? 0.97 : space.hot ? 1.04 : 1
+                                        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+
+                                        Rectangle {   // ring outside a small gap: accent on the workspace shown below and under a dragged window
+                                            anchors { fill: parent; margins: -4 }
+                                            radius: Theme.radius + 4
+                                            color: "transparent"
+                                            border { width: 2; color: space.shown || drop.containsDrag ? Theme.accent : Theme.strokeStrong }
+                                            opacity: space.shown || space.hot ? 1 : 0
+                                            Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                                        }
+                                        ClippingRectangle {
+                                            anchors.fill: parent
+                                            radius: Theme.radius
+                                            color: Theme.glassStrong
+                                            Image {
+                                                anchors.fill: parent
+                                                source: root.wallpaper ? "file://" + root.wallpaper : ""
+                                                sourceSize.width: 400
+                                                fillMode: Image.PreserveAspectCrop
+                                                asynchronous: true
+                                            }
+                                            Repeater {
+                                                model: root.clients.filter(c => c.workspace.id === space.id)
+                                                ScreencopyView {
+                                                    required property var modelData
+                                                    x: (modelData.at[0] - space.modelData.x) * space.s
+                                                    y: (modelData.at[1] - space.modelData.y) * space.s
+                                                    width: modelData.size[0] * space.s
+                                                    height: modelData.size[1] * space.s
+                                                    captureSource: win.visible ? root.toplevel(modelData) : null
+                                                    live: false
+                                                }
+                                            }
+                                        }
+                                        Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border { width: 1; color: Theme.stroke } }
+                                        MouseArea { id: spaceArea; Accessible.role: Accessible.Button; Accessible.name: "Workspace " + space.id; Accessible.onPressAction: root.pick(space.id); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.pick(space.id) }
+                                        DropArea { id: drop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, space.id) }
+                                    }
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: "Workspace " + space.id
+                                        color: space.shown ? Theme.text : Theme.subtext
+                                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: space.shown ? Font.DemiBold : Font.Medium }
                                     }
                                 }
                             }
-                            Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border { width: 1; color: Theme.stroke } }
-                            MouseArea { id: spaceArea; Accessible.role: Accessible.Button; Accessible.name: "Desktop " + space.id; Accessible.onPressAction: root.goTo(space.id); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(space.id) }
-                            DropArea { id: drop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, space.id) }
-                        }
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Desktop " + space.id
-                            color: space.here ? Theme.text : Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: space.here ? Font.DemiBold : Font.Medium }
-                        }
-                    }
-                }
 
-                // the empty desktop at the end: a click opens it and goes there, a dropped window moves to it
-                Column {
-                    spacing: Theme.spaceS
-                    Item {
-                        id: add
-                        readonly property bool hot: addArea.containsMouse || addDrop.containsDrag
-                        width: (root.mon?.w ?? 16) / (root.mon?.h ?? 10) * strip.thumbH
-                        height: strip.thumbH
-                        scale: addArea.pressed ? 0.97 : add.hot ? 1.04 : 1
-                        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+                            // the empty workspace at the end of this screen's row: a click opens it and goes there,
+                            // a dropped window moves to it
+                            Column {
+                                visible: group.modelData.here && root.mc.newTile
+                                spacing: Theme.spaceS
+                                Item {
+                                    id: add
+                                    readonly property bool hot: addArea.containsMouse || addDrop.containsDrag
+                                    width: (root.mon?.w ?? 16) / (root.mon?.h ?? 10) * strip.thumbH
+                                    height: strip.thumbH
+                                    scale: addArea.pressed ? 0.97 : add.hot ? 1.04 : 1
+                                    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
-                        Rectangle {
-                            anchors { fill: parent; margins: -4 }
-                            radius: Theme.radius + 4
-                            color: "transparent"
-                            border { width: 2; color: addDrop.containsDrag ? Theme.accent : Theme.strokeStrong }
-                            opacity: add.hot ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-                        }
-                        ClippingRectangle {   // the bare wallpaper, dimmed: an empty desktop waiting
-                            anchors.fill: parent
-                            radius: Theme.radius
-                            color: Theme.glassStrong
-                            Image {
-                                anchors.fill: parent
-                                source: root.wallpaper ? "file://" + root.wallpaper : ""
-                                sourceSize.width: 400
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                opacity: add.hot ? 0.6 : 0.3
-                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                                    Rectangle {
+                                        anchors { fill: parent; margins: -4 }
+                                        radius: Theme.radius + 4
+                                        color: "transparent"
+                                        border { width: 2; color: addDrop.containsDrag ? Theme.accent : Theme.strokeStrong }
+                                        opacity: add.hot ? 1 : 0
+                                        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                                    }
+                                    ClippingRectangle {   // the bare wallpaper, dimmed: an empty workspace waiting
+                                        anchors.fill: parent
+                                        radius: Theme.radius
+                                        color: Theme.glassStrong
+                                        Image {
+                                            anchors.fill: parent
+                                            source: root.wallpaper ? "file://" + root.wallpaper : ""
+                                            sourceSize.width: 400
+                                            fillMode: Image.PreserveAspectCrop
+                                            asynchronous: true
+                                            opacity: add.hot ? 0.6 : 0.3
+                                            Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                                        }
+                                    }
+                                    Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border { width: 1; color: Theme.stroke } }
+                                    Rectangle {
+                                        anchors.centerIn: parent
+                                        width: 40; height: 40; radius: 20
+                                        color: add.hot ? Theme.fillActive : Theme.glass
+                                        border { width: 1; color: Theme.strokeStrong }
+                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                                        Text { anchors.centerIn: parent; text: "\u{F0415}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 22 } }
+                                    }
+                                    MouseArea { id: addArea; Accessible.role: Accessible.Button; Accessible.name: "New workspace"; Accessible.onPressAction: root.goTo(root.nextSpace); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(root.nextSpace) }
+                                    DropArea { id: addDrop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, root.nextSpace) }
+                                }
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "New workspace"
+                                    color: Theme.subtext
+                                    font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
+                                }
                             }
                         }
-                        Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border { width: 1; color: Theme.stroke } }
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 40; height: 40; radius: 20
-                            color: add.hot ? Theme.fillActive : Theme.glass
-                            border { width: 1; color: Theme.strokeStrong }
-                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                            Text { anchors.centerIn: parent; text: "\u{F0415}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 22 } }
-                        }
-                        MouseArea { id: addArea; Accessible.role: Accessible.Button; Accessible.name: "New desktop"; Accessible.onPressAction: root.goTo(root.nextSpace); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(root.nextSpace) }
-                        DropArea { id: addDrop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, root.nextSpace) }
-                    }
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "New desktop"
-                        color: Theme.subtext
-                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
                     }
                 }
             }
@@ -316,7 +362,7 @@ Singleton {
                     width: empty.implicitWidth + Theme.spaceL * 2
                     height: empty.implicitHeight + Theme.spaceL * 2
                     Accessible.role: Accessible.StaticText
-                    Accessible.name: "No windows on this desktop"
+                    Accessible.name: "No windows on this workspace"
                     Column {
                         id: empty
                         anchors.centerIn: parent
@@ -329,13 +375,13 @@ Singleton {
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "No windows on this desktop"
+                            text: "No windows on this workspace"
                             color: Theme.text
                             font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Pick another desktop above, or press 1–9"
+                            text: "Pick another workspace above, or press 1–9"
                             color: Theme.subtext
                             font { family: Theme.font; pixelSize: Theme.fontLabel }
                         }

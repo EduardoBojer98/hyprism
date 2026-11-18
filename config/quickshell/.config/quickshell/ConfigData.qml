@@ -35,6 +35,12 @@ JsonAdapter {
         property list<string> widgets: []       // small tiles after the open windows, in order: ids of Theme.dockWidgets (clock, date, weather, media, …)
         property list<string> pinned: ["firefox", "google-chrome", "com.microsoft.VSCode", "com.mitchellh.ghostty", "org.gnome.Nautilus"]
     }
+    property JsonObject missionControl: JsonObject {
+        property string screens: "all"          // all: every screen's workspaces, grouped by screen | this: only the screen it opens on
+        property string click: "switch"         // a workspace clicked: switch (go there and close) | browse (show its windows first)
+        property bool newTile: true             // the "New workspace" tile at the end of the row
+        property string size: "medium"          // small | medium | large workspace pictures
+    }
     property JsonObject launcher: JsonObject {
         property string webSearch: "https://duckduckgo.com/?q=%s"
         property bool showFiles: true

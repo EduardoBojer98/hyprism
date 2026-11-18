@@ -46,6 +46,11 @@ and resize. A three-finger swipe sideways switches workspace. The full list: `Su
 `Alt+Tab` shows the open windows, most recently used first: hold Alt and press Tab again (Shift+Tab goes back),
 let go of Alt to switch. One Alt+Tab goes back to the window before. Escape or a click outside cancels.
 
+Mission Control (`Super+W`, a three-finger swipe up) lays out this workspace's windows, with every screen's
+workspaces along the top, grouped under each screen's name. Click a workspace to go there, or "New workspace" to
+start one; drag a window onto either to move it. Settings > Mission Control: which screens, what a click does
+("See its windows" first), the New tile, and the picture size.
+
 ### Screenshots
 
 `Alt+Shift+S`: the screen freezes (menus and tooltips stay); drag an area or click a window, then annotate (arrow, shapes,

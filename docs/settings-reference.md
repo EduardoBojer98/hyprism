@@ -52,6 +52,15 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `widgets` | `list<string>` | `[]` | small tiles after the open windows, in order: ids of Theme.dockWidgets (clock, date, weather, media, …) |
 | `pinned` | `list<string>` | `["firefox", "google-chrome", "com.microsoft.VSCode", "com...` |  |
 
+## missionControl
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `screens` | `string` | `"all"` | all: every screen's workspaces, grouped by screen \| this: only the screen it opens on |
+| `click` | `string` | `"switch"` | a workspace clicked: switch (go there and close) \| browse (show its windows first) |
+| `newTile` | `bool` | `true` | the "New workspace" tile at the end of the row |
+| `size` | `string` | `"medium"` | small \| medium \| large workspace pictures |
+
 ## launcher
 
 | Setting | Type | Default | What it does |
