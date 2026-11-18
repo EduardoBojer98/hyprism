@@ -23,7 +23,7 @@ Singleton {
     property bool open: false
     property var mon: null           // { name, id, x, y, w, h, ws }
     property var clients: []         // hyprctl clients on this screen's normal desktops
-    property var spaces: []          // desktop ids on this screen
+    property var spaces: []          // { id, x, y, w, h }: each desktop and its screen
     property int nextSpace: 1        // lowest desktop id no screen is using
     property int selected: -1
     property var dragging: null      // client being dragged
@@ -45,7 +45,9 @@ Singleton {
     function dispatch(lua) { Quickshell.execDetached(["hyprctl", "dispatch", lua]) }
     function toplevel(c) { return Hyprland.toplevels.values.find(t => "0x" + t.address === c.address)?.wayland ?? null }
     function focusWindow(c) { hide(); dispatch(`hl.dsp.focus({ window = "address:${c.address}" })`) }
-    function goTo(id) { hide(); dispatch(`hl.dsp.focus({ workspace = ${id} })`) }
+    // after the overlay lets go of the keyboard: Hyprland then refocuses the last window, which would
+    // pull an empty desktop's switch straight back to that window's desktop
+    function goTo(id) { hide(); switchTo.id = id; switchTo.restart() }
     function moveTo(c, id) {
         if (c.workspace.id === id) return
         dispatch(`hl.dsp.window.move({ workspace = ${id}, follow = false, window = "address:${c.address}" })`)
@@ -79,6 +81,7 @@ Singleton {
         function toggle(): void { root.toggle() }
     }
 
+    Timer { id: switchTo; property int id; interval: 120; onTriggered: root.dispatch(`hl.dsp.focus({ workspace = ${id} })`) }
     Timer { id: reread; interval: 150; onTriggered: reader.running = true }
     // never wait on the screen copy for long: open over a plain dim if it doesn't come
     Timer { id: snapGuard; interval: 250; onTriggered: if (root.snapping) { root.snapping = false; root.open = true } }
@@ -93,13 +96,15 @@ Singleton {
                     root.wallpaper = text.slice(0, nl).trim()
                     const d = JSON.parse(text.slice(nl + 1))
                     const m = d.m.find(x => x.focused) ?? d.m[0]
-                    const rotated = m.transform % 2 === 1
-                    root.mon = { name: m.name, id: m.id, x: m.x, y: m.y, ws: m.activeWorkspace.id,
-                                 w: (rotated ? m.height : m.width) / m.scale, h: (rotated ? m.width : m.height) / m.scale }
-                    root.clients = d.c.filter(c => c.monitor === m.id && c.workspace.id > 0 && c.mapped && !c.hidden)
-                    const ids = new Set(d.w.filter(w => w.monitorID === m.id && w.id > 0).map(w => w.id))
-                    ids.add(m.activeWorkspace.id)
-                    root.spaces = [...ids].sort((a, b) => a - b)
+                    const geo = x => { const r = x.transform % 2 === 1
+                        return { x: x.x, y: x.y, w: (r ? x.height : x.width) / x.scale, h: (r ? x.width : x.height) / x.scale } }
+                    root.mon = Object.assign({ name: m.name, id: m.id, ws: m.activeWorkspace.id }, geo(m))
+                    root.clients = d.c.filter(c => c.workspace.id > 0 && c.mapped && !c.hidden)
+                    // every screen's desktops, each drawn at its own screen's shape: one on another screen is a click away too
+                    const screens = d.m.reduce((o, x) => { o[x.id] = geo(x); return o }, {})
+                    const spaces = d.w.filter(w => w.id > 0 && screens[w.monitorID]).map(w => Object.assign({ id: w.id }, screens[w.monitorID]))
+                    if (!spaces.some(w => w.id === m.activeWorkspace.id)) spaces.push(Object.assign({ id: m.activeWorkspace.id }, geo(m)))
+                    root.spaces = spaces.sort((a, b) => a.id - b.id)
                     const used = new Set(d.w.map(w => w.id))
                     let n = 1; while (used.has(n)) n++
                     root.nextSpace = n
@@ -167,102 +172,129 @@ Singleton {
             // a click on empty space closes, like every other sheet (a window or a desktop closes it too)
             MouseArea { anchors.fill: parent; Accessible.ignored: true; onClicked: root.hide() }
 
-            // ---- desktops: a glass bar along the top ----
-            Glass {
-                // drops in from above the screen's edge as the windows lift off
-                anchors { top: parent.top; topMargin: Theme.spaceL - (root.flies ? (1 - root.t) * (height + Theme.spaceL) : 0)
+            // ---- desktops: every screen's, in a row along the top, then an empty one to start (as GNOME) ----
+            Row {
+                id: strip
+                // as tall as fits: a row of many desktops shrinks instead of running off the screen
+                readonly property real thumbH: Math.min(112, (win.width - 160 - spacing * root.spaces.length)
+                    / (root.spaces.reduce((a, s) => a + s.w / s.h, 0) + (root.mon?.w ?? 16) / (root.mon?.h ?? 10)))
+                anchors { top: parent.top; topMargin: Theme.spaceXl + Theme.spaceS - (root.flies ? (1 - root.t) * (height + Theme.spaceXl) : 0)
                           horizontalCenter: parent.horizontalCenter }
                 opacity: root.t
-                width: strip.implicitWidth + Theme.spaceL * 2
-                height: strip.implicitHeight + Theme.spaceM * 2
-                radius: Theme.radiusLarge
-                MouseArea { anchors.fill: parent }   // clicks between the desktops don't close
+                spacing: Theme.spaceL
 
-                Row {
-                    id: strip
-                    readonly property real thumbH: 84
-                    readonly property real s: thumbH / (root.mon?.h ?? 1)
-                    anchors.centerIn: parent
-                    spacing: Theme.spaceL
-
-                    Repeater {
-                        model: root.spaces
-                        Column {
-                            id: space
-                            required property int modelData
-                            readonly property bool here: modelData === root.mon?.ws
-                            readonly property bool hot: spaceArea.containsMouse || drop.containsDrag
-                            spacing: Theme.spaceXs + 2
-
-                            Item {
-                                width: (root.mon?.w ?? 16) * strip.s
-                                height: strip.thumbH
-                                scale: space.hot ? 1.05 : 1
-                                Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
-
-                                ClippingRectangle {
-                                    anchors.fill: parent
-                                    radius: Theme.radiusSmall
-                                    color: Theme.glassStrong
-                                    Image {
-                                        anchors.fill: parent
-                                        source: root.wallpaper ? "file://" + root.wallpaper : ""
-                                        sourceSize.width: 400
-                                        fillMode: Image.PreserveAspectCrop
-                                        asynchronous: true
-                                    }
-                                    Repeater {
-                                        model: root.clients.filter(c => c.workspace.id === space.modelData)
-                                        ScreencopyView {
-                                            required property var modelData
-                                            x: (modelData.at[0] - root.mon.x) * strip.s
-                                            y: (modelData.at[1] - root.mon.y) * strip.s
-                                            width: modelData.size[0] * strip.s
-                                            height: modelData.size[1] * strip.s
-                                            captureSource: win.visible ? root.toplevel(modelData) : null
-                                            live: false
-                                        }
-                                    }
-                                }
-                                Rectangle {   // ring: white for this desktop, accent while a window hovers over it
-                                    anchors { fill: parent; margins: -3 }
-                                    radius: Theme.radiusSmall + 3
-                                    color: "transparent"
-                                    border { width: 2; color: drop.containsDrag ? Theme.accent : space.here ? Theme.text : Theme.strokeStrong }
-                                    opacity: space.here || space.hot ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-                                }
-                                MouseArea { id: spaceArea; Accessible.role: Accessible.Button; Accessible.name: "Desktop " + space.modelData; Accessible.onPressAction: root.goTo(space.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(space.modelData) }
-                                DropArea { id: drop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, space.modelData) }
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "Desktop " + space.modelData
-                                color: space.here ? Theme.text : Theme.subtext
-                                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: space.here ? Font.DemiBold : Font.Medium }
-                            }
-                        }
-                    }
-
-                    // new empty desktop; drop a window here to give it one of its own
+                Repeater {
+                    model: root.spaces
                     Column {
-                        spacing: Theme.spaceXs + 2
-                        Rectangle {
-                            width: strip.thumbH * 0.75; height: strip.thumbH
-                            radius: Theme.radiusSmall
-                            color: addArea.containsMouse || addDrop.containsDrag ? Theme.fillActive : Theme.fill
-                            border { color: addDrop.containsDrag ? Theme.accent : Theme.stroke; width: addDrop.containsDrag ? 2 : 1 }
-                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                            Text { anchors.centerIn: parent; text: "\u{F0415}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 22 } }
-                            MouseArea { id: addArea; Accessible.role: Accessible.Button; Accessible.name: "New desktop"; Accessible.onPressAction: root.goTo(root.nextSpace); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(root.nextSpace) }
-                            DropArea { id: addDrop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, root.nextSpace) }
+                        id: space
+                        required property var modelData
+                        readonly property int id: modelData.id
+                        readonly property real s: strip.thumbH / modelData.h
+                        readonly property bool here: id === root.mon?.ws
+                        readonly property bool hot: spaceArea.containsMouse || drop.containsDrag
+                        spacing: Theme.spaceS
+
+                        Item {
+                            width: space.modelData.w * space.s
+                            height: strip.thumbH
+                            scale: spaceArea.pressed ? 0.97 : space.hot ? 1.04 : 1
+                            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+
+                            Rectangle {   // ring outside a small gap: accent on this desktop and under a dragged window
+                                anchors { fill: parent; margins: -4 }
+                                radius: Theme.radius + 4
+                                color: "transparent"
+                                border { width: 2; color: space.here || drop.containsDrag ? Theme.accent : Theme.strokeStrong }
+                                opacity: space.here || space.hot ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                            }
+                            ClippingRectangle {
+                                anchors.fill: parent
+                                radius: Theme.radius
+                                color: Theme.glassStrong
+                                Image {
+                                    anchors.fill: parent
+                                    source: root.wallpaper ? "file://" + root.wallpaper : ""
+                                    sourceSize.width: 400
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                }
+                                Repeater {
+                                    model: root.clients.filter(c => c.workspace.id === space.id)
+                                    ScreencopyView {
+                                        required property var modelData
+                                        x: (modelData.at[0] - space.modelData.x) * space.s
+                                        y: (modelData.at[1] - space.modelData.y) * space.s
+                                        width: modelData.size[0] * space.s
+                                        height: modelData.size[1] * space.s
+                                        captureSource: win.visible ? root.toplevel(modelData) : null
+                                        live: false
+                                    }
+                                }
+                            }
+                            Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border { width: 1; color: Theme.stroke } }
+                            MouseArea { id: spaceArea; Accessible.role: Accessible.Button; Accessible.name: "Desktop " + space.id; Accessible.onPressAction: root.goTo(space.id); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(space.id) }
+                            DropArea { id: drop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, space.id) }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "New"
-                            color: Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
+                            text: "Desktop " + space.id
+                            color: space.here ? Theme.text : Theme.subtext
+                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: space.here ? Font.DemiBold : Font.Medium }
                         }
+                    }
+                }
+
+                // the empty desktop at the end: a click opens it and goes there, a dropped window moves to it
+                Column {
+                    spacing: Theme.spaceS
+                    Item {
+                        id: add
+                        readonly property bool hot: addArea.containsMouse || addDrop.containsDrag
+                        width: (root.mon?.w ?? 16) / (root.mon?.h ?? 10) * strip.thumbH
+                        height: strip.thumbH
+                        scale: addArea.pressed ? 0.97 : add.hot ? 1.04 : 1
+                        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+
+                        Rectangle {
+                            anchors { fill: parent; margins: -4 }
+                            radius: Theme.radius + 4
+                            color: "transparent"
+                            border { width: 2; color: addDrop.containsDrag ? Theme.accent : Theme.strokeStrong }
+                            opacity: add.hot ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                        }
+                        ClippingRectangle {   // the bare wallpaper, dimmed: an empty desktop waiting
+                            anchors.fill: parent
+                            radius: Theme.radius
+                            color: Theme.glassStrong
+                            Image {
+                                anchors.fill: parent
+                                source: root.wallpaper ? "file://" + root.wallpaper : ""
+                                sourceSize.width: 400
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                opacity: add.hot ? 0.6 : 0.3
+                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                            }
+                        }
+                        Rectangle { anchors.fill: parent; radius: Theme.radius; color: "transparent"; border { width: 1; color: Theme.stroke } }
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 40; height: 40; radius: 20
+                            color: add.hot ? Theme.fillActive : Theme.glass
+                            border { width: 1; color: Theme.strokeStrong }
+                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                            Text { anchors.centerIn: parent; text: "\u{F0415}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 22 } }
+                        }
+                        MouseArea { id: addArea; Accessible.role: Accessible.Button; Accessible.name: "New desktop"; Accessible.onPressAction: root.goTo(root.nextSpace); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(root.nextSpace) }
+                        DropArea { id: addDrop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, root.nextSpace) }
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "New desktop"
+                        color: Theme.subtext
+                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium }
                     }
                 }
             }
@@ -271,7 +303,7 @@ Singleton {
             Item {
                 id: field
                 anchors { left: parent.left; right: parent.right; top: parent.top; bottom: parent.bottom
-                          leftMargin: 72; rightMargin: 72; topMargin: 170; bottomMargin: 110 }   // under the desktops, clear of the dock
+                          leftMargin: 72; rightMargin: 72; topMargin: 200; bottomMargin: 110 }   // under the desktops, clear of the dock
 
                 // an empty desktop: a quiet card, readable over any wallpaper, rising in with the rest
                 Glass {
