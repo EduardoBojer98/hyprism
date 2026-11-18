@@ -219,6 +219,11 @@ ColumnLayout {
 
     SettingGroup {
         title: "Look"
+        SettingRow {   // the defaults show every tile (Reset below); this is the short one
+            label: "Essentials"
+            hint: "Compact, with only the buttons most people use; your own tiles stay"
+            PillButton { text: "Use"; onClicked: page.essentials() }
+        }
         SettingRow {
             label: "Panel style"
             hint: ({ panel: "Tiles on soft fills, the panel's large corners", compact: "Smaller tiles and tighter spacing", borderless: "Flat tiles with hairline edges, no panel border" })[Config.controlCenter.style] ?? ""
@@ -234,6 +239,13 @@ ColumnLayout {
             hint: "Shown beside the power mode; click it for the hardware settings"
             ConfigToggle { section: "controlCenter"; key: "showHardware" }
         }
+    }
+
+    function essentials() {
+        const keep = ["focus", "nightlight", "caffeine", "darkmode", "micmute", "airplane", "record", "screenshot"]
+        Config.reset("controlCenter")
+        Config.set("controlCenter", "style", "compact")
+        Config.set("controlCenter", "hidden", ControlCenter.defaults.toggles.filter(id => !keep.includes(id) && !id.startsWith("action:")))
     }
 
     ResetGroup { sections: ["controlCenter"] }
