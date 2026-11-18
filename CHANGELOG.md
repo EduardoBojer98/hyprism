@@ -6,6 +6,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Settings: Page Up and Page Down scroll the page, wherever the keyboard focus is; `qs ipc call settings scroll`
+  takes top, bottom, +N/-N pixels or a group's title. The test desktop (`tests/nested.sh scroll`) uses it.
 - Search & Launcher: the five styles now work differently, not just sit elsewhere: Spotlight is the macOS bar alone
   until you type, Launchpad lays every app on the dimmed screen with no sheet (dark themes), Drawer opens on today at a
   glance with big card rows, Sidebar is a dense one-line list, Terminal has plain text rows with a kind column and no

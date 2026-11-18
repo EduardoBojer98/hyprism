@@ -6,7 +6,10 @@
 #   tests/nested.sh shot NAME      screenshot of the test desktop -> prints the PNG's path
 #   tests/nested.sh ipc ARGS...    qs ipc call ARGS... in the test shell (e.g. ipc config set appearance theme atlas)
 #   tests/nested.sh hypr ARGS...   hyprctl ARGS... in the test session
-#   tests/nested.sh key NAMES...   press keys in the test desktop (xkb names: Tab, Next, Return…)
+#   tests/nested.sh key NAMES...   press keys in the test desktop (xkb names: Tab, Next, Return…); in Settings,
+#                                  Next / Prior (Page Down / Up) scroll the page
+#   tests/nested.sh scroll WHERE   scroll the open Settings page: top, bottom, +600 / -600 (pixels), or a group's
+#                                  title (scroll Advanced), so rows below the fold can be shot
 #   tests/nested.sh screens2       add a second screen like the laptop panel (1600x1000 logical at scale 1.2)
 #   tests/nested.sh errors         the test shell's warnings and errors (nothing printed = clean)
 #   tests/nested.sh stop           close the window and delete the throwaway home
@@ -153,6 +156,9 @@ case ${1:-} in
         inside hyprctl reload >/dev/null
         sleep 1
         pins_hold || echo "warning: the test screen lost its scale on reload (tests/nested.sh pin)" >&2
+        # a fresh home opens the first-run Welcome, which holds the keyboard (keys never reached Settings):
+        # closed here; `ipc welcome open` brings it back for a picture of it
+        inside qs ipc call welcome close >/dev/null 2>&1 || true
         echo "test session up: home $T, display $SOCK"
         ;;
     shot)
@@ -179,6 +185,10 @@ case ${1:-} in
         need_running
         shift
         for k in "$@"; do inside wtype -k "$k"; done # key names as in xkb: Tab, Next (Page Down), Return, Escape…
+        ;;
+    scroll)
+        need_running
+        inside qs ipc call settings scroll "${2:?scroll top|bottom|+N|-N|GROUP TITLE}"
         ;;
     screens2)
         need_running

@@ -128,7 +128,7 @@ them out). Settings → Default Apps picks the default terminal.
 
 `Super+I` (or from the Control Center). The search field finds a page by its name or by words like "dark",
 "border", "update" or "timezone". Every control works by keyboard: Tab moves, Space or Enter presses, arrows
-change a choice or a slider.
+change a choice or a slider, Page Up and Page Down scroll the page.
 
 | Group (sidebar) | Pages |
 |---|---|
