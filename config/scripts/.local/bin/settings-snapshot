@@ -25,7 +25,8 @@ take() {
     [[ -s $SETTINGS ]] || exit 0
     mkdir -p "$DIR"
     last=$(newest)
-    if [[ -n $last ]] && cmp -s "$SETTINGS" "$DIR/$last/settings.json"; then return 0; fi
+    # unchanged since the newest copy: nothing to keep (compared in bash: diffutils' cmp isn't on every system)
+    if [[ -n $last && $(<"$SETTINGS") == "$(<"$DIR/$last/settings.json")" ]]; then return 0; fi
     id=$(date +%Y%m%d-%H%M%S%3N)-$reason # ms: two in the same second still sort newest first
     mkdir -p "$DIR/$id"
     cp -- "$SETTINGS" "$DIR/$id/settings.json"
