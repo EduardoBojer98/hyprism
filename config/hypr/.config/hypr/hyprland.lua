@@ -38,3 +38,12 @@ if index then
     end
     index:close()
 end
+
+-- Your own Lua, last so it wins: ~/.config/hypr/user.lua is yours, not a link into the repo, so editing it never
+-- blocks `hyprism update` (docs/USER-GUIDE.md, "Your own config"). A mistake shows up in hyprctl configerrors.
+local user = os.getenv("HOME") .. "/.config/hypr/user.lua"
+local f = io.open(user)
+if f then
+    f:close()
+    dofile(user)
+end

@@ -29,3 +29,5 @@ copy-on-select = clipboard
 
 # Written by the shell (Settings > Appearance); the "?" makes it optional
 config-file = ?theme.conf
+# Yours, last so it wins, and not a link into the repo (edit it freely: updates leave it alone)
+config-file = ?user.conf

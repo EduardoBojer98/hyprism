@@ -73,8 +73,11 @@ doctor() {
         [[ -d $HOME/$d ]] || continue
         for f in "$HOME/$d"/*; do
             [[ -f $f && ! -L $f ]] || continue
-            case ${f#"$HOME/"} in .config/quickshell/settings.json | .config/quickshell/settings.json.broken | .config/ghostty/theme.conf | .config/fuzzel/theme.ini) continue ;; esac
-            bad "file in a managed folder that isn't from the repo: ~/${f#"$HOME/"}" "move it into config/ in the repo, or delete it"
+            case ${f#"$HOME/"} in
+                .config/quickshell/settings.json | .config/quickshell/settings.json.broken | .config/ghostty/theme.conf | .config/fuzzel/theme.ini) continue ;;
+                .config/hypr/user.lua | .config/ghostty/user.conf) continue ;; # yours (docs/USER-GUIDE.md, "Your own config")
+            esac
+            bad "file in a managed folder that isn't from the repo: ~/${f#"$HOME/"}" "move what you need into ~/.config/hypr/user.lua or ~/.config/ghostty/user.conf (kept through updates), then delete it"
         done
     done
     while IFS= read -r l; do

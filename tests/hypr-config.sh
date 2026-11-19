@@ -24,9 +24,11 @@ for profile in "$t"/fixtures/*/; do
         ln -s "$PWD/$f" "$home/.config/hypr/hardware/"
         basename "$f" .lua >>"$home/.config/hypr/hardware/index"
     done
+    # your own user.lua is loaded last (a variable, so the check can't miss that it ran)
+    echo 'USER_LUA_LOADED = true' >"$home/.config/hypr/user.lua"
     # hl.timer segfaults --verify-config (Hyprland 0.57: no event loop when only verifying), so a wrapper
     # stubs it before loading the real config; timers only re-apply things at runtime, nothing to verify
-    printf 'hl.timer = function() end\ndofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")\n' >"$home/.config/hypr/verify.lua"
+    printf 'hl.timer = function() end\ndofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")\nassert(USER_LUA_LOADED, "user.lua was not loaded")\n' >"$home/.config/hypr/verify.lua"
     rc=0
     out=$(HOME=$home XDG_CONFIG_HOME=$home/.config hyprland --verify-config -c "$home/.config/hypr/verify.lua" 2>&1) || rc=$? # judged by its text below
     # a crash anyway (a new runtime-only call): no verdict, so say so rather than pass

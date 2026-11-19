@@ -161,6 +161,13 @@ broken 'echo "{ not json" > ~/.config/quickshell/settings.json' "isn't valid JSO
 as desktop-amd 'rm -f ~/.config/quickshell/settings.json'
 broken 'rm ~/.config/hyprism/hardware.toml' 'never looked at'
 as desktop-amd './install.sh detect >/dev/null'
+# your own files beside the linked ones are fine: the doctor leaves them alone
+as desktop-amd 'echo "-- mine" > ~/.config/hypr/user.lua && echo "font-size = 13" > ~/.config/ghostty/user.conf && ./install.sh doctor >/dev/null' || {
+    echo "xx the doctor complained about ~/.config/hypr/user.lua or ~/.config/ghostty/user.conf"
+    exit 1
+}
+as desktop-amd 'rm ~/.config/hypr/user.lua ~/.config/ghostty/user.conf'
+echo "ok: user.lua and user.conf are yours"
 # the breakages above made more backups (their broken files); keep only the first install's, which holds yours
 as desktop-amd 'find ~/.local/state/hyprism/backups -mindepth 1 -maxdepth 1 -type d | sort | tail -n +2 | xargs -r rm -rf'
 as desktop-amd 'ls ~/.local/state/hyprism/backups/*/.config/fuzzel/fuzzel.ini >/dev/null' # the first install backed yours up

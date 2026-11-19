@@ -65,7 +65,7 @@ update() {
     if [[ -z ${HYPRISM_PULLED:-} ]] && git -C "$REPO" rev-parse -q --verify '@{u}' >/dev/null 2>&1; then # no upstream = nothing to pull
         # untracked files don't count: a pull that would overwrite one stops by itself
         if [[ -n $(git -C "$REPO" status --porcelain --untracked-files=no) ]]; then
-            warn "The repo has local changes: not pulling (commit or stash them)"
+            warn "The repo has local changes: not pulling (commit or stash them; your own changes belong in ~/.config/hypr/user.lua and the other files in docs/USER-GUIDE.md, \"Your own config\")"
         else
             local before
             before=$(git -C "$REPO" rev-parse HEAD)

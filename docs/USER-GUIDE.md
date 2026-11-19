@@ -279,6 +279,22 @@ Phone page or tile. Open the app on the phone on the same Wi-Fi, then **Pair** o
   firewall rules; allow them yourself, e.g. `sudo ufw allow 1714:1764/udp && sudo ufw allow 1714:1764/tcp`, or
   `sudo firewall-cmd --permanent --add-service=kdeconnect && sudo firewall-cmd --reload`.
 
+## Your own config
+
+The files Hyprism links into `~/.config` are the repo's own: editing one changes the repo, and `hyprism update` then
+won't pull until you commit or undo it. Put your own changes in these files instead. They are yours, not links, so
+updates and `./install.sh uninstall` leave them alone, and they load last, so they win:
+
+| For | Your file | What goes in it |
+|---|---|---|
+| Hyprland | `~/.config/hypr/user.lua` | Lua, like the files in `~/.config/hypr/modules/`: binds, rules, settings. A mistake shows in `hyprctl configerrors`. |
+| Ghostty | `~/.config/ghostty/user.conf` | Ghostty settings, e.g. `font-size = 13`. |
+| Fish | any new file in `~/.config/fish/conf.d/` | aliases, functions, variables; `~/.config/fish/config.fish` is yours too. |
+| Starship | a copy of `~/.config/starship.toml` under another name | point fish at it: `set -gx STARSHIP_CONFIG ~/.config/my-starship.toml` in a `conf.d` file. |
+
+Most things have a place in Settings, which keeps them in `~/.config/quickshell/settings.json` (yours as well).
+`./install.sh doctor` lists any other file you added to a folder Hyprism manages.
+
 ## Recovery
 
 A broken setting or theme never needs a reinstall. More: [troubleshooting.md](troubleshooting.md).
