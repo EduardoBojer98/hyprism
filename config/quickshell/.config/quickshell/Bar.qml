@@ -31,9 +31,9 @@ Scope {
     function menuRows() {
         const act = id => Actions.all.find(a => a.id === id)
         const quick = ["overview", "shot", "keys", "dnd", "caffeine"].map(act).filter(a => a && Actions.available(a)).map(a => ({
-            label: a.name, glyph: a.icon, checked: a.kind === "toggle" && a.state?.on?.() === true, run: () => Actions.run(a.id) }))
+            label: a.name, glyph: a.icon, checked: Actions.isOn(a), run: () => Actions.run(a.id) }))
         const mine = Actions.forSurface("barmenu").filter(a => !Actions.builtinIds.includes(a.id)).map(a => ({
-            label: a.name, glyph: a.icon ?? "", checked: a.kind === "toggle" && a.state?.on?.() === true, run: () => Actions.run(a.id) }))
+            label: a.name, glyph: a.icon ?? "", checked: Actions.isOn(a), run: () => Actions.run(a.id) }))
         const set = (k, v) => () => Config.set(...k, v)
         const settings = [
             { label: "Show seconds", glyph: "\u{F0954}", checked: Config.bar.seconds, run: set(["bar", "seconds"], !Config.bar.seconds) },
@@ -106,8 +106,8 @@ Scope {
                 acceptedButtons: Qt.RightButton
                 Accessible.role: Accessible.Button
                 Accessible.name: "Menu bar options"
-                Accessible.onPressAction: { barMenu.at = null; barMenu.rows = root.menuRows(); barMenu.open = true }
-                onClicked: mouse => { barMenu.at = { x: mouse.x, y: mouse.y }; barMenu.rows = root.menuRows(); barMenu.open = true }
+                Accessible.onPressAction: { barMenu.at = null; Actions.refreshVisible("barmenu"); barMenu.rows = Qt.binding(root.menuRows); barMenu.open = true }
+                onClicked: mouse => { barMenu.at = { x: mouse.x, y: mouse.y }; Actions.refreshVisible("barmenu"); barMenu.rows = Qt.binding(root.menuRows); barMenu.open = true }
             }
             ShellMenu { id: barMenu; anchorItem: body }
 
