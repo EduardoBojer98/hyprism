@@ -281,6 +281,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- `hyprism doctor` no longer says the hardware changed each time a screen is plugged in or a dock is attached.
+  `nv` without a hardware file uses the NVIDIA variables only where NVIDIA's driver is loaded. `bootstrap.sh` runs
+  nothing if its download is cut short.
 - A module that is no longer on (its hardware is gone, or `--without NAME`) now has its links removed at the next
   install or update, so its settings (for example `nvidia-hybrid`'s GPU choice) stop applying. Before, they stayed
   until a full uninstall.

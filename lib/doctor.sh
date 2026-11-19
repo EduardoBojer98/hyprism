@@ -9,8 +9,9 @@ doctor_hardware() {
         return 0
     }
     local now was
-    now=$(detect_hardware | grep -v -e '^#' -e '^$')
-    was=$(sed '/^\[override\]/,$d' "$HW_FILE" | grep -v -e '^#' -e '^$')
+    # screens plugged in come and go (a dock), so they don't count as a hardware change
+    now=$(detect_hardware | grep -v -e '^#' -e '^$' -e '^external =')
+    was=$(sed '/^\[override\]/,$d' "$HW_FILE" | grep -v -e '^#' -e '^$' -e '^external =')
     [[ $now == "$was" ]] || warn "the hardware changed since it was last looked at (./install.sh detect, then ./install.sh for new modules)"
 }
 
