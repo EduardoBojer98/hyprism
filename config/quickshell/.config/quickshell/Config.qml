@@ -72,7 +72,7 @@ Singleton {
                          mutedApps: "list" },
         terminal: { cursor: ["theme", "block", "bar", "underline", "block_hollow"], blink: ["theme", "on", "off"],
                     opacity: ["theme", "solid", "soft", "clear"], padding: ["theme", "tight", "normal", "roomy"],
-                    trail: "bool", transientPrompt: "bool", greeting: ["default", "off", "fastfetch", "pokemon"] },
+                    trail: "bool", typing: ["pulse", "sparks", "ghost", "ripple", "none"], transientPrompt: "bool", greeting: ["default", "off", "fastfetch", "pokemon"] },
         osd: { timeoutMs: [600, 5000], volume: "bool", brightness: "bool", micMute: "bool", layout: "bool", capsLock: "bool", position: ["bottom", "top", "center"] },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         focus: { modes: "focusModes", active: "string", last: "string", auto: "bool", restore: "object" },

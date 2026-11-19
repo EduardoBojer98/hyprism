@@ -10,8 +10,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   fish's transient prompt and greeting (off, fastfetch, or a random Pokémon in fastfetch's logo slot, 1 in 16 shiny;
   pokemon-colorscripts) for new shells. A picked cursor shape stays at the prompt (Ghostty's shell integration no
   longer turns it into a bar). "Theme" takes each theme's own terminal look
-  (theme.json `term.cursorStyle`, `blink`, `padding`). The cursor animation is our own shader (a ring pops out of the cursor on each keystroke, a smear follows
-  a jump), only in full motion and on AC.
+  (theme.json `term.cursorStyle`, `blink`, `padding`). The cursor animation is our own shaders: a smear follows a jump, and a typing effect to pick (Pulse: a
+  ring pops out of the cursor; Sparks: sparks fly up and fall; Ghost: a sinking afterimage; Ripple: a wave that
+  bends the text; or None), only in full motion and on AC.
 - The fastfetch greeting is a card on a rail in the terminal's palette: system, hardware (model, CPU threads, each
   GPU and screen) and usage bars, packages split by source (pacman, flatpak, ...). The Pokémon sits in one fixed
   box with its Pokédex number and name under it, so the card never moves.

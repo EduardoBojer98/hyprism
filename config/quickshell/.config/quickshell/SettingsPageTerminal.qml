@@ -27,8 +27,19 @@ ColumnLayout {
         SettingRow {
             label: "Cursor animation"
             hint: Config.terminal.trail && !(Theme.motionLevel === "full") ? "Paused: Animations is not on Full"
-                : "A pulse on each keystroke, a smear when the cursor jumps. Keeps a focused terminal drawing every frame; off on battery"
+                : "A smear when the cursor jumps, and the typing effect below. Keeps a focused terminal drawing every frame; off on battery"
             ConfigToggle { section: "terminal"; key: "trail" }
+        }
+        SettingRow {
+            label: "Typing effect"
+            enabled: Config.terminal.trail
+            opacity: enabled ? 1 : 0.5
+            hint: ({ pulse: "A ring pops out of the cursor and fades",
+                     sparks: "Sparks fly up from the cursor and fall back, a new pattern every key",
+                     ghost: "The cursor leaves a sinking afterimage, a short wake behind your typing",
+                     ripple: "A wave rolls out from the cursor and bends the text it crosses",
+                     none: "Only the jump smear" })[Config.terminal.typing] ?? ""
+            ConfigChoice { section: "terminal"; key: "typing"; values: ["pulse", "sparks", "ghost", "ripple", "none"]; labels: ["Pulse", "Sparks", "Ghost", "Ripple", "None"] }
         }
         SettingRow {
             label: "Background"

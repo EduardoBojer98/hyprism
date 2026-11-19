@@ -25,7 +25,8 @@ JsonAdapter {
         property string blink: "theme"          // theme | on | off
         property string opacity: "theme"        // theme (see-through in glass themes) | solid | soft | clear
         property string padding: "theme"        // theme | tight | normal | roomy
-        property bool trail: false              // cursor animation shader (ghostty/shaders/hyprism-trail.glsl: a pulse per keystroke, a smear per jump): full motion, on AC only
+        property bool trail: false              // cursor animation shaders (ghostty/shaders/): a smear per jump, then the typing effect; full motion, on AC only
+        property string typing: "pulse"         // typing effect: pulse | sparks | ghost | ripple | none (hyprism-type-NAME.glsl)
         property bool transientPrompt: false    // starship's transient prompt: past prompts shrink to one symbol
         property string greeting: "default"     // default (the distro's) | off | fastfetch | pokemon (a random one as fastfetch's logo)
     }

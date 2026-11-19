@@ -75,10 +75,13 @@ Scope {
         if (opacity) lines.push("background-opacity = " + opacity)
         const pad = ({ tight: [6, 4], normal: [12, 10], roomy: [20, 16] })[tc.padding] ?? (own && Array.isArray(t.padding) ? t.padding : null)
         if (pad) lines.push("window-padding-x = " + n(pad[0]), "window-padding-y = " + n(pad[1]))
-        // the trail draws for a few frames after a jump; Ghostty's animation loop runs while a terminal has focus, so only
-        // in full motion and on AC (like the moving window frame)
-        if (tc.trail && Theme.motionLevel === "full" && !UPower.onBattery)
-            lines.push("custom-shader = " + Quickshell.env("HOME") + "/.config/ghostty/shaders/hyprism-trail.glsl")
+        // the jump smear, then the typing effect (Ghostty chains custom shaders in order); its animation loop runs while a
+        // terminal has focus, so only in full motion and on AC (like the moving window frame)
+        if (tc.trail && Theme.motionLevel === "full" && !UPower.onBattery) {
+            const dir = Quickshell.env("HOME") + "/.config/ghostty/shaders/"
+            lines.push("custom-shader = " + dir + "hyprism-trail.glsl")
+            if (["pulse", "sparks", "ghost", "ripple"].includes(tc.typing)) lines.push("custom-shader = " + dir + "hyprism-type-" + tc.typing + ".glsl")
+        }
         return lines.join("\n")
     }
     // fish, read by fish/conf.d/tools.fish when a shell starts. CachyOS's config.fish (sourced after conf.d) redefines
