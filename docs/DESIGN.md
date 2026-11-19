@@ -78,6 +78,19 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
 7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0;
    panels are capped to the room between bar and dock and kept on their monitor.
 
+## Tokens
+
+Components take every size, time and colour from `Theme.qml`; `tests/no-hardcode.sh` fails on a literal duration,
+`Easing.OutCubic` or font size outside it (a line marked `one-off` or `palette` may).
+
+| Kind | Tokens |
+|---|---|
+| Type | fontCaption, fontLabel, fontSize, fontTitle, fontHeading, fontDisplay, fontHero (from the theme's body size and Settings' text size); fontBadge 9 |
+| Glyphs (icon font) | glyphXs 12, glyphS 14, glyph 16, glyphL 20, iconLarge 32; app icons iconSmall 16 to iconApp 48 |
+| Space and shape | spaceXs..spaceXl (times the theme's density), rowHeight, controlHeight, radiusSmall, radius, radiusLarge, radiusPanel |
+| Colour and state | base, surfaceColor, raised, text, subtext, muted, accent, accent2, success, warning, error; fill, fillHover, fillActive; accentWash; segOn (theme's `popup.segments`) |
+| Motion | enter, exit, curve, travel, startScale, pressScale (the look and the animation level); anim, animFast, easing (small changes); pulse, blink (live things); pop, popFade, stagger, popFrom, popOvershoot (a group arriving, full motion only) |
+
 ## Light and dark
 
 Every theme has both halves: the dark themes (Pebble, Monolith) have a light version and the
