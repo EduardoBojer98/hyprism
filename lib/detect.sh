@@ -76,7 +76,7 @@ _hw_first() { # the name of the first entry matching a glob, or nothing
 
 # One line per graphics card: "vendor pci boot_vga internal_panel connected_outputs..."
 _hw_cards() {
-    local card dev vendor pci conn name internal outs
+    local card dev vendor pci conn name internal outs boot
     for card in "$HW_ROOT"/sys/class/drm/card[0-9]*; do
         [[ $card =~ /card[0-9]+$ ]] || continue
         dev=${card#"$HW_ROOT"}/device
@@ -95,7 +95,8 @@ _hw_cards() {
             outs+=("$name")
             [[ $name =~ ^(eDP|LVDS|DSI) ]] && internal=$name
         done
-        echo "$vendor ${pci:--} $(_hw_read "$dev/boot_vga") $internal ${outs[*]}"
+        boot=$(_hw_read "$dev/boot_vga") # a "3D controller" (most hybrid laptops' dGPU) has no boot_vga
+        echo "$vendor ${pci:--} ${boot:-0} $internal ${outs[*]}"
     done
 }
 
@@ -215,7 +216,7 @@ hw_get() {
     awk -v want="$1" '
         function clean(v) { gsub(/^\[|\]$|"|,/, "", v); return v }
         /^\[/ { section = substr($0, 2, index($0, "]") - 2); next }
-        /^[A-Za-z_.]+[ \t]*=/ {
+        /^[A-Za-z_.-]+[ \t]*=/ {
             key = $1; val = $0; sub(/^[^=]*=[ \t]*/, "", val)
             if (section == "override" && key == want) { over = clean(val); found = 1 }
             else if (section "." key == want) base = clean(val)

@@ -281,6 +281,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- Hardware detection: on a hybrid laptop whose NVIDIA card is a "3D controller" (no `boot_vga`) and comes after the
+  built-in graphics, the laptop screen was lost and NVIDIA taken as the main card, so `nvidia-hybrid` stayed off.
+  `--with` / `--without` now also stick for modules with a hyphen in the name (`nvidia-hybrid`, `ddc-monitor`,
+  `quirk-flow-x13`).
 - Mission Control: "New workspace" now goes there. Closing the overview refocused the last window, which pulled
   Hyprland back to that window's desktop.
 - The CI config check now verifies every machine profile: `hl.timer` crashed `--verify-config`, so each profile

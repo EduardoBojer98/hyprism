@@ -16,11 +16,11 @@ dmi() { # dmi ROOT VENDOR PRODUCT CHASSIS
     put "$1" /sys/class/dmi/id/chassis_type "$4"
 }
 cpu() { put "$1" /proc/cpuinfo "vendor_id	: $2"; }
-card() { # card ROOT N VENDOR_ID PCI BOOT_VGA [CONNECTOR=status...]
+card() { # card ROOT N VENDOR_ID PCI BOOT_VGA [CONNECTOR=status...]; BOOT_VGA - = no file (a "3D controller")
     local root=$1 n=$2 c
     put "$root" "/sys/class/drm/card$n/device/vendor" "$3"
     put "$root" "/sys/class/drm/card$n/device/uevent" "PCI_SLOT_NAME=$4"
-    put "$root" "/sys/class/drm/card$n/device/boot_vga" "$5"
+    [[ $5 == - ]] || put "$root" "/sys/class/drm/card$n/device/boot_vga" "$5"
     shift 5
     for c in "$@"; do put "$root" "/sys/class/drm/card$n-${c%=*}/status" "${c#*=}"; done
 }
@@ -58,8 +58,9 @@ make_profiles() {
     r=$1/laptop-hybrid-nvidia
     dmi "$r" "ASUSTeK COMPUTER INC." "ROG Flow X13" 31
     cpu "$r" AuthenticAMD
-    card "$r" 0 0x10de 0000:01:00.0 0
-    card "$r" 1 0x1002 0000:08:00.0 1 eDP-1=connected HDMI-A-1=connected
+    # the NVIDIA card of a hybrid laptop is a "3D controller": no boot_vga, and it may come after the iGPU
+    card "$r" 0 0x1002 0000:08:00.0 1 eDP-1=connected HDMI-A-1=connected
+    card "$r" 1 0x10de 0000:01:00.0 -
     battery "$r"
     input "$r" "ASUE Touchpad" 5
     input "$r" "ELAN Touchscreen" 2
@@ -161,5 +162,8 @@ expect laptop-intel display.internal eDP-3
     echo "xx hw_override left a duplicate line"
     fail=1
 }
+# module names with a hyphen (--without nvidia-hybrid) are overrides too
+HYPRISM_HARDWARE=$t/laptop-intel.toml bash -c '. lib/detect.sh; hw_override module.nvidia-hybrid false'
+expect laptop-intel module.nvidia-hybrid false
 
 exit "$fail"
