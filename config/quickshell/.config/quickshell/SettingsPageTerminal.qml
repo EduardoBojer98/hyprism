@@ -59,8 +59,9 @@ ColumnLayout {
         SettingRow {
             label: "Greeting"
             hint: Config.terminal.greeting === "pokemon" ? "A random Pokémon beside the system summary, now and then a shiny one (pokemon-colorscripts)"
+                : Config.terminal.greeting === "bonsai" ? "A bonsai tree grown fresh for every shell, holding a short fortune (cbonsai, fortune)"
                 : "What a new shell prints first. Fastfetch: a system summary"
-            ConfigChoice { section: "terminal"; key: "greeting"; values: ["default", "off", "fastfetch", "pokemon"]; labels: ["Default", "Off", "Fastfetch", "Pokémon"] }
+            ConfigChoice { section: "terminal"; key: "greeting"; values: ["default", "off", "fastfetch", "pokemon", "bonsai"]; labels: ["Default", "Off", "Fastfetch", "Pokémon", "Bonsai"] }
         }
     }
 }

@@ -87,6 +87,8 @@ imagemagick              ImageMagick                        repo
 fastfetch                fastfetch                          repo
 # pokemon-colorscripts: not packaged; the Pokémon greeting falls back to the distro logo
 pokemon-colorscripts     none                               none
+cbonsai                  cbonsai                            repo
+fortune                  fortune-mod                        repo
 adw-gtk-theme            adw-gtk3-theme                     repo
 papirus-icons            papirus-icon-theme                 repo
 breeze-icons             breeze-icon-theme                  repo

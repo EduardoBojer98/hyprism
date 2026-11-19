@@ -64,6 +64,8 @@ btop                     btop                               repo
 imagemagick              imagemagick                        repo
 fastfetch                fastfetch                          repo
 pokemon-colorscripts     pokemon-colorscripts-git           cachyos
+cbonsai                  cbonsai                            aur
+fortune                  fortune-mod                        repo
 adw-gtk-theme            adw-gtk-theme                      repo
 papirus-icons            papirus-icon-theme                 repo
 breeze-icons             breeze-icons                       repo

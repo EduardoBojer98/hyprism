@@ -44,7 +44,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `trail` | `bool` | `false` | cursor animation shaders (ghostty/shaders/): a smear per jump, then the typing effect; full motion, on AC only |
 | `typing` | `string` | `"pulse"` | typing effect: pulse \| sparks \| ghost \| ripple \| none (hyprism-type-NAME.glsl) |
 | `transientPrompt` | `bool` | `false` | starship's transient prompt: past prompts shrink to one symbol |
-| `greeting` | `string` | `"default"` | default (the distro's) \| off \| fastfetch \| pokemon (a random one as fastfetch's logo) |
+| `greeting` | `string` | `"default"` | default (the distro's) \| off \| fastfetch \| pokemon (a random one as fastfetch's logo) \| bonsai (cbonsai + fortune) |
 
 ## dock
 

@@ -91,7 +91,11 @@ Scope {
         // a random Pokémon in fastfetch's logo slot, one box size for all (scripts/pokemon-card); else the distro's logo
         : tc.greeting === "pokemon" ? "    command -q fastfetch; or return\n    set -l card (pokemon-card 2>/dev/null | string collect)\n"
             + "    if test -n \"$card\"\n        command fastfetch --logo-type data-raw --logo \"$card\"\n"
-            + "    else\n        command fastfetch\n    end\n" : ""
+            + "    else\n        command fastfetch\n    end\n"
+        // a bonsai grown fresh each time (cbonsai, print mode) holding a short fortune; without cbonsai just the fortune
+        : tc.greeting === "bonsai" ? "    set -l msg\n    command -q fortune; and set msg (fortune -s -n 110 | string join ' ' | string trim)\n"
+            + "    if command -q cbonsai\n        cbonsai --print --life 34 --multiplier 4 --base 1 (test -n \"$msg\"; and printf '%s\\n' --message $msg)\n"
+            + "    else if test -n \"$msg\"\n        echo \"  $msg\"\n    end\n" : ""
     readonly property string fishConf: "# Written by Quickshell ThemeSync from Settings > Appearance > Terminal\n"
         + (tc.transientPrompt ? "functions -q enable_transience; and enable_transience\n" : "")
         + (greetingBody === "" ? "" : "function __hyprism_greeting\n" + greetingBody + "end\n"

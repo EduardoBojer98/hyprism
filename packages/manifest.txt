@@ -68,6 +68,8 @@ btop                     tools     system monitor, coloured by the theme (btop t
 imagemagick              tools     draws each theme's wallpaper (theme-wallpaper), blurred wallpaper copies
 fastfetch                tools     system summary in new terminals
 pokemon-colorscripts     tools     a random Pokémon in the terminal greeting (Settings > Appearance > Terminal)
+cbonsai                  tools     a bonsai tree in the terminal greeting (Settings > Appearance > Terminal)
+fortune                  tools     the bonsai greeting's short quote
 
 # Look
 adw-gtk-theme            look      GTK3 apps match libadwaita, dark and light

@@ -28,7 +28,7 @@ JsonAdapter {
         property bool trail: false              // cursor animation shaders (ghostty/shaders/): a smear per jump, then the typing effect; full motion, on AC only
         property string typing: "pulse"         // typing effect: pulse | sparks | ghost | ripple | none (hyprism-type-NAME.glsl)
         property bool transientPrompt: false    // starship's transient prompt: past prompts shrink to one symbol
-        property string greeting: "default"     // default (the distro's) | off | fastfetch | pokemon (a random one as fastfetch's logo)
+        property string greeting: "default"     // default (the distro's) | off | fastfetch | pokemon (a random one as fastfetch's logo) | bonsai (cbonsai + fortune)
     }
     property JsonObject dock: JsonObject {
         property bool enabled: true             // every theme has a dock; off hides it everywhere
