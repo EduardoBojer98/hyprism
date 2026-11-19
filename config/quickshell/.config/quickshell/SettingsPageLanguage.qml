@@ -54,7 +54,7 @@ ColumnLayout {
             if (usable.length) {
                 t.LANG = langValue(usable[0])
                 // "sr_RS@latin:sr:en_US:en": each language, then its bare language code as a fallback
-                t.LANGUAGE = usable.flatMap(id => [id, id.split(/[_@]/)[0]]).filter((x, i, a) => a.indexOf(x) === i).join(":")
+                t.LANGUAGE = [].concat(...usable.map(id => [id, id.split(/[_@]/)[0]])).filter((x, i, a) => a.indexOf(x) === i).join(":")
             }
             const f = Config.language.formats
             if (f && isInstalled(f))
