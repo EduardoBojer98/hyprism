@@ -16,7 +16,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - The fastfetch greeting is a card on a rail in the terminal's palette: system, hardware (model, CPU threads, each
   GPU and screen) and usage bars, packages split by source (pacman, flatpak, ...). The Pokémon sits in one fixed
   box with its Pokédex number and name under it, so the card never moves.
-- A Bonsai greeting: a tree grown fresh for every shell (cbonsai) holding a short fortune (fortune-mod).
+- A Bonsai greeting: a tree grown fresh for every shell (cbonsai, through scripts/bonsai-card) with a short
+  fortune under it (fortune-mod).
 - The starship prompt sits on the same rail and shows a failed command's exit code, background jobs and the clock.
 - Each theme draws its own volume/brightness OSD (theme.json `osd.style`): Pebble a thin bar, Poster a big number
   over ten blocks, Monolith a mono `[████░░]` meter.

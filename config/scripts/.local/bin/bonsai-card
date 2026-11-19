@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+# A bonsai for the terminal greeting (Settings > Appearance > Terminal > Greeting > Bonsai): cbonsai grows a fresh
+# tree, then a short fortune sits under it. cbonsai's print mode clears the screen and dumps every row of it, so this
+# runs it at a fixed size, keeps only its final dump, and drops the blank rows and margins.
+#   bonsai-card                  a tree in up to 64x18, a fortune under it when fortune is installed
+#   bonsai-card WIDTH HEIGHT     another size
+# Prints only the fortune without cbonsai, and nothing without either.
+import os, random, re, shutil, subprocess, sys, textwrap
+
+if sys.argv[1:2] in (["--help"], ["-h"]):
+    with open(__file__, encoding="utf-8") as f:
+        print("".join(l[2:] for l in f.readlines()[1:7]), end="")
+    sys.exit(0)
+
+W, H = (int(sys.argv[1]), int(sys.argv[2])) if len(sys.argv) == 3 else (64, 18)
+SGR = re.compile(r"\x1b\[[0-9;]*m")
+OTHER = re.compile(r"\x1b\[[0-9;?]*[A-Za-ln-z]|\x1b[()][0-9A-Z]|\x1b[=>]|\x1b\][^\x07]*\x07?|[\x0e\x0f\r]")
+
+
+def tree():
+    if not shutil.which("cbonsai"):
+        return []
+    env = dict(os.environ, LINES=str(H + 2), COLUMNS=str(W), TERM="xterm-256color")
+    try:
+        out = subprocess.run(["cbonsai", "--print", "--life", "34", "--multiplier", "4", "--base", "1",
+                              "--seed", str(random.randrange(1 << 30))],   # its own seed is the clock: same second, same tree
+                             env=env, capture_output=True, text=True, errors="replace", timeout=3).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    ends = list(re.finditer(r"\x1b\[2J\x1b\[\d+;1H", out))   # curses' last clear: the plain dump follows it
+    if ends:
+        out = out[ends[-1].end():]
+    out = OTHER.sub("", out.replace("\x1b[3-1m", "\x1b[39m"))   # colour -1 is "default"
+    rows = [r for r in out.split("\n") if SGR.sub("", r).strip()]
+    if not rows:
+        return []
+    left = min(len(p) - len(p.lstrip()) for p in (SGR.sub("", r) for r in rows))
+    trimmed = []
+    for r in rows:
+        # drop `left` visible spaces from the start; escape codes before them are kept
+        cut, i, seen = [], 0, 0
+        while i < len(r) and seen < left:
+            m = SGR.match(r, i)
+            if m:
+                cut.append(m.group()); i = m.end(); continue
+            seen += 1; i += 1
+        line = "".join(cut) + r[i:]
+        # trailing blank cells, each wrapped in its own colour codes
+        line = re.sub(r"(?:(?:\x1b\[[0-9;]*m)*\s)+(?:\x1b\[[0-9;]*m)*$", "", line)
+        trimmed.append("  " + line + "\x1b[0m")
+    return trimmed
+
+
+def fortune(width):
+    if not shutil.which("fortune"):
+        return []
+    try:
+        text = subprocess.run(["fortune", "-s", "-n", "160"], capture_output=True, text=True, timeout=2).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    text = " ".join(text.split())
+    return ["  \x1b[3;90m" + l + "\x1b[0m" for l in textwrap.wrap(text, max(width, 40))] if text else []
+
+
+rows = tree()
+width = max((len(SGR.sub("", r)) for r in rows), default=0) - 2
+quote = fortune(width)
+print("\n".join(rows + ([""] if rows and quote else []) + quote))
