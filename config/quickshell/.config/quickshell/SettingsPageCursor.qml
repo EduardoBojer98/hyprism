@@ -42,14 +42,25 @@ ColumnLayout {
         }
     }
     SettingGroup {
+        title: "Size"
         SettingRow {
-            label: "Size"
-            Dropdown {
-                width: 120
-                options: ["24", "32", "40", "48"]
-                current: String(Config.appearance.cursorSize)
-                onPicked: v => Config.set("appearance", "cursorSize", Number(v))
+            label: "Pointer size"
+            hint: "Shown at its real size. Apps pick it up when they restart"
+            Item {   // the chosen theme's pointer at the chosen size
+                width: 52; height: 52
+                anchors.verticalCenter: parent.verticalCenter
+                Image {
+                    anchors.centerIn: parent
+                    width: Config.appearance.cursorSize; height: width
+                    readonly property string name: cards.chosen === "theme" ? cards.own : cards.chosen
+                    readonly property string pic: cards.list.find(t => t.name === name)?.pics?.[0] ?? ""
+                    source: pic ? "file://" + pic : ""
+                    sourceSize { width: 96; height: 96 }
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                }
             }
+            ConfigChoice { section: "appearance"; key: "cursorSize"; values: [24, 32, 40, 48] }
         }
     }
     ResetGroup { sections: ["appearance"]; keys: ["cursorTheme", "cursorSize"] }
