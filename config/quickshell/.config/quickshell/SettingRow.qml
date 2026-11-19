@@ -17,6 +17,23 @@ Item {
     Component.onCompleted: { for (const c of slot.children) if (c.accessibleName === "") c.accessibleName = row.label }
 
     Layout.fillWidth: true
+
+    // Settings search lands here: the row lights up in the accent wash, then fades back
+    function flash() { glow.restart() }
+    Rectangle {
+        id: mark
+        anchors { fill: parent; margins: 3 }
+        radius: Math.max(0, Theme.radius - 3)
+        color: Theme.accentWash
+        border { color: Theme.accent; width: 1 }
+        opacity: 0
+        SequentialAnimation {
+            id: glow
+            NumberAnimation { target: mark; property: "opacity"; to: 1; duration: Theme.animFast }
+            PauseAnimation { duration: Theme.pulse }
+            NumberAnimation { target: mark; property: "opacity"; to: 0; duration: Theme.pulse }
+        }
+    }
     // tall controls (a wrapped swatch grid, a list) make the row taller, never spill over its border
     implicitHeight: stacked ? texts.implicitHeight + slot.implicitHeight + 34 : Math.max(48, texts.implicitHeight + 20, slot.implicitHeight + 24)
 

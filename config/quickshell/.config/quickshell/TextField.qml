@@ -10,6 +10,7 @@ Rectangle {
     Accessible.role: Accessible.EditableText
     Accessible.name: accessibleName !== "" ? accessibleName : placeholder
     Accessible.focusable: true
+    onActiveFocusChanged: if (activeFocus) input.forceActiveFocus()   // focus given to the field goes to its text
 
     width: 240; height: Theme.controlHeight
     radius: Theme.radiusSmall

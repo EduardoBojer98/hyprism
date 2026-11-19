@@ -83,15 +83,66 @@ Singleton {
         { id: "language",      name: "Language & Region",   glyph: "\u{F05CA}", keys: "locale formats date numbers timezone time zone region clock format" },
         { id: "about",         name: "About",               glyph: "\u{F02FD}", keys: "system version hardware update upgrade doctor reinstall version repo channel stable dev develop beta modules gaming ai ollama docker nvidia hibernate login" },
     ]
-    // search: pages whose name, group or words match every word typed
+    // search: pages whose name, group or words match every word typed, then single settings (a row's label,
+    // hint or group title) so "blink" finds Terminal > Cursor > Blink; picking a setting scrolls to it and flashes it
     property string query: ""
+    readonly property var queryWords: query.trim().toLowerCase().split(/\s+/).filter(w => w)
     readonly property var results: {
-        const words = query.trim().toLowerCase().split(/\s+/).filter(w => w)
+        const words = queryWords
         if (!words.length) return []
-        const visible = sections.flatMap(g => g.pages.map(p => ({ page: p, group: g.name })))
+        const visible = [].concat(...sections.map(g => g.pages.map(p => ({ page: p, group: g.name }))))   // no flatMap in this JS engine
         return visible.map(v => Object.assign({ group: v.group }, allSections.find(x => x.id === v.page)))
             .filter(p => p.id && words.every(w => (p.name + " " + p.group + " " + p.keys).toLowerCase().includes(w)))
     }
+    readonly property var rowResults: {
+        const words = queryWords
+        if (!words.length) return []
+        const shown = [].concat(...sections.map(g => g.pages))
+        const hit = (r, text) => words.every(w => text.toLowerCase().includes(w))
+        const found = rowIndex.filter(r => shown.includes(r.page) && hit(r, r.label + " " + r.hint + " " + r.group))
+        // labels that match beat hints that match
+        found.sort((a, b) => hit(b, b.label) - hit(a, a.label))
+        return found.slice(0, 12)
+    }
+    function openResult(r) {   // a page result, or a row result ({ page, label, group })
+        if (r.label === undefined) { show(r.id); return }
+        show(r.page)
+        pendingRow = r
+        jump.restart()
+    }
+
+    // every row's label and hint, and the title of the group it is in, read once from the page files
+    property var rowIndex: []
+    property var pendingRow: null
+    Process {
+        running: root.open && root.rowIndex.length === 0
+        workingDirectory: Quickshell.shellDir
+        command: ["sh", "-c", "grep -nE '(label|hint|title): \"' SettingsPage*.qml"]
+        stdout: StdioCollector { onStreamFinished: root.rowIndex = root.parseRows(text) }
+    }
+    function parseRows(text) {
+        const rows = [], group = {}, field = /(label|hint|title): "((?:[^"\\]|\\.)*)"/g
+        let last = null
+        for (const line of text.split("\n")) {
+            const m = /^SettingsPage(\w+)\.qml:(\d+):(.*)$/.exec(line)
+            if (!m) continue
+            const file = m[1].charAt(0).toLowerCase() + m[1].slice(1)   // DisplaysPresets is part of Displays
+            const page = (allSections.find(p => p.id === file) ?? allSections.find(p => file.startsWith(p.id)))?.id
+            if (!page) continue
+            const n = Number(m[2])
+            let f
+            field.lastIndex = 0
+            while ((f = field.exec(m[3])) !== null) {
+                const value = f[2].replace(/\\"/g, '"')
+                if (f[1] === "title") group[page] = value
+                else if (f[1] === "label") { last = { page, label: value, hint: "", group: group[page] ?? "", line: n }; rows.push(last) }
+                else if (last && last.page === page && n - last.line <= 2 && !last.hint) last.hint = value
+            }
+        }
+        return rows
+    }
+    // after a row result opens its page: once laid out, scroll the row into view and flash it
+    Timer { id: jump; interval: 60; onTriggered: if (root.pendingRow) { root.scrollToRow(root.pendingRow); root.pendingRow = null } }
 
     // s: a group id (its first page), a page id, or "" (where you left off)
     function show(s) {
@@ -107,22 +158,37 @@ Singleton {
         function close(): void { root.open = false }
         // scroll the page: "top", "bottom", "+600"/"-600" (pixels), or a group's title ("Advanced")
         function scroll(where: string): string { return root.scrollPage(where) }
+        // open Settings with this in the search field: `qs ipc call settings search blink`
+        function search(text: string): void { root.open = true; win.startSearch(); searchField.text = text }
     }
     function scrollPage(where) {
         const max = Math.max(0, page.contentHeight - page.height)
         let y = where === "top" ? 0 : where === "bottom" ? max : /^[+-]\d+$/.test(where) ? page.contentY + Number(where) : -1
         if (y < 0) {   // a group by its title: the first SettingGroup on the page with that title (any case)
-            const find = item => {
-                if (item.title !== undefined && item.rows !== undefined && String(item.title).toLowerCase() === where.toLowerCase()) return item
-                for (const c of item.children) { const f = find(c); if (f) return f }
-                return null
-            }
-            const g = pageLoader.item ? find(pageLoader.item) : null
+            const g = findOnPage(item => item.rows !== undefined && String(item.title).toLowerCase() === where.toLowerCase())
             if (!g) return "no group \"" + where + "\" on " + root.pageId
             y = g.mapToItem(page.contentItem, 0, 0).y - win.pad
         }
         page.contentY = Math.max(0, Math.min(y, max))
         return "scrolled to " + Math.round(page.contentY) + " of " + Math.round(max)
+    }
+    // the first item on the page that passes test(item, title of the SettingGroup it is in)
+    function findOnPage(test) {
+        const find = (item, group) => {
+            if (test(item, group)) return item
+            const g = item.rows !== undefined && item.title !== undefined ? String(item.title) : group
+            for (const c of item.children) { const f = find(c, g); if (f) return f }
+            return null
+        }
+        return pageLoader.item ? find(pageLoader.item, "") : null
+    }
+    function scrollToRow(r) {
+        const isRow = (item, g) => item.stacked !== undefined && item.visible && item.label === r.label
+        const row = findOnPage((item, g) => isRow(item) && (!r.group || g === r.group)) ?? findOnPage(isRow)
+        if (!row) return
+        const max = Math.max(0, page.contentHeight - page.height)
+        page.contentY = Math.max(0, Math.min(row.mapToItem(page.contentItem, 0, 0).y - page.height / 3, max))
+        row.flash()
     }
 
     // Lua table literal from a plain JS object (strings, numbers, booleans, nested objects)
@@ -155,6 +221,11 @@ Singleton {
         readonly property int pad: width < 640 ? Theme.spaceL : 28
         // filling (almost) the whole screen means Hyprland has it maximised
         readonly property bool maximised: screen ? width >= screen.width - 80 && height >= screen.height - 120 : false
+        // a narrow window shows the search field only while searching (Ctrl+F, or the search button)
+        property bool searching: false
+        readonly property bool slim: compact && !searching   // the sidebar shows icons only
+        function startSearch() { searching = true; searchField.forceActiveFocus() }
+        function pick(r) { root.openResult(r); searchField.text = ""; searching = false }
 
         visible: root.open
         title: "Settings"
@@ -174,7 +245,7 @@ Singleton {
             Rectangle {
                 id: sidebar
                 anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-                width: win.compact ? 64 : 240
+                width: win.slim ? 64 : 240
                 color: Theme.sidebar
                 MoreBelow { z: 1; flick: nav; ground: Qt.tint(Theme.glassStrong, Theme.sidebar); anchors { left: parent.left; right: parent.right; bottom: parent.bottom } }
 
@@ -193,60 +264,64 @@ Singleton {
                         spacing: 2
 
                         Text {
-                            visible: !win.compact
+                            visible: !win.slim
                             text: "Settings"
                             leftPadding: 10
                             bottomPadding: 12
                             color: Theme.text
                             font { family: Theme.font; pixelSize: Theme.fontHeading; weight: Font.Bold }
                         }
-                        TextField {   // search: type to list matching pages, Enter opens the first
+                        Rectangle {   // narrow window: a search button in place of the field
+                            visible: win.slim
+                            width: parent.width
+                            height: Math.max(34, Theme.hit)
+                            radius: Theme.radiusSmall
+                            color: findArea.containsMouse ? Theme.fillHover : "transparent"
+                            activeFocusOnTab: true
+                            Keys.onReturnPressed: win.startSearch()
+                            Keys.onSpacePressed: win.startSearch()
+                            FocusRing {}
+                            Text { anchors.centerIn: parent; text: "\u{F0349}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: Theme.glyph } }
+                            MouseArea { id: findArea; Accessible.role: Accessible.Button; Accessible.name: "Search settings"; Accessible.onPressAction: win.startSearch()
+                                        anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.startSearch() }
+                            ToolTipText { shown: findArea.containsMouse; text: "Search settings (Ctrl+F)" }
+                        }
+                        TextField {   // search: type to list matching pages and settings, Enter opens the first
                             id: searchField
-                            visible: !win.compact
+                            visible: !win.slim
                             width: parent.width
                             placeholder: "Search settings"
+                            accessibleName: "Search settings"
                             onTextChanged: root.query = text
-                            onAccepted: if (root.results.length) { root.show(root.results[0].id); text = "" }
-                            Keys.onEscapePressed: text = ""
+                            onAccepted: { const r = root.results[0] ?? root.rowResults[0]; if (r) win.pick(r) }
+                            Keys.onEscapePressed: { if (text !== "") text = ""; else win.searching = false }
                             Keys.onDownPressed: nextItemInFocusChain(true).forceActiveFocus()   // into the results or the sidebar
                         }
-                        Item { width: 1; height: 8; visible: !win.compact }
-                        Text {
-                            visible: root.query.trim() !== "" && root.results.length === 0
-                            leftPadding: 10; topPadding: 6
+                        Item { width: 1; height: 8; visible: searchField.visible }
+                        Column {   // nothing found: say so, and what does work
+                            visible: root.queryWords.length > 0 && root.results.length === 0 && root.rowResults.length === 0
                             width: parent.width
-                            wrapMode: Text.Wrap
-                            text: "Nothing matches"
-                            color: Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontLabel }
+                            leftPadding: 10; topPadding: 6; spacing: 4
+                            Text { width: parent.width - 10; wrapMode: Text.Wrap; text: "Nothing matches \u201C" + root.query.trim() + "\u201D"; color: Theme.text
+                                   font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
+                            Text { width: parent.width - 10; wrapMode: Text.Wrap; text: "Try one word, like volume, dark or blink"; color: Theme.subtext
+                                   font { family: Theme.font; pixelSize: Theme.fontCaption } }
                         }
-                        Repeater {   // search results replace the groups while there is a query
+                        Repeater {   // search results replace the groups while there is a query: pages first
                             model: root.results
-                            Rectangle {
-                                id: result
-                                required property var modelData
-                                width: parent.width
-                                height: Math.max(44, Theme.hit)
-                                radius: Theme.radiusSmall
-                                color: resArea.containsMouse || activeFocus ? Theme.fillHover : "transparent"
-                                // keyboard: Tab or Down from the search field, Enter opens
-                                activeFocusOnTab: true
-                                function go() { root.show(modelData.id); searchField.text = "" }
-                                Keys.onReturnPressed: go()
-                                Keys.onSpacePressed: go()
-                                Keys.onDownPressed: nextItemInFocusChain(true).forceActiveFocus()
-                                Keys.onUpPressed: nextItemInFocusChain(false).forceActiveFocus()
-                                FocusRing {}
-                                Column {
-                                    anchors { left: parent.left; leftMargin: 10; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
-                                    Text { width: parent.width; elide: Text.ElideRight; text: modelData.name; color: Theme.text
-                                           font { family: Theme.font; pixelSize: Theme.fontLabel + 1; weight: Font.DemiBold } }
-                                    Text { width: parent.width; elide: Text.ElideRight; text: modelData.group; color: Theme.subtext
-                                           font { family: Theme.font; pixelSize: Theme.fontCaption } }
-                                }
-                                MouseArea { id: resArea; Accessible.role: Accessible.Button; Accessible.name: modelData.name; Accessible.onPressAction: result.go(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                            onClicked: result.go() }
-                            }
+                            SettingsSearchResult { required property var modelData; glyph: modelData.glyph; title: modelData.name; place: modelData.group; onChosen: win.pick(modelData) }
+                        }
+                        Text {
+                            visible: root.rowResults.length > 0
+                            leftPadding: 10; topPadding: root.results.length ? 10 : 2; bottomPadding: 2
+                            text: "Settings"
+                            color: Theme.subtext
+                            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                        }
+                        Repeater {   // then single settings
+                            model: root.rowResults
+                            SettingsSearchResult { required property var modelData; onChosen: win.pick(modelData); glyph: root.allSections.find(p => p.id === modelData.page)?.glyph ?? ""; title: modelData.label
+                                           place: root.pageName(modelData.page) + (modelData.group ? " \u203A " + modelData.group : "") }
                         }
 
                         Repeater {
@@ -255,7 +330,7 @@ Singleton {
                                 id: navGroup
                                 required property var modelData
                                 readonly property bool current: root.section === modelData.id
-                                readonly property bool open: current && modelData.pages.length > 1 && !win.compact
+                                readonly property bool open: current && modelData.pages.length > 1 && !win.slim
                                 width: parent.width
                                 spacing: 2
                                 Rectangle {
@@ -274,7 +349,7 @@ Singleton {
                                     color: plate ? Theme.fillActive : navArea.containsMouse ? Theme.fillHover : "transparent"
                                     border { color: plate ? Theme.stroke : "transparent"; width: 1 }
                                     Row {
-                                        anchors { left: parent.left; leftMargin: win.compact ? (parent.width - 24) / 2 : 10; verticalCenter: parent.verticalCenter }
+                                        anchors { left: parent.left; leftMargin: win.slim ? (parent.width - 24) / 2 : 10; verticalCenter: parent.verticalCenter }
                                         spacing: 10
                                         Rectangle {
                                             width: 24; height: 24; radius: Math.min(7, Theme.radiusSmall)
@@ -294,7 +369,7 @@ Singleton {
                                             }
                                         }
                                         Text {
-                                            visible: !win.compact
+                                            visible: !win.slim
                                             anchors.verticalCenter: parent.verticalCenter
                                             width: sidebar.width - 24 - 54
                                             elide: Text.ElideRight
@@ -363,6 +438,7 @@ Singleton {
                 Connections { target: root; function onPageIdChanged() { page.contentY = 0; page.contentX = 0 } }
                 // Page Up / Page Down scroll the page wherever the keyboard focus is (the Flickable has no keys of its own)
                 Shortcut { sequence: "PgDown"; context: Qt.WindowShortcut; onActivated: root.scrollPage("+" + Math.round(page.height * 0.85)) }
+                Shortcut { sequence: "Ctrl+F"; context: Qt.WindowShortcut; onActivated: win.startSearch() }
                 Shortcut { sequence: "PgUp"; context: Qt.WindowShortcut; onActivated: root.scrollPage("-" + Math.round(page.height * 0.85)) }
 
                 ColumnLayout {
