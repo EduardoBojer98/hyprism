@@ -336,7 +336,6 @@ ColumnLayout {
             hint: `${Config.nightLight.temperature} K` + (NightLight.active ? "" : " (applies when Night Light is on)")
             Slider {
                 width: 220
-                icon: "\u{F0599}"
                 // 6000 K (neutral) at the left, 2500 K (warmest) at the right
                 value: (6000 - Config.nightLight.temperature) / 3500
                 onMoved: v => Config.set("nightLight", "temperature", Math.round((6000 - v * 3500) / 100) * 100)

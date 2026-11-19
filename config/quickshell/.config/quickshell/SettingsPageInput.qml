@@ -145,8 +145,7 @@ ColumnLayout {
             label: "Key repeat delay"
             hint: page.s.repeat_delay + " ms before a held key repeats"
             Slider {
-                width: 260
-                icon: "\u{F0954}"
+                width: 220
                 value: (page.s.repeat_delay - 150) / 850
                 onMoved: v => page.set("repeat_delay", Math.round(150 + v * 850))
             }
@@ -155,8 +154,7 @@ ColumnLayout {
             label: "Key repeat rate"
             hint: page.s.repeat_rate + " characters per second"
             Slider {
-                width: 260
-                icon: "\u{F04C5}"
+                width: 220
                 value: (page.s.repeat_rate - 10) / 50
                 onMoved: v => page.set("repeat_rate", Math.round(10 + v * 50))
             }
@@ -176,9 +174,9 @@ ColumnLayout {
         }
         SettingRow {
             label: "Pointer speed"
+            hint: page.s.sensitivity === 0 ? "Default" : (page.s.sensitivity > 0 ? "Faster: +" : "Slower: ") + Math.round(page.s.sensitivity * 100) + "%"
             Slider {
-                width: 260
-                icon: "\u{F037D}"
+                width: 220
                 value: (page.s.sensitivity + 1) / 2
                 onMoved: v => page.set("sensitivity", Math.round((v * 2 - 1) * 100) / 100)
             }
@@ -202,8 +200,7 @@ ColumnLayout {
             label: "Scroll speed"
             hint: Config.input.scrollFactor.toFixed(1) + "×"
             Slider {
-                width: 260
-                icon: "\u{F037D}"
+                width: 220
                 value: (Config.input.scrollFactor - 0.2) / 2.8
                 onMoved: v => page.set("scroll_factor", Math.round((0.2 + v * 2.8) * 10) / 10)
             }
