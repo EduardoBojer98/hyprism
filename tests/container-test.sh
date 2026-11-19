@@ -102,6 +102,13 @@ as desktop-amd "test \"\$(readlink -f ~/.config/hypr/hyprland.lua)\" = $repo/con
 as desktop-amd 'ls ~/.local/state/hyprism/logs/install-*.log >/dev/null && grep -q "form = \"desktop\"" ~/.config/hyprism/hardware.toml'
 as desktop-amd './install.sh modules'
 
+echo "===== A MODULE SWITCHED OFF TAKES ITS LINKS WITH IT"
+as desktop-amd './install.sh --yes --with nvidia-hybrid --only links >/dev/null'
+as desktop-amd 'test -L ~/.config/hypr/hardware/nvidia-hybrid.lua'
+as desktop-amd './install.sh --yes --without nvidia-hybrid --only links >/dev/null'
+as desktop-amd 'test ! -e ~/.config/hypr/hardware/nvidia-hybrid.lua && ! grep -qx nvidia-hybrid ~/.config/hypr/hardware/index'
+echo "ok: --with then --without nvidia-hybrid links and unlinks its file"
+
 echo "===== THE DOCTOR FINDS WHAT IS BROKEN (and says how to fix it)"
 # broken COMMAND-THAT-BREAKS EXPECTED-TEXT: the doctor must fail, name the problem and give a fix; then repair
 broken() {

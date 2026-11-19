@@ -281,6 +281,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- A module that is no longer on (its hardware is gone, or `--without NAME`) now has its links removed at the next
+  install or update, so its settings (for example `nvidia-hybrid`'s GPU choice) stop applying. Before, they stayed
+  until a full uninstall.
 - Uninstall after the themed login screen (`greeter`) now switches greetd off and your old login screen back on;
   before, greetd stayed on with its default text login. A file Hyprism wrote in `/etc` and later changed is now
   removed by uninstall, instead of being put back as if it had been yours.

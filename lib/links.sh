@@ -39,6 +39,8 @@ links() {
         run rm "$l"
     done < <(find "$HOME/.config" "$HOME/.local/bin" "$HOME/.local/lib" "$HOME/.local/share/fonts" "$HOME/Pictures" -maxdepth 4 -xtype l 2>/dev/null || true) # a missing folder has no links
 
+    unlink_off_modules
+
     local clash rel backup src
     mapfile -t clash < <(conflicts)
     if ((${#clash[@]})); then
@@ -64,7 +66,9 @@ links() {
     local index=$HOME/.config/hypr/hardware/index list
     list=""
     [[ -d $HOME/.config/hypr/hardware ]] && list=$(find "$HOME/.config/hypr/hardware" -name '*.lua' -printf '%f\n' | sed 's/\.lua$//' | sort)
-    if [[ $list != "$(cat "$index" 2>/dev/null)" ]]; then # no index yet = write it
+    if [[ -z $list ]]; then # nothing to load: no index, as on a fresh install
+        [[ ! -e $index ]] || run rm "$index"
+    elif [[ $list != "$(cat "$index" 2>/dev/null)" ]]; then # no index yet = write it
         run mkdir -p "$(dirname "$index")"
         $DRY || printf '%s\n' "$list" >"$index"
     fi
@@ -82,6 +86,24 @@ links() {
     fi
 }
 
+# A module that is off now (its hardware is gone, or --without): its links come out of ~, so its settings stop
+# applying. Only links that point at that module's own files are removed.
+unlink_off_modules() {
+    local on dir m f target
+    on=" $(modules_on | tr '\n' ' ') "
+    for dir in "$REPO"/modules/*/home; do
+        m=$(basename "$(dirname "$dir")")
+        [[ $on == *" $m "* ]] && continue
+        while IFS= read -r f; do
+            target=$HOME/${f#"$dir/"}
+            [[ -L $target && $(readlink -f "$target") == "$(readlink -f "$f")" ]] || continue
+            say "Module $m is off: removing ~/${f#"$dir/"}"
+            run rm "$target"
+        done < <(find "$dir" -type f)
+    done
+    return 0
+}
+
 backups_list() {
     local d
     for d in "$STATE"/backups/*/; do
@@ -96,6 +118,7 @@ unlink_all() {
     local src last
     say "Removing the links"
     while read -r src; do run stow -D -d "$(dirname "$src")" -t "$HOME" "$(basename "$src")"; done < <(link_sources)
+    unlink_off_modules
     last=""
     if [[ -n $BACKUP ]]; then
         last=$STATE/backups/$BACKUP
@@ -116,7 +139,7 @@ unlink_all() {
 generated_aside() {
     local aside f
     aside=$STATE/removed-$(date +%Y%m%d-%H%M%S)
-    for f in .config/hypr/settings .config/quickshell/settings.json .config/ghostty/theme.conf .config/fuzzel/theme.ini .config/hyprism; do
+    for f in .config/hypr/settings .config/hypr/hardware/index .config/quickshell/settings.json .config/ghostty/theme.conf .config/fuzzel/theme.ini .config/hyprism; do
         [[ -e $HOME/$f ]] || continue
         run mkdir -p "$aside/$(dirname "$f")"
         run mv "$HOME/$f" "$aside/$f"
