@@ -9,23 +9,38 @@ ColumnLayout {
     spacing: 20
 
     SettingGroup {
-        title: "Ghostty and fish"
+        title: "Ghostty"
+        TerminalPreview { Layout.fillWidth: true; Layout.margins: 12 }
         SettingRow {
             label: "Theme colours"
             hint: "Ghostty switches to the theme's palette and font, live"
             ConfigToggle { section: "appearance"; key: "terminal" }
         }
         SettingRow {
-            label: "Cursor"
-            hint: "Ghostty's cursor shape, live"
+            label: "Background"
+            hint: "See-through lets the wallpaper show behind the text"
+            ConfigChoice { section: "terminal"; key: "opacity"; values: ["theme", "solid", "soft", "clear"]; labels: ["Theme", "Solid", "Soft", "Clear"] }
+        }
+        SettingRow {
+            label: "Padding"
+            hint: "Space between the window's edge and the text"
+            ConfigChoice { section: "terminal"; key: "padding"; values: ["theme", "tight", "normal", "roomy"]; labels: ["Theme", "Tight", "Normal", "Roomy"] }
+        }
+    }
+
+    SettingGroup {
+        title: "Cursor"
+        SettingRow {
+            label: "Shape"
+            hint: "Live in every open terminal"
             ConfigChoice { section: "terminal"; key: "cursor"; values: ["theme", "block", "bar", "underline", "block_hollow"]; labels: ["Theme", "Block", "Bar", "Line", "Hollow"] }
         }
         SettingRow {
-            label: "Cursor blink"
+            label: "Blink"
             ConfigChoice { section: "terminal"; key: "blink"; values: ["theme", "on", "off"]; labels: ["Theme", "On", "Off"] }
         }
         SettingRow {
-            label: "Cursor animation"
+            label: "Animation"
             hint: Config.terminal.trail && !(Theme.motionLevel === "full") ? "Paused: Animations is not on Full"
                 : "A smear when the cursor jumps, and the typing effect below. Keeps a focused terminal drawing every frame; off on battery"
             ConfigToggle { section: "terminal"; key: "trail" }
@@ -41,16 +56,10 @@ ColumnLayout {
                      none: "Only the jump smear" })[Config.terminal.typing] ?? ""
             ConfigChoice { section: "terminal"; key: "typing"; values: ["pulse", "sparks", "ghost", "ripple", "none"]; labels: ["Pulse", "Sparks", "Ghost", "Ripple", "None"] }
         }
-        SettingRow {
-            label: "Background"
-            hint: "See-through lets the wallpaper show behind the text"
-            ConfigChoice { section: "terminal"; key: "opacity"; values: ["theme", "solid", "soft", "clear"]; labels: ["Theme", "Solid", "Soft", "Clear"] }
-        }
-        SettingRow {
-            label: "Padding"
-            hint: "Space between the window's edge and the text"
-            ConfigChoice { section: "terminal"; key: "padding"; values: ["theme", "tight", "normal", "roomy"]; labels: ["Theme", "Tight", "Normal", "Roomy"] }
-        }
+    }
+
+    SettingGroup {
+        title: "fish shell"
         SettingRow {
             label: "Transient prompt"
             hint: "Past prompts shrink to one symbol, so the scrollback shows commands and output. New terminals"
@@ -64,4 +73,6 @@ ColumnLayout {
             ConfigChoice { section: "terminal"; key: "greeting"; values: ["default", "off", "fastfetch", "pokemon", "bonsai"]; labels: ["Default", "Off", "Fastfetch", "Pokémon", "Bonsai"] }
         }
     }
+
+    ResetGroup { sections: ["terminal"] }
 }
