@@ -184,11 +184,29 @@ and the file way.
 
 Needs Arch, CachyOS (or another Arch-based system) or Fedora 44+, and a user with `sudo`.
 
+One command: installs git if missing, clones Hyprism to `~/hyprism` and runs the installer.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/EduardoBojer98/hyprism/main/bootstrap.sh | bash
+```
+
+Look first without changing anything (any `install.sh` option goes after `--`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/EduardoBojer98/hyprism/main/bootstrap.sh | bash -s -- --dry-run
+```
+
+`HYPRISM_DIR=...` clones somewhere else; `HYPRISM_BRANCH=develop` takes the dev channel. Running it again updates
+the clone and re-runs the install. By hand instead:
+
 ```bash
 git clone https://github.com/EduardoBojer98/hyprism.git ~/hyprism && cd ~/hyprism
 ./install.sh --dry-run     # shows everything it would do; changes nothing
 ./install.sh               # does it; asks before every system change
 ```
+
+After the install, `hyprism` works from any folder: it is `install.sh` with the same commands and options
+(`hyprism update`, `hyprism doctor`, `hyprism --help`).
 
 The first run asks **full or base**:
 
@@ -211,7 +229,7 @@ Then log out and pick **Hyprland** at the login screen (starting it without one:
 | `./install.sh rollback` | goes back to the version before the last update |
 | `./install.sh uninstall` | removes the links, puts backups back, undoes the system changes |
 
-All commands and flags: `./install.sh --help`.
+All commands and flags: `./install.sh --help`. Each also runs as `hyprism <command>` once installed.
 
 ### Modules
 
@@ -331,6 +349,7 @@ The top level of this repo:
 | Path | What |
 |---|---|
 | `install.sh` | the one command (install, update, doctor, detect, modules, rollback, backups, uninstall) |
+| `bootstrap.sh` | the one-line install: installs git, clones or updates the repo, runs `install.sh` |
 | `config/` | one folder per app, mirroring `~`: `hypr`, `quickshell`, `ghostty`, `fish`, `scripts` (`~/.local/bin`), `themes`, … |
 | `distros/` | `arch.sh`, `fedora.sh`: package install, repos, NVIDIA driver ([distros/README.md](distros/README.md)) |
 | `docs/` | the documentation ([docs/README.md](docs/README.md)) |

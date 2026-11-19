@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# hyprism: run Hyprism's install.sh from anywhere (the same commands and options).
+#
+#   hyprism update        pull Hyprism, update the system, relink
+#   hyprism doctor        check this computer against the repo
+#   hyprism --help        every command and option of install.sh
+set -euo pipefail
+# this file is linked into ~/.local/bin; the repo is four folders above the real file's folder
+repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
+exec "$repo/install.sh" "$@"
