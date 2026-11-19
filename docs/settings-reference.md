@@ -43,7 +43,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `padding` | `string` | `"theme"` | theme \| tight \| normal \| roomy |
 | `trail` | `bool` | `false` | cursor trail shader (ghostty/shaders/hyprism-trail.glsl): full motion, on AC only |
 | `transientPrompt` | `bool` | `false` | starship's transient prompt: past prompts shrink to one symbol |
-| `greeting` | `string` | `"default"` | default (the distro's) \| off \| fastfetch |
+| `greeting` | `string` | `"default"` | default (the distro's) \| off \| fastfetch \| pokemon (a random one as fastfetch's logo) |
 
 ## dock
 

@@ -27,7 +27,7 @@ JsonAdapter {
         property string padding: "theme"        // theme | tight | normal | roomy
         property bool trail: false              // cursor trail shader (ghostty/shaders/hyprism-trail.glsl): full motion, on AC only
         property bool transientPrompt: false    // starship's transient prompt: past prompts shrink to one symbol
-        property string greeting: "default"     // default (the distro's) | off | fastfetch
+        property string greeting: "default"     // default (the distro's) | off | fastfetch | pokemon (a random one as fastfetch's logo)
     }
     property JsonObject dock: JsonObject {
         property bool enabled: true             // every theme has a dock; off hides it everywhere

@@ -67,7 +67,8 @@ Scope {
     readonly property string termLook: {
         const t = current.term ?? {}, own = Config.appearance.terminal, lines = []
         const cursor = tc.cursor !== "theme" ? tc.cursor : own ? t.cursorStyle : null
-        if (["block", "bar", "underline", "block_hollow"].includes(cursor)) lines.push("cursor-style = " + cursor)
+        // shell integration would turn it into a bar at every prompt
+        if (["block", "bar", "underline", "block_hollow"].includes(cursor)) lines.push("cursor-style = " + cursor, "shell-integration-features = no-cursor")
         const blink = tc.blink !== "theme" ? tc.blink === "on" : own ? t.blink : null
         if (typeof blink === "boolean") lines.push("cursor-style-blink = " + blink)
         const opacity = ({ solid: "1", soft: "0.92", clear: "0.8" })[tc.opacity]
@@ -84,7 +85,12 @@ Scope {
     readonly property string fishConf: "# Written by Quickshell ThemeSync from Settings > Appearance > Terminal\n"
         + (tc.transientPrompt ? "functions -q enable_transience; and enable_transience\n" : "")
         + (tc.greeting === "off" ? "function fish_greeting; end\n"
-           : tc.greeting === "fastfetch" ? "function fish_greeting; command -q fastfetch; and fastfetch; end\n" : "")
+           : tc.greeting === "fastfetch" ? "function fish_greeting; command -q fastfetch; and fastfetch; end\n"
+           // a random Pokémon in fastfetch's logo slot (1 in 16 shiny); without pokemon-colorscripts the distro's logo
+           : tc.greeting === "pokemon" ? "function fish_greeting\n    command -q fastfetch; or return\n"
+               + "    if command -q pokemon-colorscripts\n        set -l shiny; test (random 1 16) -eq 1; and set shiny --shiny\n"
+               + "        fastfetch --logo-type file-raw --logo (pokemon-colorscripts --random --no-title $shiny | psub)\n"
+               + "    else\n        fastfetch\n    end\nend\n" : "")
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
     readonly property string gtkAccent: {

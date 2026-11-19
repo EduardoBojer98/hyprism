@@ -63,6 +63,7 @@ zenity                   zenity                             repo
 btop                     btop                               repo
 imagemagick              imagemagick                        repo
 fastfetch                fastfetch                          repo
+pokemon-colorscripts     pokemon-colorscripts-git           cachyos
 adw-gtk-theme            adw-gtk-theme                      repo
 papirus-icons            papirus-icon-theme                 repo
 breeze-icons             breeze-icons                       repo
