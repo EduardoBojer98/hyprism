@@ -72,7 +72,7 @@ distro_nvidia() {
         return
     fi
     local headers k
-    headers=$(for k in /usr/lib/modules/*/pkgbase; do [[ -r $k ]] && echo "$(<"$k")-headers"; done | sort -u)
+    headers=$(for k in /usr/lib/modules/*/pkgbase; do [[ -r $k ]] || continue; echo "$(<"$k")-headers"; done | sort -u)
     # shellcheck disable=SC2086  # a list of package names
     run sudo pacman -S --needed --noconfirm egl-wayland ${headers:-linux-headers}
     if nvidia_open_supported; then

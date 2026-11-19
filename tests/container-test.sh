@@ -81,6 +81,12 @@ grep -q 'ai: 10-gpu.sh' <<<"$opt" || {
     exit 1
 }
 echo "ok: dev, gaming and ai resolve their packages"
+# the NVIDIA driver step plans the driver (on a made-up computer: this one's /proc/driver/nvidia doesn't count)
+grep -qE 'nvidia-open-dkms|akmod-nvidia ' <<<"$opt" || {
+    echo "xx the nvidia module's driver step did not plan the driver"
+    exit 1
+}
+echo "ok: nvidia driver planned"
 [[ $(snapshot) == "$before" ]] || {
     echo "xx a dry run changed the home folder"
     exit 1

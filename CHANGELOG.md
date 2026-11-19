@@ -285,6 +285,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- The NVIDIA driver step on Arch could end the install with no message when no kernel's headers name could be
+  read (no `/usr/lib/modules`, or an unreadable `pkgbase`); it now falls back to `linux-headers`.
 - `./install.sh uninstall` puts back every backup, not only the newest: where a file was backed up more than once,
   your own copy from before Hyprism is the one that comes back. CI now also tests the update from 1.1.0 on Fedora,
   and that the update keeps what you set in `settings.json`.
