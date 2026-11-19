@@ -6,6 +6,7 @@
 #   sys_remove PATH         remove a file, keeping a copy
 #   sys_enable UNIT...      enable and start services that exist and aren't enabled yet
 #   sys_disable UNIT        disable one        sys_mask UNIT   mask one (nothing can start it)
+#   sys_enable_boot UNIT    enable one from the next boot, not now (a login manager: starting it ends the session)
 #   sys_note TEXT           something uninstall can't undo by itself; shown to you instead
 
 _sys_record() { $DRY || {
@@ -14,6 +15,8 @@ _sys_record() { $DRY || {
 }; }
 _sys_keep() { # one copy of the original, from before our first change
     local keep=$STATE/system$1
+    # already on record = the original is kept, or there was none (then the file is ours and undo removes it)
+    grep -qxF "file $1" "$STATE/manifest" 2>/dev/null && return 0
     [[ -e $1 && ! -e $keep ]] || return 0
     run mkdir -p "$(dirname "$keep")"
     run sudo cp -a "$1" "$keep"
@@ -42,6 +45,12 @@ sys_enable() {
         run sudo systemctl enable --now "$u"
         _sys_record "enabled $u"
     done
+}
+sys_enable_boot() {
+    _sys_unit_exists "$1" || return 0
+    systemctl is-enabled -q "$1" 2>/dev/null && return 0
+    run sudo systemctl enable "$1" || return 1 # the caller decides (the greeter puts the old one back)
+    _sys_record "enabled-boot $1"
 }
 sys_disable() {
     systemctl is-enabled -q "$1" 2>/dev/null || return 0 # already off or not there
@@ -102,10 +111,12 @@ system_undo() {
                 if [[ -e $STATE/system$what ]]; then run sudo cp -a "$STATE/system$what" "$what"; else run sudo rm -f "$what"; fi
                 ;;
             enabled) run sudo systemctl disable --now "$what" ;;
+            enabled-boot) run sudo systemctl disable "$what" ;; # not --now: it may be running this session
             disabled) run sudo systemctl enable "$what" ;;
             masked) run sudo systemctl unmask "$what" ;;
             note) echo "   by hand: $what" ;;
         esac
     done < <(tac "$STATE/manifest" | awk '!seen[$0]++')
     run rm -f "$STATE/manifest"
+    run sudo rm -rf -- "${STATE:?}/system" # the kept originals are back in place; a later install keeps fresh ones
 }

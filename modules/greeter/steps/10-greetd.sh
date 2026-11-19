@@ -42,11 +42,11 @@ fi
 
 old=$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)")
 if [[ $old != greetd.service ]] && _sys_unit_exists greetd.service; then # no systemd (container): nothing to switch
-    [[ -n $old ]] && run sudo systemctl disable "$old"
-    # one login manager at a time, so the old one goes first; if greetd won't enable, the old one comes back
-    run sudo systemctl enable greetd.service || {
+    # one login manager at a time, so the old one goes first; if greetd won't enable, the old one comes back.
+    # Both are on record, so ./install.sh uninstall switches back (greetd off, the old one on, at next boot).
+    [[ -n $old ]] && sys_disable "$old"
+    sys_enable_boot greetd.service || {
         [[ -n $old ]] && run sudo systemctl enable "$old"
         exit 1
     }
-    sys_note "login screen switched to greetd at next boot; back: sudo systemctl disable greetd && sudo systemctl enable ${old:-<your old display manager>}"
 fi

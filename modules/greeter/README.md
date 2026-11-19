@@ -8,6 +8,6 @@ A themed login screen (greetd + ReGreet) in place of the desktop's own (Plasma L
   theme's colours, copied when the step runs: run it again after changing theme), and KDE Wallet unlock in
   `/etc/pam.d/greetd` so browser and Git passwords stay unlocked at login.
 - **Takes effect:** at the next boot. The old login screen is disabled, not removed.
-- **Undo:** `sudo systemctl disable greetd`, then `sudo systemctl enable` your old one (the step prints its name).
+- **Undo:** `./install.sh uninstall` switches greetd off and your old login screen back on (from the next boot), and puts the files in `/etc/greetd` back.
 - **Fedora:** ReGreet is not packaged; the step stops with a note and changes nothing.
 - **Tested on:** the owner's Flow X13 (CachyOS).

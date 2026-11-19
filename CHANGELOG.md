@@ -281,6 +281,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- Uninstall after the themed login screen (`greeter`) now switches greetd off and your old login screen back on;
+  before, greetd stayed on with its default text login. A file Hyprism wrote in `/etc` and later changed is now
+  removed by uninstall, instead of being put back as if it had been yours.
 - Hardware detection: on a hybrid laptop whose NVIDIA card is a "3D controller" (no `boot_vga`) and comes after the
   built-in graphics, the laptop screen was lost and NVIDIA taken as the main card, so `nvidia-hybrid` stayed off.
   `--with` / `--without` now also stick for modules with a hyphen in the name (`nvidia-hybrid`, `ddc-monitor`,
