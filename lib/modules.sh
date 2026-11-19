@@ -24,7 +24,7 @@ module_on() {
         true) return 0 ;;
         false) return 1 ;;
     esac
-    [[ -f $REPO/modules/$1/detect ]] && (. "$REPO/modules/$1/detect") >/dev/null 2>&1 # a failing detect means "not here"
+    [[ -f $REPO/modules/$1/detect ]] && (. "$REPO/modules/$1/detect") >/dev/null # a failing detect means "not here"; its errors still show
 }
 
 modules_on() {

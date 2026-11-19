@@ -280,7 +280,8 @@ Singleton {
         try { raw = JSON.parse(file.text()) } catch (e) {
             console.warn("settings.json is not valid JSON; keeping it as settings.json.broken and starting from defaults")
             // the text as it is now goes in as an argument, so the defaults written next can't race the copy
-            Quickshell.execDetached(["sh", "-c", 'printf "%s" "$2" > "$1"', "sh", file.path + ".broken", file.text()])
+            // an older .broken (maybe the last good copy of your settings) is never overwritten: this one gets the time
+            Quickshell.execDetached(["sh", "-c", 'f=$1; [ -e "$f" ] && f="$f.$(date +%Y%m%d-%H%M%S)"; printf "%s" "$2" > "$f"', "sh", file.path + ".broken", file.text()])
             reset("appearance"); for (const s of Object.keys(schema)) if (s !== "appearance") reset(s)
             return
         }
@@ -416,7 +417,16 @@ Singleton {
         for (const section of Object.keys(schema))
             for (const key of Object.keys(schema[section])) {
                 if (section === "appearance" && key === "theme") continue   // judged by checkTheme, once the theme folders are read
-                if (problem(schema[section][key], adapter[section][key])) {
+                const rule = schema[section][key], value = adapter[section][key]
+                if (!problem(rule, value)) continue
+                // a list of entries (places, shortcuts, modes…): only the entries that break the rule go
+                const kept = []
+                if (typeof rule === "string" && rule !== "list" && value && typeof value.length === "number")
+                    for (const e of Array.from(value)) if (!problem(rule, kept.concat([e]))) kept.push(e)
+                if (kept.length && !problem(rule, kept)) {
+                    console.warn("settings.json: " + section + "." + key + ": " + (value.length - kept.length) + " invalid entries dropped")
+                    adapter[section][key] = JSON.parse(JSON.stringify(kept))
+                } else {
                     console.warn("settings.json: " + section + "." + key + " was invalid, using the default")
                     adapter[section][key] = fresh[section][key]
                 }

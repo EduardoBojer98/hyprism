@@ -24,11 +24,26 @@ distro_prepare() {
     return 0
 }
 
+# Once per run: package lists older than a day can name files the mirrors have dropped (a 404 mid-install), and
+# Arch doesn't support installing on old lists without upgrading (no -Sy alone), so it asks to upgrade first
+_arch_checked=false
+arch_fresh() {
+    $_arch_checked && return 0
+    _arch_checked=true
+    [[ -n $(find /var/lib/pacman/sync -name '*.db' -mmin -1440 2>/dev/null) ]] && return 0
+    if ask "Your package lists are over a day old. Upgrade the system first (sudo pacman -Syu)?"; then
+        run sudo pacman -Syu --noconfirm || warn "The upgrade failed; installing on the old lists"
+    else
+        warn "Installing on old package lists: a download may fail (404). sudo pacman -Syu, then run this again."
+    fi
+}
+
 # distro_install SOURCE PACKAGES...
 distro_install() {
     local src=$1
     shift
     local repo=() aur=() p helper
+    arch_fresh
     for p in "$@"; do
         # cachyos: from the repo when this system has it (CachyOS), else from the AUR (plain Arch)
         if [[ $src == repo ]] || { [[ $src == cachyos ]] && pacman -Si "$p" >/dev/null 2>&1; }; then repo+=("$p"); else aur+=("$p"); fi

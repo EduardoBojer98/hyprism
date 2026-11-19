@@ -25,7 +25,12 @@ ask() {
     fi
     $YES && return 0
     local r
-    read -r -p "$1 [y/N] " r
+    # from the terminal even when the script itself comes in on stdin (curl … | bash); no terminal = no
+    if ! (: </dev/tty) 2>/dev/null; then
+        warn "No terminal to ask \"$1\": answering no (--yes answers yes)"
+        return 1
+    fi
+    read -r -p "$1 [y/N] " r </dev/tty || r=
     [[ $r == [yY]* ]]
 }
 # Every change goes through run, so --dry-run shows it instead of doing it

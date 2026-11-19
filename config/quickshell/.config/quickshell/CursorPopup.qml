@@ -108,17 +108,20 @@ Scope {
             opened()
         } else {
             anchorRect = null
+            locating = true
             locate.running = true
         }
     }
-    function hide() { if (open) { open = false; closed() } }
+    // a close while Hyprland is still being asked where the pointer is cancels the open
+    property bool locating: false
+    function hide() { locating = false; if (open) { open = false; closed() } }
     onOpenChanged: {
         if (open) Anchor.opened(name, targetScreen); else Anchor.closed(name)
         if (open) { scroll.contentY = 0; takeFocus() }
     }
     function takeFocus() { (focusItem ?? box).forceActiveFocus() }
     onTargetScreenChanged: if (open) Anchor.opened(name, targetScreen)
-    function toggle() { if (open) hide(); else show() }
+    function toggle() { if (open || locating) hide(); else show() }
 
     // Pointer position and monitor layout from Hyprland, in one call
     Process {
@@ -126,6 +129,8 @@ Scope {
         command: ["sh", "-c", "printf '{\"cursor\":%s,\"monitors\":%s}' \"$(hyprctl -j cursorpos)\" \"$(hyprctl -j monitors)\""]
         stdout: StdioCollector {
             onStreamFinished: {
+                if (!popup.locating) return
+                popup.locating = false
                 let target = null, x = 0, y = 0
                 try {
                     const d = JSON.parse(text)

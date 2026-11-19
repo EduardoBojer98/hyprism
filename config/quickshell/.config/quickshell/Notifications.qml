@@ -33,7 +33,8 @@ Singleton {
     readonly property bool dnd: c.dnd || scheduled || Focus.dnd   // a Focus mode can hold notifications too (Focus.qml)
     readonly property string dndStatus: c.dnd ? "On" : Focus.dnd ? Focus.mode.name : scheduled ? "Until " + c.dndTo : "Off"
     property real skipUntil: 0     // the schedule was turned off by hand until then (ms)
-    property bool sharing: false   // a screen or window is being shared: no banners for people on the call to read
+    property int shares: 0         // shares running now; two at once stay "sharing" until both stop
+    readonly property bool sharing: shares > 0   // a screen or window is being shared: no banners for people on the call to read
 
     // Hyprland sends "screencast>>1,<owner>" when a share starts and "screencast>>0,<owner>" when it stops
     // (screenshots send both at once, which just clears the banners from the shot).
@@ -42,7 +43,7 @@ Singleton {
         target: Hyprland
         function onRawEvent(event) {
             if (event.name !== "screencast") return
-            root.sharing = event.data.startsWith("1")
+            root.shares = Math.max(0, root.shares + (event.data.startsWith("1") ? 1 : -1))
             if (root.sharing) root.popups = root.popups.filter(n => n.urgency === NotificationUrgency.Critical)
         }
     }

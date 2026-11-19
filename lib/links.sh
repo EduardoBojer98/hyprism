@@ -75,7 +75,7 @@ links() {
     for f in "$REPO"/config/hypr/.config/hypr/defaults/*.conf; do [[ -e $settings/$(basename "$f") ]] || run cp "$f" "$settings/"; done
     # shortcut: the first wallpaper is a fixed file until themes become folders (roadmap C1)
     [[ -e $settings/wallpaper || ! -e $HOME/Pictures/Wallpapers/glass-night.png ]] || run ln -s "$HOME/Pictures/Wallpapers/glass-night.png" "$settings/wallpaper"
-    [[ -e $HOME/.config/fuzzel/theme.ini ]] || run cp "$REPO/config/fuzzel/.config/fuzzel/theme-default.ini" "$HOME/.config/fuzzel/theme.ini"
+    [[ -e $HOME/.config/fuzzel/theme.ini ]] || { run mkdir -p "$HOME/.config/fuzzel" && run cp "$REPO/config/fuzzel/.config/fuzzel/theme-default.ini" "$HOME/.config/fuzzel/theme.ini"; }
     # secret scan before commits (only in a checkout, not an unpacked archive)
     if is_checkout && [[ $(git -C "$REPO" config core.hooksPath) != .githooks ]]; then
         run git -C "$REPO" config core.hooksPath .githooks

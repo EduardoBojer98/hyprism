@@ -51,6 +51,7 @@ Singleton {
     function ring() { if (ready) cli("-d", phone.id, "--ring") }
     function send(paths) {
         if (!ready || !paths.length) return
+        if (sender.running) { sender.queue = sender.queue.concat([paths]); return }   // one share at a time, the rest wait
         sender.count = paths.length
         sender.command = ["kdeconnect-cli", "-d", phone.id, "--share"].concat(paths)
         sender.running = true
@@ -83,7 +84,7 @@ Singleton {
     Process {
         id: reader
         command: ["sh", "-c", `
-command -v kdeconnect-cli >/dev/null || { echo missing; exit 0; }
+command -v kdeconnect-cli >/dev/null && command -v jq >/dev/null || { echo missing; exit 0; }
 k=org.kde.kdeconnect
 ids=$(busctl --user -j call $k /modules/kdeconnect $k.daemon devices bb false false 2>/dev/null) || { echo nodaemon; exit 0; }
 echo ok
@@ -129,9 +130,13 @@ done`]
     Process {
         id: sender
         property int count: 0
-        onExited: code => Notifications.post(code === 0 ? (count === 1 ? "File sent" : count + " files sent") : "Couldn't send",
+        property var queue: []
+        onExited: code => {
+            Notifications.post(code === 0 ? (count === 1 ? "File sent" : count + " files sent") : "Couldn't send",
                                              code === 0 ? "To " + (root.phone?.name ?? "your phone") : "Is " + (root.phone?.name ?? "the phone") + " still nearby?",
                                              code === 0 ? "low" : "normal", "smartphone")
+            if (queue.length) { const next = queue[0]; queue = queue.slice(1); Qt.callLater(() => root.send(next)) }
+        }
     }
 
     IpcHandler {

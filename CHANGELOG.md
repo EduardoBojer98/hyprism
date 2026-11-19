@@ -294,6 +294,15 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - Settings that reach Lua: control characters and empty values no longer break the file; a display entry
   that isn't a table is refused; idle times are whole minutes and never round down to "off".
 - Install: a failing step or migration stops instead of being marked done.
+- Popups: closing one right after opening it (a quick double press) no longer opens it after all.
+- Banners stay hidden until every screen share has stopped, not just the first.
+- Phone: files sent while another send is running wait their turn instead of being dropped; without `jq` it
+  says the phone link isn't fully installed.
+- settings.json: one bad entry in a list (a place, a shortcut, a Focus mode) is dropped alone instead of
+  resetting the whole list; an older `settings.json.broken` is never overwritten.
+- Install: asks to upgrade first when the package lists are over a day old; questions read the terminal even
+  under `curl … | bash` and answer "no" when there is none; a module detect error is shown; fuzzel's folder is
+  created before its theme is copied.
 
 ### Removed
 
