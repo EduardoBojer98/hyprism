@@ -105,7 +105,12 @@ the installer prints before you say yes.
 - `squeekboard`, the on-screen keyboard of the `tablet` module. The comment there suggests `maliit-keyboard` or none.
 - `ollama-gpu`: Fedora's `ollama` package already uses the graphics card when the NVIDIA driver is there.
 - `nvidia-container-toolkit`: only in NVIDIA's own repo, which is not added for you.
-
+- `regreet`, the login screen of the `greeter` module: that step changes nothing on Fedora.
+- `amberol` (music player) and `resources` (system monitor): on Flathub, `flatpak install flathub io.bassi.Amberol`
+  and `net.nokyan.Resources`.
+- `cursors-capitaine`, the Pebble theme's cursor: retired after Fedora 42; Pebble uses the system cursor (Settings >
+  Cursor picks another).
+- `update-check`: nothing is missing, `dnf check-update` counts the updates for the bar.
 
 The installer prints a warning for each and carries on.
 
