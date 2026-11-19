@@ -74,7 +74,8 @@ In order, it:
 
 Every change to `/etc`, to a service or to your repos is asked first. Answer `n` and that part is skipped; the
 end of the run lists what was skipped and how to do it later. `--yes` answers yes to everything: use it only
-when you have read the dry run.
+when you have read the dry run. `--no-trust` answers no to the questions that trust other people's code or give
+root-level rights (AUR builds, COPR and RPM Fusion repos, the docker group), with `--yes` too.
 
 **AUR note.** Packages from the AUR are user-submitted recipes. If a package line says `aur`, the installer lists
 the names, asks "Build and install these from the AUR?" and needs `paru` or `yay` (CachyOS ships paru). Today every
@@ -104,6 +105,7 @@ the installer prints before you say yes.
 - `squeekboard`, the on-screen keyboard of the `tablet` module. The comment there suggests `maliit-keyboard` or none.
 - `ollama-gpu`: Fedora's `ollama` package already uses the graphics card when the NVIDIA driver is there.
 - `nvidia-container-toolkit`: only in NVIDIA's own repo, which is not added for you.
+
 
 The installer prints a warning for each and carries on.
 

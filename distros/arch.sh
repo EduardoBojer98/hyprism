@@ -56,7 +56,7 @@ distro_install() {
             return 0
         }
         printf '   %s (AUR: built from a user-submitted recipe)\n' "${aur[@]}"
-        ask "Build and install these from the AUR?" || {
+        ask_trust "Build and install these from the AUR?" || {
             warn "Skipped (AUR not trusted): ${aur[*]}"
             return 0
         }

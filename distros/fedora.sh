@@ -16,7 +16,7 @@ distro_unavailable() { return 1; }
 rpmfusion() { # rpmfusion free|nonfree
     rpm -q "rpmfusion-$1-release" >/dev/null 2>&1 && return 0
     echo "   RPM Fusion: a community repo for software Fedora does not ship"
-    ask "Enable it?" || {
+    ask_trust "Enable RPM Fusion $1?" || {
         warn "Skipped RPM Fusion $1: its packages can't be installed"
         return 0
     }
@@ -31,7 +31,7 @@ distro_prepare() {
             copr:*)
                 rpm -q dnf-plugins-core >/dev/null 2>&1 || run sudo dnf install -y dnf-plugins-core
                 echo "   COPR ${src#copr:}: a third-party repo, not Fedora's own"
-                if ask "Enable it?"; then
+                if ask_trust "Enable COPR ${src#copr:}?"; then
                     run sudo dnf copr enable -y "${src#copr:}"
                 else warn "Skipped COPR ${src#copr:}: its packages can't be installed"; fi
                 ;;

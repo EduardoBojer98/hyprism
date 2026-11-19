@@ -16,6 +16,8 @@
 #
 #   --dry-run                 only show what would happen (questions are listed, not asked)
 #   --yes                     answer yes to every question (unattended)
+#   --no-trust                answer no to the questions that trust other people's code or give root-level
+#                             rights: AUR builds, COPR and RPM Fusion repos, the docker group (with --yes too)
 #   --only LIST               comma list of steps (packages, links, services, defaults, firewall, modules)
 #                             and/or package groups (core, desktop, tools, look, apps, shell)
 #   --profile full|base       full: Hyprism's apps and themed login screen too; base: only the desktop,
@@ -31,7 +33,7 @@ set -Eeuo pipefail # -E: the failure summary (on_fail) also fires inside functio
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 ARGS=("$@") # kept for update, which re-runs itself after a pull
-DRY=false YES=false ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" PROFILE="" CHANNEL="" CMD=install
+DRY=false YES=false TRUST=true ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" PROFILE="" CHANNEL="" CMD=install
 usage() {
     awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
     exit "${1:-0}"
@@ -40,6 +42,7 @@ while (($#)); do
     case $1 in
         --dry-run) DRY=true ;;
         --yes | -y) YES=true ;;
+        --no-trust) TRUST=false ;;
         --only | --with | --without | --backup | --step | --profile)
             [[ -n ${2:-} ]] || {
                 echo "$1 needs a value" >&2

@@ -87,6 +87,17 @@ grep -qE 'nvidia-open-dkms|akmod-nvidia ' <<<"$opt" || {
     exit 1
 }
 echo "ok: nvidia driver planned"
+# --no-trust: no AUR build, COPR, RPM Fusion or docker group, even with --yes
+cautious=$(as desktop-nvidia './install.sh --dry-run --yes --no-trust --with dev 2>&1')
+if grep -E 'would (run|ask):' <<<"$cautious" | grep -qiE 'copr enable|rpmfusion|AUR|docker group'; then
+    echo "xx --no-trust still offers a third-party source or the docker group"
+    exit 1
+fi
+grep -q 'Skipped (--no-trust)' <<<"$cautious" || {
+    echo "xx --no-trust skipped nothing (dev's docker group question at least)"
+    exit 1
+}
+echo "ok: --no-trust declines the trust questions"
 [[ $(snapshot) == "$before" ]] || {
     echo "xx a dry run changed the home folder"
     exit 1

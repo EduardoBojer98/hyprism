@@ -18,6 +18,14 @@ bad() {
     [[ -z ${2:-} ]] || printf '   fix: %s\n' "$2"
     PROBLEMS=$((PROBLEMS + 1))
 }
+# ask_trust QUESTION: a question that trusts other people's code or gives root-level rights; --no-trust answers no
+ask_trust() {
+    if ! ${TRUST:-true}; then
+        warn "Skipped (--no-trust): $1"
+        return 1
+    fi
+    ask "$1"
+}
 ask() {
     if $DRY; then
         printf '   would ask: %s\n' "$1"
