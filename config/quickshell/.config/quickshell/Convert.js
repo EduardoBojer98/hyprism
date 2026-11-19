@@ -82,7 +82,8 @@ const ZONES = { utc: "UTC", gmt: "UTC", est: "America/New_York", edt: "America/N
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
 const DAY = 86400000
 
-function num(s) { return Number(String(s).replace(/,/g, "")) }
+// "1,000" and "1,000.5" group thousands; any other comma is a decimal one ("2,5" is 2.5)
+function num(s) { s = String(s); return Number(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s) ? s.replace(/,/g, "") : s.replace(",", ".")) }
 function fmt(v) {
     if (!isFinite(v)) return String(v)
     const a = Math.abs(v)

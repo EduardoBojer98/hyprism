@@ -151,7 +151,7 @@ Singleton {
         // a portal shortcut's name ("appid:id", from hyprctl globalshortcuts) goes into keybinds.lua too: no quotes or backslashes
         if (rule === "portalShortcuts") return value && typeof value.length === "number" && value.length <= 100
             && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[A-Za-z0-9._:+@ -]{3,160}$/.test(c?.name ?? "") && c.name.includes(":")) ? "" : "Shortcuts need keys and an app's shortcut name"
-        if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(displayKeyOk) ? "" : "Unknown display names"
+        if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(displayKeyOk) ? (Object.values(value).every(v => v !== null && typeof v === "object" && !Array.isArray(v)) ? "" : "Each display needs its own settings") : "Unknown display names"
         if (rule === "presets") return value && typeof value.length === "number" && value.length <= 20
             && Array.from(value).every(p => /^[a-z0-9-]{1,40}$/.test(p?.id ?? "") && typeof p.name === "string" && p.name.length > 0 && p.name.length <= 40
                 && !/[\x00-\x1f]/.test(p.name) && typeof p.auto === "boolean" && p.outputs !== null && typeof p.outputs === "object"

@@ -285,6 +285,15 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   Hyprland back to that window's desktop.
 - The CI config check now verifies every machine profile: `hl.timer` crashed `--verify-config`, so each profile
   was skipped as "Hyprland's own crash".
+- Search: a calculator, file or time-zone lookup still busy with an older query runs again with the newest one
+  (it showed stale results); file search matches the text literally; "2,5 km in m" reads the comma as a decimal;
+  "time in Amsterdam" works (zone.tab); the launch counts no longer grow forever.
+- Launchpad: renaming a folder and then closing it keeps the new name.
+- Quick Look opens files with `#` or `%` in the name, also from `file://` links.
+- Displays: Apply keeps the settings of screens that aren't plugged in (a dock's); they come back at "auto".
+- Settings that reach Lua: control characters and empty values no longer break the file; a display entry
+  that isn't a table is refused; idle times are whole minutes and never round down to "off".
+- Install: a failing step or migration stops instead of being marked done.
 
 ### Removed
 

@@ -55,7 +55,7 @@ Item {
         Launcher.close(); Search.remember("app:" + app.id); app.execute()
     }
     function openFolder(i) { folderIndex = i; folderCurrent = 0 }
-    function closeFolder() { if (folderIndex < 0) return; folderIndex = -1; nameField.focus = false; Launcher.field.forceActiveFocus() }
+    function closeFolder() { if (folderIndex < 0) return; Launcher.field.forceActiveFocus(); folderIndex = -1 }   // focus leaves the name first, so a rename in progress is kept
 
     // ---- paging ----------------------------------------------------------------------------------------------
     property int page: 0

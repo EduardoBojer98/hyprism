@@ -59,7 +59,9 @@ Scope {
             + (s.mirrorMode ? `MIRROR_MODE=${s.mirrorMode}\n` : "")
     }
 
-    readonly property string idle: idleText(Config.idle.lockMin, Config.idle.sleepMin, Config.idle.sleepOnPowerMin)
+    // whole minutes (hypridle wants whole seconds), and a set time never rounds down to "off"
+    function wholeMin(m) { return m > 0 ? Math.max(1, Math.round(m)) : 0 }
+    readonly property string idle: idleText(wholeMin(Config.idle.lockMin), wholeMin(Config.idle.sleepMin), wholeMin(Config.idle.sleepOnPowerMin))
     readonly property string inputLua: inputTable(Config.input)
     readonly property string displaysLua: displaysTable(Config.displays)
     readonly property string appsLua: SettingsApp.lua({ terminal: Config.apps.terminal })   // read by modules/binds.lua at load

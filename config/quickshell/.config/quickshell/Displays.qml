@@ -200,7 +200,11 @@ Singleton {
         if (confirm) { previous = saved; countdown.left = 15; countdown.start() }
         notice = ""
         dirty = false
-        Config.set("displays", "layout", layoutOf(edits))   // SettingsSync writes displays.lua and applies it
+        // screens that aren't plugged in now (a dock's) keep their mode, scale and rotation; their old spot could
+        // overlap this layout, so they come back at "auto" and can be placed again
+        const away = {}, old = Config.displays.layout ?? {}
+        for (const n of Object.keys(old)) if (!(n in edits)) { away[n] = Object.assign({}, old[n]); delete away[n].position }
+        Config.set("displays", "layout", Object.assign(away, layoutOf(edits)))   // SettingsSync writes displays.lua and applies it
         reloadTimer.restart()
         return ""
     }
@@ -255,8 +259,8 @@ Singleton {
                 radius: Theme.radiusPanel
                 Column {
                     anchors.centerIn: parent
-                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: root.numberOf(modelData.name); color: Theme.text; font { family: Theme.font; pixelSize: 160; weight: Font.Bold } }
-                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData.name; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontSize } }
+                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData ? root.numberOf(modelData.name) : ""; color: Theme.text; font { family: Theme.font; pixelSize: 160; weight: Font.Bold } }
+                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData?.name ?? ""; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontSize } }
                 }
             }
         }

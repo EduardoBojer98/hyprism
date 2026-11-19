@@ -63,6 +63,9 @@ Singleton {
     function remember(key) {
         const u = Object.assign({}, Config.launcher.usage ?? {})
         u[key] = (u[key] ?? 0) + 1
+        const keys = Object.keys(u)
+        if (keys.length > 300)   // keep the 200 most used, so settings.json doesn't grow forever
+            for (const k of keys.sort((a, b) => u[b] - u[a]).slice(200)) if (k !== key) delete u[k]
         Config.set("launcher", "usage", u)
         Config.set("launcher", "recent", [key].concat((Config.launcher.recent ?? []).filter(k => k !== key)).slice(0, 12))
     }
@@ -261,6 +264,13 @@ Singleton {
 
     // ---- async providers -------------------------------------------------------------------------
 
+    // a process still busy with an older query runs again with the newest command when it ends
+    function launch(proc, cmd) {
+        if (proc.running) { proc.next = cmd; return }
+        proc.next = null; proc.command = cmd; proc.running = true
+    }
+    function relaunch(proc) { if (proc.next) { const c = proc.next; proc.next = null; launch(proc, c); return true } return false }
+
     onQueryChanged: { files = []; calc = ""; zoneAnswer = null; slow.restart() }
     onFileModeChanged: { files = []; slow.restart() }
     Timer {
@@ -270,10 +280,10 @@ Singleton {
             const raw = root.query.trim()
             if (raw.startsWith(">") || raw.length === 0) return
             const c = root.convert
-            if (c?.kind === "tz") { zone.command = zone.base.concat([c.zone, c.city, c.at, c.place]); zone.running = true }
+            if (c?.kind === "tz") { root.launch(zone, zone.base.concat([c.zone, c.city, c.at, c.place])) }
             else if (c?.kind === "currency" && (c.need || Date.now() - root.ratesChecked > 3600000)) root.refreshRates(false)
             // Calculator: starts like a number or bracket, through qalc (units, %, offline currencies)
-            else if (!c && /^[\d(.\-√π]/.test(raw) && /\d/.test(raw)) { qalc.command = ["qalc", "-t", "-set", "upxrates 0", "--", raw]; qalc.running = true }
+            else if (!c && /^[\d(.\-√π]/.test(raw) && /\d/.test(raw)) root.launch(qalc, ["qalc", "-t", "-set", "upxrates 0", "--", raw])
             // Files: "~/x" or "/x" browse a path; otherwise search home once there are 3+ letters
             let cmd = null
             if (raw.startsWith("~") || raw.startsWith("/")) {
@@ -285,23 +295,26 @@ Singleton {
                        "--", part ? "^" + part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : ".", dir]
             } else if (root.fileMode || (raw.length >= 3 && Config.launcher.showFiles)) {
                 cmd = ["fd", "--ignore-case", "--max-results", root.fileMode ? "40" : "12", "--exclude", "node_modules", "--exclude", "vendor",
-                       "--", raw, root.home]
+                       "--fixed-strings", "--", raw, root.home]
             }
             // Folders come back with a trailing slash so they can be told apart
-            if (cmd) { fd.command = ["sh", "-c", "\"$@\" | while read -r p; do [ -d \"$p\" ] && echo \"${p%/}/\" || echo \"$p\"; done", "fd"].concat(cmd); fd.running = true }
+            if (cmd) { root.launch(fd, ["sh", "-c", "\"$@\" | while IFS= read -r p; do [ -d \"$p\" ] && echo \"${p%/}/\" || echo \"$p\"; done", "fd"].concat(cmd)) }
         }
     }
     Process {
         id: fd
+        property var next: null
         property var buffer: []
         onStarted: buffer = []
         stdout: SplitParser { onRead: line => fd.buffer.push(line) }
-        onExited: root.files = buffer
+        onExited: if (!root.relaunch(fd)) root.files = buffer
     }
-    // a city -> its zone (zone1970.tab: "tokyo" -> Asia/Tokyo), then the time there now, or what its `at` is here
+    // a city -> its zone (zone.tab: "tokyo" -> Asia/Tokyo), then the time there now, or what its `at` is here
     Process {
         id: zone
-        readonly property var base: ["sh", "-c", "z=$1; [ -n \"$z\" ] || z=$(awk -F'\\t' '!/^#/ {print $3}' /usr/share/zoneinfo/zone1970.tab 2>/dev/null | grep -i -m1 \"/$2\\$\");"
+        property var next: null
+        onExited: root.relaunch(zone)
+        readonly property var base: ["sh", "-c", "z=$1; [ -n \"$z\" ] || z=$(awk -F'\\t' '!/^#/ {print $3}' /usr/share/zoneinfo/zone.tab 2>/dev/null | grep -i -m1 \"/$2\\$\");"
             + " [ -n \"$z\" ] || exit 1; if [ -z \"$3\" ]; then TZ=\"$z\" date '+%H:%M|%a %-d %b|%Z'; else date -d \"TZ=\\\"$z\\\" $3\" '+%H:%M|%a %-d %b|'\"$(TZ=$z date +%Z)\"; fi", "zone"]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -328,10 +341,13 @@ Singleton {
     }
     Process {
         id: qalc
+        property var next: null
+        onExited: root.relaunch(qalc)
         stdout: StdioCollector {
             onStreamFinished: {
                 const a = text.trim()
                 const raw = root.query.trim()
+                if (qalc.next || qalc.command[qalc.command.length - 1] !== raw) return   // the query moved on
                 // Ignore echoes, errors and "ans = word" style non-answers
                 root.calc = a && a !== raw && !/error|warning|undefined/i.test(a) && /\d/.test(a) ? a.replace(/^≈\s*/, "≈ ") : ""
             }

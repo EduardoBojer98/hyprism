@@ -25,7 +25,7 @@ Singleton {
 
     IpcHandler {
         target: "quicklook"
-        function open(path: string): void { root.open(path.replace(/^file:\/\//, ""), false) }
+        function open(path: string): void { root.open(path.startsWith("file://") ? decodeURIComponent(path.slice(7)) : path, false) }
         function close(): void { root.close() }
     }
 

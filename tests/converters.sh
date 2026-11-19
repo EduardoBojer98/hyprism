@@ -26,7 +26,7 @@ QtObject {
         const rates = C.parseRates("<Cube time='2026-11-17'><Cube currency='USD' rate='1.0500'/><Cube currency='RON' rate='5.0000'/></Cube>")
         const cases = [
             ["5 km in mi", "3.10686 mi"], ["70 f to c", "21.1111 °C"], ["2 gb in mb", "2000 mb"], ["0 c in k", "273.15 K"],
-            ["1 lb to g", "453.592 g"], ["100 km/h in mph", "62.1371 mph"], ["90 min to h", "1.5 h"], ["5 km in kg", null],
+            ["1 lb to g", "453.592 g"], ["100 km/h in mph", "62.1371 mph"], ["90 min to h", "1.5 h"], ["5 km in kg", null], ["2,5 km in m", "2500 m"], ["1,000 m in km", "1 km"],
             ["100 eur to ron", "500 RON"], ["100 usd in eur", "95.24 EUR"], ["€20 to usd", "21 USD"], ["100 xyz to ron", null],
             ["days until 25 dec", "37 days"], ["days until 1 jan", "44 days"], ["days since 1 nov", "17 days"],
             ["today + 90 days", "Tue 16 Feb 2027"], ["today - 2 weeks", "Wed 4 Nov 2026"], ["2026-12-25 + 1 day", "Sat 26 Dec 2026"],

@@ -7,6 +7,8 @@ import QtQuick
 // anything else as its icon, size and type. Shown by QuickLook.qml, over the launcher or on its own.
 Glass {
     id: view
+    // a path as a file URL; "#", "%", "?" in a name would otherwise break it
+    function url(p) { return "file://" + p.split("/").map(encodeURIComponent).join("/") }
     property string path: ""
     strong: true
     radius: Math.max(Theme.radiusLarge, 14)
@@ -90,7 +92,7 @@ Glass {
                 if (render.ran !== String(view.serial)) return
                 const l = text.split("\n")
                 view.pageCount = Number(l[0]) || 0
-                view.pages = l.slice(1).filter(s => s.endsWith(".png")).map(s => "file://" + s)
+                view.pages = l.slice(1).filter(s => s.endsWith(".png")).map(s => view.url(s))
                 if (!view.pages.length) view.kind = "none"
                 view.busy = false
             }
@@ -137,7 +139,7 @@ Glass {
         Image {
             visible: view.kind === "image" || view.kind === "frame"
             anchors.fill: parent
-            source: view.kind === "image" ? "file://" + view.path : view.kind === "frame" ? (view.pages[0] ?? "") : ""
+            source: view.kind === "image" ? view.url(view.path) : view.kind === "frame" ? (view.pages[0] ?? "") : ""
             fillMode: Image.PreserveAspectFit
             asynchronous: true
             cache: false

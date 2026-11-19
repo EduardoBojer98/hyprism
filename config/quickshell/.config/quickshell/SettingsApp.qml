@@ -127,7 +127,9 @@ Singleton {
     // Lua table literal from a plain JS object (strings, numbers, booleans, nested objects)
     function lua(value, indent) {
         indent = indent || ""
-        if (typeof value === "string") return JSON.stringify(value)
+        // JSON's \u00XX (control characters) isn't Lua; \xXX is
+        if (typeof value === "string") return JSON.stringify(value).replace(/\\\\|\\u00([0-9a-fA-F]{2})/g, (m, h) => h ? "\\x" + h : m)
+        if (value === null || value === undefined) return "nil"
         if (typeof value === "number" || typeof value === "boolean") return String(value)
         const inner = indent + "    "
         return "{\n" + Object.keys(value).map(k =>
