@@ -74,7 +74,7 @@ corners, gaps, font and motion and is kept in `settings.json`; there is no build
 | `launcher`, `notify` | Launcher placement and look; where notifications appear and their shape |
 | `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset, `frame`: `accent`, `gradient` or `rainbow` (the focused window's frame) |
 | `lock` | Lock screen clock style and alignment |
-| `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, `palette` (16 colours), and its look: `cursorStyle` (`block`, `bar`, `underline`, `block_hollow`), `blink`, `padding` `[x, y]` |
+| `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, `palette` (16 colours), and its look: `cursorStyle` (`block`, `bar`, `underline`, `block_hollow`), `blink`, `padding` `[x, y]`, `prompt`: the starship prompt and fastfetch card preset (`rounded` pills, `blocks` on a heavy rail, `brackets` as an ascii HUD) |
 | `wall` | The wallpaper's name: a picture `<wall>.png` in the folder, or a recipe with that name in `wallpaper.sh` |
 | `icons` | The icon theme it starts with (a folder name; `Papirus` and `breeze` follow light and dark). Settings > Icons can pick another |
 | `cursor` | The cursor theme it starts with (a folder name; empty = the system's). A missing one falls back to the system cursor. Settings > Cursor can pick another |

@@ -194,7 +194,7 @@
     "cursor": "#ff3b1f",
     "cursorText": "#141414",
     "selection": "#561f17",
-    "selectionText": "#f4f1ea", "cursorStyle": "block", "blink": false, "padding": [12, 10]
+    "selectionText": "#f4f1ea", "cursorStyle": "block", "blink": false, "padding": [12, 10], "prompt": "blocks"
   },
   "wall": "poster",
   "icons": "Papirus",

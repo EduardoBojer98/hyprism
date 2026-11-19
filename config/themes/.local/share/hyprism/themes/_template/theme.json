@@ -37,7 +37,7 @@
     "cursor": "#e4ff1a",
     "cursorText": "#0c0d08",
     "selection": "#3d4510",
-    "selectionText": "#f3f6df", "cursorStyle": "bar", "blink": true, "padding": [14, 12]
+    "selectionText": "#f3f6df", "cursorStyle": "bar", "blink": true, "padding": [14, 12], "prompt": "rounded"
   },
   "wall": "pebble"
 }

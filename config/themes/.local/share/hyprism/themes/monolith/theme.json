@@ -204,7 +204,7 @@
     "cursor": "#b6ff3b",
     "cursorText": "#07080b",
     "selection": "#16274a",
-    "selectionText": "#e3e8ef", "cursorStyle": "block", "blink": false, "padding": [10, 8]
+    "selectionText": "#e3e8ef", "cursorStyle": "block", "blink": false, "padding": [10, 8], "prompt": "brackets"
   },
   "wall": "monolith",
   "icons": "Papirus",

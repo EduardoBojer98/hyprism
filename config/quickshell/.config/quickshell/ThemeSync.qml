@@ -87,15 +87,16 @@ Scope {
     // fish, read by fish/conf.d/tools.fish when a shell starts. CachyOS's config.fish (sourced after conf.d) redefines
     // fish_greeting as plain `fastfetch`, so until the first prompt `fastfetch` itself stands in for our greeting too.
     readonly property string greetingBody: tc.greeting === "off" ? "    true\n"
-        : tc.greeting === "fastfetch" ? "    command -q fastfetch; and command fastfetch\n"
+        : tc.greeting === "fastfetch" ? "    command -q fastfetch; and command fastfetch $__hyprism_ff\n"
         // a random Pokémon in fastfetch's logo slot, one box size for all (scripts/pokemon-card); else the distro's logo
         : tc.greeting === "pokemon" ? "    command -q fastfetch; or return\n    set -l card (pokemon-card 2>/dev/null | string collect)\n"
-            + "    if test -n \"$card\"\n        command fastfetch --logo-type data-raw --logo \"$card\"\n"
-            + "    else\n        command fastfetch\n    end\n"
+            + "    if test -n \"$card\"\n        command fastfetch $__hyprism_ff --logo-type data-raw --logo \"$card\"\n"
+            + "    else\n        command fastfetch $__hyprism_ff\n    end\n"
         // a bonsai grown fresh each time with a short fortune under it (scripts/bonsai-card: cbonsai, fortune)
         : tc.greeting === "bonsai" ? "    command -q bonsai-card; and bonsai-card\n" : ""
     readonly property string fishConf: "# Written by Quickshell ThemeSync from Settings > Appearance > Terminal\n"
         + (tc.transientPrompt ? "functions -q enable_transience; and enable_transience\n" : "")
+        + (promptPreset === "rounded" ? "set -e __hyprism_ff\n" : "set -g __hyprism_ff -c ~/.config/fastfetch/" + promptPreset + ".jsonc\n")
         + (greetingBody === "" ? "" : "function __hyprism_greeting\n" + greetingBody + "end\n"
            + "function fish_greeting; __hyprism_greeting; end\n"
            + "function fastfetch --wraps fastfetch; if set -q argv[1]; command fastfetch $argv; else; __hyprism_greeting; end; end\n"
@@ -183,7 +184,10 @@ Scope {
             [one ?? Theme.success, one ?? Theme.warning, one ?? Theme.error].forEach((c, i) => put(name + "_" + ["start", "mid", "end"][i], c))
         return "# Written by Quickshell ThemeSync from the active theme\n" + t.join("\n")
     }
-    FileView { id: starshipSrc; path: Quickshell.env("HOME") + "/.config/starship.toml"; watchChanges: true; onFileChanged: reload(); onLoaded: debounce.restart() }
+    // the theme's prompt preset (theme.json term.prompt): rounded is ~/.config/starship.toml, the others sit beside it
+    // (starship-blocks.toml, starship-brackets.toml), with fastfetch cards to match (fastfetch/blocks.jsonc, brackets.jsonc)
+    readonly property string promptPreset: ["blocks", "brackets"].includes(current.term?.prompt) ? current.term.prompt : "rounded"
+    FileView { id: starshipSrc; path: Quickshell.env("HOME") + "/.config/starship" + (root.promptPreset === "rounded" ? "" : "-" + root.promptPreset) + ".toml"; watchChanges: true; onFileChanged: reload(); onLoaded: debounce.restart() }
     readonly property string starshipToml: {
         const src = starshipSrc.text()
         if (src.indexOf("[palettes.hyprism]") < 0) return ""

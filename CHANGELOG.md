@@ -25,6 +25,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   box with its Pokédex number and name under it, so the card never moves.
 - A Bonsai greeting: a tree grown fresh for every shell (cbonsai, through scripts/bonsai-card) with a short
   fortune under it (fortune-mod).
+- Each theme has its own prompt and greeting card (theme.json `term.prompt`): Pebble rounded pills, Poster square
+  blocks on a heavy rail with caps headings, Monolith an ascii HUD with `[brackets]`, `>` bullets and `[####..]` meters.
 - The starship prompt sits on the same rail and shows a failed command's exit code, background jobs and the clock.
 - Each theme draws its own volume/brightness OSD (theme.json `osd.style`): Pebble a thin bar, Poster a big number
   over ten blocks, Monolith a mono `[████░░]` meter.
