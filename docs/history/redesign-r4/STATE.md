@@ -21,10 +21,13 @@ Branch `redesign` (worktree `.claude/worktrees/redesign`), from `develop` at 61e
 
 - Worktree, baseline, screenshots, AUDIT.md, PLAN.md.
 - 5bf0857 tokens + no-hardcode guard; e681bbc real controls (tile gating, OSK read-back, bar menu checks).
+- dda5800 audit docs; 2116f3c docs + changelog; dcd3d6e review fixes; da7d691 perf(bar).
+- 7b52452 per-theme OSD + Settings > Appearance > Terminal; b1576bb Pokémon greeting + fastfetch card.
+- Perf A/B settled: spikes on both trees, noise (REPORT.md). perf-base worktree removed.
 
 ## Next
 
-- PLAN.md tasks 3-7.
+- Owner: review and merge (REPORT.md "Merge and apply"). Ideas left: RESEARCH.md "Not done".
 - claude-free failed this session (unrecognized_model free-coding); Explore agents used instead.
 
 ## Checks
