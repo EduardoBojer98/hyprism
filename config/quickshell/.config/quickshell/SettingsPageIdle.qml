@@ -18,6 +18,7 @@ ColumnLayout {
 
     SettingGroup {
         title: "When you step away"
+        IdlePreview { Layout.fillWidth: true }
         SettingRow {
             label: "Lock the screen after"
             hint: "The screen dims 30 seconds before; screens turn off 30 seconds after"
