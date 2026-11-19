@@ -66,14 +66,23 @@ module_steps() {
                 warn "Skipped ${s##*/} (./install.sh --only modules offers it again)"
                 continue
             }
-            # a step is plain bash run here, so it can use run, ask, sys_write, hw_get and the distro functions
-            if (
+            # a step is plain bash run here, so it can use run, ask, sys_write, hw_get and the distro functions.
+            # Not inside `if ( … )`: bash ignores set -e there, so a failing line would go on and be marked done.
+            local rc saved
+            saved=$(trap -p ERR)
+            trap - ERR
+            set +e
+            (
                 set -euo pipefail
                 # shellcheck disable=SC2034  # for the step
                 MODULE=$REPO/modules/$m
                 # shellcheck disable=SC1090
                 . "$s"
-            ); then
+            )
+            rc=$?
+            set -e
+            eval "$saved"
+            if ((rc == 0)); then
                 $DRY || {
                     mkdir -p "$STATE/steps"
                     step_sum "$s" >"$STATE/steps/$(step_id "$s")"

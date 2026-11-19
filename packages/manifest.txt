@@ -86,6 +86,7 @@ nautilus                 apps      file manager (Super+E): tabs, search, preview
 gvfs-mtp                 apps      phones and cameras in the file manager
 gvfs-smb                 apps      Windows / NAS network shares in the file manager
 ffmpegthumbnailer        apps      video thumbnails in the file manager
+poppler                  apps      PDF pages for Quick Look (pdftoppm, pdfinfo)
 file-roller              apps      open and make archives (zip, tar, 7z, rar) from the file manager
 7zip                     apps      7z and rar support for archives
 text-editor              apps      text editor with tabs, syntax colours and a dark/light switch

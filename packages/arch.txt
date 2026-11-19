@@ -79,6 +79,7 @@ nautilus                 nautilus                           repo
 gvfs-mtp                 gvfs-mtp                           repo
 gvfs-smb                 gvfs-smb                           repo
 ffmpegthumbnailer        ffmpegthumbnailer                  repo
+poppler                  poppler                            repo
 file-roller              file-roller                        repo
 7zip                     7zip                               repo
 text-editor              gnome-text-editor                  repo

@@ -7,7 +7,7 @@
 
 migrations() {
     local m id
-    mkdir -p "$STATE/migrations"
+    $DRY || mkdir -p "$STATE/migrations" # a dry run leaves no state, or the real run wouldn't count as fresh
     for m in "$REPO"/migrations/[0-9][0-9][0-9][0-9]-*.sh; do
         [[ -f $m ]] || continue
         id=$(basename "$m" .sh)
@@ -18,11 +18,20 @@ migrations() {
         fi
         say "Migration $id"
         awk 'NR == 1 { next } /^#/ { sub(/^# ?/, "   "); print; next } { exit }' "$m"
-        if (
+        # not inside `if ( … )`: bash ignores set -e there, so a failing line would go on and be marked done
+        local rc saved
+        saved=$(trap -p ERR)
+        trap - ERR
+        set +e
+        (
             set -euo pipefail
             # shellcheck disable=SC1090
             . "$m"
-        ); then
+        )
+        rc=$?
+        set -e
+        eval "$saved"
+        if ((rc == 0)); then
             $DRY || touch "$STATE/migrations/$id"
         else
             FAILED+=("migration $id failed (it runs again on the next update)")
