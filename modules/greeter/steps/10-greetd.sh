@@ -16,8 +16,9 @@ vt = 1
 command = "cage -s -m last -- regreet"
 user = "greeter"'
 
-icons=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'")
-font=$(gsettings get org.gnome.desktop.interface font-name 2>/dev/null | tr -d "'")
+# gsettings may be missing on a fresh system: fall back to the defaults below
+icons=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'" || true)
+font=$(gsettings get org.gnome.desktop.interface font-name 2>/dev/null | tr -d "'" || true)
 sys_write /etc/greetd/regreet.toml "[GTK]
 application_prefer_dark_theme = true
 theme_name = \"adw-gtk3-dark\"
