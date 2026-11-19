@@ -285,6 +285,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- NVIDIA sleep on Fedora: the step no longer picks the older drivers' setup because akmods hasn't built the driver
+  yet; it waits, and the next `./install.sh` after a reboot sets it up. The doctor says when it is still missing.
 - The NVIDIA driver step on Arch could end the install with no message when no kernel's headers name could be
   read (no `/usr/lib/modules`, or an unreadable `pkgbase`); it now falls back to `linux-headers`.
 - `./install.sh uninstall` puts back every backup, not only the newest: where a file was backed up more than once,

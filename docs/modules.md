@@ -42,7 +42,7 @@ A folder `modules/<name>/` with these files. Only `detect` and `README.md` are n
 | `detect` | bash; exit 0 when this computer has the hardware (reads `hardware.toml` with `hw_get`) |
 | `packages.txt` | extra packages by logical name, one per line with the reason |
 | `home/` | files linked into `~`, like `config/` |
-| `steps/NN-*.sh` | system changes, asked one by one; they use `run`, `sys_write`, `sys_enable`, so `--dry-run` shows them and uninstall can undo them |
+| `steps/NN-*.sh` | system changes, asked one by one; they use `run`, `sys_write`, `sys_enable`, so `--dry-run` shows them and uninstall can undo them; exit 3 means "not yet": the next run offers the step again |
 | `doctor` | extra checks for `./install.sh doctor` |
 | `README.md` | what it is for; line 3 is the one-line summary `./install.sh modules` shows |
 

@@ -7,7 +7,7 @@
 #   packages.txt   extra packages by logical name
 #   home/          files linked into ~ like config/
 #   steps/NN-*.sh  system changes, asked one by one; they use run, sys_write, sys_enable… so --dry-run
-#                  shows them and uninstall can undo them
+#                  shows them and uninstall can undo them; exit 3 = not yet (offered again on the next run)
 #   doctor         extra checks for ./install.sh doctor
 #   README.md      what it is for (line 3 is the one-line summary `./install.sh modules` shows)
 
@@ -82,7 +82,9 @@ module_steps() {
             rc=$?
             set -e
             eval "$saved"
-            if ((rc == 0)); then
+            if ((rc == 3)); then
+                warn "${s##*/} waits for a later run (./install.sh offers it again)"
+            elif ((rc == 0)); then
                 $DRY || {
                     mkdir -p "$STATE/steps"
                     step_sum "$s" >"$STATE/steps/$(step_id "$s")"

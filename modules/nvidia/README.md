@@ -8,6 +8,7 @@ The NVIDIA driver, installed the way your distro recommends.
   before) get the 580xx branch (AUR on Arch, `akmod-nvidia-580xx` on Fedora): the current driver dropped them.
 - **Sleep:** where the driver can save video memory itself (kernel suspend notifiers), that is switched on and
   NVIDIA's sleep services are switched off: their switch to a text console before every sleep could leave the
-  screen black on wake. Older drivers keep the services. File: `/etc/modprobe.d/hyprism-nvidia-sleep.conf`.
+  screen black on wake. Older drivers keep the services. File: `/etc/modprobe.d/hyprism-nvidia-sleep.conf`. While the driver isn't built yet (Fedora's akmods
+  builds it after the install) the step waits and the next `./install.sh` offers it again.
 - **Needs:** a reboot afterwards. With Secure Boot on Fedora, enroll the key (the step tells you how).
 - **Tested on:** fixture `desktop-nvidia`; the owner's Flow X13 (driver already present).

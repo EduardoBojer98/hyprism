@@ -1,5 +1,8 @@
 # shellcheck shell=bash
 [[ -e /proc/driver/nvidia ]] || bad "nvidia: the driver isn't loaded" "./install.sh --only modules, then reboot"
+if [[ -e /proc/driver/nvidia && ! -e /etc/modprobe.d/hyprism-nvidia-sleep.conf ]]; then
+    warn "nvidia: sleep isn't set up for this driver yet (./install.sh --only modules)"
+fi
 # a driver or distro update can switch NVIDIA's sleep services back on (steps/20-sleep.sh says why they're off)
 if modinfo -p nvidia 2>/dev/null | grep -q '^NVreg_UseKernelSuspendNotifiers' && systemctl -q is-enabled nvidia-suspend.service 2>/dev/null; then
     warn "nvidia: NVIDIA's sleep services are on again; their console switch can leave the screen black on wake (./install.sh --only modules)"

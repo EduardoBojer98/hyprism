@@ -4,7 +4,11 @@
 # console 63 before every sleep, the console moves the screens to other CRTCs, and the compositor's restore
 # on wake can fail for good (a black screen until reboot; seen on a Flow X13, 2026-11-14). Older drivers
 # still need the services, with the option that keeps video memory across sleep.
-# Applies from the next boot.
+# Applies from the next boot. Fedora builds the driver after the install (akmods): until then this step waits.
+if ! modinfo nvidia >/dev/null 2>&1; then
+    say "The NVIDIA driver isn't built yet: reboot once it is, and the next ./install.sh sets up sleep."
+    exit 3
+fi
 if modinfo -p nvidia 2>/dev/null | grep -q '^NVreg_UseKernelSuspendNotifiers'; then
     for u in nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service nvidia-suspend-then-hibernate.service; do
         sys_disable "$u"
