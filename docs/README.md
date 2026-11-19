@@ -19,5 +19,4 @@
 - [DESIGN.md](DESIGN.md): the design rules behind the themes.
 - [DECISIONS.md](DECISIONS.md): why things are as they are, and what each dependency is for.
 - [testing/vm-checklist.md](testing/vm-checklist.md): the manual test list for what CI cannot do.
-- [audit/AUDIT.md](audit/AUDIT.md) and [audit/ROADMAP.md](audit/ROADMAP.md): the review and the work plan.
-- [history/README.md](history/README.md): records of earlier work.
+- [history/README.md](history/README.md): records of earlier work, the earlier audits among them (`history/audit/`).

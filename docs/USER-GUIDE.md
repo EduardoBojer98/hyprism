@@ -80,7 +80,7 @@ middle or double click to close, right click to copy. Up to 12 pins; the menu ha
 
 Settings → Screenshots: what happens after a capture, the folder, the delay, the notification, and the recording's
 sound and folder. Screenshots use grim, slurp and Satty. Flameshot is not used: its single overlay window
-misbehaves with mixed scaling such as 1.2 next to 1.0 (see `docs/audit/v3/research.md`).
+misbehaves with mixed scaling such as 1.2 next to 1.0 (see `docs/history/audit/v3/research.md`).
 
 ### Panels, menus and flyouts
 

@@ -220,6 +220,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- The earlier audits moved to `docs/history/audit/`; `docs/ROADMAP.md` is the current plan.
 - Supported systems are stated plainly: Arch, CachyOS, EndeavourOS and Fedora 44+, on x86_64. Manjaro and other
   processors now install with a warning that they are untested, instead of being listed as supported.
 - Dock (floating and in the menu bar): open apps and windows are ordered by workspace, then as they opened, and

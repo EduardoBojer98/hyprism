@@ -63,7 +63,7 @@ in KDE Frameworks and look different from the rest of the desktop.
 
 ## Round 3 (decided 2026-11-17)
 
-The audit and its research: `docs/audit/v4/AUDIT.md`.
+The audit and its research: `docs/history/audit/v4/AUDIT.md`.
 
 - One action registry (`Actions.qml`) for Spotlight, bar clicks, hot corners, the Control Center and your own
   shortcuts: `docs/decisions/0002-action-registry.md`.

@@ -1,6 +1,6 @@
 # ADR 0002: one action registry
 
-Date: 2026-11-17. Status: accepted (round 3, phase 1; spec in `docs/audit/v4/AUDIT.md` E3–E5).
+Date: 2026-11-17. Status: accepted (round 3, phase 1; spec in `docs/history/audit/v4/AUDIT.md` E3–E5).
 
 ## Question
 

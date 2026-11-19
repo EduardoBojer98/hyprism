@@ -19,7 +19,6 @@ while IFS= read -r f; do files+=("$f"); done < <(find docs -name '*.md' -not -pa
 
 for f in "${files[@]}"; do
     [[ -f $f ]] || continue
-    [[ $f == docs/audit/* ]] && continue # dated review of an older commit: it cites old paths on purpose
     dir=$(dirname "$f")
     # (a) relative links: [text](target)
     while IFS= read -r target; do
