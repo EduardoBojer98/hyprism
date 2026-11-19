@@ -286,4 +286,10 @@ ColumnLayout {
             }
         }
     }
+
+    ResetGroup {
+        sections: ["windows"]
+        keys: ["inactiveOpacity", "dimInactive", "dimStrength", "titleBars", "titleBarSize", "titleButtons", "maxButton", "titleAlign",
+               "border", "borderAngle", "borderColors", "borderAnimate", "rainbowSpeed", "rainbowOnBattery"]
+    }
 }

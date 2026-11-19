@@ -17,6 +17,7 @@ ColumnLayout {
     function label(m) { return m === 0 ? "Never" : m + " min" }
 
     SettingGroup {
+        title: "When you step away"
         SettingRow {
             label: "Lock the screen after"
             hint: "The screen dims 30 seconds before; screens turn off 30 seconds after"
@@ -66,4 +67,6 @@ ColumnLayout {
             PillButton { text: Caffeine.active ? "Turn off" : "Turn on"; onClicked: Caffeine.toggle() }
         }
     }
+
+    ResetGroup { sections: ["idle", "caffeine"]; keys: ["lockMin", "sleepMin", "sleepOnPowerMin", "defaultMinutes"] }
 }

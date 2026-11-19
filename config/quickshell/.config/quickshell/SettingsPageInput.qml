@@ -235,4 +235,11 @@ ColumnLayout {
             PillButton { text: "Open"; onClicked: Quickshell.execDetached(["solaar"]) }
         }
     }
+
+    // your keyboard layouts stay: only the typing, pointer and touchpad options go back
+    ResetGroup {
+        sections: ["input"]
+        keys: ["repeatRate", "repeatDelay", "sensitivity", "naturalScroll", "tapToClick", "disableWhileTyping", "clickMethod",
+               "scrollFactor", "middleEmulation", "dragLock"]
+    }
 }
