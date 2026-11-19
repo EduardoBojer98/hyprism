@@ -8,6 +8,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 - `./install.sh --no-trust`: answers no to the questions that trust other people's code or give root-level rights
   (AUR builds, COPR and RPM Fusion repos, the docker group), with `--yes` too, for a careful unattended run.
+- A failed module step names the command that runs it again (`./install.sh --step MODULE/FILE`); failed packages
+  say `./install.sh --only packages` tries again.
 - A notice at login when the computer's hardware changed since Hyprism looked at it (a new graphics card, a
   battery, a touchscreen): run `hyprism detect`, then `hyprism`, to set up what fits. Each change is announced once.
 - Launchpad: apps in pages with dots, turned by a swipe, the scroll wheel or touchpad, the arrows or PageUp/PageDown,

@@ -90,6 +90,6 @@ packages() {
     distro_prepare "${!batch[@]}"
     for src in "${!batch[@]}"; do
         # shellcheck disable=SC2086  # a list of package names
-        distro_install "$src" ${batch[$src]} || FAILED+=("packages from $src did not install:${batch[$src]}")
+        distro_install "$src" ${batch[$src]} || FAILED+=("packages from $src did not install:${batch[$src]} (./install.sh --only packages tries again)")
     done
 }

@@ -90,7 +90,7 @@ module_steps() {
                     step_sum "$s" >"$STATE/steps/$(step_id "$s")"
                 }
             else
-                FAILED+=("module $m, step ${s##*/} failed")
+                FAILED+=("module $m, step ${s##*/} failed: ./install.sh --step $m/${s##*/} runs it again")
             fi
         done
     done
