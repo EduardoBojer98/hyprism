@@ -79,7 +79,7 @@ fix, and review fixes. No new look was forced on Pebble, Poster or Monolith (PLA
 
 - `bash tests/lint.sh`: pass (includes no-hardcode, accessibility, theme contrast, settings reference, docs).
 - `python3 tests/settings-coverage.py`: 244 options, 0 gaps. `bash tests/docs.sh`: pass.
-- `tests/all.sh` baseline on develop: all six parts ok. Final on redesign (after b1576bb): see the line below.
+- `tests/all.sh` baseline on develop: all six parts ok. Final on redesign (b1576bb): all six parts ok (lint, install-arch, install-fedora, update-arch, update-fedora, system).
 
 ## Merge and apply (owner)
 
