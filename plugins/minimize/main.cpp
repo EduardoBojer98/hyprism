@@ -63,13 +63,22 @@ static void eval(const std::string& lua) {
 // an app's own maximise button: maximise_button() decides. Every window stays told it is maximised (Hyprland
 // does that on map): a "restored" Chrome or GTK app draws its own shadow and the border lands outside it. A
 // restore request gets a brief "not maximised" first, or Chrome waits for that answer and its button stops working
+// Apps also ask on their own (Chrome when tiling resizes it, or restoring its last state), and a tiled window would
+// float out of the layout: only a request right after a click, tap or pen touch is the app's button.
+static std::chrono::steady_clock::time_point g_lastPress;
+static void pressed() {
+    g_lastPress = std::chrono::steady_clock::now();
+}
+
 static void maximise(PHLWINDOWREF ref, bool asked) {
-    g_pEventLoopManager->doLater([ref, asked] {
+    const bool clicked = std::chrono::steady_clock::now() - g_lastPress < std::chrono::milliseconds(1500);
+    g_pEventLoopManager->doLater([ref, asked, clicked] {
         const auto w = ref.lock();
         if (!w || !w->mapped())
             return;
         const int fs = (int)Fullscreen::controller()->getFullscreenModes(w).internal;
-        eval(std::format("maximise_button(\"0x{:x}\", {}, {})", (uintptr_t)w.get(), w->isFloating() ? "true" : "false", fs));
+        if (clicked)
+            eval(std::format("maximise_button(\"0x{:x}\", {}, {})", (uintptr_t)w.get(), w->isFloating() ? "true" : "false", fs));
         const auto top = toplevelOf(w);
         if (!top || asked)
             return;
@@ -200,6 +209,12 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     static auto onClose   = Event::bus()->m_events.window.close.listen([](PHLWINDOW w) { closing(w); });
     static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); });
     static auto onMouse   = Event::bus()->m_events.input.mouse.move.listen([](Vector2D, Event::SCallbackInfo&) { mouseMoved(); });
+    static auto onButton  = Event::bus()->m_events.input.mouse.button.listen([](IPointer::SButtonEvent e, Event::SCallbackInfo&) {
+        if (e.state == WL_POINTER_BUTTON_STATE_PRESSED)
+            pressed();
+    });
+    static auto onTouch   = Event::bus()->m_events.input.touch.down.listen([](ITouch::SDownEvent, Event::SCallbackInfo&) { pressed(); });
+    static auto onTip     = Event::bus()->m_events.input.tablet.tip.listen([](CTablet::STipEvent, Event::SCallbackInfo&) { pressed(); });
     static auto onDrag    = g_layoutManager->dragController()->m_events.motion.listen(dragMoved);
     static auto onDrop    = g_layoutManager->dragController()->m_events.ended.listen(dragEnded);
     for (const auto& w : Desktop::windowState()->windows())

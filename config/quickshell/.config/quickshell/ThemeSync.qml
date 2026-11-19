@@ -81,16 +81,21 @@ Scope {
             lines.push("custom-shader = " + Quickshell.env("HOME") + "/.config/ghostty/shaders/hyprism-trail.glsl")
         return lines.join("\n")
     }
-    // fish, read by fish/conf.d/tools.fish when a shell starts
+    // fish, read by fish/conf.d/tools.fish when a shell starts. CachyOS's config.fish (sourced after conf.d) redefines
+    // fish_greeting as plain `fastfetch`, so until the first prompt `fastfetch` itself stands in for our greeting too.
+    readonly property string greetingBody: tc.greeting === "off" ? "    true\n"
+        : tc.greeting === "fastfetch" ? "    command -q fastfetch; and command fastfetch\n"
+        // a random Pokémon in fastfetch's logo slot (1 in 16 shiny); without pokemon-colorscripts the distro's logo
+        : tc.greeting === "pokemon" ? "    command -q fastfetch; or return\n    if command -q pokemon-colorscripts\n"
+            + "        set -l shiny; test (random 1 16) -eq 1; and set shiny --shiny\n"
+            + "        command fastfetch --logo-type file-raw --logo (pokemon-colorscripts --random --no-title $shiny | psub)\n"
+            + "    else\n        command fastfetch\n    end\n" : ""
     readonly property string fishConf: "# Written by Quickshell ThemeSync from Settings > Appearance > Terminal\n"
         + (tc.transientPrompt ? "functions -q enable_transience; and enable_transience\n" : "")
-        + (tc.greeting === "off" ? "function fish_greeting; end\n"
-           : tc.greeting === "fastfetch" ? "function fish_greeting; command -q fastfetch; and fastfetch; end\n"
-           // a random Pokémon in fastfetch's logo slot (1 in 16 shiny); without pokemon-colorscripts the distro's logo
-           : tc.greeting === "pokemon" ? "function fish_greeting\n    command -q fastfetch; or return\n"
-               + "    if command -q pokemon-colorscripts\n        set -l shiny; test (random 1 16) -eq 1; and set shiny --shiny\n"
-               + "        fastfetch --logo-type file-raw --logo (pokemon-colorscripts --random --no-title $shiny | psub)\n"
-               + "    else\n        fastfetch\n    end\nend\n" : "")
+        + (greetingBody === "" ? "" : "function __hyprism_greeting\n" + greetingBody + "end\n"
+           + "function fish_greeting; __hyprism_greeting; end\n"
+           + "function fastfetch --wraps fastfetch; if set -q argv[1]; command fastfetch $argv; else; __hyprism_greeting; end; end\n"
+           + "function __hyprism_greeting_done --on-event fish_prompt; functions -e fastfetch __hyprism_greeting_done; end\n")
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
     readonly property string gtkAccent: {

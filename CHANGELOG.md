@@ -304,6 +304,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- A tiled Chrome no longer turns floating when another window opens beside it: an app's own maximise request
+  moves the window only right after a click, tap or pen touch (the minimize plugin; `hypr-plugins` rebuilds it).
+- The terminal greeting setting works on CachyOS, whose config.fish redefined the greeting after ours.
 - Control Center: Wi-Fi, Bluetooth, Airplane, Touchscreen and On-screen keyboard tiles show only where that
   hardware (or squeekboard) is; the on-screen keyboard's tile shows squeekboard's real state; the touchscreen tile
   reads Hyprland's setting at start; the bar menu ticks your own toggles that are on.
