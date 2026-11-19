@@ -102,7 +102,7 @@ gitleaks                 gitleaks                           repo
 greetd                   greetd                             repo
 regreet                  greetd-regreet                     repo
 cage                     cage                               repo
-# Host extras (hosts/*/packages.txt)
+# ASUS laptops (modules/asus)
 asusctl                  asusctl                            repo
 rog-control-center       rog-control-center                 repo
 

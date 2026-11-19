@@ -4,8 +4,9 @@ One command sets up the desktop. It asks before every change to your system, and
 
 ## What you need
 
-- A working Arch-family system (Arch, CachyOS, EndeavourOS, Manjaro) or Fedora 44 or newer. Older Fedora is
-  refused: its Hyprland and Quickshell are too old.
+- Arch, CachyOS, EndeavourOS or Fedora 44 or newer, on an x86_64 (64-bit Intel or AMD) computer. Older Fedora is
+  refused: its Hyprland and Quickshell are too old. Manjaro and other processors (ARM) install with a warning: they
+  are untested, and Manjaro's packages trail Arch's.
 - A normal user with `sudo`, and an internet connection. Do not run the installer as root: it refuses, and asks
   for `sudo` itself when it needs it.
 - A way to start Hyprland (see below).

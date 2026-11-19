@@ -85,7 +85,7 @@ What you can change on top of a theme, kept separately for each theme:
     <td><img src="docs/screenshots/features/settings-bar.webp" alt="Settings app, Menu Bar page with three zones of bar items and a list of items to add"></td>
   </tr>
   <tr>
-    <td><b>Settings</b> (<code>Super+I</code>): 34 pages in 13 groups, searchable, applied live, each with Reset to defaults.</td>
+    <td><b>Settings</b> (<code>Super+I</code>): 37 pages in 13 groups (38 with ASUS hardware), searchable, applied live, each with Reset to defaults.</td>
     <td><b>Menu bar</b>: drag items between three zones, any item more than once, each copy with its own settings; "Start from" presets and different items per screen.</td>
   </tr>
   <tr>
@@ -182,7 +182,8 @@ and the file way.
 
 ## Quick start
 
-Needs Arch, CachyOS (or another Arch-based system) or Fedora 44+, and a user with `sudo`.
+Needs Arch, CachyOS, EndeavourOS or Fedora 44+ on x86_64, and a user with `sudo`. Other Arch-based systems (Manjaro) and
+other processors install with a warning: they are untested.
 
 One command: installs git if missing, clones Hyprism to `~/hyprism` and runs the installer.
 

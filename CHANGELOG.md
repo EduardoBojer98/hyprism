@@ -214,6 +214,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- Supported systems are stated plainly: Arch, CachyOS, EndeavourOS and Fedora 44+, on x86_64. Manjaro and other
+  processors now install with a warning that they are untested, instead of being listed as supported.
 - Dock (floating and in the menu bar): open apps and windows are ordered by workspace, then as they opened, and
   can be dragged into an order of your own (kept for the session, shared by both docks). The dock in the menu bar
   gets the right-click menu the floating one has: its windows, New window, Minimise / Restore, Pin, Quit.
