@@ -6,7 +6,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
-- Settings > Appearance > Terminal: Ghostty's cursor (shape, blink, an animation), background and padding, live;
+- Settings > Appearance > Terminal (its own page): theme colours, Ghostty's cursor (shape, blink, an animation), background and padding, live;
   fish's transient prompt and greeting (off, fastfetch, or a random Pokémon in fastfetch's logo slot, 1 in 16 shiny;
   pokemon-colorscripts) for new shells. A picked cursor shape stays at the prompt (Ghostty's shell integration no
   longer turns it into a bar). "Theme" takes each theme's own terminal look

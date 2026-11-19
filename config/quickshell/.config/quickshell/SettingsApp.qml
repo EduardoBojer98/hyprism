@@ -22,7 +22,7 @@ Singleton {
     // it in that page's `keys` below, so search finds it. Adding a page: a SettingsPage<Id>.qml, an
     // entry in allSections, and its id in one group here.
     readonly property var allGroups: [
-        { id: "appearance", name: "Appearance",          glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons", "cursor"] },
+        { id: "appearance", name: "Appearance",          glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons", "cursor", "terminal"] },
         { id: "barGroup",   name: "Menu Bar",            glyph: "\u{F0E7F}", pages: ["bar"] },
         { id: "dockGroup",  name: "Dock",                glyph: "\u{F0A1F}", pages: ["dock"] },
         { id: "lockGroup",  name: "Lock Screen",         glyph: "\u{F033E}", pages: ["lockscreen"] },
@@ -43,10 +43,11 @@ Singleton {
 
     // Pages: what each SettingsPage<Id>.qml is called, and the words search finds it by (Spotlight searches these too)
     readonly property var allSections: [
-        { id: "appearance",    name: "Themes",              glyph: "\u{F03D8}", keys: "theme look colour accent font text size corners gaps shadow blur animations motion reduce terminal dark light mode night day border frame window gaps rounding color colors gray grey" },
+        { id: "appearance",    name: "Themes",              glyph: "\u{F03D8}", keys: "theme look colour accent font text size corners gaps shadow blur animations motion reduce dark light mode night day border frame window gaps rounding color colors gray grey" },
         { id: "wallpaper",     name: "Wallpaper",           glyph: "\u{F02E9}", keys: "background picture slideshow blur folder colours accent follow wallpaper" },
         { id: "icons",         name: "Icons",               glyph: "\u{F0BC1}", keys: "icon theme papirus" },
         { id: "cursor",        name: "Cursor",              glyph: "\u{F01BF}", keys: "pointer mouse size" },
+        { id: "terminal",      name: "Terminal",            glyph: "\u{F018D}", keys: "terminal ghostty shell fish cursor blink animation trail pulse opacity padding prompt transient greeting fastfetch pokemon" },
         { id: "bar",           name: "Menu Bar",            glyph: "\u{F0E7F}", keys: "panel top bottom left right position size floating items widgets clock seconds date 24-hour window title monitor hide autohide hidden status preset layout screen screens save item settings icon label format click right-click scroll tooltip warn critical interval sysinfo readings" },
         { id: "dock",          name: "Dock",                glyph: "\u{F0A1F}", keys: "taskbar pinned apps icon size hide automatically running windows pictures position monitor mark indicator dot line bar ring diamond widgets" },
         { id: "lockscreen",    name: "Lock Screen",         glyph: "\u{F033E}", keys: "lock clock date avatar user picture blur brightness widgets battery media layout lock after password" },
