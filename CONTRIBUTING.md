@@ -35,6 +35,10 @@ Other test commands:
 - `tests/nested.sh start`: a test desktop in a window, from this checkout, apart from your real session. Use it to
   see a shell change work (`tests/nested.sh shot NAME` takes a screenshot).
 - `tests/docs.sh`: every link, path and `./install.sh` command named in the docs exists.
+- Desktop-session tests (not in CI: each opens a `tests/nested.sh` window, so run them by hand inside a Hyprland
+  session after a shell change): `tests/settings-roundtrip.sh` (a setting reaches settings.json and back),
+  `tests/theme-targets.sh` (a theme reaches every program it is pushed to), `tests/performance.sh` (idle CPU and
+  memory budget) and `tests/screenshots.sh` (retakes the README pictures).
 
 ## Changes
 

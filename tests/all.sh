@@ -32,6 +32,7 @@ for distro in arch fedora; do
     job "install-$distro" "$image" 'bash /mnt/repo/tests/container-test.sh'
 done
 if [[ $want == all || $want == update ]]; then
-    job update archlinux:latest 'bash /mnt/repo/tests/update-test.sh'
+    job update-arch archlinux:latest 'bash /mnt/repo/tests/update-test.sh'
+    job update-fedora fedora:latest 'bash /mnt/repo/tests/update-test.sh'
 fi
 exit "$fail"

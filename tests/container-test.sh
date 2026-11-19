@@ -46,6 +46,8 @@ expect_modules() { # expect_modules PROFILE "module module ..."
     }
     echo "ok: $1 -> ${2:-none}"
 }
+# a file of yours that Hyprism has its own of: the install backs it up, the uninstall must put it back
+as desktop-amd 'mkdir -p ~/.config/fuzzel && echo "# mine" > ~/.config/fuzzel/fuzzel.ini'
 before=$(snapshot)
 # --yes answers "Full setup?" with yes, so the greeter (themed login screen) is on everywhere
 expect_modules vm "greeter"
@@ -134,7 +136,9 @@ broken 'echo "{ not json" > ~/.config/quickshell/settings.json' "isn't valid JSO
 as desktop-amd 'rm -f ~/.config/quickshell/settings.json'
 broken 'rm ~/.config/hyprism/hardware.toml' 'never looked at'
 as desktop-amd './install.sh detect >/dev/null'
-as desktop-amd 'rm -rf ~/.local/state/hyprism/backups' # the breakages above made backups; uninstall would put those files back
+# the breakages above made more backups (their broken files); keep only the first install's, which holds yours
+as desktop-amd 'find ~/.local/state/hyprism/backups -mindepth 1 -maxdepth 1 -type d | sort | tail -n +2 | xargs -r rm -rf'
+as desktop-amd 'ls ~/.local/state/hyprism/backups/*/.config/fuzzel/fuzzel.ini >/dev/null' # the first install backed yours up
 as desktop-amd './install.sh doctor' >/dev/null
 
 echo "===== A FAILURE IS REPORTED"
@@ -148,7 +152,11 @@ sed -i '$d' $repo/packages/manifest.txt
 
 echo "===== UNINSTALL"
 as desktop-amd './install.sh uninstall --yes' | tail -4
-left=$(snapshot | grep -v '^\./\.bash' || true)
+as desktop-amd 'grep -qx "# mine" ~/.config/fuzzel/fuzzel.ini' || {
+    echo "xx uninstall did not put your own fuzzel.ini back"
+    exit 1
+}
+left=$(snapshot | grep -v -e '^\./\.bash' -e '^\./\.config/fuzzel/fuzzel\.ini $' || true)
 [[ -z $left ]] || {
     echo "xx uninstall left files in the home folder:"
     echo "$left"

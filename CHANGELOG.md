@@ -283,6 +283,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- `./install.sh uninstall` puts back every backup, not only the newest: where a file was backed up more than once,
+  your own copy from before Hyprism is the one that comes back. CI now also tests the update from 1.1.0 on Fedora,
+  and that the update keeps what you set in `settings.json`.
 - NVIDIA on plain Arch and Fedora: cards older than Turing (GTX 10 and before) now get the 580xx driver branch they
   need, instead of a driver that no longer runs them. On Arch the kernel headers match every installed kernel
   (`linux-lts`, `linux-zen`, ...), not only `linux`.

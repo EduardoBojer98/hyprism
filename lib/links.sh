@@ -110,7 +110,7 @@ backups_list() {
         [[ -d $d ]] || continue
         printf '  %s  (%s files)\n' "$(basename "$d")" "$(find "$d" -type f -o -type l | wc -l)"
     done
-    echo "Put one back: ./install.sh uninstall --backup NAME"
+    echo "Uninstall puts them all back (the oldest copy of each file wins); only one: ./install.sh uninstall --backup NAME"
 }
 
 # Remove the links, then offer a backup (the newest unless --backup names one)
@@ -119,16 +119,19 @@ unlink_all() {
     say "Removing the links"
     while read -r src; do run stow -D -d "$(dirname "$src")" -t "$HOME" "$(basename "$src")"; done < <(link_sources)
     unlink_off_modules
-    last=""
+    # every backup, newest first, so the oldest copy of a file (yours, from before Hyprism) is the one that stays
+    local sets=() d
     if [[ -n $BACKUP ]]; then
-        last=$STATE/backups/$BACKUP
+        [[ -d $STATE/backups/$BACKUP ]] && sets=("$STATE/backups/$BACKUP")
     elif [[ -d $STATE/backups ]]; then
-        last=$(find "$STATE/backups" -mindepth 1 -maxdepth 1 -type d | sort | tail -1)
+        mapfile -t sets < <(find "$STATE/backups" -mindepth 1 -maxdepth 1 -type d | sort -r)
     fi
-    if [[ -n $last && -d $last ]]; then
-        say "Backup: $last"
-        (cd "$last" && find . -type f -o -type l) | sed 's|^\./|   |'
-        ask "Put these files back into your home folder?" && run cp -a "$last/." "$HOME/"
+    if ((${#sets[@]})); then
+        say "Backups: ${sets[*]##*/}"
+        for d in "${sets[@]}"; do (cd "$d" && find . -type f -o -type l); done | sed 's|^\./|   |' | sort -u
+        if ask "Put these files back into your home folder?"; then
+            for d in "${sets[@]}"; do run cp -a "$d/." "$HOME/"; done
+        fi
     else
         say "No backup to restore."
     fi

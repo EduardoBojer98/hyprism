@@ -207,8 +207,9 @@ btrfs, use your snapshots for those (the doctor says whether you have them).
 What it does, in order:
 
 1. Removes the links it made. Your own files stay.
-2. Offers to put back the files that were backed up when they were in the way (the newest backup, or
-   `--backup NAME`; `./install.sh backups` lists them).
+2. Offers to put back the files that were backed up when they were in the way: all backups, and where one file
+   was backed up more than once, its oldest copy (yours, from before Hyprism). `--backup NAME` puts back only that
+   one; `./install.sh backups` lists them.
 3. Lists the system changes it made (`/etc` files, services it enabled or masked) and asks before undoing them:
    files go back to what they were, services to their earlier state. Things it cannot undo by itself, such as
    the docker group, are listed for you to do by hand.
