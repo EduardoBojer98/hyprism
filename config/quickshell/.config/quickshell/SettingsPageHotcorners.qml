@@ -10,6 +10,12 @@ ColumnLayout {
 
     SettingGroup {
         title: "Push the pointer into a corner to…"
+        DesktopPreview {
+            show: "corners"
+            corners: ({ topLeft: label("topLeft"), topRight: label("topRight"), bottomLeft: label("bottomLeft"), bottomRight: label("bottomRight") })
+            function label(k) { return Config.hotCorners[k] ? HotCornerActions.name(Config.hotCorners[k]) : "" }
+            Layout.fillWidth: true; Layout.topMargin: 4
+        }
         Repeater {
             model: [["topLeft", "Top left"], ["topRight", "Top right"], ["bottomLeft", "Bottom left"], ["bottomRight", "Bottom right"]]
             SettingRow {

@@ -47,6 +47,7 @@ ColumnLayout {
 
     SettingGroup {
         title: "Place"
+        DesktopPreview { show: "dock"; Layout.fillWidth: true; Layout.topMargin: 4 }
         SettingRow {
             label: "Show the dock"
             ConfigToggle { section: "dock"; key: "enabled" }

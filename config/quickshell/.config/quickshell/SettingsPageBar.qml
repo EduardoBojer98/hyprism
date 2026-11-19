@@ -32,6 +32,7 @@ ColumnLayout {
 
     SettingGroup {
         title: "Place"
+        DesktopPreview { show: "bar"; Layout.fillWidth: true; Layout.topMargin: 4 }
         SettingRow {
             label: "Position"
             hint: "For " + Theme.current.name + " on every screen: each theme keeps its own place, size and shape"
