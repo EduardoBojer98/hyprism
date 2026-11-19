@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Everything CI runs, on this computer, through Docker: the lint suite as CI runs it (in an Arch container,
-# as root, on a copy), the install test on Arch and Fedora, and the update test (from the previous release;
-# it skips itself in a git worktree). Changes nothing outside throwaway containers.
-#   tests/all.sh             all four
+# as root, on a copy), the install test on Arch and Fedora, the update test (from the previous release;
+# it skips itself in a git worktree) and the system-steps test (systemd in a container). Changes nothing
+# outside throwaway containers.
+#   tests/all.sh             all of them
 #   tests/all.sh lint        only the lint suite          tests/all.sh arch | fedora   only that install test
-#   tests/all.sh update      only the update test
+#   tests/all.sh update      only the update test       tests/all.sh system   only the system-steps test
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 want=${1:-all}
@@ -34,5 +35,12 @@ done
 if [[ $want == all || $want == update ]]; then
     job update-arch archlinux:latest 'bash /mnt/repo/tests/update-test.sh'
     job update-fedora fedora:latest 'bash /mnt/repo/tests/update-test.sh'
+fi
+if [[ $want == all || $want == system ]]; then
+    if tests/system-test.sh >"$logs/system.log" 2>&1; then echo "ok: system"; else
+        echo "xx system failed (log: $logs/system.log)"
+        tail -5 "$logs/system.log"
+        fail=1
+    fi
 fi
 exit "$fail"

@@ -7,6 +7,8 @@
 #           the home folder as it was
 #   update  a computer set up with the newest release tag is updated to this code: migrations once, no dead links,
 #           doctor clean, settings kept (Arch and Fedora; needs the tags pushed)
+#   system  an install in an Arch container that boots systemd: services, firewall, the login-manager switch
+#           and /etc files really change, and uninstall puts every one back
 # AUR packages and real hardware steps can't run here (docs/testing covers those by hand).
 name: ci
 on:
@@ -65,3 +67,10 @@ jobs:
           fetch-tags: true
       - name: update from the last release (${{ matrix.image }})
         run: docker run --rm -v "$PWD":/mnt/repo:ro ${{ matrix.image }} bash /mnt/repo/tests/update-test.sh
+
+  system:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: system steps under systemd, then uninstall
+        run: bash tests/system-test.sh

@@ -29,7 +29,9 @@ docker run --rm -v "$PWD":/mnt/repo:ro fedora:latest bash /mnt/repo/tests/contai
 Other test commands:
 
 - `tests/all.sh`: everything CI runs, through Docker (the lint suite, the install test on Arch and Fedora, the
-  update test). `tests/all.sh lint`, `arch`, `fedora` or `update` runs one part.
+  update test, the system-steps test). `tests/all.sh lint`, `arch`, `fedora`, `update` or `system` runs one part.
+- `tests/system-test.sh`: an install in an Arch container that boots systemd, so services, the firewall, the
+  login-manager switch and the files in `/etc` really change; uninstall must put each back.
 - `tests/lint.sh`: the static checks (QML and Lua parse, colours only in themes, theme contrast, formatting,
   script tests, the docs check `tests/docs.sh`).
 - `tests/nested.sh start`: a test desktop in a window, from this checkout, apart from your real session. Use it to
