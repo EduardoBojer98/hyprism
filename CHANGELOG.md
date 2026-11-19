@@ -6,12 +6,16 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
-- Settings > Appearance > Terminal: Ghostty's cursor (shape, blink, a cursor trail), background and padding, live;
+- Settings > Appearance > Terminal: Ghostty's cursor (shape, blink, an animation), background and padding, live;
   fish's transient prompt and greeting (off, fastfetch, or a random Pokémon in fastfetch's logo slot, 1 in 16 shiny;
   pokemon-colorscripts) for new shells. A picked cursor shape stays at the prompt (Ghostty's shell integration no
   longer turns it into a bar). "Theme" takes each theme's own terminal look
-  (theme.json `term.cursorStyle`, `blink`, `padding`). The trail is our own shader, only in full motion and on AC.
-- The fastfetch greeting is a card in the terminal's palette: icons per line, usage bars for memory, disk and battery.
+  (theme.json `term.cursorStyle`, `blink`, `padding`). The cursor animation is our own shader (a ring pops out of the cursor on each keystroke, a smear follows
+  a jump), only in full motion and on AC.
+- The fastfetch greeting is a card on a rail in the terminal's palette: system, hardware (model, CPU threads, each
+  GPU and screen) and usage bars, packages split by source (pacman, flatpak, ...). The Pokémon sits in one fixed
+  box with its Pokédex number and name under it, so the card never moves.
+- The starship prompt sits on the same rail and shows a failed command's exit code, background jobs and the clock.
 - Each theme draws its own volume/brightness OSD (theme.json `osd.style`): Pebble a thin bar, Poster a big number
   over ten blocks, Monolith a mono `[████░░]` meter.
 - Modules in Settings > About: every optional part and hardware module this computer can use, whether it is on and

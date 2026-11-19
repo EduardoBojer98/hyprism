@@ -41,7 +41,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `blink` | `string` | `"theme"` | theme \| on \| off |
 | `opacity` | `string` | `"theme"` | theme (see-through in glass themes) \| solid \| soft \| clear |
 | `padding` | `string` | `"theme"` | theme \| tight \| normal \| roomy |
-| `trail` | `bool` | `false` | cursor trail shader (ghostty/shaders/hyprism-trail.glsl): full motion, on AC only |
+| `trail` | `bool` | `false` | cursor animation shader (ghostty/shaders/hyprism-trail.glsl: a pulse per keystroke, a smear per jump): full motion, on AC only |
 | `transientPrompt` | `bool` | `false` | starship's transient prompt: past prompts shrink to one symbol |
 | `greeting` | `string` | `"default"` | default (the distro's) \| off \| fastfetch \| pokemon (a random one as fastfetch's logo) |
 

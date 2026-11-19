@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+# A random Pokémon for the terminal greeting (Settings > Appearance > Terminal > Greeting), always the same size:
+# its blank margins trimmed, centred in a fixed box with its Pokédex number and name under it, so fastfetch's
+# card sits in the same place every time.
+#   pokemon-card                 a random one in a 40x20 box (the sprite fits 40x18: about 5 in 6 do), 1 in 16 shiny
+#   pokemon-card WIDTH HEIGHT    another box (two rows of it are the caption)
+# Reads pokemon-colorscripts' own sprite files (its small set); prints nothing without them.
+import json, os, random, re, shutil, sys
+
+if sys.argv[1:2] in (["--help"], ["-h"]):
+    with open(__file__, encoding="utf-8") as f:
+        print("".join(l[2:] for l in f.readlines()[1:7]), end="")
+    sys.exit(0)
+
+W, BOX = (int(sys.argv[1]), int(sys.argv[2])) if len(sys.argv) == 3 else (40, 20)
+H = BOX - 2   # the sprite's rows; a blank row and the caption under it
+ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def sprites():
+    exe = shutil.which("pokemon-colorscripts")
+    roots = [os.path.join(os.path.dirname(os.path.realpath(exe)), "colorscripts")] if exe else []
+    roots += ["/usr/local/opt/pokemon-colorscripts/colorscripts", "/usr/share/pokemon-colorscripts/colorscripts"]
+    for root in roots:
+        if os.path.isdir(os.path.join(root, "small", "regular")):
+            return os.path.join(root, "small")
+    return None
+
+
+def fit(path):
+    # the sprite's rows with blank rows and the common left margin cut, or None when it is bigger than the box
+    with open(path, encoding="utf-8") as f:
+        rows = f.read().rstrip("\n").split("\n")
+    plain = [ANSI.sub("", r).rstrip() for r in rows]
+    keep = [i for i, p in enumerate(plain) if p.strip()]
+    if not keep:
+        return None
+    rows, plain = rows[keep[0]:keep[-1] + 1], plain[keep[0]:keep[-1] + 1]
+    left = min(len(p) - len(p.lstrip()) for p in plain if p.strip())
+    if max(len(p) for p in plain) - left > W or len(rows) > H:
+        return None
+    out = []
+    for r, p in zip(rows, plain):
+        # drop `left` visible spaces from the start; escape codes before them are kept
+        cut, i, seen = [], 0, 0
+        while i < len(r) and seen < left:
+            m = ANSI.match(r, i)
+            if m:
+                cut.append(m.group()); i = m.end(); continue
+            seen += 1; i += 1
+        line = "".join(cut) + r[i:].rstrip(" ")
+        out.append((line, len(ANSI.sub("", line))))   # the width it really takes, trailing spaces gone
+    return out, max(n for _, n in out)
+
+
+def main():
+    base = sprites()
+    if not base:
+        return
+    kind = "shiny" if random.randrange(16) == 0 and os.path.isdir(os.path.join(base, "shiny")) else "regular"
+    names = os.listdir(os.path.join(base, kind))
+    random.shuffle(names)
+    for name in names:
+        got = fit(os.path.join(base, kind, name))
+        if got:
+            break
+    else:
+        return
+    rows, width = got
+    pad_left, top = (W - width) // 2, (H - len(rows)) // 2
+    lines = [" " * W] * top
+    lines += [" " * pad_left + r + "\x1b[0m" + " " * (W - pad_left - n) for r, n in rows]
+    lines += [" " * W] * (H - len(lines) + 1)
+    # caption: "#025  Pikachu", "✦" before it for a shiny; dim number, bold name
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(base)), "pokemon.json"), encoding="utf-8") as f:
+            dex = {p["name"]: i + 1 for i, p in enumerate(json.load(f))}
+    except (OSError, ValueError, KeyError, TypeError):
+        dex = {}
+    number = dex.get(name) or dex.get(name.split("-")[0])
+    title = " ".join(w.capitalize() for w in name.split("-"))[:W - 8]
+    plain = ("✦ " if kind == "shiny" else "") + (f"#{number:03d}  " if number else "") + title
+    styled = ("\x1b[33m✦\x1b[0m " if kind == "shiny" else "") + (f"\x1b[90m#{number:03d}\x1b[0m  " if number else "") + f"\x1b[1m{title}\x1b[0m"
+    left = (W - len(plain)) // 2
+    lines.append(" " * left + styled + " " * (W - left - len(plain)))
+    sys.stdout.write("\n".join(lines) + "\n")
+
+
+if __name__ == "__main__":
+    main()

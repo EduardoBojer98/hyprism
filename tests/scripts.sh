@@ -38,8 +38,10 @@ check "desktop-reset seeds hypridle.conf" '[[ -f $t/home/hypr/settings/hypridle.
 for f in "$bin"/*; do
     n=${f##*/}
     [[ $n == nv ]] && continue
+    sh=bash
+    head -1 "$f" | grep -q python && sh=python3
     # shellcheck disable=SC2034  # read inside check's condition
-    help=$(env -u HYPRLAND_INSTANCE_SIGNATURE XDG_CONFIG_HOME="$t/cfg" XDG_STATE_HOME="$t/state" bash "$f" --help 2>&1)
+    help=$(env -u HYPRLAND_INSTANCE_SIGNATURE XDG_CONFIG_HOME="$t/cfg" XDG_STATE_HOME="$t/state" "$sh" "$f" --help 2>&1)
     # shellcheck disable=SC2034  # read inside check's condition
     rc=$?
     check "$n --help prints help and exits 0" '((rc == 0)) && [[ $(wc -l <<<"$help") -ge 2 ]] && ! grep -q "^#" <<<"$help"'

@@ -85,10 +85,9 @@ Scope {
     // fish_greeting as plain `fastfetch`, so until the first prompt `fastfetch` itself stands in for our greeting too.
     readonly property string greetingBody: tc.greeting === "off" ? "    true\n"
         : tc.greeting === "fastfetch" ? "    command -q fastfetch; and command fastfetch\n"
-        // a random Pokémon in fastfetch's logo slot (1 in 16 shiny); without pokemon-colorscripts the distro's logo
-        : tc.greeting === "pokemon" ? "    command -q fastfetch; or return\n    if command -q pokemon-colorscripts\n"
-            + "        set -l shiny; test (random 1 16) -eq 1; and set shiny --shiny\n"
-            + "        command fastfetch --logo-type file-raw --logo (pokemon-colorscripts --random --no-title $shiny | psub)\n"
+        // a random Pokémon in fastfetch's logo slot, one box size for all (scripts/pokemon-card); else the distro's logo
+        : tc.greeting === "pokemon" ? "    command -q fastfetch; or return\n    set -l card (pokemon-card 2>/dev/null | string collect)\n"
+            + "    if test -n \"$card\"\n        command fastfetch --logo-type data-raw --logo \"$card\"\n"
             + "    else\n        command fastfetch\n    end\n" : ""
     readonly property string fishConf: "# Written by Quickshell ThemeSync from Settings > Appearance > Terminal\n"
         + (tc.transientPrompt ? "functions -q enable_transience; and enable_transience\n" : "")

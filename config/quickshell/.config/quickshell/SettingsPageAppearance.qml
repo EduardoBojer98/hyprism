@@ -210,9 +210,9 @@ ColumnLayout {
             ConfigChoice { section: "terminal"; key: "blink"; values: ["theme", "on", "off"]; labels: ["Theme", "On", "Off"] }
         }
         SettingRow {
-            label: "Cursor trail"
+            label: "Cursor animation"
             hint: Config.terminal.trail && !(Theme.motionLevel === "full") ? "Paused: Animations is not on Full"
-                : "A short smear when the cursor jumps. Keeps a focused terminal drawing every frame; off on battery"
+                : "A pulse on each keystroke, a smear when the cursor jumps. Keeps a focused terminal drawing every frame; off on battery"
             ConfigToggle { section: "terminal"; key: "trail" }
         }
         SettingRow {

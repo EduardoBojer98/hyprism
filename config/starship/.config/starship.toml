@@ -1,12 +1,12 @@
-# Rounded "pill" prompt: folder pill + git pill, then a clean input line.
-# Language versions and command time sit on the right. Colours are palette names: the
+# Rounded "pill" prompt on a rail (like the greeting card): folder pill + git pill, then the input line.
+# Language versions, command time, a failed command's code, background jobs and the clock sit on the right. Colours are palette names: the
 # block at the end holds Reactor's; ThemeSync writes ~/.config/hyprism/starship.toml with the active theme's.
 palette = "hyprism"
 add_newline = true
 format = """
-[](accent)$directory[](fg:accent bg:raised)$git_branch$git_status[](raised)
-$character"""
-right_format = "$nodejs$php$python$cmd_duration"
+[╭─](faint)[](accent)$directory[](fg:accent bg:raised)$git_branch$git_status[](raised)
+[╰─](faint)$character"""
+right_format = "$nodejs$php$python$cmd_duration$status$jobs$time"
 
 [character]
 success_symbol = "[❯](bold accent)"
@@ -46,7 +46,23 @@ format = "[$symbol$version]($style) "
 [cmd_duration]
 min_time = 2000
 style = "faint"
-format = "[󱎫 $duration]($style)"
+format = "[󱎫 $duration]($style) "
+
+[status]
+disabled = false
+style = "err"
+format = "[✘ $status]($style) "
+
+[jobs]
+symbol = "󰜎"
+style = "warn"
+format = "[$symbol $number]($style) "
+
+[time]
+disabled = false
+style = "faint"
+format = "[$time]($style)"
+time_format = "%H:%M"
 
 [palettes.hyprism]
 accent = "#e4ff1a"
