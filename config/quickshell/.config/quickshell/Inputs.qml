@@ -26,8 +26,7 @@ Singleton {
         touchscreen = on
         Quickshell.execDetached(["hyprctl", "eval", `hl.config({ input = { touchdevice = { enabled = ${on} } } })`])
     }
-    // the touchpad's device name and whether there is a touchscreen, from Hyprland. Both devices are switched on
-    // at start, so the tiles never show "on" for a device a previous shell left off.
+    // the touchpad's device name and whether there is a touchscreen, from Hyprland
     Process {
         running: true
         command: ["sh", "-c", "hyprctl -j devices | jq -r '(.mice[].name | select(test(\"touchpad\"; \"i\"))), \"touch=\" + ((.touch // []) | length | tostring)'"]
@@ -36,9 +35,15 @@ Singleton {
                 const lines = text.trim().split("\n")
                 root.touchpadName = (lines.find(l => !l.startsWith("touch=")) ?? "").replace(/[^A-Za-z0-9:_.-]/g, "")
                 root.hasTouchscreen = (lines.find(l => l.startsWith("touch=")) ?? "touch=0") !== "touch=0"
-                if (root.touchpadName) root.setTouchpad(true)
-                if (root.hasTouchscreen) root.setTouchscreen(true)
+                if (root.hasTouchscreen) touchState.running = true
             }
         }
+    }
+    // the touchscreen's real state (your config or a previous shell may have left it off). A touchpad's
+    // per-device state can't be read from Hyprland, so its tile starts at on.
+    Process {
+        id: touchState
+        command: ["hyprctl", "getoption", "input:touchdevice:enabled"]
+        stdout: StdioCollector { onStreamFinished: root.touchscreen = !/(bool|int): (false|0)\b/.test(text) }
     }
 }

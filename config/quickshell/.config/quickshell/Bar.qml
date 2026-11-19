@@ -109,7 +109,7 @@ Scope {
                 Accessible.onPressAction: { barMenu.at = null; Actions.refreshVisible("barmenu"); barMenu.rows = Qt.binding(root.menuRows); barMenu.open = true }
                 onClicked: mouse => { barMenu.at = { x: mouse.x, y: mouse.y }; Actions.refreshVisible("barmenu"); barMenu.rows = Qt.binding(root.menuRows); barMenu.open = true }
             }
-            ShellMenu { id: barMenu; anchorItem: body }
+            ShellMenu { id: barMenu; anchorItem: body; onOpenChanged: if (!open) rows = Array.from(rows) }   // closed: a snapshot, not a live binding
 
             // blocks and a block clock run flush to the screen's edges, like tmux's status line; a floating bar has
             // rounded ends instead, so they keep the usual inset (flush, the end items sat on the corner)

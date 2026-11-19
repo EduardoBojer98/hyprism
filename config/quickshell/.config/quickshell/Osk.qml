@@ -10,12 +10,13 @@ Singleton {
     property bool visible: false
     property bool installed: false   // squeekboard on the PATH: the tile is offered only then
 
+    // flips at once (two quick taps send show, then hide), then squeekboard's own answer wins
     function toggle() {
-        set.command = ["busctl", "--user", "call", "sm.puri.OSK0", "/sm/puri/OSK0", "sm.puri.OSK0", "SetVisible", "b", visible ? "false" : "true"]
-        set.running = true
+        visible = !visible
+        Quickshell.execDetached(["busctl", "--user", "call", "sm.puri.OSK0", "/sm/puri/OSK0", "sm.puri.OSK0", "SetVisible", "b", String(visible)])
+        readLater.restart()
     }
-    // what squeekboard says, after every change: a failed call leaves the tile as it was
-    Process { id: set; onExited: read.running = true }
+    Timer { id: readLater; interval: 400; onTriggered: read.running = true }   // a failed call puts the tile back
     Process {
         id: read
         command: ["busctl", "--user", "get-property", "sm.puri.OSK0", "/sm/puri/OSK0", "sm.puri.OSK0", "Visible"]

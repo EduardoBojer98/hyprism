@@ -297,8 +297,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 ### Fixed
 
 - Control Center: Wi-Fi, Bluetooth, Airplane, Touchscreen and On-screen keyboard tiles show only where that
-  hardware (or squeekboard) is; the on-screen keyboard's tile shows squeekboard's real state; touch devices start
-  on, so their tiles never claim "on" for a device left off; the bar menu ticks your own toggles that are on.
+  hardware (or squeekboard) is; the on-screen keyboard's tile shows squeekboard's real state; the touchscreen tile
+  reads Hyprland's setting at start; the bar menu ticks your own toggles that are on.
 - Reduced motion: Launchpad's icons no longer grow and bounce in; they appear.
 - Control Center small tiles share one label size (a long name used to shrink on its own).
 - NVIDIA sleep on Fedora: the step no longer picks the older drivers' setup because akmods hasn't built the driver

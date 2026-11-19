@@ -166,7 +166,7 @@ Glass {
                 Image {
                     required property string modelData
                     source: modelData
-                    sourceSize.height: stage.height   // decode at the size shown, not the page's full resolution
+                    sourceSize.height: Math.ceil(stage.height * 2)   // decode near the size shown (x2 for scaled screens), not the full page
                     readonly property real slot: (stage.width - Theme.spaceM * (view.pages.length - 1)) / Math.max(1, view.pages.length)
                     width: Math.min(slot, stage.height * (implicitWidth / Math.max(1, implicitHeight)))
                     height: stage.height
