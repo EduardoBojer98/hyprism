@@ -106,10 +106,12 @@ Scope {
                 acceptedButtons: Qt.RightButton
                 Accessible.role: Accessible.Button
                 Accessible.name: "Menu bar options"
-                Accessible.onPressAction: { barMenu.at = null; Actions.refreshVisible("barmenu"); barMenu.rows = Qt.binding(root.menuRows); barMenu.open = true }
-                onClicked: mouse => { barMenu.at = { x: mouse.x, y: mouse.y }; Actions.refreshVisible("barmenu"); barMenu.rows = Qt.binding(root.menuRows); barMenu.open = true }
+                Accessible.onPressAction: { barMenu.at = null; Actions.refreshVisible("barmenu"); barMenu.rows = root.menuRows(); barMenu.open = true }
+                onClicked: mouse => { barMenu.at = { x: mouse.x, y: mouse.y }; Actions.refreshVisible("barmenu"); barMenu.rows = root.menuRows(); barMenu.open = true }
             }
-            ShellMenu { id: barMenu; anchorItem: body; onOpenChanged: if (!open) rows = Array.from(rows) }   // closed: a snapshot, not a live binding
+            ShellMenu { id: barMenu; anchorItem: body }
+            // your own toggles' state arrives a moment after the menu opens: rebuild the rows then, only while open
+            Connections { target: Actions; enabled: barMenu.open; function onStatesChanged() { barMenu.rows = root.menuRows() } }
 
             // blocks and a block clock run flush to the screen's edges, like tmux's status line; a floating bar has
             // rounded ends instead, so they keep the usual inset (flush, the end items sat on the corner)
