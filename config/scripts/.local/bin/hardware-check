@@ -2,7 +2,11 @@
 # At login (modules/autostart.lua): when this computer's hardware changed since Hyprism last looked at it (a new
 # graphics card, a battery, a touchscreen), say so once, so the modules that fit can be set up. A change is
 # announced once; the same change isn't announced again at the next login.
+#   hardware-check        check now (quiet when nothing changed)
 set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+case ${1:-} in -h | --help) usage ;; esac
 # this file is linked into ~/.local/bin; the repo is four folders above the real file's folder
 repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
 # shellcheck source=lib/detect.sh

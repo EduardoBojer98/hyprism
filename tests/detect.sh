@@ -180,7 +180,7 @@ expect laptop-intel module.nvidia-hybrid false
 
 # the login check (hardware-check): quiet while nothing changed, one notice for a change, not again for the same one
 mkdir -p "$t/bin" && printf '#!/bin/sh\necho x >>"%s"\n' "$t/notified" >"$t/bin/notify-send" && chmod +x "$t/bin/notify-send"
-check() { PATH=$t/bin:$PATH HYPRISM_ROOT=$t/$1 HYPRISM_HARDWARE=$t/hidpi-single.toml XDG_STATE_HOME=$t/state \
+check() { PATH=$t/bin:$PATH HYPRISM_LIB=$PWD/config/scripts/.local/lib/hyprism HYPRISM_ROOT=$t/$1 HYPRISM_HARDWARE=$t/hidpi-single.toml XDG_STATE_HOME=$t/state \
     config/scripts/.local/bin/hardware-check; }
 check hidpi-single && check desktop-amd && check desktop-amd
 if [[ $(wc -l <"$t/notified" 2>/dev/null) == 1 ]]; then echo "ok: hardware-check announces a change once"; else
