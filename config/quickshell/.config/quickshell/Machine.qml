@@ -19,6 +19,19 @@ Singleton {
     property string switchOutput: ""   // monitor monswitch hands over, e.g. HDMI-A-1
     readonly property bool monitorSwitch: switchOutput !== ""
 
+    // the installer's modules (modules/<name>/ in the repo), in words, for Settings > About and the welcome
+    readonly property var moduleNames: ({ ai: "Local AI (Ollama)", asus: "ASUS laptop tools", "ddc-monitor": "Monitor input switch",
+                                          dev: "Developer tools", gaming: "Gaming", greeter: "Themed login screen",
+                                          hibernate: "Hibernation", laptop: "Laptop", logitech: "Logitech devices",
+                                          nvidia: "NVIDIA driver", "nvidia-hybrid": "NVIDIA hybrid graphics",
+                                          tablet: "Tablet and touch" })
+    // a module not named here gets its folder name in words; quirk-MODEL folders are one model's fixes
+    function moduleName(id) {
+        if (moduleNames[id]) return moduleNames[id]
+        const words = id.replace(/^quirk-/, "").split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+        return id.startsWith("quirk-") ? "Fixes for " + words : words
+    }
+
     function refresh() { probe.running = false; probe.running = true }   // after Settings > Shared Monitor saves
 
     Process {

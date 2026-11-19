@@ -44,6 +44,21 @@ modules_list() {
     echo "Turn one on or off: ./install.sh --with NAME  or  --without NAME"
 }
 
+# The same list for Settings: [{ name, on, detected, choice ("true", "false" or ""), optional, summary }]
+modules_json() {
+    local m detected
+    for m in $(module_names); do
+        detected=false
+        if ! grep -q 'opt-in' "$REPO/modules/$m/detect" 2>/dev/null && [[ -f $REPO/modules/$m/detect ]] &&
+            (. "$REPO/modules/$m/detect") >/dev/null 2>&1; then detected=true; fi
+        jq -cn --arg name "$m" --argjson on "$(module_on "$m" 2>/dev/null && echo true || echo false)" \
+            --argjson detected "$detected" --arg choice "$(hw_get "module.$m")" \
+            --argjson optional "$(grep -q 'opt-in' "$REPO/modules/$m/detect" 2>/dev/null && echo true || echo false)" \
+            --arg summary "$(sed -n '3,/^$/p' "$REPO/modules/$m/README.md" 2>/dev/null | paste -sd' ' | sed 's/ *$//')" \
+            '{$name, $on, $detected, $choice, $optional, $summary}'
+    done | jq -cs .
+}
+
 # Each step's checksum is kept once it has run, so later runs only offer new or changed steps
 step_id() { echo "$(basename "$(dirname "$(dirname "$1")")")-$(basename "$1")"; }
 step_sum() { sha256sum "$1" | cut -c1-16; }

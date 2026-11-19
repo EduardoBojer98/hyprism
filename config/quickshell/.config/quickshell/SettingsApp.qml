@@ -80,7 +80,7 @@ Singleton {
         { id: "apps",          name: "Default Apps",        glyph: "\u{F003B}", keys: "browser mail terminal file manager task manager open with default" },
         { id: "startup",       name: "Startup Apps",        glyph: "\u{F040A}", keys: "autostart login start on login" },
         { id: "language",      name: "Language & Region",   glyph: "\u{F05CA}", keys: "locale formats date numbers timezone time zone region clock format" },
-        { id: "about",         name: "About",               glyph: "\u{F02FD}", keys: "system version hardware update upgrade doctor reinstall version repo channel stable dev develop beta" },
+        { id: "about",         name: "About",               glyph: "\u{F02FD}", keys: "system version hardware update upgrade doctor reinstall version repo channel stable dev develop beta modules gaming ai ollama docker nvidia hibernate login" },
     ]
     // search: pages whose name, group or words match every word typed
     property string query: ""

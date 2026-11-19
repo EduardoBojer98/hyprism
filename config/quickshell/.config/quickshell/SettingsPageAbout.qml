@@ -56,6 +56,56 @@ ColumnLayout {
         }
     }
 
+    // ---- modules: the optional parts (./install.sh modules --json). Switching one runs the installer in a
+    // terminal, because it installs packages and asks before system changes; "Check again" re-reads the list after.
+    property var modules: []
+    // hardware this computer doesn't have stays out of the list, unless you switched it yourself
+    readonly property var shownModules: modules.filter(m => m.on || m.optional || m.detected || m.choice !== "")
+    // short, beside the button; a choice that goes against what was found says so in the hint
+    function moduleState(m) {
+        if (m.choice !== "") return (m.choice === "true" ? "On" : "Off") + " (your choice)"
+        return m.on ? "On" : "Off"
+    }
+    function moduleNote(m) {
+        if (m.choice === "true" && !m.detected && !m.optional) return "Its hardware wasn't found on this computer. "
+        if (m.choice === "false" && m.detected) return "This computer has the hardware. "
+        return ""
+    }
+    Process {
+        id: modulesRead
+        running: true
+        command: ["hyprism", "modules", "--json"]
+        stdout: StdioCollector { onStreamFinished: { try { page.modules = JSON.parse(text) } catch (e) { page.modules = [] } } }
+    }
+
+    SettingGroup {
+        title: "Modules"
+        visible: page.modules.length > 0
+        SettingRow {
+            label: "Optional parts and hardware support"
+            hint: "Turning one on opens a terminal that installs it and asks before each system change. "
+                + "Turning one off removes its config; its packages and system changes stay until an uninstall"
+            PillButton { enabled: !modulesRead.running; text: "Check again"; onClicked: modulesRead.running = true }
+        }
+        Repeater {
+            model: page.shownModules
+            SettingRow {
+                required property var modelData
+                label: Machine.moduleName(modelData.name)
+                hint: page.moduleNote(modelData) + modelData.summary
+                Value { text: page.moduleState(modelData); color: modelData.on ? Theme.accent : Theme.subtext }
+                PillButton {
+                    enabled: !!page.info.repo
+                    text: modelData.on ? "Turn off" : "Turn on"
+                    Accessible.name: text + " " + Machine.moduleName(modelData.name)
+                    // off only unlinks its files (packages and system changes stay; uninstall undoes those)
+                    onClicked: page.inTerminal(modelData.on ? "./install.sh --without " + modelData.name + " --only links"
+                                                            : "./install.sh --with " + modelData.name)
+                }
+            }
+        }
+    }
+
     Component.onCompleted: Updates.refresh(false)
     // what Updates found, in words: the first line is the row's label, the rest its hint
     readonly property var updateText: {

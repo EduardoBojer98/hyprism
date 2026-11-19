@@ -120,6 +120,14 @@ echo "===== LINKS, LOG, HARDWARE FILE"
 as desktop-amd "test \"\$(readlink -f ~/.config/hypr/hyprland.lua)\" = $repo/config/hypr/.config/hypr/hyprland.lua"
 as desktop-amd 'ls ~/.local/state/hyprism/logs/install-*.log >/dev/null && grep -q "form = \"desktop\"" ~/.config/hyprism/hardware.toml'
 as desktop-amd './install.sh modules'
+# the list Settings reads: every module, with on/off and why
+json=$(as laptop-hybrid-nvidia 'export HYPRISM_HARDWARE=/tmp/hybrid.toml; ./install.sh detect >/dev/null && ./install.sh modules --json')
+want='{"nvidia-hybrid":[true,true],"dev":[false,false],"quirk-flow-x13":[false,false]}'
+[[ $(jq -c '[.[] | select(.name == "nvidia-hybrid" or .name == "dev" or .name == "quirk-flow-x13") | {(.name): [.on, .detected]}] | add' -S <<<"$json") == $(jq -cS . <<<"$want") ]] || {
+    echo "xx modules --json: $json"
+    exit 1
+}
+echo "ok: modules --json"
 
 echo "===== A MODULE SWITCHED OFF TAKES ITS LINKS WITH IT"
 as desktop-amd './install.sh --yes --with nvidia-hybrid --only links >/dev/null'

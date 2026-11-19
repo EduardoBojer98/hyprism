@@ -9,7 +9,7 @@
 #                             released; dev = branch develop, newest work, can break)
 #   ./install.sh doctor       check this computer against the repo; changes nothing
 #   ./install.sh detect       look at the hardware again and print hardware.toml
-#   ./install.sh modules      list the optional modules and which are on
+#   ./install.sh modules      list the optional modules and which are on (--json: for Settings)
 #   ./install.sh rollback     go back to the Hyprism version from before the last update
 #   ./install.sh backups      list the backups of files that were in the way
 #   ./install.sh uninstall    remove the links, put a backup back, undo the system changes
@@ -33,7 +33,7 @@ set -Eeuo pipefail # -E: the failure summary (on_fail) also fires inside functio
 
 REPO=$(cd "$(dirname "$0")" && pwd)
 ARGS=("$@") # kept for update, which re-runs itself after a pull
-DRY=false YES=false TRUST=true ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" PROFILE="" CHANNEL="" CMD=install
+DRY=false YES=false TRUST=true JSON=false ONLY="" WITH="" WITHOUT="" BACKUP="" STEP="" PROFILE="" CHANNEL="" CMD=install
 usage() {
     awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"
     exit "${1:-0}"
@@ -43,6 +43,7 @@ while (($#)); do
         --dry-run) DRY=true ;;
         --yes | -y) YES=true ;;
         --no-trust) TRUST=false ;;
+        --json) JSON=true ;;
         --only | --with | --without | --backup | --step | --profile)
             [[ -n ${2:-} ]] || {
                 echo "$1 needs a value" >&2
@@ -130,7 +131,7 @@ PROFILE=$(hw_get setup.profile) # "" = an install from before the choice: apps a
 case $CMD in
     doctor) doctor ;;
     detect) cat "$HW_FILE" ;;
-    modules) modules_list ;;
+    modules) if $JSON; then modules_json; else modules_list; fi ;;
     backups) backups_list ;;
     rollback)
         start_log

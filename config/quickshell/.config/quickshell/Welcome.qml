@@ -6,7 +6,8 @@ import QtQuick.Layouts
 
 // First-run welcome: opens once on the first login (when the settings and the themes are loaded and
 // system.welcomed is still false), centred like the power menu. The three keys a newcomer needs, a look
-// to pick (theme, light or dark, bar layout), the keyboard layouts, and what was found on this computer.
+// to pick (theme, light or dark, bar layout), the keyboard layouts, and what was found on this computer with
+// the modules set up for it (a button opens Settings > About to switch them).
 // Everything it changes goes through Config.set, so it is all in Settings later. `welcomed` is saved when
 // it is closed (Done, Esc, a click outside), so a crash before that shows it again.
 // `qs ipc call welcome open` shows it again; so does the "Welcome" action in the menu.
@@ -16,13 +17,14 @@ Singleton {
     property bool open: false
     property string computer: ""      // one line from ~/.config/hyprism/hardware.toml, "" when there is none
     property bool asked: false        // the first-run check runs once
+    property var modulesOn: []        // the modules on for this computer, in words (./install.sh modules --json)
 
     readonly property bool due: Config.loaded && Themes.ready && !Config.system.welcomed
     onDueChanged: check()
     Component.onCompleted: check()
     function check() { if (due && !asked) { asked = true; show() } }
 
-    function show() { reader.running = false; reader.running = true; Quickshell.execDetached(["theme-wallpaper", "--all"]); open = true }
+    function show() { reader.running = false; reader.running = true; modulesRead.running = false; modulesRead.running = true; Quickshell.execDetached(["theme-wallpaper", "--all"]); open = true }
     function hide() { if (!open) return; open = false; Config.set("system", "welcomed", true) }
     function toggle() { if (open) hide(); else show() }
 
@@ -48,6 +50,17 @@ Singleton {
                 if (pick(/^battery\s*=\s*"([^"]*)"/m)) parts.push("battery")
                 if (/^touchscreen\s*=\s*true/m.test(text)) parts.push("touch screen")
                 root.computer = text.trim() ? parts.filter(p => p).join(" · ") : ""
+            }
+        }
+    }
+
+    Process {
+        id: modulesRead
+        command: ["hyprism", "modules", "--json"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try { root.modulesOn = JSON.parse(text).filter(m => m.on).map(m => Machine.moduleName(m.name)) }
+                catch (e) { root.modulesOn = [] }
             }
         }
     }
@@ -166,10 +179,29 @@ Singleton {
                 Text {
                     Layout.fillWidth: true
                     visible: root.computer !== ""
-                    text: root.computer + ". Optional parts: run ./install.sh modules to list them."
+                    text: root.computer
                     color: Theme.text
                     wrapMode: Text.Wrap
                     font { family: Theme.font; pixelSize: Theme.fontSize }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: root.computer !== ""
+                    spacing: Theme.spaceM
+                    PillButton {
+                        text: "Modules…"
+                        Accessible.name: "Turn modules on or off"
+                        Accessible.role: Accessible.Button
+                        onClicked: { root.hide(); SettingsApp.show("about") }
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: root.modulesOn.length ? "Set up for it: " + root.modulesOn.join(" · ")
+                                                    : "Gaming, developer tools, local AI and more can be turned on."
+                        color: Theme.subtext
+                        wrapMode: Text.Wrap
+                        font { family: Theme.font; pixelSize: Theme.fontLabel }
+                    }
                 }
             }
         }

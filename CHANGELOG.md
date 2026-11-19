@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Modules in Settings > About: every optional part and hardware module this computer can use, whether it is on and
+  a button that turns it on (the installer runs in a terminal) or off. `./install.sh modules --json`
+  gives the same list.
+- The welcome names the modules set up for this computer, with a button to switch them.
 - `./install.sh --no-trust`: answers no to the questions that trust other people's code or give root-level rights
   (AUR builds, COPR and RPM Fusion repos, the docker group), with `--yes` too, for a careful unattended run.
 - A failed module step names the command that runs it again (`./install.sh --step MODULE/FILE`); failed packages
