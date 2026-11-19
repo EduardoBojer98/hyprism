@@ -17,6 +17,7 @@ Singleton {
     readonly property alias clipboard: adapter.clipboard
     readonly property alias notifications: adapter.notifications
     readonly property alias osd: adapter.osd
+    readonly property alias terminal: adapter.terminal
     readonly property alias caffeine: adapter.caffeine
     readonly property alias nightLight: adapter.nightLight
     readonly property alias phone: adapter.phone
@@ -69,6 +70,9 @@ Singleton {
                          dndSchedule: "bool", dndFrom: "time", dndTo: "time",
                          historyMax: [10, 500], sound: "string", soundLow: "string", soundCritical: "string", volume: [0, 100],
                          mutedApps: "list" },
+        terminal: { cursor: ["theme", "block", "bar", "underline", "block_hollow"], blink: ["theme", "on", "off"],
+                    opacity: ["theme", "solid", "soft", "clear"], padding: ["theme", "tight", "normal", "roomy"],
+                    trail: "bool", transientPrompt: "bool", greeting: ["default", "off", "fastfetch"] },
         osd: { timeoutMs: [600, 5000], volume: "bool", brightness: "bool", micMute: "bool", layout: "bool", capsLock: "bool", position: ["bottom", "top", "center"] },
         caffeine: { defaultMinutes: [0, 600], on: "bool", minutes: [0, 600], endsAt: [0, 1e15] },
         focus: { modes: "focusModes", active: "string", last: "string", auto: "bool", restore: "object" },

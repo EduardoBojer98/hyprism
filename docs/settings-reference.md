@@ -33,6 +33,18 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `cursorTheme` | `string` | `"theme"` | theme (the theme's own) \| a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons \| default (the system's) |
 | `cursorSize` | `int` | `24` |  |
 
+## terminal
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `cursor` | `string` | `"theme"` | theme \| block \| bar \| underline \| block_hollow |
+| `blink` | `string` | `"theme"` | theme \| on \| off |
+| `opacity` | `string` | `"theme"` | theme (see-through in glass themes) \| solid \| soft \| clear |
+| `padding` | `string` | `"theme"` | theme \| tight \| normal \| roomy |
+| `trail` | `bool` | `false` | cursor trail shader (ghostty/shaders/hyprism-trail.glsl): full motion, on AC only |
+| `transientPrompt` | `bool` | `false` | starship's transient prompt: past prompts shrink to one symbol |
+| `greeting` | `string` | `"default"` | default (the distro's) \| off \| fastfetch |
+
 ## dock
 
 | Setting | Type | Default | What it does |

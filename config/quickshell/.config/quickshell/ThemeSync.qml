@@ -14,6 +14,7 @@ import "WindowFrames.js" as Frames
 //   Qt apps    qt6ct/colors/hyprism.conf, and qt6ct/qt6ct.conf unless it is yours (env.lua points Qt at qt6ct)
 //   KDE apps   ~/.local/share/color-schemes/Hyprism.colors, picked by hyprism/kde/kdeglobals (env.lua, with qt6ct)
 //   btop       btop/themes/hyprism.theme (btop.conf only if there is none: it is yours)
+//   fish       hyprism/fish.fish: transient prompt and greeting (Config.terminal), sourced by fish/conf.d/tools.fish
 //   prompt     hyprism/starship.toml: ~/.config/starship.toml with its palette block swapped for the theme's
 //   wallpaper  the theme's own picture (scripts/theme-wallpaper), unless Settings > Themes > Wallpaper is off
 // Qt apps without qt6ct installed keep following KDE's own settings, which this never writes.
@@ -61,6 +62,29 @@ Scope {
         : palette + "\nfont-family = \"\"\nfont-family = " + (current.font.mono === "Martian Mono" ? "Martian Mono" : "JetBrainsMono Nerd Font")
           + "\nfont-family = JetBrainsMono Nerd Font"   // "" resets the list; Nerd Font stays as the icon fallback
           + "\nbackground-opacity = " + (Theme.glassy ? "0.86" : "1")   // see-through only in the glass themes
+    // Settings > Appearance > Terminal: each pick, or the theme's term look when "theme" (only while Ghostty follows the theme)
+    readonly property var tc: Config.terminal
+    readonly property string termLook: {
+        const t = current.term ?? {}, own = Config.appearance.terminal, lines = []
+        const cursor = tc.cursor !== "theme" ? tc.cursor : own ? t.cursorStyle : null
+        if (["block", "bar", "underline", "block_hollow"].includes(cursor)) lines.push("cursor-style = " + cursor)
+        const blink = tc.blink !== "theme" ? tc.blink === "on" : own ? t.blink : null
+        if (typeof blink === "boolean") lines.push("cursor-style-blink = " + blink)
+        const opacity = ({ solid: "1", soft: "0.92", clear: "0.8" })[tc.opacity]
+        if (opacity) lines.push("background-opacity = " + opacity)
+        const pad = ({ tight: [6, 4], normal: [12, 10], roomy: [20, 16] })[tc.padding] ?? (own && Array.isArray(t.padding) ? t.padding : null)
+        if (pad) lines.push("window-padding-x = " + n(pad[0]), "window-padding-y = " + n(pad[1]))
+        // the trail draws for a few frames after a jump; Ghostty's animation loop runs while a terminal has focus, so only
+        // in full motion and on AC (like the moving window frame)
+        if (tc.trail && Theme.motionLevel === "full" && !UPower.onBattery)
+            lines.push("custom-shader = " + Quickshell.env("HOME") + "/.config/ghostty/shaders/hyprism-trail.glsl")
+        return lines.join("\n")
+    }
+    // fish, read by fish/conf.d/tools.fish when a shell starts
+    readonly property string fishConf: "# Written by Quickshell ThemeSync from Settings > Appearance > Terminal\n"
+        + (tc.transientPrompt ? "functions -q enable_transience; and enable_transience\n" : "")
+        + (tc.greeting === "off" ? "function fish_greeting; end\n"
+           : tc.greeting === "fastfetch" ? "function fish_greeting; command -q fastfetch; and fastfetch; end\n" : "")
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
     readonly property string gtkAccent: {
@@ -198,7 +222,7 @@ Scope {
         SettingsApp.writeConfigFile("fuzzel/theme.ini", "# Written by Quickshell ThemeSync from the active theme\n[colors]\n"
             + `background=${hex(Theme.surfaceColor)}f2\ntext=${hex(Theme.text)}ff\ninput=${hex(Theme.text)}ff\nprompt=${a}ff\nmatch=${a}ff\n`
             + `selection=${a}55\nselection-text=${hex(Theme.text)}ff\nselection-match=${hex(Theme.text)}ff\nborder=${a}ff`)
-        SettingsApp.writeConfigFile("ghostty/theme.conf", "# Written by Quickshell ThemeSync from the active theme (empty: the config's own theme)\n" + terminal,
+        SettingsApp.writeConfigFile("ghostty/theme.conf", "# Written by Quickshell ThemeSync from the active theme (empty: the config's own theme)\n" + terminal + "\n" + termLook,
                                     ["pkill", "-USR2", "-x", "ghostty"])   // SIGUSR2 = reload config
         // qt6ct.conf is ours only if absent or marked by .hyprism; a user's own file is never touched
         put("qt6ct/colors/hyprism.conf", qtColors, ["sh", "-c", 'd="$HOME/.config/qt6ct"; if [ ! -e "$d/qt6ct.conf" ] || [ -e "$d/.hyprism" ]; then printf "[Appearance]\\ncolor_scheme_path=%s/colors/hyprism.conf\\ncustom_palette=true\\nicon_theme=%s\\nstandard_dialogs=default\\nstyle=Fusion\\n" "$d" "$1" > "$d/qt6ct.conf" && : > "$d/.hyprism"; fi',
@@ -209,6 +233,7 @@ Scope {
         // btop.conf is yours: only when there is none, one line that picks the theme
         put("btop/themes/hyprism.theme", btopTheme, ["sh", "-c", 'f="$HOME/.config/btop/btop.conf"; [ -e "$f" ] || printf "color_theme = \\"hyprism\\"\\ntheme_background = False\\n" > "$f"'])
         put("hyprism/starship.toml", starshipToml)
+        put("hyprism/fish.fish", fishConf)
     }
 
     // The theme's own wallpaper, drawn once per theme into ~/.cache/hyprism/wallpapers/
@@ -282,5 +307,7 @@ Scope {
     onLightChanged: debounce.restart()
     onIconThemeChanged: debounce.restart()
     onTerminalChanged: debounce.restart()
+    onTermLookChanged: debounce.restart()
+    onFishConfChanged: debounce.restart()
     onGtkAccentChanged: debounce.restart()
 }

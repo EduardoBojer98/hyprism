@@ -19,6 +19,16 @@ JsonAdapter {
         property string cursorTheme: "theme"     // theme (the theme's own) | a folder in ~/.local/share/icons, ~/.icons or /usr/share/icons | default (the system's)
         property int cursorSize: 24
     }
+    // Ghostty and fish: ThemeSync writes ghostty/theme.conf (live) and hyprism/fish.fish (new shells); theme = the theme's term look
+    property JsonObject terminal: JsonObject {
+        property string cursor: "theme"         // theme | block | bar | underline | block_hollow
+        property string blink: "theme"          // theme | on | off
+        property string opacity: "theme"        // theme (see-through in glass themes) | solid | soft | clear
+        property string padding: "theme"        // theme | tight | normal | roomy
+        property bool trail: false              // cursor trail shader (ghostty/shaders/hyprism-trail.glsl): full motion, on AC only
+        property bool transientPrompt: false    // starship's transient prompt: past prompts shrink to one symbol
+        property string greeting: "default"     // default (the distro's) | off | fastfetch
+    }
     property JsonObject dock: JsonObject {
         property bool enabled: true             // every theme has a dock; off hides it everywhere
         property string size: "regular"         // compact | regular | roomy: the padding around the icons

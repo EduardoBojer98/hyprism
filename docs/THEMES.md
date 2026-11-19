@@ -68,12 +68,13 @@ corners, gaps, font and motion and is kept in `settings.json`; there is no build
 | `shape` | `radius`, `radiusSmall`, `line` (panel border px), `material`: `solid` or `glass`, `density`: `compact`, `regular` or `roomy` (spacing everywhere; default `regular`) |
 | `bar` | Edge, size, floating or attached, fill, how items speak (`voice`: `icons`, `mixed`, `words`, `caps`), workspace style, `sep` (rules between items), `sepStyle` (`line`; `slash`: the rule leans like a HUD segment cut; `pip`: a small square), `dimLabels` (a readout's word or glyph dimmed, its value in ink), and the items in `start`, `center`, `end` |
 | `dock` | Edge, shape, hover effect, running mark, fill |
+| `osd` | `style`: `bar`, `numeral` (a big number over ten blocks) or `ascii` (a mono meter) |
 | `popup` | Panel depth (`soft`, `hard`, `glow`, `none`), decoration, `decorColour` (`accent` or `accent2`: the colour of that decoration), tile style, `segments` (`text` or `accent`: the chosen part of a segmented control) |
 | `motion` | How panels open: `enter` and `exit` in ms, `curve`, `travel`, `scale`, `press` |
 | `launcher`, `notify` | Launcher placement and look; where notifications appear and their shape |
 | `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset, `frame`: `accent`, `gradient` or `rainbow` (the focused window's frame) |
 | `lock` | Lock screen clock style and alignment |
-| `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, and `palette` (16 colours) |
+| `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, `palette` (16 colours), and its look: `cursorStyle` (`block`, `bar`, `underline`, `block_hollow`), `blink`, `padding` `[x, y]` |
 | `wall` | The wallpaper's name: a picture `<wall>.png` in the folder, or a recipe with that name in `wallpaper.sh` |
 | `icons` | The icon theme it starts with (a folder name; `Papirus` and `breeze` follow light and dark). Settings > Icons can pick another |
 | `cursor` | The cursor theme it starts with (a folder name; empty = the system's). A missing one falls back to the system cursor. Settings > Cursor can pick another |

@@ -197,6 +197,46 @@ ColumnLayout {
         }
     }
 
+    // ---- terminal: Ghostty's look (live) and fish's behaviour (new shells); "Theme" takes the theme's term look -----
+    SettingGroup {
+        title: "Terminal"
+        SettingRow {
+            label: "Cursor"
+            hint: "Ghostty's cursor shape, live"
+            ConfigChoice { section: "terminal"; key: "cursor"; values: ["theme", "block", "bar", "underline", "block_hollow"]; labels: ["Theme", "Block", "Bar", "Line", "Hollow"] }
+        }
+        SettingRow {
+            label: "Cursor blink"
+            ConfigChoice { section: "terminal"; key: "blink"; values: ["theme", "on", "off"]; labels: ["Theme", "On", "Off"] }
+        }
+        SettingRow {
+            label: "Cursor trail"
+            hint: Config.terminal.trail && !(Theme.motionLevel === "full") ? "Paused: Animations is not on Full"
+                : "A short smear when the cursor jumps. Keeps a focused terminal drawing every frame; off on battery"
+            ConfigToggle { section: "terminal"; key: "trail" }
+        }
+        SettingRow {
+            label: "Background"
+            hint: "See-through lets the wallpaper show behind the text"
+            ConfigChoice { section: "terminal"; key: "opacity"; values: ["theme", "solid", "soft", "clear"]; labels: ["Theme", "Solid", "Soft", "Clear"] }
+        }
+        SettingRow {
+            label: "Padding"
+            hint: "Space between the window's edge and the text"
+            ConfigChoice { section: "terminal"; key: "padding"; values: ["theme", "tight", "normal", "roomy"]; labels: ["Theme", "Tight", "Normal", "Roomy"] }
+        }
+        SettingRow {
+            label: "Transient prompt"
+            hint: "Past prompts shrink to one symbol, so the scrollback shows commands and output. New terminals"
+            ConfigToggle { section: "terminal"; key: "transientPrompt" }
+        }
+        SettingRow {
+            label: "Greeting"
+            hint: "What a new shell prints first. Fastfetch: a system summary"
+            ConfigChoice { section: "terminal"; key: "greeting"; values: ["default", "off", "fastfetch"]; labels: ["Default", "Off", "Fastfetch"] }
+        }
+    }
+
     // ---- motion: one look for panels and windows, kept whatever the theme -------------------------------
     SettingGroup {
         title: "Motion"

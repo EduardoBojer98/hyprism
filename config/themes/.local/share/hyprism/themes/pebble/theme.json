@@ -147,6 +147,9 @@
     "select": "wash",
     "prompt": ""
   },
+  "osd": {
+    "style": "bar"
+  },
   "notify": {
     "corner": "top-right",
     "kind": "card"
@@ -193,7 +196,7 @@
     "cursor": "#b9cf8f",
     "cursorText": "#171918",
     "selection": "#3a4232",
-    "selectionText": "#e9ece6"
+    "selectionText": "#e9ece6", "cursorStyle": "bar", "blink": true, "padding": [16, 12]
   },
   "wall": "pebble",
   "icons": "breeze",

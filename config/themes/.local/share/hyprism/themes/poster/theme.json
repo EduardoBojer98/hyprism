@@ -145,6 +145,9 @@
     "select": "inverse",
     "prompt": ""
   },
+  "osd": {
+    "style": "numeral"
+  },
   "notify": {
     "corner": "bottom-left",
     "kind": "block"
@@ -191,7 +194,7 @@
     "cursor": "#ff3b1f",
     "cursorText": "#141414",
     "selection": "#561f17",
-    "selectionText": "#f4f1ea"
+    "selectionText": "#f4f1ea", "cursorStyle": "block", "blink": false, "padding": [12, 10]
   },
   "wall": "poster",
   "icons": "Papirus",

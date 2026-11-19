@@ -6,6 +6,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Settings > Appearance > Terminal: Ghostty's cursor (shape, blink, a cursor trail), background and padding, live;
+  fish's transient prompt and greeting (off or fastfetch) for new shells. "Theme" takes each theme's own terminal look
+  (theme.json `term.cursorStyle`, `blink`, `padding`). The trail is our own shader, only in full motion and on AC.
+- Each theme draws its own volume/brightness OSD (theme.json `osd.style`): Pebble a thin bar, Poster a big number
+  over ten blocks, Monolith a mono `[████░░]` meter.
 - Modules in Settings > About: every optional part and hardware module this computer can use, whether it is on and
   a button that turns it on (the installer runs in a terminal) or off. `./install.sh modules --json`
   gives the same list.

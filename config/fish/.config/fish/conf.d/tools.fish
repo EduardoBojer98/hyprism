@@ -9,6 +9,8 @@ test -f ~/.config/hyprism/starship.toml; and set -gx STARSHIP_CONFIG ~/.config/h
 command -q starship; and starship init fish | source
 command -q zoxide; and zoxide init fish | source
 command -q fzf; and fzf --fish | source
+# Settings > Appearance > Terminal: transient prompt and greeting (Quickshell ThemeSync)
+test -f ~/.config/hyprism/fish.fish; and source ~/.config/hyprism/fish.fish
 
 set -gx FZF_DEFAULT_COMMAND "fd --type f --hidden --exclude .git"
 # Colours from the terminal palette, which follows Settings > Appearance (Ghostty theme.conf)

@@ -18,6 +18,10 @@ PanelWindow {
     property string label                // a word instead of the level bar ("Mic muted", "US")
     property bool armed: false           // set a moment after start, so the initial state stays quiet
     readonly property string pos: Config.osd.position
+    // the theme's look (theme.json osd.style): bar (a thin level bar), numeral (a big number over a segmented bar),
+    // ascii (a terminal meter, [████░░░░] 50)
+    readonly property string look: Theme.current.osd?.style ?? "bar"
+    readonly property real level: Math.max(0, Math.min(1, value))
 
     // kind is the settings key that turns this one on or off
     function show(kind, i, v, t) {
@@ -40,8 +44,8 @@ PanelWindow {
     // above a bottom bar and the dock (a hiding one too, it shows when the pointer is down there)
     margins.bottom: Theme.reserveBottom + (Config.dock.enabled && Config.dock.autoHide && Theme.dockEdge === "bottom" ? Theme.dockThickness + Theme.dockLift : 0) + 32
     margins.top: Theme.reserveTop + 32
-    implicitWidth: 260
-    implicitHeight: 48
+    implicitWidth: look === "numeral" ? 300 : 260
+    implicitHeight: look === "numeral" && label === "" ? 76 : 48
     exclusiveZone: 0
     color: "transparent"
     visible: card.opacity > 0
@@ -127,16 +131,16 @@ PanelWindow {
 
         Text {   // the level as a number: a bar alone can't say 0 % from muted, or 45 from 50
             id: level
-            visible: osd.label === ""
+            visible: osd.label === "" && osd.look === "bar"
             anchors { right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
             width: Theme.fontLabel * 2.4
             horizontalAlignment: Text.AlignRight
-            text: Math.round(Math.max(0, Math.min(1, osd.value)) * 100)
+            text: Math.round(osd.level * 100)
             color: Theme.subtext
             font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium; features: { "tnum": 1 } }
         }
         Rectangle {
-            visible: osd.label === ""
+            visible: osd.label === "" && osd.look === "bar"
             anchors { left: glyph.right; leftMargin: Theme.spaceM; right: level.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
             height: 6
             radius: Math.min(3, Theme.radiusSmall)
@@ -147,8 +151,48 @@ PanelWindow {
                 height: parent.height
                 radius: parent.radius
                 color: Theme.accent
-                transform: Scale { xScale: Math.max(0, Math.min(1, osd.value)); Behavior on xScale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } } }
+                transform: Scale { xScale: osd.level; Behavior on xScale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } } }
             }
         }
-    }
+    
+        // numeral: the level as a poster number, ten blocks under it that snap (no tween: a stamp, not a glide)
+        Column {
+            visible: osd.label === "" && osd.look === "numeral"
+            anchors { left: glyph.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
+            spacing: Theme.spaceXs
+            Text {
+                anchors.right: parent.right
+                text: Math.round(osd.level * 100)
+                color: Theme.text
+                font { family: Theme.displayFont; pixelSize: Theme.fontHeading; weight: Theme.displayWeight; features: { "tnum": 1 } }
+            }
+            Row {
+                width: parent.width
+                spacing: 3
+                Repeater {
+                    model: 10
+                    Rectangle {
+                        required property int index
+                        width: (parent.width - 9 * 3) / 10
+                        height: 10
+                        radius: Math.min(2, Theme.radiusSmall)
+                        color: index < Math.round(osd.level * 10) ? Theme.accent : Theme.fill
+                    }
+                }
+            }
+        }
+
+        // ascii: a terminal meter in the mono face, the number after it
+        Text {
+            visible: osd.label === "" && osd.look === "ascii"
+            anchors { left: glyph.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
+            readonly property int cells: 16
+            readonly property int on: Math.round(osd.level * cells)
+            textFormat: Text.StyledText
+            text: "<font color='" + Theme.subtext + "'>[</font><font color='" + Theme.accent + "'>" + "█".repeat(on) + "</font><font color='" + Theme.muted + "'>"
+                  + "░".repeat(cells - on) + "]</font> " + String(Math.round(osd.level * 100)).padStart(3, " ")
+            color: Theme.text
+            font { family: Theme.monoFont; pixelSize: Theme.fontLabel; features: { "tnum": 1 } }
+        }
+}
 }
