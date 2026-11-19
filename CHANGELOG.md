@@ -6,6 +6,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- A notice at login when the computer's hardware changed since Hyprism looked at it (a new graphics card, a
+  battery, a touchscreen): run `hyprism detect`, then `hyprism`, to set up what fits. Each change is announced once.
 - Launchpad: apps in pages with dots, turned by a swipe, the scroll wheel or touchpad, the arrows or PageUp/PageDown,
   instead of one long scroll. Hold an icon and drag it to move it; drop it on another app to make a folder (named for
   what they have in common), on a folder to add it. A click opens a folder in place, where its name can be edited

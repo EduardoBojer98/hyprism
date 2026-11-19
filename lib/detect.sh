@@ -245,6 +245,14 @@ nvidia_open_supported() {
     return 0
 }
 
+# True when this computer no longer matches hardware.toml. Screens plugged in come and go (a dock), so they
+# don't count; neither does your [override] section.
+hw_changed() {
+    local now was
+    now=$(detect_hardware | grep -v -e '^#' -e '^$' -e '^external =')
+    was=$(sed '/^\[override\]/,$d' "$HW_FILE" | grep -v -e '^#' -e '^$' -e '^external =')
+    [[ $now != "$was" ]]
+}
 hw_has() {
     local v
     v=$(hw_get "$1")

@@ -8,11 +8,7 @@ doctor_hardware() {
         bad "this computer's hardware was never looked at (no hardware.toml)" "./install.sh detect"
         return 0
     }
-    local now was
-    # screens plugged in come and go (a dock), so they don't count as a hardware change
-    now=$(detect_hardware | grep -v -e '^#' -e '^$' -e '^external =')
-    was=$(sed '/^\[override\]/,$d' "$HW_FILE" | grep -v -e '^#' -e '^$' -e '^external =')
-    [[ $now == "$was" ]] || warn "the hardware changed since it was last looked at (./install.sh detect, then ./install.sh for new modules)"
+    if hw_changed; then warn "the hardware changed since it was last looked at (./install.sh detect, then ./install.sh for new modules)"; fi
 }
 
 # What a working session needs, checked only inside one (a text console or a container has none of it)

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# At login (modules/autostart.lua): when this computer's hardware changed since Hyprism last looked at it (a new
+# graphics card, a battery, a touchscreen), say so once, so the modules that fit can be set up. A change is
+# announced once; the same change isn't announced again at the next login.
+set -euo pipefail
+# this file is linked into ~/.local/bin; the repo is four folders above the real file's folder
+repo=$(cd "$(dirname "$(readlink -f "$0")")/../../../.." && pwd)
+# shellcheck source=lib/detect.sh
+. "$repo/lib/detect.sh"
+[[ -s $HW_FILE ]] && hw_changed || exit 0
+seen=${XDG_STATE_HOME:-$HOME/.local/state}/hyprism/hardware-announced
+now=$(detect_hardware | grep -v -e '^#' -e '^external =' | md5sum)
+[[ $(cat "$seen" 2>/dev/null) == "$now" ]] && exit 0
+mkdir -p "${seen%/*}" && echo "$now" >"$seen"
+notify-send -a Hyprism -i computer "This computer's hardware changed" \
+    "Run hyprism detect, then hyprism, to set up what fits it (hyprism doctor shows what changed)."

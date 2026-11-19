@@ -34,4 +34,5 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("sleep 1 && if [ -x /usr/lib/pam_kwallet_init ]; then /usr/lib/pam_kwallet_init; elif [ -x /usr/libexec/pam_kwallet_init ]; then /usr/libexec/pam_kwallet_init;"
         .. " elif command -v gnome-keyring-daemon >/dev/null; then gnome-keyring-daemon --start --components=secrets; fi")
     hl.exec_cmd("sleep 3 && startup-apps")                  -- ~/.config/autostart, Settings > Startup Apps
+    hl.exec_cmd("sleep 5 && hardware-check")               -- a notice when the hardware changed (~/.local/bin/hardware-check)
 end)
