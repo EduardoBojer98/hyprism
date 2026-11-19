@@ -123,7 +123,7 @@ as desktop-amd './install.sh modules'
 # the list Settings reads: every module, with on/off and why
 json=$(as laptop-hybrid-nvidia 'export HYPRISM_HARDWARE=/tmp/hybrid.toml; ./install.sh detect >/dev/null && ./install.sh modules --json')
 want='{"nvidia-hybrid":[true,true],"dev":[false,false],"quirk-flow-x13":[false,false]}'
-[[ $(jq -c '[.[] | select(.name == "nvidia-hybrid" or .name == "dev" or .name == "quirk-flow-x13") | {(.name): [.on, .detected]}] | add' -S <<<"$json") == $(jq -cS . <<<"$want") ]] || {
+[[ $(jq -c '[.[] | select(.name == "nvidia-hybrid" or .name == "dev" or .name == "quirk-flow-x13") | {(.name): [.on, .detected]}] | add' -S <<<"$json") == "$(jq -cS . <<<"$want")" ]] || {
     echo "xx modules --json: $json"
     exit 1
 }
