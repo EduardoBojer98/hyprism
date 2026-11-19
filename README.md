@@ -32,7 +32,7 @@ Hyprland and a Quickshell shell for Arch, CachyOS and Fedora: one install comman
   `~/.config/quickshell/settings.json`, never in the repo. [docs/settings-reference.md](docs/settings-reference.md)
   lists every key.
 - **Free software only.** No paid apps, trials or subscriptions.
-- **Arch, CachyOS and Fedora 44+.** CI installs on both and tests an update from release 1.1.0.
+- **Arch, CachyOS and Fedora 44+.** CI installs on both and tests an update from the last release.
 
 ## Themes
 

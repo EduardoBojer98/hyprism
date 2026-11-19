@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Update test in a throwaway Arch or Fedora container: a computer set up with the previous release (v1.1.0) is brought to
+# Update test in a throwaway Arch or Fedora container: a computer set up with the previous release (the newest v* tag) is brought to
 # this code with the new installer, the way a user's update does it.
 #
 #   1. the old release installs (its own installer, from a full clone at the tag)
 #   2. that clone is moved to the new code and the new installer runs
-#   3. exit 0; migrations 0001 to 0003 ran, once; the old state folder is gone; no dead link is left in
+#   3. exit 0; every migration the old release didn't have ran, once; the old state folder is gone; no dead link is left in
 #      ~/.config; your settings.json kept what you set; the doctor is clean; a second run runs no migration
 #   4. rollback: after one more (empty) commit, `rollback --yes` returns to the recorded commit, drops previous-commit,
 #      and the doctor is still clean
 #   5. channels: against a remote with main and develop, `channel dev` switches and updates, `update` pulls a
 #      new develop commit (an untracked file in the way of nothing doesn't stop it), `channel stable` goes back
 #
-# Needs the repo's history and the tag v1.1.0 (CI checks out with fetch-depth: 0 and fetch-tags: true).
+# Needs the repo's history and its tags (CI checks out with fetch-depth: 0 and fetch-tags: true). OLD_TAG=v1.1.0
+# picks an older release to update from (docker run -e OLD_TAG=...).
 # A git worktree has no history inside the container: the test says so and passes without running.
 #
 # Run from the repo:  docker run --rm -v "$PWD":/mnt/repo:ro archlinux:latest (or fedora:latest) bash /mnt/repo/tests/update-test.sh [NEW_REF]
@@ -31,8 +32,9 @@ fi
 useradd -m -s /bin/bash tester
 echo 'tester ALL=(ALL) NOPASSWD: ALL' >/etc/sudoers.d/tester
 git config --global --add safe.directory '*'
-git -C /mnt/repo rev-parse --verify -q v1.1.0 >/dev/null || {
-    echo "xx the tag v1.1.0 is missing (git fetch --tags; CI: fetch-tags: true)"
+old_tag=${OLD_TAG:-$(git -C /mnt/repo tag -l 'v*' --sort=-v:refname | head -1)}
+git -C /mnt/repo rev-parse --verify -q "${old_tag:-none}^{commit}" >/dev/null || {
+    echo "xx the release tag '${old_tag}' is missing (git fetch --tags; CI: fetch-tags: true)"
     exit 1
 }
 new_sha=$(git -C /mnt/repo rev-parse --verify "$new_ref^{commit}")
@@ -44,11 +46,12 @@ fail() {
 # as COMMAND [PROFILE]: run as the test user, on that made-up computer when a profile is given
 as() { sudo -u tester -H env ${2:+HYPRISM_ROOT="/opt/fixtures/$2"} bash -c "cd $old && $1"; }
 
-echo "===== OLD RELEASE (v1.1.0)"
+echo "===== OLD RELEASE ($old_tag)"
 mkdir $old && chown tester: $old
 sudo -u tester -H git config --global --add safe.directory '*' # the mounted repo belongs to another user
-as "git clone -q /mnt/repo . && git checkout -q -B main v1.1.0"
-as './install.sh --yes --host default'
+as "git clone -q /mnt/repo . && git checkout -q -B main $old_tag"
+# 1.x installers asked which host the computer was; later ones detect it
+case $old_tag in v1.*) as './install.sh --yes --host default' ;; *) as './install.sh --yes' ;; esac
 
 echo "===== SAME FOLDER, NEW CODE ($new_ref = ${new_sha:0:9})"
 # something you set yourself, which the update must keep
@@ -56,7 +59,11 @@ as 'mkdir -p ~/.config/quickshell && echo "{\"bar\": {\"mine\": \"kept\"}}" > ~/
 as "git remote add new /mnt/repo && git fetch -q new $new_sha && git checkout -q -B main $new_sha"
 bash $old/tests/detect.sh make /opt/fixtures
 as './install.sh --yes' desktop-amd 2>&1 | tee /tmp/update.log || fail "the new installer ended with an error"
-for m in 0001-state-folder 0002-hosts-to-modules 0003-names; do
+# the migrations this update brings: in the new code, not in the old release
+mig() { git -C /mnt/repo ls-tree --name-only "$1" migrations/ | sed -n 's|^migrations/\([0-9]\{4\}-.*\)\.sh$|\1|p'; }
+new_migrations=$(comm -13 <(mig "$old_tag" | sort) <(mig "$new_sha" | sort))
+[[ -n $new_migrations ]] || echo "note: $old_tag already has every migration"
+for m in $new_migrations; do
     [[ $(grep -c "Migration $m" /tmp/update.log) == 1 ]] || fail "migration $m was not named exactly once in the output"
     [[ -e /home/tester/.local/state/hyprism/migrations/$m ]] || fail "migration $m left no record"
 done
@@ -96,4 +103,4 @@ as './install.sh update --yes' desktop-amd || fail "update on dev ended with an 
 [[ $(cat $state/previous-commit) == "$dev" ]] || fail "update did not record the commit before it"
 as './install.sh channel stable --yes' desktop-amd || fail "switching back to stable ended with an error"
 [[ $(as 'git rev-parse --abbrev-ref HEAD')/$(as 'git rev-parse HEAD') == "main/$before" ]] || fail "stable is not main"
-echo "PASSED (update from v1.1.0 to ${new_sha:0:9})"
+echo "PASSED (update from $old_tag to ${new_sha:0:9})"
