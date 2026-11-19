@@ -6,6 +6,13 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Settings previews: a small drawing of your screen on Menu Bar, Dock, Notifications (the OSD) and Hot Corners
+  that follows each pick (place, size, shape, gap, corner actions); a Ghostty window on Terminal with its palette,
+  cursor, blink, background and padding, which types a command to show the typing effect; a timeline on Lock &
+  Sleep of what happens while you're away, plugged in and on battery; the pointer at the picked size on Cursor.
+- Settings search finds single settings, not only pages: results say "Page › Group", and opening one scrolls to
+  the row and flashes it. Ctrl+F focuses search; a narrow window has a search button.
+- Reset to defaults on Lock & Sleep, Keyboard & Touchpad, Window Look and Terminal.
 - Settings > Appearance > Terminal (its own page): theme colours, Ghostty's cursor (shape, blink, an animation), background and padding, live;
   fish's transient prompt and greeting (off, fastfetch, or a random Pokémon in fastfetch's logo slot, 1 in 16 shiny;
   pokemon-colorscripts) for new shells. A picked cursor shape stays at the prompt (Ghostty's shell integration no
@@ -311,6 +318,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- Settings search matched no pages and the Language page's layout list failed (`flatMap` is missing in
+  Quickshell's JavaScript).
+- Settings: cursor size is a choice of four sizes; sliders on Keyboard & Touchpad and Night Light lost their stray
+  icons; Terminal is grouped as Ghostty, Cursor and fish shell; the OSD settings sit with their preview.
 - A tiled Chrome no longer turns floating when another window opens beside it: an app's own maximise request
   moves the window only right after a click, tap or pen touch (the minimize plugin; `hypr-plugins` rebuilds it).
 - The terminal greeting setting works on CachyOS, whose config.fish redefined the greeting after ours.
