@@ -25,8 +25,10 @@ Rectangle {
     color: filled ? (area.containsMouse ? Qt.lighter(Theme.accent, 1.08) : Theme.accent)
                   : (area.containsMouse ? Theme.fillHover : Theme.fill)
     border { color: filled ? "transparent" : Theme.stroke; width: 1 }
-    scale: area.pressed ? Theme.pressScale : 1
+    scale: area.pressed && !feel.shadow ? Theme.pressScale : 1
     Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+    PressFeel { id: feel; pressed: area.pressed }
+    transform: Translate { x: feel.shift; y: feel.shift + feel.drop }
 
     Text {
         id: label

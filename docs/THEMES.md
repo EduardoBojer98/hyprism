@@ -71,6 +71,7 @@ corners, gaps, font and motion and is kept in `settings.json`; there is no build
 | `osd` | `style`: `bar`, `numeral` (a big number over ten blocks) or `ascii` (a mono meter) |
 | `popup` | Panel depth (`soft`, `hard`, `glow`, `none`), decoration, `decorColour` (`accent` or `accent2`: the colour of that decoration), tile style, `segments` (`text` or `accent`: the chosen part of a segmented control) |
 | `motion` | How panels open: `enter` and `exit` in ms, `curve`, `travel`, `scale`, `press` |
+| `feel` | Each theme's signature in full motion: `press` (`scale`; `sink`, a 1 px drop that springs back; `shadow`, the button pushes into a hard block in `accent2`) and `focus` (`ring`, or `reticle`: corner marks that close in) |
 | `launcher`, `notify` | Launcher placement and look; where notifications appear and their shape |
 | `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset, `frame`: `accent`, `gradient` or `rainbow` (the focused window's frame) |
 | `lock` | Lock screen clock style and alignment |

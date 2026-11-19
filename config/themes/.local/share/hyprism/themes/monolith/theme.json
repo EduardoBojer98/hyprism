@@ -132,6 +132,7 @@
     "tiles": "solid",
     "segments": "accent"
   },
+  "feel": {"press": "scale", "focus": "reticle"},
   "motion": {
     "enter": 140,
     "exit": 90,

@@ -42,16 +42,21 @@ Item {
         width: parent.width; height: 2
         color: depth.mark
     }
+    // brackets draw in from each corner as the popup opens (full motion only)
+    readonly property bool shown: visible && (parent?.opacity ?? 1) > 0.01
+    property real arm: Theme.bracketArm
+    onShownChanged: if (shown && over && Theme.moves) draw.restart()
+    NumberAnimation { id: draw; target: depth; property: "arm"; from: 0; to: Theme.bracketArm; duration: Theme.enter; easing.type: Theme.easing }
     Repeater {   // brackets: accent corner marks over the frame
         model: depth.over && Theme.current.popup.decor === "brackets" ? [[0, 0], [1, 0], [0, 1], [1, 1]] : []
         Item {
             id: mark
             required property var modelData
-            width: 14; height: 14
+            width: Theme.bracketArm; height: Theme.bracketArm
             x: modelData[0] ? depth.width - width + 2 : -2
             y: modelData[1] ? depth.height - height + 2 : -2
-            Rectangle { width: parent.width; height: 2; color: depth.mark; y: mark.modelData[1] ? parent.height - 2 : 0 }
-            Rectangle { width: 2; height: parent.height; color: depth.mark; x: mark.modelData[0] ? parent.width - 2 : 0 }
+            Rectangle { width: depth.arm; height: 2; color: depth.mark; x: mark.modelData[0] ? parent.width - width : 0; y: mark.modelData[1] ? parent.height - 2 : 0 }
+            Rectangle { width: 2; height: depth.arm; color: depth.mark; x: mark.modelData[0] ? parent.width - 2 : 0; y: mark.modelData[1] ? parent.height - height : 0 }
         }
     }
 }

@@ -124,6 +124,7 @@
     "decor": "",
     "tiles": "solid"
   },
+  "feel": {"press": "shadow", "focus": "ring"},
   "motion": {
     "enter": 200,
     "exit": 110,

@@ -6,6 +6,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- A signature feel per theme (theme.json `feel`), full motion only: Poster's buttons push into their hard
+  shadow, Pebble's sink and spring back and its panels land with a small overshoot, Monolith's focus is a reticle that
+  closes in and its popup brackets draw in from the corners.
 - Settings previews: a small drawing of your screen on Menu Bar, Dock, Notifications (the OSD) and Hot Corners
   that follows each pick (place, size, shape, gap, corner actions); a Ghostty window on Terminal with its palette,
   cursor, blink, background and padding, which types a command to show the typing effect; a timeline on Lock &

@@ -126,13 +126,14 @@
     "decor": "",
     "tiles": "wash"
   },
+  "feel": {"press": "sink", "focus": "ring"},
   "motion": {
     "enter": 220,
     "exit": 140,
     "curve": [
-      0.22,
-      1,
-      0.36,
+      0.34,
+      1.22,
+      0.64,
       1
     ],
     "travel": 6,

@@ -259,11 +259,17 @@ Singleton {
     readonly property int travel: moves ? m.travel : 0
     readonly property real startScale: moves ? m.scale : 1
     readonly property real pressScale: moves ? m.press : 1
+    // theme.json feel, drawn by PressFeel and FocusRing: how a button press answers ("scale"; "sink", a 1 px drop that
+    // springs back; "shadow", Poster's push into its hard shadow) and how keyboard focus is drawn ("ring", or
+    // Monolith's corner "reticle"). Reduced motion keeps the plain press.
+    readonly property string pressStyle: moves ? (current.feel?.press ?? "scale") : "scale"
+    readonly property string focusStyle: current.feel?.focus ?? "ring"
     readonly property string hyprMotion: moves ? m.hypr : motionLevel === "reduced" ? "minimal" : "off"
     // small state changes (hover, colour, a toggle): short and the same feel everywhere
     readonly property int animFast: animate ? Math.min(120, Math.max(60, m.enter / 2)) : 0
     readonly property int anim: animate ? Math.min(220, m.enter) : 0
     readonly property int easing: Easing.OutCubic
+    readonly property int bracketArm: 14                 // a popup corner bracket (PopupDepth); FocusRing's reticle is half
     // a live thing breathing (recording, an app starting, weather loading): a fade, so it stays in reduced motion
     readonly property int pulse: 700
     readonly property int blink: 530                     // the text cursor
