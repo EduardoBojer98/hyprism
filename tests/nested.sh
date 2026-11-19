@@ -128,12 +128,16 @@ case ${1:-} in
             echo "linking failed: $T/install.log" >&2
             exit 1
         }
+        # the private bus must not start a document portal: it would unmount $run/doc and kill the real one
+        mkdir -p "$T/dbus-services"
+        printf '[D-BUS Service]\nName=org.freedesktop.portal.Documents\nExec=/bin/false\n' >"$T/dbus-services/org.freedesktop.portal.Documents.service"
+        printf '<busconfig>\n  <servicedir>%s/dbus-services</servicedir>\n  <include>/usr/share/dbus-1/session.conf</include>\n</busconfig>\n' "$T" >"$T/dbus.conf"
         # compositor sockets (wayland-N) and Hyprland instance folders that exist now; the new ones are ours
         seen() { find "$run" -maxdepth 2 \( -name 'wayland-[0-9]*' ! -name '*.lock' -o -path "$run/hypr/*" \) -prune -printf '%p\n' 2>/dev/null | sort; }
         before=$(seen)
         env HOME="$T" XDG_CONFIG_HOME="$T/.config" XDG_STATE_HOME="$T/.local/state" XDG_DATA_HOME="$T/.local/share" XDG_CACHE_HOME="$T/.cache" \
             PATH="$T/shims:$T/.local/bin:$PATH" HYPRISM_TEST=1 GSETTINGS_BACKEND=memory HYPRISM_LIB="$T/.local/lib/hyprism" \
-            setsid dbus-run-session -- Hyprland -c "$T/.config/hypr/hyprland.lua" >"$T/hyprland.log" 2>&1 &
+            setsid dbus-run-session --config-file="$T/dbus.conf" -- Hyprland -c "$T/.config/hypr/hyprland.lua" >"$T/hyprland.log" 2>&1 &
         echo $! >"$state/pid"
         SIG="" SOCK=""
         for _ in $(seq 40); do
