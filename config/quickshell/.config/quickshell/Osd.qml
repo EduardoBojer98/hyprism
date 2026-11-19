@@ -106,7 +106,7 @@ PanelWindow {
         radius: Math.min(height / 2, Theme.radiusLarge)
         strong: true
         opacity: hideTimer.running ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: hideTimer.running ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: hideTimer.running ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
 
         Text {
             id: glyph
@@ -147,7 +147,7 @@ PanelWindow {
                 height: parent.height
                 radius: parent.radius
                 color: Theme.accent
-                transform: Scale { xScale: Math.max(0, Math.min(1, osd.value)); Behavior on xScale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } } }
+                transform: Scale { xScale: Math.max(0, Math.min(1, osd.value)); Behavior on xScale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } } }
             }
         }
     }

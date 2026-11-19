@@ -67,7 +67,7 @@ Item {
         anchors.verticalCenterOffset: dock.vertical ? 0 : -3 * dock.sign
         property real raise: dock.hoverStyle === "lift" && winArea.containsMouse && Theme.moves ? -5 * dock.sign : 0
         transform: Translate { x: dock.vertical ? frame.raise : 0; y: dock.vertical ? 0 : frame.raise }
-        Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+        Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
         height: win.nameOnly ? (dock.vertical ? win.height - 6 : Math.round(dock.iconSize * 0.66))
               : dock.vertical ? Math.min(win.height - 6, (dock.iconSize - 4) / win.aspect) : Math.min(boxH, (win.width - 6) / win.aspect)
         width: win.nameOnly ? (dock.vertical ? Math.round(dock.iconSize * 0.66) : win.width - 6) : height * win.aspect
@@ -77,7 +77,7 @@ Item {
         opacity: win.minimised ? 0.55 : 1
         transformOrigin: dock.edgeOrigin
         scale: winArea.pressed ? Theme.pressScale : dock.hoverStyle === "grow" && winArea.containsMouse && Theme.moves ? 1.1 : 1
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         clip: true
 
         ScreencopyView {

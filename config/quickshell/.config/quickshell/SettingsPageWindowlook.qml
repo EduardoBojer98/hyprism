@@ -225,7 +225,7 @@ ColumnLayout {
                         required property int index
                         width: 14; height: 14; radius: 7
                         color: index === 0 ? "#ff5f57" : "#868b92"   // palette: plugins.lua's button discs
-                        Text { anchors.centerIn: parent; text: parent.modelData; color: "#1e1e1e"; font { family: Theme.font; pixelSize: 9 } }   // palette
+                        Text { anchors.centerIn: parent; text: parent.modelData; color: "#1e1e1e"; font { family: Theme.font; pixelSize: Theme.fontBadge } }   // palette
                     }
                 }
             }

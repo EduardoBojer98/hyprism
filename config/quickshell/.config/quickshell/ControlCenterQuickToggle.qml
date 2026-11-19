@@ -10,6 +10,7 @@ Rectangle {
     property var host: null   // the panel's PanelState, for the tooltip
     property string glyph
     property string label
+    property int labelSize: Theme.fontCaption   // the grid sets one size for all its tiles
     property string status
     property string hint
     property bool active: false
@@ -40,7 +41,7 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qt.glyph
             color: qt.active ? Theme.ccIconOn : Theme.text
-            font { family: Theme.iconFont; pixelSize: 19 }
+            font { family: Theme.iconFont; pixelSize: Theme.glyphL }
             Behavior on color { ColorAnimation { duration: Theme.anim } }
         }
         Text {
@@ -48,10 +49,8 @@ Rectangle {
             horizontalAlignment: Text.AlignHCenter
             text: qt.label
             elide: Text.ElideRight
-            fontSizeMode: Text.HorizontalFit   // wide faces (mono) shrink a little before they cut a word
-            minimumPixelSize: Theme.fontCaption - 2
             color: qt.active ? Theme.ccOnText : Theme.text
-            font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+            font { family: Theme.font; pixelSize: qt.labelSize; weight: Font.DemiBold }
         }
     }
     MouseArea {

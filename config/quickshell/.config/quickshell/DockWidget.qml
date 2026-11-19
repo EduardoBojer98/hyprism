@@ -37,9 +37,9 @@ Item {
         // hover like an app icon: lift (off the edge) or grow (from the edge); press: a small give
         property real raise: dock.hoverStyle === "lift" && lit && Theme.moves ? -6 * dock.sign : 0
         transform: Translate { x: dock.vertical ? tile.raise : 0; y: dock.vertical ? 0 : tile.raise }
-        Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+        Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
         scale: area.pressed ? Theme.pressScale : dock.hoverStyle === "grow" && tile.lit && Theme.moves ? 1.14 : 1
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         Behavior on color { ColorAnimation { duration: Theme.anim } }
 
         Rectangle {   // top sheen, like the launcher tile on glass
@@ -116,7 +116,7 @@ Item {
         anchors.centerIn: parent
         width: Math.round(w.s * 0.8); height: width
         preferredRendererType: Shape.CurveRenderer
-        Behavior on value { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+        Behavior on value { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
         ShapePath {
             strokeColor: Qt.alpha(dock.ink, 0.14); strokeWidth: ring.thick; fillColor: "transparent"
             PathAngleArc { centerX: ring.width / 2; centerY: ring.height / 2; radiusX: (ring.width - ring.thick) / 2; radiusY: radiusX; startAngle: 0; sweepAngle: 360 }

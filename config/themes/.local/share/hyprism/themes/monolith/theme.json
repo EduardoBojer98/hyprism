@@ -129,7 +129,8 @@
     "depth": "glow",
     "decor": "brackets",
     "decorColour": "accent2",
-    "tiles": "solid"
+    "tiles": "solid",
+    "segments": "accent"
   },
   "motion": {
     "enter": 140,

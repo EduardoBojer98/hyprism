@@ -46,11 +46,11 @@ PanelWindow {
         border { width: 2; color: Qt.alpha(Theme.accent, 0.7) }
         opacity: root.open ? 1 : 0
         scale: root.open || !Theme.moves ? 1 : 0.97
-        Behavior on opacity { NumberAnimation { duration: root.open ? Theme.animFast : Theme.exit; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-        Behavior on x { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
-        Behavior on y { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
-        Behavior on width { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
-        Behavior on height { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.open ? Theme.animFast : Theme.exit; easing.type: Theme.easing } }
+        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+        Behavior on x { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+        Behavior on y { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+        Behavior on width { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+        Behavior on height { enabled: box.grow && Theme.moves; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     }
 }

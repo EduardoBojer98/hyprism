@@ -34,7 +34,7 @@ PanelWindow {
         radius: Math.min(height / 2, Theme.radiusLarge)
         strong: true
         opacity: toast.open ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: toast.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: toast.open ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
 
         RowLayout {
             anchors { fill: parent; leftMargin: Theme.spaceL; rightMargin: Theme.spaceM }

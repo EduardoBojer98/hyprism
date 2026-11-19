@@ -124,7 +124,7 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         highlightMoveDuration: Theme.animFast
         // the filtered set settles in place instead of jumping
-        displaced: Transition { NumberAnimation { properties: "x,y"; duration: Theme.enter; easing.type: Easing.OutCubic } }
+        displaced: Transition { NumberAnimation { properties: "x,y"; duration: Theme.enter; easing.type: Theme.easing } }
         delegate: Item {
             id: cell
             required property var modelData
@@ -134,15 +134,15 @@ Item {
             z: cellArea.containsMouse ? 1 : 0
             // Launchpad's wave: each icon fades and grows in, a few ms after the one before it
             opacity: 1
-            Component.onCompleted: if (apps.pad && apps.wave && Theme.enter > 0) arrive.start()
+            Component.onCompleted: if (apps.pad && apps.wave && Theme.moves) arrive.start()
             SequentialAnimation {
                 id: arrive
                 PropertyAction { target: cell; property: "opacity"; value: 0 }
-                PropertyAction { target: appIcon; property: "scale"; value: 0.6 }
-                PauseAnimation { duration: Math.min(cell.index, 30) * 9 }
+                PropertyAction { target: appIcon; property: "scale"; value: Theme.popFrom }
+                PauseAnimation { duration: Math.min(cell.index, 30) * Theme.stagger }
                 ParallelAnimation {
-                    NumberAnimation { target: cell; property: "opacity"; to: 1; duration: 200; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: appIcon; property: "scale"; to: 1; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+                    NumberAnimation { target: cell; property: "opacity"; to: 1; duration: Theme.popFade; easing.type: Theme.easing }
+                    NumberAnimation { target: appIcon; property: "scale"; to: 1; duration: Theme.pop; easing.type: Easing.OutBack; easing.overshoot: Theme.popOvershoot }
                 }
             }
             Rectangle {   // Launchpad: a soft light under the current icon, no box
@@ -167,7 +167,7 @@ Item {
                 source: Quickshell.iconPath(cell.modelData.icon, "application-x-executable")
                 // Launchpad lifts the current icon a little (the wave sets scale itself while it plays)
                 property real lift: apps.pad && cell.lit ? 1.08 : 1
-                Behavior on lift { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+                Behavior on lift { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
                 transform: Scale { origin.x: appIcon.width / 2; origin.y: appIcon.height / 2; xScale: appIcon.lift; yScale: appIcon.lift }
             }
             Text {

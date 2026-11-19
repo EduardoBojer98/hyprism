@@ -255,7 +255,7 @@ Item {
         z: 20
         visible: opacity > 0 || (pad.drag !== null && pad.drag.from >= 0)   // the held app's cell lives here: keep it
         opacity: pad.folder ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: pad.folder ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: pad.folder ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
         property var shown: null              // the folder drawn, kept while it fades out
         Connections { target: pad; function onFolderChanged() { if (pad.folder) { folderLayer.shown = pad.folder; nameField.text = pad.folder.folder } } }
         Rectangle { anchors.fill: parent; color: "black"; opacity: 0.5 }   // palette: dims the pages behind
@@ -273,7 +273,7 @@ Item {
             color: Qt.rgba(0.17, 0.17, 0.19, 0.96)   // palette: a dark sheet on the dark scrim (no blur under it)
             border { width: 1; color: Qt.rgba(1, 1, 1, 0.10) }
             scale: pad.folder || !Theme.moves ? 1 : 0.92
-            Behavior on scale { NumberAnimation { duration: Theme.enter; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Theme.enter; easing.type: Theme.easing } }
             MouseArea { anchors.fill: parent; Accessible.ignored: true }   // a click on the sheet keeps it open
             TextInput {
                 id: nameField

@@ -43,7 +43,7 @@ Item {
             anchors.centerIn: parent
             text: bar.icon
             color: bar.v > 0 ? Theme.text : Theme.subtext
-            font { family: Theme.iconFont; pixelSize: 16 }
+            font { family: Theme.iconFont; pixelSize: Theme.glyph }
         }
         MouseArea {
             id: wellArea

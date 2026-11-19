@@ -58,7 +58,7 @@ Rectangle {
             anchors.centerIn: parent
             text: conn.glyph
             color: conn.active ? Theme.accentText : Theme.text
-            font { family: Theme.iconFont; pixelSize: 17 }
+            font { family: Theme.iconFont; pixelSize: Theme.glyph }
             Behavior on color { ColorAnimation { duration: Theme.anim } }
         }
         MouseArea { id: discArea; Accessible.role: Accessible.Button; Accessible.name: (conn.active ? "Turn off " : "Turn on ") + conn.title; Accessible.onPressAction: conn.toggled(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }

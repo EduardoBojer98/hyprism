@@ -39,7 +39,7 @@ ColumnLayout {
                 visible: !(Sys.player?.trackArtUrl)
                 text: "\u{F075A}"
                 color: Theme.subtext
-                font { family: Theme.iconFont; pixelSize: 20 }
+                font { family: Theme.iconFont; pixelSize: Theme.glyphL }
             }
         }
         Column {

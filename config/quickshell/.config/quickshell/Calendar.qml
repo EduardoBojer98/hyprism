@@ -374,7 +374,7 @@ Singleton {
         Item {
             width: 12; height: 18
             Rectangle { visible: !event.glyph; anchors.centerIn: parent; width: 8; height: 8; radius: 4; color: root.tone(event.kind) }
-            Text { visible: !!event.glyph; anchors.centerIn: parent; text: event.glyph ?? ""; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: 12 } }
+            Text { visible: !!event.glyph; anchors.centerIn: parent; text: event.glyph ?? ""; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: Theme.glyphXs } }
         }
         Text {
             width: parent.width - 20 - (dateText.visible ? dateText.implicitWidth + 8 : 0)

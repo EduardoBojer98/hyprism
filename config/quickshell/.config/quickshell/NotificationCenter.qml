@@ -100,7 +100,7 @@ Singleton {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: Notifications.dnd ? "\u{F009B}" : "\u{F009E}"
                         color: Theme.muted
-                        font { family: Theme.iconFont; pixelSize: 34 }
+                        font { family: Theme.iconFont; pixelSize: Theme.iconLarge }
                     }
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter

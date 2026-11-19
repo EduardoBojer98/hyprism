@@ -39,5 +39,17 @@ if [[ -n $distro ]]; then
     fail=1
 fi
 
-((fail == 0)) && echo "ok: no hardware names and no distro commands in core"
+# Styling comes from the tokens (Theme.qml, docs/DESIGN.md): no literal animation times, no OutCubic outside the
+# tokens, no literal font or glyph sizes. A line marked "one-off" (a single giant glyph) or "palette" may.
+# MotionPreview's PauseAnimations script its demo loop, they are not motion.
+qml=config/quickshell/.config/quickshell
+style=$(grep -nE '(Number|Color|Rotation)Animation[^}]*duration:[[:space:]]*[0-9]|PauseAnimation[[:space:]]*\{[[:space:]]*duration:[[:space:]]*[0-9]|Easing\.OutCubic|pixelSize:[[:space:]]*[0-9]' "$qml"/*.qml |
+    grep -v "^$qml/Theme.qml:" | grep -vE 'one-off|palette' | grep -vE "^$qml/MotionPreview.qml:.*PauseAnimation" || true)
+if [[ -n $style ]]; then
+    echo "xx literal durations, easings or sizes in the shell (use the Theme.qml tokens: anim, pulse, glyph, font...):"
+    cut -c1-170 <<<"${style//$qml\//}" | awk '{ print "   " $0 }'
+    fail=1
+fi
+
+((fail == 0)) && echo "ok: no hardware names, no distro commands in core, no literal styling in the shell"
 exit "$fail"

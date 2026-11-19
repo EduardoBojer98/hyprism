@@ -198,7 +198,7 @@ Scope {
             readonly property bool keyed: !popup.anchorRect
             Behavior on t { NumberAnimation { duration: box.keyed ? (popup.open ? Math.min(Theme.enter, 150) : Math.min(Theme.exit, 110))
                                                         : popup.open ? Theme.enter : Theme.exit
-                                              easing.type: popup.open ? Easing.BezierSpline : Easing.OutCubic
+                                              easing.type: popup.open ? Easing.BezierSpline : Theme.easing
                                               easing.bezierCurve: Theme.curve } }
             opacity: Math.min(1, t * 1.6)
             readonly property real off: keyed ? 0 : (1 - t) * Theme.travel

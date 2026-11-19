@@ -37,6 +37,6 @@ Rectangle {
     color: style === "ring" ? "transparent" : tone
     border.width: style === "ring" ? Math.max(1.5, thick * 0.3) : 0
     border.color: tone
-    Behavior on width { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
-    Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+    Behavior on width { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+    Behavior on height { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 }

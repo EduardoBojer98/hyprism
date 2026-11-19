@@ -92,7 +92,7 @@ ColumnLayout {
                 anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
                 text: "\u{F0349}"
                 color: Theme.subtext
-                font { family: Theme.iconFont; pixelSize: 16 }
+                font { family: Theme.iconFont; pixelSize: Theme.glyph }
             }
             TextInput {
                 id: search
@@ -144,7 +144,7 @@ ColumnLayout {
                         anchors.verticalCenter: parent.verticalCenter
                         text: chip.modelData.glyph
                         color: chip.active ? Theme.accentText : Theme.subtext
-                        font { family: Theme.iconFont; pixelSize: 15 }
+                        font { family: Theme.iconFont; pixelSize: Theme.glyphS }
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter

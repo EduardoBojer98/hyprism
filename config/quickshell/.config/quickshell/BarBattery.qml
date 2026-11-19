@@ -41,7 +41,7 @@ Grid {
                 anchors.centerIn: parent
                 text: Sys.batteryPct
                 color: Sys.batteryLow ? Theme.error : bat.tone
-                font { family: bat.family; pixelSize: 10; weight: Font.Bold; features: { "tnum": 1 } }
+                font { family: bat.family; pixelSize: Theme.fontBadge + 1; weight: Font.Bold; features: { "tnum": 1 } }
             }
         }
         Rectangle { anchors { left: cell.right; leftMargin: 1; verticalCenter: cell.verticalCenter } width: 2; height: 4; radius: 1; color: Qt.alpha(bat.tone, 0.5) }

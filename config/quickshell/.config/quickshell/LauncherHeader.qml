@@ -43,9 +43,9 @@ Item {
                     loops: Animation.Infinite
                     onRunningChanged: if (!running) parent.opacity = 1
                     PropertyAction { value: 1 }
-                    PauseAnimation { duration: 530 }
+                    PauseAnimation { duration: Theme.blink }
                     PropertyAction { value: 0 }
-                    PauseAnimation { duration: 530 }
+                    PauseAnimation { duration: Theme.blink }
                 }
             }
             font {

@@ -39,7 +39,7 @@ BarItem {
         visible: !ind.asWords && ind.shownGlyph !== ""
         text: ind.shownGlyph
         color: ind.dimLabel && ind.alarm === 0 ? ind.bar.dim : ind.ink
-        font { family: Theme.iconFont; pixelSize: 16 }
+        font { family: Theme.iconFont; pixelSize: Theme.glyph }
     }
     Text {   // dimLabels: the word on its own, one mono cell before the value
         visible: ind.dimLabel && ind.asWords && ind.word !== ""

@@ -169,7 +169,7 @@ Glass {
         width: 22; height: 22; radius: 11
         visible: (card.hovered || card.activeFocus) && (card.banner || card.stacked === 0)
         color: closeArea.containsMouse ? Theme.fillActive : Theme.fillHover
-        Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 12 } }
+        Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: Theme.glyphXs } }
         MouseArea {
             id: closeArea
             Accessible.role: Accessible.Button

@@ -19,15 +19,15 @@ Item {
     onCurrentChanged: if (current) pad.currentItem = cell
     opacity: held ? 0.25 : 1
     Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-    Component.onCompleted: if (pad.wave && Theme.enter > 0 && order < 40) arrive.start()
+    Component.onCompleted: if (pad.wave && Theme.moves && order < 40) arrive.start()
     SequentialAnimation {
         id: arrive
         PropertyAction { target: tile; property: "opacity"; value: 0 }
-        PropertyAction { target: tile; property: "scale"; value: 0.6 }
-        PauseAnimation { duration: cell.order * 9 }
+        PropertyAction { target: tile; property: "scale"; value: Theme.popFrom }
+        PauseAnimation { duration: cell.order * Theme.stagger }
         ParallelAnimation {
-            NumberAnimation { target: tile; property: "opacity"; to: 1; duration: 200; easing.type: Easing.OutCubic }
-            NumberAnimation { target: tile; property: "scale"; to: 1; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+            NumberAnimation { target: tile; property: "opacity"; to: 1; duration: Theme.popFade; easing.type: Theme.easing }
+            NumberAnimation { target: tile; property: "scale"; to: 1; duration: Theme.pop; easing.type: Easing.OutBack; easing.overshoot: Theme.popOvershoot }
         }
     }
     Item {
@@ -36,7 +36,7 @@ Item {
         width: pad.icon; height: pad.icon
         // lifts a little under the pointer or the keys, more when something is dropped on it
         property real lift: cell.target ? 1.16 : cell.lit ? 1.08 : 1
-        Behavior on lift { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+        Behavior on lift { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         transform: Scale { origin.x: tile.width / 2; origin.y: tile.height / 2; xScale: tile.lift; yScale: tile.lift }
         Rectangle {   // a soft light under the current icon, a ring when it will take the dropped app
             anchors.centerIn: parent

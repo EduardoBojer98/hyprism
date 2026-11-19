@@ -271,10 +271,10 @@ Singleton {
             add: Transition { ParallelAnimation {
                 NumberAnimation { property: "y"; from: (root.corner.startsWith("bottom") ? 1 : -1) * Theme.travel; duration: Theme.enter
                                   easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve }
-                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Theme.easing }
             } }
             remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.exit } }
-            displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Easing.OutCubic } }
+            displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Theme.easing } }
 
             delegate: NotificationCard {
                 id: banner

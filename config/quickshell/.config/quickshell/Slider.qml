@@ -59,7 +59,7 @@ Item {
         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
         text: slider.icon
         color: slider.v > 0.08 ? Theme.onSelected : Theme.text   // on the fill once the fill reaches it
-        font { family: Theme.iconFont; pixelSize: 15 }
+        font { family: Theme.iconFont; pixelSize: Theme.glyphS }
         MouseArea { anchors { fill: parent; margins: -6 } onClicked: slider.iconClicked() }
     }
 

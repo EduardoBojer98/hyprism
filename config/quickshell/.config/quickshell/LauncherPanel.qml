@@ -16,7 +16,7 @@ Glass {
     visible: Launcher.view !== "search" || Launcher.field.text.trim() !== ""
     // a new view (suggestions, results, apps, clipboard) fades in instead of snapping; typing alone doesn't replay it
     Connections { target: Launcher; function onViewChanged() { if (Launcher.open) swap.restart() } }
-    NumberAnimation { id: swap; targets: [homeFlick, clipView, apps, resultsView]; property: "opacity"; from: 0.25; to: 1; duration: Theme.anim; easing.type: Easing.OutCubic }
+    NumberAnimation { id: swap; targets: [homeFlick, clipView, apps, resultsView]; property: "opacity"; from: 0.25; to: 1; duration: Theme.anim; easing.type: Theme.easing }
     // as tall as its content, never past the dock (the home view scrolls then); a style with `fill` keeps one height
     readonly property real natural: keys.height + (Launcher.view === "home" ? home.implicitHeight + Theme.spaceM * 2
           : Launcher.view === "apps" || Launcher.view === "clip" ? 460

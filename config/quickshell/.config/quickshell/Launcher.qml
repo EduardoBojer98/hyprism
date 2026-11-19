@@ -282,7 +282,7 @@ Singleton {
             anchors.fill: parent
             visible: opacity > 0
             opacity: QuickLook.inLauncher ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: QuickLook.inLauncher ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: QuickLook.inLauncher ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
             Rectangle { anchors.fill: parent; color: "black"; opacity: 0.35 }   // palette: a scrim, the same in every theme
             MouseArea { Accessible.ignored: true; anchors.fill: parent; enabled: QuickLook.inLauncher; onClicked: QuickLook.close() }   // click beside it: Esc does the same
             QuickLookView {
@@ -292,7 +292,7 @@ Singleton {
                 anchors.centerIn: parent
                 path: QuickLook.inLauncher ? QuickLook.path : ""
                 scale: QuickLook.inLauncher || !Theme.moves ? 1 : 0.96
-                Behavior on scale { NumberAnimation { duration: Theme.enter; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: Theme.enter; easing.type: Theme.easing } }
                 MouseArea { Accessible.ignored: true; anchors.fill: parent; z: -1 }   // clicks on the sheet don't close it
             }
         }

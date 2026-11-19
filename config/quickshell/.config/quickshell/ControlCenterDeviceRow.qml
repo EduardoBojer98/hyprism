@@ -32,7 +32,7 @@ Rectangle {
             anchors.centerIn: parent
             text: dr.glyph
             color: dr.selected ? Theme.accentText : Theme.text
-            font { family: Theme.iconFont; pixelSize: 14 }
+            font { family: Theme.iconFont; pixelSize: Theme.glyphS }
         }
     }
     Column {
@@ -73,7 +73,7 @@ Rectangle {
             anchors { right: parent.right; verticalCenter: parent.verticalCenter }
             text: dr.selected ? "\u{F012C}" : dr.trailingGlyph
             color: dr.selected ? Theme.accent : Theme.muted
-            font { family: Theme.iconFont; pixelSize: 14 }
+            font { family: Theme.iconFont; pixelSize: Theme.glyphS }
         }
     }
     MouseArea { id: drArea; Accessible.role: Accessible.Button; Accessible.name: dr.title; Accessible.onPressAction: dr.clicked(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: dr.clicked() }

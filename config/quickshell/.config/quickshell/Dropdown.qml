@@ -93,8 +93,8 @@ Item {
             color: Theme.menu
             opacity: dd.open ? 1 : 0
             // drops out of the field, the theme's way, never more than a few px
-            transform: Translate { y: dd.open ? 0 : -Math.min(6, Theme.travel); Behavior on y { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } } }
-            Behavior on opacity { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+            transform: Translate { y: dd.open ? 0 : -Math.min(6, Theme.travel); Behavior on y { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Theme.easing } } }
+            Behavior on opacity { NumberAnimation { duration: dd.open ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
             border { color: Theme.stroke; width: Theme.line }
             PopupDepth { id: depthUnder; anchors.fill: parent; z: -1; radius: box.radius }
             PopupDepth { anchors.fill: parent; z: 10; over: true }

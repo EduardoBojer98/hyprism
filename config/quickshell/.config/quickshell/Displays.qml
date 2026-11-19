@@ -259,7 +259,7 @@ Singleton {
                 radius: Theme.radiusPanel
                 Column {
                     anchors.centerIn: parent
-                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData ? root.numberOf(modelData.name) : ""; color: Theme.text; font { family: Theme.font; pixelSize: 160; weight: Font.Bold } }
+                    Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData ? root.numberOf(modelData.name) : ""; color: Theme.text; font { family: Theme.font; pixelSize: 160; weight: Font.Bold } }   // one-off: the screen number fills the identify card
                     Text { anchors.horizontalCenter: parent.horizontalCenter; text: modelData?.name ?? ""; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontSize } }
                 }
             }

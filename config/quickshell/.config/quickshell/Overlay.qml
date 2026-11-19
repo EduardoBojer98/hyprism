@@ -44,7 +44,7 @@ Scope {
             anchors.fill: parent
             opacity: overlay.open ? 1 : 0
             // in on the look's enter time, out faster; the card grows from the look's start scale (a modal: from its centre)
-            Behavior on opacity { NumberAnimation { duration: overlay.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: overlay.open ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
             focus: overlay.open
 
             Keys.onPressed: event => {
@@ -66,7 +66,7 @@ Scope {
                 radius: Theme.radiusPanel
                 scale: overlay.open ? 1 : Theme.startScale
                 Behavior on scale { NumberAnimation { duration: overlay.open ? Theme.enter : Theme.exit
-                                                      easing.type: overlay.open ? Easing.BezierSpline : Easing.OutCubic; easing.bezierCurve: Theme.curve } }
+                                                      easing.type: overlay.open ? Easing.BezierSpline : Theme.easing; easing.bezierCurve: Theme.curve } }
                 MouseArea { anchors.fill: parent; z: -1 }   // clicks on the card don't close it
             }
         }

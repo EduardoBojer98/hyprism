@@ -117,7 +117,7 @@ ColumnLayout {
                             anchors.centerIn: parent
                             text: BarItems.info(parent.modelData).glyph
                             color: parent.picked ? Theme.accent : Qt.alpha(ed.ink, 0.8)
-                            font { family: Theme.iconFont; pixelSize: 15 }
+                            font { family: Theme.iconFont; pixelSize: Theme.glyphS }
                         }
                         Rectangle {
                             visible: parent.picked
@@ -342,7 +342,7 @@ ColumnLayout {
                 anchors { left: parent.left; leftMargin: 4; verticalCenter: parent.verticalCenter }
                 text: "\u{F01DD}"
                 color: Qt.alpha(Theme.text, chip.over ? 0.5 : 0.28)
-                font { family: Theme.iconFont; pixelSize: 14 }
+                font { family: Theme.iconFont; pixelSize: Theme.glyphS }
             }
             Text {
                 id: glyph
@@ -353,7 +353,7 @@ ColumnLayout {
                 text: chip.info.glyph
                 color: chip.picked ? Theme.accent : Theme.text
                 opacity: chip.hiddenItem ? 0.4 : 1
-                font { family: Theme.iconFont; pixelSize: 15 }
+                font { family: Theme.iconFont; pixelSize: Theme.glyphS }
             }
             Text {
                 visible: chip.onBar
@@ -374,7 +374,7 @@ ColumnLayout {
                     anchors.centerIn: parent
                     text: chip.hiddenItem ? "\u{F0209}" : "\u{F0208}"   // eye-off / eye
                     color: eyeArea.containsMouse || chip.hiddenItem ? Theme.text : Theme.subtext
-                    font { family: Theme.iconFont; pixelSize: 14 }
+                    font { family: Theme.iconFont; pixelSize: Theme.glyphS }
                 }
                 MouseArea {
                     id: eyeArea
@@ -398,7 +398,7 @@ ColumnLayout {
                     anchors.centerIn: parent
                     text: "\u{F0156}"
                     color: crossArea.containsMouse ? Theme.error : Theme.subtext
-                    font { family: Theme.iconFont; pixelSize: 13 }
+                    font { family: Theme.iconFont; pixelSize: Theme.glyphS }
                 }
                 MouseArea {
                     id: crossArea
@@ -417,8 +417,8 @@ ColumnLayout {
                 visible: !chip.onBar
                 anchors.centerIn: parent
                 spacing: 6
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "\u{F0415}"; color: Theme.accent; font { family: Theme.iconFont; pixelSize: 13 } }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: chip.info.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: 14 } }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: "\u{F0415}"; color: Theme.accent; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: chip.info.glyph; color: Theme.text; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
                 Text { anchors.verticalCenter: parent.verticalCenter; text: chip.info.name; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
             }
         }

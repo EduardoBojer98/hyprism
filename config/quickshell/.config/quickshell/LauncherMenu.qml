@@ -34,8 +34,8 @@ Item {
         transformOrigin: Item.TopLeft
         ParallelAnimation {
             id: menuIn
-            NumberAnimation { target: menuCard; property: "opacity"; from: 0; to: 1; duration: Math.min(Theme.enter, 160); easing.type: Easing.OutCubic }
-            NumberAnimation { target: menuCard; property: "scale"; from: Theme.moves ? 0.95 : 1; to: 1; duration: Math.min(Theme.enter, 160); easing.type: Easing.OutCubic }
+            NumberAnimation { target: menuCard; property: "opacity"; from: 0; to: 1; duration: Math.min(Theme.enter, 160); easing.type: Theme.easing }
+            NumberAnimation { target: menuCard; property: "scale"; from: Theme.moves ? 0.95 : 1; to: 1; duration: Math.min(Theme.enter, 160); easing.type: Theme.easing }
         }
         Accessible.role: Accessible.PopupMenu
         Accessible.name: (root.entry?.name ?? "") + " menu"

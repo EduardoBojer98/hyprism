@@ -228,7 +228,7 @@ ColumnLayout {
             hint: "A Nerd Font glyph, pasted in (nerdfonts.com/cheat-sheet)"
             RowLayout {
                 spacing: Theme.spaceS
-                Text { text: iconField.text || "\u{F018D}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 20 } }
+                Text { text: iconField.text || "\u{F018D}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: Theme.glyphL } }
                 TextField { id: iconField; width: 80; placeholder: "glyph" }
             }
         }

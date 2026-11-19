@@ -195,7 +195,7 @@ PanelWindow {
         property real hide: root.shown ? 0 : (across + root.lift + 4) * root.sign
         transform: Translate { x: root.vertical ? island.hide : 0; y: root.vertical ? 0 : island.hide }
         opacity: root.shown ? 1 : 0
-        Behavior on hide { NumberAnimation { duration: root.shown ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+        Behavior on hide { NumberAnimation { duration: root.shown ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
         Behavior on opacity { NumberAnimation { duration: root.shown ? Theme.anim : Theme.exit } }
 
         readonly property int pad: Theme.dockPad

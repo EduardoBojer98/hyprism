@@ -32,7 +32,7 @@ Item {
         color: launcherTile.lit ? Qt.alpha(dock.ink, 0.17) : Qt.alpha(dock.ink, 0.07)
         border { color: Qt.alpha(dock.ink, launcherTile.lit ? 0.3 : 0.15); width: 1 }
         scale: launcherArea.pressed ? Theme.pressScale : 1
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         Behavior on color { ColorAnimation { duration: Theme.anim } }
 
         Rectangle {   // top sheen, like light on glass
@@ -52,7 +52,7 @@ Item {
             columns: 2
             spacing: dock.iconSize * 0.09
             rotation: launcherTile.lit && Theme.moves ? 45 : 0
-            Behavior on rotation { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+            Behavior on rotation { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
             Repeater {
                 model: 4
                 Rectangle {

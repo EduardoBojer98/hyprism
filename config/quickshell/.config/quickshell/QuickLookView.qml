@@ -152,7 +152,7 @@ Glass {
                 anchors.centerIn: parent
                 width: 64; height: 64; radius: 32
                 color: Qt.rgba(0, 0, 0, 0.45)
-                Text { anchors.centerIn: parent; anchors.horizontalCenterOffset: 3; text: "\u{F040A}"; color: "white"; font { family: Theme.font; pixelSize: 30 } }   // palette: on the dark disc
+                Text { anchors.centerIn: parent; anchors.horizontalCenterOffset: 3; text: "\u{F040A}"; color: "white"; font { family: Theme.font; pixelSize: 30 } }   // palette, one-off: on the dark disc
             }
         }
 
@@ -166,6 +166,7 @@ Glass {
                 Image {
                     required property string modelData
                     source: modelData
+                    sourceSize.height: stage.height   // decode at the size shown, not the page's full resolution
                     readonly property real slot: (stage.width - Theme.spaceM * (view.pages.length - 1)) / Math.max(1, view.pages.length)
                     width: Math.min(slot, stage.height * (implicitWidth / Math.max(1, implicitHeight)))
                     height: stage.height
@@ -213,7 +214,7 @@ Glass {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: view.busy ? "" : Search.fileGlyph(view.path)
                 color: Theme.subtext
-                font { family: Theme.font; pixelSize: 96 }
+                font { family: Theme.font; pixelSize: 96 }   // one-off: the file-type glyph fills the empty preview
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter

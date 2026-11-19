@@ -328,7 +328,7 @@ Singleton {
                                         color: add.hot ? Theme.fillActive : Theme.glass
                                         border { width: 1; color: Theme.strokeStrong }
                                         Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                        Text { anchors.centerIn: parent; text: "\u{F0415}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: 22 } }
+                                        Text { anchors.centerIn: parent; text: "\u{F0415}"; color: Theme.text; font { family: Theme.iconFont; pixelSize: Theme.glyphL } }
                                     }
                                     MouseArea { id: addArea; Accessible.role: Accessible.Button; Accessible.name: "New workspace"; Accessible.onPressAction: root.goTo(root.nextSpace); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.goTo(root.nextSpace) }
                                     DropArea { id: addDrop; anchors.fill: parent; onDropped: if (root.dragging) root.moveTo(root.dragging, root.nextSpace) }
@@ -371,7 +371,7 @@ Singleton {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "\u{F0570}"
                             color: Theme.subtext
-                            font { family: Theme.iconFont; pixelSize: 32 }
+                            font { family: Theme.iconFont; pixelSize: Theme.iconLarge }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter

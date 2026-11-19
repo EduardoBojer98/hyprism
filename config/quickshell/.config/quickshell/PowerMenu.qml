@@ -104,7 +104,7 @@ Singleton {
                         Layout.alignment: Qt.AlignTop
                         width: 28; height: 28; radius: 14
                         color: closeArea.containsMouse ? Theme.fillHover : Theme.fill
-                        Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: 14 } }
+                        Text { anchors.centerIn: parent; text: "\u{F0156}"; color: Theme.subtext; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
                         MouseArea { id: closeArea; Accessible.role: Accessible.Button; Accessible.name: "Close"; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.hide() }
                     }
                 }

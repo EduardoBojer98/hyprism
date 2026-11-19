@@ -49,7 +49,7 @@ ColumnLayout {
                 width: 24; height: 24; radius: Math.min(12, Theme.radiusSmall + 4)
                 color: modelData
                 border { color: chosen ? Theme.text : Theme.stroke; width: chosen ? 2 : 1 }
-                Text { visible: sw.index === 0; anchors.centerIn: parent; text: "\u{F0674}"; color: Themes.textOn(sw.modelData, page.base.colour); font { family: Theme.iconFont; pixelSize: 11 } }
+                Text { visible: sw.index === 0; anchors.centerIn: parent; text: "\u{F0674}"; color: Themes.textOn(sw.modelData, page.base.colour); font { family: Theme.iconFont; pixelSize: Theme.glyphXs } }
                 MouseArea { id: swArea; Accessible.role: Accessible.Button; Accessible.name: sws.name + " " + (sw.index === 0 ? "default" : sw.modelData); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.adjust(sws.key, sw.index === 0 ? undefined : sw.modelData) }
                 ToolTipText { shown: swArea.containsMouse; text: sw.index === 0 ? "The theme's own" : sw.modelData }
             }

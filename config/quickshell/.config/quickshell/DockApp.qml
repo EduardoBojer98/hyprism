@@ -46,8 +46,8 @@ Item {
     readonly property real mid: (dock.vertical ? height : width) / 2   // tooltip / menu centre
     z: dragged ? 1 : 0
     // neighbours glide aside while an icon is dragged past them
-    Behavior on x { enabled: dock.dragId !== "" && !dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
-    Behavior on y { enabled: dock.dragId !== "" && dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+    Behavior on x { enabled: dock.dragId !== "" && !dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+    Behavior on y { enabled: dock.dragId !== "" && dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
 
     Item {
         id: cell
@@ -80,17 +80,17 @@ Item {
             // hover: lift (moves off the edge) or grow (from the edge); press: a small give
             property real raise: dock.hoverStyle === "lift" && area.containsMouse && !app.dragged && Theme.moves ? -6 * dock.sign : 0
             transform: Translate { x: dock.vertical ? icon.raise : 0; y: dock.vertical ? 0 : icon.raise }
-            Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic } }
+            Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
             scale: area.pressed && !app.dragged ? Theme.pressScale : dock.hoverStyle === "grow" && area.containsMouse && !app.dragged && Theme.moves ? 1.14 : 1
-            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
             // launching: a slow breath until the first window shows up
             SequentialAnimation on opacity {
                 running: app.launching && Theme.animate
                 loops: Animation.Infinite
                 onRunningChanged: if (!running) icon.opacity = 1
-                NumberAnimation { to: 0.45; duration: 520; easing.type: Easing.InOutSine }
-                NumberAnimation { to: 1; duration: 520; easing.type: Easing.InOutSine }
+                NumberAnimation { to: 0.45; duration: Theme.pulse; easing.type: Easing.InOutSine }
+                NumberAnimation { to: 1; duration: Theme.pulse; easing.type: Easing.InOutSine }
             }
         }
         Timer { running: app.launching; interval: 10000; onTriggered: app.launching = false }

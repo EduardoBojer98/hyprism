@@ -67,7 +67,7 @@ Rectangle {
     color: lit ? pressedColor : interactive && area.containsMouse ? hover : "transparent"
     Behavior on color { ColorAnimation { duration: Theme.animFast } }
     scale: area.pressed ? Theme.pressScale : 1
-    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic } }
+    Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
     Grid {
         id: grid

@@ -53,7 +53,7 @@ PopupWindow {
             y: Theme.barEdge === "top" ? -box.off : Theme.barEdge === "bottom" ? box.off : 0
         }
         Behavior on off { NumberAnimation { duration: root.open ? Theme.enter : Theme.exit; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve } }
-        Behavior on opacity { NumberAnimation { duration: root.open ? Theme.enter : Theme.exit; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.open ? Theme.enter : Theme.exit; easing.type: Theme.easing } }
 
         PopupDepth { id: depthUnder; anchors.fill: parent; z: -1; radius: box.radius }
         PopupDepth { anchors.fill: parent; z: 10; over: true }

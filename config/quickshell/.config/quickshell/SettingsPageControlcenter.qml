@@ -116,7 +116,7 @@ ColumnLayout {
                 anchors { right: parent.right; top: parent.top; margins: 8 }
                 width: 22; height: 22; radius: 11
                 color: Theme.accent
-                Text { anchors.centerIn: parent; text: "\u{F012C}"; color: Theme.accentText; font { family: Theme.iconFont; pixelSize: 14 } }
+                Text { anchors.centerIn: parent; text: "\u{F012C}"; color: Theme.accentText; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
             }
         }
         MouseArea { id: cardArea; anchors.fill: shot; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: card.pick() }
@@ -126,7 +126,7 @@ ColumnLayout {
             width: 22; height: 22; radius: 11
             color: forget.containsMouse ? Theme.error : Theme.glassStrong
             border { color: Theme.stroke; width: 1 }
-            Text { anchors.centerIn: parent; text: "\u{F0156}"; color: forget.containsMouse ? Theme.accentText : Theme.text; font { family: Theme.iconFont; pixelSize: 13 } }
+            Text { anchors.centerIn: parent; text: "\u{F0156}"; color: forget.containsMouse ? Theme.accentText : Theme.text; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
             MouseArea { id: forget; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         Accessible.role: Accessible.Button; Accessible.name: "Forget layout " + card.modelData.name
                         onClicked: ControlCenter.forgetLayout(card.modelData.id) }
@@ -196,8 +196,8 @@ ColumnLayout {
                                 RowLayout {
                                     Layout.fillWidth: true
                                     spacing: 10
-                                    Text { text: "\u{F01DD}"; color: Theme.muted; font { family: Theme.iconFont; pixelSize: 15 } }   // drag handle
-                                    Text { text: sec.inf.glyph; color: sec.on ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: 16 } }
+                                    Text { text: "\u{F01DD}"; color: Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }   // drag handle
+                                    Text { text: sec.inf.glyph; color: sec.on ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyph } }
                                     Column {
                                         Layout.fillWidth: true
                                         Text {
@@ -271,7 +271,7 @@ ColumnLayout {
                                                         id: chipRow
                                                         anchors.centerIn: parent
                                                         spacing: 6
-                                                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.on ? chip.inf.glyph : "\u{F0209}"; color: chip.on ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: 13 } }
+                                                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.on ? chip.inf.glyph : "\u{F0209}"; color: chip.on ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
                                                         Text {
                                                             anchors.verticalCenter: parent.verticalCenter
                                                             text: chip.inf.label + (chip.here ? "" : " (not on this computer)")

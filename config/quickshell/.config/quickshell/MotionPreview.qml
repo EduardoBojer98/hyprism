@@ -113,7 +113,7 @@ Item {
             border { color: Theme.stroke; width: 1 }
             property real t: card.panelOn ? 1 : 0
             Behavior on t { NumberAnimation { duration: card.panelOn ? card.spec.enter : card.spec.exit
-                                              easing.type: card.panelOn ? Easing.BezierSpline : Easing.OutCubic; easing.bezierCurve: card.curve } }
+                                              easing.type: card.panelOn ? Easing.BezierSpline : Theme.easing; easing.bezierCurve: card.curve } }
             opacity: Math.min(1, t * 1.6)
             readonly property real sc: card.spec.scale + (1 - card.spec.scale) * t
             transform: [
@@ -133,7 +133,7 @@ Item {
                 color: card.toggleOn ? Theme.accent : Theme.fillActive
                 Behavior on color { ColorAnimation { duration: card.anim } }
                 scale: card.pressing ? card.spec.press : 1
-                Behavior on scale { NumberAnimation { duration: card.animFast; easing.type: Easing.OutCubic } }
+                Behavior on scale { NumberAnimation { duration: card.animFast; easing.type: Theme.easing } }
                 Rectangle {
                     width: parent.height - 4 * card.s
                     height: width

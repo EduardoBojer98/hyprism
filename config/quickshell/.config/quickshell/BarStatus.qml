@@ -37,7 +37,7 @@ BarItem {
         visible: Sys.recording
         width: 10; height: 10; radius: 5
         color: Theme.error
-        SequentialAnimation on opacity { running: Sys.recording && Theme.animate; loops: Animation.Infinite; NumberAnimation { to: 0.35; duration: 700 } NumberAnimation { to: 1; duration: 700 } }
+        SequentialAnimation on opacity { running: Sys.recording && Theme.animate; loops: Animation.Infinite; NumberAnimation { to: 0.35; duration: Theme.pulse } NumberAnimation { to: 1; duration: Theme.pulse } }
         MouseArea { anchors.fill: parent; anchors.margins: -6; Accessible.role: Accessible.Button; Accessible.name: "Stop recording"; Accessible.onPressAction: Quickshell.execDetached(["record", "stop"]); cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["record", "stop"]) }
     }
     // mixed: a mode's glyph keeps the same distance to the next glyph as a glyph + number pair does (rightPadding)

@@ -22,6 +22,12 @@ ColumnLayout {
         readonly property real cellW: (width - (perRow - 1) * gap) / perRow
         readonly property int cellH: ControlCenter.style === "compact" ? Theme.ccToggle - 8 : Theme.ccToggle
         implicitHeight: rows * cellH + Math.max(0, rows - 1) * gap
+        // one label size for every tile: the longest name decides, so no tile reads smaller than its neighbour
+        FontMetrics { id: fm; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
+        readonly property int labelSize: {
+            const widest = Math.max(1, ...mod.ids.map(id => fm.advanceWidth(ControlCenter.items[id]?.label ?? "")))
+            return Math.max(Theme.fontCaption - 2, Math.min(Theme.fontCaption, Math.floor(Theme.fontCaption * (cellW - Theme.spaceXs * 2) / widest)))
+        }
 
         Repeater {
             model: mod.ids
@@ -38,6 +44,7 @@ ColumnLayout {
                 host: mod.host
                 glyph: it.glyph
                 label: it.label
+                labelSize: grid.labelSize
                 status: it.status
                 hint: it.hint ?? ""
                 active: ControlCenter.isOn(modelData)

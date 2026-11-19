@@ -28,7 +28,7 @@ BarItem {
             anchors.centerIn: parent
             text: Keyboard.short
             color: kb.tone
-            font { family: Theme.font; pixelSize: 9; weight: Font.Bold; letterSpacing: 0.3 }
+            font { family: Theme.font; pixelSize: Theme.fontBadge; weight: Font.Bold; letterSpacing: 0.3 }
         }
     }
 }

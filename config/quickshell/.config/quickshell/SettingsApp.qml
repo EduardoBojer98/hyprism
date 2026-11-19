@@ -397,8 +397,8 @@ Singleton {
                         transform: Translate { id: pageShift }
                         ParallelAnimation {
                             id: pageIn
-                            NumberAnimation { target: pageLoader; property: "opacity"; from: 0; to: 1; duration: Theme.anim; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: pageShift; property: "y"; from: Theme.moves ? 10 : 0; to: 0; duration: Theme.anim; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: pageLoader; property: "opacity"; from: 0; to: 1; duration: Theme.anim; easing.type: Theme.easing }
+                            NumberAnimation { target: pageShift; property: "y"; from: Theme.moves ? 10 : 0; to: 0; duration: Theme.anim; easing.type: Theme.easing }
                         }
                     }
                 }
@@ -424,7 +424,7 @@ Singleton {
                             anchors.centerIn: parent
                             text: modelData.glyph
                             color: Theme.text
-                            font { family: Theme.iconFont; pixelSize: 13 }
+                            font { family: Theme.iconFont; pixelSize: Theme.glyphS }
                         }
                         MouseArea { id: btnArea; Accessible.role: Accessible.Button; Accessible.name: modelData.tip; Accessible.onPressAction: modelData.act(); anchors.fill: parent; hoverEnabled: true; onClicked: modelData.act() }
                         ToolTipText { shown: btnArea.containsMouse; text: modelData.tip }

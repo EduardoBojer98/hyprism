@@ -65,8 +65,9 @@ Singleton {
     // themes with a solid "inverse" selection (Poster, Monolith) show a picked segment in reverse video:
     // Monolith in the accent, Poster in ink on paper
     readonly property bool selectInverse: current.launcher.select === "inverse"
-    readonly property color segOn: a.theme === "monolith" ? accent : text
-    readonly property color segOnText: a.theme === "monolith" ? accentText : surfaceColor
+    readonly property bool accentSegments: current.popup.segments === "accent"   // theme.json popup.segments: text | accent
+    readonly property color segOn: accentSegments ? accent : text
+    readonly property color segOnText: accentSegments ? accentText : surfaceColor
     readonly property color thumb: light ? "#ffffff" : c.text
     readonly property color onImage: "#f5f5f7"   // text over a photo (lock screen on a picture): light, whatever the theme
     readonly property color thumbText: light ? c.text : c.ground   // text on a thumb: white thumbs in light themes
@@ -215,6 +216,12 @@ Singleton {
     // icons and cursor: the theme's own (theme.json icons / cursor) unless you picked one; "Papirus" follows light/dark
     readonly property string iconTheme: a.iconTheme === "theme" ? (current.icons || "Papirus") : a.iconTheme
     readonly property string cursorTheme: a.cursorTheme === "theme" ? (current.cursor || "default") : a.cursorTheme
+    // shell glyphs (the icon font) in five steps; app icons use iconSmall..iconApp
+    readonly property int glyphXs: 12      // inside a small badge or a chip
+    readonly property int glyphS: 14       // next to body text, chevrons, row actions
+    readonly property int glyph: 16        // buttons and list rows
+    readonly property int glyphL: 20       // tiles and media controls
+    readonly property int fontBadge: 9     // the count or letter on a tiny badge (bell, keyboard layout)
     readonly property int iconSmall: 16
     readonly property int iconMedium: 22
     readonly property int iconLarge: 32
@@ -257,6 +264,16 @@ Singleton {
     readonly property int animFast: animate ? Math.min(120, Math.max(60, m.enter / 2)) : 0
     readonly property int anim: animate ? Math.min(220, m.enter) : 0
     readonly property int easing: Easing.OutCubic
+    // a live thing breathing (recording, an app starting, weather loading): a fade, so it stays in reduced motion
+    readonly property int pulse: 700
+    readonly property int blink: 530                     // the text cursor
+    // a group arriving (Launchpad's wave): each item fades in and grows from popFrom, stagger ms after the last;
+    // only in full motion (reduced motion never scales or overshoots)
+    readonly property int pop: moves ? 320 : 0
+    readonly property int popFade: moves ? 200 : 0
+    readonly property int stagger: 9
+    readonly property real popFrom: 0.6
+    readonly property real popOvershoot: 1.2
 
     // ---- Control Center tokens ---------------------------------------------------------------------------
     // One rhythm for the quick-settings panel and the flyouts that reuse its modules: gaps from the density,
