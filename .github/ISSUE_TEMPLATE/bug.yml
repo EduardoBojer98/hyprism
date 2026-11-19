@@ -1,0 +1,35 @@
+name: Bug
+description: Something in the install, the shell or an app doesn't work
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to see it again
+      placeholder: "1. ./install.sh --with gaming\n2. ..."
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `hyprism doctor`
+      description: Run it in a terminal and paste everything it prints.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: hardware
+    attributes:
+      label: ~/.config/hyprism/hardware.toml
+      description: What Hyprism detected about this computer (no personal data in it).
+      render: toml
+  - type: textarea
+    id: log
+    attributes:
+      label: Install log, if the install or an update failed
+      description: The newest file in ~/.local/state/hyprism/logs/ (the end is usually enough).
+      render: text

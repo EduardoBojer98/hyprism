@@ -51,3 +51,15 @@ Other test commands:
 - Where to add things (a package, a setting, a theme, a bar item, a module): see the "How to add things" table in
   [docs/CONVENTIONS.md](docs/CONVENTIONS.md).
 - Never commit secrets. Keep them in `~/.config/secrets.env`, outside the repo.
+
+## Releasing
+
+1. On `develop` with CI green: set `VERSION` (drop `-dev`) and rename "Unreleased" in
+   [CHANGELOG.md](CHANGELOG.md) to the version and date, in one `chore(release): X.Y.Z` commit.
+2. Wait for CI on that commit (the update test then runs from the previous release tag).
+3. Tag it and publish: `git tag -a vX.Y.Z -m vX.Y.Z`, then the fast-forward from "Changes" above, and
+   `git push origin develop main vX.Y.Z`.
+4. Back on `develop`: set `VERSION` to the next `-dev` and add an empty "Unreleased" section.
+
+The update test picks the newest `v*` tag by itself; `OLD_TAG=v1.1.0` (`docker run -e OLD_TAG=...`) tests an
+update from an older one.
