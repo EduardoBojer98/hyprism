@@ -162,6 +162,18 @@ expect laptop-intel display.internal eDP-3
     echo "xx hw_override left a duplicate line"
     fail=1
 }
+# NVIDIA generation: Turing and newer run the open driver; an older card needs 580xx
+gen() { HYPRISM_ROOT=$t/$1 bash -c '. lib/detect.sh; nvidia_open_supported && echo open || echo legacy'; }
+put "$t/laptop-hybrid-nvidia" /sys/class/drm/card1/device/device 0x2520 # RTX 3060 mobile
+put "$t/desktop-nvidia" /sys/class/drm/card0/device/device 0x1b80       # GTX 1080
+check_gen() { if [[ $(gen "$1") == "$2" ]]; then echo "ok: $1 nvidia driver = $2"; else
+    echo "xx $1 nvidia driver: expected $2, got $(gen "$1")"
+    fail=1
+fi; }
+check_gen laptop-hybrid-nvidia open
+check_gen desktop-nvidia legacy
+check_gen desktop-amd open
+
 # module names with a hyphen (--without nvidia-hybrid) are overrides too
 HYPRISM_HARDWARE=$t/laptop-intel.toml bash -c '. lib/detect.sh; hw_override module.nvidia-hybrid false'
 expect laptop-intel module.nvidia-hybrid false

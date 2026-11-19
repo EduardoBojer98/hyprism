@@ -283,6 +283,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- NVIDIA on plain Arch and Fedora: cards older than Turing (GTX 10 and before) now get the 580xx driver branch they
+  need, instead of a driver that no longer runs them. On Arch the kernel headers match every installed kernel
+  (`linux-lts`, `linux-zen`, ...), not only `linux`.
 - `hyprism doctor` no longer says the hardware changed each time a screen is plugged in or a dock is attached.
   `nv` without a hardware file uses the NVIDIA variables only where NVIDIA's driver is loaded. `bootstrap.sh` runs
   nothing if its download is cut short.

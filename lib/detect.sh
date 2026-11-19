@@ -232,6 +232,19 @@ hw_override() {
     printf '%s = %s\n' "$1" "$2" >>"$HW_FILE"
 }
 
+# True when every NVIDIA card is Turing (GTX 16 / RTX 20) or newer: the current driver (open kernel modules) runs
+# them. Older cards (Pascal, Maxwell, Volta) need the 580xx branch. Turing's first PCI id is 0x1e02; every older
+# chip is below 0x1e00 (NVIDIA's supported-chips list). A card without a readable id counts as new.
+nvidia_open_supported() {
+    local card id
+    for card in "$HW_ROOT"/sys/class/drm/card[0-9]*; do
+        [[ $card =~ /card[0-9]+$ && $(_hw_read "${card#"$HW_ROOT"}/device/vendor") == 0x10de ]] || continue
+        id=$(_hw_read "${card#"$HW_ROOT"}/device/device")
+        [[ -z $id ]] || ((id >= 0x1e00)) || return 1
+    done
+    return 0
+}
+
 hw_has() {
     local v
     v=$(hw_get "$1")

@@ -64,11 +64,23 @@ distro_install() {
     fi
 }
 
-# NVIDIA driver: CachyOS's chwd picks the right one for the kernel; plain Arch gets the open modules (Turing and newer)
+# CachyOS: its own chwd picks the driver. Arch: the open modules for Turing and newer, the 580xx branch (AUR) for
+# older cards; dkms builds for every installed kernel, so each needs its headers (linux-lts-headers, ...).
 distro_nvidia() {
     if command -v chwd >/dev/null; then
         run sudo chwd -a
-    else run sudo pacman -S --needed --noconfirm nvidia-open-dkms nvidia-utils egl-wayland linux-headers; fi
+        return
+    fi
+    local headers k
+    headers=$(for k in /usr/lib/modules/*/pkgbase; do [[ -r $k ]] && echo "$(<"$k")-headers"; done | sort -u)
+    # shellcheck disable=SC2086  # a list of package names
+    run sudo pacman -S --needed --noconfirm egl-wayland ${headers:-linux-headers}
+    if nvidia_open_supported; then
+        run sudo pacman -S --needed --noconfirm nvidia-open-dkms nvidia-utils
+    else
+        warn "This NVIDIA card is older than Turing (GTX 16 / RTX 20): the current driver dropped it, so it gets the 580xx branch from the AUR"
+        distro_install aur nvidia-580xx-dkms nvidia-580xx-utils
+    fi
 }
 
 # Firewall: ufw, deny incoming and allow outgoing. A failed ufw call (no kernel firewall in a container) is a warning.

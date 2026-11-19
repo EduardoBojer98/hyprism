@@ -53,7 +53,12 @@ distro_install() {
 distro_nvidia() {
     rpmfusion free
     rpmfusion nonfree
-    run sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda
+    if nvidia_open_supported; then
+        run sudo dnf install -y akmod-nvidia xorg-x11-drv-nvidia-cuda
+    else # Pascal, Maxwell, Volta: RPM Fusion's current driver dropped them
+        warn "This NVIDIA card is older than Turing (GTX 16 / RTX 20): installing RPM Fusion's 580xx driver for it"
+        run sudo dnf install -y akmod-nvidia-580xx xorg-x11-drv-nvidia-580xx-cuda
+    fi
     say "Wait a few minutes for akmods to build the module, then reboot. With Secure Boot see /usr/share/doc/akmods/README.secureboot"
 }
 

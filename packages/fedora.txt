@@ -6,7 +6,7 @@
 #
 # Hyprland is NOT in Fedora's own repos (Fedora 44). The whole ecosystem comes from copr:sdegler/hyprland
 # (solopasha/hyprland is abandoned: rawhide only, last build 0.51.1 in 2025-10). Versions there match Arch.
-# NVIDIA (modules/nvidia): rpmfusion-nonfree akmod-nvidia + xorg-x11-drv-nvidia-cuda
+# NVIDIA (modules/nvidia): rpmfusion-nonfree akmod-nvidia + xorg-x11-drv-nvidia-cuda (cards before Turing: the -580xx ones)
 # (595.58.03 in nonfree, 615.78.08 in nonfree-updates). Not installed by this file; see the host notes.
 #
 # name                   package(s)                         source
