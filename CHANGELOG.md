@@ -16,7 +16,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   grid (wide Wi-Fi and Bluetooth, a big first toggle, solid blocks when on, hard shadows that collapse on press,
   section names in the display font); Monolith's text HUD (`// sound`, `vol [████████░░] 80`, `[x] wifi  name`,
   `mode: <balanced>`, brackets around each section that draw in on open). Sliders still drag, scroll and step with
-  the arrows; every toggle still toggles.
+  the arrows; every toggle still toggles. The layout gallery in Settings > Control Center draws
+  each layout in the theme's structure too.
 - Notifications built three ways (theme.json `notify.kind`), banners and the notification centre alike: Pebble's
   soft `card`s with the icon in a soft circle and a folded group peeking out as two card edges; Poster's `block`s with
   a thick accent bar, a display-font title and a hard shadow, sliding in from the left with a small overshoot, red
