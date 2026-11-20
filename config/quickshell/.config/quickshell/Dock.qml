@@ -32,7 +32,7 @@ PanelWindow {
     // the keyboard is here (DockFocus, or its menu is open): the dock shows itself and takes the keys
     readonly property bool hasKeys: DockFocus.active && DockFocus.screen?.name === screen?.name || menu.entry !== null
     onHasKeysChanged: if (hasKeys && !menu.entry) takeFocus.restart()
-    Timer { id: takeFocus; interval: 80; onTriggered: if (root.hasKeys && !menu.entry) launcherPart.forceActiveFocus() }   // the compositor hands over the keys a moment after
+    Timer { id: takeFocus; interval: 80; onTriggered: if (root.hasKeys && !menu.entry) (launcherPart.visible ? launcherPart : launcherPart.nextItemInFocusChain(true)).forceActiveFocus() }   // the compositor hands over the keys a moment after
     readonly property bool shown: !Config.dock.autoHide || hover.hovered || hideTimer.running || emptyWorkspace
                                   || hasKeys || dragId !== "" || runDrag !== ""
     // keys on an icon: Left / Right (Up / Down on a vertical dock) or Tab move, Enter / Space does what a click does,
@@ -89,7 +89,7 @@ PanelWindow {
     readonly property var appEntries: pinnedEntries.concat(runningEntries)
     function dragTo(x) {
         dragX = x
-        const first = root.slot + row.spacing * 2 + 1          // launcher + divider
+        const first = Config.dock.launcher ? root.slot + row.spacing * 2 + 1 : 0   // launcher + divider
         const i = Math.max(0, Math.min(pinnedEntries.length - 1, Math.floor((x - first) / (slot + row.spacing))))
         const ids = pinnedEntries.map(e => e.id)
         if (ids[i] === dragId) return
@@ -234,9 +234,9 @@ PanelWindow {
             verticalItemAlignment: Grid.AlignVCenter
 
             // App menu / Spotlight-style launcher
-            DockLauncher { id: launcherPart; dock: root }
+            DockLauncher { id: launcherPart; dock: root; visible: Config.dock.launcher }   // Settings > Dock: Launcher button
 
-            DockSeparator { dock: root }
+            DockSeparator { dock: root; visible: Config.dock.launcher }
 
             Repeater {
                 // ScriptModel keeps existing icons when the list changes (and moves them on reorder)

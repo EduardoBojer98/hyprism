@@ -82,6 +82,12 @@ ColumnLayout {
             ConfigChoice { section: "launcher"; key: "position"; values: ["theme", "center", "pointer"]; labels: ["Style's place", "Middle", "At the pointer"] }
         }
         SettingRow {
+            label: "Beside the button you click"
+            hint: Config.launcher.besideButton ? "A bar or dock button opens it next to that button; shortcuts use Open"
+                                               : "Off: the dock, the bar and the shortcuts all open it in the same place"
+            ConfigToggle { section: "launcher"; key: "besideButton" }
+        }
+        SettingRow {
             label: "Before you type, show"
             hint: Config.launcher.startView === "theme" ? page.styleName + " opens on " + ({ apps: "every app", search: "just the search field", home: "suggestions" })[Launcher.look.startView] : ""
             ConfigChoice { section: "launcher"; key: "startView"; values: ["theme", "home", "apps", "search"]; labels: ["Style's own", "Suggestions", "All apps", "Search field"] }

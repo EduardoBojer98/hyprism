@@ -182,7 +182,8 @@ Singleton {
         homeIndex = 0
         Calendar.now = new Date()
         Clipboard.prepare()
-        fromClick = Anchor.fresh
+        fromClick = Anchor.fresh && Config.launcher.besideButton
+        if (Anchor.fresh && !fromClick) Anchor.at = 0   // the same place as from a shortcut: CursorPopup asks where the pointer is
         popup.show()
     }
     function close() { popup.hide() }
@@ -288,7 +289,7 @@ Singleton {
         dim: root.look.dim
         darkScrim: root.pad
         focusItem: field
-        onOpened: if (root.pointer && !root.fromClick) popup.anchorRect = null   // a shortcut opens centred or at the pointer, not beside the bar item
+        onOpened: if (!root.fromClick) popup.anchorRect = null   // opens at its own place, not beside the bar or dock item (launcher.besideButton)
         onClosed: { field.text = ""; root.confirmFor = null; menu.entry = null; if (QuickLook.inLauncher) QuickLook.close() }
         onOpenChanged: Actions.watch("launcher", popup.open)   // toggles show their real state
 

@@ -57,6 +57,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `hiddenOn` | `list<string>` | `[]` | monitor names (e.g. "eDP-1") without a dock |
 | `iconSize` | `int` | `44` | the dock's size: Settings presets 36 / 44 / 52 / 60, or any size 24-72 on its slider |
 | `autoHide` | `bool` | `false` | visible by default; true slides it away until the pointer reaches its edge |
+| `launcher` | `bool` | `true` | the launcher button at the dock's start |
 | `showRunning` | `bool` | `true` |  |
 | `barLabels` | `string` | `"icon"` | open windows in the dock inside the bar: icon \| name (app name) \| title (window title) |
 | `nameOnly` | `bool` | `false` | open windows show just their app's name, no icon, picture or title (dock and bar) |
@@ -90,6 +91,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `order` | `list<string>` | `["apps", "files", "calc", "settings", "actions", "web"]` |  |
 | `clipboardInside` | `bool` | `true` | Spotlight's clipboard button shows history in the panel |
 | `position` | `string` | `"theme"` | theme (the style's own place) \| center (middle of the screen) \| pointer (around the mouse pointer) |
+| `besideButton` | `bool` | `false` | a click on a bar or dock button opens it beside that button; off: at `position`, like a shortcut |
 | `size` | `int` | `100` | percent of the style's width, search height and icons (80..130) |
 | `rows` | `string` | `"style"` | style \| standard \| compact (one line) \| cards (tall, big icons) \| text (no icons) |
 | `home` | `list<string>` | `["glance", "frequent", "recent", "quick"]` | suggestions allowed: glance (weather, next event, last copy), frequent, recent, quick (actions) |

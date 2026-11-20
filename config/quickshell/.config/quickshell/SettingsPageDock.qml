@@ -145,6 +145,12 @@ ColumnLayout {
             ConfigToggle { section: "dock"; key: "previews" }
         }
         SettingRow {
+            visible: !page.inBar
+            label: "Launcher button"
+            hint: "The button at the dock's start that opens Search & Launcher. Off: Super or Super+Space still open it"
+            ConfigToggle { section: "dock"; key: "launcher" }
+        }
+        SettingRow {
             label: "Show open apps"
             hint: Config.dock.combine ? "Open apps that aren't pinned join after the pinned ones" : "Each window as its own tile, after the pinned apps"
             ConfigToggle { section: "dock"; key: "showRunning" }

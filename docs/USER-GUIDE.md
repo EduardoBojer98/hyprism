@@ -126,7 +126,8 @@ let go (Windows → Snap to screen edges). Chrome works the same, dragged by its
 window keeps the gap at the screen edges. To have every new window open floating instead of tiled, use the Control
 Center's Floating tile, add the Floating windows item to the menu bar, or Windows → Open new windows floating.
 Spotlight opens in each style's own place (Settings → Search & Launcher → Adjust → Open: or the middle, or at the
-pointer). Picking a style starts it as designed; Adjust changes it and its Reset puts it back. Its styles each work differently: Spotlight (the macOS bar, one-line results once you type),
+pointer), the same from the dock, the bar and the shortcuts; "Beside the button you click" opens it next to a bar or dock
+button instead, and Settings → Dock → Launcher button hides the dock's. Picking a style starts it as designed; Adjust changes it and its Reset puts it back. Its styles each work differently: Spotlight (the macOS bar, one-line results once you type),
 Launchpad (the whole screen darkened, every app as a big icon, category tabs; typing filters the apps), Drawer (today
 at a glance, big rows), Sidebar (a dense one-line list), Terminal (a prompt and mono one-line rows). Every style shows
 app icons; Adjust → Rows → Text gives plain text rows. Adjust also sets size, corners, the dim behind it, key hints and

@@ -55,10 +55,10 @@ Singleton {
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { enabled: "bool", size: ["compact", "regular", "roomy"], hiddenOn: "list",
-                iconSize: [24, 72], autoHide: "bool", showRunning: "bool", combine: "bool", barLabels: ["icon", "name", "title"], nameOnly: "bool", previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list", widgets: "list" },
+                iconSize: [24, 72], autoHide: "bool", launcher: "bool", showRunning: "bool", combine: "bool", barLabels: ["icon", "name", "title"], nameOnly: "bool", previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list", widgets: "list" },
         launcher: { webSearch: "string", showFiles: "bool", usage: "object",
                     style: ["theme", "spotlight", "launchpad", "drawer", "sidebar", "terminal"],
-                    columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool", position: ["center", "pointer", "theme"],
+                    columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool", position: ["center", "pointer", "theme"], besideButton: "bool",
                     size: [80, 130], rows: ["style", "standard", "compact", "cards", "text"], home: "list", dim: ["style", "none", "light", "dark"],
                     corners: ["style", "sharp", "soft", "round"], hints: "bool", subtitles: "bool", maxResults: [10, 80], quickActions: "list",
                     quickLook: "bool", converters: "bool", padLayout: "list" },
