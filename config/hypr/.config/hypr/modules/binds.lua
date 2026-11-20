@@ -54,7 +54,7 @@ add("layout-next",   "Keyboard", "Next keyboard layout",      key("CTRL + Space"
 add("close",      "Windows", "Close window",             key("Q"), hl.dsp.window.close())
 add("fullscreen", "Windows", "Fullscreen",               key("F"), hl.dsp.window.fullscreen({ action = "toggle" }))
 add("maximise",   "Windows", "Maximise",                 key("SHIFT + F"), hl.dsp.window.fullscreen({ action = "toggle", mode = "maximized" }))
-add("float",      "Windows", "Float / tile",             key("T"), hl.dsp.window.float({ action = "toggle" }))
+add("float",      "Windows", "Float / tile",             key("T"), function() float_toggle() end)   -- windows.lua: back where it floated
 add("split",      "Windows", "Swap split direction",     key("J"), hl.dsp.layout("togglesplit"))
 add("minimise",   "Windows", "Minimise (restore from the dock)", key("H"), hl.dsp.window.move({ workspace = "special:minimized", follow = false }))
 add("window-menu", "Windows", "Window menu: snap, move, opacity", key("Z"), exec("qs ipc call windowmenu open"))

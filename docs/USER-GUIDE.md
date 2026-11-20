@@ -53,7 +53,7 @@ Websites as apps are made in a terminal with `webapp add "Name" https://address`
 
 ## Windows and workspaces
 
-Keys: `Super+Q` close, `Super+F` fullscreen, `Super+T` float or tile, `Super+H` minimise (restore from the dock),
+Keys: `Super+Q` close, `Super+F` fullscreen, `Super+T` float or tile (floated again, a window comes back where it was), `Super+H` minimise (restore from the dock),
 `Super+Arrows` move focus, `Super+Shift+Arrows` move the window, `Super+1` to `0` go to a workspace,
 `Super+Shift+1` to `0` send the window there, `Super+W` Mission Control, `Super+drag` and `Super+right-drag` move
 and resize. A three-finger swipe sideways switches workspace. The full list: `Super+/`.

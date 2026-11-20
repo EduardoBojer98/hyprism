@@ -212,7 +212,8 @@ Singleton {
                     spacing: Theme.spaceXs + 2
                     PillButton {
                         text: "Floating"; primary: root.win.floating === true
-                        onClicked: root.act([`hl.dsp.window.float({ action = "toggle", window = "${root.addr}" })`])
+                        // windows.lua float_toggle(): floated again, it comes back where it was
+                        onClicked: { popup.hide(); if (/^0x[0-9a-f]+$/.test(root.win.address ?? "")) Quickshell.execDetached(["hyprctl", "eval", `float_toggle("${root.win.address}")`]) }
                     }
                     PillButton {
                         text: "On top, every desktop"; primary: root.win.pinned === true

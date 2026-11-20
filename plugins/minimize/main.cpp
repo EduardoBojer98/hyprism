@@ -70,8 +70,15 @@ static void pressed() {
     g_lastPress = std::chrono::steady_clock::now();
 }
 
+// Leaving fullscreen (a video's exit button: a click) makes Chrome ask to be maximised again; that is no button
+// press, and taking it for one floated the tiled window. Requests this soon after a fullscreen change are the app's own.
+static std::unordered_map<Desktop::View::CWindow*, std::chrono::steady_clock::time_point> g_fullscreenAt;
+
 static void maximise(PHLWINDOWREF ref, bool asked) {
-    const bool clicked = std::chrono::steady_clock::now() - g_lastPress < std::chrono::milliseconds(1500);
+    const auto now     = std::chrono::steady_clock::now();
+    const auto fsAt    = g_fullscreenAt.find(ref.get());
+    const bool afterFs = fsAt != g_fullscreenAt.end() && now - fsAt->second < std::chrono::milliseconds(1000);
+    const bool clicked = !afterFs && now - g_lastPress < std::chrono::milliseconds(1500);
     g_pEventLoopManager->doLater([ref, asked, clicked] {
         const auto w = ref.lock();
         if (!w || !w->mapped())
@@ -207,7 +214,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
     static auto onOpen    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { watch(w); opened(w); });
     static auto onClose   = Event::bus()->m_events.window.close.listen([](PHLWINDOW w) { closing(w); });
-    static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); });
+    static auto onDestroy = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) { g_listeners.erase(w.get()); g_fullscreenAt.erase(w.get()); });
+    static auto onFs      = Event::bus()->m_events.window.fullscreen.listen([](PHLWINDOW w) { g_fullscreenAt[w.get()] = std::chrono::steady_clock::now(); });
     static auto onMouse   = Event::bus()->m_events.input.mouse.move.listen([](Vector2D, Event::SCallbackInfo&) { mouseMoved(); });
     static auto onButton  = Event::bus()->m_events.input.mouse.button.listen([](IPointer::SButtonEvent e, Event::SCallbackInfo&) {
         if (e.state == WL_POINTER_BUTTON_STATE_PRESSED)

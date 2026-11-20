@@ -120,6 +120,29 @@ function edge_snap(addr, x, y, bar)
     hl.dispatch(hl.dsp.window.move({ x = box.x, y = box.y + bar, window = win }))
 end
 
+-- Super+T and the window menu's Floating: a window tiled and floated again comes back where you left it
+-- (Hyprland keeps its floating size but centres it). Another window than the focused one just toggles.
+local float_spot = {}
+function float_toggle(addr)
+    local a = hl.get_active_window()
+    if a and addr and a.address ~= addr then a = nil end
+    if not a then
+        if addr then hl.dispatch(hl.dsp.window.float({ action = "toggle", window = "address:" .. addr })) end
+        return
+    end
+    local win, was = "address:" .. a.address, a.floating   -- `a` is live: read it before the toggle
+    if was and (a.fullscreen or 0) == 0 then float_spot[a.address] = { x = a.at.x, y = a.at.y } end
+    hl.dispatch(hl.dsp.window.float({ action = "toggle", window = win }))
+    local s = not was and float_spot[a.address]
+    local m = s and hl.get_monitor_at({ x = s.x, y = s.y })
+    if m then   -- only onto a screen that is still there
+        local W, H = screen_size(m)
+        if s.x >= m.x and s.x < m.x + W and s.y >= m.y and s.y < m.y + H then
+            hl.dispatch(hl.dsp.window.move({ x = s.x, y = s.y, window = win }))
+        end
+    end
+end
+
 -- Chrome's tab drag closes a floating window and opens a new one where the tab is dropped (the minimize plugin
 -- calls this for it): floating again at its old size under the pointer, or snapped if dropped on an edge
 function tab_drop(addr, w, h, x, y)
