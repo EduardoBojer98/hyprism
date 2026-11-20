@@ -87,7 +87,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `recent` | `list<string>` | `[]` | result keys, most recent first, for the home view |
 | `order` | `list<string>` | `["apps", "files", "calc", "settings", "actions", "web"]` |  |
 | `clipboardInside` | `bool` | `true` | Spotlight's clipboard button shows history in the panel |
-| `position` | `string` | `"center"` | center (middle of the screen) \| pointer (around the mouse pointer) \| theme (the theme's own place) |
+| `position` | `string` | `"theme"` | theme (the style's own place) \| center (middle of the screen) \| pointer (around the mouse pointer) |
 | `size` | `int` | `100` | percent of the style's width, search height and icons (80..130) |
 | `rows` | `string` | `"style"` | style \| standard \| compact (one line) \| cards (tall, big icons) \| text (no icons) |
 | `home` | `list<string>` | `["glance", "frequent", "recent", "quick"]` | suggestions allowed: glance (weather, next event, last copy), frequent, recent, quick (actions) |

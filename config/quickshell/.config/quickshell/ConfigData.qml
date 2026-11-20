@@ -64,7 +64,7 @@ JsonAdapter {
         // result groups, best first; a group missing from the list is hidden
         property list<string> order: ["apps", "files", "calc", "settings", "actions", "web"]
         property bool clipboardInside: true     // Spotlight's clipboard button shows history in the panel
-        property string position: "center"      // center (middle of the screen) | pointer (around the mouse pointer) | theme (the theme's own place)
+        property string position: "theme"       // theme (the style's own place) | center (middle of the screen) | pointer (around the mouse pointer)
         // your adjustments over the style (Search & Launcher > Adjust); "style" = what the style does
         property int size: 100                  // percent of the style's width, search height and icons (80..130)
         property string rows: "style"           // style | standard | compact (one line) | cards (tall, big icons) | text (no icons)

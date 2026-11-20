@@ -125,8 +125,8 @@ quarter, or to the top edge to maximise it, as on Windows or GNOME: an outline s
 let go (Windows → Snap to screen edges). Chrome works the same, dragged by its tab strip or by a tab. A maximised
 window keeps the gap at the screen edges. To have every new window open floating instead of tiled, use the Control
 Center's Floating tile, add the Floating windows item to the menu bar, or Windows → Open new windows floating.
-Spotlight opens in the middle of the screen by default (Settings → Search & Launcher → Open); choose "Style's place"
-to get strips and edges back. Its styles each work differently: Spotlight (the macOS bar, one-line results once you type),
+Spotlight opens in each style's own place (Settings → Search & Launcher → Adjust → Open: or the middle, or at the
+pointer). Picking a style starts it as designed; Adjust changes it and its Reset puts it back. Its styles each work differently: Spotlight (the macOS bar, one-line results once you type),
 Launchpad (the whole screen darkened, every app as a big icon, category tabs; typing filters the apps), Drawer (today
 at a glance, big rows), Sidebar (a dense one-line list), Terminal (a prompt and mono one-line rows). Every style shows
 app icons; Adjust → Rows → Text gives plain text rows. Adjust also sets size, corners, the dim behind it, key hints and
@@ -144,7 +144,7 @@ that runs `qs ipc call quicklook open %f` (Thunar: Edit → Configure custom act
 a swipe, the scroll wheel or touchpad, ←→ past a page's edge, PageUp/PageDown, or a click on a dot. On All, with
 nothing typed, the order is yours: hold an icon, then drag it where it should go (towards the screen's left or right
 edge to reach another page). Drop it on another app to make a folder, or on a folder to add it. Click a folder to
-open it, click its name to rename it, drag an app out of it to take it out; Esc closes it. Search & Launcher → Adjust →
+open it, click its name to rename it, drag an app out of it to take it out; Esc closes it. Search & Launcher → Apps and results →
 Launchpad arrangement → Reset goes back to A to Z.
 
 **Converters.** Type a conversion and the answer is the top hit; Enter copies it. Units: `5 km in mi`, `70 f to c`,

@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Search & Launcher: Spotlight (tap Super): its style (the theme's own or a preset, drawn as a gallery),
-// how it opens and the result order. Your own actions are made in Settings > Actions (SettingsPageActions.qml).
+// Search & Launcher: Spotlight (tap Super): its style (the theme's own or a preset, drawn as a gallery; picking
+// one resets the look options so it opens as designed), adjustments over it, suggestions, result order and search. Your own actions are made in Settings > Actions (SettingsPageActions.qml).
 ColumnLayout {
     id: page
     spacing: 20
@@ -23,21 +23,22 @@ ColumnLayout {
         Config.set("launcher", "order", o.includes(g) ? o.filter(x => x !== g) : o.concat([g]))
     }
 
+    // Picking a style starts it as designed: the look options below go back to the style's own, so no two styles
+    // end up looking alike under the same overrides. Your other options (suggestions, order, search) stay.
+    readonly property var lookKeys: ({ position: "theme", startView: "theme", rows: "style", dim: "style", corners: "style", size: 100 })
+    readonly property bool tweaked: Object.keys(lookKeys).some(k => Config.launcher[k] !== lookKeys[k])
+    readonly property string styleName: Launcher.preset ? Launcher.preset.name : Theme.current.name + "'s own"
+    function asDesigned() { for (const k of Object.keys(lookKeys)) Config.set("launcher", k, lookKeys[k]) }
+    function pick(id) { Config.set("launcher", "style", id); asDesigned() }
+
     // Style: the theme's own launcher or one of Launcher.styles, each drawn in the active theme's colours
     SettingGroup {
         title: "Style"
-        SettingRow {
-            label: "Open"
-            hint: Config.launcher.position === "center" ? "Super opens it in the middle of the screen you're working on, in every style"
-                : Config.launcher.position === "pointer" ? "Super opens it around the mouse pointer, on the screen you're working on"
-                : "Where the style puts it: centred, or along a screen edge"
-            ConfigChoice { section: "launcher"; key: "position"; values: ["center", "pointer", "theme"]; labels: ["Middle", "At the pointer", "Style's place"] }
-        }
         Text {
             Layout.fillWidth: true
             Layout.margins: 16
             Layout.bottomMargin: 0
-            text: "Each style is its own way to work: Spotlight is the macOS bar, Launchpad a wall of icons, Drawer a sheet with today at a glance, Sidebar a dense list, Terminal a prompt and mono rows for the keyboard. Colours and fonts follow the theme."
+            text: "Each style is its own way to work, in its own place. Picking one starts it as designed; colours and fonts follow the theme."
             color: Theme.subtext
             wrapMode: Text.Wrap
             font { family: Theme.font; pixelSize: Theme.fontLabel }
@@ -55,41 +56,36 @@ ColumnLayout {
                     readonly property var style: Launcher.styles[modelData] ?? null
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
-                    // drawn where it will open: centred unless "Style's place", and on the view you start on
-                    spec: Object.assign({}, style ?? Theme.current.launcher,
+                    // the chosen one as you adjusted it, the rest as designed
+                    spec: Object.assign({}, style ?? Theme.current.launcher, !chosen ? {} : Object.assign(
                         Config.launcher.position !== "theme" ? { placement: "center" } : {},
-                        ({ home: { view: "home" }, apps: { view: "grid" }, search: { view: "inline" } })[Config.launcher.startView] ?? {})
+                        ({ home: { view: "home" }, apps: { view: "grid" }, search: { view: "inline" } })[Config.launcher.startView] ?? {},
+                        Config.launcher.rows !== "style" ? { rows: Config.launcher.rows } : {},
+                        Config.launcher.corners !== "style" ? { corners: Config.launcher.corners === "soft" ? "round" : Config.launcher.corners } : {}))
                     label: style ? style.name : Theme.current.name + "'s own"
                     about: style ? style.about : "Follows the theme, and changes with it"
                     chosen: (Config.launcher.style ?? "theme") === modelData
-                    onPicked: Config.set("launcher", "style", modelData)
+                    onPicked: page.pick(modelData)
                 }
             }
         }
     }
 
+    // your adjustments over the chosen style; "Style's own" leaves each to it
     SettingGroup {
-        title: "Spotlight"
+        title: "Adjust " + page.styleName
+        SettingRow {
+            label: "Open"
+            hint: Config.launcher.position === "center" ? "In the middle of the screen you're working on"
+                : Config.launcher.position === "pointer" ? "Around the mouse pointer, on the screen you're working on"
+                : "Where " + page.styleName + " goes: " + (({ center: "the middle", fullscreen: "the whole screen", island: "a sheet from the bottom", column: "a column on the left", strip: "a strip along the top", half: "half the screen", corner: "a corner" })[Launcher.rl.placement] ?? "its own place")
+            ConfigChoice { section: "launcher"; key: "position"; values: ["theme", "center", "pointer"]; labels: ["Style's place", "Middle", "At the pointer"] }
+        }
         SettingRow {
             label: "Before you type, show"
-            hint: Config.launcher.startView === "theme" ? "Spotlight and Terminal: just the search field; Launchpad: every app; Drawer and Sidebar: suggestions" : ""
-            ConfigChoice { section: "launcher"; key: "startView"; values: ["theme", "home", "apps", "search"]; labels: ["The style's own", "Suggestions", "All apps", "Just the search field"] }
+            hint: Config.launcher.startView === "theme" ? page.styleName + " opens on " + ({ apps: "every app", search: "just the search field", home: "suggestions" })[Launcher.look.startView] : ""
+            ConfigChoice { section: "launcher"; key: "startView"; values: ["theme", "home", "apps", "search"]; labels: ["Style's own", "Suggestions", "All apps", "Search field"] }
         }
-        SettingRow {
-            label: "Apps per row"
-            hint: "In All apps; fewer when the panel is too narrow for them"
-            ConfigChoice { section: "launcher"; key: "columns"; values: [5, 6, 7, 8, 9] }
-        }
-        SettingRow {
-            label: "Clipboard button"
-            hint: "Super+V always opens the history at the pointer"
-            ConfigChoice { section: "launcher"; key: "clipboardInside"; values: [true, false]; labels: ["History inside Spotlight", "Open the clipboard popup"] }
-        }
-    }
-
-    // your adjustments over the style: "Style's own" leaves each to the style picked above
-    SettingGroup {
-        title: "Adjust"
         SettingRow {
             label: "Size"
             hint: "Width, search bar and icons, against the style's own"
@@ -110,6 +106,20 @@ ColumnLayout {
             ConfigChoice { section: "launcher"; key: "corners"; values: ["style", "sharp", "soft", "round"]; labels: ["Style's own", "Square", "Soft", "Round"] }
         }
         SettingRow {
+            label: "Back to how " + page.styleName + " is designed"
+            hint: page.tweaked ? "Puts the options above back to the style's own" : "Nothing changed"
+            PillButton { text: "Reset"; enabled: page.tweaked; onClicked: page.asDesigned() }
+        }
+    }
+
+    SettingGroup {
+        title: "Apps and results"
+        SettingRow {
+            label: "Apps per row"
+            hint: "In All apps and Launchpad; fewer when the panel is too narrow for them"
+            ConfigChoice { section: "launcher"; key: "columns"; values: [5, 6, 7, 8, 9] }
+        }
+        SettingRow {
             label: "Second line under results"
             hint: "A file's folder, an app's description"
             ConfigToggle { section: "launcher"; key: "subtitles" }
@@ -124,6 +134,12 @@ ColumnLayout {
             ConfigSlider { section: "launcher"; key: "maxResults"; from: 10; to: 80; step: 5; format: v => String(v) }
         }
         SettingRow {
+            label: "Clipboard button"
+            hint: "Super+V always opens the history at the pointer"
+            ConfigChoice { section: "launcher"; key: "clipboardInside"; values: [true, false]; labels: ["History inside", "Clipboard popup"] }
+        }
+        SettingRow {
+            visible: Config.launcher.style === "launchpad" || (Config.launcher.padLayout ?? []).length > 0
             label: "Launchpad arrangement"
             hint: (Config.launcher.padLayout ?? []).length ? "Your order and folders. Reset puts every app back by name, with no folders"
                 : "By name. In Launchpad, hold an icon and drag it to move it; drop it on another app to make a folder"
