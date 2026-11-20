@@ -134,6 +134,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `dndFrom` | `string` | `"22:00"` |  |
 | `dndTo` | `string` | `"07:00"` |  |
 | `historyMax` | `int` | `100` |  |
+| `keepDays` | `int` | `7` | dismissed ones stay under Earlier in the notification centre (days); 0 = not kept |
 | `sound` | `string` | `"message-new-instant"` | normal priority: a freedesktop sound name (Notifications.sounds), "" = none |
 | `soundLow` | `string` | `""` | low priority sound, "" = none |
 | `soundCritical` | `string` | `"window-attention"` | critical sound, "" = none |

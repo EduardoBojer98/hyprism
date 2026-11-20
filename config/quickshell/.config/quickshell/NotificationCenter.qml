@@ -6,13 +6,15 @@ import QtQuick.Layouts
 // Notifications: their own panel, opened from the bell in the bar, Super+N or
 // `qs ipc call notifications toggle` (the Control Center holds the controls only). A header with the
 // count, Do Not Disturb and Clear all; then the history grouped by app, a group folded into its
-// newest card until you open it; an empty state when there is nothing. Styled and moving like every
+// newest card until you open it, ones that arrived since you last looked marked; an empty state when there is
+// nothing; then Earlier, the dismissed ones (folded while there are new ones), with Clear history. Styled and moving like every
 // other panel of the active theme.
 Singleton {
     id: root
 
     readonly property bool open: popup.open
     property var unfolded: ({})            // app name -> true
+    property bool showEarlier: false
 
     function toggle() { popup.toggle() }
     // keyboard: Up / Down walk the cards (Tab reaches the buttons too), Enter opens one, Delete dismisses it
@@ -30,7 +32,8 @@ Singleton {
         boxWidth: Notifications.cardWidth + Theme.spaceM * 2
         boxHeight: column.implicitHeight + Theme.spaceM * 2
         focusItem: column
-        onOpened: { Notifications.seenAt = Date.now(); Notifications.now = new Date(); root.unfolded = ({}) }
+        onOpened: { Notifications.seenBefore = Notifications.seenAt; Notifications.seenAt = Date.now()
+                    root.showEarlier = Notifications.history.length === 0; Notifications.now = new Date(); root.unfolded = ({}) }
         onClosed: Notifications.seenAt = Date.now()   // what arrived while it was open was seen
 
         Glass {
@@ -156,6 +159,33 @@ Singleton {
                     Layout.topMargin: 4
                     text: "Clear all"
                     onClicked: Notifications.clearAll()
+                }
+
+                // ---- Earlier: the dismissed ones, as plain records; a click opens the app ----
+                RowLayout {
+                    visible: Notifications.earlier.length > 0
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 4
+                    Layout.topMargin: 4
+                    Text {
+                        Layout.fillWidth: true
+                        text: "Earlier · " + Notifications.earlier.length
+                        color: Theme.subtext
+                        elide: Text.ElideRight
+                        font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                    }
+                    Chip { label: root.showEarlier ? "Hide" : "Show"; onClicked: root.showEarlier = !root.showEarlier }
+                    Chip { label: "Clear history"; onClicked: Notifications.clearEarlier() }
+                }
+                Repeater {
+                    // shortcut: the newest 20 only, each card costs a little; raise it if more are wanted
+                    model: root.showEarlier ? Notifications.earlier.slice(0, 20) : []
+                    NotificationCard {
+                        required property var modelData
+                        Layout.fillWidth: true
+                        flat: true
+                        notification: modelData
+                    }
                 }
             }
         }

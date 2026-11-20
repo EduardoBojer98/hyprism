@@ -22,6 +22,8 @@ Glass {
     property int stacked: 0                // more notifications folded behind this one
     readonly property bool hovered: area.containsMouse || closeArea.containsMouse || replying   // a banner waits while you type
     property bool replying: false
+    // in the centre: arrived since you last looked (timed out unseen, or held by Do Not Disturb)
+    readonly property bool missed: !banner && !kindOverride && !!notification && Notifications.missed(notification)
     // the app takes a typed reply (a chat app): a field under the text, Enter sends it
     readonly property bool canReply: !!notification?.hasInlineReply && (banner || stacked === 0)
     readonly property bool critical: notification?.urgency === NotificationUrgency.Critical
@@ -135,6 +137,13 @@ Glass {
                 visible: !card.isCompact
                 Layout.fillWidth: true
                 Layout.rightMargin: closeButton.visible ? closeButton.width : 0   // the × sits over this row
+                Rectangle {   // missed: an accent dot before the app's name
+                    visible: card.missed
+                    implicitWidth: 8; implicitHeight: 8; radius: 4
+                    color: card.red ? Theme.errorText : Theme.accent
+                    Accessible.role: Accessible.StaticText
+                    Accessible.name: "New"
+                }
                 Rectangle {   // tag: the app's name on an accent tag
                     visible: card.kind === "tag" && appName.text !== ""
                     implicitWidth: appTag.implicitWidth + 12; implicitHeight: appTag.implicitHeight + 4
@@ -208,7 +217,8 @@ Glass {
         const n = card.notification
         if (!n) return []
         const body = String(n.body ?? "").replace(/<[^>]*>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&amp;/g, "&")
-        return [[Qt.formatTime(new Date(Notifications.timeOf(n)), "HH:mm") + " ", Theme.muted, false],
+        return [[card.missed ? "• " : "", Theme.accent, true],
+                [Qt.formatTime(new Date(Notifications.timeOf(n)), "HH:mm") + " ", Theme.muted, false],
                 ["[" + (card.critical ? "!! " : "") + (n.appName || "other").toLowerCase() + "] ", card.critical ? Theme.error : Theme.accent, false],
                 [n.summary ?? "", Theme.text, true],
                 [body ? " — " + body : "", Theme.subtext, false]]

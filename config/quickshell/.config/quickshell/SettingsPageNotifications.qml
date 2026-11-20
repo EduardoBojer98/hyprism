@@ -351,6 +351,16 @@ ColumnLayout {
             hint: Notifications.history.length + " notifications"
             PillButton { text: "Clear all"; enabled: Notifications.history.length > 0; onClicked: Notifications.clearAll() }
         }
+        SettingRow {
+            label: "Keep dismissed ones"
+            hint: "Listed under Earlier in the notification centre, so you can find one you dismissed or missed"
+            ConfigChoice { section: "notifications"; key: "keepDays"; values: [0, 1, 7, 30]; labels: ["Off", "1 day", "7 days", "30 days"] }
+        }
+        SettingRow {
+            label: "Clear dismissed ones"
+            hint: Notifications.earlier.length + " under Earlier"
+            PillButton { text: "Clear history"; enabled: Notifications.earlier.length > 0; onClicked: Notifications.clearEarlier() }
+        }
     }
 
     SettingGroup {

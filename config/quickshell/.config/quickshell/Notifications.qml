@@ -11,16 +11,20 @@ import QtQuick
 // history, which the notification centre shows (the bell, Super+N). Do Not Disturb (on by hand, or on a daily
 // schedule) keeps everything but critical ones out of the banners. Each urgency has its own time on screen
 // and sound. `qs ipc call notifications test` sends one through this server, the way an app would. A notification leaves the history when you dismiss it or
-// the app withdraws it; the oldest go past Config.notifications.historyMax.
-// The history is saved to ~/.local/state/hyprism/notifications.json, so a shell restart keeps it. A saved
+// the app withdraws it; the oldest go past Config.notifications.historyMax. It then moves to `earlier`, a plain
+// record the centre lists under Earlier for Config.notifications.keepDays (0 = not kept); a click there opens the app.
+// Both are saved to ~/.local/state/hyprism/notifications.json, so a shell restart keeps them. A saved
 // one comes back as a plain record (text, icon, time): it can be read and dismissed, its app's buttons are gone.
 Singleton {
     id: root
 
     property var history: []     // Notification objects, newest first
     property var popups: []      // the ones showing as banners now
+    property var earlier: []     // closed ones as plain records (record()), newest first; closedAt: when it closed
     property var times: ({})     // id -> arrival time (ms)
     property real seenAt: 0      // when the notification centre was last open
+    property real seenBefore: 0  // seenAt before this opening: newer ones are marked as missed in the centre
+    function missed(n) { return !n.closedAt && timeOf(n) > seenBefore }
     // arrived since then and still in the history: counted from the history, so a dismissed or withdrawn one leaves the count
     readonly property int unread: NotificationCenter.open ? 0 : history.filter(n => (times[n.id] ?? 0) > seenAt).length
     property date now: new Date()
@@ -61,7 +65,7 @@ Singleton {
         return out
     }
 
-    function timeOf(n) { return times[n.id] ?? Date.now() }
+    function timeOf(n) { return times[n.id] ?? n.time ?? Date.now() }
     function ago(n) {
         const s = Math.max(0, (now.getTime() - timeOf(n)) / 1000)
         if (s < 60) return "now"
@@ -100,8 +104,12 @@ Singleton {
     // Click: the app's default action if it has one (invoke() closes it unless it is resident), and its window to
     // the front; without one, its window or else the app started, and the notification closed
     function activate(n) {
+        // the centre closes first: its keyboard grab would hand the focus back to the old window as it goes
+        const wait = NotificationCenter.open
+        if (wait) NotificationCenter.toggle()
+        if (n.closedAt) return focusApp(n, true, wait)   // Earlier: just the app
         const action = (n.actions ?? []).find(a => a.identifier === "default")
-        focusApp(n, !action)
+        focusApp(n, !action, wait)
         if (action) action.invoke()
         else n.dismiss()
     }
@@ -110,15 +118,17 @@ Singleton {
         if (!DesktopEntries.applications.values.length) return null
         return (n.desktopEntry ? DesktopEntries.byId(n.desktopEntry) : null) ?? (n.appName ? DesktopEntries.heuristicLookup(n.appName) : null)
     }
-    function focusApp(n, launch) {
+    function focusApp(n, launch, wait) {
         const e = entryOf(n)
         const ids = [n.desktopEntry, n.appName, e?.id, e?.startupClass].filter(s => s).map(s => String(s).toLowerCase())
         const wins = Hyprland.toplevels.values.filter(t => t.wayland)
         const t = wins.find(t => ids.includes(t.wayland.appId.toLowerCase()))
                ?? (e ? wins.find(t => DesktopEntries.heuristicLookup(t.wayland.appId)?.id === e.id) : null)
-        if (t) Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.focus({ window = "address:0x${String(t.address).replace(/^0x/, "")}" })`])
+        if (t) { raise.address = String(t.address).replace(/^0x/, ""); raise.interval = wait ? 200 : 1; raise.restart() }
         else if (launch && e) e.execute()
     }
+    Timer { id: raise; property string address
+            onTriggered: Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.focus({ window = "address:0x${address}" })`]) }
     function clearApp(app) { for (const n of history.filter(x => (x.appName || "Other") === app)) n.dismiss() }
     function clearAll() { for (const n of history.slice()) n.dismiss() }
     function minutes(hhmm) { const p = String(hhmm).split(":"); return Number(p[0]) * 60 + Number(p[1]) }
@@ -176,6 +186,8 @@ Singleton {
     }
 
     function forget(n) {
+        if (history.includes(n) && c.keepDays > 0)
+            earlier = prune([Object.assign(record(n), { id: "earlier-" + n.id + "-" + Date.now(), closedAt: Date.now() })].concat(earlier))
         history = history.filter(x => x !== n)
         hidePopup(n)
         const t = Object.assign({}, times); delete t[n.id]; times = t
@@ -191,7 +203,10 @@ Singleton {
         keepOnReload: true
         onNotification: n => {
             n.tracked = true
-            const t = Object.assign({}, root.times); t[n.id] = Date.now(); root.times = t
+            // kept over a reload, it can come again after the saved file was read: the saved copy goes, its time stays
+            const back = root.history.find(x => x.savedId === n.id && root.same(x, n))
+            if (back) root.history = root.history.filter(x => x !== back)
+            const t = Object.assign({}, root.times); t[n.id] = back ? Number(back.time) || Date.now() : Date.now(); root.times = t
             n.closed.connect(() => root.forget(n))
             if (!n.transient) {
                 root.history = [n].concat(root.history.filter(x => x !== n))
@@ -216,6 +231,15 @@ Singleton {
         if (savedText !== null) restore()
     }
 
+    // Earlier: within keepDays, at most historyMax; plain records get dismiss() to leave the list
+    function same(n, r) { return n.appName === r.appName && n.summary === r.summary && n.body === r.body }
+    function prune(list) {
+        const from = Date.now() - c.keepDays * 86400000
+        return list.filter(r => r.closedAt >= from).slice(0, c.historyMax)
+                   .map(r => Object.assign(r, { actions: [], hints: ({}), dismiss: () => { earlier = earlier.filter(x => x !== r) } }))
+    }
+    function clearEarlier() { earlier = [] }
+
     // ---- saved history ----
     property bool restored: false   // nothing is written before the saved file is read, so it is never emptied
     function record(n) {
@@ -227,16 +251,19 @@ Singleton {
     property bool started: false
     property var savedText: null
     function restore() {
-        let saved = []
-        try { saved = JSON.parse(savedText) } catch (e) {}
-        if (!Array.isArray(saved)) saved = []
+        let saved = [], file = null
+        try { file = JSON.parse(savedText) } catch (e) {}
+        if (Array.isArray(file)) saved = file   // the old file: the history alone
+        else if (file && typeof file === "object") {
+            saved = Array.isArray(file.history) ? file.history : []
+            earlier = prune((Array.isArray(file.earlier) ? file.earlier : []).filter(r => r && typeof r === "object" && Number(r.closedAt)))
+        }
         const t = Object.assign({}, times), out = []
-        const same = (n, r) => n.appName === r.appName && n.summary === r.summary && n.body === r.body
         saved.forEach((r, i) => {
             if (typeof r !== "object" || !r) return
             const live = history.find(n => same(n, r))
             if (live) { t[live.id] = Number(r.time) || t[live.id]; return }   // kept over a reload: keep its age
-            const n = Object.assign({ actions: [], hints: ({}) }, r, { id: "saved-" + i + "-" + r.time })
+            const n = Object.assign({ actions: [], hints: ({}) }, r, { id: "saved-" + i + "-" + r.time, savedId: r.id })
             n.dismiss = () => root.forget(n)
             t[n.id] = Number(r.time) || Date.now()
             out.push(n)
@@ -246,7 +273,10 @@ Singleton {
         restored = true
     }
     onHistoryChanged: if (restored) saveLater.restart()
-    Timer { id: saveLater; interval: 500; onTriggered: store.setText(JSON.stringify(root.history.map(n => root.record(n)), null, 1)) }
+    onEarlierChanged: if (restored) saveLater.restart()
+    Timer { id: saveLater; interval: 500
+            onTriggered: store.setText(JSON.stringify({ history: root.history.map(n => root.record(n)),
+                                                        earlier: root.earlier.map(r => Object.assign(root.record(r), { closedAt: r.closedAt })) }, null, 1)) }
     FileView {
         id: store
         path: (Quickshell.env("XDG_STATE_HOME") || Quickshell.env("HOME") + "/.local/state") + "/hyprism/notifications.json"

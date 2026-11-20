@@ -44,6 +44,9 @@ every shortcut. The full key list is in the [README](../README.md#keys).
 - **Notifications** have their own panel from the bell (`Super+N`): Do Not Disturb (`Super+Shift+N`), history by app.
   Click one to open the app that sent it; its own buttons (and a reply field, for chat apps that offer one) are on
   the card. Settings → Notifications → Size makes popups and the panel bigger or smaller.
+  New ones you haven't seen yet (timed out, or held by Do Not Disturb) have a dot. Dismissed ones move to
+  **Earlier** at the bottom of the panel, kept for 7 days (Settings → Notifications → Keep dismissed ones) with
+  Clear history; a click there opens the app.
 - **Focus modes** (Settings > Focus, the Control Center's Focus tile, launcher actions such as *Focus: Work*):
   Work, Client call and Sleep to start, and any you add. Each can turn on Do Not Disturb while letting chosen apps
   through, set a wallpaper, open apps, and turn on Night Light or Caffeine; turning it off puts those back. A mode can
@@ -93,7 +96,7 @@ misbehaves with mixed scaling such as 1.2 next to 1.0 (see `docs/history/audit/v
   control. The status item opens the flyout of the icon you click. Battery shows charge, draw in watts, time left,
   CPU temperature, fans, the power mode (Silent / Balanced / Performance) and Caffeine.
 - `F6` moves the keyboard to the bar, `Shift+F6` to the dock.
-- The notification history is kept in `~/.local/state/hyprism/notifications.json` and survives a restart.
+- The notification history and Earlier are kept in `~/.local/state/hyprism/notifications.json` and survive a restart.
 
 ### Weather
 

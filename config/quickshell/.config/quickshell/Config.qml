@@ -69,7 +69,7 @@ Singleton {
                          style: ["theme", "card", "bubble", "line", "block", "tag", "compact"],
                          position: ["theme", "top-left", "top", "top-right", "bottom-left", "bottom", "bottom-right"],
                          dndSchedule: "bool", dndFrom: "time", dndTo: "time",
-                         historyMax: [10, 500], sound: "string", soundLow: "string", soundCritical: "string", volume: [0, 100],
+                         historyMax: [10, 500], keepDays: [0, 30], sound: "string", soundLow: "string", soundCritical: "string", volume: [0, 100],
                          mutedApps: "list" },
         terminal: { cursor: ["theme", "block", "bar", "underline", "block_hollow"], blink: ["theme", "on", "off"],
                     opacity: ["theme", "solid", "soft", "clear"], padding: ["theme", "tight", "normal", "roomy"],

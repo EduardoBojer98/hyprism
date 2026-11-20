@@ -106,6 +106,7 @@ JsonAdapter {
         property string dndFrom: "22:00"
         property string dndTo: "07:00"
         property int historyMax: 100
+        property int keepDays: 7                         // dismissed ones stay under Earlier in the notification centre (days); 0 = not kept
         property string sound: "message-new-instant"   // normal priority: a freedesktop sound name (Notifications.sounds), "" = none
         property string soundLow: ""                     // low priority sound, "" = none
         property string soundCritical: "window-attention"   // critical sound, "" = none
