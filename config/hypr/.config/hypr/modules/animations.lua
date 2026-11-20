@@ -67,9 +67,9 @@ function apply_motion(name)
     set("border", 5.39, "easeOutQuint")
     -- a frame of two or more colours turns only when the shell says so (THEME.border_loop: Settings > Windows > Turn it on,
     -- motion Full, not Silent, on AC or allowed on battery). "loop" makes Hyprland draw every frame, so it is off in every
-    -- other case. speed: 1 slow (20 s a turn) .. 10 fast (2 s)
+    -- other case. speed: 1 slow (10 s a turn: Hyprland caps speed at 100) .. 10 fast (2 s)
     local loop = THEME.border_loop == true
-    hl.animation({ leaf = "borderangle", enabled = loop, speed = loop and math.max(10, math.floor(200 / math.max(1, math.min(10, THEME.border_speed or 5)))) or 1,
+    hl.animation({ leaf = "borderangle", enabled = loop, speed = loop and math.floor(20 + (10 - math.max(1, math.min(10, THEME.border_speed or 5))) * 80 / 9) or 1,
                    bezier = "linear", style = loop and "loop" or nil })
     ;(PRESETS[name] or PRESETS.ease)()
     set("fadeIn", 1.73, "almostLinear"); set("fadeOut", 1.46, "almostLinear")
