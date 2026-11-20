@@ -68,7 +68,8 @@ ColumnLayout {
             model: Phone.nearby
             SettingRow {
                 required property var modelData
-                label: modelData.name
+                // two devices with one name (a second KDE Connect on the same computer, say) get their id's start to tell apart
+                label: modelData.name + (Phone.nearby.filter(o => o.name === modelData.name).length > 1 ? "  ·  " + modelData.id.slice(0, 8) : "")
                 hint: modelData.requested ? "Accept the request on the phone" : "Not paired: both screens show the same key to compare"
                 PillButton { text: modelData.requested ? "Waiting…" : "Pair"; primary: !modelData.requested; enabled: !modelData.requested; onClicked: Phone.pair(modelData.id) }
             }
