@@ -260,7 +260,8 @@ Scope {
     function applyWallpaper() {
         if (!Config.appearance.wallpaper || current.wall === lastWall) return
         lastWall = current.wall
-        Quickshell.execDetached(["sh", "-c", "p=$(theme-wallpaper \"$1\") && qs ipc call wallpaper set \"$p\"", "sh", current.wall])
+        // a slow first render can finish after a newer one: only the last one asked for is set
+        Quickshell.execDetached(["sh", "-c", "k=${XDG_CACHE_HOME:-$HOME/.cache}/hyprism/wallpaper-wanted; mkdir -p \"${k%/*}\"; printf %s \"$1\" >\"$k\"; p=$(theme-wallpaper \"$1\") && [ \"$(cat \"$k\")\" = \"$1\" ] && qs ipc call wallpaper set \"$p\"", "sh", current.wall])
     }
     Timer { id: wallDebounce; interval: 500; onTriggered: if (Config.loaded && Themes.ready) root.applyWallpaper() }
     // First login: no wallpaper has been set yet, so draw the default theme's own (later logins keep what is set)
