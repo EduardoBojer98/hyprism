@@ -4,7 +4,8 @@
 # The image is shrunk to 96 px and reduced to 8 colours; greys, near-black and near-white are dropped. The most
 # frequent colour left is the accent, the next one at least 40 degrees away in hue is accent2 (none: the accent's
 # hue turned 150 degrees). Only lightness is changed afterwards (hue and saturation stay) until each colour has
-# 3:1 contrast on SURFACE: lighter on a dark surface, darker on a light one.
+# 6:1 contrast on SURFACE: lighter on a dark surface, darker on a light one, so small accent text reads and text on an
+# accent fill (dark on a light accent, white on a dark one) gets about the same.
 # MODE defaults to dark. SURFACE (#rrggbb) defaults to #141414 (dark) or #f5f5f5 (light).
 # A picture with nothing colourful in it prints {} (the theme's own colours stay).
 # The Settings > Wallpaper switch "Colours from the wallpaper" runs this (QS/WallpaperColours.qml).
@@ -59,14 +60,14 @@ function tohsl(r, g, b,    mx, mn, d) {
     H *= 60
 }
 function hexv(s) { return index("0123456789abcdef", substr(tolower(s), 1, 1)) - 1 }
-# push lightness (hue and saturation kept) until the colour has 3:1 on the surface; prints #rrggbb
+# push lightness (hue and saturation kept) until the colour has 6:1 on the surface; prints #rrggbb
 function fit(h, s, l,    step, n) {
     step = mode == "dark" ? 0.005 : -0.005
     for (n = 0; n <= 200; n++) {
         torgb(h, s, l)
         c = (lum(R, G, B) + 0.05) / (sl + 0.05)
         if (sl > lum(R, G, B)) c = (sl + 0.05) / (lum(R, G, B) + 0.05)
-        if (c >= 3 || l + step > 1 || l + step < 0) break
+        if (c >= 6 || l + step > 1 || l + step < 0) break
         l += step
     }
     return sprintf("#%02x%02x%02x", R, G, B)

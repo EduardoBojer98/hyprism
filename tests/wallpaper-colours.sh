@@ -23,7 +23,7 @@ magick -size 200x120 xc:'#d9b8e8' -fill '#b8e0d0' -draw 'rectangle 0,0 90,120' "
 magick -size 200x120 gradient:'#202020-#e0e0e0' "$t/grey.png"
 dark=#141414 light=#f5f5f5
 
-# ok_pair JSON SURFACE: two #rrggbb colours, each at least 3:1 against SURFACE
+# ok_pair JSON SURFACE: two #rrggbb colours, each at least 6:1 against SURFACE (or as far as lightness goes)
 ok_pair() {
     python3 -I - "$1" "$2" <<'PY'
 import json, re, sys
@@ -36,7 +36,7 @@ def ratio(a, b):
     x, y = sorted((lum(a), lum(b)), reverse=True)
     return (x + 0.05) / (y + 0.05)
 cols = [d.get("accent", ""), d.get("accent2", "")]
-sys.exit(0 if all(re.fullmatch(r"#[0-9a-f]{6}", c) and ratio(c, s) >= 3 for c in cols) else 1)
+sys.exit(0 if all(re.fullmatch(r"#[0-9a-f]{6}", c) and ratio(c, s) >= 6 for c in cols) else 1)
 PY
 }
 # hue_of #rrggbb: degrees
@@ -47,7 +47,7 @@ for pic in orange pastel; do
         s=$dark
         [[ $m == light ]] && s=$light
         out=$("$bin/wallpaper-colours" "$t/$pic.png" "$m" 2>&1)
-        check "$pic ($m): two colours, each 3:1 on the surface" 'ok_pair "$out" "$s"'
+        check "$pic ($m): two colours, each 6:1 on the surface" 'ok_pair "$out" "$s"'
     done
 done
 out=$("$bin/wallpaper-colours" "$t/orange.png" dark | python3 -I -c 'import json,sys; print(json.load(sys.stdin)["accent"])')

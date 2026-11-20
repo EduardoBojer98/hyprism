@@ -5,7 +5,7 @@ import QtQuick
 
 // Settings > Wallpaper > "Colours from the wallpaper" (Config.appearance.wallpaperColours, off by default).
 // When on and the wallpaper is your own picture (not one a theme draws or ships), the `wallpaper-colours` script
-// picks an accent and a second accent from it, kept at 3:1 contrast on the theme's surface. They are saved as
+// picks an accent and a second accent from it, kept at 6:1 contrast on the theme's surface. They are saved as
 // the theme's adjustments (Themes.adjust: accent, accent2), so validation and the text-on-accent check still apply.
 // What they replaced is kept in Config.appearance.custom[theme]._before and put back when the mode goes off,
 // the wallpaper is the theme's own again, or another theme becomes the active one.

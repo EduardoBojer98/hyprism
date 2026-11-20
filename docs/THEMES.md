@@ -97,7 +97,7 @@ your own pictures regardless of the theme.
 Settings → Wallpaper → "Colours from the wallpaper" lets the accent and second accent follow a picture you chose
 yourself (`appearance.wallpaperColours`). It is off by default and does nothing while the wallpaper is one a theme
 draws or ships. `wallpaper-colours IMAGE [dark|light] [SURFACE]` picks the colours; their lightness is adjusted
-(hue stays) so each keeps at least 3:1 contrast on the theme's panels, and the text on an accent is still checked.
+(hue stays) so each keeps at least 6:1 contrast on the theme's panels, and the text on an accent is still checked.
 They are saved like your own adjustments for the active theme (`appearance.custom`), after remembering the accents
 they replace. Switch the toggle off, go back to the theme's wallpaper or change theme, and the earlier accents
 return. A picture with no colour in it (grey) changes nothing.
