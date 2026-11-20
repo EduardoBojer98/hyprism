@@ -38,13 +38,25 @@ Item {
         brightness: lp.brightness - 1
     }
 
+    Repeater {   // the blocks scene's composition, in % of the screen from its bottom-left corner
+        model: LockScreen.blocks
+        Rectangle {
+            required property var modelData
+            x: modelData.x / 100 * lp.width
+            width: modelData.w / 100 * lp.width
+            height: modelData.h / 100 * lp.height
+            y: lp.height - height - modelData.y / 100 * lp.height
+            color: LockScreen.tone(modelData.colour)
+        }
+    }
+
     Repeater {
         model: LockScreen.elements
         Item {
             id: el
             required property var modelData
             readonly property var e: modelData
-            readonly property bool isText: !["input", "avatar"].includes(e.role)
+            readonly property bool isText: !["input", "avatar", "shape"].includes(e.role)
             width: isText ? label.implicitWidth : e.w * lp.s
             height: isText ? label.implicitHeight : e.hgt * lp.s
             x: e.h === "left" ? e.x * lp.s : e.h === "right" ? lp.width - width - e.x * lp.s : (lp.width - width) / 2 + e.x * lp.s
@@ -63,16 +75,32 @@ Item {
                 }
                 lineHeight: el.e.tight ? 0.92 : 1
             }
-            Rectangle {   // the password field
+            Rectangle {   // a shape: the soft media pill, the blocks field's hard shadow
+                visible: el.e.role === "shape"
+                anchors.fill: parent
+                radius: el.e.round ? height / 2 : 0
+                color: LockScreen.tone(el.e.colour)
+            }
+            Rectangle {   // the password field, styled as LockScreen.conf styles it per scene
+                readonly property string scene: LockScreen.scene
                 visible: el.e.role === "input"
                 anchors.fill: parent
-                radius: Theme.radius >= 12 ? height / 2 : Theme.radius * lp.s
-                color: Qt.alpha(Theme.surfaceColor, 0.85)
-                border { width: Math.max(1, Theme.line * lp.s); color: Theme.accent }
+                radius: scene === "blocks" || scene === "boot" ? 0 : scene === "soft" || Theme.radius >= 12 ? height / 2 : Theme.radius * lp.s
+                color: scene === "boot" ? "transparent" : Qt.alpha(Theme.surfaceColor, scene === "blocks" ? 1 : scene === "soft" ? 0.78 : 0.85)
+                border { width: scene === "boot" || scene === "soft" ? 0 : Math.max(1, (scene === "blocks" ? 3 : Theme.line) * lp.s)
+                         color: scene === "blocks" ? Theme.text : Theme.accent }
                 Row {
+                    visible: parent.scene !== "boot"
                     anchors.centerIn: parent
                     spacing: 6 * lp.s
                     Repeater { model: 4; Rectangle { width: 7 * lp.s; height: width; radius: width / 2; color: Theme.text; opacity: 0.8 } }
+                }
+                Text {   // boot: the stars of a typed password
+                    visible: parent.scene === "boot"
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "****_"
+                    color: LockScreen.ink
+                    font { family: Theme.monoFont; pixelSize: Math.max(4, Math.round(12 * 1.33 * lp.s)) }
                 }
             }
             Item {   // the avatar: a round picture with an accent ring

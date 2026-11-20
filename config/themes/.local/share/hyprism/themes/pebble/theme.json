@@ -171,8 +171,10 @@
   },
   "lock": {
     "clock": "big",
-    "align": "center"
+    "align": "center",
+    "scene": "soft"
   },
+  "power": {"style": "tiles"},
   "term": {
     "palette": [
       "#292d2a",

@@ -179,8 +179,10 @@
   },
   "lock": {
     "clock": "terminal",
-    "align": "left"
+    "align": "left",
+    "scene": "boot"
   },
+  "power": {"style": "list"},
   "term": {
     "palette": [
       "#161a21",

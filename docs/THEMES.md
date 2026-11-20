@@ -74,7 +74,8 @@ corners, gaps, font and motion and is kept in `settings.json`; there is no build
 | `feel` | Each theme's signature in full motion: `press` (`scale`; `sink`, a 1 px drop that springs back; `shadow`, the button pushes into a hard block in `accent2`) and `focus` (`ring`, or `reticle`: corner marks that close in) |
 | `launcher`, `notify` | Launcher placement and look; where notifications appear and their shape |
 | `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset, `frame`: `accent`, `gradient` or `rainbow` (the focused window's frame) |
-| `lock` | Lock screen clock style and alignment |
+| `lock` | Lock screen `clock` style, `align`, and `scene`, the composition around it: `soft` (a time-of-day greeting, a shadowed password pill, a now-playing pill), `blocks` (a paper panel with accent and `accent2` blocks, a square field with a hard shadow) or `boot` (a boot log that types in, then `login:` and a `password: ****` line; all at once in reduced motion). Settings > Lock Screen's preview draws the same layout |
+| `power` | `style` of the power menu: `tiles` (icon tiles), `blocks` (giant display-type blocks with their key, hard shadows) or `list` (numbered mono lines, `1) lock`). Every style takes the keys L S H O R P and 1–6 |
 | `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, `palette` (16 colours), and its look: `cursorStyle` (`block`, `bar`, `underline`, `block_hollow`), `blink`, `padding` `[x, y]`, `prompt`: the starship prompt and fastfetch card preset (`rounded` pills, `blocks` on a heavy rail, `brackets` as an ascii HUD) |
 | `wall` | The wallpaper's name: a picture `<wall>.png` in the folder, or a recipe with that name in `wallpaper.sh` |
 | `icons` | The icon theme it starts with (a folder name; `Papirus` and `breeze` follow light and dark). Settings > Icons can pick another |

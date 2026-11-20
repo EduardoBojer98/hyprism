@@ -169,8 +169,10 @@
   },
   "lock": {
     "clock": "stacked",
-    "align": "left"
+    "align": "left",
+    "scene": "blocks"
   },
+  "power": {"style": "blocks"},
   "term": {
     "palette": [
       "#262626",

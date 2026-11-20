@@ -6,6 +6,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- A lock screen and power menu per theme (theme.json `lock.scene`, `power.style`). Pebble: a centred clock, a
+  time-of-day greeting, a soft password pill and a now-playing pill. Poster: the stacked clock on a paper panel with
+  colour blocks and a hard-shadowed field; the power menu is giant blocks with their key. Monolith: a boot log that
+  types in (`[ ok ] session locked`, then `login:` and `password: ****`), and a numbered power menu. The power menu
+  now takes keys in every theme: L lock, S sleep, H hibernate, O log out, R restart, P shut down, or 1–6.
 - A signature feel per theme (theme.json `feel`), full motion only: Poster's buttons push into their hard
   shadow, Pebble's sink and spring back and its panels land with a small overshoot, Monolith's focus is a reticle that
   closes in and its popup brackets draw in from the corners.
@@ -323,6 +328,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- The lock screen's media widget showed "Sample Text": playerctl's `{{ }}` format is hyprlang syntax.
 - Settings search matched no pages and the Language page's layout list failed (`flatMap` is missing in
   Quickshell's JavaScript).
 - Settings: cursor size is a choice of four sizes; sliders on Keyboard & Touchpad and Night Light lost their stray
