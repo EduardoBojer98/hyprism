@@ -85,9 +85,10 @@ Glass {
             // below the card, never under it: a see-through (glass) card would show it through as grey bars
             y: card.height - 1; height: (index + 1) * 6
             radius: Math.min(card.radius, 6)
-            color: card.flat ? Theme.fill : Theme.glassStrong
-            border { color: Theme.stroke; width: card.flat ? 0 : 1 }
-            opacity: 0.8 - index * 0.25
+            // a solid raised tone with an edge: a faint fill or glass reads as nothing on a dark panel
+            color: Theme.raised
+            border { color: Theme.stroke; width: 1 }
+            opacity: 1 - index * 0.3
         }
     }
 
