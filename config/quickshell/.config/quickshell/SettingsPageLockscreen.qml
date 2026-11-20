@@ -158,6 +158,13 @@ ColumnLayout {
             hint: "Darker keeps the clock easy to read on bright pictures"
             ConfigSlider { section: "lockscreen"; key: "brightness"; from: 0.3; to: 1; step: 0.02; format: v => Math.round(v * 100) + "%" }
         }
+        SettingRow {
+            label: "Colours from its picture"
+            hint: !Config.lockscreen.wallpaperColours ? "Off: the desktop's accent colours"
+                : WallpaperColours.lockAccent ? "The clock and password field take their accents from the picture behind them"
+                : "Nothing colourful in this picture: the desktop's accents stay"
+            ConfigToggle { section: "lockscreen"; key: "wallpaperColours" }
+        }
         SettingRow {   // the same setting as the bar clock's, here too so it is reachable with no clock on the bar
             label: "24-hour time"
             hint: (Config.bar.clock24 ? "14:40" : "2:40 PM") + ". Bar clocks follow it unless set otherwise in their own settings"
@@ -169,7 +176,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: "Fonts and colours come from the theme."
+        text: "Fonts and colours come from the theme (accents from the picture with Colours from its picture on)."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }

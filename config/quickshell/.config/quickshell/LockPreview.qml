@@ -66,7 +66,7 @@ Item {
                 id: label
                 visible: el.isText
                 text: LockScreen.previewText(el.e.role, lp.now)
-                color: el.e.colour === "accent" ? Theme.accent : el.e.colour === "muted" ? LockScreen.inkMuted : LockScreen.ink
+                color: el.e.colour === "accent" ? LockScreen.accent : el.e.colour === "muted" ? LockScreen.inkMuted : LockScreen.ink
                 font {
                     family: el.e.mono ? Theme.monoFont : el.e.display ? Theme.displayFont : Theme.font
                     pixelSize: Math.max(4, Math.round((el.e.size ?? 10) * 1.33 * lp.s))
@@ -88,7 +88,7 @@ Item {
                 radius: scene === "blocks" || scene === "boot" ? 0 : scene === "soft" || Theme.radius >= 12 ? height / 2 : Theme.radius * lp.s
                 color: scene === "boot" ? "transparent" : Qt.alpha(Theme.surfaceColor, scene === "blocks" ? 1 : scene === "soft" ? 0.78 : 0.85)
                 border { width: scene === "boot" || scene === "soft" ? 0 : Math.max(1, (scene === "blocks" ? 3 : Theme.line) * lp.s)
-                         color: scene === "blocks" ? Theme.text : Theme.accent }
+                         color: scene === "blocks" ? Theme.text : LockScreen.accent }
                 Row {
                     visible: parent.scene !== "boot"
                     anchors.centerIn: parent
@@ -115,7 +115,7 @@ Item {
                 }
                 Rectangle { id: round; anchors.fill: parent; radius: width / 2; visible: false; layer.enabled: true }
                 MultiEffect { anchors.fill: parent; source: face; maskEnabled: true; maskSource: round }
-                Rectangle { anchors.fill: parent; radius: width / 2; color: "transparent"; border { width: Math.max(1, 2 * lp.s); color: Theme.accent } }
+                Rectangle { anchors.fill: parent; radius: width / 2; color: "transparent"; border { width: Math.max(1, 2 * lp.s); color: LockScreen.accent } }
             }
         }
     }

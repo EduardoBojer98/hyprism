@@ -67,7 +67,9 @@ What you can change on top of a theme, kept separately for each theme:
 - **Bar shape:** edge, size, floating or attached and the dock's place follow the theme you are on.
 - **Icons and cursor:** each theme brings a matching pack (Pebble: Breeze and Capitaine; Poster and Monolith:
   Papirus with a Breeze cursor). Settings → Appearance → Icons / Cursor picks another or adds your own.
-- **Colours from the wallpaper** (Settings → Wallpaper, off by default): the accents follow your own picture.
+- **Colours from the wallpaper** (Settings → Appearance → Themes or Wallpaper, off by default): the accents follow
+  your own picture; Light or dark → Wallpaper picks the light or dark half by how bright it is, and Settings → Lock
+  Screen → Colours from its picture gives the lock screen accents from the picture behind it.
 
 ## Features
 

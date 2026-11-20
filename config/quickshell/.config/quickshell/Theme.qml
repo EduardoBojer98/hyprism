@@ -8,7 +8,9 @@ import QtQuick
 // Ghostty and the wallpaper. Personal knobs on top: Config.appearance.fontScale and .animations.
 Singleton {
     readonly property var a: Config.appearance
-    readonly property var current: Themes.resolve(a.theme, a.custom, a.mode, Config.bar.layout)   // the theme, your adjustments, and your one bar layout
+    // "wallpaper": light behind a bright picture of yours, dark behind a dark one (a theme's own picture: the theme decides)
+    readonly property string mode: a.mode !== "wallpaper" ? a.mode : WallpaperColours.bright < 0 ? "theme" : WallpaperColours.bright > 0.55 ? "light" : "dark"
+    readonly property var current: Themes.resolve(a.theme, a.custom, mode, Config.bar.layout)   // the theme, your adjustments, and your one bar layout
     readonly property var c: current.colour
     readonly property bool light: !current.dark
 

@@ -72,4 +72,53 @@ Singleton {
         }
     }
     Component.onCompleted: debounce.restart()
+
+    // Settings > Appearance > Light or dark "Wallpaper": how bright your own picture is, 0 to 1 (-1: a theme's
+    // picture, or the theme sets the wallpaper, where switching halves would swap the picture too)
+    readonly property string brightJob: Config.loaded && Config.appearance.mode === "wallpaper" && own && !Config.appearance.wallpaper ? Wallpapers.still(cur) : ""
+    property real bright: -1
+    onBrightJobChanged: {
+        if (!brightJob) { bright = -1; return }
+        meter.running = false
+        meter.command = ["magick", brightJob.startsWith("/") ? brightJob + "[0]" : "./" + brightJob, "-resize", "64x64", "-colorspace", "Gray", "-format", "%[fx:mean]", "info:"]
+        meter.running = true
+    }
+    Process {
+        id: meter
+        stdout: StdioCollector { onStreamFinished: { const v = parseFloat(text); if (v >= 0 && v <= 1) root.bright = v } }
+    }
+
+    // Settings > Lock Screen "Colours from its picture": accents picked from what the lock screen shows (its own
+    // picture or the desktop's), for the lock screen only; ThemeSync writes them. "" = the desktop's accents.
+    readonly property string lockPicture: Config.lockscreen.wallpaper ? Wallpapers.expand(Config.lockscreen.wallpaper) : Wallpapers.still(cur)
+    // picked as on a dark surface brighter than the dimmed picture, so they read over it (light enough for ThemeSync's 0.45 check)
+    readonly property string lockJob: Config.loaded && Config.lockscreen.wallpaperColours && lockPicture.startsWith("/") ? lockPicture : ""
+    property string lockAccent: ""
+    property string lockAccent2: ""
+    onLockJobChanged: lockDebounce.restart()
+    Timer {
+        id: lockDebounce
+        interval: 800
+        onTriggered: {
+            root.lockAccent = ""; root.lockAccent2 = ""
+            if (!root.lockJob) return
+            lockRunner.job = root.lockJob
+            lockRunner.running = false
+            lockRunner.command = ["wallpaper-colours", root.lockPicture, "dark", "#3a3a3a"]   // palette: a contrast reference above the dimmed picture, not a theme colour
+            lockRunner.running = true
+        }
+    }
+    Process {
+        id: lockRunner
+        property string job: ""
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (lockRunner.job !== root.lockJob) return
+                try {
+                    const r = JSON.parse(text)
+                    if (/^#[0-9a-f]{6}$/.test(r.accent ?? "") && /^#[0-9a-f]{6}$/.test(r.accent2 ?? "")) { root.lockAccent = r.accent; root.lockAccent2 = r.accent2 }
+                } catch (e) { console.warn("wallpaper-colours (lock): " + e) }
+            }
+        }
+    }
 }

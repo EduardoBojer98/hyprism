@@ -10,6 +10,9 @@ Singleton {
     id: root
 
     readonly property var l: Config.lockscreen
+    // Settings > Lock Screen "Colours from its picture" (WallpaperColours.qml), else the desktop's
+    readonly property color accent: WallpaperColours.lockAccent ? Qt.color(WallpaperColours.lockAccent) : Theme.accent
+    readonly property color accent2: WallpaperColours.lockAccent2 ? Qt.color(WallpaperColours.lockAccent2) : Theme.accent2
     readonly property var def: Theme.current.lock
     readonly property string clock: l.clock === "theme" ? def.clock : l.clock      // big | stacked | terminal | readout | small
     readonly property string align: l.position === "theme" ? def.align : l.position // center | top | bottom | left
@@ -183,10 +186,10 @@ Singleton {
         const w = ({ 300: " Light", 500: " Medium", 600: " SemiBold", 700: " Bold", 800: " ExtraBold", 900: " Black" })[e.weight ?? 400] ?? ""
         return w && f.endsWith(w) ? f + "," : f + w
     }
-    function colour(e) { return e.colour === "accent" ? "rgb(" + hex(Theme.accent) + ")" : e.colour === "muted" ? rgba(inkMuted, Number(inkMuted.a.toFixed(2))) : "rgb(" + hex(ink) + ")" }
+    function colour(e) { return e.colour === "accent" ? "rgb(" + hex(accent) + ")" : e.colour === "muted" ? rgba(inkMuted, Number(inkMuted.a.toFixed(2))) : "rgb(" + hex(ink) + ")" }
     // a shape's fill by name (blocks, the soft media pill, the blocks field's shadow), here and in LockPreview
     function tone(name) {
-        return ({ surface: Theme.surfaceColor, accent: Theme.accent, accent2: Theme.accent2, text: Theme.text,
+        return ({ surface: Theme.surfaceColor, accent: accent, accent2: accent2, text: Theme.text,
                   pill: Qt.alpha(Theme.surfaceColor, 0.72) })[name] ?? Theme.surfaceColor
     }
     function place(e) {
@@ -204,7 +207,7 @@ Singleton {
                    + "    rounding    = " + (e.round ? -1 : 0) + "\n" + (e.round ? "    shadow_passes = 2\n    shadow_size = 6\n" : "") + place(e) + "}\n"
             } else if (e.role === "avatar") {
                 s += "image {\n    monitor     =\n    path        = " + avatarPath + "\n    size        = " + e.w + "\n    rounding    = -1\n"
-                   + "    border_size = 2\n    border_color = rgb(" + hex(Theme.accent) + ")\n" + place(e) + "}\n"
+                   + "    border_size = 2\n    border_color = rgb(" + hex(accent) + ")\n" + place(e) + "}\n"
             } else if (e.role === "input") {
                 // boot: bare, a star per letter after "password:"; soft: no outline, a soft shadow; blocks: a thick text frame
                 const boot = scene === "boot", soft = scene === "soft", blk = scene === "blocks"
@@ -212,10 +215,10 @@ Singleton {
                 s += "input-field {\n    monitor           =\n    size              = " + e.w + ", " + e.hgt + "\n"
                    + "    outline_thickness = " + (boot || soft ? 0 : blk ? 3 : Math.max(1, Theme.line)) + "\n"
                    + "    rounding          = " + (blk || boot ? 0 : soft || Theme.radius >= 12 ? -1 : Theme.radius) + "\n"
-                   + "    outer_color       = rgb(" + hex(blk ? Theme.text : Theme.accent) + ")\n"
+                   + "    outer_color       = rgb(" + hex(blk ? Theme.text : accent) + ")\n"
                    + "    inner_color       = " + (boot ? "rgba(0, 0, 0, 0)" : rgba(Theme.surfaceColor, blk ? 1 : soft ? 0.78 : 0.85)) + "\n"
                    + "    font_color        = rgb(" + hex(boot ? ink : Theme.text) + ")\n    font_family       = " + (boot ? Theme.monoFont : Theme.font) + "\n"
-                   + "    check_color       = rgb(" + hex(Theme.accent2) + ")\n    fail_color        = rgb(" + hex(Theme.error) + ")\n"
+                   + "    check_color       = rgb(" + hex(accent2) + ")\n    fail_color        = rgb(" + hex(Theme.error) + ")\n"
                    + "    placeholder_text  = <span foreground=\"##" + hex(boot ? ink : Theme.subtext) + "\">" + (boot ? "_" : "Password" + lay) + "</span>\n"
                    + "    fail_text         = <i>$FAIL</i>\n    fade_on_empty     = false\n"
                    + (boot ? "    dots_center       = false\n    dots_text_format  = *\n    dots_spacing      = 0.1\n    dots_size         = 0.5\n"

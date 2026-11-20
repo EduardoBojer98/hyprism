@@ -174,6 +174,7 @@ JsonAdapter {
         property string wallpaper: ""           // full path; empty = the desktop wallpaper
         property int blur: 3                    // blur passes, 0 = sharp
         property real brightness: 0.72
+        property bool wallpaperColours: false   // its accents come from the picture it shows (WallpaperColours.qml); off = the desktop's
     }
     // Window behaviour, animations and per-app rules: ThemeSync writes them to hypr/settings/windows.lua
     // (hypr/modules/windows.lua has the same defaults)

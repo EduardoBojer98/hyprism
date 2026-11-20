@@ -38,7 +38,7 @@ Scope {
     // Lock screen (Settings > Lock Screen): colours and background, then the layout from LockScreen.qml
     readonly property var lock: Config.lockscreen
     readonly property string lockConf: "# Written by Quickshell ThemeSync from the active theme (" + current.name + ")\n"
-        + "$accent = rgb(" + hex(Theme.accent.hslLightness < 0.45 ? Theme.onImage : Theme.accent) + ")\n$accent2 = rgb(" + hex(Theme.accent2) + ")\n"
+        + "$accent = rgb(" + hex(LockScreen.accent.hslLightness < 0.45 ? Theme.onImage : LockScreen.accent) + ")\n$accent2 = rgb(" + hex(LockScreen.accent2) + ")\n"
         + "$text = rgb(" + hex(Theme.text) + ")\n$muted = rgb(" + hex(Theme.subtext) + ")\n"
         + "$ground = rgb(" + hex(Theme.base) + ")\n$surface = rgb(" + hex(Theme.surfaceColor) + ")\n"
         + "$fail = rgb(" + hex(Theme.error) + ")\n$rounding = " + Theme.radius + "\n"

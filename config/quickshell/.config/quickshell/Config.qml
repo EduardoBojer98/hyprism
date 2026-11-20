@@ -51,7 +51,7 @@ Singleton {
     readonly property var schema: ({
         appearance: {
             theme: Themes.ids,
-            mode: ["theme", "light", "dark"], custom: "object", terminal: "bool", wallpaper: "bool", wallpaperColours: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"], motionStyle: ["theme", "smooth", "snappy", "springy", "minimal"],
+            mode: ["theme", "light", "dark", "wallpaper"], custom: "object", terminal: "bool", wallpaper: "bool", wallpaperColours: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"], motionStyle: ["theme", "smooth", "snappy", "springy", "minimal"],
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { enabled: "bool", size: ["compact", "regular", "roomy"], hiddenOn: "list",
@@ -84,7 +84,7 @@ Singleton {
         actions: { list: "actions" },
         lockscreen: { clock: ["theme", "big", "stacked", "terminal", "readout", "small"], position: ["theme", "center", "top", "bottom", "left"],
                       date: "bool", greeting: "bool", avatar: "string", widgets: "list", wallpaper: "string",
-                      blur: [0, 6], brightness: [0.3, 1] },
+                      blur: [0, 6], brightness: [0.3, 1], wallpaperColours: "bool" },
         windows: { layout: ["dwindle", "master", "scrolling"], newSplit: [0, 2], smartSplit: "bool",
                    masterNew: ["master", "slave"], masterSide: ["left", "right", "top", "center"], columnWidth: [0.3, 1],
                    followMouse: "bool", focusOnActivate: "bool", warpCursor: "bool", backAndForth: "bool",

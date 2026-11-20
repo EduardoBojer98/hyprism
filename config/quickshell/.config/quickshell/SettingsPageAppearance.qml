@@ -69,8 +69,15 @@ ColumnLayout {
         SettingRow {
             label: "Light or dark"
             hint: page.a.mode === "theme" ? "Follows the theme: " + page.base.name + " starts " + (page.base.dark ? "dark" : "light") + ". Every theme has a light and a dark version."
+                : page.a.mode === "wallpaper" ? (WallpaperColours.bright < 0 ? "Works with a picture of your own; with the theme's picture the theme decides"
+                    : "Your wallpaper is " + (Theme.light ? "bright, so the light" : "dark, so the dark") + " version shows; it changes with the picture")
                 : "Every theme in its " + page.a.mode + " version; windows, apps, terminal and wallpaper follow"
-            ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark"]; labels: ["Default", "Light", "Dark"] }
+            ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark", "wallpaper"]; labels: ["Default", "Light", "Dark", "Wallpaper"] }
+        }
+        SettingRow {
+            label: "Accent colours from the wallpaper"
+            hint: "The accents follow your own picture, in every theme. Off: the theme's own"
+            ConfigToggle { section: "appearance"; key: "wallpaperColours" }
         }
         Text {
             Layout.fillWidth: true
@@ -91,7 +98,7 @@ ColumnLayout {
                 model: Themes.list
                 ThemePreview {
                     required property var modelData
-                    theme: Themes.resolve(modelData.id, {}, page.a.mode)   // each in the light or dark half you picked
+                    theme: Themes.resolve(modelData.id, {}, Theme.mode)   // each in the light or dark half you picked
                     chosen: page.a.theme === modelData.id
                     Layout.fillWidth: true
                     onPicked: Config.set("appearance", "theme", modelData.id)

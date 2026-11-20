@@ -210,6 +210,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `wallpaper` | `string` | `""` | full path; empty = the desktop wallpaper |
 | `blur` | `int` | `3` | blur passes, 0 = sharp |
 | `brightness` | `real` | `0.72` |  |
+| `wallpaperColours` | `bool` | `false` | its accents come from the picture it shows (WallpaperColours.qml); off = the desktop's |
 
 ## windows
 
