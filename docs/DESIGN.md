@@ -74,7 +74,7 @@ fill is forced to 4.5:1 or more by `Themes.resolve`.
    `looks`) sets the panel tokens and the Hyprland preset together, each with a live preview; Animations:
    Full (the look), Reduced (90 ms fades, nothing moves), Off.
 6. **Depth belongs to the world.** Soft shadows only in Pebble, the hard offset block only in
-   Poster (the one neo-brutalist world), frames, blue corner brackets and a faint accent glow in Monolith.
+   Poster (the one neo-brutalist world), frames, blue corner brackets and a neutral soft shadow in Monolith.
 7. **Both screens.** Sizes are logical px: the laptop runs at 1.2 (1600×1000 logical), the Acer at 1.0;
    panels are capped to the room between bar and dock and kept on their monitor.
 

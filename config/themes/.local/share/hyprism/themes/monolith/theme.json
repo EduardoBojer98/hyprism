@@ -127,7 +127,7 @@
   },
   "popup": {
     "layout": "hud",
-    "depth": "glow",
+    "depth": "soft",
     "decor": "brackets",
     "decorColour": "accent2",
     "tiles": "solid",
