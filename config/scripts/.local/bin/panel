@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Laptop panel events (lid, 2-in-1 tablet mode), called by the switch binds in hypr/modules/binds.lua.
 #
-#   panel tablet on|off   360° hinge: auto-rotate panel + touch + stylus (the on-screen
-#                         keyboard is only shown from its button in the bar)
+#   panel tablet on|off   360° hinge: auto-rotate panel + touch + stylus, and the on-screen keyboard
+#                         (each as Settings > Touch & Tablet says)
 #   panel lid close|open  lid: hand everything to the Acer, or suspend if the Acer isn't ours
 #   panel rotate          (internal) follow the accelerometer until killed
 set -euo pipefail
@@ -11,6 +11,9 @@ set -euo pipefail
 case ${1:-} in -h | --help) usage ;; esac
 
 rotate() { hyprctl eval "laptop_panel($1)" >/dev/null; } # function from hypr/modules/monitors.lua
+# Settings > Touch & Tablet (settings.json touch): the value, or the default when unset or unreadable
+touch_setting() { jq -r --arg k "$1" --arg d "$2" 'if (.touch // {}) | has($k) then .touch[$k] | tostring else $d end' "$HOME/.config/quickshell/settings.json" 2>/dev/null || echo "$2"; }
+osk() { busctl --user call sm.puri.OSK0 /sm/puri/OSK0 sm.puri.OSK0 SetVisible b "$1" >/dev/null 2>&1 || true; }
 # the laptop's own panel (eDP-1, eDP-2…) and whether another screen is showing this desktop
 internal() { hyprctl -j monitors all | jq -r '[.[] | select(.name | startswith("eDP"))][0].name // empty'; }
 other_active() { hyprctl -j monitors | jq -e --arg i "$1" 'any(.[]; .name != $i)' >/dev/null; }
@@ -18,11 +21,13 @@ other_active() { hyprctl -j monitors | jq -e --arg i "$1" 'any(.[]; .name != $i)
 case "${1:-} ${2:-}" in
     "tablet on")
         pkill -f "panel rotate" || true
-        setsid -f "$0" rotate
+        [[ $(touch_setting autoRotate true) == true ]] && setsid -f "$0" rotate
         qs ipc call tablet set true >/dev/null 2>&1 || true # finger-sized controls in the shell
+        [[ $(touch_setting oskInTablet false) == true ]] && osk true
         ;;
     "tablet off")
         qs ipc call tablet set false >/dev/null 2>&1 || true
+        [[ $(touch_setting oskInTablet false) == true ]] && osk false
         pkill -f "panel rotate" || true
         pkill -x monitor-sensor || true
         rotate 0

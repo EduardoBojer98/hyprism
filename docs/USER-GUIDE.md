@@ -167,7 +167,7 @@ change a choice or a slider, Page Up and Page Down scroll the page.
 | **Notifications** | Notifications, Focus |
 | **Windows & Workspaces** | Window Behaviour, Window Look, Workspaces, Mission Control, Hot Corners, App Rules |
 | **Displays** | Displays, Shared Monitor |
-| **Keyboard & Mouse** | Keyboard, Mouse & Touchpad, Keyboard Shortcuts |
+| **Keyboard & Mouse** | Keyboard, Mouse & Touchpad, Touch & Tablet (with a touchscreen or the on-screen keyboard), Keyboard Shortcuts |
 | **Sound** | Sound |
 | **Network & Bluetooth** | Wi-Fi & Network, Bluetooth, Phone |
 | **Power** | Battery & Power, ASUS Hardware (only with `asusctl`) |

@@ -34,7 +34,7 @@ Scope {
             + "general {\n    lock_cmd         = pidof hyprlock || hyprlock\n    before_sleep_cmd = hypr-crashlog mark sleep; loginctl lock-session; " + screensOn + "\n"
             + "    after_sleep_cmd  = hypr-crashlog mark wake; " + screensOn + "\n}\n\n" + blocks.join("\n\n") + "\n"
     }
-    function inputTable(i) {
+    function inputTable(i, t) {
         const list = Array.from(i.layouts), many = list.length > 1
         return SettingsApp.lua({
             kb_layout: list.map(l => l.code).join(","),
@@ -49,6 +49,8 @@ Scope {
             scroll_factor: i.scrollFactor, middle_emulation: i.middleEmulation, drag_lock: i.dragLock,
             mouse_natural_scroll: i.mouseNaturalScroll, mouse_scroll_factor: i.mouseScrollFactor, accel_profile: i.accelProfile,
             left_handed: i.leftHanded, numlock: i.numlock,
+            touch_output: t.output, touch_swipe: t.swipe,
+            swipe_invert: i.swipeInvert, swipe_create: i.swipeCreate, swipe_forever: i.swipeForever,
         })
     }
     // the layout, plus the Advanced options under "_options" (monitors.lua skips names that start with _)
@@ -68,7 +70,7 @@ Scope {
     // whole minutes (hypridle wants whole seconds), and a set time never rounds down to "off"
     function wholeMin(m) { return m > 0 ? Math.max(1, Math.round(m)) : 0 }
     readonly property string idle: idleText(wholeMin(Config.idle.lockMin), wholeMin(Config.idle.sleepMin), wholeMin(Config.idle.sleepOnPowerMin))
-    readonly property string inputLua: inputTable(Config.input)
+    readonly property string inputLua: inputTable(Config.input, Config.touch)
     readonly property string displaysLua: displaysTable(Config.displays)
     readonly property string appsLua: SettingsApp.lua({ terminal: Config.apps.terminal })   // read by modules/binds.lua at load
     readonly property string workspacesLua: SettingsApp.lua({ mode: Config.workspaces.mode, count: Config.workspaces.count, screens: Config.workspaces.screens })

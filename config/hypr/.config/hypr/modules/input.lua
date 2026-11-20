@@ -5,7 +5,8 @@
 INPUT = { kb_layout = "us", kb_variant = "", kb_options = "", repeat_rate = 25,
           repeat_delay = 600, sensitivity = 0, natural_scroll = true, tap_to_click = true,
           disable_while_typing = true, clickfinger = true, scroll_factor = 1.0, middle_emulation = false, drag_lock = false,
-          mouse_natural_scroll = false, mouse_scroll_factor = 1.0, accel_profile = "adaptive", left_handed = false, numlock = false }
+          mouse_natural_scroll = false, mouse_scroll_factor = 1.0, accel_profile = "adaptive", left_handed = false, numlock = false,
+          touch_output = "", touch_swipe = false, swipe_invert = false, swipe_create = false, swipe_forever = false }
 local ok, saved = pcall(require, "settings.input")
 if ok and type(saved) == "table" then for k, v in pairs(saved) do INPUT[k] = v end end
 
@@ -34,11 +35,15 @@ function apply_input()
             },
         },
     })
-    -- Keep the touchscreen and stylus on the laptop's own panel, not stretched over every screen
-    local panel = HW.display.internal
+    -- Keep the touchscreen and stylus on one screen (Settings > Touch & Tablet; the laptop's own panel by default),
+    -- not stretched over every screen
+    local panel = INPUT.touch_output ~= "" and INPUT.touch_output or HW.display.internal
     if panel and panel ~= "" then
         hl.config({ input = { touchdevice = { output = panel }, tablet = { output = panel } } })
     end
+    hl.config({ gestures = { workspace_swipe_touch = INPUT.touch_swipe, workspace_swipe_invert = INPUT.swipe_invert,
+                             workspace_swipe_touch_invert = INPUT.swipe_invert, workspace_swipe_create_new = INPUT.swipe_create,
+                             workspace_swipe_forever = INPUT.swipe_forever } })
 end
 
 apply_input()

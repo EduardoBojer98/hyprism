@@ -382,7 +382,21 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `leftHanded` | `bool` | `false` | swap the left and right buttons |
 | `numlock` | `bool` | `false` | Num Lock on when you log in |
 | `capsLock` | `string` | `"caps"` | the Caps Lock key: "caps", "escape", "ctrl" or "off" |
+| `swipeInvert` | `bool` | `false` | workspace swipes go the other way |
+| `swipeCreate` | `bool` | `false` | swiping past the last workspace makes a new one |
+| `swipeForever` | `bool` | `false` | one long swipe goes through several workspaces |
 | `imported` | `bool` | `false` |  |
+
+## touch
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `output` | `string` | `""` | the screen the touchscreen and pen belong to; empty = the laptop's own panel |
+| `swipe` | `bool` | `false` | three fingers sideways on the screen switch workspaces |
+| `autoRotate` | `bool` | `true` | tablet mode turns the screen with the device (~/.local/bin/panel) |
+| `oskInTablet` | `bool` | `false` | tablet mode shows the on-screen keyboard |
+| `oskAuto` | `bool` | `false` | the on-screen keyboard pops up when a text field is tapped |
+| `oskLayouts` | `bool` | `true` | the on-screen keyboard offers your keyboard layouts |
 
 ## displays
 

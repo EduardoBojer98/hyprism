@@ -27,7 +27,7 @@ Singleton {
         { id: "notify",     name: "Notifications",       glyph: "\u{F009A}", pages: ["notifications", "focus"] },
         { id: "windows",    name: "Windows & Workspaces", glyph: "\u{F05AF}", pages: ["windows", "windowlook", "workspaces", "missioncontrol", "hotcorners", "apprules"] },
         { id: "display",    name: "Displays",            glyph: "\u{F0379}", pages: ["displays", "monitor"] },
-        { id: "input",      name: "Keyboard & Mouse",    glyph: "\u{F030C}", pages: ["input", "mouse", "keybinds"] },
+        { id: "input",      name: "Keyboard & Mouse",    glyph: "\u{F030C}", pages: ["input", "mouse", "touch", "keybinds"] },
         { id: "sound",      name: "Sound",               glyph: "\u{F057E}", pages: ["sound"] },
         { id: "network",    name: "Network & Bluetooth", glyph: "\u{F05A9}", pages: ["network", "bluetooth", "phone"] },
         { id: "power",      name: "Power",               glyph: "\u{F0079}", pages: ["power", "asus"] },
@@ -36,8 +36,8 @@ Singleton {
         { id: "applications", name: "Apps",              glyph: "\u{F003B}", pages: ["installed", "apps", "startup", "terminal"] },
         { id: "system",     name: "System",              glyph: "\u{F02FD}", pages: ["about", "language"] },
     ]
-    // ASUS Hardware only on machines with asusctl
-    readonly property var sections: allGroups.map(g => Object.assign({}, g, { pages: g.pages.filter(p => p !== "asus" || Machine.asus) }))
+    // ASUS Hardware only with asusctl; Touch & Tablet only with a touchscreen or the on-screen keyboard
+    readonly property var sections: allGroups.map(g => Object.assign({}, g, { pages: g.pages.filter(p => (p !== "asus" || Machine.asus) && (p !== "touch" || Inputs.hasTouchscreen || Osk.installed)) }))
     readonly property var currentGroup: sections.find(g => g.id === section) ?? sections[0]
     function pageName(id) { return allSections.find(p => p.id === id)?.name ?? "" }
 
@@ -70,6 +70,7 @@ Singleton {
         { id: "monitor",       name: "Shared Monitor",      glyph: "\u{F0E58}", keys: "ddc input switch kvm mirror" },
         { id: "input",         name: "Keyboard",            glyph: "\u{F030C}", keys: "layout serbian latin repeat keyboard layout language caps lock escape num lock numlock typing" },
         { id: "mouse",         name: "Mouse & Touchpad",    glyph: "\u{F037D}", keys: "mouse touchpad trackpad pointer sensitivity speed acceleration flat left-handed left handed natural scroll wheel tap gestures swipe fingers logitech solaar" },
+        { id: "touch",         name: "Touch & Tablet",      glyph: "\u{F0741}", keys: "touchscreen touch screen pen stylus tablet mode rotate rotation on-screen keyboard osk squeekboard swipe 2-in-1" },
         { id: "keybinds",      name: "Keyboard Shortcuts",  glyph: "\u{F0313}", keys: "keys binds hotkeys shortcuts screenshot print capture record" },
         { id: "sound",         name: "Sound",               glyph: "\u{F057E}", keys: "volume output input microphone speakers audio mute headphones" },
         { id: "network",       name: "Wi-Fi & Network",     glyph: "\u{F05A9}", keys: "wifi ethernet internet vpn" },

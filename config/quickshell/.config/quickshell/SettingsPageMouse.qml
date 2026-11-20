@@ -111,6 +111,30 @@ ColumnLayout {
         }
     }
 
+    // the three-finger swipe between workspaces (touchpad, and the touchscreen when Touch & Tablet turns it on)
+    SettingGroup {
+        visible: Inputs.touchpadName !== "" || Inputs.hasTouchscreen
+        title: "Gestures"
+        SettingRow {
+            label: "Three fingers"
+            hint: "Sideways: the next or previous workspace. Up: Mission Control"
+        }
+        SettingRow {
+            label: "Reverse the swipe"
+            hint: "Swiping left goes to the next workspace instead"
+            ConfigToggle { section: "input"; key: "swipeInvert" }
+        }
+        SettingRow {
+            label: "Swipe past the last workspace for a new one"
+            ConfigToggle { section: "input"; key: "swipeCreate" }
+        }
+        SettingRow {
+            label: "One long swipe goes through several"
+            hint: "Off: one workspace per swipe"
+            ConfigToggle { section: "input"; key: "swipeForever" }
+        }
+    }
+
     // Logitech buttons, DPI, battery and haptics are Solaar's own window (the logitech module installs it)
     property bool solaar: false
     Process {
@@ -131,6 +155,6 @@ ColumnLayout {
     ResetGroup {
         sections: ["input"]
         keys: ["sensitivity", "naturalScroll", "tapToClick", "disableWhileTyping", "clickMethod", "scrollFactor", "middleEmulation",
-               "dragLock", "mouseNaturalScroll", "mouseScrollFactor", "accelProfile", "leftHanded"]
+               "dragLock", "mouseNaturalScroll", "mouseScrollFactor", "accelProfile", "leftHanded", "swipeInvert", "swipeCreate", "swipeForever"]
     }
 }

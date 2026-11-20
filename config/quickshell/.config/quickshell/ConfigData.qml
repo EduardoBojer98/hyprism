@@ -335,7 +335,18 @@ JsonAdapter {
         property bool leftHanded: false          // swap the left and right buttons
         property bool numlock: false             // Num Lock on when you log in
         property string capsLock: "caps"         // the Caps Lock key: "caps", "escape", "ctrl" or "off"
+        property bool swipeInvert: false         // workspace swipes go the other way
+        property bool swipeCreate: false         // swiping past the last workspace makes a new one
+        property bool swipeForever: false        // one long swipe goes through several workspaces
         property bool imported: false
+    }
+    property JsonObject touch: JsonObject {     // Settings > Touch & Tablet
+        property string output: ""               // the screen the touchscreen and pen belong to; empty = the laptop's own panel
+        property bool swipe: false               // three fingers sideways on the screen switch workspaces
+        property bool autoRotate: true           // tablet mode turns the screen with the device (~/.local/bin/panel)
+        property bool oskInTablet: false         // tablet mode shows the on-screen keyboard
+        property bool oskAuto: false             // the on-screen keyboard pops up when a text field is tapped
+        property bool oskLayouts: true           // the on-screen keyboard offers your keyboard layouts
     }
     property JsonObject displays: JsonObject {
         property var layout: ({})                // screen (description, or connector when two share one) -> { mode, position, scale, transform, vrr, bitdepth, mirror, disabled }

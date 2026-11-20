@@ -3,7 +3,8 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// On-screen keyboard (squeekboard). Never pops up by itself; only the bar button shows/hides it.
+// On-screen keyboard (squeekboard). Shown from the bar button or the Control Center; Settings > Touch & Tablet can
+// make it pop up on a tapped text field, or in tablet mode (~/.local/bin/panel).
 // Shared by the bars on both screens.
 Singleton {
     id: root
@@ -27,4 +28,12 @@ Singleton {
         command: ["sh", "-c", "command -v squeekboard"]
         onExited: code => root.installed = code === 0
     }
+
+    // Settings > Touch & Tablet, told to squeekboard through the GNOME settings it reads: pop up on a tapped text
+    // field, and your keyboard layouts as its languages ("rs" with variant "latin" -> ('xkb', 'rs+latin'))
+    readonly property string sources: "[" + Array.from(Config.input.layouts).map(l => `('xkb', '${l.code}${l.variant ? "+" + l.variant : ""}')`).join(", ") + "]"
+    readonly property var apply: ["sh", "-c", 'gsettings set org.gnome.desktop.a11y.applications screen-keyboard-enabled "$1"; [ "$2" = true ] && gsettings set org.gnome.desktop.input-sources sources "$3"; true',
+                                  "sh", String(Config.touch.oskAuto), String(Config.touch.oskLayouts), sources]
+    onApplyChanged: if (installed) Quickshell.execDetached(apply)
+    onInstalledChanged: if (installed) Quickshell.execDetached(apply)
 }

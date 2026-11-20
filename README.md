@@ -171,7 +171,7 @@ and the file way.
 | **Notifications** | Notifications (and the on-screen volume and brightness pop-up), Focus |
 | **Windows & Workspaces** | Window Behaviour (layout, focus, snapping), Window Look (title bars, border, opacity), Workspaces, Mission Control, Hot Corners, App Rules |
 | **Displays** | Displays (resolution, scale, rotation, arrangement, Night Light, adaptive sync, HDR), Shared Monitor |
-| **Keyboard & Mouse** | Keyboard (layouts, repeat, Caps Lock, Num Lock), Mouse & Touchpad (speed, acceleration, wheel, touchpad), Keyboard Shortcuts |
+| **Keyboard & Mouse** | Keyboard (layouts, repeat, Caps Lock, Num Lock), Mouse & Touchpad (speed, acceleration, wheel, touchpad, gestures), Touch & Tablet (touchscreen, tablet mode, on-screen keyboard), Keyboard Shortcuts |
 | **Sound** | output, input, volumes, devices |
 | **Network & Bluetooth** | Wi-Fi & Network, Bluetooth, Phone |
 | **Power** | Battery & Power (power mode, charge limit, low battery, lid), ASUS Hardware (only with asusctl) |
