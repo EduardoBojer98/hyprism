@@ -115,7 +115,7 @@ Singleton {
         input: { layouts: "layouts", shortcut: [0, 3], repeatRate: [1, 100], repeatDelay: [100, 2000], sensitivity: [-1, 1],
                  naturalScroll: "bool", tapToClick: "bool", disableWhileTyping: "bool", clickMethod: ["buttonareas", "clickfinger"],
                  scrollFactor: [0.2, 3], middleEmulation: "bool", dragLock: "bool", mouseNaturalScroll: "bool", mouseScrollFactor: [0.2, 3],
-                 accelProfile: ["adaptive", "flat"], leftHanded: "bool", numlock: "bool", capsLock: ["caps", "escape", "ctrl", "off"],
+                 accelProfile: ["adaptive", "flat"], leftHanded: "bool", mouseByApp: "bool", numlock: "bool", capsLock: ["caps", "escape", "ctrl", "off"],
                  swipeInvert: "bool", swipeCreate: "bool", swipeForever: "bool", imported: "bool" },
         touch: { output: "name", swipe: "bool", autoRotate: "bool", oskInTablet: "bool", oskAuto: "bool", oskLayouts: "bool" },
         displays: { layout: "displays", autoHdr: "bool", sendContentType: "bool", xwaylandNativeScale: "bool",

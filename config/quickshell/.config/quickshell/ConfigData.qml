@@ -337,6 +337,7 @@ JsonAdapter {
         property real mouseScrollFactor: 1.0     // a mouse wheel's scroll speed, 0.2..3
         property string accelProfile: "adaptive" // "adaptive" (faster moves go further) or "flat" (the same distance at any speed)
         property bool leftHanded: false          // swap the left and right buttons
+        property bool mouseByApp: false          // an app (Solaar, Piper, input-remapper) sets the mouse: the four above stay at libinput's defaults
         property bool numlock: false             // Num Lock on when you log in
         property string capsLock: "caps"         // the Caps Lock key: "caps", "escape", "ctrl" or "off"
         property bool swipeInvert: false         // workspace swipes go the other way

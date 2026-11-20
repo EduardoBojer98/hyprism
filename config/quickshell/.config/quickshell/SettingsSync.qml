@@ -48,7 +48,7 @@ Scope {
             disable_while_typing: i.disableWhileTyping, clickfinger: i.clickMethod === "clickfinger",
             scroll_factor: i.scrollFactor, middle_emulation: i.middleEmulation, drag_lock: i.dragLock,
             mouse_natural_scroll: i.mouseNaturalScroll, mouse_scroll_factor: i.mouseScrollFactor, accel_profile: i.accelProfile,
-            left_handed: i.leftHanded, numlock: i.numlock,
+            left_handed: i.leftHanded, mouse_by_app: i.mouseByApp, numlock: i.numlock,
             touch_output: t.output, touch_swipe: t.swipe,
             swipe_invert: i.swipeInvert, swipe_create: i.swipeCreate, swipe_forever: i.swipeForever,
         })

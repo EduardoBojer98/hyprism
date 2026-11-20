@@ -384,6 +384,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `mouseScrollFactor` | `real` | `1.0` | a mouse wheel's scroll speed, 0.2..3 |
 | `accelProfile` | `string` | `"adaptive"` | "adaptive" (faster moves go further) or "flat" (the same distance at any speed) |
 | `leftHanded` | `bool` | `false` | swap the left and right buttons |
+| `mouseByApp` | `bool` | `false` | an app (Solaar, Piper, input-remapper) sets the mouse: the four above stay at libinput's defaults |
 | `numlock` | `bool` | `false` | Num Lock on when you log in |
 | `capsLock` | `string` | `"caps"` | the Caps Lock key: "caps", "escape", "ctrl" or "off" |
 | `swipeInvert` | `bool` | `false` | workspace swipes go the other way |

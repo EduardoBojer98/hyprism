@@ -19,9 +19,22 @@ ColumnLayout {
     opacity: loaded ? 1 : 0.5
     function set(k, v) { if (loaded) Config.set("input", keyOf[k], v) }
 
+    // An app made for the mouse (Solaar, Piper, input-remapper) can own speed, buttons and wheel: then the two
+    // groups below step aside and libinput's defaults stay, so they never fight that app (input.lua, mouse_by_app)
+    SettingGroup {
+        title: "Who sets the mouse"
+        SettingRow {
+            label: "An app handles my mouse"
+            hint: Config.input.mouseByApp ? "Speed, acceleration, buttons and the wheel are left to that app. The touchpad options below still apply"
+                                          : "Turn on when Solaar, Piper or a vendor tool sets your mouse, so these settings don't override it"
+            ConfigToggle { section: "input"; key: "mouseByApp" }
+        }
+    }
+
     // every mouse and touchpad; a device's own app (Solaar, a vendor tool) can still set its buttons and DPI
     SettingGroup {
         title: "Pointer"
+        visible: !Config.input.mouseByApp
         SettingRow {
             label: "Pointer speed"
             hint: page.s.sensitivity === 0 ? "Default" : (page.s.sensitivity > 0 ? "Faster: +" : "Slower: ") + Math.round(page.s.sensitivity * 100) + "%"
@@ -45,6 +58,7 @@ ColumnLayout {
 
     SettingGroup {
         title: "Mouse"
+        visible: !Config.input.mouseByApp
         SettingRow {
             label: "Natural scrolling"
             hint: "Rolling the wheel down moves the page up, like a touchpad"
@@ -61,6 +75,7 @@ ColumnLayout {
         }
     }
     Text {
+        visible: !Config.input.mouseByApp
         Layout.fillWidth: true
         Layout.topMargin: -12
         text: "These apply to every mouse. An app made for your mouse (Solaar for Logitech, for example) can still change its buttons and DPI."
@@ -155,6 +170,6 @@ ColumnLayout {
     ResetGroup {
         sections: ["input"]
         keys: ["sensitivity", "naturalScroll", "tapToClick", "disableWhileTyping", "clickMethod", "scrollFactor", "middleEmulation",
-               "dragLock", "mouseNaturalScroll", "mouseScrollFactor", "accelProfile", "leftHanded", "swipeInvert", "swipeCreate", "swipeForever"]
+               "dragLock", "mouseNaturalScroll", "mouseScrollFactor", "accelProfile", "leftHanded", "mouseByApp", "swipeInvert", "swipeCreate", "swipeForever"]
     }
 }
