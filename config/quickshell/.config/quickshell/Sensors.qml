@@ -369,18 +369,25 @@ Singleton {
             Caption_ { Layout.fillWidth: true; text: vit.title }
             Text { visible: text !== ""; text: vit.state_.word; color: vit.state_.tone; font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
         }
-        Row {
-            spacing: Theme.spaceS
-            Text {
-                id: bigText
-                text: vit.big || "–"; color: vit.bigTone
-                font { family: Theme.displayFont; pixelSize: Theme.fontDisplay; weight: Theme.displayWeight; features: { "tnum": 1 } }
-            }
-            Text {
-                visible: vit.second !== ""
-                anchors.baseline: bigText.baseline
-                text: vit.second; color: vit.secondTone
-                font { family: Theme.displayFont; pixelSize: Theme.fontTitle; weight: Theme.displayWeight; features: { "tnum": 1 } }
+        Item {   // the number and its unit shrink together to fit the column (wide mono display fonts)
+            Layout.fillWidth: true
+            implicitHeight: bigRow.height * bigRow.scale
+            Row {
+                id: bigRow
+                spacing: Theme.spaceS
+                scale: Math.min(1, parent.width / Math.max(1, implicitWidth))
+                transformOrigin: Item.TopLeft
+                Text {
+                    id: bigText
+                    text: vit.big || "–"; color: vit.bigTone
+                    font { family: Theme.displayFont; pixelSize: Theme.fontDisplay; weight: Theme.displayWeight; features: { "tnum": 1 } }
+                }
+                Text {
+                    visible: vit.second !== ""
+                    anchors.baseline: bigText.baseline
+                    text: vit.second; color: vit.secondTone
+                    font { family: Theme.displayFont; pixelSize: Theme.fontTitle; weight: Theme.displayWeight; features: { "tnum": 1 } }
+                }
             }
         }
         Bar_ { visible: vit.fill >= 0; f: vit.fill; tone: root.fillTone(vit.fillFlag) }
@@ -447,16 +454,21 @@ Singleton {
     component Stats_: GridLayout {
         id: st
         property var items: []
-        readonly property real cell: (body.width - 3 * columnSpacing) / 4
+        // four to a row when the longest label and value fit a quarter, else two (mono fonts are wide)
+        readonly property real widest: Math.max(0, ...items.filter(x => x).map(x => Math.max(capM.advanceWidth(x.k), valM.advanceWidth(String(x.v)))))
+        readonly property int cols: widest + Theme.spaceS <= (body.width - 3 * columnSpacing) / 4 ? 4 : 2
+        readonly property real cell: (body.width - (cols - 1) * columnSpacing) / cols
+        FontMetrics { id: capM; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+        FontMetrics { id: valM; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium } }
         Layout.fillWidth: true
-        columns: 4
+        columns: cols
         columnSpacing: Theme.spaceS
         rowSpacing: Theme.spaceS
         Repeater {
             model: st.items.filter(x => x)
             ColumnLayout {
                 required property var modelData
-                readonly property int span: modelData.span ?? 1
+                readonly property int span: Math.min(st.cols, modelData.span ?? 1)
                 Layout.columnSpan: span
                 Layout.preferredWidth: st.cell * span + (span - 1) * st.columnSpacing
                 Layout.maximumWidth: Layout.preferredWidth

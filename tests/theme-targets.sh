@@ -18,7 +18,7 @@ for id in pebble poster monolith; do
     sleep 2
     accent=$(jq -r .colour.accent "themes/$id/theme.json")
     bare=${accent#\#}
-    cursor=$(jq -r .term.cursor "themes/$id/theme.json")   # Ghostty takes the theme's terminal palette, not the accent
+    cursor=$(jq -r .term.cursor "themes/$id/theme.json") # Ghostty takes the theme's terminal palette, not the accent
     for pair in ghostty/theme.conf:"$cursor" qt6ct/colors/hyprism.conf:"#ff$bare" btop/themes/hyprism.theme:"$accent" \
         hyprism/starship.toml:"$accent" hypr/settings/theme.lua:"$bare" gtk-4.0/hyprism.css:"$accent"; do
         f=${pair%%:*} want=${pair#*:}
