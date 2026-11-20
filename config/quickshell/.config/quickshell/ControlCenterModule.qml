@@ -4,10 +4,8 @@ import QtQuick.Layouts
 
 // Control Center building block (used by ControlCenter.qml and its parts).
 // A tile with a title row (and a clickable detail on the right)
-Rectangle {   // same look as Tile
+ControlCenterTile {
     id: mod
-    radius: Theme.radius
-    color: Theme.fill
     property string title
     property string detail
     property bool warn: false          // detail in the warning colour
@@ -27,13 +25,15 @@ Rectangle {   // same look as Tile
             id: header
             visible: mod.title !== ""
             Layout.fillWidth: true
-            Layout.preferredHeight: 16
+            Layout.preferredHeight: Math.max(16, headerTitle.implicitHeight)
             Text {
                 id: headerTitle
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                text: mod.title
-                color: Theme.text
-                font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+                text: (ControlCenter.hud ? "// " : "") + mod.title
+                color: ControlCenter.hud ? Theme.accent2 : Theme.text
+                font { family: ControlCenter.bento ? Theme.displayFont : ControlCenter.hud ? Theme.monoFont : Theme.font
+                       pixelSize: ControlCenter.bento ? Theme.fontTitle : Theme.fontLabel; weight: ControlCenter.hud ? Font.Normal : Font.DemiBold
+                       capitalization: ControlCenter.bento ? Font.AllUppercase : ControlCenter.hud ? Font.AllLowercase : Font.MixedCase }
             }
             Row {
                 id: headerDetail
@@ -45,7 +45,7 @@ Rectangle {   // same look as Tile
                     text: mod.detail
                     elide: Text.ElideRight
                     color: mod.warn ? Theme.warning : Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
+                    font { family: ControlCenter.hud ? Theme.monoFont : Theme.font; pixelSize: Theme.fontCaption; features: { "tnum": 1 } }
                 }
                 Chevron { visible: mod.expandable; open: mod.isExpanded; size: 13; anchors.verticalCenter: parent.verticalCenter }
             }

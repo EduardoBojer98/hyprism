@@ -34,11 +34,50 @@ ColumnLayout {
         }
 
         ControlCenterSegmented {   // the asusctl / power-profiles id stays "quiet"; people read Silent
-            visible: !pw.folded
+            visible: !pw.folded && !ControlCenter.hud
             options: ["Silent", "Balanced", "Performance"]
             current: PowerMode.profile
             accessibleName: "Power mode"
             onPicked: i => PowerMode.set(i)
+        }
+        Item {   // hud: `mode: <balanced>`; the arrows (or Left / Right, or a click on the word) step through the modes
+            id: hudMode
+            visible: !pw.folded && ControlCenter.hud
+            Layout.fillWidth: true
+            implicitHeight: Math.max(Theme.hit, Theme.fontLabel * 2)
+            readonly property var names: ["silent", "balanced", "performance"]
+            function step(d) { PowerMode.set((PowerMode.profile + d + names.length) % names.length) }
+            activeFocusOnTab: true
+            Keys.onLeftPressed: step(-1)
+            Keys.onRightPressed: step(1)
+            Keys.onSpacePressed: step(1)
+            Accessible.role: Accessible.Slider
+            Accessible.name: "Power mode"
+            Accessible.description: names[PowerMode.profile] ?? ""
+            Accessible.focusable: true
+            FocusRing {}
+            Row {
+                anchors.verticalCenter: parent.verticalCenter
+                Repeater {
+                    model: [["mode: ", 0], ["<", -1], [hudMode.names[PowerMode.profile] ?? "?", 1], [">", 1]]
+                    Text {
+                        required property var modelData
+                        required property int index
+                        text: modelData[0]
+                        color: index === 0 ? Theme.subtext : index === 2 ? Theme.accent : stepArea.containsMouse ? Theme.accent : Theme.text
+                        font { family: Theme.monoFont; pixelSize: Theme.fontLabel; weight: index === 2 ? Font.Bold : Font.Normal }
+                        MouseArea {
+                            id: stepArea
+                            anchors { fill: parent; margins: -Theme.spaceXs }
+                            enabled: index > 0
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            Accessible.ignored: true
+                            onClicked: hudMode.step(modelData[1])
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -10,6 +10,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   icons on squircle plates, a selection that springs in), Poster's `sheet` (the query as a display header, big rows
   with a letter index and a category tag, an inverse selection on a hard shadow) and Monolith's `prompt` (numbered
   text rows, a `>` marker, matches in accent, `[enter] open` hints).
+- The Control Center takes its structure from the theme (theme.json `popup.layout`): Pebble's soft cards with fat
+  pill sliders, round icon wells, toggles with their state and a media card tinted by the album art; Poster's bento
+  grid (wide Wi-Fi and Bluetooth, a big first toggle, solid blocks when on, hard shadows that collapse on press,
+  section names in the display font); Monolith's text HUD (`// sound`, `vol [████████░░] 80`, `[x] wifi  name`,
+  `mode: <balanced>`, brackets around each section that draw in on open). Sliders still drag, scroll and step with
+  the arrows; every toggle still toggles.
 - A signature feel per theme (theme.json `feel`), full motion only: Poster's buttons push into their hard
   shadow, Pebble's sink and spring back and its panels land with a small overshoot, Monolith's focus is a reticle that
   closes in and its popup brackets draw in from the corners.

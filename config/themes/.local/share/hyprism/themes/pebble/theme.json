@@ -122,6 +122,7 @@
     "fill": "surface"
   },
   "popup": {
+    "layout": "cards",
     "depth": "soft",
     "decor": "",
     "tiles": "wash"

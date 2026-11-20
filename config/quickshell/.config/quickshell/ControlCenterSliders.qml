@@ -83,6 +83,7 @@ ControlCenterTile {
             ControlCenterBar {
                 visible: mod.hasDisplay
                 host: mod.host
+                tag: "bri"
                 icon: "\u{F00DF}"
                 value: Sys.brightness / 100
                 onMoved: v => Sys.setBrightness(v * 100)
@@ -110,6 +111,7 @@ ControlCenterTile {
                         font { family: Theme.font; pixelSize: Theme.fontCaption }
                     }
                     ControlCenterBar {
+                        tag: "ext"
                         icon: "\u{F0379}"
                         value: Math.max(0, ext.value)
                         onMoved: v => { ext.value = Math.max(0.01, v); ddcSet.restart() }
@@ -187,6 +189,7 @@ ControlCenterTile {
                 isExpanded: mod.host.expanded === "out"
                 expandHint: Sys.nodeName(Sys.sink) || "No output"
                 onExpand: mod.host.toggleExpanded("out")
+                tag: "vol"
                 icon: Sys.sink?.audio?.muted ? "\u{F075F}" : "\u{F057E}"
                 hint: Sys.sink?.audio?.muted ? "Unmute" : "Mute"
                 value: Sys.sink?.audio?.muted ? 0 : (Sys.sink?.audio?.volume ?? 0)
@@ -227,6 +230,7 @@ ControlCenterTile {
                         }
                         ControlCenterBar {
                             host: mod.host
+                            tag: "app"
                             icon: app.modelData.audio?.muted ? "\u{F075F}" : "\u{F057E}"
                             hint: app.modelData.audio?.muted ? "Unmute" : "Mute"
                             value: app.modelData.audio?.muted ? 0 : (app.modelData.audio?.volume ?? 0)
@@ -259,6 +263,7 @@ ControlCenterTile {
                 isExpanded: mod.host.expanded === "in"
                 expandHint: Sys.nodeName(Sys.source) || "No input"
                 onExpand: mod.host.toggleExpanded("in")
+                tag: "mic"
                 icon: Sys.source?.audio?.muted ? "\u{F036D}" : "\u{F036C}"
                 hint: Sys.source?.audio?.muted ? "Unmute" : "Mute"
                 value: Sys.source?.audio?.muted ? 0 : (Sys.source?.audio?.volume ?? 0)
