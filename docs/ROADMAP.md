@@ -14,3 +14,14 @@ What is left, newest decisions first. Done work moves to `CHANGELOG.md`; the rea
   `hyprland.lua` link into the repo), so binds and settings written there can't be tested there yet.
 - `qs ipc call config set … '[…]'`: the command line drops the outer brackets of a list; start the value with a
   space (`' [ … ]'`).
+- Themes, look and feel pass (asked 2026-11-20; contrast and the system panel's overflow are done):
+  - Every popup in every theme, light and dark, side by side from `tests/nested.sh`: spacing, alignment and the
+    type scale the same across the system panel, Control Center, calendar, weather, power, launcher and
+    notifications; nothing clipped or elided at 12 px caption / 13 px label.
+  - Wide display fonts (Poster, Monolith): the system panel shrinks big numbers and halves stat grids; check
+    the other popups for the same squeeze (calendar header, weather, Control Center tile labels).
+  - Choose: one theme reworked in depth first, or a polish pass over all three. Not started; needs your pick.
+- Windows: a tiled window floats on a maximise click or a double click on a title bar, Chrome's empty tab strip
+  included (Settings > Window Look > Maximise button: Float). Dropped on a screen edge it fills that half but
+  stays floating, so new windows don't tile beside it and it doesn't grow when the other closes. To decide:
+  edge snap tiles the window instead, and/or the button fills the screen.
