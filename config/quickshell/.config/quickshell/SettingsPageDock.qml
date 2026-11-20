@@ -242,20 +242,34 @@ ColumnLayout {
     SettingGroup {
         visible: Config.dock.enabled && !page.inBar
         title: "Widgets · small tiles after the open windows"
+        SettingRow { visible: page.widgets.length === 0; label: "No widgets on the dock"; hint: "Add one below" }
         Repeater {
-            model: page.widgetList
+            model: page.widgets
             SettingRow {
                 id: wrow
                 required property string modelData
-                readonly property bool on: page.widgets.includes(modelData)
                 label: Theme.dockWidgets[modelData].name
                 hint: Theme.dockWidgets[modelData].about
                 Row {
                     spacing: 8
-                    ArrowButton { visible: wrow.on; glyph: "\u{F0143}"; tip: "Move " + wrow.label + " earlier"; enabled: page.widgets.indexOf(wrow.modelData) > 0; onClicked: page.moveWidget(wrow.modelData, -1) }
-                    ArrowButton { visible: wrow.on; glyph: "\u{F0140}"; tip: "Move " + wrow.label + " later"; enabled: page.widgets.indexOf(wrow.modelData) < page.widgets.length - 1; onClicked: page.moveWidget(wrow.modelData, 1) }
-                    Toggle { checked: wrow.on; onToggled: on => page.showWidget(wrow.modelData, on) }
+                    ArrowButton { glyph: "\u{F0143}"; tip: "Move " + wrow.label + " earlier"; enabled: page.widgets.indexOf(wrow.modelData) > 0; onClicked: page.moveWidget(wrow.modelData, -1) }
+                    ArrowButton { glyph: "\u{F0140}"; tip: "Move " + wrow.label + " later"; enabled: page.widgets.indexOf(wrow.modelData) < page.widgets.length - 1; onClicked: page.moveWidget(wrow.modelData, 1) }
+                    PillButton { text: "Remove"; onClicked: page.showWidget(wrow.modelData, false) }
                 }
+            }
+        }
+        SettingRow {
+            visible: page.widgetList.length > page.widgets.length
+            label: "Add a widget"
+            hint: "It goes at the end; move it with the arrows"
+        }
+        Flow {
+            visible: page.widgetList.length > page.widgets.length
+            Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.bottomMargin: 12
+            spacing: 8
+            Repeater {
+                model: page.widgetList.filter(id => !page.widgets.includes(id))
+                PillButton { required property string modelData; text: "+ " + Theme.dockWidgets[modelData].name; onClicked: page.showWidget(modelData, true) }
             }
         }
     }
