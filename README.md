@@ -174,7 +174,7 @@ and the file way.
 | **Windows & Workspaces** | Window Behaviour (layout, focus, snapping), Window Look (title bars, border, opacity), Workspaces, Mission Control, Hot Corners, App Rules |
 | **Displays** | Displays (resolution, scale, rotation, arrangement, Night Light, adaptive sync, HDR), Shared Monitor |
 | **Keyboard & Mouse** | Keyboard (layouts, repeat, Caps Lock, Num Lock), Mouse & Touchpad (speed, acceleration, wheel, touchpad, gestures), Touch & Tablet (touchscreen, tablet mode, on-screen keyboard), Keyboard Shortcuts |
-| **Sound** | output, input, volumes, devices |
+| **Sound** | volume and mute, balance, a left/right test, the device to play through, the mic and who is listening, each app's volume |
 | **Network & Bluetooth** | Wi-Fi & Network, Bluetooth, Phone |
 | **Power** | Battery & Power (power mode, charge limit, low battery, lid), ASUS Hardware (only with asusctl) |
 | **Lock Screen** | Lock Screen (clock, picture, widgets, background), Lock & Sleep (lock and sleep times, Caffeine) |
