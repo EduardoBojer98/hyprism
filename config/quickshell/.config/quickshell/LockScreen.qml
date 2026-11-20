@@ -46,6 +46,8 @@ Singleton {
         if (l.date) out.push({ role: "date", size: 17, weight: Font.Medium, mono: clock === "terminal" || clock === "readout", colour: "muted", caps: clock === "readout" })
         out.push({ role: "gap", hgt: 26 })
         out.push(scene === "boot" ? { role: "input", w: 120, hgt: 30, prefix: 110 } : { role: "input", w: 300, hgt: 50 })
+        // boot: the layout as one more log line (hyprlock centres a placeholder, far from "password:")
+        if (scene === "boot" && l.widgets.includes("layout")) out.push({ role: "kbd", size: 12, mono: true, colour: "muted" })
         return out
     }
     function heightOf(e) { return e.hgt ?? Math.round(e.size * 1.33 * (e.tight ? 0.92 : 1.18) * (e.lines ?? 1)) }
@@ -107,8 +109,9 @@ Singleton {
         return (h < 5 ? "Good evening" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening") + (l.greeting ? ", " + niceName : "")
     }
     readonly property var bootLines: ["[ ok ] started hyprlock", "[ ok ] grabbed keyboard and pointer", "[ ok ] session locked", "login: " + userName]
-    // hyprlock: the log types in, one letter per 20 ms from the first draw. update:60000:1 lets SIGUSR2
-    // re-run it; the first run (a new hyprlock, $PPID) starts one loop that signals that hyprlock for ~3.5 s.
+    // hyprlock: the log types in, one letter per 20 ms, from 600 ms after the first run (hyprlock runs it before
+    // its first frame, then fades in). update:60000:1 lets SIGUSR2 re-run it; the first run (a new hyprlock,
+    // $PPID) starts one loop that signals that hyprlock for ~4 s.
     // (hyprlock drops a signal that lands mid-refresh, so one shot per run would stall; and it reads the
     // command's output pipes to the end, so the loop closes every inherited descriptor.)
     // Reduced or no motion: the whole log at once. No # (a config comment) and no $name that is a variable here.
@@ -116,9 +119,9 @@ Singleton {
         const log = "t=$(printf '%s\\n' '" + bootLines.slice(0, 3).join("' '") + "'; printf 'login: %s' \"$(id -un)\"); "
         if (!Theme.moves) return "cmd[update:0] " + log + "printf '%s' \"$t\""
         return "cmd[update:60000:1] k=${XDG_RUNTIME_DIR:-/tmp}/hyprism-lockboot; n=$(date +%s%3N); read -r p s <\"$k\" 2>/dev/null; "
-            + "if [ \"$p\" != \"$PPID\" ]; then s=$n; echo \"$PPID $s\" >\"$k\"; "
-            + "setsid -f sh -c 'for f in /proc/self/fd/*; do n=$(basename $f); [ $n -gt 2 ] && eval \"exec $n>&-\"; done; i=0; while [ $i -lt 50 ]; do sleep 0.07; kill -USR2 $1 || break; i=$((i + 1)); done' - \"$PPID\" </dev/null >/dev/null 2>&1; fi; " + log
-            + "c=$(( (n - s) / 20 )); [ \"$c\" -lt \"$(printf %s \"$t\" | wc -c)\" ] && t=$(printf '%s' \"$t\" | head -c \"$c\"); printf '%s' \"$t\""
+            + "if [ \"$p\" != \"$PPID\" ]; then s=$((n + 600)); echo \"$PPID $s\" >\"$k\"; "
+            + "setsid -f sh -c 'for f in /proc/self/fd/*; do n=$(basename $f); [ $n -gt 2 ] && eval \"exec $n>&-\"; done; i=0; while [ $i -lt 60 ]; do sleep 0.07; kill -USR2 $1 || break; i=$((i + 1)); done' - \"$PPID\" </dev/null >/dev/null 2>&1; fi; " + log
+            + "c=$(( (n - s) / 20 )); [ \"$c\" -lt 0 ] && c=0; [ \"$c\" -lt \"$(printf %s \"$t\" | wc -c)\" ] && t=$(printf '%s' \"$t\" | head -c \"$c\"); printf '%s' \"$t\""
     }
     readonly property var dateFormat: ({ hl: "%A, %-d %B", qt: "dddd, d MMMM" })
     function previewText(role, now) {
@@ -133,6 +136,7 @@ Singleton {
         case "prompt": return "~ $ date +%R"
         case "boot": return bootLines.join("\n")
         case "pwlabel": return "password:"
+        case "kbd": return "layout: " + (Keyboard.layouts[Keyboard.active]?.name ?? Keyboard.short)
         case "media": return "\u266A  " + (Sys.track || "Nothing playing")
         case "widgets": return widgetText([Sys.hasBattery ? "bat " + Sys.batteryPct + "%" : "", scene === "soft" ? "" : Sys.track])
         }
@@ -156,6 +160,8 @@ Singleton {
         case "prompt": return "~ $ date +%R"
         case "boot": return bootCmd
         case "pwlabel": return "password:"
+        // hyprlock fills $LAYOUT in before running it; a plain label can keep "error" from before the keymap came
+        case "kbd": return "cmd[update:1000] printf '%s' 'layout: $LAYOUT'"
         case "media": return "cmd[update:2000] " + nowPlaying + "printf '\u266A  %s' \"${m:-Nothing playing}\""
         case "widgets": {
             const bits = []
@@ -170,10 +176,12 @@ Singleton {
     // ---- hyprlock --------------------------------------------------------------------------------------
     function hex(c) { return c.toString().slice(1, 7) }
     function rgba(c, a) { return "rgba(" + [c.r, c.g, c.b].map(v => Math.round(v * 255)).join(", ") + ", " + a + ")" }
-    function family(e) {   // hyprlock picks the face by its full name: "Outfit Light"
+    // hyprlock picks the face by its full name: "Outfit Light". A family whose own name ends in the weight
+    // ("Archivo Black") gets a trailing comma, or Pango reads it as Archivo at weight Black and draws it regular.
+    function family(e) {
         const f = e.mono ? Theme.monoFont : e.display ? Theme.displayFont : Theme.font
         const w = ({ 300: " Light", 500: " Medium", 600: " SemiBold", 700: " Bold", 800: " ExtraBold", 900: " Black" })[e.weight ?? 400] ?? ""
-        return f.endsWith(w.trim()) ? f : f + w
+        return w && f.endsWith(w) ? f + "," : f + w
     }
     function colour(e) { return e.colour === "accent" ? "rgb(" + hex(Theme.accent) + ")" : e.colour === "muted" ? rgba(inkMuted, Number(inkMuted.a.toFixed(2))) : "rgb(" + hex(ink) + ")" }
     // a shape's fill by name (blocks, the soft media pill, the blocks field's shadow), here and in LockPreview
@@ -200,7 +208,7 @@ Singleton {
             } else if (e.role === "input") {
                 // boot: bare, a star per letter after "password:"; soft: no outline, a soft shadow; blocks: a thick text frame
                 const boot = scene === "boot", soft = scene === "soft", blk = scene === "blocks"
-                const lay = l.widgets.includes("layout") ? "  ·  $LAYOUT" : ""
+                const lay = !boot && l.widgets.includes("layout") ? "  ·  $LAYOUT" : ""
                 s += "input-field {\n    monitor           =\n    size              = " + e.w + ", " + e.hgt + "\n"
                    + "    outline_thickness = " + (boot || soft ? 0 : blk ? 3 : Math.max(1, Theme.line)) + "\n"
                    + "    rounding          = " + (blk || boot ? 0 : soft || Theme.radius >= 12 ? -1 : Theme.radius) + "\n"
