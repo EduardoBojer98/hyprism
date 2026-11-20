@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Settings > Displays > Presets: quick layouts for the screens plugged in now, and your saved ones (apply,
+// Settings > Displays > Presets: your saved layouts (apply,
 // rename, delete, default star, switch automatically). Everything goes through Displays.qml, so applying one
 // gets the same keep-or-revert countdown as the Apply button.
 SettingGroup {
@@ -12,19 +12,6 @@ SettingGroup {
     property string renaming: ""       // id of the preset being renamed
 
     function run(why) { message = why }
-
-    SettingRow {
-        label: "Quick layouts"
-        hint: Displays.builtInPresets.length ? "Made from the screens plugged in now" : "Plug in another screen to switch layouts"
-        RowLayout {
-            spacing: Theme.spaceS
-            Repeater {
-                model: Displays.builtInPresets
-                PillButton { required property var modelData; text: modelData.name; onClicked: group.run(Displays.applyMode(modelData.how)) }
-            }
-            PillButton { text: "Identify"; onClicked: Displays.identify() }
-        }
-    }
 
     Repeater {
         model: Displays.presets

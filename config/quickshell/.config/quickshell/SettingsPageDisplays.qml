@@ -40,6 +40,7 @@ ColumnLayout {
 
     function set(field, value) { Displays.set(selected, field, value) }
 
+
     // ---- several screens: extend, mirror or one only ----------------------------------------
     SettingGroup {
         title: "Multiple displays"
@@ -55,29 +56,7 @@ ColumnLayout {
                 onPicked: i => Displays.arrange(keys[i])
             }
         }
-        SettingRow {
-            label: "Main screen"
-            hint: Config.displays.main && !Displays.mainScreen ? "Not connected now: notifications follow the screen you work on until it's back"
-                : "Notifications and volume or brightness messages show here; workspace 1 and the pointer start here at login"
-            Dropdown {
-                width: 200
-                readonly property var keys: [""].concat(page.monitors.map(m => m.key))
-                readonly property var names: ["Where I'm working"].concat(page.monitors.map(m => Displays.numberOf(m.name) + " \u00b7 " + Displays.label(m)))
-                options: names
-                accessibleName: "Main screen"
-                current: keys.includes(Config.displays.main) ? names[keys.indexOf(Config.displays.main)] : "A screen not connected"
-                onPicked: v => Config.set("displays", "main", keys[names.indexOf(v)])
-            }
-        }
-        SettingRow {
-            visible: Config.displays.main !== ""
-            label: "Menu bar only on the main screen"
-            hint: "The other screens get the whole height"
-            ConfigToggle { section: "displays"; key: "barOnMainOnly" }
-        }
     }
-
-    SettingsPageDisplaysPresets {}
 
     // ---- arrangement canvas -----------------------------------------------------------------
     Rectangle {
@@ -153,6 +132,12 @@ ColumnLayout {
             color: Theme.subtext
             font { family: Theme.font; pixelSize: Theme.fontCaption }
         }
+        PillButton {   // shows each screen's number on the screen itself
+            visible: page.monitors.length > 1
+            anchors { right: parent.right; top: parent.top; margins: 10 }
+            text: "Identify"
+            onClicked: Displays.identify()
+        }
     }
 
     // a gap between screens is a warning, not a refusal (Apply still works): say it under the drawing, offer to close it
@@ -178,6 +163,17 @@ ColumnLayout {
         title: page.sel ? Displays.label(page.sel) + " screen" : ""   // the vendor model code says little; the canvas above shows which one
         visible: page.sel !== null
 
+        SettingRow {
+            visible: page.monitors.length > 1
+            label: "Screen"
+            hint: "Or click it in the drawing"
+            Choice {
+                accessibleName: "Screen to change"
+                options: page.monitors.map(m => Displays.numberOf(m.name) + " \u00b7 " + Displays.label(m))
+                index: page.monitors.findIndex(m => m.key === page.selected)
+                onPicked: i => page.selected = page.monitors[i].key
+            }
+        }
         SettingRow {
             label: "Use this display"
             hint: page.placed.length <= 1 && !page.selEdit?.disabled ? "It's the only screen showing the desktop" : "Off leaves the screen dark and moves its windows"
@@ -242,9 +238,9 @@ ColumnLayout {
         }
         SettingRow {
             label: "Adaptive sync (VRR)"
-            hint: "Smoother games and video; \"Fullscreen\" avoids flicker on the desktop"
+            hint: "Smoother games and video; \"Fullscreen\" avoids flicker on the desktop. Default: as in Advanced"
             Choice {
-                options: ["Off", "On", "Fullscreen"]
+                options: ["Default", "On", "Fullscreen"]
                 index: page.selEdit?.vrr ?? 0
                 onPicked: i => page.set("vrr", i)
             }
@@ -291,44 +287,10 @@ ColumnLayout {
     }
 
     SettingGroup {
-        title: "Advanced"
-        SettingRow {
-            label: "Adaptive sync (all screens)"
-            hint: "Smoother motion in games on screens that support it; \"Fullscreen\" only while an app is fullscreen"
-            ConfigChoice { section: "displays"; key: "vrr"; values: ["off", "on", "fullscreen"]; labels: ["Off", "On", "Fullscreen"] }
-        }
-        SettingRow {
-            label: "New screens"
-            hint: "Where a screen goes the first time it is plugged in (after that, its saved place)"
-            ConfigChoice { section: "displays"; key: "newScreen"; values: ["right", "left", "above", "below", "mirror"]; labels: ["Right", "Left", "Above", "Below", "Mirror"] }
-        }
-        SettingRow {
-            label: "Prefer the highest refresh rate"
-            hint: "A screen you plug in for the first time starts at its fastest mode instead of its default"
-            ConfigToggle { section: "displays"; key: "preferHighRefresh" }
-        }
-        SettingRow {
-            label: "Sharp old apps"
-            hint: "Old X11 apps draw at the screen's real pixels: crisp, but smaller on a scaled screen"
-            ConfigToggle { section: "displays"; key: "xwaylandNativeScale" }
-        }
-        SettingRow {
-            label: "Automatic HDR colour"
-            hint: "Switches the screen's colour mode for HDR video; leave off if a screen blanks during fullscreen video"
-            ConfigToggle { section: "displays"; key: "autoHdr" }
-        }
-        SettingRow {
-            label: "Tell the screen what is playing"
-            hint: "Lets a TV pick its game or movie mode; leave off if a screen blanks when you go fullscreen"
-            ConfigToggle { section: "displays"; key: "sendContentType" }
-        }
-    }
-
-    SettingGroup {
         title: "Night Light"
         SettingRow {
             label: "Turn on"
-            hint: NightLight.sun ? `Sunset ${NightLight.clock(NightLight.sun.set)}, sunrise ${NightLight.clock(NightLight.sun.rise)} in ${Config.weather.city}` : ""
+            hint: NightLight.sun ? `Sunset ${NightLight.clock(NightLight.sun.set)}, sunrise ${NightLight.clock(NightLight.sun.rise)}` + (Config.weather.city ? ` in ${Config.weather.city}` : "") : ""
             ConfigChoice { section: "nightLight"; key: "mode"; values: ["off", "on", "sun", "schedule"]; labels: ["Off", "Always", "Sunset to sunrise", "Custom hours"] }
         }
         SettingRow {
@@ -363,6 +325,67 @@ ColumnLayout {
                     }
                 }
             }
+        }
+    }
+
+    SettingGroup {
+        title: "Main screen"
+        visible: page.monitors.length > 1
+        SettingRow {
+            label: "Which screen"
+            hint: Config.displays.main && !Displays.mainScreen ? "Not connected now: notifications follow the screen you work on until it's back"
+                : "Notifications and volume or brightness messages show here; workspace 1 and the pointer start here at login"
+            Dropdown {
+                width: 200
+                readonly property var keys: [""].concat(page.monitors.map(m => m.key))
+                readonly property var names: ["Where I'm working"].concat(page.monitors.map(m => Displays.numberOf(m.name) + " \u00b7 " + Displays.label(m)))
+                options: names
+                accessibleName: "Main screen"
+                current: keys.includes(Config.displays.main) ? names[keys.indexOf(Config.displays.main)] : "A screen not connected"
+                onPicked: v => Config.set("displays", "main", keys[names.indexOf(v)])
+            }
+        }
+        SettingRow {
+            visible: Config.displays.main !== ""
+            label: "Menu bar only on the main screen"
+            hint: "The other screens get the whole height"
+            ConfigToggle { section: "displays"; key: "barOnMainOnly" }
+        }
+    }
+
+    SettingsPageDisplaysPresets {}
+
+    SettingGroup {
+        title: "Advanced"
+        SettingRow {
+            label: "Adaptive sync (all screens)"
+            hint: "Smoother motion in games on screens that support it; \"Fullscreen\" only while an app is fullscreen"
+            ConfigChoice { section: "displays"; key: "vrr"; values: ["off", "on", "fullscreen"]; labels: ["Off", "On", "Fullscreen"] }
+        }
+        SettingRow {
+            label: "New screens"
+            hint: "Where a screen goes the first time it is plugged in (after that, its saved place)"
+            ConfigChoice { section: "displays"; key: "newScreen"; values: ["right", "left", "above", "below", "mirror"]; labels: ["Right", "Left", "Above", "Below", "Mirror"] }
+        }
+        SettingRow {
+            label: "Prefer the highest refresh rate"
+            hint: "A screen you plug in for the first time starts at its fastest mode instead of its default"
+            ConfigToggle { section: "displays"; key: "preferHighRefresh" }
+        }
+        SettingRow {
+            label: "Sharp old apps"
+            hint: "Old X11 apps draw at the screen's real pixels: crisp, but smaller on a scaled screen"
+            ConfigToggle { section: "displays"; key: "xwaylandNativeScale" }
+        }
+        SettingRow {
+            label: "Automatic HDR colour"
+            hint: "Switches the screen's colour mode for HDR video; leave off if a screen blanks during fullscreen video"
+            ConfigToggle { section: "displays"; key: "autoHdr" }
+        }
+        SettingRow {
+            label: "Tell the screen what is playing"
+            hint: "Lets a TV pick its game or movie mode; leave off if a screen blanks when you go fullscreen"
+            ConfigToggle { section: "displays"; key: "sendContentType" }
         }
     }
 }
