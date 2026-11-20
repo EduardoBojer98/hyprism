@@ -14,16 +14,18 @@ Item {
     readonly property real s: width / 200                  // drawing scale
     readonly property real barT: 7 * s
     readonly property bool sideBar: Theme.barEdge === "left" || Theme.barEdge === "right"
-    readonly property bool split: spec.split ?? (Theme.glassy && spec.placement === "center")
-    readonly property string corners: spec.corners && spec.corners !== "theme" ? spec.corners : Theme.radius === 0 ? "sharp" : "round"
+    // the theme's structure (launcher.layout, Launcher.qml): grid | sheet | prompt; a style has none
+    readonly property string layout: spec.layout ?? ""
+    readonly property bool split: spec.split ?? (layout === "grid" || Theme.glassy && spec.placement === "center")
+    readonly property string corners: spec.corners && spec.corners !== "theme" ? spec.corners : layout === "grid" ? "round" : Theme.radius === 0 ? "sharp" : "round"
     readonly property real r: corners === "sharp" ? 0 : 4 * s
-    readonly property bool grid: spec.view === "grid" || spec.view === "start"
-    readonly property bool inverse: (spec.select ?? "wash") === "inverse"
+    readonly property bool grid: spec.view === "grid" || spec.view === "start" || layout === "grid"
+    readonly property bool inverse: layout === "sheet" || layout !== "grid" && layout !== "prompt" && (spec.select ?? "wash") === "inverse"
     // what makes each style itself: Spotlight is the bar alone until you type, Launchpad has no sheet,
     // and the rows are drawn the style's way (compact lines, tall cards, text with a kind column)
     readonly property bool barOnly: spec.view === "inline" && split
     readonly property bool bare: (spec.bare ?? false) && !Theme.light
-    readonly property string rows: spec.rows ?? ((spec.prompt ?? "") !== "" ? "text" : "standard")
+    readonly property string rows: spec.rows ?? (layout === "sheet" ? "cards" : (spec.prompt ?? "") !== "" ? "text" : "standard")
     readonly property bool glance: spec.view === "home" && (spec.home ?? []).includes("glance")
 
     implicitHeight: shot.height + text.implicitHeight + Theme.spaceS
@@ -65,7 +67,7 @@ Item {
                 corner: [sw * 0.03, sh * 0.38, sw * 0.4, sh * 0.56],
             })[card.spec.placement] ?? [sw * 0.24, sh * 0.2, sw * 0.52, sh * 0.56]
             x: at[0]; y: at[1]; width: at[2]; height: card.barOnly ? fh : at[3]
-            readonly property real fh: Math.max(10 * card.s, at[3] * (card.spec.placement === "fullscreen" ? 0.17 : card.barOnly ? 0.26 : 0.2))
+            readonly property real fh: Math.max(10 * card.s, at[3] * (card.spec.placement === "fullscreen" ? 0.17 : card.barOnly ? 0.26 : card.layout === "sheet" ? 0.28 : 0.2))
             readonly property real gap: card.split ? 3 * card.s : 0
 
             Rectangle {   // one card behind everything (unified)
@@ -89,18 +91,19 @@ Item {
                     color: Theme.accent
                     font { family: Theme.monoFont; pixelSize: Math.max(8, box.fh * 0.5); weight: Font.Bold }
                 }
-                Rectangle {   // the lens
-                    visible: (card.spec.prompt ?? "") === ""
+                Rectangle {   // the lens (the sheet has none: the query is the header)
+                    visible: (card.spec.prompt ?? "") === "" && card.layout !== "sheet"
                     anchors { left: parent.left; leftMargin: 5 * card.s; verticalCenter: parent.verticalCenter }
                     width: box.fh * 0.36; height: width; radius: width / 2
                     color: "transparent"
                     border { width: Math.max(1, card.s); color: Theme.subtext }
                 }
                 Rectangle {   // typed text
-                    x: 5 * card.s + box.fh * 0.6
+                    readonly property bool big: card.spec.header === "query" || card.layout === "sheet"
+                    x: 5 * card.s + (card.layout === "sheet" ? 0 : box.fh * 0.6)
                     anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width * (card.spec.header === "query" ? 0.3 : 0.22)
-                    height: Math.max(2, box.fh * (card.spec.header === "query" ? 0.3 : 0.18))
+                    width: parent.width * (big ? 0.3 : 0.22)
+                    height: Math.max(2, box.fh * (card.layout === "sheet" ? 0.4 : big ? 0.3 : 0.18))
                     radius: height / 2
                     color: Theme.muted
                 }
@@ -166,6 +169,14 @@ Item {
                                 radius: card.corners === "sharp" ? 0 : width * 0.3
                                 color: parent.index === 0 && card.inverse ? Theme.accentText : Theme.subtext
                                 opacity: 0.55
+                                Rectangle {   // grid: the squircle plate under the icon
+                                    visible: card.layout === "grid"
+                                    anchors.centerIn: parent
+                                    z: -1
+                                    width: parent.width * 1.4; height: width; radius: width * 0.32
+                                    color: Theme.fill
+                                    border { width: 1; color: Theme.stroke }
+                                }
                             }
                         }
                     }
@@ -182,11 +193,39 @@ Item {
                         model: Math.max(0, Math.min(card.rows === "compact" ? 10 : 6, Math.floor((body.height - body.listTop - body.pad) / (list.rowH + list.spacing))))
                         Rectangle {
                             required property int index
-                            width: parent.width; height: list.rowH
+                            // sheet: a letter column on the left; prompt: a > and an index
+                            readonly property real lead: card.layout === "sheet" || card.layout === "prompt" ? 6 * card.s : 0
+                            x: lead
+                            width: parent.width - lead - (card.layout === "sheet" ? card.s * 1.5 : 0); height: list.rowH
                             radius: card.r / 2
                             color: index === 0 ? (card.inverse ? Theme.accent : Theme.accentWash) : "transparent"
+                            Rectangle {   // sheet: the hard shadow under the selection
+                                visible: card.layout === "sheet" && parent.index === 0
+                                x: card.s * 1.5; y: card.s * 1.5; z: -1
+                                width: parent.width; height: parent.height
+                                color: Theme.text
+                            }
+                            Rectangle {   // sheet: the first letter; prompt: the > on the selection, then a dim index
+                                visible: parent.lead > 0 && (card.layout === "sheet" || parent.index === 0)
+                                x: -parent.lead + card.s; anchors.verticalCenter: parent.verticalCenter
+                                width: card.layout === "sheet" ? 3 * card.s : 1.5 * card.s; height: card.layout === "sheet" ? width : 2 * card.s
+                                color: card.layout === "sheet" ? Theme.text : Theme.accent
+                            }
+                            Rectangle {
+                                visible: card.layout === "prompt"
+                                x: -parent.lead + 3 * card.s; anchors.verticalCenter: parent.verticalCenter
+                                width: 2.5 * card.s; height: Math.max(2, 1.4 * card.s); radius: height / 2
+                                color: Theme.muted
+                            }
+                            Rectangle {   // sheet: the category tag at the row's end
+                                visible: card.layout === "sheet"
+                                anchors { right: parent.right; rightMargin: 2 * card.s; verticalCenter: parent.verticalCenter }
+                                width: 7 * card.s; height: 3.5 * card.s
+                                color: "transparent"
+                                border { width: 1; color: parent.index === 0 ? Theme.accentText : Theme.text }
+                            }
                             Rectangle {   // the accent tick of a soft selection
-                                visible: parent.index === 0 && !card.inverse
+                                visible: parent.index === 0 && !card.inverse && !card.layout
                                 x: 1; anchors.verticalCenter: parent.verticalCenter
                                 width: Math.max(1, card.s); height: parent.height * 0.5
                                 color: Theme.accent
@@ -200,14 +239,14 @@ Item {
                                 opacity: card.rows === "text" ? 0.8 : 0.6
                             }
                             Rectangle {   // the second line of a card
-                                visible: card.rows === "cards"
+                                visible: card.rows === "cards" && card.layout !== "sheet"
                                 x: 14 * card.s; y: parent.height * 0.6
                                 width: parent.width * 0.22; height: Math.max(2, 1.2 * card.s); radius: height / 2
                                 color: Theme.muted; opacity: 0.6
                             }
                             Rectangle {
                                 x: (card.rows === "cards" ? 14 : card.rows === "text" ? 12 : card.rows === "compact" ? 8 : 10) * card.s
-                                y: card.rows === "cards" ? parent.height * 0.3 : (parent.height - height) / 2
+                                y: card.rows === "cards" && card.layout !== "sheet" ? parent.height * 0.3 : (parent.height - height) / 2
                                 width: parent.width * [0.42, 0.3, 0.36, 0.26, 0.34, 0.28][parent.index]; height: Math.max(2, 1.6 * card.s)
                                 radius: height / 2
                                 color: parent.index === 0 && card.inverse ? Theme.accentText : Theme.muted

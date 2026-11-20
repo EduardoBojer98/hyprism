@@ -120,7 +120,7 @@ Singleton {
              : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
              : rl.placement === "fullscreen" ? Math.min(rl.width * size, screenW - 80)
              : Math.min(rl.width * size, screenW - Theme.spaceL * 2),
-        field: Math.round((preset?.field ?? (layout === "sheet" ? Theme.fontHero * 2 : layout === "grid" ? 64 : rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5))) * Math.sqrt(size)),
+        field: Math.round((preset?.field ?? (layout === "sheet" ? Theme.fontHero * 2.1 : layout === "grid" ? 64 : rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5))) * Math.sqrt(size)),
         corners: Config.launcher.corners !== "style" ? Config.launcher.corners
                : preset && preset.corners !== "theme" ? preset.corners : layout === "grid" ? "round" : Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
         selection: "accent",
