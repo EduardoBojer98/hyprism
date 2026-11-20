@@ -233,6 +233,11 @@ ColumnLayout {
             hint: "Off: text only, in popups and the notification centre"
             ConfigToggle { section: "notifications"; key: "showIcons" }
         }
+        SettingRow {
+            label: "Size"
+            hint: "Text, icons and width of popups and the notification centre"
+            ConfigSlider { section: "notifications"; key: "size"; from: 80; to: 150; step: 10; format: v => v + "%" }
+        }
     }
 
     SettingGroup {

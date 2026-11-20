@@ -27,7 +27,7 @@ Singleton {
         id: popup
         name: "notifications"
         placement: "topRight"
-        boxWidth: 380
+        boxWidth: Notifications.cardWidth + Theme.spaceM * 2
         boxHeight: column.implicitHeight + Theme.spaceM * 2
         focusItem: column
         onOpened: { Notifications.seenAt = Date.now(); Notifications.now = new Date(); root.unfolded = ({}) }

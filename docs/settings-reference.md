@@ -127,6 +127,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `maxVisible` | `int` | `4` | popups on screen at once; the rest wait in the notification centre |
 | `groupByApp` | `bool` | `true` | one popup per app (with a count) and the history grouped by app |
 | `showIcons` | `bool` | `true` | the app's icon or the notification's picture |
+| `size` | `int` | `100` | banners and the notification centre, % (text, icons, width) |
 | `style` | `string` | `"theme"` | popup look: theme \| card \| bubble \| line \| block \| tag \| compact |
 | `position` | `string` | `"theme"` | theme \| top-left \| top \| top-right \| bottom-left \| bottom \| bottom-right |
 | `dndSchedule` | `bool` | `false` | Do Not Disturb every day between dndFrom and dndTo |

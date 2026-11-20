@@ -115,14 +115,14 @@ Glass {
             readonly property bool soft: card.kind === "card"
             Layout.alignment: card.isCompact ? Qt.AlignVCenter : Qt.AlignTop
             visible: src !== "" && Config.notifications.showIcons
-            implicitWidth: soft ? Theme.iconLarge + Theme.spaceS : image.implicitSize
+            implicitWidth: soft ? Notifications.iconSize + Theme.spaceS : image.implicitSize
             implicitHeight: implicitWidth
             radius: width / 2
             color: soft ? Theme.accentWash : "transparent"
             IconImage {
                 id: image
                 anchors.centerIn: parent
-                implicitSize: card.isCompact || icon.soft ? Theme.iconMedium : Theme.iconLarge
+                implicitSize: card.isCompact || icon.soft ? Notifications.iconSmall : Notifications.iconSize
                 source: icon.src
             }
         }
@@ -142,7 +142,7 @@ Glass {
                     radius: Theme.radius === 0 ? 0 : height / 2
                     color: Theme.accent
                     Text { id: appTag; anchors.centerIn: parent; width: Math.min(implicitWidth, parent.width - 12); text: appName.text; elide: Text.ElideRight; color: Theme.accentText
-                           font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold } }
+                           font { family: Theme.font; pixelSize: Notifications.fontMeta; weight: Font.DemiBold } }
                 }
                 Text {
                     id: appName
@@ -151,14 +151,14 @@ Glass {
                     text: card.isBlock ? (card.notification?.appName ?? "").toUpperCase() : card.notification?.appName ?? ""
                     color: card.inkSoft
                     elide: Text.ElideRight
-                    font { family: Theme.font; pixelSize: Theme.fontCaption; weight: card.isBlock ? Font.Bold : Font.DemiBold; letterSpacing: card.isBlock ? 1 : 0 }
+                    font { family: Theme.font; pixelSize: Notifications.fontMeta; weight: card.isBlock ? Font.Bold : Font.DemiBold; letterSpacing: card.isBlock ? 1 : 0 }
                 }
                 Item { visible: card.kind === "tag"; Layout.fillWidth: true }
                 Text {
                     visible: !card.hovered || card.stacked > 0
                     text: card.stacked > 0 ? `${card.stacked} more` : card.notification ? Notifications.ago(card.notification) : ""
                     color: card.red ? Theme.errorText : Theme.muted
-                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                    font { family: Theme.font; pixelSize: Notifications.fontMeta }
                 }
             }
             Text {
@@ -169,7 +169,7 @@ Glass {
                 color: card.ink
                 elide: Text.ElideRight
                 // block: the title in the display font (Poster's heavy type)
-                font { family: card.isBlock ? Theme.displayFont : Theme.font; pixelSize: card.isBlock ? Theme.fontTitle : Theme.fontSize
+                font { family: card.isBlock ? Theme.displayFont : Theme.font; pixelSize: card.isBlock ? Notifications.fontDisplay : Notifications.fontHead
                        weight: card.isBlock ? Theme.displayWeight : Font.DemiBold }
             }
             Text {
@@ -181,7 +181,7 @@ Glass {
                 wrapMode: Text.Wrap
                 maximumLineCount: card.isCompact ? 1 : card.banner ? 3 : 5
                 elide: Text.ElideRight
-                font { family: Theme.font; pixelSize: Theme.fontLabel }
+                font { family: Theme.font; pixelSize: Notifications.fontBody }
             }
             RowLayout {
                 visible: card.buttons.length > 0 && (card.banner || card.stacked === 0)
@@ -235,7 +235,7 @@ Glass {
         signal clicked()
         text: "[" + word + "]"
         color: actArea.containsMouse || activeFocus ? Theme.accent : Theme.subtext
-        font { family: Theme.monoFont; pixelSize: Theme.fontCaption; underline: actArea.containsMouse }
+        font { family: Theme.monoFont; pixelSize: Notifications.fontMeta; underline: actArea.containsMouse }
         activeFocusOnTab: !card.banner
         Keys.onReturnPressed: clicked()
         Keys.onSpacePressed: clicked()
@@ -257,7 +257,7 @@ Glass {
             wrapMode: Text.Wrap
             maximumLineCount: card.banner ? 3 : 4
             elide: Text.ElideRight
-            font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
+            font { family: Theme.monoFont; pixelSize: Notifications.fontBody }
         }
         Flow {
             Layout.fillWidth: true

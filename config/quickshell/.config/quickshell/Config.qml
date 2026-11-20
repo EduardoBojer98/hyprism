@@ -65,7 +65,7 @@ Singleton {
         clipboard: { maxItems: [20, 2000], maxAgeDays: [0, 365], images: "bool", paused: "bool",
                      skipSensitive: "bool", autoPaste: "bool" },
         notifications: { dnd: "bool", timeoutSec: [2, 30], timeoutLowSec: [2, 30], timeoutCriticalSec: [0, 120], maxVisible: [1, 8],
-                         groupByApp: "bool", showIcons: "bool",
+                         groupByApp: "bool", showIcons: "bool", size: [80, 150],
                          style: ["theme", "card", "bubble", "line", "block", "tag", "compact"],
                          position: ["theme", "top-left", "top", "top-right", "bottom-left", "bottom", "bottom-right"],
                          dndSchedule: "bool", dndFrom: "time", dndTo: "time",

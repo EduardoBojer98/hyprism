@@ -99,6 +99,7 @@ JsonAdapter {
         property int maxVisible: 4                       // popups on screen at once; the rest wait in the notification centre
         property bool groupByApp: true                   // one popup per app (with a count) and the history grouped by app
         property bool showIcons: true                    // the app's icon or the notification's picture
+        property int size: 100                           // banners and the notification centre, % (text, icons, width)
         property string style: "theme"                   // popup look: theme | card | bubble | line | block | tag | compact
         property string position: "theme"               // theme | top-left | top | top-right | bottom-left | bottom | bottom-right
         property bool dndSchedule: false                 // Do Not Disturb every day between dndFrom and dndTo

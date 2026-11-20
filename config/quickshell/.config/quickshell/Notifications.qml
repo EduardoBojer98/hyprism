@@ -86,6 +86,16 @@ Singleton {
     }
     function muted(n) { return Config.notifications.mutedApps.includes(n.appName || "Other") }
 
+    // sizes for the banners and the centre's cards, scaled by Settings > Notifications > Size
+    readonly property real zoom: c.size / 100
+    readonly property int cardWidth: Math.round(400 * zoom)
+    readonly property int fontMeta: Math.round(Theme.fontLabel * zoom)    // app name, age, buttons
+    readonly property int fontBody: Math.round(Theme.fontSize * zoom)
+    readonly property int fontHead: Math.round(Theme.fontTitle * zoom)    // the title
+    readonly property int fontDisplay: Math.round((Theme.fontTitle + 4) * zoom)   // block: the title in the display font
+    readonly property int iconSize: Math.round(40 * zoom)
+    readonly property int iconSmall: Math.round(28 * zoom)               // compact, and inside card's soft circle
+
     function hidePopup(n) { popups = popups.filter(x => x !== n) }
     // Click: the app's default action if it has one (invoke() closes it unless it is resident), and its window to
     // the front; without one, its window or else the app started, and the notification closed
@@ -266,7 +276,7 @@ Singleton {
         exclusionMode: ExclusionMode.Ignore
         anchors { top: !atBottom; bottom: atBottom; right: place.endsWith("right"); left: place.endsWith("left") }   // neither: centred
         margins { top: Theme.reserveTop + 10; bottom: Theme.reserveBottom + 10; right: Theme.reserveRight + 12; left: Theme.reserveLeft + 12 }
-        implicitWidth: 344
+        implicitWidth: root.cardWidth
         // grouped: the last stack's peek (not lines: they say "+n more"); block: its hard shadow
         implicitHeight: Math.max(1, list.contentHeight + (root.c.groupByApp && root.kind !== "line" ? 14 : 0) + list.anchors.bottomMargin)
         exclusiveZone: 0

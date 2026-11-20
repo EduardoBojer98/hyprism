@@ -42,6 +42,8 @@ every shortcut. The full key list is in the [README](../README.md#keys).
   Settings > Control Center starts from a layout (Classic, Essentials, Mixer, Grid, Minimal, or one you kept),
   then lets you drag sections and tiles; `qs ipc call controlcenter layout <name>` switches layout from a key.
 - **Notifications** have their own panel from the bell (`Super+N`): Do Not Disturb (`Super+Shift+N`), history by app.
+  Click one to open the app that sent it; its own buttons (and a reply field, for chat apps that offer one) are on
+  the card. Settings → Notifications → Size makes popups and the panel bigger or smaller.
 - **Focus modes** (Settings > Focus, the Control Center's Focus tile, launcher actions such as *Focus: Work*):
   Work, Client call and Sleep to start, and any you add. Each can turn on Do Not Disturb while letting chosen apps
   through, set a wallpaper, open apps, and turn on Night Light or Caffeine; turning it off puts those back. A mode can
