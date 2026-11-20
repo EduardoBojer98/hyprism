@@ -46,14 +46,12 @@ function maximise_button(addr, floating, fullscreen)
     end
 end
 
--- Edge snap, like Windows and GNOME: a floating window dropped with the pointer on a screen's outer edge fills
--- that half, in a corner that quarter, and on the top edge (away from the corners) it is maximised. The minimize
+-- Edge snap: a floating window dropped with the pointer on a screen's left or right outer edge tiles on that side
+-- (it shares the screen and grows when the other window closes); on the top edge it is maximised. The minimize
 -- plugin calls snap_preview() while such a window is dragged near an edge (Quickshell SnapPreview.qml shows the
 -- spot) and edge_snap() when it is dropped, with the pointer and the window's title bar height.
 -- Settings > Windows > Snap to screen edges.
-local SNAP_PARTS = { left = { 0, 0, 0.5, 1 }, right = { 0.5, 0, 0.5, 1 }, max = { 0, 0, 1, 1 },
-                     topleft = { 0, 0, 0.5, 0.5 }, topright = { 0.5, 0, 0.5, 0.5 },
-                     bottomleft = { 0, 0.5, 0.5, 0.5 }, bottomright = { 0.5, 0.5, 0.5, 0.5 } }
+local SNAP_PARTS = { left = { 0, 0, 0.5, 1 }, right = { 0.5, 0, 0.5, 1 }, max = { 0, 0, 1, 1 } }
 
 local function screen_size(m)
     local rot = m.transform % 2 == 1
@@ -72,15 +70,11 @@ local function snap_zone(x, y, bar)
         local ow, oh = screen_size(o)
         return not (px >= o.x and px < o.x + ow and py >= o.y and py < o.y + oh)
     end
-    local e, cw, ch = 3, math.max(48, W * 0.12), math.max(48, H * 0.15)   -- on the edge; corner reach
+    local e = 3   -- on the edge
     local L = x <= m.x + e and outer(m.x - 4, y)
     local R = x >= m.x + W - 1 - e and outer(m.x + W + 4, y)
     local T = y <= m.y + e and outer(x, m.y - 4)
-    local B = y >= m.y + H - 1 - e and outer(x, m.y + H + 4)
-    local nl, nr, nt, nb = x < m.x + cw, x >= m.x + W - cw, y < m.y + ch, y >= m.y + H - ch
-    local name = (L or T) and nl and nt and "topleft" or (R or T) and nr and nt and "topright"
-        or (L or B) and nl and nb and "bottomleft" or (R or B) and nr and nb and "bottomright"
-        or L and "left" or R and "right" or T and "max" or nil
+    local name = L and "left" or R and "right" or T and "max" or nil
     if not name then return nil end
     -- that part of the free area with the theme's gaps, the same as the window menu's Snap (WindowMenu.qml)
     local p, r, g, gi = SNAP_PARTS[name], m.reserved, THEME.gaps_out or 0, THEME.gaps_in or 0
@@ -115,9 +109,9 @@ function edge_snap(addr, x, y, bar)
         hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle", window = win }))
         return
     end
-    bar = bar or 0
-    hl.dispatch(hl.dsp.window.resize({ x = box.w, y = box.h - bar, window = win }))
-    hl.dispatch(hl.dsp.window.move({ x = box.x, y = box.y + bar, window = win }))
+    -- a side tiles it: the layout splits the window under the pointer on that side, so it shares the
+    -- screen with new windows and grows when the other one closes (a floating half would sit on top of them)
+    hl.dispatch(hl.dsp.window.float({ action = "disable", window = win }))
 end
 
 -- Super+T and the window menu's Floating: a window tiled and floated again comes back where you left it

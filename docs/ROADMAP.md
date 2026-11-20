@@ -21,7 +21,3 @@ What is left, newest decisions first. Done work moves to `CHANGELOG.md`; the rea
   - Wide display fonts (Poster, Monolith): the system panel shrinks big numbers and halves stat grids; check
     the other popups for the same squeeze (calendar header, weather, Control Center tile labels).
   - Choose: one theme reworked in depth first, or a polish pass over all three. Not started; needs your pick.
-- Windows: a tiled window floats on a maximise click or a double click on a title bar, Chrome's empty tab strip
-  included (Settings > Window Look > Maximise button: Float). Dropped on a screen edge it fills that half but
-  stays floating, so new windows don't tile beside it and it doesn't grow when the other closes. To decide:
-  edge snap tiles the window instead, and/or the button fills the screen.

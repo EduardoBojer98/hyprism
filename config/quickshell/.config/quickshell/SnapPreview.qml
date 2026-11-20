@@ -3,7 +3,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 
-// Where a dragged window will land when dropped on a screen edge or corner (Windows-style edge snap): a tinted
+// Where a dragged window will land when dropped on a screen edge (edge snap): a tinted
 // outline that glides from zone to zone. Shown and hidden by the Lua snap_preview() (hypr modules/windows.lua),
 // which the minimize plugin calls while a floating window is dragged near an edge. Never takes input.
 PanelWindow {

@@ -125,9 +125,9 @@ theme: the title-bar plugin can't recolour a button until Hyprland next starts, 
 any bar. Unfocused windows' buttons turn to the theme's quiet tone. The maximise button (and a double click on a
 title bar, and an app's own button) floats a tiled window, centred, and fills the screen with a floating one, which
 the next click brings back; Super+T tiles it again. Window Look → Maximise button switches it to always filling the
-screen. Drag a floating window to the left or right edge of the screen to fill that half, into a corner for that
-quarter, or to the top edge to maximise it, as on Windows or GNOME: an outline shows where it will land before you
-let go (Windows → Snap to screen edges). Chrome works the same, dragged by its tab strip or by a tab. A maximised
+screen. Drag a floating window to the left or right edge of the screen to tile it on that side (it shares the
+screen with the other windows and grows when they close), or to the top edge to maximise it: an outline shows the
+side before you let go (Windows → Snap to screen edges). Chrome works the same, dragged by its tab strip or by a tab. A maximised
 window keeps the gap at the screen edges. To have every new window open floating instead of tiled, use the Control
 Center's Floating tile, add the Floating windows item to the menu bar, or Windows → Open new windows floating.
 Spotlight opens in each style's own place (Settings → Search & Launcher → Adjust → Open: or the middle, or at the

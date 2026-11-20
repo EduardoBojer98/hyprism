@@ -91,7 +91,7 @@ ColumnLayout {
         }
         SettingRow {
             label: "Snap to screen edges"
-            hint: "Drop a floating window on the left or right edge to fill that half, in a corner for a quarter, on the top edge to maximise it"
+            hint: "Drop a floating window on the left or right edge to tile it on that side, on the top edge to maximise it"
             ConfigToggle { section: "windows"; key: "edgeSnap" }
         }
         SettingRow {
