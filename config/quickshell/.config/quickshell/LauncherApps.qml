@@ -117,7 +117,7 @@ Item {
         readonly property int cols: apps.pad ? Math.max(3, Math.floor(width / (Launcher.look.icon + 88)))
                                              : Math.max(2, Math.min(Launcher.look.columns, Math.floor(width / (Launcher.look.icon + 44))))
         cellWidth: Math.floor(width / cols)
-        cellHeight: Launcher.look.icon + (apps.pad ? 72 : 58)
+        cellHeight: Launcher.look.icon + (apps.pad ? 72 : Launcher.layout === "grid" ? 72 : 58)
         leftMargin: (width - cellWidth * cols) / 2   // the cells centred, not the remainder on the right
         topMargin: Theme.spaceXs
         model: Launcher.open ? Launcher.appGrid : []   // icons only while shown (the closed launcher kept ~50 MB)
@@ -157,8 +157,14 @@ Item {
                 visible: !apps.pad
                 anchors { fill: parent; margins: 3 }
                 radius: Launcher.corner === 0 ? 0 : Theme.radius
-                color: cell.GridView.isCurrentItem ? Launcher.selection : cellArea.containsMouse ? Theme.fillHover : "transparent"
+                color: cellArea.containsMouse && !cell.GridView.isCurrentItem ? Theme.fillHover : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                LauncherSelection { on: cell.GridView.isCurrentItem; radius: parent.radius }
+            }
+            Item {   // grid (Pebble): the icon on a squircle plate
+                visible: !apps.pad
+                anchors.fill: appIcon
+                LauncherPlate {}
             }
             IconImage {
                 id: appIcon
@@ -171,7 +177,7 @@ Item {
                 transform: Scale { origin.x: appIcon.width / 2; origin.y: appIcon.height / 2; xScale: appIcon.lift; yScale: appIcon.lift }
             }
             Text {
-                anchors { left: parent.left; right: parent.right; top: appIcon.bottom; topMargin: Theme.spaceXs; margins: Theme.spaceXs }
+                anchors { left: parent.left; right: parent.right; top: appIcon.bottom; topMargin: Theme.spaceXs + (Launcher.layout === "grid" ? Theme.spaceS : 0); margins: Theme.spaceXs }
                 horizontalAlignment: Text.AlignHCenter
                 id: cellName
                 text: cell.modelData.name

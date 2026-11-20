@@ -26,7 +26,7 @@
   "popup": {"depth": "glow", "decor": "topline", "tiles": "solid"},
   "motion": {"enter": 180, "exit": 110, "curve": [0.2, 0, 0, 1], "travel": 8, "scale": 0.97, "press": 0.96},
   "feel": {"press": "scale", "focus": "ring"},
-  "launcher": {"placement": "center", "view": "home", "header": "query", "width": 680, "select": "inverse", "prompt": ""},
+  "launcher": {"layout": "grid", "placement": "center", "view": "home", "header": "query", "width": 680, "select": "inverse", "prompt": ""},
   "osd": {"style": "bar"},
   "notify": {"corner": "top-right", "kind": "card"},
   "hypr": {"gapsIn": 6, "gapsOut": 12, "border": 2, "rounding": 10, "active": ["e4ff1aff", "ff6b0aff"], "inactive": "2a2c1cff", "shadow": "soft", "blur": false, "motion": "snappy"},

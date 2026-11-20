@@ -141,6 +141,7 @@
     "press": 0.97
   },
   "launcher": {
+    "layout": "grid",
     "placement": "center",
     "view": "home",
     "header": "none",

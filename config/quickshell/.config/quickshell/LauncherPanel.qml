@@ -106,7 +106,17 @@ Glass {
                 Row {
                     required property var modelData
                     spacing: Theme.spaceXs + 1
+                    // prompt (Monolith): written out as a terminal would, [enter] open  [tab] mode
+                    readonly property bool typed: Launcher.layout === "prompt"
+                    Text {
+                        visible: parent.typed
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "[" + (({ "↵": "enter", "↑↓": "↑↓", "←→↑↓": "←→↑↓" })[modelData[0]] ?? modelData[0].toLowerCase()) + "]"
+                        color: Theme.accent
+                        font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
+                    }
                     Rectangle {
+                        visible: !parent.typed
                         anchors.verticalCenter: parent.verticalCenter
                         width: Math.max(height, cap.implicitWidth + 10); height: cap.implicitHeight + 4
                         radius: Math.min(Theme.radiusSmall, 5)
@@ -122,9 +132,9 @@ Glass {
                     }
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: modelData[1]
-                        color: Theme.muted
-                        font { family: Launcher.rowFont; pixelSize: Theme.fontCaption }
+                        text: parent.typed && modelData[0] === "Tab" ? "mode" : modelData[1]
+                        color: parent.typed ? Theme.subtext : Theme.muted
+                        font { family: parent.typed ? Theme.monoFont : Launcher.rowFont; pixelSize: Theme.fontCaption }
                     }
                 }
             }

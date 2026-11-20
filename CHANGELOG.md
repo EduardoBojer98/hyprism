@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- A launcher structure per theme (theme.json `launcher.layout`): Pebble's `grid` (a big search pill, a Recent row,
+  icons on squircle plates, a selection that springs in), Poster's `sheet` (the query as a display header, big rows
+  with a letter index and a category tag, an inverse selection on a hard shadow) and Monolith's `prompt` (numbered
+  text rows, a `>` marker, matches in accent, `[enter] open` hints).
 - A signature feel per theme (theme.json `feel`), full motion only: Poster's buttons push into their hard
   shadow, Pebble's sink and spring back and its panels land with a small overshoot, Monolith's focus is a reticle that
   closes in and its popup brackets draw in from the corners.

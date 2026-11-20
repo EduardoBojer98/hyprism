@@ -54,8 +54,8 @@ ListView {
             && (Search.groupNames[Search.groupOf[Launcher.listModel[index - 1]?.kind]] ?? Launcher.listModel[index - 1]?.kind) !== group
         width: results.width
 
-        LauncherHomeLabel {
-            visible: row.topHit || row.newSection || (row.index === 1 && Launcher.mode === "search")
+        LauncherHomeLabel {   // the sheet tags each row instead
+            visible: Launcher.layout !== "sheet" && (row.topHit || row.newSection || (row.index === 1 && Launcher.mode === "search"))
             text: row.topHit ? "Top Hit" : row.group
             leftPad: Theme.spaceM
             topPad: row.index === 0 ? 2 : Theme.spaceS
@@ -65,23 +65,26 @@ ListView {
         // the row's look (Launcher.rows): standard | compact (one line) | cards (tall, big icon) | text (no icon, a kind column)
         readonly property string look: Launcher.rows
         readonly property bool oneLine: look === "compact" || look === "text"
-        readonly property int iconSize: look === "text" ? 0 : look === "compact" ? (topHit ? 28 : 18) : look === "cards" ? (topHit ? 48 : 34)
+        readonly property int iconSize: look === "text" ? 0 : Launcher.layout === "prompt" ? Theme.iconSmall : look === "compact" ? (topHit ? 28 : 18) : look === "cards" ? (topHit ? 48 : 34)
                                       : topHit ? Theme.iconLarge : Theme.iconMedium + 4
-        readonly property bool sub: Config.launcher.subtitles && !!modelData.subtitle
+        readonly property bool sub: Config.launcher.subtitles && !!modelData.subtitle && Launcher.layout !== "sheet"
+        readonly property bool current: ListView.isCurrentItem
 
         Rectangle {
             width: parent.width
-            height: row.look === "cards" ? (row.topHit ? 72 : 56) : row.oneLine ? Math.max(Theme.hit, Theme.rowHeight - 6) + (row.topHit && row.look === "compact" ? 14 : 0)
+            height: Launcher.layout === "sheet" ? Math.round(Theme.rowHeight * 1.6) : Launcher.layout === "grid" && !row.oneLine ? (row.topHit ? 64 : Theme.rowHeight + Theme.spaceM) : row.look === "cards" ? (row.topHit ? 72 : 56) : row.oneLine ? Math.max(Theme.hit, Theme.rowHeight - 6) + (row.topHit && row.look === "compact" ? 14 : 0)
                   : row.topHit ? 56 : Theme.rowHeight + 4
             radius: Launcher.corner === 0 ? 0 : row.look === "cards" ? Theme.radius : Theme.radiusSmall
-            color: row.ListView.isCurrentItem ? Launcher.selection : rowArea.containsMouse ? Theme.fillHover : "transparent"
+            color: rowArea.containsMouse && !row.current ? Theme.fillHover : "transparent"
             Behavior on color { ColorAnimation { duration: Theme.animFast } }
-            LauncherMark { visible: row.ListView.isCurrentItem }
+            LauncherSelection { on: row.current; radius: parent.radius; inset: lead.width }
+            LauncherMark { visible: row.current && !Launcher.layout }
+            LauncherLead { id: lead; current: row.current; number: row.index + 1; letter: Launcher.initial(row.modelData, Launcher.listModel[row.index - 1]) }
 
             Text {   // text rows: what kind of result, in a fixed column
                 id: kindTag
                 visible: row.look === "text"
-                anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+                anchors { left: lead.right; leftMargin: lead.width ? 0 : Theme.spaceM; verticalCenter: parent.verticalCenter }
                 width: visible ? 64 : 0
                 text: (Search.groupOf[row.modelData.kind] ?? row.modelData.kind ?? "").replace(/s$/, "")
                 color: row.ListView.isCurrentItem ? Launcher.selSub : Theme.accent
@@ -89,9 +92,10 @@ ListView {
             }
             Item {
                 id: iconBox
-                anchors { left: kindTag.visible ? kindTag.right : parent.left; leftMargin: kindTag.visible ? 0 : Theme.spaceM; verticalCenter: parent.verticalCenter }
+                anchors { left: kindTag.visible ? kindTag.right : lead.right; leftMargin: kindTag.visible ? 0 : Theme.spaceM; verticalCenter: parent.verticalCenter }
                 width: row.iconSize; height: width
                 visible: row.iconSize > 0
+                LauncherPlate { pad: Theme.spaceXs + 1 }
                 IconImage {
                     anchors.fill: parent
                     visible: !!row.modelData.icon
@@ -107,13 +111,14 @@ ListView {
             }
             Column {
                 visible: !row.oneLine
-                anchors { left: iconBox.right; leftMargin: Theme.spaceM; right: kindLabel.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+                anchors { left: iconBox.right; leftMargin: Theme.spaceM; right: tag.visible ? tag.left : kindLabel.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
                 Text {
                     width: parent.width
-                    text: row.modelData.title
                     elide: Text.ElideRight
                     color: row.ListView.isCurrentItem ? Launcher.selText : Theme.text
-                    font { family: Launcher.rowFont; pixelSize: row.topHit ? Theme.fontTitle : row.look === "cards" ? Theme.fontSize + 1 : Theme.fontSize; weight: row.topHit || row.look === "cards" ? Font.DemiBold : Font.Medium }
+                    textFormat: Launcher.layout === "prompt" ? Text.StyledText : Text.PlainText
+                    text: Launcher.layout === "prompt" ? Launcher.marked(row.modelData.title, Search.query) : row.modelData.title
+                    font { family: Launcher.rowFont; pixelSize: row.topHit || Launcher.layout === "sheet" ? Theme.fontTitle : row.look === "cards" ? Theme.fontSize + 1 : Theme.fontSize; weight: Launcher.layout === "sheet" ? Font.Bold : row.topHit || row.look === "cards" ? Font.DemiBold : Font.Medium }
                 }
                 Text {
                     width: parent.width
@@ -127,12 +132,13 @@ ListView {
             Row {   // one line: the title, then the subtitle quieter after it
                 id: line
                 visible: row.oneLine
-                anchors { left: iconBox.visible ? iconBox.right : kindTag.right; leftMargin: iconBox.visible ? Theme.spaceS + 2 : 0; right: kindLabel.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
+                anchors { left: iconBox.visible ? iconBox.right : kindTag.visible ? kindTag.right : lead.right; leftMargin: iconBox.visible ? Theme.spaceS + 2 : 0; right: tag.visible ? tag.left : kindLabel.left; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
                 spacing: Theme.spaceS
                 Text {
                     id: lineTitle
                     width: Math.min(implicitWidth, line.width)
-                    text: row.modelData.title
+                    textFormat: Launcher.layout === "prompt" ? Text.StyledText : Text.PlainText
+                    text: Launcher.layout === "prompt" ? Launcher.marked(row.modelData.title, Search.query) : row.modelData.title
                     elide: Text.ElideRight
                     color: row.ListView.isCurrentItem ? Launcher.selText : Theme.text
                     font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: row.topHit ? Font.DemiBold : Font.Normal }
@@ -150,11 +156,12 @@ ListView {
             Text {
                 id: kindLabel
                 anchors { right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-                visible: row.ListView.isCurrentItem
+                visible: row.current && !Launcher.layout
                 text: "↵"
                 color: Launcher.selSub
                 font { family: Launcher.rowFont; pixelSize: Theme.fontSize }
             }
+            LauncherTag { id: tag; anchors { right: parent.right; rightMargin: Theme.spaceM + Theme.shadowOffset; verticalCenter: parent.verticalCenter } item: row.modelData; current: row.current }
             MouseArea {
                 id: rowArea
                 Accessible.role: Accessible.ListItem

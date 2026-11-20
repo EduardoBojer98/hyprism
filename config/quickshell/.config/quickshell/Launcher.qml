@@ -53,6 +53,11 @@ Singleton {
     // The look comes from the style or the theme; your behaviour options (web search, files, actions, order,
     // recent, clipboard) from Config.launcher.
     readonly property var rl: preset ?? Theme.current.launcher
+    // the theme's structure (theme.json launcher.layout): grid (Pebble: a big search pill, a Recent row, icons on
+    // squircle plates, a wash that springs in) | sheet (Poster: the query as a display header, big rows with a tag,
+    // an inverse block on a hard shadow, a first-letter index) | prompt (Monolith: a ❯ line, numbered text rows, a >
+    // marker, matches in accent, [enter] hints). A style from Settings brings its own structure instead.
+    readonly property string layout: preset ? "" : Theme.current.launcher.layout ?? ""
     readonly property real screenW: popup.targetScreen?.width ?? 1600
     readonly property real screenH: popup.targetScreen?.height ?? 1000
     // "center" (the default): every style floats in the middle of the screen under the pointer; "pointer": around
@@ -67,23 +72,57 @@ Singleton {
     readonly property bool hints: Config.launcher.hints && (rl.hints ?? true)   // Spotlight has none, as on macOS
     readonly property var homeSections: (rl.home ?? ["glance", "frequent", "recent", "quick"]).filter(h => Config.launcher.home.includes(h))
     readonly property var homeParts: ({ frequent: Search.frequentApps, recent: Search.recentItems, quick: Search.quickActions })
-    // where a home section starts in keyboard order (sections in the order the home view draws them)
+    // the home sections in the order the home view draws them (grid: the Recent row first)
+    readonly property var homeOrder: layout === "grid" ? ["recent", "frequent", "quick"] : ["frequent", "recent", "quick"]
+    // frequent apps as icons (not rows); the sheet and the prompt keep everything a list
+    readonly property bool iconHome: rows !== "text" && rows !== "compact" && layout !== "sheet" && layout !== "prompt"
+    // where a home section starts in keyboard order
     function homeOffset(h) {
         let n = 0
-        for (const k of ["frequent", "recent", "quick"]) { if (k === h) return n; if (homeSections.includes(k)) n += homeParts[k].length }
+        for (const k of homeOrder) { if (k === h) return n; if (homeSections.includes(k)) n += homeParts[k].length }
         return n
+    }
+    // ↑↓ on the home view: an icon row is one step, a list one row at a time
+    function homeStep(i, down) {
+        const blocks = homeOrder.filter(h => homeSections.includes(h) && homeParts[h].length > 0)
+            .map(h => ({ at: homeOffset(h), n: homeParts[h].length, icons: h === "frequent" && iconHome || h === "recent" && layout === "grid" }))
+        const k = blocks.findIndex(b => i >= b.at && i < b.at + b.n), b = blocks[k], p = blocks[k - 1]
+        if (!b) return i
+        if (down) return Math.min(homeItems.length - 1, b.icons ? b.at + b.n : i + 1)
+        if (!b.icons && i > b.at) return i - 1
+        return p ? (p.icons ? p.at : p.at + p.n - 1) : i
+    }
+    // a result's title with the typed letters in accent (prompt): the first run that matches, else each letter in
+    // order (initials); StyledText, so the title is escaped
+    function marked(title, q) {
+        const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        const t = String(title ?? ""), low = t.toLowerCase(), on = "<font color='" + Theme.accent + "'>", off = "</font>"
+        q = String(q ?? "").trim().toLowerCase()
+        if (!q) return esc(t)
+        const at = low.indexOf(q)
+        if (at >= 0) return esc(t.slice(0, at)) + on + esc(t.slice(at, at + q.length)) + off + esc(t.slice(at + q.length))
+        let out = "", j = 0
+        for (let n = 0; n < t.length; n++) {
+            if (j < q.length && low[n] === q[j]) { out += on + esc(t[n]) + off; j++ } else out += esc(t[n])
+        }
+        return j === q.length ? out : esc(t)
+    }
+    // the sheet's index: a result's first letter, shown only where it changes down the list
+    function initial(item, prev) {
+        const a = String(item?.title ?? "").charAt(0).toUpperCase(), b = String(prev?.title ?? "").charAt(0).toUpperCase()
+        return a === b ? "" : a
     }
     property bool fromClick: false   // opened by clicking a bar item: then it stays beside that item
     readonly property var look: Object.assign({}, Config.launcher, {
         placement: pad ? "fullscreen" : Config.launcher.position === "center" ? "center" : pointer ? "cursor" : rl.placement,
-        style: preset ? (preset.split ? "split" : "unified") : Theme.glassy && rl.placement === "center" ? "split" : "unified",
+        style: preset ? (preset.split ? "split" : "unified") : layout === "grid" ? "split" : Theme.glassy && rl.placement === "center" ? "split" : "unified",
         width: pad ? Math.min(rl.width * size, screenW - 80) : pointer ? Math.min((rl.width > 0 ? rl.width : 680) * size, 1100, screenW - Theme.spaceL * 2) : rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
              : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
              : rl.placement === "fullscreen" ? Math.min(rl.width * size, screenW - 80)
              : Math.min(rl.width * size, screenW - Theme.spaceL * 2),
-        field: Math.round((preset?.field ?? (rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5))) * Math.sqrt(size)),
+        field: Math.round((preset?.field ?? (layout === "sheet" ? Theme.fontHero * 2 : layout === "grid" ? 64 : rl.header === "query" ? 64 : rl.placement === "strip" ? 40 : Math.round(Theme.body * 3.5))) * Math.sqrt(size)),
         corners: Config.launcher.corners !== "style" ? Config.launcher.corners
-               : preset && preset.corners !== "theme" ? preset.corners : Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
+               : preset && preset.corners !== "theme" ? preset.corners : layout === "grid" ? "round" : Theme.radius === 0 ? "sharp" : Theme.radius >= 14 ? "round" : "soft",
         selection: "accent",
         // a light dim behind it, never a blur (Hyprland skips blur under see-through layers, rules.lua)
         dim: Config.launcher.dim !== "style" ? ({ none: 0, light: 0.15, dark: 0.45 })[Config.launcher.dim] ?? 0.15
@@ -94,7 +133,7 @@ Singleton {
         startView: rl.view === "grid" || rl.view === "start" ? "apps" : rl.view === "inline" ? "search" : "home"
     })
     readonly property bool unified: look.style === "unified"
-    readonly property bool bigQuery: rl.header === "query"   // Poster: the query set large
+    readonly property bool bigQuery: rl.header === "query" || layout === "sheet"   // Poster: the query set large
     // Monolith: section headings as a ruled line in accent2; the theme's type, so it holds in every style
     readonly property bool ruled: (Theme.current.launcher.labels ?? "plain") === "rule"
     readonly property string rowFont: preset?.mono ? Theme.monoFont : Theme.font
@@ -107,7 +146,8 @@ Singleton {
     readonly property real room: Math.max(180, screenH - popup.bottomReserve - top - look.field - (unified ? 0 : Theme.spaceS))   // a floor for tiny screens
     // the selected row, the theme's way: a soft accent tint (glass themes) or a solid accent block with
     // inverted text (the flat and terminal themes)
-    readonly property bool inverse: (rl.select ?? "wash") === "inverse"
+    // (a prompt keeps a tint, so its matches in accent still read on the selected row)
+    readonly property bool inverse: layout === "sheet" || layout !== "grid" && layout !== "prompt" && (rl.select ?? "wash") === "inverse"
     readonly property color selection: inverse ? Theme.accent : Theme.accentWash
     readonly property color selText: inverse ? Theme.accentText : Theme.text
     readonly property color selSub: inverse ? Qt.alpha(Theme.accentText, 0.78) : Theme.subtext
@@ -125,7 +165,7 @@ Singleton {
     readonly property string view: pad && mode === "search" ? "apps"
                                  : mode === "search" && Search.query.trim() === "" && startView !== "search" ? startView : mode
     // home view, in keyboard order: frequent apps, then recent items, then quick actions
-    readonly property var homeItems: ["frequent", "recent", "quick"].filter(h => homeSections.includes(h)).reduce((all, h) => all.concat(homeParts[h]), [])
+    readonly property var homeItems: homeOrder.filter(h => homeSections.includes(h)).reduce((all, h) => all.concat(homeParts[h]), [])
     property int homeIndex: 0
     property string category: "All"
     property bool open: popup.open

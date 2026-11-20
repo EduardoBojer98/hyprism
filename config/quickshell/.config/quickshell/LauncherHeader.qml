@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Widgets
 import QtQuick
+import QtQuick.Effects
 
 // Launcher part: the search pill (lens, text field, key handling) and the round mode buttons.
 // Used by Launcher.qml; reads the panel's state from the Launcher singleton.
@@ -8,6 +9,16 @@ Item {
     property alias input: field
     height: Launcher.look.field
     z: 1   // above the panel, so the mode buttons' tooltips show over it
+
+    RectangularShadow {   // grid (Pebble): the search pill floats on a soft shadow of its own
+        visible: Launcher.layout === "grid"
+        anchors.fill: searchBox
+        offset.y: 6
+        blur: 22
+        spread: -2
+        radius: searchBox.radius
+        color: Theme.shadow
+    }
 
     Glass {
         id: searchBox
@@ -21,6 +32,7 @@ Item {
         Text {
             id: lens
             anchors { left: parent.left; leftMargin: Theme.spaceL + 2; verticalCenter: parent.verticalCenter }
+            visible: Launcher.layout !== "sheet" || Launcher.mode !== "search"   // the sheet: the query alone is the header
             readonly property bool typed: Launcher.prompt !== "" && Launcher.mode === "search"
             text: typed ? Launcher.prompt : Launcher.mode === "search" ? "\u{F0349}" : Launcher.modes.find(m => m.id === Launcher.mode)?.glyph ?? ""
             color: typed ? Theme.accent : Theme.subtext
@@ -28,7 +40,7 @@ Item {
         }
         TextInput {
             id: field
-            anchors { left: lens.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
+            anchors { left: lens.visible ? lens.right : parent.left; leftMargin: lens.visible ? Theme.spaceM : Theme.spaceL + 2; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
             color: Theme.text
             selectionColor: Theme.accent
             selectedTextColor: Theme.accentText
@@ -50,7 +62,7 @@ Item {
             }
             font {
                 family: Launcher.preset?.mono ? Theme.monoFont : Launcher.bigQuery ? Theme.displayFont : Theme.font
-                pixelSize: Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : Launcher.rl.queryLight ? 0.42 : 0.38))
+                pixelSize: Launcher.layout === "sheet" ? Theme.fontHero : Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : Launcher.rl.queryLight ? 0.42 : 0.38))
                 weight: Launcher.bigQuery ? Theme.displayWeight : Launcher.rl.queryLight ? Font.Light : Font.Normal
             }
             onTextChanged: {
@@ -112,11 +124,10 @@ Item {
                     return
                 }
                 if (Launcher.view === "home" && !Launcher.confirmFor) {
-                    const n = Launcher.homeItems.length, nA = Launcher.homeSections.includes("frequent") && Launcher.rows !== "text" && Launcher.rows !== "compact" ? Search.frequentApps.length : 0, i = Launcher.homeIndex
+                    const n = Launcher.homeItems.length, i = Launcher.homeIndex
                     if (event.key === Qt.Key_Right) Launcher.homeIndex = Math.min(n - 1, i + 1)
                     else if (event.key === Qt.Key_Left) Launcher.homeIndex = Math.max(0, i - 1)
-                    else if (event.key === Qt.Key_Down) Launcher.homeIndex = Math.min(n - 1, i < nA ? nA : i + 1)
-                    else if (event.key === Qt.Key_Up) Launcher.homeIndex = i < nA ? i : i === nA ? 0 : i - 1
+                    else if (event.key === Qt.Key_Down || event.key === Qt.Key_Up) Launcher.homeIndex = Launcher.homeStep(i, event.key === Qt.Key_Down)
                     else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) Launcher.activate(Launcher.homeItems[i])
                     else if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) Launcher.cycleMode()
                     else if (event.key === Qt.Key_Escape) Launcher.close()

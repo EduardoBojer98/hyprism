@@ -139,6 +139,7 @@
     "press": 0.96
   },
   "launcher": {
+    "layout": "sheet",
     "placement": "half",
     "view": "home",
     "header": "query",
