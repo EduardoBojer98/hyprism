@@ -215,6 +215,10 @@ case ${1:-} in
         sleep 1
         pkill -f "Hyprland -c $T/" 2>/dev/null || true
         hyprctl output remove "$SCREEN" >/dev/null 2>&1 || true # not running under Hyprland = no virtual screen
+        # daemons the test bus started on demand (kdeconnectd...) outlive dbus-run-session: end all with the test HOME
+        for p in $(pgrep -u "$UID"); do
+            grep -qz "^HOME=$T\$" "/proc/$p/environ" 2>/dev/null && kill "$p" 2>/dev/null || true
+        done
         [[ $T == "$run"/hyprism-home.* ]] && rm -rf "$T"
         rm -rf "$state"
         echo "test session closed"
