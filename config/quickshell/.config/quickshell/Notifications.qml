@@ -250,7 +250,8 @@ Singleton {
         anchors { top: !atBottom; bottom: atBottom; right: place.endsWith("right"); left: place.endsWith("left") }   // neither: centred
         margins { top: Theme.reserveTop + 10; bottom: Theme.reserveBottom + 10; right: Theme.reserveRight + 12; left: Theme.reserveLeft + 12 }
         implicitWidth: 344
-        implicitHeight: Math.max(1, list.contentHeight + (root.c.groupByApp ? 14 : 0))   // grouped: the last stack's peek
+        // grouped: the last stack's peek (not lines: they say "+n more"); block: its hard shadow
+        implicitHeight: Math.max(1, list.contentHeight + (root.c.groupByApp && root.kind !== "line" ? 14 : 0) + list.anchors.bottomMargin)
         exclusiveZone: 0
         color: "transparent"
         // held while the Control Center or the notification centre is open: they'd land on it, and the
@@ -262,17 +263,29 @@ Singleton {
         ListView {
             id: list
             anchors.fill: parent
-            spacing: root.c.groupByApp ? 14 : 8   // grouped: room for a folded stack peeking out underneath
+            // block: room for the hard shadow right and below
+            anchors { rightMargin: root.kind === "block" ? Theme.shadowOffset : 0; bottomMargin: root.kind === "block" ? Theme.shadowOffset : 0 }
+            // grouped: room for a folded stack peeking out underneath; lines sit close, like a log
+            spacing: root.kind === "line" ? 2 : root.c.groupByApp ? 14 : 8
             interactive: false
             model: ScriptModel { values: root.shown }
 
-            // drop in from the corner's edge with a fade (down at the top, up at the bottom), fade out in place
-            // in from the corner's edge the theme's way (Theme.travel, its curve), out with a quick fade
-            add: Transition { ParallelAnimation {
+            // in the kind's way, out with a quick fade:
+            //   card and the rest  slide from the corner's edge with a fade (Theme.travel, its curve)
+            //   block              slide in from the left with a small overshoot (full motion; a fade otherwise)
+            //   line               a fade; the line types itself in (NotificationCard)
+            add: root.kind === "block" ? slideIn : root.kind === "line" ? fadeIn : dropIn
+            property Transition dropIn: Transition { ParallelAnimation {
                 NumberAnimation { property: "y"; from: (root.corner.startsWith("bottom") ? 1 : -1) * Theme.travel; duration: Theme.enter
                                   easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve }
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Theme.easing }
             } }
+            property Transition slideIn: Transition { ParallelAnimation {
+                NumberAnimation { property: "x"; from: Theme.moves ? -list.width : 0; to: 0; duration: Theme.pop
+                                  easing.type: Easing.OutBack; easing.overshoot: Theme.popOvershoot }
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Theme.easing }
+            } }
+            property Transition fadeIn: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter } }
             remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.exit } }
             displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Theme.easing } }
 
