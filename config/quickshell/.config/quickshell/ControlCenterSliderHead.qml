@@ -3,7 +3,8 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center building block (used by ControlCenter.qml and its parts).
-// Label over a slider; with a detail (device name) it is a button that opens the device list
+// Label over a slider or a section; with a detail (device name) it is a button that opens the device list.
+// The layout sets its voice: the UI font (cards), capitals in the display font (bento), `// sound` in mono (hud).
 Item {
     id: sh
     property string title
@@ -11,14 +12,16 @@ Item {
     property bool isExpanded: false
     signal clicked()
     Layout.fillWidth: true
-    Layout.preferredHeight: 16
+    Layout.preferredHeight: Math.max(16, shTitle.implicitHeight)
     Layout.bottomMargin: -4
     Text {
         id: shTitle
         anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-        text: sh.title
-        color: Theme.text
-        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+        text: (ControlCenter.hud ? "// " : "") + sh.title
+        color: ControlCenter.hud ? Theme.accent2 : Theme.text
+        font { family: ControlCenter.bento ? Theme.displayFont : ControlCenter.hud ? Theme.monoFont : Theme.font
+               pixelSize: ControlCenter.bento ? Theme.fontTitle : Theme.fontLabel; weight: ControlCenter.hud ? Font.Normal : Font.DemiBold
+               capitalization: ControlCenter.bento ? Font.AllUppercase : ControlCenter.hud ? Font.AllLowercase : Font.MixedCase }
     }
     Row {
         anchors { right: parent.right; verticalCenter: parent.verticalCenter }
@@ -30,7 +33,7 @@ Item {
             text: sh.detail
             elide: Text.ElideRight
             color: Theme.subtext
-            font { family: Theme.font; pixelSize: Theme.fontCaption }
+            font { family: ControlCenter.hud ? Theme.monoFont : Theme.font; pixelSize: Theme.fontCaption }
         }
         Chevron { open: sh.isExpanded; size: 13; anchors.verticalCenter: parent.verticalCenter }
     }

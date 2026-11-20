@@ -120,6 +120,7 @@
     "fill": "surface"
   },
   "popup": {
+    "layout": "bento",
     "depth": "hard",
     "decor": "",
     "tiles": "solid"

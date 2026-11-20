@@ -126,6 +126,7 @@
     "fill": "surface"
   },
   "popup": {
+    "layout": "hud",
     "depth": "glow",
     "decor": "brackets",
     "decorColour": "accent2",

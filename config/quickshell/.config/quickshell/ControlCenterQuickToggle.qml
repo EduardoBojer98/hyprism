@@ -5,6 +5,8 @@ import QtQuick.Layouts
 // or takes an accent wash with an accent icon (wash themes). What it is doing (45 min left, Medium) shows in its
 // tooltip and accessible description; a large tile shows it inline. With a list, a small chevron in the corner
 // opens it (right-click and Enter too).
+// The layout shapes it: a wide rounded tile, a round well, the name and its state (cards); the icon over the name with
+// a hard shadow it presses into, the big bento tile in the display font (bento); a `[x] name` line (hud).
 Rectangle {
     id: qt
     property var host: null   // the panel's PanelState, for the tooltip
@@ -16,6 +18,7 @@ Rectangle {
     property bool active: false
     property bool expandable: false
     property bool isExpanded: false
+    property bool big: false   // bento: the 2x2 tile
     signal toggled()
     signal expand()
     readonly property string tip: status !== "" && status !== "On" && status !== "Off" ? label + ": " + status : hint || label
@@ -25,23 +28,27 @@ Rectangle {
     FocusRing {}
 
     readonly property bool flat: ControlCenter.style === "borderless"
-    radius: flat ? Theme.radiusSmall : Theme.radius
-    color: active ? (qtArea.containsMouse ? Theme.ccTileOnHover : Theme.ccTileOn)
+    readonly property bool hud: ControlCenter.hud
+    radius: flat || hud ? Theme.radiusSmall : ControlCenter.cards ? Theme.radiusLarge : Theme.radius
+    color: active && !hud ? (qtArea.containsMouse ? Theme.ccTileOnHover : Theme.ccTileOn)
          : qtArea.containsMouse || isExpanded ? Theme.fillHover
-         : flat ? "transparent" : Theme.fill
-    border { color: isExpanded ? Theme.strokeStrong : flat && !active ? Theme.stroke : "transparent"; width: 1 }
-    scale: qtArea.pressed ? Theme.pressScale : 1
+         : flat || hud ? "transparent" : Theme.fill
+    border { color: isExpanded && !hud ? Theme.strokeStrong : flat && !active && !hud ? Theme.stroke : "transparent"; width: 1 }
+    scale: qtArea.pressed && !ControlCenter.bento ? Theme.pressScale : 1
+    PressFeel { id: feel; pressed: qtArea.pressed; visible: ControlCenter.bento }
+    transform: Translate { x: feel.shift; y: feel.shift + feel.drop }
     Behavior on color { ColorAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
-    Column {
+    Column {   // the icon over its name (bento, and the classic grid)
+        visible: !ControlCenter.cards && !qt.hud
         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: Theme.spaceXs }
         spacing: Theme.spaceXs + 2
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qt.glyph
             color: qt.active ? Theme.ccIconOn : Theme.text
-            font { family: Theme.iconFont; pixelSize: Theme.glyphL }
+            font { family: Theme.iconFont; pixelSize: qt.big ? Theme.iconLarge : Theme.glyphL }
             Behavior on color { ColorAnimation { duration: Theme.anim } }
         }
         Text {
@@ -50,8 +57,48 @@ Rectangle {
             text: qt.label
             elide: Text.ElideRight
             color: qt.active ? Theme.ccOnText : Theme.text
-            font { family: Theme.font; pixelSize: qt.labelSize; weight: Font.DemiBold }
+            font { family: qt.big ? Theme.displayFont : Theme.font; pixelSize: qt.big ? Theme.fontTitle : qt.labelSize; weight: Font.DemiBold
+                   capitalization: qt.big ? Font.AllUppercase : Font.MixedCase }
         }
+        Text {   // the big bento tile has room for what it is doing
+            visible: qt.big && qt.status !== ""
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            text: qt.status
+            elide: Text.ElideRight
+            color: qt.active ? Theme.ccOnSubtext : Theme.subtext
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
+        }
+    }
+    Rectangle {   // cards: a round well, then the name over its state
+        id: well
+        visible: ControlCenter.cards
+        anchors { left: parent.left; leftMargin: Theme.ccInset; verticalCenter: parent.verticalCenter }
+        width: Theme.ccWell; height: Theme.ccWell
+        radius: Theme.radius > 0 ? height / 2 : 0
+        color: qt.active ? Theme.ccWellOn : Theme.fillHover
+        Behavior on color { ColorAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+        Text {
+            anchors.centerIn: parent
+            text: qt.glyph
+            color: qt.active ? Theme.accentText : Theme.text
+            font { family: Theme.iconFont; pixelSize: Theme.glyph }
+        }
+    }
+    Column {
+        visible: ControlCenter.cards
+        anchors { left: well.right; leftMargin: Theme.spaceS; right: parent.right; rightMargin: qt.expandable ? Theme.spaceL : Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        spacing: 1
+        Text { width: parent.width; text: qt.label; elide: Text.ElideRight; color: qt.active ? Theme.ccOnText : Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
+        Text { width: parent.width; visible: text !== ""; text: qt.status; elide: Text.ElideRight; color: qt.active ? Theme.ccOnSubtext : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+    }
+    Text {   // hud: `[x] night light`; an action that only runs reads `[>]`
+        visible: qt.hud
+        anchors { left: parent.left; leftMargin: Theme.spaceXs; right: parent.right; rightMargin: qt.expandable ? Theme.spaceL : Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        text: (qt.status === "" ? "[>] " : qt.active ? "[x] " : "[ ] ") + qt.label.toLowerCase()
+        elide: Text.ElideRight
+        color: qt.active ? Theme.accent : qtArea.containsMouse ? Theme.text : Theme.subtext
+        font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
     }
     MouseArea {
         id: qtArea
@@ -68,7 +115,8 @@ Rectangle {
     }
     Rectangle {   // the list: a small badge in the corner that reads on the on and off tile alike
         visible: qt.expandable
-        anchors { right: parent.right; top: parent.top; margins: 3 }
+        anchors { right: parent.right; rightMargin: 3 }
+        y: ControlCenter.cards || qt.hud ? (parent.height - height) / 2 : 3
         width: 18; height: 18; radius: Math.min(Theme.radiusSmall, 5)
         color: qt.active ? Qt.alpha(Theme.ccOnText, chevArea.containsMouse || qt.isExpanded ? 0.16 : 0)
                          : chevArea.containsMouse || qt.isExpanded ? Theme.fillActive : "transparent"
