@@ -65,6 +65,8 @@ ColumnLayout {
         running: true
         command: ["installed-apps", "list"]
         stdout: StdioCollector { onStreamFinished: { try { page.info = JSON.parse(text) } catch (e) { page.info = {} } } }
+        // a lookup that never answers (installed-apps missing or crashed) stops saying "Looking up…"
+        onRunningChanged: if (!running) Qt.callLater(() => { if (page.info === null) page.info = {} })
     }
     Process {
         id: infoProc
@@ -75,6 +77,7 @@ ColumnLayout {
                 page.details = d
             }
         }
+        onRunningChanged: if (!running) { const id = command[2]; Qt.callLater(() => { if (!page.details[id]) page.details = Object.assign({ [id]: { fields: [] } }, page.details) }) }
     }
 
     // ---- toolbar: search and sort, then the where-from filters --------------------------------
