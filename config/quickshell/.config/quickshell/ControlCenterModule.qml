@@ -19,7 +19,7 @@ ControlCenterTile {
 
     ColumnLayout {
         id: inner
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset }
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset; leftMargin: ControlCenter.inset; rightMargin: ControlCenter.inset }
         spacing: Theme.spaceS
         Item {
             id: header
@@ -34,6 +34,15 @@ ControlCenterTile {
                 font { family: ControlCenter.bento ? Theme.displayFont : ControlCenter.hud ? Theme.monoFont : Theme.font
                        pixelSize: ControlCenter.bento ? Theme.fontTitle : Theme.fontLabel; weight: ControlCenter.hud ? Font.Normal : Font.DemiBold
                        capitalization: ControlCenter.bento ? Font.AllUppercase : ControlCenter.hud ? Font.AllLowercase : Font.MixedCase }
+            }
+            Text {   // hud: a dot leader from the title to its detail, `// sound ······ 100%`
+                visible: ControlCenter.hud
+                anchors { left: headerTitle.right; right: headerDetail.visible ? headerDetail.left : parent.right; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS
+                          verticalCenter: headerTitle.verticalCenter }
+                text: "·".repeat(160)
+                clip: true
+                color: Theme.muted
+                font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
             }
             Row {
                 id: headerDetail

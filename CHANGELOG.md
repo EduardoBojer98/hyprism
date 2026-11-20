@@ -12,6 +12,13 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - Control Center power mode: Silent, Balanced and Performance side by side with their speedometer, one click picks
   (soft tiles in Pebble, caps blocks on a hard shadow in Poster, `[󰾆 silent] 󰾅 balanced [󰓅 perf]` in Monolith).
 - Monolith's Control Center rows show their icon: `[x] 󰖩 wi-fi`.
+- Control Center dropdowns (Wi-Fi, Bluetooth, Focus, Caffeine, Phone) in each theme's voice: a soft card in Pebble;
+  a block on the hard shadow with caps title, bold Settings link and solid action in Poster; a `// wi-fi` readout on
+  an accent rail in Monolith, `[x] on` for the switch, `>` on the one in use, `[join]` actions, `-> wi-fi settings`.
+- A tile with a dropdown shows it the theme's way: a hairline and chevron (Pebble), a corner block in the second
+  accent once open (Poster), `>` turning to `v` (Monolith); no more grey plate when open.
+- Monolith's Control Center headers run a dot leader to their detail (`// sound ······ 100%`), every section lines
+  up on one edge, and the panel's own corner brackets replace the brackets round each section.
 - A launcher structure per theme (theme.json `launcher.layout`): Pebble's `grid` (a big search pill, a Recent row,
   icons on squircle plates, a selection that springs in), Poster's `sheet` (the query as a display header, big rows
   with a letter index and a category tag, an inverse selection on a hard shadow) and Monolith's `prompt` (numbered

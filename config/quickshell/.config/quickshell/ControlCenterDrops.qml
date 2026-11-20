@@ -104,10 +104,19 @@ ColumnLayout {
                 : Caffeine.endsAt === 0 ? "Keeping the screen on until you turn it off."
                 : "Keeping the screen on until " + Qt.formatTime(new Date(Caffeine.endsAt), "HH:mm") + "  ·  " + Caffeine.remaining(ControlCenter.now.getTime())
             color: Theme.subtext
-            font { family: Theme.font; pixelSize: Theme.fontCaption }
+            font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption }
         }
         ControlCenterSectionLabel { text: Caffeine.active ? "Change to" : "Turn on for" }
+        ControlCenterModes {   // the hud's `[30 min]  [ 1 h ]` picker
+            Layout.topMargin: Theme.spaceXs
+            visible: ControlCenter.hud
+            options: Caffeine.choices.map(m => ({ glyph: "", name: m === 0 ? "Always" : Caffeine.label(m) }))
+            current: Caffeine.active ? Caffeine.choices.indexOf(Caffeine.minutes) : -1
+            accessibleName: "Caffeine duration"
+            onPicked: i => { Caffeine.start(Caffeine.choices[i]); ControlCenter.now = new Date() }
+        }
         ControlCenterSegmented {
+            visible: !ControlCenter.hud
             options: Caffeine.choices.map(m => m === 0 ? "Always" : Caffeine.label(m))
             current: Caffeine.active ? Caffeine.choices.indexOf(Caffeine.minutes) : -1
             onPicked: i => { Caffeine.start(Caffeine.choices[i]); ControlCenter.now = new Date() }
@@ -198,10 +207,10 @@ ColumnLayout {
                 Layout.rightMargin: 4
                 Column {
                     Layout.fillWidth: true
-                    Text { text: modelData[1]; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize } }
-                    Text { text: modelData[2]; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                    Text { text: modelData[1]; color: Theme.text; font { family: ControlCenter.textFont; pixelSize: Theme.fontSize } }
+                    Text { text: modelData[2]; color: Theme.subtext; font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption } }
                 }
-                Toggle { checked: phoneDrop.d?.[modelData[0]] ?? false; onToggled: on => Phone.setPlugin(modelData[0], on) }
+                ControlCenterSwitch { checked: phoneDrop.d?.[modelData[0]] ?? false; accessibleName: modelData[1]; onToggled: on => Phone.setPlugin(modelData[0], on) }
             }
         }
         // not paired yet: the phones KDE Connect sees, a click pairs

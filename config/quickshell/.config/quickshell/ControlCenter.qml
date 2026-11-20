@@ -184,6 +184,8 @@ Singleton {
     readonly property bool cards: layout === "cards"
     readonly property bool bento: layout === "bento"
     readonly property bool hud: layout === "hud"
+    readonly property int inset: hud ? 0 : Theme.ccInset   // a tile's sides to its content; the hud has no tile, so none
+    readonly property string textFont: hud ? Theme.monoFont : Theme.font   // body text: the hud reads in mono
     readonly property int customWidth: Config.controlCenter.width || Theme.panelWidth
     readonly property int gap: style === "compact" ? Math.max(4, Theme.ccGap - 3) : Theme.ccGap   // between tiles
     readonly property int pad: style === "compact" ? Math.max(6, Theme.ccPad - 4) : Theme.ccPad   // panel padding
@@ -289,7 +291,7 @@ Singleton {
             text: cc.view.hintText
             elide: Text.ElideRight
             color: Theme.text
-            font { family: Theme.font; pixelSize: Theme.fontCaption }
+            font { family: cc.textFont; pixelSize: Theme.fontCaption }
         }
     }
     }

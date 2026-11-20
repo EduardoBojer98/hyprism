@@ -3,7 +3,9 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 // Control Center building block (used by ControlCenter.qml and its parts).
-// A dropdown under its tile: title with an on/off switch, the content, then a link to Settings
+// A dropdown under its tile: title with an on/off switch, the content, then a link to Settings. The layout frames it:
+// a soft card (cards), a block on the hard shadow with its title in caps display type (bento), a `// wi-fi` readout
+// with an accent rail down its left and `[x] on` for the switch (hud).
 Rectangle {
     id: drop
     property string title
@@ -16,17 +18,20 @@ Rectangle {
     signal switched()
 
     // slides open and shut: the height follows the content, so it also grows as networks appear
-    property real shown: open ? dropCol.implicitHeight + 16 : 0
+    readonly property real full: dropCol.implicitHeight + 16
+    property real shown: open ? full : 0
     Behavior on shown { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     Layout.fillWidth: true
     Layout.preferredHeight: shown
     visible: shown > 0
-    clip: true
+    clip: shown < full   // only while it slides: open, Poster's shadow block sits outside it
     opacity: open ? 1 : 0
     Behavior on opacity { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-    radius: Theme.radius
-    color: Theme.fill
-    border { color: Theme.stroke; width: 1 }
+    radius: ControlCenter.cards ? Theme.radiusLarge : Theme.radius
+    color: ControlCenter.hud ? "transparent" : Theme.fill
+    border { color: ControlCenter.bento ? Theme.strokeStrong : Theme.stroke; width: ControlCenter.hud || ControlCenter.cards ? 0 : 1 }
+    PressFeel { visible: ControlCenter.bento && !drop.clip }
+    Rectangle { visible: ControlCenter.hud; width: 1; height: parent.height; color: Theme.accent2 }   // the hud's rail
 
     ColumnLayout {
         id: dropCol
@@ -40,11 +45,13 @@ Rectangle {
             Layout.bottomMargin: 2
             Text {
                 Layout.fillWidth: true
-                text: drop.title
-                color: Theme.text
-                font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold }
+                text: (ControlCenter.hud ? "// " : "") + drop.title
+                color: ControlCenter.hud ? Theme.accent2 : Theme.text
+                font { family: ControlCenter.bento ? Theme.displayFont : ControlCenter.textFont
+                       pixelSize: ControlCenter.hud ? Theme.fontLabel : Theme.fontTitle; weight: ControlCenter.hud ? Font.Normal : Font.DemiBold
+                       capitalization: ControlCenter.bento ? Font.AllUppercase : ControlCenter.hud ? Font.AllLowercase : Font.MixedCase }
             }
-            Toggle { visible: drop.hasSwitch; checked: drop.switchOn; onToggled: drop.switched() }
+            ControlCenterSwitch { visible: drop.hasSwitch; checked: drop.switchOn; accessibleName: drop.title; onToggled: drop.switched() }
         }
         ColumnLayout { id: dropBody; Layout.fillWidth: true; spacing: 2 }
         ControlCenterSettingsLink { visible: drop.settingsLabel !== ""; label: drop.settingsLabel; page: drop.settingsPage }

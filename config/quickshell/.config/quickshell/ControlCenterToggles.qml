@@ -71,7 +71,6 @@ ColumnLayout {
                 onExpand: mod.host.toggleExpanded(it.list)
             }
         }
-        ControlCenterBrackets {}
     }
 
     ControlCenterDrops { host: mod.host; ids: mod.ids }

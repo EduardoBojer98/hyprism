@@ -55,7 +55,7 @@ ColumnLayout {
                 verticalAlignment: TextInput.AlignVCenter
                 echoMode: TextInput.Password
                 color: Theme.text
-                font { family: Theme.font; pixelSize: Theme.fontSize }
+                font { family: ControlCenter.textFont; pixelSize: Theme.fontSize }
                 focus: parent.parent.visible
                 onAccepted: join()
                 Keys.onEscapePressed: wr.host.passwordFor = null

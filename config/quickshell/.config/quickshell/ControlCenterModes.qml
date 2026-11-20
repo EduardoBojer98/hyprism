@@ -86,7 +86,7 @@ Item {
                     width: Math.min(implicitWidth, parent.width)
                     elide: Text.ElideRight
                     textFormat: Text.PlainText
-                    text: (opt.on ? " " : "[") + opt.modelData.glyph + " " + opt.modelData.name.toLowerCase() + (opt.on ? " " : "]")
+                    text: (opt.on ? " " : "[") + (opt.modelData.glyph ? opt.modelData.glyph + " " : "") + opt.modelData.name.toLowerCase() + (opt.on ? " " : "]")
                     color: opt.ink
                     font { family: Theme.monoFont; pixelSize: Theme.fontLabel; weight: opt.on ? Font.Bold : Font.Normal }
                 }

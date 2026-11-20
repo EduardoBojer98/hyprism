@@ -87,10 +87,10 @@ Rectangle {
     }
     Column {
         visible: ControlCenter.cards
-        anchors { left: well.right; leftMargin: Theme.spaceS; right: parent.right; rightMargin: qt.expandable ? Theme.spaceL : Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        anchors { left: well.right; leftMargin: Theme.spaceS; right: parent.right; rightMargin: qt.expandable ? listMark.width + 3 + Theme.spaceXs * 2 + 1 : Theme.spaceXs; verticalCenter: parent.verticalCenter }
         spacing: 1
         Text { width: parent.width; text: qt.label; elide: Text.ElideRight; color: qt.active ? Theme.ccOnText : Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
-        Text { width: parent.width; visible: text !== ""; text: qt.status; elide: Text.ElideRight; color: qt.active ? Theme.ccOnSubtext : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+        Text { width: parent.width; visible: text !== ""; text: qt.status; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption - 1; color: qt.active ? Theme.ccOnSubtext : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
     }
     Row {   // hud: `[x]  night light`, a mono glyph between; an action that only runs reads `[>]`
         id: hudRow
@@ -120,19 +120,38 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         onClicked: mouse => mouse.button === Qt.RightButton && qt.expandable ? qt.expand() : qt.toggled()
     }
-    Rectangle {   // the list: a small badge in the corner that reads on the on and off tile alike
+    // the list it opens, the layout's way: a hairline and a chevron at the tile's right end (cards), a corner block
+    // in the second accent once open (bento), `>` turning to `v` (hud). Open is the chevron turned up, never a grey plate.
+    Rectangle {
+        visible: qt.expandable && ControlCenter.cards
+        anchors { right: listMark.left; rightMargin: Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        width: 1; height: Math.round(qt.height * 0.42)
+        color: qt.active ? Qt.alpha(Theme.ccOnText, 0.22) : Theme.stroke
+    }
+    Rectangle {
+        id: listMark
+        readonly property bool block: ControlCenter.bento && qt.isExpanded
         visible: qt.expandable
-        anchors { right: parent.right; rightMargin: 3 }
-        y: ControlCenter.cards || qt.hud ? (parent.height - height) / 2 : 3
-        width: 18; height: 18; radius: Math.min(Theme.radiusSmall, 5)
-        color: qt.active ? Qt.alpha(Theme.ccOnText, chevArea.containsMouse || qt.isExpanded ? 0.16 : 0)
-                         : chevArea.containsMouse || qt.isExpanded ? Theme.fillActive : "transparent"
+        anchors { right: parent.right; rightMargin: ControlCenter.bento ? 0 : 3 }
+        y: ControlCenter.bento ? 0 : (parent.height - height) / 2
+        width: ControlCenter.bento ? 20 : 18; height: width
+        radius: ControlCenter.bento ? 0 : height / 2
+        color: block ? Theme.accent2 : chevArea.containsMouse ? (qt.active ? Qt.alpha(Theme.ccOnText, 0.16) : Theme.fillHover) : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.animFast } }
         Chevron {
+            visible: !qt.hud
             anchors.centerIn: parent
             open: qt.isExpanded
             size: 12
-            color: qt.isExpanded && !qt.active ? Theme.accent : qt.active ? Theme.ccOnSubtext : Theme.subtext
+            color: listMark.block ? Theme.accentText : qt.active ? Theme.ccOnSubtext : qt.isExpanded ? Theme.accent
+                 : chevArea.containsMouse ? Theme.text : Theme.subtext
+        }
+        Text {
+            visible: qt.hud
+            anchors.centerIn: parent
+            text: qt.isExpanded ? "v" : ">"
+            color: qt.isExpanded ? Theme.accent : chevArea.containsMouse ? Theme.text : Theme.subtext
+            font { family: Theme.monoFont; pixelSize: Theme.fontLabel; weight: Font.Bold }
         }
         MouseArea { id: chevArea; Accessible.role: Accessible.Button; Accessible.name: "Options for " + qt.label; Accessible.onPressAction: qt.expand(); anchors { fill: parent; margins: -4 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
     }

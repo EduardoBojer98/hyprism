@@ -23,7 +23,17 @@ Item {
                pixelSize: ControlCenter.bento ? Theme.fontTitle : Theme.fontLabel; weight: ControlCenter.hud ? Font.Normal : Font.DemiBold
                capitalization: ControlCenter.bento ? Font.AllUppercase : ControlCenter.hud ? Font.AllLowercase : Font.MixedCase }
     }
+    Text {   // hud: a dot leader from the title to its detail, `// sound ······ 100%`
+        visible: ControlCenter.hud
+        anchors { left: shTitle.right; right: shDetail.visible ? shDetail.left : parent.right; leftMargin: Theme.spaceS; rightMargin: Theme.spaceS
+                  verticalCenter: shTitle.verticalCenter }
+        text: "·".repeat(160)
+        clip: true
+        color: Theme.muted
+        font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
+    }
     Row {
+        id: shDetail
         anchors { right: parent.right; verticalCenter: parent.verticalCenter }
         visible: sh.detail !== ""
         spacing: 2

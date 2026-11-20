@@ -52,7 +52,7 @@ ControlCenterTile {
 
     GridLayout {
         id: rows
-        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset }
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.ccInset; leftMargin: ControlCenter.inset; rightMargin: ControlCenter.inset }
         columns: 1
         rowSpacing: Theme.spaceS
 
@@ -78,7 +78,7 @@ ControlCenterTile {
                 Layout.bottomMargin: -6
                 text: "Built-in"
                 color: Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontCaption }
+                font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption }
             }
             ControlCenterBar {
                 visible: mod.hasDisplay
@@ -108,7 +108,7 @@ ControlCenterTile {
                     Text {
                         text: ext.modelData.lastIpcObject?.model || ext.modelData.name
                         color: Theme.subtext
-                        font { family: Theme.font; pixelSize: Theme.fontCaption }
+                        font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption }
                     }
                     ControlCenterBar {
                         tag: "ext"
@@ -148,14 +148,14 @@ ControlCenterTile {
                 Row {
                     anchors { left: parent.left; leftMargin: 6; verticalCenter: parent.verticalCenter }
                     spacing: Theme.spaceS
-                    Text { text: "\u{F0379}"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
-                    Text { text: "Displays"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel } }
+                    Text { text: "\u{F0379}"; color: Theme.text; font { family: ControlCenter.textFont; pixelSize: Theme.fontLabel } }
+                    Text { text: "Displays"; color: Theme.text; font { family: ControlCenter.textFont; pixelSize: Theme.fontLabel } }
                 }
                 Text {
                     anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
                     text: parent.how + "  \u{F0142}"
                     color: Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontLabel }
+                    font { family: ControlCenter.textFont; pixelSize: Theme.fontLabel }
                 }
                 MouseArea {
                     id: arrangeArea
@@ -226,7 +226,7 @@ ControlCenterTile {
                             text: app.modelData.properties["application.name"] || app.modelData.description || app.modelData.name
                             elide: Text.ElideRight
                             color: Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontCaption }
+                            font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption }
                         }
                         ControlCenterBar {
                             host: mod.host

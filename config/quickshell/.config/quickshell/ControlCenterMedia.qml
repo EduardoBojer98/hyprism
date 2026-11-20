@@ -49,7 +49,7 @@ ColumnLayout {
         Rectangle {
             id: artBox
             visible: !ControlCenter.hud
-            anchors { left: parent.left; leftMargin: Theme.ccInset; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: ControlCenter.inset; verticalCenter: parent.verticalCenter }
             width: ControlCenter.bento ? Theme.ccTile + Theme.ccWell : Theme.ccWell + 12; height: width; radius: Theme.radiusSmall
             color: Theme.fillHover
             clip: true
@@ -74,11 +74,11 @@ ColumnLayout {
             y: ControlCenter.bento ? artBox.y : (parent.height - height) / 2   // not anchors: switching anchors live leaves a conflict
             Text { width: parent.width; text: Sys.player?.trackTitle || Sys.player?.identity || ""; color: Theme.text; elide: Text.ElideRight; maximumLineCount: 2; wrapMode: ControlCenter.bento ? Text.Wrap : Text.NoWrap
                    font { family: ControlCenter.bento ? Theme.displayFont : Theme.font; pixelSize: ControlCenter.bento ? Theme.fontTitle : Theme.fontSize; weight: Font.DemiBold } }
-            Text { width: parent.width; text: Sys.player?.trackArtist || Sys.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+            Text { width: parent.width; text: Sys.player?.trackArtist || Sys.player?.identity || ""; color: Theme.subtext; elide: Text.ElideRight; font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption } }
         }
         Text {   // hud: `> title — artist`
             visible: ControlCenter.hud
-            anchors { left: parent.left; leftMargin: Theme.ccInset; right: controls.left; rightMargin: Theme.spaceS; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: ControlCenter.inset; right: controls.left; rightMargin: Theme.spaceS; verticalCenter: parent.verticalCenter }
             elide: Text.ElideRight
             textFormat: Text.PlainText
             text: "> " + (Sys.player?.trackTitle || Sys.player?.identity || "") + (Sys.player?.trackArtist ? " \u2014 " + Sys.player.trackArtist : "")
@@ -87,7 +87,7 @@ ColumnLayout {
         }
         Row {
             id: controls
-            anchors { right: parent.right; rightMargin: Theme.ccInset - 4 }
+            anchors { right: parent.right; rightMargin: Math.max(0, ControlCenter.inset - 4) }
             y: ControlCenter.bento ? artBox.y + artBox.height - height : (parent.height - height) / 2
             spacing: 2
             Repeater {

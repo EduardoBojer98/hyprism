@@ -43,7 +43,7 @@ ColumnLayout {
                 elide: Text.ElideRight
                 horizontalAlignment: Text.AlignRight
                 color: Theme.subtext
-                font { family: Theme.font; pixelSize: Theme.fontLabel }
+                font { family: ControlCenter.textFont; pixelSize: Theme.fontLabel }
             }
         }
         RowLayout {
@@ -54,8 +54,8 @@ ColumnLayout {
                 model: mod.facts
                 Column {
                     required property var modelData
-                    Text { text: modelData[0]; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
-                    Text { text: modelData[1]; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold; features: { "tnum": 1 } } }
+                    Text { text: modelData[0]; color: Theme.subtext; font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption } }
+                    Text { text: modelData[1]; color: Theme.text; font { family: ControlCenter.textFont; pixelSize: Theme.fontLabel; weight: Font.DemiBold; features: { "tnum": 1 } } }
                 }
             }
         }
@@ -69,13 +69,13 @@ ColumnLayout {
             spacing: Theme.spaceS
             Column {
                 Layout.fillWidth: true
-                Text { text: "Caffeine"; color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                Text { text: "Caffeine"; color: Theme.text; font { family: ControlCenter.textFont; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
                 Text {
                     width: parent.width
                     text: !Caffeine.active ? "The screen sleeps as usual" : Caffeine.endsAt > 0 ? "Awake until " + Qt.formatTime(new Date(Caffeine.endsAt), Sys.h24 ? "HH:mm" : "h:mm ap") : "Keeping the screen awake"
                     elide: Text.ElideRight
                     color: Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                    font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption }
                 }
             }
             Toggle {

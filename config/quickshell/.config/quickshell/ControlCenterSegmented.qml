@@ -53,7 +53,7 @@ Rectangle {
                     elide: Text.ElideRight
                     text: modelData
                     color: seg.current === index ? (Theme.selectInverse ? Theme.segOnText : Theme.thumbText) : segArea.containsMouse ? Theme.text : Theme.subtext
-                    font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                    font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
                     Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 }
                 MouseArea { id: segArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: seg.picked(index); Accessible.role: Accessible.RadioButton; Accessible.name: modelData; Accessible.checkable: true; Accessible.checked: seg.current === index; Accessible.onPressAction: seg.picked(index) }

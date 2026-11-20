@@ -35,7 +35,7 @@ ColumnLayout {
             Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryGlyph; color: Sys.batteryLow ? Theme.error : Sys.charging ? Theme.success : Theme.subtext
                    font { family: Theme.iconFont; pixelSize: Theme.glyph } }
             Text { anchors.verticalCenter: parent.verticalCenter; text: Sys.batteryPct + "%" + (Sys.charging ? "  ·  Charging" : ""); color: Sys.batteryLow ? Theme.error : Theme.subtext
-                   font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Medium; features: { "tnum": 1 } } }
+                   font { family: ControlCenter.textFont; pixelSize: Theme.fontCaption; weight: Font.Medium; features: { "tnum": 1 } } }
         }
         Item { Layout.fillWidth: true; implicitHeight: 1 }
         Repeater {

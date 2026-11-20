@@ -13,11 +13,10 @@ ColumnLayout {
 
     ControlCenterSliderHead { visible: !ControlCenter.cards && mod.tiles.length > 0; title: "Network" }
 
-    Item {   // holds the grid, so the hud's brackets can sit around it
+    Item {   // holds the grid
         visible: mod.tiles.length > 0
         Layout.fillWidth: true
         implicitHeight: grid.implicitHeight
-        ControlCenterBrackets {}
         GridLayout {
             id: grid
             anchors { left: parent.left; right: parent.right }

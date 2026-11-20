@@ -11,5 +11,5 @@ Text {
     padding: 8
     wrapMode: Text.Wrap
     color: Theme.muted
-    font { family: Theme.font; pixelSize: Theme.fontLabel }
+    font { family: ControlCenter.textFont; pixelSize: Theme.fontLabel }
 }
