@@ -23,6 +23,18 @@ ColumnLayout {
     function clone(o) { return JSON.parse(JSON.stringify(o ?? {})) }
     function lists(p) { return { start: Array.from(p.start ?? []), center: Array.from(p.center ?? []), end: Array.from(p.end ?? []) } }
     function startFrom(name) { editor.save(lists(b.presets[name])) }
+    // what each ready-made layout is for (Config.bar.presets as they ship)
+    readonly property var about: ({
+        minimal: "The fewest items: for a small screen, or when you want the desktop quiet",
+        full: "Everything at a glance: for a big screen with room to spare",
+        laptop: "Battery, brightness and power mode up front: for working on battery",
+        external: "Weather, music and the tray: for a desk monitor, no battery or brightness"
+    })
+    // "Left: Launcher, Workspaces · Middle: Clock · Right: …" from a layout's three lists (the Controls button is always there)
+    function describe(p) {
+        const side = l => Array.from(l ?? []).filter(i => i !== "controls").map(i => BarItems.info(i).name).join(", ") || "nothing"
+        return `Left: ${side(p?.start)} · Middle: ${side(p?.center)} · Right: ${side(p?.end)}`
+    }
     function save(name) {
         if (!/^[A-Za-z0-9-]+$/.test(name)) { message = "Use letters, digits and dashes only."; return }
         if (shipped.includes(name)) { message = "That name is built in."; return }
@@ -47,17 +59,17 @@ ColumnLayout {
     }
 
     SettingGroup {
-        title: "Layout"
-        SettingRow {
-            label: "Start from"
-            hint: "Copies a set of items into the bar you are editing; change anything after"
-            Flow {
-                spacing: 6
-                width: 360
-                Repeater {
-                    model: lay.names
-                    PillButton { required property string modelData; text: modelData.charAt(0).toUpperCase() + modelData.slice(1); onClicked: lay.startFrom(modelData) }
-                }
+        title: "Start from a ready-made layout · copies its items into the bar you are editing"
+        // one row per ready-made layout: who it suits, then what each side of the bar holds
+        Repeater {
+            model: lay.shipped.filter(n => lay.names.includes(n))
+            SettingRow {
+                id: ready
+                required property string modelData
+                readonly property var p: lay.b.presets[modelData]
+                label: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                hint: (lay.about[modelData] ?? "") + "\n" + lay.describe(p)
+                PillButton { text: "Use"; Accessible.name: "Start from " + ready.label; onClicked: lay.startFrom(ready.modelData) }
             }
         }
         SettingRow {
@@ -81,8 +93,12 @@ ColumnLayout {
                 id: kept
                 required property string modelData
                 label: modelData
-                hint: "A starting point you kept"
-                PillButton { text: "Delete"; Accessible.name: "Delete " + kept.modelData; onClicked: lay.remove(kept.modelData) }
+                hint: "A starting point you kept\n" + lay.describe(lay.b.presets[modelData])
+                RowLayout {
+                    spacing: Theme.spaceS
+                    PillButton { text: "Use"; Accessible.name: "Start from " + kept.modelData; onClicked: lay.startFrom(kept.modelData) }
+                    PillButton { text: "Delete"; Accessible.name: "Delete " + kept.modelData; onClicked: lay.remove(kept.modelData) }
+                }
             }
         }
     }
