@@ -92,13 +92,20 @@ Rectangle {
         Text { width: parent.width; text: qt.label; elide: Text.ElideRight; color: qt.active ? Theme.ccOnText : Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
         Text { width: parent.width; visible: text !== ""; text: qt.status; elide: Text.ElideRight; color: qt.active ? Theme.ccOnSubtext : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
     }
-    Text {   // hud: `[x] night light`; an action that only runs reads `[>]`
+    Row {   // hud: `[x]  night light`, a mono glyph between; an action that only runs reads `[>]`
+        id: hudRow
         visible: qt.hud
+        readonly property color ink: qt.active ? Theme.accent : qtArea.containsMouse ? Theme.text : Theme.subtext
         anchors { left: parent.left; leftMargin: Theme.spaceXs; right: parent.right; rightMargin: qt.expandable ? Theme.spaceL : Theme.spaceXs; verticalCenter: parent.verticalCenter }
-        text: (qt.status === "" ? "[>] " : qt.active ? "[x] " : "[ ] ") + qt.label.toLowerCase()
-        elide: Text.ElideRight
-        color: qt.active ? Theme.accent : qtArea.containsMouse ? Theme.text : Theme.subtext
-        font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
+        spacing: Theme.spaceXs
+        Text { id: hudBox; anchors.verticalCenter: parent.verticalCenter; text: qt.status === "" ? "[>]" : qt.active ? "[x]" : "[ ]"; color: hudRow.ink; font { family: Theme.monoFont; pixelSize: Theme.fontLabel } }
+        Text { id: hudGlyph; anchors.verticalCenter: parent.verticalCenter; text: qt.glyph; color: hudRow.ink; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.max(0, hudRow.width - hudBox.width - hudGlyph.width - 2 * hudRow.spacing)
+            text: qt.label.toLowerCase(); elide: Text.ElideRight; color: hudRow.ink
+            font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
+        }
     }
     MouseArea {
         id: qtArea

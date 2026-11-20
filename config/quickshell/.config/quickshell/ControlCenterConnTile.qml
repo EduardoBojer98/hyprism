@@ -86,9 +86,17 @@ Rectangle {
                       capitalization: ControlCenter.bento ? Font.AllUppercase : Font.MixedCase } }
         Text { width: parent.width; text: conn.subtitle; color: conn.active ? Theme.ccOnSubtext : Theme.subtext; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption - 1; font { family: Theme.font; pixelSize: Theme.fontCaption } }
     }
+    Text {   // hud: the mono glyph after the check box
+        id: hudGlyph
+        visible: conn.hud
+        anchors { left: disc.right; leftMargin: Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        text: conn.glyph
+        color: conn.active ? Theme.accent : Theme.subtext
+        font { family: Theme.iconFont; pixelSize: Theme.glyphS }
+    }
     Text {   // hud: `wifi      Hyprism-5G`, the state right-aligned before the `>`
         visible: conn.hud
-        anchors { left: disc.right; leftMargin: Theme.spaceS; right: conn.expandable ? chev.left : parent.right; rightMargin: Theme.spaceS; verticalCenter: parent.verticalCenter }
+        anchors { left: hudGlyph.right; leftMargin: Theme.spaceXs; right: conn.expandable ? chev.left : parent.right; rightMargin: Theme.spaceS; verticalCenter: parent.verticalCenter }
         text: conn.title.toLowerCase()
         color: Theme.text
         font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
