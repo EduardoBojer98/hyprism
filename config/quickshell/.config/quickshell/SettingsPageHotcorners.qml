@@ -29,14 +29,13 @@ ColumnLayout {
                 }
             }
         }
-    }
-
-    Text {
-        Layout.fillWidth: true
-        text: "Works on every screen. Corners next to another screen only fire where the pointer can stop."
-        color: Theme.subtext
-        wrapMode: Text.Wrap
-        font { family: Theme.font; pixelSize: Theme.fontCaption }
+        Text {
+            Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.bottomMargin: 12
+            text: "Works on every screen. Corners next to another screen only fire where the pointer can stop."
+            color: Theme.subtext
+            wrapMode: Text.Wrap
+            font { family: Theme.font; pixelSize: Theme.fontCaption }
+        }
     }
 
     ResetGroup { sections: ["hotCorners"] }
