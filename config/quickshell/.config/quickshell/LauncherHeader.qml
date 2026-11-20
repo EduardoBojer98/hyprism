@@ -62,7 +62,7 @@ Item {
             }
             font {
                 family: Launcher.preset?.mono ? Theme.monoFont : Launcher.bigQuery ? Theme.displayFont : Theme.font
-                pixelSize: Launcher.layout === "sheet" ? Theme.fontHero : Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : Launcher.rl.queryLight ? 0.42 : 0.38))
+                pixelSize: Launcher.layout === "sheet" ? Math.round(Theme.fontHero * 1.15 * Math.sqrt(Launcher.size)) : Math.round(Launcher.look.field * (Launcher.bigQuery ? 0.5 : Launcher.rl.queryLight ? 0.42 : 0.38))
                 weight: Launcher.bigQuery ? Theme.displayWeight : Launcher.rl.queryLight ? Font.Light : Font.Normal
             }
             onTextChanged: {
