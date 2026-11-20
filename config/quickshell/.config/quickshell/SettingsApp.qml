@@ -22,19 +22,19 @@ Singleton {
     // it in that page's `keys` below, so search finds it. Adding a page: a SettingsPage<Id>.qml, an
     // entry in allSections, and its id in one group here.
     readonly property var allGroups: [
-        { id: "appearance", name: "Appearance",          glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons", "cursor", "terminal"] },
-        { id: "barGroup",   name: "Menu Bar",            glyph: "\u{F0E7F}", pages: ["bar"] },
-        { id: "dockGroup",  name: "Dock",                glyph: "\u{F0A1F}", pages: ["dock"] },
-        { id: "lockGroup",  name: "Lock Screen",         glyph: "\u{F033E}", pages: ["lockscreen"] },
-        { id: "desktop",    name: "Desktop & Widgets",   glyph: "\u{F056E}", pages: ["controlcenter", "notifications", "focus", "launcher", "actions", "clipboard", "capture", "weather", "calendar", "hotcorners", "missioncontrol"] },
-        { id: "windows",    name: "Windows",             glyph: "\u{F05AF}", pages: ["windows", "windowlook", "apprules"] },
-        { id: "display",    name: "Displays",            glyph: "\u{F0379}", pages: ["displays", "workspaces", "monitor"] },
-        { id: "input",      name: "Input",               glyph: "\u{F030C}", pages: ["input", "keybinds"] },
+        { id: "appearance", name: "Appearance",          glyph: "\u{F03D8}", pages: ["appearance", "wallpaper", "icons", "cursor"] },
+        { id: "desktop",    name: "Menu Bar & Dock",     glyph: "\u{F0E7F}", pages: ["bar", "dock", "controlcenter", "weather", "calendar"] },
+        { id: "notify",     name: "Notifications",       glyph: "\u{F009A}", pages: ["notifications", "focus"] },
+        { id: "windows",    name: "Windows & Workspaces", glyph: "\u{F05AF}", pages: ["windows", "windowlook", "workspaces", "missioncontrol", "hotcorners", "apprules"] },
+        { id: "display",    name: "Displays",            glyph: "\u{F0379}", pages: ["displays", "monitor"] },
+        { id: "input",      name: "Keyboard & Mouse",    glyph: "\u{F030C}", pages: ["input", "keybinds"] },
         { id: "sound",      name: "Sound",               glyph: "\u{F057E}", pages: ["sound"] },
         { id: "network",    name: "Network & Bluetooth", glyph: "\u{F05A9}", pages: ["network", "bluetooth", "phone"] },
-        { id: "power",      name: "Power",               glyph: "\u{F0079}", pages: ["power", "idle", "asus"] },
-        { id: "applications", name: "Apps",              glyph: "\u{F003B}", pages: ["installed", "apps", "startup"] },
-        { id: "system",     name: "About",               glyph: "\u{F02FD}", pages: ["about", "language"] },
+        { id: "power",      name: "Power",               glyph: "\u{F0079}", pages: ["power", "asus"] },
+        { id: "lockGroup",  name: "Lock Screen",         glyph: "\u{F033E}", pages: ["lockscreen", "idle"] },
+        { id: "tools",      name: "Search & Tools",      glyph: "\u{F0349}", pages: ["launcher", "actions", "clipboard", "capture"] },
+        { id: "applications", name: "Apps",              glyph: "\u{F003B}", pages: ["installed", "apps", "startup", "terminal"] },
+        { id: "system",     name: "System",              glyph: "\u{F02FD}", pages: ["about", "language"] },
     ]
     // ASUS Hardware only on machines with asusctl
     readonly property var sections: allGroups.map(g => Object.assign({}, g, { pages: g.pages.filter(p => p !== "asus" || Machine.asus) }))

@@ -167,18 +167,18 @@ and the file way.
 | Group | Pages |
 |---|---|
 | **Appearance** | Themes (light or dark, Adjust, animations), Wallpaper (folders, slideshow, blur, colours from the wallpaper), Icons, Cursor |
-| **Menu Bar** | edge, size, floating, items in three zones, each item's own settings, presets, per screen |
-| **Dock** | place, size, pinned apps, open windows, previews, auto-hide, mark, widgets |
-| **Lock Screen** | clock, date, greeting, picture, widgets, background, blur |
-| **Desktop & Widgets** | Control Center, Notifications (and the on-screen volume and brightness pop-up), Search & Launcher, Clipboard, Screenshots, Weather, Calendar, Hot Corners |
-| **Windows** | Window Behaviour (layout, focus, snapping), Window Look (title bars, border, opacity), App Rules |
-| **Displays** | Displays (resolution, scale, rotation, arrangement, Night Light, adaptive sync, HDR), Workspaces, Shared Monitor |
-| **Input** | Keyboard & Touchpad (layouts, repeat, touchpad, gestures), Keyboard Shortcuts |
+| **Menu Bar & Dock** | Menu Bar (edge, size, items, presets, per screen), Dock (place, pinned apps, previews, auto-hide, widgets), Control Center, Weather, Calendar |
+| **Notifications** | Notifications (and the on-screen volume and brightness pop-up), Focus |
+| **Windows & Workspaces** | Window Behaviour (layout, focus, snapping), Window Look (title bars, border, opacity), Workspaces, Mission Control, Hot Corners, App Rules |
+| **Displays** | Displays (resolution, scale, rotation, arrangement, Night Light, adaptive sync, HDR), Shared Monitor |
+| **Keyboard & Mouse** | Keyboard & Touchpad (layouts, repeat, touchpad, gestures), Keyboard Shortcuts |
 | **Sound** | output, input, volumes, devices |
-| **Network & Bluetooth** | Wi-Fi & Network, Bluetooth |
-| **Power** | Battery & Power (power mode, charge limit, low battery, lid), Lock & Sleep (lock and sleep times on battery and plugged in, Caffeine), ASUS Hardware (only with asusctl) |
-| **Apps** | Installed Apps (where each came from, uninstall), Default Apps, Startup Apps |
-| **About** | the system, update and doctor, Language & Region |
+| **Network & Bluetooth** | Wi-Fi & Network, Bluetooth, Phone |
+| **Power** | Battery & Power (power mode, charge limit, low battery, lid), ASUS Hardware (only with asusctl) |
+| **Lock Screen** | Lock Screen (clock, picture, widgets, background), Lock & Sleep (lock and sleep times, Caffeine) |
+| **Search & Tools** | Search & Launcher, Actions, Clipboard, Screenshots |
+| **Apps** | Installed Apps (where each came from, uninstall), Default Apps, Startup Apps, Terminal |
+| **System** | About (the system, update and doctor), Language & Region |
 
 ## Quick start
 

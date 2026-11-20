@@ -163,18 +163,18 @@ change a choice or a slider, Page Up and Page Down scroll the page.
 | Group (sidebar) | Pages |
 |---|---|
 | **Appearance** | Themes, Wallpaper, Icons, Cursor |
-| **Menu Bar** | Menu Bar |
-| **Dock** | Dock |
-| **Lock Screen** | Lock Screen |
-| **Desktop & Widgets** | Control Center, Notifications, Search & Launcher, Actions, Clipboard, Weather, Calendar, Screenshots, Hot Corners |
-| **Windows** | Window Behaviour, Window Look, App Rules |
-| **Displays** | Screens, Shared Monitor |
-| **Input** | Keyboard & Touchpad, Keyboard Shortcuts |
+| **Menu Bar & Dock** | Menu Bar, Dock, Control Center, Weather, Calendar |
+| **Notifications** | Notifications, Focus |
+| **Windows & Workspaces** | Window Behaviour, Window Look, Workspaces, Mission Control, Hot Corners, App Rules |
+| **Displays** | Displays, Shared Monitor |
+| **Keyboard & Mouse** | Keyboard & Touchpad, Keyboard Shortcuts |
 | **Sound** | Sound |
-| **Network & Bluetooth** | Wi-Fi & Network, Bluetooth |
-| **Power** | Battery & Power, Lock & Sleep, ASUS Hardware (only with `asusctl`) |
-| **Apps** | Installed Apps, Default Apps, Startup Apps |
-| **About** | About (this computer, Update, Run doctor), Language & Region |
+| **Network & Bluetooth** | Wi-Fi & Network, Bluetooth, Phone |
+| **Power** | Battery & Power, ASUS Hardware (only with `asusctl`) |
+| **Lock Screen** | Lock Screen, Lock & Sleep |
+| **Search & Tools** | Search & Launcher, Actions, Clipboard, Screenshots |
+| **Apps** | Installed Apps, Default Apps, Startup Apps, Terminal |
+| **System** | About (this computer, Update, Run doctor), Language & Region |
 
 Everything applies right away except language (next login) and lid behaviour (a system file set by the `laptop` module).
 

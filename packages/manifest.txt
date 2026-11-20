@@ -67,8 +67,8 @@ zenity                   tools     folder/file picker in Settings (wallpaper fol
 btop                     tools     system monitor, coloured by the theme (btop theme "hyprism")
 imagemagick              tools     draws each theme's wallpaper (theme-wallpaper), blurred wallpaper copies
 fastfetch                tools     system summary in new terminals
-pokemon-colorscripts     tools     a random Pokémon in the terminal greeting (Settings > Appearance > Terminal)
-cbonsai                  tools     a bonsai tree in the terminal greeting (Settings > Appearance > Terminal)
+pokemon-colorscripts     tools     a random Pokémon in the terminal greeting (Settings > Apps > Terminal)
+cbonsai                  tools     a bonsai tree in the terminal greeting (Settings > Apps > Terminal)
 fortune                  tools     the bonsai greeting's short quote
 
 # Look

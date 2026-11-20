@@ -112,13 +112,13 @@ only, for example `"ghostty +new-window"`).
 **Startup apps.** Settings → Apps → Startup Apps. Command: `startup-apps add org.gnome.Nautilus` (a desktop entry id),
 `startup-apps list`, `startup-apps remove FILE`. They live in `~/.config/autostart/`, not in `settings.json`.
 
-**Notifications and Do Not Disturb.** Settings → Desktop & Widgets → Notifications. Key `Super+Shift+N`. File:
+**Notifications and Do Not Disturb.** Settings → Notifications. Key `Super+Shift+N`. File:
 `notifications.dnd`, `notifications.timeoutSec`, `notifications.mutedApps`.
 
 **Night light.** Settings → Displays → Screens → Night Light. File: `nightLight.mode` = `"off"`, `"on"`, `"sun"` or
 `"schedule"`; `nightLight.temperature` (K), `nightLight.from`, `nightLight.to`.
 
-**The on-screen display.** Settings → Desktop & Widgets → Notifications → On-screen display. File: `osd.volume`,
+**The on-screen display.** Settings → Notifications → On-screen display. File: `osd.volume`,
 `osd.brightness`, `osd.micMute`, `osd.layout`, `osd.capsLock`, `osd.position` (`"bottom"`, `"top"`, `"center"`),
 `osd.timeoutMs`.
 
