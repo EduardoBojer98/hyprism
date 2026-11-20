@@ -99,7 +99,8 @@ Singleton {
         startup: { apps: "list" },
         system: { taskManager: "string", welcomed: "bool" },
         wallpaper: { folders: "list", current: "string", slideshow: "bool", interval: [1, 1440],
-                     source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30] },
+                     source: ["all", "selected"], selected: "list", order: ["shuffle", "name"], blur: [0, 30],
+                     livePause: ["fullscreen", "windows"], liveOnBattery: "bool", screens: "screenWallpapers" },
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
                clock24: "bool", seconds: "bool",
                windowTitle: "bool", items: "object", preset: "string", presets: "object", monitors: "object", layout: "object" },
@@ -164,6 +165,9 @@ Singleton {
         if (rule === "portalShortcuts") return value && typeof value.length === "number" && value.length <= 100
             && Array.from(value).every(c => /^[A-Za-z0-9_+: ]{1,60}$/.test(c?.keys ?? "") && /^[A-Za-z0-9._:+@ -]{3,160}$/.test(c?.name ?? "") && c.name.includes(":")) ? "" : "Shortcuts need keys and an app's shortcut name"
         if (rule === "displays") return value !== null && typeof value === "object" && Object.keys(value).every(displayKeyOk) ? (Object.values(value).every(v => v !== null && typeof v === "object" && !Array.isArray(v)) ? "" : "Each display needs its own settings") : "Unknown display names"
+        if (rule === "screenWallpapers") return value !== null && typeof value === "object" && !Array.isArray(value)
+                && Object.keys(value).every(k => /^[A-Za-z0-9._-]{1,40}$/.test(k)) && Object.values(value).every(v => typeof v === "string" && v.startsWith("/"))
+                ? "" : "Each screen needs a full file path"
         if (rule === "presets") return value && typeof value.length === "number" && value.length <= 20
             && Array.from(value).every(p => /^[a-z0-9-]{1,40}$/.test(p?.id ?? "") && typeof p.name === "string" && p.name.length > 0 && p.name.length <= 40
                 && !/[\x00-\x1f]/.test(p.name) && typeof p.auto === "boolean" && p.outputs !== null && typeof p.outputs === "object"

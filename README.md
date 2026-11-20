@@ -166,7 +166,7 @@ and the file way.
 
 | Group | Pages |
 |---|---|
-| **Appearance** | Themes (light or dark, Adjust, animations), Wallpaper (folders, slideshow, blur, colours from the wallpaper), Icons, Cursor |
+| **Appearance** | Themes (light or dark, Adjust, animations), Wallpaper (folders, slideshow, one per screen if you like, blur, colours from the wallpaper), Icons, Cursor |
 | **Menu Bar & Dock** | Menu Bar (edge, size, items, presets, per screen), Dock (place, pinned apps, previews, auto-hide, widgets), Control Center, Weather, Calendar |
 | **Notifications** | Notifications (and the on-screen volume and brightness pop-up), Focus |
 | **Windows & Workspaces** | Window Behaviour (layout, focus, snapping), Window Look (title bars, border, opacity), Workspaces, Mission Control, Hot Corners, App Rules |

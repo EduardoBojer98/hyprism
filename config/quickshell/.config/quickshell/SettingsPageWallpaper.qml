@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
@@ -15,7 +16,11 @@ ColumnLayout {
     readonly property bool picking: c.slideshow && c.source === "selected"
     property string folderError: ""
 
-    readonly property string cur: Wallpapers.current
+    // the screen being changed ("" = every screen without one of its own); the picker shows with two screens or more
+    property string target: ""
+    readonly property var screens: Hyprland.monitors.values.filter(m => Machine.realScreen(m.name))
+    readonly property bool own: target !== "" && Wallpapers.screens[target] !== undefined
+    readonly property string cur: target ? Wallpapers.on(target) : Wallpapers.current
     readonly property bool curVideo: Wallpapers.isVideo(cur)
     readonly property string home: Quickshell.env("HOME")
     function name(p) { return p.split("/").pop() }
@@ -122,6 +127,23 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
                 spacing: Theme.spaceXs
+                Choice {
+                    visible: page.screens.length > 1
+                    Layout.bottomMargin: Theme.spaceS
+                    accessibleName: "Screen to change"
+                    options: ["Every screen"].concat(page.screens.map(m => Displays.label(m) + (Wallpapers.screens[m.name] ? " \u00b7 own" : "")))
+                    index: Math.max(0, page.screens.findIndex(m => m.name === page.target) + 1)
+                    onPicked: i => page.target = i === 0 ? "" : page.screens[i - 1].name
+                }
+                Text {
+                    Layout.fillWidth: true
+                    visible: page.screens.length > 1
+                    text: page.target === "" ? (Object.keys(Wallpapers.screens).length ? "Screens marked own keep theirs. Pick one to change it on its own." : "Pick a screen to give it a wallpaper of its own.")
+                        : page.own ? "Has its own wallpaper. The slideshow and Focus modes leave it be." : "Shows the same wallpaper as the others. Pick one below to give it its own."
+                    wrapMode: Text.Wrap
+                    color: Theme.muted
+                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                }
                 Text {
                     Layout.fillWidth: true
                     text: page.cur ? page.name(page.cur) : "No wallpaper yet"
@@ -159,7 +181,8 @@ ColumnLayout {
                     Layout.fillWidth: true
                     Layout.topMargin: Theme.spaceS
                     spacing: Theme.spaceS
-                    PillButton { text: "Next"; visible: Wallpapers.pool.length > 1; onClicked: Wallpapers.next() }
+                    PillButton { text: "Next"; visible: Wallpapers.pool.length > 1 && !page.own; onClicked: Wallpapers.next() }
+                    PillButton { text: "Same as the other screens"; visible: page.own; onClicked: Wallpapers.shared(page.target) }
                     PillButton { text: Wallpapers.userPaused ? "Play" : "Pause"; visible: page.curVideo; onClicked: Wallpapers.userPaused = !Wallpapers.userPaused }
                     PillButton { text: "Show in Files"; visible: page.cur !== ""; onClicked: Wallpapers.reveal(page.cur) }
                 }
@@ -205,7 +228,7 @@ ColumnLayout {
                 Column {
                     id: tile
                     required property string modelData
-                    readonly property bool isCurrent: modelData === Wallpapers.current
+                    readonly property bool isCurrent: modelData === page.cur
                     readonly property bool inRotation: page.c.selected.includes(modelData)
                     readonly property bool video: Wallpapers.isVideo(modelData)
                     spacing: 6
@@ -223,10 +246,10 @@ ColumnLayout {
                             asynchronous: true
                         }
                         MouseArea {
-                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Wallpapers.pick(tile.modelData)
+                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Wallpapers.pick(tile.modelData, page.target)
                             Accessible.role: Accessible.Button
                             Accessible.name: "Use " + page.name(tile.modelData) + " as the wallpaper"
-                            Accessible.onPressAction: Wallpapers.pick(tile.modelData)
+                            Accessible.onPressAction: Wallpapers.pick(tile.modelData, page.target)
                         }
                         Rectangle {   // a video (live wallpaper)
                             visible: tile.video

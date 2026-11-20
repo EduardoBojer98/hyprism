@@ -306,6 +306,7 @@ JsonAdapter {
         property int blur: 0                     // desktop only (a blurred copy in ~/.cache; for a video its still frame, not the video); 0 = sharp
         property string livePause: "fullscreen"  // a video wallpaper pauses behind "fullscreen" windows or any "windows" on its workspace
         property bool liveOnBattery: false       // a video wallpaper plays on battery too (about doubles idle power); off = paused
+        property var screens: ({})               // a screen with its own wallpaper: { "HDMI-A-1": full path }; the rest show current
     }
     // Hyprland-side settings: Settings edits these; SettingsSync.qml writes the files Hyprland, hypridle and
     // monswitch read from them. imported: the values were read once from the file written before (no loss).

@@ -11,7 +11,7 @@ import QtQuick
 // (the link keeps the original; the lock screen blurs on its own).
 // A video ("live wallpaper") has a still frame (wallpaper-still) that takes the picture's place everywhere above;
 // mpvpaper plays the video over it (see the player at the end).
-//   Wallpapers.images · Wallpapers.apply(path) · Wallpapers.pick(path) · Wallpapers.next() · `qs ipc call wallpaper next`
+//   Wallpapers.images · Wallpapers.apply(path[, screen]) · Wallpapers.pick(path[, screen]) · Wallpapers.on(screen) · Wallpapers.next() · `qs ipc call wallpaper next` · `qs ipc call wallpaper setOn HDMI-A-1 <path>`
 Singleton {
     id: root
 
@@ -23,6 +23,10 @@ Singleton {
     property bool userPaused: false  // the video stopped by hand (Settings, `qs ipc call wallpaper playPause`) until the next wallpaper
     onCurrentChanged: userPaused = false
     // what the slideshow cycles through
+    // screens with a wallpaper of their own (Settings > Wallpaper > Screen); the slideshow and Focus leave them be
+    readonly property var screens: c.screens ?? ({})
+    readonly property var realScreens: Quickshell.screens.filter(s => Machine.realScreen(s.name)).map(s => s.name)
+    function on(name) { return screens[name] || current }   // what a screen shows
     readonly property var pool: c.source === "selected" ? c.selected.filter(p => images.includes(p)) : images
 
     function expand(p) { return p.startsWith("~") ? home + p.slice(1) : p }
@@ -38,12 +42,18 @@ Singleton {
                                  "sh", p, "file://" + encodeURI(p).replace(/,/g, "%2C")])
     }
 
-    function apply(path) {
+    // screen: only that one gets it (kept in wallpaper.screens); none: every screen without one of its own
+    function apply(path, screen) {
         if (!path) return
+        if (screen) {
+            Config.set("wallpaper", "screens", Object.assign({}, screens, { [screen]: path }))
+            show(path, screen)
+            return
+        }
         current = path
         Config.set("wallpaper", "current", path)
         const safe = path.replace(/[|'\\\n]/g, "")
-        show(safe)
+        showAll()
         // hyprpaper.conf and hyprlock.conf both read this link (kept out of git, it's your choice)
         Quickshell.execDetached(["sh", "-c", "mkdir -p \"$HOME/.config/hypr/settings\" && ln -sfn \"$1\" \"$HOME/.config/hypr/settings/wallpaper\"", "sh", still(safe)])
     }
@@ -51,17 +61,29 @@ Singleton {
     // What hyprpaper displays: the picture, or a blurred copy (made once per picture and strength,
     // at most 2560 px wide, blurred at half that, so even a big photo takes well under a second;
     // the newest 10 copies are kept)
-    function show(path) {
+    // a screen back to the shared wallpaper
+    function shared(screen) {
+        const s = Object.assign({}, screens)
+        delete s[screen]
+        Config.set("wallpaper", "screens", s)
+        show(current, screen)
+    }
+    function showAll() {
+        if (Object.keys(screens).length === 0) show(current, "")
+        else for (const n of realScreens) show(on(n), n)
+    }
+
+    function show(path, screen) {
         if (!path || !path.startsWith("/")) return   // an absolute file path only: nothing ImageMagick or ffmpeg could read as an option or a coder
         Quickshell.execDetached(["sh", "-c",
             "s=$(wallpaper-still \"$1\"); [ -n \"$s\" ] || exit 0; "
             + "if [ \"$2\" -gt 0 ]; then d=\"$HOME/.cache/wallpaper-blur\"; out=\"$d/$(printf %s \"$s$2\" | md5sum | cut -c1-16).jpg\"; mkdir -p \"$d\"; "
             + "[ -f \"$out\" ] || { magick \"$s\" -resize 1280x1280\\> -blur 0x\"$2\" -resize 200% -quality 92 \"$out.tmp.jpg\" && mv \"$out.tmp.jpg\" \"$out\"; }; "
             + "ls -t \"$d\"/*.jpg | tail -n +11 | xargs -r rm -f; [ -f \"$out\" ] || exit 0; s=$out; fi; "
-            + "hyprctl hyprpaper wallpaper \",$s\"",
-            "sh", path, String(c.blur)])
+            + "hyprctl hyprpaper wallpaper \"$3,$s\"",
+            "sh", path, String(c.blur), (screen ?? "").replace(/[^A-Za-z0-9._-]/g, "")])
     }
-    Timer { id: blurDebounce; interval: 400; onTriggered: root.show(root.current) }
+    Timer { id: blurDebounce; interval: 400; onTriggered: root.showAll() }
     Connections { target: Config.wallpaper; function onBlurChanged() { blurDebounce.restart() } }
 
     function next() {
@@ -77,9 +99,9 @@ Singleton {
     }
 
     // A wallpaper you pick yourself stays when you switch themes (Settings > Themes > Wallpaper turns it back on)
-    function pick(path) {
-        Config.set("appearance", "wallpaper", false)
-        apply(path)
+    function pick(path, screen) {
+        if (!screen) Config.set("appearance", "wallpaper", false)
+        apply(path, screen)
     }
 
     // every image and video in the folders (and one level of subfolders), every theme's own wallpaper, plus the one
@@ -101,7 +123,7 @@ Singleton {
                 if (!root.current) {
                     root.current = root.c.current || root.expand((cur ?? "").trim())
                     // shortcut: hyprpaper.conf shows the sharp picture at login until this swaps in the blurred copy
-                    if (root.c.blur > 0) root.show(root.current)
+                    if (root.c.blur > 0 || Object.keys(root.screens).length > 0) root.showAll()
                 }
             }
         }
@@ -120,10 +142,11 @@ Singleton {
     // stops). A playing video about doubles idle power even behind windows (Hyprland still draws it), so it pauses
     // over mpv's socket: on battery (unless liveOnBattery), and on a fullscreen window, or any window with
     // livePause "windows". mpvpaper's own -p/-s do nothing on Hyprland. Measured: docs/research/live-wallpapers.md.
-    readonly property bool live: isVideo(current) && current.startsWith("/")
+    readonly property var liveScreens: realScreens.filter(n => isVideo(on(n)) && on(n).startsWith("/"))
+    readonly property bool live: liveScreens.length > 0
     readonly property bool batteryPause: UPower.onBattery && !c.liveOnBattery
     Variants {
-        model: root.live ? Quickshell.screens.filter(s => Machine.realScreen(s.name)) : []
+        model: Quickshell.screens.filter(s => root.liveScreens.includes(s.name))
         Process {
             id: player
             required property ShellScreen modelData
@@ -135,13 +158,13 @@ Singleton {
                 Quickshell.execDetached(["sh", "-c", "printf '%s\\n' \"$2\" | socat - UNIX-CONNECT:\"$1\" >/dev/null 2>&1", "sh", sock, JSON.stringify({ command: cmd })])
             }
             onPausedChanged: send(["set_property", "pause", paused])
-            readonly property string file: root.current   // another video: the same player loads it (an image ends the player)
-            onFileChanged: if (root.live) send(["loadfile", file])
+            readonly property string file: root.on(modelData.name)   // another video: the same player loads it (an image ends the player)
+            onFileChanged: if (root.isVideo(file)) send(["loadfile", file])
             // gpu-hwdec-interop=vaapi: the default also loads CUDA and Vulkan, which wakes a sleeping NVIDIA card on
             // hybrid laptops. shortcut: no VA-API (an NVIDIA-only desktop) decodes on the CPU; add NVDEC when one shows up
             Component.onCompleted: {
                 command = ["mpvpaper", "-o", "hwdec=vaapi gpu-hwdec-interop=vaapi profile=fast loop-file=inf no-audio panscan=1.0 input-ipc-server=" + sock + (paused ? " pause=yes" : ""),
-                           modelData.name, root.current]
+                           modelData.name, file]
                 running = true
             }
         }
@@ -151,6 +174,7 @@ Singleton {
         target: "wallpaper"
         function next(): void { root.next() }
         function set(path: string): void { root.apply(root.expand(path)) }
+        function setOn(screen: string, path: string): void { root.apply(root.expand(path), screen) }
         function playPause(): void { if (root.live) root.userPaused = !root.userPaused }
     }
 }

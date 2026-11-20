@@ -350,6 +350,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `blur` | `int` | `0` | desktop only (a blurred copy in ~/.cache; for a video its still frame, not the video); 0 = sharp |
 | `livePause` | `string` | `"fullscreen"` | a video wallpaper pauses behind "fullscreen" windows or any "windows" on its workspace |
 | `liveOnBattery` | `bool` | `false` | a video wallpaper plays on battery too (about doubles idle power); off = paused |
+| `screens` | `var` | `{}` | a screen with its own wallpaper: { "HDMI-A-1": full path }; the rest show current |
 
 ## idle
 
