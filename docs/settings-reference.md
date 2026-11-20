@@ -430,4 +430,5 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `otherInput` | `string` | `"0x12"` | the other computer's input |
 | `mirror` | `string` | `""` | screen it mirrors while away (keeps a signal); empty = this computer's own screen, "none" = no mirror |
 | `mirrorMode` | `string` | `""` | the mode for that mirror, e.g. 1920x1080@60; empty = the screen's own |
+| `more` | `var` | `[]` | up to 3 more monitors switched with it: [{ output, thisInput, otherInput }] |
 | `imported` | `bool` | `false` |  |

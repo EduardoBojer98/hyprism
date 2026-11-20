@@ -134,6 +134,8 @@ esac
 #                  # Default: this computer's built-in screen; none means no mirroring, workspaces stay put
 #   MIRROR_MODE=1920x1080@60   # optional: mode used for that mirror
 #   POLL=5         # optional: seconds between DDC reads in watch mode (30 while nothing changes and the screen is off)
+#   OUT2=DP-1 LAPTOP2=0x0f PC2=0x10   # optional, one line each: more monitors (up to OUT4) that switch together with OUT.
+#                  # OUT leads: its input decides which side is showing, and the watcher follows its buttons
 # Settings > Shared Monitor writes this file. By hand: ddcutil detect; ddcutil getvcp 60
 CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
 [[ -f $CONF ]] || {
@@ -143,7 +145,7 @@ CONF=${XDG_CONFIG_HOME:-$HOME/.config}/monswitch.conf
 POLL=5 # seconds between DDC reads in watch mode
 # read KEY=value lines (never run the file as shell): only the known keys, only plain values
 while IFS='=' read -r key value; do
-    case $key in OUT | LAPTOP | PC | MIRROR | MIRROR_MODE | POLL)
+    case $key in OUT | LAPTOP | PC | MIRROR | MIRROR_MODE | POLL | OUT[2-4] | LAPTOP[2-4] | PC[2-4])
         # plain values only, starting with a letter or digit (a leading "-" would reach ddcutil as an option)
         if [[ $value =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
             printf -v "$key" '%s' "$value"
@@ -153,6 +155,13 @@ while IFS='=' read -r key value; do
 done <"$CONF"
 : "${OUT:?set OUT in $CONF}" "${LAPTOP:?set LAPTOP in $CONF}" "${PC:?set PC in $CONF}"
 [[ $POLL =~ ^[1-9][0-9]*$ ]] || POLL=5
+# the main monitor first, then the others that switch with it (an entry missing a value is skipped)
+OUTS=("$OUT") LAPTOPS=("$LAPTOP") PCS=("$PC")
+for n in 2 3 4; do
+    o=OUT$n l=LAPTOP$n p=PC$n
+    [[ -n ${!o:-} && -n ${!l:-} && -n ${!p:-} ]] || continue
+    OUTS+=("${!o}") LAPTOPS+=("${!l}") PCS+=("${!p}")
+done
 MIRROR=${MIRROR-$(hw display.internal)} # "none" in the file = no mirroring
 [[ $MIRROR == none ]] && MIRROR=""
 MIRROR_MODE=${MIRROR_MODE:-preferred} # your own mode from the file, else whatever the screen prefers
@@ -164,7 +173,7 @@ mkdir -p "$STATE_DIR"
 
 # The i2c bus number can change between boots, after a resume or a replug; the DRM connector always
 # links to the right one, so it is looked up on every call (watch runs for the whole session).
-bus() { readlink -f /sys/class/drm/card*-"$OUT"/ddc 2>/dev/null | sed 's/.*i2c-//' | head -1; }
+bus() { readlink -f /sys/class/drm/card*-"${1:-$OUT}"/ddc 2>/dev/null | sed 's/.*i2c-//' | head -1; }
 
 ddc_input() { # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (common mid-switch, or unplugged)
     local b
@@ -172,38 +181,44 @@ ddc_input() { # prints 0x11 / 0x12, or nothing when the monitor doesn't answer (
     [[ -n $b ]] || return 0
     { ddcutil --bus "$b" getvcp 60 --terse 2>/dev/null || true; } | awk '$1 == "VCP" {sub(/^x/, "0x", $4); print $4}'
 }
-ddc_set() {
-    local b
-    b=$(bus)
-    [[ -n $b ]] || {
-        echo "monswitch: $OUT isn't connected" >&2
-        return 1
-    }
-    ddcutil --bus "$b" setvcp 60 "$1"
+ddc_set() { # pc | laptop: every shared monitor to that side; fails only when the main one can't be switched
+    local i b code
+    for i in "${!OUTS[@]}"; do
+        if [[ $1 == pc ]]; then code=${PCS[$i]}; else code=${LAPTOPS[$i]}; fi
+        b=$(bus "${OUTS[$i]}")
+        if [[ -n $b ]] && ddcutil --bus "$b" setvcp 60 "$code"; then continue; fi
+        echo "monswitch: ${OUTS[$i]} didn't switch (not connected, or DDC/CI off)" >&2
+        ((i == 0)) && return 1
+    done
+    return 0
 }
 
 # true while the monitor is this computer's own screen; false while it mirrors another one (handed over) or is gone
 out_enabled() { hyprctl -j monitors | jq -e --arg o "$OUT" 'any(.[]; .name == $o and ((.mirrorOf // "none") == "none"))' >/dev/null; }
 
-save_layout() { # the shared monitor's workspaces and the one it shows, and the one the mirrored screen shows
+save_layout() { # each shared monitor's workspaces and the one it shows, and the one the mirrored screen shows
+    local outs
+    outs=$(printf '%s\n' "${OUTS[@]}" | jq -Rsc 'split("\n") | map(select(. != ""))')
     jq -n \
-        --argjson ws "$(hyprctl -j workspaces | jq --arg o "$OUT" '[.[] | select(.monitor == $o and .id > 0) | .id]')" \
-        --argjson active "$(hyprctl -j monitors | jq --arg o "$OUT" '[.[] | select(.name == $o) | .activeWorkspace.id][0] // null')" \
+        --argjson ws "$(hyprctl -j workspaces | jq --argjson o "$outs" '[.[] | select(.id > 0 and (.monitor as $m | $o | index($m))) | {id, monitor}]')" \
+        --argjson active "$(hyprctl -j monitors | jq --argjson o "$outs" '[.[] | select(.name as $n | $o | index($n)) | .activeWorkspace.id]')" \
         --argjson mine "$(hyprctl -j monitors | jq --arg o "${MIRROR:-}" '[.[] | select(.name == $o) | .activeWorkspace.id][0] // null')" \
         '{workspaces: $ws, active: $active, mirrorActive: $mine}' >"$LAYOUT"
 }
 
 restore_layout() {
     [[ -f $LAYOUT ]] || return 0
-    local id
-    for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
-        hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$OUT\" })" >/dev/null
-    done
-    # the mirrored screen shows what it showed before the hand-off, then the shared monitor its own (focused last)
+    local id mon
+    # a layout saved before several monitors could be shared lists bare ids, all on OUT
+    while read -r id mon; do
+        hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$mon\" })" >/dev/null
+    done < <(jq -r --arg o "$OUT" '.workspaces[] | if type == "number" then "\(.) \($o)" else "\(.id) \(.monitor)" end' "$LAYOUT")
+    # the mirrored screen shows what it showed before the hand-off, then each shared monitor its own (the main one last)
     id=$(jq -r '.mirrorActive // empty' "$LAYOUT")
     [[ -n $id && $id -gt 0 ]] && hyprctl dispatch "hl.dsp.focus({ workspace = \"$id\" })" >/dev/null
-    id=$(jq -r '.active // empty' "$LAYOUT")
-    [[ -n $id ]] && hyprctl dispatch "hl.dsp.focus({ workspace = \"$id\" })" >/dev/null
+    for id in $(jq -r '[.active] | flatten | map(select(. != null)) | reverse | .[]' "$LAYOUT"); do
+        hyprctl dispatch "hl.dsp.focus({ workspace = \"$id\" })" >/dev/null
+    done
     return 0
 }
 
@@ -215,14 +230,16 @@ release() {
     [[ -n $MIRROR ]] || return 0 # no screen to mirror: leave Hyprland as it is
     save_layout
     # kept in a file Hyprland's monitors.lua reads, so a reload or a theme change keeps the hand-off
-    local table="{ output = \"$OUT\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\" }"
-    printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "$OUT" "$table" >"$SHARED"
+    local o table="{"
+    for o in "${OUTS[@]}"; do table+=" { output = \"$o\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\" },"; done
+    table="${table%,} }"
+    printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "${OUTS[*]}" "$table" >"$SHARED"
     hyprctl eval "SHARED = $table; apply_displays()" >/dev/null
     local id # a mirror can keep its workspaces, so move them explicitly
-    for id in $(jq -r '.workspaces[]' "$LAYOUT"); do
+    for id in $(jq -r '.workspaces[].id' "$LAYOUT"); do
         hyprctl dispatch "hl.dsp.workspace.move({ workspace = \"$id\", monitor = \"$MIRROR\" })" >/dev/null
     done
-    notify-send -a monswitch "Monitor → other computer" "Workspaces moved to $MIRROR"
+    notify-send -a monswitch "Monitor$( ((${#OUTS[@]} > 1)) && echo s) → other computer" "Workspaces moved to $MIRROR"
 }
 reclaim() {
     out_enabled && return 0
@@ -235,7 +252,7 @@ reclaim() {
 
 to_pc() {
     # switch first, while the laptop still sends a picture; if the monitor refused, nothing changes here
-    ddc_set "$PC" || {
+    ddc_set pc || {
         notify-send -a monswitch "Monitor didn't switch" "It didn't take the input change; check DDC/CI is on in its menu"
         return 1
     }
@@ -263,7 +280,7 @@ to_pc() {
 }
 to_laptop() {
     reclaim # send a picture first, so the monitor has a signal to switch to
-    ddc_set "$LAPTOP"
+    ddc_set laptop
 }
 
 # One action at a time: a keypress and the watcher must never interleave.

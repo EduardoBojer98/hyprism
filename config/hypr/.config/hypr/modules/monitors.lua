@@ -11,6 +11,11 @@ DISPLAYS = ok and type(saved) == "table" and saved or {}
 -- removes it after; it is read here so the hand-off survives a reload or anything re-applying these rules.
 local sok, shared = pcall(require, "settings.shared")
 SHARED = sok and type(shared) == "table" and shared or nil
+-- a list, one entry per monitor handed over; a file from before several could be shared holds one entry itself
+if SHARED and SHARED.output then SHARED = { SHARED } end
+local function handed(name)
+    for _, s in ipairs(SHARED or {}) do if s.output == name then return s end end
+end
 
 -- Saved layouts are keyed by a screen's description ("make model serial"), or by its connector name (HDMI-A-1)
 -- when two screens share a description. Resolve a key to the connector now carrying it. get_monitors() leaves
@@ -40,10 +45,12 @@ local function monitor(key, overrides)
     for k, v in pairs(DISPLAYS[key] or {}) do spec[k] = v end
     for k, v in pairs(overrides or {}) do spec[k] = v end
     spec.mirror = resolve(spec.mirror)
-    if SHARED and SHARED.output == name then
-        spec = { output = name, mode = SHARED.mode, position = "auto", scale = 1, mirror = SHARED.mirror, disabled = false }
+    local s = handed(name)
+    if s then
+        spec = { output = name, mode = s.mode, position = "auto", scale = 1, mirror = s.mirror, disabled = false }
+        HANDED = HANDED or {}
+        HANDED[name] = true
     end
-    if SHARED and SHARED.output == name then HANDED = name end
     hl.monitor(spec)
 end
 
@@ -57,10 +64,10 @@ local function reannounce()
     for key, d in pairs(DISPLAYS) do
         if key:sub(1, 1) ~= "_" and not d.disabled and (d.mirror or "") == "" then names[key] = true end
     end
-    if HANDED then names[HANDED] = true end -- the shared monitor, when it isn't in the saved layout
+    for name in pairs(HANDED or {}) do names[name] = true end -- shared monitors, when they aren't in the saved layout
     for key in pairs(names) do
         local name = resolve(key)
-        if not shown[name] and not (SHARED and SHARED.output == name) then
+        if not shown[name] and not handed(name) then
             hl.monitor({ output = name, disabled = true })
             monitor(key)
         end
@@ -78,7 +85,9 @@ function apply_displays()
     for name in pairs(DISPLAYS) do
         if name:sub(1, 1) ~= "_" then monitor(name) end
     end
-    if SHARED and not DISPLAYS[key_of(SHARED.output)] then monitor(SHARED.output) end
+    for _, s in ipairs(SHARED or {}) do
+        if not DISPLAYS[key_of(s.output)] then monitor(s.output) end
+    end
     -- any other screen: beside the others (Settings > Displays > New screens), or showing the laptop panel's picture
     local new = option("newScreen", "right")
     local fallback = { output = "", mode = option("preferHighRefresh", true) and "highrr" or "preferred", scale = "auto",

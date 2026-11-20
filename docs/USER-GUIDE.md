@@ -232,7 +232,9 @@ inside the repo folder.
 `monswitch` hands a monitor to another computer over DDC/CI and back (`Super+M`, Control Center), moving your
 desktops off it while it is away (it mirrors a screen here so the monitor keeps a signal). Needs the
 `ddc-monitor` module. Turn DDC/CI on in the monitor's menu, then **Settings → Displays → Shared Monitor**: pick the
-monitor and its two inputs, Save. It follows switches made on the monitor's own buttons too.
+monitor and its two inputs, Save. It follows switches made on the monitor's own buttons too. Several monitors going to
+the same other computer: **Also switch** adds up to three more; they hand over and come back with the first one, whose
+input decides which side is showing (its own buttons are the ones followed).
 
 ## Keyboard and screen readers
 

@@ -118,7 +118,7 @@ Singleton {
                     newScreen: ["right", "left", "above", "below", "mirror"], main: "string", barOnMainOnly: "bool", imported: "bool" },
         workspaces: { mode: ["dynamic", "fixed"], count: [1, 10], screens: "displays" },
         apps: { terminal: "command" },
-        monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", imported: "bool" }
+        monitorShare: { enabled: "bool", output: "name", thisInput: "ddc", otherInput: "ddc", mirror: "name", mirrorMode: "mode", more: "sharedMonitors", imported: "bool" }
     })
 
     // Why a value breaks its rule, or "" when it's fine. Lists from settings.json arrive as QML lists, so
@@ -138,6 +138,10 @@ Singleton {
         if (rule === "command") return typeof value === "string" && /^[A-Za-z0-9 +._\/-]{1,80}$/.test(value) ? "" : "Letters, digits, space and + - _ . / only"
         if (rule === "ddc") return typeof value === "string" && /^(0x[0-9a-fA-F]{1,2})?$/.test(value) ? "" : "Use an input code like 0x11"
         if (rule === "mode") return typeof value === "string" && /^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(value) ? "" : "Use a mode like 1920x1080@60"
+        // more shared monitors: each value goes into monswitch.conf, so the same plain checks as the main one
+        if (rule === "sharedMonitors") return value && typeof value.length === "number" && value.length <= 3
+            && Array.from(value).every(m => /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(m?.output ?? "") && /^0x[0-9a-fA-F]{1,2}$/.test(m?.thisInput ?? "")
+                && /^0x[0-9a-fA-F]{1,2}$/.test(m?.otherInput ?? "")) ? "" : "Up to 3 more monitors, each with its two inputs"
         if (rule === "layouts") return value && typeof value.length === "number" && value.length >= 1 && value.length <= 4
             && Array.from(value).every(l => /^[a-z]{2,8}$/.test(l?.code ?? "") && /^[a-z0-9_-]*$/.test(l?.variant ?? "")) ? "" : "One to four keyboard layouts"
         if (rule === "places") return value && typeof value.length === "number" && value.length <= 20

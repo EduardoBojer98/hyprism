@@ -4,7 +4,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
-// Shared Monitor: one monitor used by this computer and another one (a work PC, a console),
+// Shared Monitor: a monitor (or up to four, switched together) used by this computer and another one (a work PC, a console),
 // switched over DDC/CI from the Control Center or the monitor's own buttons. Edits settings.json
 // (monitorShare) on Save; SettingsSync.qml writes ~/.config/monswitch.conf for ~/.local/bin/monswitch
 // (monswitch.conf.off while it's switched off, so the values are kept).
@@ -31,31 +31,37 @@ ColumnLayout {
     property string mirror: ""
     property string mirrorMode: ""
     property string status: ""
-    readonly property string snapshot: JSON.stringify([enabled, out, mine, other, mirror, mirrorMode.trim()])
+    property var more: []         // more monitors switched with it: [{ output, thisInput, otherInput }]
+    readonly property string snapshot: JSON.stringify([enabled, out, mine, other, mirror, mirrorMode.trim(), more])
     property string savedState: snapshot   // page state as last loaded or saved
     readonly property bool dirty: snapshot !== savedState
     property var found: []        // from `monswitch inputs`: [{ output, model, current, inputs: [{ code, name }] }]
     property bool scanned: false
-    readonly property var monitor: found.find(m => m.output === out) ?? null
-    // [code, text] rows for the two input dropdowns: the monitor's own list when it gave one, else the usual codes
-    readonly property var table: monitor && monitor.inputs.length
-        ? monitor.inputs.map(i => [i.code, i.name + (i.code === monitor.current ? " (now)" : "")])
-        : presets.map(p => [p[0], `${p[1]} (${p[0]})`])
+    // [code, text] rows for a monitor's input dropdowns: its own list when it gave one, else the usual codes
+    function tableOf(output) {
+        const m = found.find(x => x.output === output)
+        return m && m.inputs.length ? m.inputs.map(i => [i.code, i.name + (i.code === m.current ? " (now)" : "")])
+                                    : presets.map(p => [p[0], `${p[1]} (${p[0]})`])
+    }
+    readonly property var table: tableOf(out)
     readonly property var outputs: {
         const names = found.length ? found.map(m => m.output) : Hyprland.monitors.values.map(m => m.name).filter(n => Machine.realScreen(n))
         if (out && !names.includes(out)) names.push(out)
         return names
     }
 
-    function label(v) { const p = table.find(x => x[0] === v.toLowerCase()); return p ? p[1] : `Other (${v})` }
-    function options(v) { const l = table.map(p => p[1]); return table.some(p => p[0] === v.toLowerCase()) ? l : l.concat([label(v)]) }
-    function valueOf(option) { return table.find(x => x[1] === option)?.[0] ?? option.match(/\((0x[0-9a-fA-F]+)\)/)?.[1] ?? "" }
+    function label(v, t) { t = t ?? table; const p = t.find(x => x[0] === v.toLowerCase()); return p ? p[1] : `Other (${v})` }
+    function options(v, t) { t = t ?? table; const l = t.map(p => p[1]); return t.some(p => p[0] === v.toLowerCase()) ? l : l.concat([label(v, t)]) }
+    function valueOf(option, t) { return (t ?? table).find(x => x[1] === option)?.[0] ?? option.match(/\((0x[0-9a-fA-F]+)\)/)?.[1] ?? "" }
+    function setMore(i, key, value) { const l = JSON.parse(JSON.stringify(more)); l[i][key] = value; more = l }
 
     function save() {
         if (enabled && (!out || !mine || !other)) { status = "Pick the monitor and both inputs first"; return }
         if (enabled && mine === other) { status = "The two inputs must differ"; return }
+        if (enabled && more.some(m => m.thisInput === m.otherInput)) { status = "Each monitor's two inputs must differ"; return }
+        if (new Set([out].concat(more.map(m => m.output))).size !== more.length + 1) { status = "Pick a different monitor for each row"; return }
         // Config.set checks each value (plain names, input codes, a mode like 1920x1080@60) and says why not
-        const c = { enabled: enabled, output: out, thisInput: mine, otherInput: other, mirror: mirror, mirrorMode: mirrorMode.trim() }
+        const c = { enabled: enabled, output: out, thisInput: mine, otherInput: other, mirror: mirror, mirrorMode: mirrorMode.trim(), more: more }
         for (const k of Object.keys(c)) { const err = Config.set("monitorShare", k, c[k]); if (err) { status = "Couldn't save: " + err; return } }
         status = "Saved"
         savedState = snapshot
@@ -64,7 +70,7 @@ ColumnLayout {
     function load() {
         const c = Config.monitorShare
         enabled = c.enabled; out = c.output || (Hyprland.monitors.values.find(x => !x.name.startsWith("eDP") && Machine.realScreen(x.name))?.name ?? "")
-        mine = c.thisInput; other = c.otherInput; mirror = c.mirror; mirrorMode = c.mirrorMode
+        mine = c.thisInput; other = c.otherInput; mirror = c.mirror; mirrorMode = c.mirrorMode; more = JSON.parse(JSON.stringify(c.more ?? []))
         savedState = snapshot
     }
     Component.onCompleted: load()
@@ -127,6 +133,43 @@ ColumnLayout {
             label: "Mirror mode"
             hint: "Resolution@refresh both computers' screens support"
             TextField { width: 160; text: page.mirrorMode; invalid: !/^(\d{3,5}x\d{3,5}(@\d{2,3}(\.\d+)?)?)?$/.test(text.trim()); onTextChanged: page.mirrorMode = text }
+        }
+    }
+
+    // more monitors on the same two computers: they switch with the one above (it decides which side is showing)
+    SettingGroup {
+        title: "Also switch"
+        opacity: page.enabled ? 1 : 0.5
+        enabled: page.enabled
+        Repeater {
+            model: page.more.length
+            SettingRow {
+                id: extra
+                required property int index
+                readonly property var m: page.more[index]
+                readonly property var t: page.tableOf(m.output)
+                label: m.output || "No other monitor answers DDC/CI"
+                hint: "This computer's input, then the other computer's"
+                RowLayout {
+                    spacing: Theme.spaceS
+                    Dropdown { width: 130; accessibleName: "Monitor"; options: page.outputs.filter(o => o !== page.out); current: extra.m.output; onPicked: v => page.setMore(extra.index, "output", v) }
+                    Dropdown { width: 150; accessibleName: "This computer's input"; options: page.options(extra.m.thisInput, extra.t); current: page.label(extra.m.thisInput, extra.t); onPicked: v => page.setMore(extra.index, "thisInput", page.valueOf(v, extra.t)) }
+                    Dropdown { width: 150; accessibleName: "Other computer's input"; options: page.options(extra.m.otherInput, extra.t); current: page.label(extra.m.otherInput, extra.t); onPicked: v => page.setMore(extra.index, "otherInput", page.valueOf(v, extra.t)) }
+                    PillButton { text: "Remove"; onClicked: page.more = page.more.filter((_, i) => i !== extra.index) }
+                }
+            }
+        }
+        SettingRow {
+            label: page.more.length ? "Another monitor" : "More than one shared monitor"
+            hint: page.more.length >= 3 ? "Up to four monitors in all" : "For a desk where several monitors go to the other computer together"
+            PillButton {
+                text: "Add a monitor"
+                enabled: page.more.length < 3
+                onClicked: {
+                    const free = page.outputs.find(o => o !== page.out && !page.more.some(m => m.output === o)) ?? ""
+                    page.more = page.more.concat([{ output: free, thisInput: page.mine, otherInput: page.other }])
+                }
+            }
         }
     }
 

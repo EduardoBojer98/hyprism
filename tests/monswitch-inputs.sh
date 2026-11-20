@@ -73,7 +73,7 @@ toggle() {
 }
 echo "$own" >"$sw/monitors.json"
 toggle
-check "toggle on its own screen hands it over (PC input, then mirror)" 'grep -q "setvcp 60 0x12" "$sw/ddc.log" && grep -q "SHARED = { output = \"HDMI-A-1\", mirror = \"eDP-1\"" "$sw/hypr.log"'
+check "toggle on its own screen hands it over (PC input, then mirror)" 'grep -q "setvcp 60 0x12" "$sw/ddc.log" && grep -q "SHARED = { { output = \"HDMI-A-1\", mirror = \"eDP-1\"" "$sw/hypr.log"'
 echo "$mirrored" >"$sw/monitors.json"
 toggle
 check "toggle while mirroring takes it back (mirror off, then laptop input)" 'grep -q "SHARED = nil" "$sw/hypr.log" && grep -q "setvcp 60 0x11" "$sw/ddc.log" && [[ ! -e $sw/cfg/hypr/settings/shared.lua ]]'
@@ -114,5 +114,15 @@ echo "$own" >"$sw/monitors.json"
 printf '12\n12\n11\n' >"$sw/reads"
 toggle
 check "back to this computer a moment after the hand-off: the mirror ends again" 'grep -q "SHARED = {" "$sw/hypr.log" && grep -q "SHARED = nil" "$sw/hypr.log" && [[ ! -e $sw/cfg/hypr/settings/shared.lua ]]'
+
+# two shared monitors: both switch, both are handed over, both come back
+printf 'OUT=HDMI-A-1\nLAPTOP=0x11\nPC=0x12\nMIRROR=eDP-1\nOUT2=DP-1\nLAPTOP2=0x0f\nPC2=0x10\n' >"$sw/cfg/monswitch.conf"
+echo "$own" >"$sw/monitors.json"
+printf '12\n12\n12\n12\n12\n12\n12\n12\n12\n' >"$sw/reads"
+toggle
+check "two monitors: both go to the other computer" 'grep -q "setvcp 60 0x12" "$sw/ddc.log" && grep -q "setvcp 60 0x10" "$sw/ddc.log"'
+check "two monitors: both are handed over" 'grep -q "{ output = \"HDMI-A-1\", mirror = \"eDP-1\".*{ output = \"DP-1\", mirror = \"eDP-1\"" "$sw/hypr.log"'
+toggle
+check "two monitors: both come back" 'grep -q "setvcp 60 0x11" "$sw/ddc.log" && grep -q "setvcp 60 0x0f" "$sw/ddc.log" && grep -q "SHARED = nil" "$sw/hypr.log"'
 
 exit $fail

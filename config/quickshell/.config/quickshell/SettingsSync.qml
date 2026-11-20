@@ -57,6 +57,7 @@ Scope {
             + `OUT=${s.output}\nLAPTOP=${s.thisInput}\nPC=${s.otherInput}\n`
             + (s.mirror ? `MIRROR=${s.mirror}\n` : "")           // left out = monswitch uses this computer's own screen
             + (s.mirrorMode ? `MIRROR_MODE=${s.mirrorMode}\n` : "")
+            + Array.from(s.more ?? []).map((m, i) => `OUT${i + 2}=${m.output}\nLAPTOP${i + 2}=${m.thisInput}\nPC${i + 2}=${m.otherInput}\n`).join("")
     }
 
     // whole minutes (hypridle wants whole seconds), and a set time never rounds down to "off"
