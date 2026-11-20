@@ -1,0 +1,141 @@
+#!/usr/bin/env python3
+# The terminal greeting (Settings > Appearance > Terminal > Greeting), fitted to the window it opens in: the biggest
+# layout that fits wins, so a split pane, a phone-sized window or a dropdown terminal all get a whole card.
+#   greeting-card fastfetch [FASTFETCH ARGS]   the card with the distro logo; the card alone; the card cut at the
+#                                              edge; one line
+#   greeting-card pokemon [FASTFETCH ARGS]     the same with a random Pokémon as the logo, a smaller one when the
+#                                              big box doesn't fit
+#   greeting-card bonsai                       a tree sized to the window with a fortune under it; the fortune alone
+# FASTFETCH ARGS are passed on (the theme's card: -c ~/.config/fastfetch/brackets.jsonc). Prints nothing when even
+# one line doesn't fit.
+import os, re, shutil, subprocess, sys, unicodedata
+
+if sys.argv[1:2] in (["--help"], ["-h"], []):
+    with open(__file__, encoding="utf-8") as f:
+        print("".join(l[2:] for l in f.readlines()[1:10]), end="")
+    sys.exit(0)
+
+KIND, FF = sys.argv[1], sys.argv[2:]
+COLS, LINES = shutil.get_terminal_size((80, 24))
+ROOM = LINES - 3   # the prompt (two rows with a rail) and a blank row under the greeting
+ESC = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+SWATCH = set("█▀▄●○◆◇■□ ")                                 # the colours row at the card's foot
+HEAD = re.compile(r"\b(hardware|usage)\b", re.I)          # a section's first row, in every card preset
+
+
+def width(s):
+    s = ESC.sub("", s)
+    return sum(0 if unicodedata.combining(c) else 2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
+
+
+def cut(line, n):
+    # the first n cells of a line; escape codes are kept, colours reset at the end
+    out, seen, i = [], 0, 0
+    while i < len(line):
+        m = ESC.match(line, i)
+        if m:
+            out.append(m.group()); i = m.end(); continue
+        w = width(line[i])
+        if seen + w > n:
+            break
+        out.append(line[i]); seen += w; i += 1
+    return "".join(out) + "\x1b[0m"
+
+
+def fits(text):
+    rows = text.rstrip("\n").split("\n")
+    return len(rows) <= ROOM and max((width(r) for r in rows), default=0) < COLS
+
+
+def parent_shell():
+    # fastfetch names its parent process as the shell, which is this script; fish passes its version along
+    try:
+        with open(f"/proc/{os.getppid()}/comm", encoding="utf-8") as f:
+            name = f.read().strip()
+    except OSError:
+        return ""
+    return f"{name} {os.environ.get('HYPRISM_SHELL_VERSION', '')}".strip()
+
+
+SHELL = parent_shell()
+
+
+def fastfetch(*logo):
+    if not shutil.which("fastfetch"):
+        return ""
+    try:
+        out = subprocess.run(["fastfetch", *FF, *logo, "--pipe", "false"], capture_output=True, text=True,
+                             errors="replace", timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return out.replace(os.path.basename(sys.argv[0]), SHELL) if SHELL else out
+
+
+def run(cmd):
+    if not shutil.which(cmd[0]):
+        return ""
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=5).stdout
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def one_line():
+    try:
+        with open("/etc/os-release", encoding="utf-8") as f:
+            name = dict(l.rstrip("\n").split("=", 1) for l in f if "=" in l).get("NAME", "").strip('"')
+        with open("/proc/uptime", encoding="utf-8") as f:
+            up = int(float(f.read().split()[0]))
+    except (OSError, ValueError):
+        name, up = "", 0
+    d, h, m = up // 86400, up // 3600 % 24, up // 60 % 60
+    parts = [f"\x1b[1m{os.environ.get('USER', '')}\x1b[0m@{os.uname().nodename}", name, os.uname().release,
+             (f"{d}d " if d else "") + f"{h}h {m}m"]
+    return cut("\x1b[90m · \x1b[0m".join(p for p in parts if p), COLS - 1)
+
+
+def card():
+    # the biggest layout that fits, in order; fastfetch takes ~20 ms a try
+    tries = []
+    if KIND == "pokemon":
+        tries.append(lambda: (lambda p: fastfetch("--logo-type", "data-raw", "--logo", p) if p.strip() else "")(run(["pokemon-card"])))
+        alone = fastfetch("--logo", "none")
+        room = COLS - 1 - max((width(r) for r in alone.split("\n")), default=0) - 5   # the logo's padding
+        if room >= 16 and ROOM >= 10:   # a smaller Pokémon: pokemon-card picks one that fits the box, or none
+            tries.append(lambda: (lambda p: fastfetch("--logo-type", "data-raw", "--logo", p) if p.strip() else "")(
+                run(["pokemon-card", str(min(room, 40)), str(min(ROOM, 20))])))
+        tries.append(lambda: alone)
+    else:
+        tries += [lambda: fastfetch(), lambda: fastfetch("--logo", "none")]
+    for t in tries:
+        text = t()
+        if text and fits(text):
+            return text
+    # the card alone, shorter: it sheds parts from the bottom (the colour swatches, then usage, then hardware),
+    # its closing line kept; a card wider than the window is cut at the edge
+    rows = (alone if KIND == "pokemon" else fastfetch("--logo", "none")).rstrip("\n").split("\n")
+    plain = [ESC.sub("", r).strip() for r in rows]
+    end = len(rows)
+    while end > 1 and (not plain[end - 1] or set(plain[end - 1]) <= SWATCH):
+        end -= 1
+    heads = [i for i in range(end) if HEAD.search(plain[i])]
+    for keep in [len(rows), end] + [h for h in reversed(heads)]:
+        short = rows[:keep] if keep >= end else rows[:keep] + [rows[end - 1]]
+        if len(short) <= ROOM and COLS >= 40 and any(plain):
+            return "\n".join(r if width(r) < COLS else cut(r, COLS - 2) + "\x1b[90m…\x1b[0m" for r in short) + "\n"
+    return one_line() + "\n" if COLS >= 20 and LINES >= 4 else ""
+
+
+def bonsai():
+    # a tree as big as the window allows with its fortune under it; smaller trees until both fit, else nothing
+    w = min(64, COLS - 4)
+    for h in (18, 14, 10, 7, 0):
+        if w < 12 or ROOM < 2:
+            break
+        text = run(["bonsai-card", str(w), str(min(h, ROOM))])
+        if text and fits(text):
+            return text
+    return ""
+
+
+sys.stdout.write(bonsai() if KIND == "bonsai" else card())

@@ -6,6 +6,12 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- The terminal greeting fits any window (scripts/greeting-card): the picture beside the card when there's room, a
+  smaller Pokémon, the card alone, the card shedding its swatches, usage and hardware rows from the bottom, long
+  lines cut with `…`, then one line; a bonsai grows to the window. Checked from 200x60 down to 15x3.
+- Control Center power mode: Silent, Balanced and Performance side by side with their speedometer, one click picks
+  (soft tiles in Pebble, caps blocks on a hard shadow in Poster, `[󰾆 silent] 󰾅 balanced [󰓅 perf]` in Monolith).
+- Monolith's Control Center rows show their icon: `[x] 󰖩 wi-fi`.
 - A launcher structure per theme (theme.json `launcher.layout`): Pebble's `grid` (a big search pill, a Recent row,
   icons on squircle plates, a selection that springs in), Poster's `sheet` (the query as a display header, big rows
   with a letter index and a category tag, an inverse selection on a hard shadow) and Monolith's `prompt` (numbered

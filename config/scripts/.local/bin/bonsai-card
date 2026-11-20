@@ -3,7 +3,7 @@
 # tree, then a short fortune sits under it. cbonsai's print mode clears the screen and dumps every row of it, so this
 # runs it at a fixed size, keeps only its final dump, and drops the blank rows and margins.
 #   bonsai-card                  a tree in up to 64x18, a fortune under it when fortune is installed
-#   bonsai-card WIDTH HEIGHT     another size
+#   bonsai-card WIDTH HEIGHT     another size (under 20x6 only the fortune, wrapped to WIDTH)
 # Prints only the fortune without cbonsai, and nothing without either.
 import os, random, re, shutil, subprocess, sys, textwrap
 
@@ -18,7 +18,7 @@ OTHER = re.compile(r"\x1b\[[0-9;?]*[A-Za-ln-z]|\x1b[()][0-9A-Z]|\x1b[=>]|\x1b\][
 
 
 def tree():
-    if not shutil.which("cbonsai"):
+    if not shutil.which("cbonsai") or W < 20 or H < 6:   # too small for a tree: the fortune alone
         return []
     env = dict(os.environ, LINES=str(H + 2), COLUMNS=str(W), TERM="xterm-256color")
     try:
@@ -59,7 +59,7 @@ def fortune(width):
     except (OSError, subprocess.SubprocessError):
         return []
     text = " ".join(text.split())
-    return ["  \x1b[3;90m" + l + "\x1b[0m" for l in textwrap.wrap(text, max(width, 40))] if text else []
+    return ["  \x1b[3;90m" + l + "\x1b[0m" for l in textwrap.wrap(text, min(max(width, 40), W - 2))] if text else []
 
 
 rows = tree()
