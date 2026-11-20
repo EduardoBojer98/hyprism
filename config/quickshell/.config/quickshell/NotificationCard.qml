@@ -20,7 +20,10 @@ Glass {
     property var notification              // a live Notification, or a saved record (Notifications.qml)
     property bool banner: false
     property int stacked: 0                // more notifications folded behind this one
-    readonly property bool hovered: area.containsMouse || closeArea.containsMouse
+    readonly property bool hovered: area.containsMouse || closeArea.containsMouse || replying   // a banner waits while you type
+    property bool replying: false
+    // the app takes a typed reply (a chat app): a field under the text, Enter sends it
+    readonly property bool canReply: !!notification?.hasInlineReply && (banner || stacked === 0)
     readonly property bool critical: notification?.urgency === NotificationUrgency.Critical
     readonly property var buttons: (notification?.actions ?? []).filter(a => a.identifier !== "default" && a.text !== "")
     property string kindOverride: ""       // Settings' style picker draws every kind
@@ -189,6 +192,14 @@ Glass {
                     PillButton { required property var modelData; text: modelData.text; onClicked: modelData.invoke() }
                 }
             }
+            TextField {   // the reply
+                visible: card.canReply
+                Layout.topMargin: Theme.spaceXs
+                placeholder: card.notification?.inlineReplyPlaceholder || "Write a reply"
+                onTextChanged: card.replying = text !== ""
+                onAccepted: if (text.trim() !== "") { card.notification.sendInlineReply(text); text = "" }
+                Layout.fillWidth: true
+            }
         }
     }
 
@@ -262,6 +273,14 @@ Glass {
             }
             LogAction { visible: card.stacked > 0; word: "+" + card.stacked + " more"; onClicked: card.banner ? card.open() : card.expandRequested() }
             LogAction { visible: card.banner || card.stacked === 0; word: "dismiss"; onClicked: card.notification?.dismiss() }
+        }
+        TextField {   // the reply
+            visible: card.canReply
+            Layout.topMargin: Theme.spaceXs
+            placeholder: card.notification?.inlineReplyPlaceholder || "Write a reply"
+            onTextChanged: card.replying = text !== ""
+            onAccepted: if (text.trim() !== "") { card.notification.sendInlineReply(text); text = "" }
+            Layout.fillWidth: true
         }
     }
 

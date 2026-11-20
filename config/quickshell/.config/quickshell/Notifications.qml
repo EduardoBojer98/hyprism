@@ -87,11 +87,27 @@ Singleton {
     function muted(n) { return Config.notifications.mutedApps.includes(n.appName || "Other") }
 
     function hidePopup(n) { popups = popups.filter(x => x !== n) }
-    // Click: the app's default action if it has one (that also closes it), otherwise just close it
+    // Click: the app's default action if it has one (invoke() closes it unless it is resident), and its window to
+    // the front; without one, its window or else the app started, and the notification closed
     function activate(n) {
-        const action = n.actions.find(a => a.identifier === "default")
+        const action = (n.actions ?? []).find(a => a.identifier === "default")
+        focusApp(n, !action)
         if (action) action.invoke()
-        if (!action || n.resident) n.dismiss()
+        else n.dismiss()
+    }
+    // the sender's app: its desktop entry, else the app name looked up among the installed apps
+    function entryOf(n) {
+        if (!DesktopEntries.applications.values.length) return null
+        return (n.desktopEntry ? DesktopEntries.byId(n.desktopEntry) : null) ?? (n.appName ? DesktopEntries.heuristicLookup(n.appName) : null)
+    }
+    function focusApp(n, launch) {
+        const e = entryOf(n)
+        const ids = [n.desktopEntry, n.appName, e?.id, e?.startupClass].filter(s => s).map(s => String(s).toLowerCase())
+        const wins = Hyprland.toplevels.values.filter(t => t.wayland)
+        const t = wins.find(t => ids.includes(t.wayland.appId.toLowerCase()))
+               ?? (e ? wins.find(t => DesktopEntries.heuristicLookup(t.wayland.appId)?.id === e.id) : null)
+        if (t) Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.focus({ window = "address:0x${String(t.address).replace(/^0x/, "")}" })`])
+        else if (launch && e) e.execute()
     }
     function clearApp(app) { for (const n of history.filter(x => (x.appName || "Other") === app)) n.dismiss() }
     function clearAll() { for (const n of history.slice()) n.dismiss() }
@@ -160,6 +176,7 @@ Singleton {
         actionsSupported: true
         bodyMarkupSupported: true
         imageSupported: true
+        inlineReplySupported: true
         persistenceSupported: true
         keepOnReload: true
         onNotification: n => {
@@ -259,6 +276,8 @@ Singleton {
         visible: (root.popups.length > 0 || list.count > 0) && !ControlCenter.open && !NotificationCenter.open
         WlrLayershell.namespace: "qs-notifications"
         WlrLayershell.layer: WlrLayer.Overlay
+        // typing a reply needs the keyboard; only then, so a banner never takes it otherwise
+        WlrLayershell.keyboardFocus: root.shown.some(n => n?.hasInlineReply) ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
 
         ListView {
             id: list
