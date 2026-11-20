@@ -15,8 +15,8 @@ ColumnLayout {
     readonly property var styles: ({
         card: { name: "Card", about: "Icon, app and time, title and text" },
         bubble: { name: "Bubble", about: "Round, a lifted tone, no edge" },
-        line: { name: "Line", about: "No frame; an accent line down the side" },
-        block: { name: "Block", about: "A thick accent frame" },
+        line: { name: "Line", about: "A log line in mono; it types in" },
+        block: { name: "Block", about: "An accent bar, a bold title, a hard shadow" },
         tag: { name: "Tag", about: "The app's name on an accent tag" },
         compact: { name: "Compact", about: "One slim row: the title and a line of text" }
     })

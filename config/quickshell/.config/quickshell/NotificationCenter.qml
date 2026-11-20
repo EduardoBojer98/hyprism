@@ -118,8 +118,9 @@ Singleton {
                         required property var modelData
                         readonly property bool unfolded: modelData.items.length === 1 || root.unfolded[modelData.app] === true
                         Layout.fillWidth: true
-                        Layout.bottomMargin: unfolded ? 0 : 12        // room for the folded stack
-                        spacing: 6
+                        // room for the folded stack (lines say "+n more" instead); lines sit close, like a log
+                        Layout.bottomMargin: unfolded || Notifications.kind === "line" ? 0 : 12
+                        spacing: Notifications.kind === "line" ? 0 : 6
 
                         RowLayout {
                             visible: group.modelData.items.length > 1 && group.unfolded
