@@ -26,10 +26,10 @@ Item {
     Accessible.description: options[current]?.name ?? ""
     Accessible.focusable: true
 
-    Row {
+    Item {   // equal tiles side by side; the hud's words keep their own width, spread edge to edge with equal gaps
         id: row
         anchors.fill: parent
-        spacing: modes.hud ? Theme.spaceS : Theme.spaceXs + (modes.bento ? 2 : 0)
+        readonly property real spacing: Theme.spaceXs + (modes.bento ? 2 : 0)
         Repeater {
             model: modes.options
             Rectangle {
@@ -39,8 +39,11 @@ Item {
                 readonly property bool on: modes.current === index
                 readonly property color ink: modes.hud ? (on ? Theme.accentText : optArea.containsMouse ? Theme.text : Theme.subtext)
                                                        : on ? Theme.ccOnText : optArea.containsMouse ? Theme.text : Theme.subtext
-                width: modes.hud ? hudText.implicitWidth + Theme.spaceS * 2
-                                 : (row.width - row.spacing * (modes.options.length - 1)) / Math.max(1, modes.options.length)
+                readonly property int count: Math.max(1, modes.options.length)
+                width: modes.hud ? Math.min(hudText.implicitWidth + Theme.spaceS * 2, row.width / count)
+                                 : (row.width - row.spacing * (count - 1)) / count
+                x: modes.hud ? (count === 1 ? 0 : index * (row.width - width) / (count - 1))
+                             : index * (width + row.spacing)
                 height: modes.hud ? Math.round(Theme.fontLabel * 1.7) : row.height
                 anchors.verticalCenter: parent.verticalCenter
                 radius: modes.hud || modes.bento ? Theme.radiusSmall : ControlCenter.cards ? Theme.radiusLarge : Theme.radius
@@ -80,6 +83,8 @@ Item {
                     id: hudText
                     visible: modes.hud
                     anchors.centerIn: parent
+                    width: Math.min(implicitWidth, parent.width)
+                    elide: Text.ElideRight
                     textFormat: Text.PlainText
                     text: (opt.on ? " " : "[") + opt.modelData.glyph + " " + opt.modelData.name.toLowerCase() + (opt.on ? " " : "]")
                     color: opt.ink
