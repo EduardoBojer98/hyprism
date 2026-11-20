@@ -6,6 +6,11 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Notifications built three ways (theme.json `notify.kind`), banners and the notification centre alike: Pebble's
+  soft `card`s with the icon in a soft circle and a folded group peeking out as two card edges; Poster's `block`s with
+  a thick accent bar, a display-font title and a hard shadow, sliding in from the left with a small overshoot, red
+  when urgent; Monolith's log `line`s (`23:19 [app] title — body`, newest on top, actions as `[open] [dismiss]`)
+  that type in. Reduced motion keeps a plain fade and shows a line whole.
 - A signature feel per theme (theme.json `feel`), full motion only: Poster's buttons push into their hard
   shadow, Pebble's sink and spring back and its panels land with a small overshoot, Monolith's focus is a reticle that
   closes in and its popup brackets draw in from the corners.
