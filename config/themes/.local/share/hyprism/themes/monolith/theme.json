@@ -58,9 +58,9 @@
       "accent": "#10141a",
       "onAccent": "#b6ff3b",
       "accent2": "#1f5fbf",
-      "ok": "#0b7569",
-      "warn": "#9a5a00",
-      "err": "#c42b2b"
+      "ok": "#0a6e63",
+      "warn": "#905400",
+      "err": "#ba2929"
     },
     "hypr": {
       "active": [

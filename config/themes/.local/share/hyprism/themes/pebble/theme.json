@@ -10,7 +10,7 @@
     "line": "#3d433f",
     "text": "#e9ece6",
     "muted": "#b0b7b0",
-    "faint": "#7f8780",
+    "faint": "#939a94",
     "accent": "#b9cf8f",
     "onAccent": "#171918",
     "accent2": "#8fa8a3",
@@ -54,13 +54,13 @@
       "line": "#c3c8c1",
       "text": "#1b1e1c",
       "muted": "#4b524d",
-      "faint": "#6b726c",
-      "accent": "#4d6a35",
+      "faint": "#5c625d",
+      "accent": "#4c6834",
       "onAccent": "#ffffff",
-      "accent2": "#4d6f6b",
-      "ok": "#2d7a45",
-      "warn": "#8a6100",
-      "err": "#b23a32"
+      "accent2": "#476662",
+      "ok": "#286d3e",
+      "warn": "#7d5800",
+      "err": "#ac3830"
     },
     "hypr": {
       "active": [

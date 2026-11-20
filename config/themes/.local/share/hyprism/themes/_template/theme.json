@@ -16,7 +16,7 @@
       "selectionText": "#181a0e"
     },
     "wall": "pebble-light",
-    "colour": {"ground": "#f5f6ea", "surface": "#fdfdf7", "raised": "#eaecda", "line": "#cfd2b4", "text": "#181a0e", "muted": "#4f5238", "faint": "#767a5c", "accent": "#b14800", "onAccent": "#ffffff", "accent2": "#5f6e00", "ok": "#16794a", "warn": "#975b00", "err": "#c22745"},
+    "colour": {"ground": "#f5f6ea", "surface": "#fdfdf7", "raised": "#eaecda", "line": "#cfd2b4", "text": "#181a0e", "muted": "#4f5238", "faint": "#686b51", "accent": "#b14800", "onAccent": "#ffffff", "accent2": "#5f6e00", "ok": "#16794a", "warn": "#975b00", "err": "#c22745"},
     "hypr": {"active": ["b14800ff", "5f6e00ff"], "inactive": "d9dbc6ff"}
   },
   "font": {"ui": "Archivo", "display": "Martian Mono", "mono": "JetBrainsMono Nerd Font", "size": 13, "displayWeight": 500},

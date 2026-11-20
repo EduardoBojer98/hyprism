@@ -84,8 +84,8 @@ Singleton {
     readonly property string iconFont: "JetBrainsMono Nerd Font"
     readonly property real fontScale: a.fontScale
     readonly property int body: current.font.size
-    readonly property int fontCaption: Math.max(11, Math.round((body - 2) * fontScale))   // floors: small copy stays readable
-    readonly property int fontLabel: Math.max(12, Math.round((body - 1) * fontScale))
+    readonly property int fontCaption: Math.max(12, Math.round((body - 2) * fontScale))   // floors: small copy stays readable
+    readonly property int fontLabel: Math.max(13, Math.round((body - 1) * fontScale))
     readonly property int fontSize: Math.round(body * fontScale)
     readonly property int fontTitle: Math.round((body + 2) * fontScale)
     readonly property int fontHeading: Math.round((body + 7) * fontScale)

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Checks every shipped theme folder (themes/<id>/theme.json), both halves:
 
-  - all the colours are there, and text is readable (WCAG): body text 7:1, secondary 4.5:1, captions 3:1
+  - all the colours are there, and text is readable (WCAG): body text 7:1, secondary and captions 4.5:1
     against the panel and the desktop; text on the accent 4.5:1
-  - things you must be able to see but not read (WCAG 3:1 for interface parts): the accent, the second accent
-    and the ok / warn / error colours against the panel
+  - the accent, the second accent and the ok / warn / error colours: 4.5:1 on the panel and its raised tone,
+    since the shell sets them as small text too
   - the bar's text against the bar's own fill
   - the terminal palette is complete; its text is 7:1 on its background and the six colours 3:1
   - the wallpaper exists (a picture in the folder, or a recipe in wallpaper.sh)
@@ -25,8 +25,8 @@ CONFIG = ROOT / "config/quickshell/.config/quickshell/ConfigData.qml"
 THEMES_QML = ROOT / "config/quickshell/.config/quickshell/Themes.qml"
 
 KEYS = ["ground", "surface", "raised", "line", "text", "muted", "faint", "accent", "onAccent", "accent2", "ok", "warn", "err"]
-TEXT = {"text": 7.0, "muted": 4.5, "faint": 3.0}      # must be readable
-SEEN = ["accent", "accent2", "ok", "warn", "err"]       # must be visible (3:1)
+TEXT = {"text": 7.0, "muted": 4.5, "faint": 4.5}      # must be readable (faint is the small hint text)
+SEEN = ["accent", "accent2", "ok", "warn", "err"]       # small text too (app tags, headers, status): 4.5:1 on both panel tones
 TERM_KEYS = ["background", "foreground", "cursor", "cursorText", "selection", "selectionText"]
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 
@@ -76,9 +76,10 @@ def check_half(name, c, term, wall, folder, bar_fill, problems):
     if r < 4.5:
         problems.append(f"{name}: text on the accent is {r:.2f}:1 (needs 4.5)")
     for key in SEEN:
-        r = contrast(c[key], c["surface"])
-        if r < 3:
-            problems.append(f"{name}: {key} on surface is {r:.2f}:1 (needs 3 to be seen)")
+        for bg in ("surface", "raised"):
+            r = contrast(c[key], c[bg])
+            if r < 4.5:
+                problems.append(f"{name}: {key} on {bg} is {r:.2f}:1 (needs 4.5, it is also text)")
     ink, ground = bar_pair(c, bar_fill)
     r = contrast(ink, ground)
     if r < 4.5:

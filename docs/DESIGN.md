@@ -45,7 +45,7 @@ Pebble, atlas to Poster, console and reactor to Monolith) and migration 0006 rem
 
 | | Pebble: calm | Poster: loud | Monolith: terminal |
 |---|---|---|---|
-| Ground / text / accent | `#171918` / `#e9ece6` / `#b9cf8f` (+ `#8fa8a3`) | `#141414` / ink `#141414` on paper `#f4f1ea` / `#ff3b1f` (+ `#2d5bff`) | `#07080b` / `#e3e8ef` / `#b6ff3b` (+ electric blue `#4f8cff`) |
+| Ground / text / accent | `#171918` / `#e9ece6` / `#b9cf8f` (+ `#8fa8a3`) | `#141414` / ink `#141414` on paper `#f4f1ea` / `#c71900` (+ `#1b4dff`; the dark half keeps the bright `#ff573d`) | `#07080b` / `#eef2f6` / `#b6ff3b` (+ electric blue `#4f8cff`) |
 | Type | Archivo, light numerals (weight 300), 14 px | Archivo Black + Archivo, 14 px | JetBrains Mono, Martian Mono numerals (700), 13 px |
 | Shape · depth | r14, 1 px lines, solid · soft shadow | r0, 3 px lines · hard offset block | r0, 1 px lines · faint accent glow; blue corner brackets on panels |
 | Density | roomy | regular | regular |
@@ -55,8 +55,10 @@ Pebble, atlas to Poster, console and reactor to Monolith) and migration 0006 rem
 | Windows | gaps 8/16, 2 px, r14, soft shadow, ease | gaps 8/16, 3 px, r0, hard shadow, slam | gaps 4/8, 2 px, r0, no shadow, snappy |
 | Window frame | accent | accent | gradient (lime to electric blue) |
 
-Contrast (WCAG 2): body text on surfaces 13.2:1 or more; secondary text 5.9:1 or more; text on an accent
-fill is forced to 4.5:1 or more by `Themes.resolve`.
+Contrast (WCAG 2): body text on surfaces 11:1 or more; secondary text 5.8:1 or more; hint text and the accent,
+second accent and status colours 4.5:1 or more on both panel tones, since the shell also sets them as small text
+(`tests/themes.py`); text on an accent fill is forced to 4.5:1 or more by `Themes.resolve`. Captions are at least
+12 px and labels 13 px, before Appearance > Text size.
 
 ## Rules
 
