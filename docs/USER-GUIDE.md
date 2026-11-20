@@ -167,7 +167,7 @@ change a choice or a slider, Page Up and Page Down scroll the page.
 | **Notifications** | Notifications, Focus |
 | **Windows & Workspaces** | Window Behaviour, Window Look, Workspaces, Mission Control, Hot Corners, App Rules |
 | **Displays** | Displays, Shared Monitor |
-| **Keyboard & Mouse** | Keyboard & Touchpad, Keyboard Shortcuts |
+| **Keyboard & Mouse** | Keyboard, Mouse & Touchpad, Keyboard Shortcuts |
 | **Sound** | Sound |
 | **Network & Bluetooth** | Wi-Fi & Network, Bluetooth, Phone |
 | **Power** | Battery & Power, ASUS Hardware (only with `asusctl`) |
@@ -187,7 +187,7 @@ live), so those are outputs: edit Settings or `settings.json`, not them.
 | File written from `settings.json` | For | Settings page |
 |---|---|---|
 | `~/.config/hypr/settings/hypridle.conf` | hypridle: dim, lock, screens off, sleep | Power → Lock & Sleep |
-| `~/.config/hypr/settings/input.lua` | Hyprland: keyboard layouts, repeat, touchpad, pointer | Input → Keyboard & Touchpad |
+| `~/.config/hypr/settings/input.lua` | Hyprland: keyboard layouts, repeat, touchpad, pointer | Keyboard & Mouse |
 | `~/.config/hypr/settings/displays.lua` | Hyprland: screen arrangement, modes, scale, rotation | Displays → Screens |
 | `~/.config/monswitch.conf` (`.off` while off) | `monswitch`: a monitor shared with another computer | Displays → Shared Monitor |
 | `~/.config/hypr/settings/keybinds.lua`, `windows.lua` | Hyprland: your shortcut changes, window behaviour | Input → Keyboard Shortcuts, Windows |

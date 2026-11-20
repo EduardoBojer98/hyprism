@@ -39,11 +39,16 @@ Scope {
         return SettingsApp.lua({
             kb_layout: list.map(l => l.code).join(","),
             kb_variant: many || list[0]?.variant ? list.map(l => l.variant ?? "").join(",") : "",
-            kb_options: many ? shortcuts[i.shortcut] ?? "" : "",
+            // the layout switch key, then what Caps Lock does (unless Caps Lock is that switch)
+            kb_options: [many ? shortcuts[i.shortcut] ?? "" : "",
+                         many && i.shortcut === 2 ? "" : ({ escape: "caps:escape", ctrl: "ctrl:nocaps", off: "caps:none" })[i.capsLock] ?? ""]
+                        .filter(o => o).join(","),
             repeat_rate: i.repeatRate, repeat_delay: i.repeatDelay, sensitivity: i.sensitivity,
             natural_scroll: i.naturalScroll, tap_to_click: i.tapToClick,
             disable_while_typing: i.disableWhileTyping, clickfinger: i.clickMethod === "clickfinger",
             scroll_factor: i.scrollFactor, middle_emulation: i.middleEmulation, drag_lock: i.dragLock,
+            mouse_natural_scroll: i.mouseNaturalScroll, mouse_scroll_factor: i.mouseScrollFactor, accel_profile: i.accelProfile,
+            left_handed: i.leftHanded, numlock: i.numlock,
         })
     }
     // the layout, plus the Advanced options under "_options" (monitors.lua skips names that start with _)
@@ -83,7 +88,7 @@ Scope {
     }
     function writeInput() {
         if (!Config.input.imported) return
-        const body = "-- Written by Quickshell from Settings > Keyboard & Touchpad (settings.json input).\nreturn " + inputLua
+        const body = "-- Written by Quickshell from Settings > Keyboard and Mouse & Touchpad (settings.json input).\nreturn " + inputLua
         put("hypr/settings/input.lua", body, ["hyprctl", "eval", "INPUT = " + inputLua.replace(/\n/g, " ") + "; apply_input()"])
     }
     function writeDisplays() {

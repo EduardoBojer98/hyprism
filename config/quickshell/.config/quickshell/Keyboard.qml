@@ -5,7 +5,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 
-// Keyboard layouts: the ones set in Settings > Keyboard & Touchpad (Hyprland's kb_layout /
+// Keyboard layouts: the ones set in Settings > Keyboard (Hyprland's kb_layout /
 // kb_variant), the active one, and the bar's dropdown to switch between them.
 //   Keyboard.short ("US") · Keyboard.layouts · Keyboard.use(i) · `qs ipc call keyboard toggle`
 //   Keyboard.catalog: every layout and variant xkb knows, for Settings to add from

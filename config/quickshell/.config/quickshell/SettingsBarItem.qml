@@ -37,7 +37,7 @@ SettingGroup {
     readonly property var metric: Metrics.registry[({ cpu: "cpu", gpu: "gpu", memory: "ram" })[kind] ?? ""] ?? null
     // where the rest of an item's options live
     readonly property var elsewhere: ({ apps: ["Dock", "dock"], workspaces: ["Workspaces", "workspaces"], weather: ["Weather", "weather"],
-                                        notifications: ["Notifications", "notifications"], keyboard: ["Keyboard & Touchpad", "input"] })
+                                        notifications: ["Notifications", "notifications"], keyboard: ["Keyboard", "input"] })
 
     // empty / undefined removes the key (the item's default applies again); an empty entry goes away too
     function put(key, value) {

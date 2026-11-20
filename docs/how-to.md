@@ -89,11 +89,11 @@ press new ones. File: `keybinds.overrides.<id>` = `{ "keys": "SUPER + K" }`; `"k
 is the first word of each `add(...)` line in `config/hypr/.config/hypr/modules/binds.lua`. Mouse and hardware-switch
 binds are fixed.
 
-**A keyboard layout and the switch key.** Settings → Input → Keyboard & Touchpad → Keyboard layouts, Switch layouts
+**A keyboard layout and the switch key.** Settings → Keyboard & Mouse → Keyboard → Keyboard layouts, Switch layouts
 with. File: `input.layouts` = `[{ "code": "us", "variant": "" }, { "code": "de", "variant": "" }]` (up to 4),
 `input.shortcut` = 0 Alt+Shift, 1 Ctrl+Shift, 2 Caps Lock, 3 none. `Super+Ctrl+Space` always works.
 
-**Touchpad options.** Settings → Input → Keyboard & Touchpad → Touchpad. File: `input.naturalScroll`,
+**Touchpad options.** Settings → Keyboard & Mouse → Mouse & Touchpad → Touchpad. File: `input.naturalScroll`,
 `input.tapToClick`, `input.disableWhileTyping`, `input.clickMethod` (`"clickfinger"` or `"buttonareas"`),
 `input.scrollFactor`, `input.middleEmulation`, `input.dragLock`, `input.sensitivity`.
 

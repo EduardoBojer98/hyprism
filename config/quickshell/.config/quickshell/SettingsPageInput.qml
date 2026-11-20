@@ -3,8 +3,8 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Keyboard & Touchpad: keyboard layouts (any xkb layout or variant, up to 4, the first is the
-// default), the layout shortcut, key repeat, touchpad and pointer.
+// Keyboard: keyboard layouts (any xkb layout or variant, up to 4, the first is the
+// default), the layout shortcut, key repeat, Caps Lock and Num Lock. Mouse & Touchpad: SettingsPageMouse.qml.
 // Saved in settings.json (input); SettingsSync.qml writes hypr/settings/input.lua and applies it live.
 ColumnLayout {
     id: page
@@ -159,84 +159,22 @@ ColumnLayout {
                 onMoved: v => page.set("repeat_rate", Math.round(10 + v * 50))
             }
         }
-    }
-
-    SettingGroup {
-        title: "Touchpad & mouse"
         SettingRow {
-            label: "Natural scrolling"
-            hint: "Content follows your fingers, like a phone"
-            Toggle { checked: page.s.natural_scroll; onToggled: v => page.set("natural_scroll", v) }
+            label: "Caps Lock key"
+            hint: page.s.list.length > 1 && page.s.shortcut === 2 ? "Switches layouts now (Switch layouts with, above)"
+                : "What the key does on every keyboard"
+            enabled: !(page.s.list.length > 1 && page.s.shortcut === 2)
+            ConfigChoice { section: "input"; key: "capsLock"; values: ["caps", "escape", "ctrl", "off"]; labels: ["Caps Lock", "Escape", "Ctrl", "Nothing"] }
         }
         SettingRow {
-            label: "Tap to click"
-            Toggle { checked: page.s.tap_to_click; onToggled: v => page.set("tap_to_click", v) }
-        }
-        SettingRow {
-            label: "Pointer speed"
-            hint: page.s.sensitivity === 0 ? "Default" : (page.s.sensitivity > 0 ? "Faster: +" : "Slower: ") + Math.round(page.s.sensitivity * 100) + "%"
-            Slider {
-                width: 220
-                value: (page.s.sensitivity + 1) / 2
-                onMoved: v => page.set("sensitivity", Math.round((v * 2 - 1) * 100) / 100)
-            }
+            label: "Num Lock on at login"
+            ConfigToggle { section: "input"; key: "numlock" }
         }
     }
 
-    SettingGroup {
-        visible: Inputs.touchpadName !== ""   // only on a computer with a touchpad
-        title: "Touchpad"
-        SettingRow {
-            label: "Pause while typing"
-            hint: "Ignores the pad while you type, so a palm can't move the cursor"
-            ConfigToggle { section: "input"; key: "disableWhileTyping" }
-        }
-        SettingRow {
-            label: "Click with"
-            hint: "Fingers: one, two or three fingers pressed = left, right, middle. Corners: press the pad's bottom corners"
-            ConfigChoice { section: "input"; key: "clickMethod"; values: ["clickfinger", "buttonareas"]; labels: ["Fingers", "Corners"] }
-        }
-        SettingRow {
-            label: "Scroll speed"
-            hint: Config.input.scrollFactor.toFixed(1) + "×"
-            Slider {
-                width: 220
-                value: (Config.input.scrollFactor - 0.2) / 2.8
-                onMoved: v => page.set("scroll_factor", Math.round((0.2 + v * 2.8) * 10) / 10)
-            }
-        }
-        SettingRow {
-            label: "Left + right = middle click"
-            ConfigToggle { section: "input"; key: "middleEmulation" }
-        }
-        SettingRow {
-            label: "Drag lock"
-            hint: "Lifting your finger mid-drag keeps holding the item until you tap again"
-            ConfigToggle { section: "input"; key: "dragLock" }
-        }
-    }
-
-    // Logitech buttons, DPI, battery and haptics are Solaar's own window (the logitech module installs it)
-    property bool solaar: false
-    Process {
-        running: true
-        command: ["sh", "-c", "command -v solaar"]
-        onExited: code => page.solaar = code === 0
-    }
-    SettingGroup {
-        visible: page.solaar
-        title: "Logitech devices"
-        SettingRow {
-            label: "Buttons, scroll wheel, DPI and haptics"
-            hint: "Opens Solaar"
-            PillButton { text: "Open"; onClicked: Quickshell.execDetached(["solaar"]) }
-        }
-    }
-
-    // your keyboard layouts stay: only the typing, pointer and touchpad options go back
+    // your keyboard layouts stay: only the typing options go back
     ResetGroup {
         sections: ["input"]
-        keys: ["repeatRate", "repeatDelay", "sensitivity", "naturalScroll", "tapToClick", "disableWhileTyping", "clickMethod",
-               "scrollFactor", "middleEmulation", "dragLock"]
+        keys: ["repeatRate", "repeatDelay", "numlock", "capsLock"]
     }
 }

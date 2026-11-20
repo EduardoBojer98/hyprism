@@ -376,6 +376,12 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `scrollFactor` | `real` | `1.0` | touchpad scroll speed, 0.2..3 |
 | `middleEmulation` | `bool` | `false` | left + right together = middle click |
 | `dragLock` | `bool` | `false` | lift the finger mid-drag without dropping the item |
+| `mouseNaturalScroll` | `bool` | `false` | a mouse wheel's direction (the touchpad has its own) |
+| `mouseScrollFactor` | `real` | `1.0` | a mouse wheel's scroll speed, 0.2..3 |
+| `accelProfile` | `string` | `"adaptive"` | "adaptive" (faster moves go further) or "flat" (the same distance at any speed) |
+| `leftHanded` | `bool` | `false` | swap the left and right buttons |
+| `numlock` | `bool` | `false` | Num Lock on when you log in |
+| `capsLock` | `string` | `"caps"` | the Caps Lock key: "caps", "escape", "ctrl" or "off" |
 | `imported` | `bool` | `false` |  |
 
 ## displays

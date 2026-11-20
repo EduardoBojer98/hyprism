@@ -199,7 +199,7 @@ ColumnLayout {
         SettingRow {
             label: "Keyboard layouts"
             hint: "Typing languages are keyboard layouts"
-            PillButton { text: "Open Keyboard & Touchpad"; onClicked: SettingsApp.show("input") }
+            PillButton { text: "Open Keyboard"; onClicked: SettingsApp.show("input") }
         }
     }
 

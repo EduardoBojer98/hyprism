@@ -328,6 +328,13 @@ JsonAdapter {
         property real scrollFactor: 1.0          // touchpad scroll speed, 0.2..3
         property bool middleEmulation: false     // left + right together = middle click
         property bool dragLock: false            // lift the finger mid-drag without dropping the item
+        // every mouse and keyboard, unless an app of its own (Solaar, a vendor tool) sets the device itself
+        property bool mouseNaturalScroll: false  // a mouse wheel's direction (the touchpad has its own)
+        property real mouseScrollFactor: 1.0     // a mouse wheel's scroll speed, 0.2..3
+        property string accelProfile: "adaptive" // "adaptive" (faster moves go further) or "flat" (the same distance at any speed)
+        property bool leftHanded: false          // swap the left and right buttons
+        property bool numlock: false             // Num Lock on when you log in
+        property string capsLock: "caps"         // the Caps Lock key: "caps", "escape", "ctrl" or "off"
         property bool imported: false
     }
     property JsonObject displays: JsonObject {

@@ -4,7 +4,8 @@
 -- Defaults for a fresh install; Settings > Keyboard & Touchpad writes settings/input.lua.
 INPUT = { kb_layout = "us", kb_variant = "", kb_options = "", repeat_rate = 25,
           repeat_delay = 600, sensitivity = 0, natural_scroll = true, tap_to_click = true,
-          disable_while_typing = true, clickfinger = true, scroll_factor = 1.0, middle_emulation = false, drag_lock = false }
+          disable_while_typing = true, clickfinger = true, scroll_factor = 1.0, middle_emulation = false, drag_lock = false,
+          mouse_natural_scroll = false, mouse_scroll_factor = 1.0, accel_profile = "adaptive", left_handed = false, numlock = false }
 local ok, saved = pcall(require, "settings.input")
 if ok and type(saved) == "table" then for k, v in pairs(saved) do INPUT[k] = v end end
 
@@ -17,6 +18,11 @@ function apply_input()
             repeat_rate  = INPUT.repeat_rate,
             repeat_delay = INPUT.repeat_delay,
             sensitivity  = INPUT.sensitivity,
+            accel_profile = INPUT.accel_profile,
+            left_handed  = INPUT.left_handed,
+            numlock_by_default = INPUT.numlock,
+            natural_scroll = INPUT.mouse_natural_scroll,   -- mice; the touchpad's own is below
+            scroll_factor  = INPUT.mouse_scroll_factor,
             touchpad = {
                 natural_scroll = INPUT.natural_scroll,
                 tap_to_click   = INPUT.tap_to_click,
