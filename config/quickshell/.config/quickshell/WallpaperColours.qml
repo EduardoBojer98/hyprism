@@ -93,6 +93,11 @@ Singleton {
     readonly property string lockPicture: Config.lockscreen.wallpaper ? Wallpapers.expand(Config.lockscreen.wallpaper) : Wallpapers.still(cur)
     // picked as on a dark surface brighter than the dimmed picture, so they read over it (light enough for ThemeSync's 0.45 check)
     readonly property string lockJob: Config.loaded && Config.lockscreen.wallpaperColours && lockPicture.startsWith("/") ? lockPicture : ""
+    // the picture's hue as a light tint: muddy photo colours (browns, olive) read as a clear pastel on the dimmed picture
+    function tint(hex, light) {
+        const c = Qt.color(hex)
+        return Qt.hsla(Math.max(0, c.hslHue), Math.min(0.7, Math.max(0.4, c.hslSaturation)), light, 1).toString()
+    }
     property string lockAccent: ""
     property string lockAccent2: ""
     onLockJobChanged: lockDebounce.restart()
@@ -116,7 +121,7 @@ Singleton {
                 if (lockRunner.job !== root.lockJob) return
                 try {
                     const r = JSON.parse(text)
-                    if (/^#[0-9a-f]{6}$/.test(r.accent ?? "") && /^#[0-9a-f]{6}$/.test(r.accent2 ?? "")) { root.lockAccent = r.accent; root.lockAccent2 = r.accent2 }
+                    if (/^#[0-9a-f]{6}$/.test(r.accent ?? "") && /^#[0-9a-f]{6}$/.test(r.accent2 ?? "")) { root.lockAccent = root.tint(r.accent, 0.8); root.lockAccent2 = root.tint(r.accent2, 0.72) }
                 } catch (e) { console.warn("wallpaper-colours (lock): " + e) }
             }
         }

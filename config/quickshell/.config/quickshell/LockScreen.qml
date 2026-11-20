@@ -26,21 +26,23 @@ Singleton {
     // (on the blocks scene's solid panel it is always the theme's own)
     readonly property bool darkInk: scene === "blocks" || Theme.light && l.brightness >= 0.6
     readonly property color ink: darkInk ? Theme.text : Theme.onImage
-    readonly property color inkMuted: darkInk ? Theme.subtext : Qt.alpha(Theme.onImage, 0.78)
+    readonly property color inkMuted: darkInk ? Theme.subtext : Qt.alpha(Theme.onImage, 0.86)
+    // text straight on the picture gets a soft dark shadow, so it reads over bright and busy spots too
+    readonly property bool shadowed: !darkInk
     readonly property string avatarPath: l.avatar === "" ? "" : l.avatar.replace(/^~/, Quickshell.env("HOME"))
 
     // ---- the stack, top to bottom: avatar, greeting, clock, date, password, then widgets at the edge ----
     readonly property var stack: {
         const out = [], dw = Theme.displayWeight
         if (avatarPath) out.push({ role: "avatar", w: 96, hgt: 96 })
-        if (scene === "boot") out.push({ role: "boot", size: 12, mono: true, colour: "muted", lines: 4 }, { role: "gap", hgt: 22 })
+        if (scene === "boot") out.push({ role: "boot", size: 14, mono: true, colour: "muted", lines: 4 }, { role: "gap", hgt: 22 })
         if (l.greeting || scene === "soft") out.push({ role: "greeting", size: scene === "soft" ? 20 : 15, weight: Font.DemiBold, colour: "muted" })
         if (clock === "stacked") {
             out.push({ role: "hours", size: 140, weight: Math.max(dw, Font.Bold), display: true, colour: "text", tight: true })
             out.push({ role: "minutes", size: 140, weight: Math.max(dw, Font.Bold), display: true, colour: "accent", tight: true })
         } else if (clock === "terminal") {
-            out.push({ role: "prompt", size: 15, mono: true, colour: "muted" })
-            out.push({ role: "clock", size: 72, weight: Font.Bold, mono: true, colour: "accent" })
+            out.push({ role: "prompt", size: 17, mono: true, colour: "muted" })
+            out.push({ role: "clock", size: 88, weight: Font.Bold, mono: true, colour: "accent" })
         } else if (clock === "readout") {
             out.push({ role: "seconds", size: 54, weight: Font.Light, mono: true, colour: "accent" })
         } else {
@@ -48,9 +50,9 @@ Singleton {
         }
         if (l.date) out.push({ role: "date", size: 17, weight: Font.Medium, mono: clock === "terminal" || clock === "readout", colour: "muted", caps: clock === "readout" })
         out.push({ role: "gap", hgt: 26 })
-        out.push(scene === "boot" ? { role: "input", w: 120, hgt: 30, prefix: 110 } : { role: "input", w: 300, hgt: 50 })
+        out.push(scene === "boot" ? { role: "input", w: 140, hgt: 34, prefix: 128 } : { role: "input", w: 300, hgt: 50 })
         // boot: the layout as one more log line (hyprlock centres a placeholder, far from "password:")
-        if (scene === "boot" && l.widgets.includes("layout")) out.push({ role: "kbd", size: 12, mono: true, colour: "muted" })
+        if (scene === "boot" && l.widgets.includes("layout")) out.push({ role: "kbd", size: 14, mono: true, colour: "muted" })
         return out
     }
     function heightOf(e) { return e.hgt ?? Math.round(e.size * 1.33 * (e.tight ? 0.92 : 1.18) * (e.lines ?? 1)) }
@@ -79,8 +81,8 @@ Singleton {
                                         y: Math.round(total / 2 - top - h / 2) })
                 if (e.prefix) {   // boot: "password:" and the field on one line, as a group
                     const left = m.h === "left", lead = left ? m.x : m.x - (e.prefix + e.w) / 2
-                    out.push(Object.assign({}, m, { role: "pwlabel", size: 12, mono: true, colour: "muted", hgt: undefined,
-                                                    x: left ? lead : lead + 43 }))   // shortcut: 43 = half of "password:" at 12 pt mono
+                    out.push(Object.assign({}, m, { role: "pwlabel", size: 14, mono: true, colour: "muted", hgt: undefined,
+                                                    x: left ? lead : lead + 50 }))   // shortcut: 50 = half of "password:" at 14 pt mono
                     m.x = left ? lead + e.prefix : lead + e.prefix + e.w / 2
                 }
                 if (e.role === "input" && scene === "blocks")   // the hard shadow: a text-coloured block behind, down and right
@@ -98,7 +100,7 @@ Singleton {
         }
         // widgets: one line at the bottom edge (the top edge when the stack is at the bottom)
         if (l.widgets.includes("battery") || l.widgets.includes("media") && scene !== "soft")
-            out.push(Object.assign({ role: "widgets", size: 12, weight: Font.Medium, colour: "muted" }, edge, { y: align === "bottom" ? -36 : 36 }))
+            out.push(Object.assign({ role: "widgets", size: 13, weight: Font.Medium, colour: "muted" }, edge, { y: align === "bottom" ? -36 : 36 }))
         return out
     }
 
@@ -227,7 +229,8 @@ Singleton {
             } else {
                 s += "label {\n    monitor     =\n    text        = " + hyprText(e.role) + "\n    font_size   = " + e.size + "\n"
                    + "    font_family = " + family(e) + "\n    color       = " + colour(e) + "\n"
-                   + (e.h === "left" ? "    text_align  = left\n" : "") + place(e) + "}\n"
+                   + (e.h === "left" ? "    text_align  = left\n" : "")
+                   + (shadowed ? "    shadow_passes = 3\n    shadow_size = 4\n    shadow_color = rgba(0, 0, 0, 0.8)\n    shadow_boost = 1.4\n" : "") + place(e) + "}\n"
             }
         }
         return s

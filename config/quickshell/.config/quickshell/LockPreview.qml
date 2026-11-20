@@ -74,6 +74,9 @@ Item {
                     capitalization: el.e.caps ? Font.AllUppercase : Font.MixedCase
                 }
                 lineHeight: el.e.tight ? 0.92 : 1
+                // as hyprlock's label shadow (LockScreen.shadowed)
+                layer.enabled: LockScreen.shadowed && el.isText
+                layer.effect: MultiEffect { shadowEnabled: true; shadowColor: Qt.rgba(0, 0, 0, 0.8); shadowBlur: 0.5; shadowVerticalOffset: 0; shadowHorizontalOffset: 0 }
             }
             Rectangle {   // a shape: the soft media pill, the blocks field's hard shadow
                 visible: el.e.role === "shape"
