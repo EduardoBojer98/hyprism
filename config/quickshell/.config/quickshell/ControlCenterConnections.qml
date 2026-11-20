@@ -13,28 +13,33 @@ ColumnLayout {
 
     ControlCenterSliderHead { visible: !ControlCenter.cards && mod.tiles.length > 0; title: "Network" }
 
-    GridLayout {
-        id: grid
+    Item {   // holds the grid, so the hud's brackets can sit around it
         visible: mod.tiles.length > 0
         Layout.fillWidth: true
-        columns: ControlCenter.cards ? 2 : 1
-        columnSpacing: ControlCenter.gap
-        rowSpacing: ControlCenter.gap
-        Repeater {
-            model: mod.tiles
-            ControlCenterConnTile {
-                required property string modelData
-                required property int index
-                readonly property var it: ControlCenter.items[modelData]
-                Layout.columnSpan: grid.columns === 2 && index === mod.tiles.length - 1 && mod.tiles.length % 2 === 1 ? 2 : 1
-                glyph: it.glyph
-                title: it.label
-                subtitle: it.action ? it.hint : it.status
-                active: ControlCenter.isOn(modelData)
-                expandable: it.list !== undefined
-                isExpanded: mod.host.expanded === it.list
-                onToggled: ControlCenter.activate(modelData)
-                onExpand: mod.host.toggleExpanded(it.list)
+        implicitHeight: grid.implicitHeight
+        ControlCenterBrackets {}
+        GridLayout {
+            id: grid
+            anchors { left: parent.left; right: parent.right }
+            columns: ControlCenter.cards ? 2 : 1
+            columnSpacing: ControlCenter.gap
+            rowSpacing: ControlCenter.gap
+            Repeater {
+                model: mod.tiles
+                ControlCenterConnTile {
+                    required property string modelData
+                    required property int index
+                    readonly property var it: ControlCenter.items[modelData]
+                    Layout.columnSpan: grid.columns === 2 && index === mod.tiles.length - 1 && mod.tiles.length % 2 === 1 ? 2 : 1
+                    glyph: it.glyph
+                    title: it.label
+                    subtitle: it.action ? it.hint : it.status
+                    active: ControlCenter.isOn(modelData)
+                    expandable: it.list !== undefined
+                    isExpanded: mod.host.expanded === it.list
+                    onToggled: ControlCenter.activate(modelData)
+                    onExpand: mod.host.toggleExpanded(it.list)
+                }
             }
         }
     }
