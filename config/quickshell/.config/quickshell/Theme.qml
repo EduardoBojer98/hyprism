@@ -9,7 +9,7 @@ import QtQuick
 Singleton {
     readonly property var a: Config.appearance
     // "wallpaper": light behind a bright picture of yours, dark behind a dark one (a theme's own picture: the theme decides)
-    readonly property string mode: a.mode !== "wallpaper" ? a.mode : WallpaperColours.bright < 0 ? "theme" : WallpaperColours.bright > 0.55 ? "light" : "dark"
+    readonly property string mode: a.mode === "mixed" ? a.desktopMode : a.mode !== "wallpaper" ? a.mode : WallpaperColours.bright < 0 ? "theme" : WallpaperColours.bright > 0.55 ? "light" : "dark"
     readonly property var current: Themes.resolve(a.theme, a.custom, mode, Config.bar.layout)   // the theme, your adjustments, and your one bar layout
     readonly property var c: current.colour
     readonly property bool light: !current.dark

@@ -51,7 +51,7 @@ Singleton {
     readonly property var schema: ({
         appearance: {
             theme: Themes.ids,
-            mode: ["theme", "light", "dark", "wallpaper"], custom: "object", terminal: "bool", wallpaper: "bool", wallpaperColours: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"], motionStyle: ["theme", "smooth", "snappy", "springy", "minimal"],
+            mode: ["theme", "light", "dark", "wallpaper", "mixed"], desktopMode: ["light", "dark"], appMode: ["light", "dark"], custom: "object", terminal: "bool", wallpaper: "bool", wallpaperColours: "bool", fontScale: [0.85, 1.25], motion: ["full", "reduced", "off"], motionStyle: ["theme", "smooth", "snappy", "springy", "minimal"],
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { enabled: "bool", size: ["compact", "regular", "roomy"], hiddenOn: "list",

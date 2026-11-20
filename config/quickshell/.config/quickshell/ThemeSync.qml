@@ -24,7 +24,19 @@ Scope {
 
     readonly property var current: Theme.current
     readonly property var h: current.hypr
-    readonly property bool light: Theme.light
+    // Settings > Appearance > Light or dark "Mixed" (like Windows' Custom mode): the desktop (Quickshell, Hyprland,
+    // the lock screen) in one half, apps (GTK, Qt, KDE, Ghostty, btop, fuzzel, the prompt) in the other.
+    // `app` carries the apps' colours: Theme itself, or the same tokens from the theme's other half.
+    readonly property bool mixed: Config.appearance.mode === "mixed"
+    readonly property var appTheme: mixed ? Themes.resolve(Config.appearance.theme, Config.appearance.custom, Config.appearance.appMode, Config.bar.layout) : current
+    readonly property var app: {
+        if (!mixed) return Theme
+        const c = appTheme.colour, k = v => Qt.color(v)
+        return { light: !appTheme.dark, base: k(c.ground), surfaceColor: k(c.surface), raised: k(c.raised), text: k(c.text), subtext: k(c.muted),
+                 muted: k(c.faint), stroke: k(c.line), accent: k(c.accent), accent2: k(c.accent2), accentText: k(c.onAccent),
+                 success: k(c.ok), warning: k(c.warn), error: k(c.err) }
+    }
+    readonly property bool light: app.light
     readonly property string iconTheme: Theme.iconTheme === "Papirus" || (Theme.iconTheme === "Papirus-Dark" && light) ? (light ? "Papirus-Light" : "Papirus-Dark")
         : Theme.iconTheme === "breeze" && !light ? "breeze-dark" : Theme.iconTheme
     // only plain folder names reach the shell commands below (a missing one: apps fall back to the system's)
@@ -51,7 +63,7 @@ Scope {
     // Ghostty: the theme's own terminal palette (theme.json "term") and its mono face
     function hexOk(c) { return /^#[0-9a-fA-F]{6}$/.test(c) }
     readonly property string palette: {
-        const t = current.term ?? {}, lines = []
+        const t = appTheme.term ?? {}, lines = []
         for (const [key, name] of [["background", "background"], ["foreground", "foreground"], ["cursor", "cursor-color"], ["cursorText", "cursor-text"],
                                    ["selection", "selection-background"], ["selectionText", "selection-foreground"]])
             if (hexOk(t[key])) lines.push(name + " = " + t[key])
@@ -102,7 +114,7 @@ Scope {
 
     // accent -> nearest GNOME accent-color value (GTK4/libadwaita apps), by hue; greys -> slate
     readonly property string gtkAccent: {
-        const c = Theme.accent
+        const c = app.accent
         if (c.hslSaturation < 0.18) return "slate"
         const hue = c.hslHue * 360
         return hue < 15 || hue >= 345 ? "red" : hue < 40 ? "orange" : hue < 65 ? "yellow" : hue < 160 ? "green"
@@ -135,8 +147,8 @@ Scope {
         + `border_angle = ${n(Config.windows.borderAngle)}, glow = ${q(glow)}, inactive = ${q(h.inactive)}, `
         + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.hyprMotion)}, accent = ${q(hex(Theme.accent))}, `
         + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)}, `
-        + `bar = ${q(hex(Theme.surfaceColor) + (Theme.glassy ? "e6" : "ff"))}, bar_text = ${q(hex(Theme.text) + "ff")}, `
-        + `bar_text_dim = ${q(hex(Theme.subtext) + "ff")}, bar_buttons_dim = ${q(hex(Theme.raised) + "ff")}, `
+        + `bar = ${q(hex(app.surfaceColor) + (Theme.glassy ? "e6" : "ff"))}, bar_text = ${q(hex(app.text) + "ff")}, `
+        + `bar_text_dim = ${q(hex(app.subtext) + "ff")}, bar_buttons_dim = ${q(hex(app.raised) + "ff")}, `
         + `bar_font = ${q(safeFont(Theme.font))}, bar_height = ${n(barHeight)}, bar_blur = ${Theme.glassy} }`
 
     // Qt apps (qt6ct), btop and the starship prompt: texts built from the same tokens, written only when they change.
@@ -146,12 +158,12 @@ Scope {
     // the 21 QPalette roles: WindowText Button Light Midlight Dark Mid Text BrightText ButtonText Base Window Shadow
     // Highlight HighlightedText Link LinkVisited AlternateBase NoRole ToolTipBase ToolTipText PlaceholderText
     function qtRoles(fg) {
-        return [fg, Theme.raised, Qt.lighter(Theme.raised, 1.3), Qt.lighter(Theme.raised, 1.15), Qt.darker(Theme.surfaceColor, 1.4), Theme.stroke,
-                fg, Theme.text, fg, Theme.surfaceColor, Theme.base, Qt.darker(Theme.base, 3), Theme.accent, Theme.accentText, Theme.accent2,
-                Theme.accent2, Theme.raised, Theme.base, Theme.raised, Theme.text, Theme.subtext].map(aarrggbb).join(", ")
+        return [fg, app.raised, Qt.lighter(app.raised, 1.3), Qt.lighter(app.raised, 1.15), Qt.darker(app.surfaceColor, 1.4), app.stroke,
+                fg, app.text, fg, app.surfaceColor, app.base, Qt.darker(app.base, 3), app.accent, app.accentText, app.accent2,
+                app.accent2, app.raised, app.base, app.raised, app.text, app.subtext].map(aarrggbb).join(", ")
     }
-    readonly property string qtColors: "[ColorScheme]\nactive_colors=" + qtRoles(Theme.text) + "\ndisabled_colors=" + qtRoles(Theme.muted)
-        + "\ninactive_colors=" + qtRoles(Theme.text)
+    readonly property string qtColors: "[ColorScheme]\nactive_colors=" + qtRoles(app.text) + "\ndisabled_colors=" + qtRoles(app.muted)
+        + "\ninactive_colors=" + qtRoles(app.text)
     // KDE apps (Dolphin, Kate, Okular) ignore qt6ct's palette: outside Plasma KDE's colour-scheme manager finds no
     // scheme and loads Breeze Light over it. This is a KDE scheme from the same tokens; env.lua makes KDE apps
     // pick it in Hyprland only (hyprism/kde/kdeglobals on XDG_CONFIG_DIRS), so Plasma keeps its own.
@@ -159,38 +171,38 @@ Scope {
     function rgb(c) { const t = hx(c); return [0, 2, 4].map(i => parseInt(t.slice(i, i + 2), 16)).join(",") }
     readonly property string kdeColors: {
         const set = (name, bg, alt, fg, dim, act) => `[Colors:${name}]\n` + [["BackgroundNormal", bg], ["BackgroundAlternate", alt],
-            ["ForegroundNormal", fg], ["ForegroundInactive", dim], ["ForegroundActive", act], ["ForegroundLink", Theme.accent2],
-            ["ForegroundVisited", Theme.accent2], ["ForegroundNegative", Theme.error], ["ForegroundNeutral", Theme.warning],
-            ["ForegroundPositive", Theme.success], ["DecorationFocus", Theme.accent], ["DecorationHover", Theme.accent]]
+            ["ForegroundNormal", fg], ["ForegroundInactive", dim], ["ForegroundActive", act], ["ForegroundLink", app.accent2],
+            ["ForegroundVisited", app.accent2], ["ForegroundNegative", app.error], ["ForegroundNeutral", app.warning],
+            ["ForegroundPositive", app.success], ["DecorationFocus", app.accent], ["DecorationHover", app.accent]]
             .map(([k, c]) => k + "=" + rgb(c)).join("\n")
-        const s = Theme.surfaceColor, r = Theme.raised, t = Theme.text, d = Theme.subtext, a = Theme.accent
+        const s = app.surfaceColor, r = app.raised, t = app.text, d = app.subtext, a = app.accent
         return "# Written by Quickshell ThemeSync from the active theme\n[General]\nColorScheme=Hyprism\nName=Hyprism\n\n"
             + [set("View", s, r, t, d, a), set("Window", s, r, t, d, a), set("Header", s, r, t, d, a), set("Button", r, s, t, d, a),
                set("Tooltip", r, s, t, d, a), set("Complementary", s, r, t, d, a),
-               set("Selection", a, a, Theme.accentText, Theme.accentText, Theme.accentText)].join("\n\n")
+               set("Selection", a, a, app.accentText, app.accentText, app.accentText)].join("\n\n")
     }
     readonly property string btopTheme: {
         const t = []
         const put = (k, c) => t.push(`theme[${k}]="#${hx(c)}"`)
-        put("main_bg", Theme.base); put("main_fg", Theme.text); put("title", Theme.text); put("hi_fg", Theme.accent)
-        put("selected_bg", Theme.accent); put("selected_fg", Theme.accentText); put("inactive_fg", Theme.muted)
-        put("graph_text", Theme.subtext); put("meter_bg", Theme.raised); put("proc_misc", Theme.accent2)
-        for (const b of ["cpu_box", "mem_box", "net_box", "proc_box", "div_line"]) put(b, Theme.stroke)
+        put("main_bg", app.base); put("main_fg", app.text); put("title", app.text); put("hi_fg", app.accent)
+        put("selected_bg", app.accent); put("selected_fg", app.accentText); put("inactive_fg", app.muted)
+        put("graph_text", app.subtext); put("meter_bg", app.raised); put("proc_misc", app.accent2)
+        for (const b of ["cpu_box", "mem_box", "net_box", "proc_box", "div_line"]) put(b, app.stroke)
         // graphs running ok -> warn -> err; memory and network keep one hue each
-        const ramp = { temp: null, cpu: null, used: null, process: null, free: Theme.success, cached: Theme.accent2, available: Theme.accent, download: Theme.accent, upload: Theme.accent2 }
+        const ramp = { temp: null, cpu: null, used: null, process: null, free: app.success, cached: app.accent2, available: app.accent, download: app.accent, upload: app.accent2 }
         for (const [name, one] of Object.entries(ramp))
-            [one ?? Theme.success, one ?? Theme.warning, one ?? Theme.error].forEach((c, i) => put(name + "_" + ["start", "mid", "end"][i], c))
+            [one ?? app.success, one ?? app.warning, one ?? app.error].forEach((c, i) => put(name + "_" + ["start", "mid", "end"][i], c))
         return "# Written by Quickshell ThemeSync from the active theme\n" + t.join("\n")
     }
     // the theme's prompt preset (theme.json term.prompt): rounded is ~/.config/starship.toml, the others sit beside it
     // (starship-blocks.toml, starship-brackets.toml), with fastfetch cards to match (fastfetch/blocks.jsonc, brackets.jsonc)
-    readonly property string promptPreset: ["blocks", "brackets"].includes(current.term?.prompt) ? current.term.prompt : "rounded"
+    readonly property string promptPreset: ["blocks", "brackets"].includes(appTheme.term?.prompt) ? appTheme.term.prompt : "rounded"
     FileView { id: starshipSrc; path: Quickshell.env("HOME") + "/.config/starship" + (root.promptPreset === "rounded" ? "" : "-" + root.promptPreset) + ".toml"; watchChanges: true; onFileChanged: reload(); onLoaded: debounce.restart() }
     readonly property string starshipToml: {
         const src = starshipSrc.text()
         if (src.indexOf("[palettes.hyprism]") < 0) return ""
-        const block = "[palettes.hyprism]\n" + [["accent", Theme.accent], ["on_accent", Theme.accentText], ["accent2", Theme.accent2], ["raised", Theme.raised],
-            ["ok", Theme.success], ["warn", Theme.warning], ["err", Theme.error], ["faint", Theme.muted]].map(([k, c]) => `${k} = "#${hx(c)}"`).join("\n") + "\n"
+        const block = "[palettes.hyprism]\n" + [["accent", app.accent], ["on_accent", app.accentText], ["accent2", app.accent2], ["raised", app.raised],
+            ["ok", app.success], ["warn", app.warning], ["err", app.error], ["faint", app.muted]].map(([k, c]) => `${k} = "#${hx(c)}"`).join("\n") + "\n"
         return src.replace(/\[palettes\.hyprism\][\s\S]*$/, () => block)
     }
     property var written: ({})
@@ -219,15 +231,15 @@ Scope {
         // the theme's surfaces, text and exact accent for GTK 3 (adw-gtk3) and GTK 4 apps, in our own file
         // that gtk.css imports (gtk.css and colors.css belong to KDE, which rewrites them at its login; we only
         // add the import). Panels' surface, not the desktop ground: Poster's ground is dark under paper panels.
-        const named = { accent_color: Theme.accent, accent_bg_color: Theme.accent, accent_fg_color: Theme.accentText,
-                        window_bg_color: Theme.surfaceColor, window_fg_color: Theme.text, view_bg_color: Theme.surfaceColor,
-                        view_fg_color: Theme.text, headerbar_bg_color: Theme.raised, headerbar_fg_color: Theme.text,
-                        card_bg_color: Theme.raised, card_fg_color: Theme.text, popover_bg_color: Theme.surfaceColor,
-                        popover_fg_color: Theme.text, dialog_bg_color: Theme.surfaceColor, dialog_fg_color: Theme.text,
+        const named = { accent_color: app.accent, accent_bg_color: app.accent, accent_fg_color: app.accentText,
+                        window_bg_color: app.surfaceColor, window_fg_color: app.text, view_bg_color: app.surfaceColor,
+                        view_fg_color: app.text, headerbar_bg_color: app.raised, headerbar_fg_color: app.text,
+                        card_bg_color: app.raised, card_fg_color: app.text, popover_bg_color: app.surfaceColor,
+                        popover_fg_color: app.text, dialog_bg_color: app.surfaceColor, dialog_fg_color: app.text,
                         // libadwaita 1.4+ sidebars (Nautilus, Settings-style apps): else its own blue-grey
-                        sidebar_bg_color: Theme.raised, sidebar_fg_color: Theme.text, sidebar_backdrop_color: Theme.raised,
-                        secondary_sidebar_bg_color: Theme.raised, secondary_sidebar_fg_color: Theme.text,
-                        secondary_sidebar_backdrop_color: Theme.raised }
+                        sidebar_bg_color: app.raised, sidebar_fg_color: app.text, sidebar_backdrop_color: app.raised,
+                        secondary_sidebar_bg_color: app.raised, secondary_sidebar_fg_color: app.text,
+                        secondary_sidebar_backdrop_color: app.raised }
         const css = "/* Written by Quickshell ThemeSync from the active theme */\n"
             + Object.keys(named).map(k => `@define-color ${k} ${named[k]};`).join("\n") + "\n"
         for (const v of ["gtk-3.0", "gtk-4.0"])
@@ -235,10 +247,10 @@ Scope {
                 ["sh", "-c", 'f="$HOME/.config/$1/gtk.css"; grep -qF "@import \'hyprism.css\';" "$f" 2>/dev/null || printf "\\n%s\\n" "@import \'hyprism.css\';" >> "$f"', "sh", v])
         // live for Hyprland and apps started from now on; env.lua reads theme.lua at the next login
         if (cursorTheme) Quickshell.execDetached(["hyprctl", "setcursor", cursorTheme, String(cursorSize)])
-        const a = hex(Theme.accent)
+        const a = hex(app.accent)
         SettingsApp.writeConfigFile("fuzzel/theme.ini", "# Written by Quickshell ThemeSync from the active theme\n[colors]\n"
-            + `background=${hex(Theme.surfaceColor)}f2\ntext=${hex(Theme.text)}ff\ninput=${hex(Theme.text)}ff\nprompt=${a}ff\nmatch=${a}ff\n`
-            + `selection=${a}55\nselection-text=${hex(Theme.text)}ff\nselection-match=${hex(Theme.text)}ff\nborder=${a}ff`)
+            + `background=${hex(app.surfaceColor)}f2\ntext=${hex(app.text)}ff\ninput=${hex(app.text)}ff\nprompt=${a}ff\nmatch=${a}ff\n`
+            + `selection=${a}55\nselection-text=${hex(app.text)}ff\nselection-match=${hex(app.text)}ff\nborder=${a}ff`)
         SettingsApp.writeConfigFile("ghostty/theme.conf", "# Written by Quickshell ThemeSync from the active theme (empty: the config's own theme)\n" + terminal + "\n" + termLook,
                                     ["pkill", "-USR2", "-x", "ghostty"])   // SIGUSR2 = reload config
         // qt6ct.conf is ours only if absent or marked by .hyprism; a user's own file is never touched

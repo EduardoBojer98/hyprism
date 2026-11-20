@@ -69,10 +69,23 @@ ColumnLayout {
         SettingRow {
             label: "Light or dark"
             hint: page.a.mode === "theme" ? "Follows the theme: " + page.base.name + " starts " + (page.base.dark ? "dark" : "light") + ". Every theme has a light and a dark version."
+                : page.a.mode === "mixed" ? "The desktop in one version, apps in the other, as Windows' Custom mode does"
                 : page.a.mode === "wallpaper" ? (WallpaperColours.bright < 0 ? "Works with a picture of your own; with the theme's picture the theme decides"
                     : "Your wallpaper is " + (Theme.light ? "bright, so the light" : "dark, so the dark") + " version shows; it changes with the picture")
                 : "Every theme in its " + page.a.mode + " version; windows, apps, terminal and wallpaper follow"
-            ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark", "wallpaper"]; labels: ["Default", "Light", "Dark", "Wallpaper"] }
+            ConfigChoice { section: "appearance"; key: "mode"; values: ["theme", "light", "dark", "wallpaper", "mixed"]; labels: ["Default", "Light", "Dark", "Wallpaper", "Mixed"] }
+        }
+        SettingRow {
+            visible: page.a.mode === "mixed"
+            label: "Desktop"
+            hint: "Menu bar, dock, panels, notifications, the lock screen and window frames"
+            ConfigChoice { section: "appearance"; key: "desktopMode"; values: ["light", "dark"]; labels: ["Light", "Dark"] }
+        }
+        SettingRow {
+            visible: page.a.mode === "mixed"
+            label: "Apps"
+            hint: "App windows and their title bars, the terminal, file manager and the rest. Apps open before the switch may need a restart"
+            ConfigChoice { section: "appearance"; key: "appMode"; values: ["light", "dark"]; labels: ["Light", "Dark"] }
         }
         SettingRow {
             label: "Accent colours from the wallpaper"

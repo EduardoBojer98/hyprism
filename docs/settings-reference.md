@@ -20,7 +20,9 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `theme` | `string` | `"pebble"` | the whole desktop design (Themes.qml): layout, type, shape, colour, motion |
-| `mode` | `string` | `"theme"` | theme (each theme's own) \| light \| dark: every theme has both halves (Themes.qml alt) |
+| `mode` | `string` | `"theme"` | theme (each theme's own) \| light \| dark \| wallpaper \| mixed: every theme has both halves (Themes.qml alt) |
+| `desktopMode` | `string` | `"dark"` | mode "mixed": the bar, dock, panels, lock screen and window frames |
+| `appMode` | `string` | `"light"` | mode "mixed": apps (GTK, Qt, KDE, the terminal) and their title bars |
 | `custom` | `var` | `{}` | your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable) |
 | `terminal` | `bool` | `true` | Ghostty follows the theme (ThemeSync writes ghostty/theme.conf) |
 | `wallpaper` | `bool` | `true` | the theme's own wallpaper; off = keep yours (Settings > Wallpaper) |
