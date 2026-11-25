@@ -38,7 +38,7 @@ JsonAdapter {
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a dock
         property int iconSize: 44               // the dock's size: Settings presets 36 / 44 / 52 / 60, or any size 24-72 on its slider
         property bool autoHide: false           // visible by default; true slides it away until the pointer reaches its edge
-        property string look: "theme"           // the island: theme (its own fill) | clear (a flat overlay) | frosted (the desktop blurred under the overlay)
+        property string look: "theme"           // the island: theme (its own fill) | clear (a flat overlay) | frosted (the desktop blurred under the overlay) | none (icons only)
         property int tint: 30                   // clear / frosted: the overlay's strength in the dock's colour, % (0: none)
         property bool launcher: true            // the launcher button at the dock's start
         property bool showRunning: true

@@ -21,7 +21,7 @@ PanelWindow {
     readonly property string markSide: ds.markSide ?? "edge"   // edge | inner | left
     readonly property string hoverStyle: ds.hover     // lift | grow | plate
     readonly property int lift: Theme.dockLift
-    readonly property string look: Config.dock.look         // theme | clear | frosted (Settings > Dock > Look)
+    readonly property string look: Config.dock.look         // theme | clear | frosted | none (Settings > Dock > Look)
     readonly property real tint: Config.dock.tint / 100
     readonly property color tintBase: ds.fill === "ink" ? Theme.text : Theme.surfaceColor        // gap to the screen edge
     readonly property string edge: Theme.dockEdge
@@ -211,6 +211,7 @@ PanelWindow {
 
     Glass {
         id: island
+        flat: root.look === "none"   // no glass sheen or rim: only the icons
         // along the dock: centred; across: at the edge, or just past it while hidden. The hide is a
         // translate (no layout), out of the way towards the edge, faster out than in.
         readonly property real across: root.vertical ? width : height
@@ -230,11 +231,13 @@ PanelWindow {
         radius: root.shape === "pill" ? across / 2 : root.shape === "tile" ? Theme.radiusPanel : Theme.radius
         color: root.look === "theme" ? (({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[root.ds.fill] ?? Theme.glass)
              : root.look === "clear" ? Qt.alpha(root.tintBase, root.tint) : "transparent"   // frosted: the overlay is on the blur layer
-        border { width: Theme.line; color: root.ds.fill === "ink" ? Theme.text : Theme.stroke }
+        border { width: root.look === "none" ? 0 : Theme.line
+                 color: root.look === "frosted" ? Qt.alpha(Theme.light ? "#ffffff" : Theme.text, Theme.light ? 0.55 : 0.14)   // palette: a glass rim
+                      : root.ds.fill === "ink" ? Theme.text : Theme.stroke }
 
         // the theme's depth: a soft shadow (glass themes) or a hard offset block (Poster), under the island
         RectangularShadow {
-            visible: (Theme.depth === "soft" || Theme.depth === "glow") && root.look === "theme"
+            visible: ((Theme.depth === "soft" || Theme.depth === "glow") && root.look === "theme") || root.look === "frosted"
             z: -1
             anchors.fill: parent
             offset.y: Theme.depth === "glow" ? 0 : 6
@@ -317,13 +320,14 @@ PanelWindow {
                         edge === "bottom" ? s.height - root.height - (be === "bottom" ? bh : 0) : (be === "top" ? bh : 0))
     }
 
-    // Settings > Dock > Look "frosted": the overlay on a full-screen layer of its own under windows, which
+    // Settings > Dock > Look "frosted": the overlay on a full-screen layer of its own just under the dock, which
     // Hyprland blurs at any strength (rules.lua: qs-dockblur, ignore_alpha 0), kept on the island's place
     PanelWindow {
         screen: root.screen
-        visible: root.look === "frosted" && root.visible
         WlrLayershell.namespace: "qs-dockblur"
-        WlrLayershell.layer: WlrLayer.Bottom
+        // over windows (a window behind the dock is blurred too) and under the dock: mapped for as long as
+        // the shell runs and fully clear unless frosted, so the dock, which maps after it, stays on top
+        WlrLayershell.layer: WlrLayer.Top
         exclusionMode: ExclusionMode.Ignore
         anchors { top: true; bottom: true; left: true; right: true }
         color: "transparent"
@@ -335,6 +339,7 @@ PanelWindow {
             width: island.width; height: island.height
             radius: island.radius
             // a trace of colour even at 0%, or Hyprland has nothing to blur behind
+            visible: root.look === "frosted"
             color: Qt.alpha(root.tintBase, Math.max(0.01, root.tint))
             opacity: island.opacity
         }

@@ -114,11 +114,12 @@ ColumnLayout {
             label: "Look"
             hint: ({ theme: "The theme's own " + ({ glass: "glass", surface: "panel", ink: "ink block" })[Theme.dockStyle.fill] ?? "fill",
                      clear: "An even overlay, or nothing at all at 0%",
-                     frosted: "The desktop blurred behind the dock, under the overlay" })[Config.dock.look] ?? ""
-            ConfigChoice { section: "dock"; key: "look"; values: ["theme", "clear", "frosted"]; labels: ["Theme's", "Clear", "Frosted"] }
+                     frosted: "Frosted glass: what's behind the dock blurred, a light rim and a soft shadow",
+                     none: "No background: the icons float on their own" })[Config.dock.look] ?? ""
+            ConfigChoice { section: "dock"; key: "look"; values: ["theme", "clear", "frosted", "none"]; labels: ["Theme's", "Clear", "Frosted", "None"] }
         }
         SettingRow {
-            visible: Config.dock.enabled && !page.inBar && Config.dock.look !== "theme"
+            visible: Config.dock.enabled && !page.inBar && Config.dock.look !== "theme" && Config.dock.look !== "none"
             label: "Overlay"
             hint: Config.dock.tint === 0 ? "None: completely transparent" + (Config.dock.look === "frosted" ? " over the blur" : "")
                                          : "The dock's own colour over what's behind it"

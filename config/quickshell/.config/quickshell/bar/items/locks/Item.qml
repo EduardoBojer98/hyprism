@@ -6,7 +6,7 @@ import qs
 BarIndicator {
     readonly property bool caps: Keyboard.capsLock
     readonly property bool num: Keyboard.numLock
-    visible: caps || num
+    readonly property bool shown: caps || num   // BarWidget hides the whole slot, no gap
     glyph: [caps ? "\u{F0632}" : "", num ? "\u{F03A0}" : ""].filter(g => g).join(" ")
     word: [caps ? "caps" : "", num ? "num" : ""].filter(w => w).join(" ")
     tip: [caps ? "Caps Lock is on" : "", num ? "Num Lock is on" : ""].filter(t => t).join(" · ")

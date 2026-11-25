@@ -26,7 +26,7 @@ over ornament, one icon language, motion that confirms an action and never makes
 | `colour` | ground, surface, raised, line, text, muted, faint, accent, onAccent, accent2, ok, warn, err |
 | `font` | ui, display (clocks, big numbers), mono, size (body px), displayWeight |
 | `shape` | radius, radiusSmall, line (panel border px), material: `solid` or `glass`, density: `compact`, `regular` or `roomy` (spacing in bars, panels and lists) |
-| `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, sep (rules between items), sepStyle (line, slash, pip), voice (icons, words, mixed, caps), mono, ws (dots, filled, text, numbers, blocks, squares, tabs, reticle), clock (plain, accent, display, block, split), decor (brackets), start / center / end items |
+| `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, sep (rules between items), sepStyle (line, slash, pip), voice (icons, words, mixed, caps), mono, ws (dots, capsule, filled, text, numbers, blocks, squares, tabs, reticle), clock (plain, accent, display, block, split), decor (brackets), start / center / end items |
 | `dock` | edge (its own place; the bar's edge puts it inside the bar), shape (pill, tile, block), hover (lift, grow, plate, magnify: icons swell toward the pointer and push their neighbours aside), mark (line, dot, bar), fill |
 | `popup` | depth: soft (blurred shadow), hard (offset block), glow (accent haze), none (frame only); decor: brackets, topline, in decorColour (accent or accent2); tiles: solid or wash (Control Center tiles that are on) |
 | `motion` | enter / exit ms, curve (cubic bezier), travel px out of the trigger's side, start scale, press scale |

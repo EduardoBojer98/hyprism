@@ -4,7 +4,8 @@ import QtQuick
 
 // Workspaces of one monitor, drawn in the theme's own way (Themes.qml bar.ws), across a horizontal
 // bar or down a vertical one:
-//   dots     small dots; the current one stretches into an accent pill (Lumen)
+//   dots     small dots; the current one stretches into an accent pill
+//   capsule  numbers in a recessed track; a raised thumb slides to the current one, like a segmented control (Lumen)
 //   filled   numbers, the current one on an accent block (Monolith)
 //   text     one readout label, "WS 02" (Console)
 //   numbers  numbers in a recessed pill with the current one filled (Glass)
@@ -49,12 +50,26 @@ Item {
         MouseArea { anchors.fill: parent; onWheel: w => ws.step(w.angleDelta.y); Accessible.ignored: true }
     }
 
-    Rectangle {   // numbers: the recessed pill behind the set
-        visible: ws.style === "numbers"
+    Rectangle {   // numbers and capsule: the recessed pill behind the set
+        visible: ws.style === "numbers" || ws.style === "capsule"
         anchors.fill: flow
         anchors.margins: -2
         radius: height / 2
         color: Theme.fill
+        border { color: ws.style === "capsule" ? Theme.stroke : "transparent"; width: ws.style === "capsule" ? 1 : 0 }
+    }
+
+    Rectangle {   // capsule: the thumb, one piece that slides from workspace to workspace
+        readonly property Item at: ws.style === "capsule" ? cells.itemAt(ws.current) : null
+        visible: at !== null
+        x: flow.x + (at?.x ?? 0); y: flow.y + (at?.y ?? 0)
+        width: at?.width ?? 0; height: at?.height ?? 0
+        radius: Math.min(width, height) / 2
+        color: Theme.light ? Theme.surfaceColor : Theme.raised
+        border { color: Theme.stroke; width: 1 }
+        Behavior on x { NumberAnimation { duration: Theme.enter; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve } }
+        Behavior on y { NumberAnimation { duration: Theme.enter; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve } }
+        Behavior on width { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     }
 
     Grid {
@@ -63,11 +78,12 @@ Item {
         anchors.centerIn: parent
         // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
         columns: ws.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
-        spacing: ({ dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0, tabs: 0, reticle: 2 })[ws.style] ?? 4
+        spacing: ({ capsule: 0, dots: 6, blocks: 0, squares: 6, filled: 2, numbers: 0, tabs: 0, reticle: 2 })[ws.style] ?? 4
         verticalItemAlignment: Grid.AlignVCenter
         horizontalItemAlignment: Grid.AlignHCenter
 
         Repeater {
+            id: cells
             model: ws.list
             Item {
                 id: cell
@@ -79,10 +95,10 @@ Item {
 
                 // along the bar (main) and across it (cross); a dot stretches along the bar when current
                 readonly property real main: s === "dots" ? (on ? 20 : 8) : s === "blocks" ? ws.thickness * 0.95
-                    : s === "squares" ? 34 : s === "numbers" ? 22 : s === "reticle" ? Math.max(label.implicitWidth + 14, 22)
+                    : s === "squares" ? 34 : s === "numbers" ? 22 : s === "reticle" ? Math.max(label.implicitWidth + 14, 22) : s === "capsule" ? Math.max(label.implicitWidth + 14, 24)
                     : Math.max(label.implicitWidth + (s === "tabs" ? 20 : 12), 20)
                 readonly property real cross: s === "dots" ? 8 : s === "blocks" ? ws.thickness - (Theme.barFloating ? 2 * Theme.line : 1) : s === "squares" ? 34 : s === "numbers" ? 20
-                    : s === "tabs" ? ws.thickness - 1 : s === "reticle" ? Math.min(ws.thickness - 6, 22) : 20
+                    : s === "tabs" ? ws.thickness - 1 : s === "reticle" || s === "capsule" ? Math.min(ws.thickness - 8, 22) : 20
                 implicitWidth: ws.vertical ? cross : main
                 implicitHeight: ws.vertical ? main : cross
                 Behavior on implicitWidth { enabled: !ws.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
@@ -90,8 +106,9 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    radius: cell.s === "dots" || cell.s === "numbers" ? Math.min(width, height) / 2 : 0
-                    color: cell.on ? (cell.s === "reticle" ? Qt.alpha(Theme.accent, 0.14) : Theme.accent)
+                    radius: cell.s === "dots" || cell.s === "numbers" || cell.s === "capsule" ? Math.min(width, height) / 2 : 0
+                    visible: cell.s !== "capsule" || (area.containsMouse && !cell.on)
+                    color: cell.s === "capsule" ? Qt.alpha(ws.tone, 0.07) : cell.on ? (cell.s === "reticle" ? Qt.alpha(Theme.accent, 0.14) : Theme.accent)
                          : cell.s === "dots" ? (cell.busy ? ws.dim : Qt.alpha(ws.dim, 0.45))
                          : area.containsMouse ? Qt.alpha(ws.tone, 0.11) : "transparent"
                     border { color: cell.s === "squares" && !cell.on ? ws.tone : "transparent"; width: cell.s === "squares" ? 2 : 0 }
@@ -128,7 +145,7 @@ Item {
                     textFormat: cell.s === "tabs" ? Text.StyledText : Text.PlainText
                     text: cell.s === "tabs" && !cell.on && ws.app(cell.modelData) !== "" && !ws.vertical
                           ? `<font color="${ws.dim}">${cell.modelData.id}</font> ${ws.app(cell.modelData)}` : ws.label(cell.modelData)
-                    color: cell.on ? (cell.s === "reticle" ? Theme.accent : Theme.accentText)
+                    color: cell.on ? (cell.s === "reticle" || cell.s === "capsule" ? Theme.accent : Theme.accentText)
                          : cell.modelData.urgent ? Theme.warning : cell.busy || area.containsMouse ? ws.tone : ws.dim
                     font {
                         family: cell.s === "blocks" ? Theme.displayFont : cell.s === "filled" || cell.s === "tabs" || cell.s === "reticle" ? Theme.monoFont : Theme.font
@@ -154,11 +171,11 @@ Item {
 
         Item {   // new workspace
             visible: ws.adds
-            readonly property real size: ws.style === "dots" ? 14 : ws.style === "blocks" ? ws.thickness * 0.7 : Math.min(ws.thickness - 6, 22)
+            readonly property real size: ws.style === "dots" ? 14 : ws.style === "capsule" ? Math.min(ws.thickness - 8, 22) : ws.style === "blocks" ? ws.thickness * 0.7 : Math.min(ws.thickness - 6, 22)
             implicitWidth: size; implicitHeight: size
             Rectangle {
                 anchors.fill: parent
-                radius: ws.style === "dots" || ws.style === "numbers" ? width / 2 : Theme.radius === 0 ? 0 : Math.min(Theme.radiusSmall, width / 3)
+                radius: ws.style === "dots" || ws.style === "numbers" || ws.style === "capsule" ? width / 2 : Theme.radius === 0 ? 0 : Math.min(Theme.radiusSmall, width / 3)
                 color: addArea.pressed ? Qt.alpha(ws.tone, 0.18) : addArea.containsMouse ? Qt.alpha(ws.tone, 0.11) : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
             }
