@@ -72,6 +72,12 @@ Item {
     // the tooltip follows a reading that changes while the pointer is on it
     Connections { target: w.body; function onTipChanged() { if (area.containsMouse) dock.hovering(w, w.body.tip, true) } }
 
+    // hover motion: `kick` runs 0 -> 1 each time the pointer arrives (one-shot moves); `w.lit` holds while it stays
+    readonly property bool lit: tile.lit && Theme.moves
+    property real kick: 1
+    onLitChanged: if (lit) kicker.restart()
+    NumberAnimation { id: kicker; target: w; property: "kick"; from: 0; to: 1; duration: Theme.pulse; easing.type: Theme.easing }
+
     // a panel opened from a widget appears beside it
     function beside() { Anchor.take(w, dock.edge, dock.origin()) }
 
@@ -159,8 +165,9 @@ Item {
                     }
                 }
                 Repeater {   // the hands from the centre, each with a short stub past the pin: hour, then minute
-                    model: [{ length: 0.5, thick: Math.max(3, w.s * 0.085), turn: (now.getHours() % 12 + now.getMinutes() / 60) * 30 },
-                            { length: 0.76, thick: Math.max(2, w.s * 0.055), turn: now.getMinutes() * 6 + (Config.bar.seconds ? now.getSeconds() / 10 : 0) }]
+                    // hover: the hands sweep once round the face and land back on the time
+                    model: [{ length: 0.5, thick: Math.max(3, w.s * 0.085), turn: (now.getHours() % 12 + now.getMinutes() / 60) * 30 + (w.kick < 1 ? w.kick * 360 : 0) },
+                            { length: 0.76, thick: Math.max(2, w.s * 0.055), turn: now.getMinutes() * 6 + (Config.bar.seconds ? now.getSeconds() / 10 : 0) + (w.kick < 1 ? w.kick * 720 : 0) }]
                     Rectangle {
                         id: hand
                         required property var modelData
@@ -189,9 +196,15 @@ Item {
             tip: Qt.formatDate(Sys.now, "dddd d MMMM yyyy")
             function primary(widget) { w.beside(); Calendar.toggle() }
             Column {
+                id: page
                 anchors.centerIn: parent
                 anchors.verticalCenterOffset: -1
                 spacing: -Math.round(w.s * 0.04)
+                transform: Rotation {   // hover: the page flips over, like a desk calendar
+                    origin { x: page.width / 2; y: 0 }
+                    axis { x: 1; y: 0; z: 0 }
+                    angle: w.kick < 1 ? w.kick * 360 : 0
+                }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: Qt.formatDate(Sys.now, "ddd").toUpperCase()
@@ -219,7 +232,17 @@ Item {
                 anchors.centerIn: parent
                 spacing: -Math.round(w.s * 0.06)
                 Text {
+                    id: sky
                     anchors.horizontalCenter: parent.horizontalCenter
+                    property real bob: 0
+                    transform: Translate { y: sky.bob }
+                    SequentialAnimation on bob {   // hover: the sky drifts up and down
+                        running: w.lit
+                        loops: Animation.Infinite
+                        onRunningChanged: if (!running) sky.bob = 0
+                        NumberAnimation { to: -w.s * 0.06; duration: Theme.pulse; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 0; duration: Theme.pulse; easing.type: Easing.InOutSine }
+                    }
                     text: Weather.glyph
                     color: Theme.accent
                     font { family: Theme.iconFont; pixelSize: Math.round(w.s * 0.38) }
@@ -262,6 +285,14 @@ Item {
                 color: Qt.alpha(dock.ink, 0.12)
                 opacity: media.playing ? 1 : 0.45
                 Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+                scale: w.lit ? 1.08 : 1
+                Behavior on scale { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
+                RotationAnimation on rotation {   // a record: turns slowly while it plays
+                    running: media.playing && Theme.moves
+                    loops: Animation.Infinite
+                    from: 0; to: 360
+                    duration: Theme.pulse * 10
+                }
                 Image {
                     id: cover
                     anchors.fill: parent
@@ -306,6 +337,7 @@ Item {
                 text: Sys.volumeGlyph
                 color: Sys.muted ? Qt.alpha(dock.ink, 0.5) : dock.ink
                 font.pixelSize: Math.round(w.s * 0.34)
+                scale: 1 + 0.18 * Math.sin(Math.PI * w.kick)   // hover: one beat
             }
         }
     }
@@ -333,7 +365,7 @@ Item {
                         border { width: 1.5; color: Qt.alpha(dock.ink, 0.6) }
                         Rectangle {   // the charge
                             anchors { left: parent.left; top: parent.top; bottom: parent.bottom; margins: 3 }
-                            width: Math.max(2, (parent.width - 6) * Sys.batteryPct / 100)
+                            width: Math.max(2, (parent.width - 6) * Sys.batteryPct / 100 * w.kick)   // hover: it fills up again
                             radius: Math.max(0, parent.radius - 2)
                             color: bat.tone
                             Behavior on width { NumberAnimation { duration: Theme.anim } }
@@ -370,7 +402,7 @@ Item {
             function primary(widget) { w.beside(); Sensors.toggle() }
             Component.onCompleted: Metrics.want(["cpu"], 2)
             Component.onDestruction: Metrics.unwant(["cpu"])
-            Ring { value: parent.pct / 100; tone: parent.pct >= 95 ? Theme.error : parent.pct >= 85 ? Theme.warning : Theme.accent }
+            Ring { value: parent.pct / 100; tone: parent.pct >= 95 ? Theme.error : parent.pct >= 85 ? Theme.warning : Theme.accent; rotation: w.kick < 1 ? w.kick * 360 : 0 }   // hover: one turn
             Figure { anchors.centerIn: parent; text: Math.round(parent.pct); font.pixelSize: Math.round(w.s * 0.28) }
         }
     }
@@ -394,7 +426,17 @@ Item {
                         required property var modelData
                         spacing: 1
                         Text {
+                            id: arrow
                             anchors.verticalCenter: parent.verticalCenter
+                            property real flow: 0   // hover: down flows down, up flows up
+                            transform: Translate { y: arrow.flow * (arrow.text === "\u{F0045}" ? 1 : -1) }
+                            SequentialAnimation on flow {
+                                running: w.lit
+                                loops: Animation.Infinite
+                                onRunningChanged: if (!running) arrow.flow = 0
+                                NumberAnimation { from: -w.s * 0.05; to: w.s * 0.05; duration: Theme.pulse; easing.type: Easing.InOutSine }
+                                NumberAnimation { to: -w.s * 0.05; duration: Theme.pulse; easing.type: Easing.InOutSine }
+                            }
                             text: modelData.glyph; color: modelData.tone
                             font { family: Theme.iconFont; pixelSize: Math.round(w.s * 0.22) }
                         }
@@ -418,7 +460,13 @@ Item {
             tip: "Screenshot an area  ·  right-click for more tools"
             function primary(widget) { Quickshell.execDetached(["sh", "-c", "sleep 0.3; screenshot"]) }
             function secondary(widget) { w.beside(); UtilityMenu.toggle() }
-            Glyph { text: "\u{F0100}"; font.pixelSize: Math.round(w.s * 0.42) }
+            Glyph { text: "\u{F0100}"; font.pixelSize: Math.round(w.s * 0.42); scale: 1 - 0.25 * Math.sin(Math.PI * w.kick) }   // hover: a shutter blink
+            Rectangle {   // and its flash
+                anchors.fill: parent
+                radius: Math.round(w.s * 0.27)
+                color: Theme.accent
+                opacity: 0.35 * Math.sin(Math.PI * w.kick)
+            }
         }
     }
 
@@ -457,7 +505,7 @@ Item {
             }
             Timer { id: disarm; interval: 4000; onTriggered: trash.armed = false }
             Timer { id: refreshSoon; interval: 800; onTriggered: trash.refresh() }
-            Glyph { text: trash.count > 0 ? "\u{F0A79}" : "\u{F0A7A}"; color: trash.armed ? Theme.error : dock.ink }
+            Glyph { text: trash.count > 0 ? "\u{F0A79}" : "\u{F0A7A}"; color: trash.armed ? Theme.error : dock.ink; rotation: 14 * Math.sin(3 * Math.PI * w.kick) * (1 - w.kick) }   // hover: a wiggle
             Badge { n: trash.count }
         }
     }
@@ -486,11 +534,12 @@ Item {
                         color: Qt.alpha(dock.ink, modelData.alpha)
                         visible: dl.count >= modelData.from
                         transformOrigin: Item.Bottom
-                        rotation: modelData.angle
+                        rotation: modelData.angle * (w.lit ? 1.7 : 1)   // hover: the pages fan out
+                        Behavior on rotation { NumberAnimation { duration: Theme.anim; easing.type: Easing.OutBack } }
                         antialiasing: true
                     }
                 }
-                Rectangle {   // the front page
+                Rectangle {   // the front page; hover: its arrow drops in
                     anchors.fill: parent
                     radius: Math.round(w.s * 0.07)
                     color: Theme.accent
@@ -499,6 +548,7 @@ Item {
                         anchors.verticalCenterOffset: 1
                         text: "\u{F01DA}"
                         color: Theme.accentText
+                        transform: Translate { y: (w.kick - 1) * w.s * 0.12 }
                         font { family: Theme.iconFont; pixelSize: Math.round(w.s * 0.32) }
                     }
                 }

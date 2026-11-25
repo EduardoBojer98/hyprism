@@ -80,7 +80,15 @@ Item {
             transformOrigin: dock.edgeOrigin
             // hover: lift (moves off the edge) or grow (from the edge); press: a small give
             property real raise: dock.hoverStyle === "lift" && area.containsMouse && !app.dragged && Theme.moves ? -6 * dock.sign : 0
-            transform: Translate { x: dock.vertical ? icon.raise : 0; y: dock.vertical ? 0 : icon.raise }
+            property real hop: 0   // launching: hops off the edge until its window shows (three at most)
+            transform: Translate { x: dock.vertical ? icon.raise + icon.hop : 0; y: dock.vertical ? 0 : icon.raise + icon.hop }
+            SequentialAnimation on hop {
+                running: app.launching && Theme.moves
+                loops: 3
+                onRunningChanged: if (!running) icon.hop = 0
+                NumberAnimation { to: -dock.iconSize * 0.35 * dock.sign; duration: Theme.pulse / 2; easing.type: Easing.OutQuad }
+                NumberAnimation { to: 0; duration: Theme.pulse / 2; easing.type: Easing.OutBounce }
+            }
             Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
             scale: (area.pressed && !app.dragged ? Theme.pressScale : dock.hoverStyle === "grow" && area.containsMouse && !app.dragged && Theme.moves ? 1.14 : 1) * (dock.magnify ? dock.swell(app) : 1)
             Behavior on scale { enabled: !dock.magnify; NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }

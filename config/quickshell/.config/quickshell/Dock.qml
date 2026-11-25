@@ -302,8 +302,21 @@ PanelWindow {
                 Loader {
                     id: cell
                     required property var modelData
+                    required property int index
                     // a widget with nothing to show (no player) takes no place
                     visible: modelData.kind !== "widget" || (item?.body?.shown ?? false)
+                    // a new part pops in from the edge (all of them in turn when the dock first shows);
+                    // reordering keeps the parts (ScriptModel objectProp), so only new ones pop
+                    property real enter: Theme.moves ? 0 : 1
+                    opacity: enter
+                    scale: 0.4 + 0.6 * enter
+                    transformOrigin: root.edgeOrigin
+                    onLoaded: if (enter < 1) popIn.start()
+                    SequentialAnimation {
+                        id: popIn
+                        PauseAnimation { duration: Math.min(cell.index, 12) * Theme.animFast / 3 }
+                        NumberAnimation { target: cell; property: "enter"; to: 1; duration: Theme.anim * 2; easing.type: Easing.OutBack }
+                    }
                     sourceComponent: ({ launcher: launcherPart, app: appPart, window: windowPart, widget: widgetPart, sep: sepPart })[modelData.kind]
                     Component { id: launcherPart; DockLauncher { dock: root } }
                     Component { id: appPart; DockApp { dock: root; modelData: cell.modelData.value; index: 0 } }
