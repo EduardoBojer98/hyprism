@@ -9,6 +9,7 @@ import QtQuick.Shapes
 // Used by Dock.qml, which passes itself in as `dock`.
 Item {
     id: w
+    transform: Translate { x: dock.magnify && !dock.vertical ? dock.push(w) : 0; y: dock.magnify && dock.vertical ? dock.push(w) : 0 }   // magnify: make room
     required property var dock
     required property string modelData            // the widget's id
     readonly property var kind: ({ clock: clockBody, date: dateBody, weather: weatherBody, media: mediaBody, volume: volumeBody,
@@ -38,8 +39,8 @@ Item {
         property real raise: dock.hoverStyle === "lift" && lit && Theme.moves ? -6 * dock.sign : 0
         transform: Translate { x: dock.vertical ? tile.raise : 0; y: dock.vertical ? 0 : tile.raise }
         Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-        scale: area.pressed ? Theme.pressScale : dock.hoverStyle === "grow" && tile.lit && Theme.moves ? 1.14 : 1
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+        scale: (area.pressed ? Theme.pressScale : dock.hoverStyle === "grow" && tile.lit && Theme.moves ? 1.14 : 1) * (dock.magnify ? dock.swell(w) : 1)
+        Behavior on scale { enabled: !dock.magnify; NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         Behavior on color { ColorAnimation { duration: Theme.anim } }
 
         Rectangle {   // top sheen, like the launcher tile on glass

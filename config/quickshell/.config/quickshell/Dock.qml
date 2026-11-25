@@ -27,6 +27,27 @@ PanelWindow {
     readonly property color ink: ds.fill === "ink" ? Theme.base : Theme.text
     readonly property int slot: iconSize + 4          // one icon's cell, along the dock
     readonly property int cellCross: iconSize + 8     // and across it (room for the mark)
+
+    // hover "magnify": icons swell toward the pointer on a smooth falloff and push their neighbours
+    // aside, the island widening with them. Distances use the row's own layout (transforms don't move
+    // it), so the swell never feeds back into where the pointer seems to be.
+    readonly property bool magnify: hoverStyle === "magnify" && Theme.moves
+    readonly property real growth: 0.55 * magOn                // extra size of the icon under the pointer
+    readonly property real reach: slot * 2.8                   // how far along the row the swell spreads
+    property real magOn: magnify && hover.hovered && dragId === "" && runDrag === "" && !menu.entry ? 1 : 0
+    Behavior on magOn { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+    property real pointer: 0   // along the row, in row coordinates; kept on leave so the swell eases out in place
+    readonly property real rowStart: vertical ? (height - row.height) / 2 : (width - row.width) / 2
+    readonly property real pointerNow: (vertical ? hover.point.position.y : hover.point.position.x) - rowStart
+    onPointerNowChanged: if (magnify && hover.hovered) pointer = pointerNow
+    function bump(d) { return d >= reach ? 0 : (1 + Math.cos(Math.PI * d / reach)) / 2 }          // 1 at the pointer, 0 at reach
+    function bumpArea(a) { return a >= reach ? reach / 2 : a / 2 + reach / (2 * Math.PI) * Math.sin(Math.PI * a / reach) }
+    function centreOf(item) { return vertical ? item.y + item.height / 2 : item.x + item.width / 2 }
+    function swell(item) { return 1 + growth * bump(Math.abs(centreOf(item) - pointer)) }
+    // how far a part slides away from the pointer: the growth of everything between them
+    function push(item) { const d = centreOf(item) - pointer; return Math.sign(d) * growth * iconSize / (slot + row.spacing) * bumpArea(Math.abs(d)) }
+    readonly property real growBefore: growth * iconSize / (slot + row.spacing) * bumpArea(Math.max(0, pointer))
+    readonly property real growAfter: growth * iconSize / (slot + row.spacing) * bumpArea(Math.max(0, (vertical ? row.height : row.width) - pointer))
     // by name, re-read when monitors change: after a display switch Hyprland makes new monitor objects and monitorFor() stays stale
     readonly property HyprlandMonitor monitor: Hyprland.monitors.values.find(m => m.name === screen?.name) ?? null
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
@@ -191,8 +212,8 @@ PanelWindow {
         // translate (no layout), out of the way towards the edge, faster out than in.
         readonly property real across: root.vertical ? width : height
         readonly property real restAt: root.sign > 0 ? (root.vertical ? parent.width : parent.height) - across - root.lift : root.lift
-        x: root.vertical ? restAt : (parent.width - width) / 2
-        y: root.vertical ? (parent.height - height) / 2 : restAt
+        x: root.vertical ? restAt : (parent.width - width) / 2 + (root.growAfter - root.growBefore) / 2
+        y: root.vertical ? (parent.height - height) / 2 + (root.growAfter - root.growBefore) / 2 : restAt
         property real hide: root.shown ? 0 : (across + root.lift + 4) * root.sign
         transform: Translate { x: root.vertical ? island.hide : 0; y: root.vertical ? 0 : island.hide }
         opacity: root.shown ? 1 : 0
@@ -200,8 +221,9 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: root.shown ? Theme.anim : Theme.exit } }
 
         readonly property int pad: Theme.dockPad
-        width: root.vertical ? Theme.dockThickness : row.implicitWidth + pad * 2 + (root.shape === "pill" ? 8 : 0)
-        height: root.vertical ? row.implicitHeight + pad * 2 + (root.shape === "pill" ? 8 : 0) : Theme.dockThickness
+        readonly property real grown: root.growBefore + root.growAfter
+        width: root.vertical ? Theme.dockThickness : row.implicitWidth + pad * 2 + (root.shape === "pill" ? 8 : 0) + grown
+        height: root.vertical ? row.implicitHeight + pad * 2 + (root.shape === "pill" ? 8 : 0) + grown : Theme.dockThickness
         radius: root.shape === "pill" ? across / 2 : root.shape === "tile" ? Theme.radiusPanel : Theme.radius
         color: ({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[root.ds.fill] ?? Theme.glass
         border { width: Theme.line; color: root.ds.fill === "ink" ? Theme.text : Theme.stroke }
@@ -228,6 +250,9 @@ PanelWindow {
         Grid {
             id: row
             anchors.centerIn: parent
+            // magnify: the row stays put on screen while the island grows unevenly around it
+            anchors.horizontalCenterOffset: root.vertical ? 0 : (root.growBefore - root.growAfter) / 2
+            anchors.verticalCenterOffset: root.vertical ? (root.growBefore - root.growAfter) / 2 : 0
             // one row or one column: only `columns` is set (setting rows too adds spacing for empty rows)
             columns: root.vertical ? 1 : Math.max(1, visibleChildren.filter(c => c.width > 0).length)
             spacing: 6

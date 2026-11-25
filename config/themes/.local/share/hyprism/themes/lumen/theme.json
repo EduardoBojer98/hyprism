@@ -77,8 +77,8 @@
     "displayWeight": 600
   },
   "shape": {
-    "radius": 18,
-    "radiusSmall": 11,
+    "radius": 22,
+    "radiusSmall": 12,
     "line": 1,
     "material": "glass",
     "density": "regular"
@@ -115,8 +115,8 @@
   },
   "dock": {
     "edge": "bottom",
-    "shape": "pill",
-    "hover": "grow",
+    "shape": "tile",
+    "hover": "magnify",
     "mark": "dot",
     "fill": "glass"
   },
@@ -163,7 +163,7 @@
     "gapsIn": 6,
     "gapsOut": 12,
     "border": 1,
-    "rounding": 16,
+    "rounding": 20,
     "active": [
       "0a62d066"
     ],

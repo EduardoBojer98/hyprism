@@ -12,7 +12,7 @@ Rectangle {
     required property var dock
     id: tip
     readonly property bool on: dock.tipReady && dock.tipItem !== null && dock.menuBox.entry === null && dock.dragId === "" && !dock.previewOn
-    readonly property point at: dock.tipItem ? dock.beside(width, height, dock.middleOf(dock.tipItem), 8) : Qt.point(0, 0)
+    readonly property point at: dock.tipItem ? dock.beside(width, height, dock.middleOf(dock.tipItem), 8 + (dock.magnify ? dock.iconSize * dock.growth : 0)) : Qt.point(0, 0)
     x: at.x; y: at.y
     width: tipLabel.implicitWidth + 16
     height: 24

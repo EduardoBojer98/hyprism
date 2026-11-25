@@ -45,6 +45,7 @@ Item {
     readonly property real along: dock.vertical ? y : x
     readonly property real mid: (dock.vertical ? height : width) / 2   // tooltip / menu centre
     z: dragged ? 1 : 0
+    transform: Translate { x: dock.magnify && !dock.vertical ? dock.push(app) : 0; y: dock.magnify && dock.vertical ? dock.push(app) : 0 }   // magnify: make room
     // neighbours glide aside while an icon is dragged past them
     Behavior on x { enabled: dock.dragId !== "" && !dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     Behavior on y { enabled: dock.dragId !== "" && dock.vertical; NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
@@ -81,8 +82,8 @@ Item {
             property real raise: dock.hoverStyle === "lift" && area.containsMouse && !app.dragged && Theme.moves ? -6 * dock.sign : 0
             transform: Translate { x: dock.vertical ? icon.raise : 0; y: dock.vertical ? 0 : icon.raise }
             Behavior on raise { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-            scale: area.pressed && !app.dragged ? Theme.pressScale : dock.hoverStyle === "grow" && area.containsMouse && !app.dragged && Theme.moves ? 1.14 : 1
-            Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+            scale: (area.pressed && !app.dragged ? Theme.pressScale : dock.hoverStyle === "grow" && area.containsMouse && !app.dragged && Theme.moves ? 1.14 : 1) * (dock.magnify ? dock.swell(app) : 1)
+            Behavior on scale { enabled: !dock.magnify; NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
 
             // launching: a slow breath until the first window shows up
             SequentialAnimation on opacity {

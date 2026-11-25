@@ -4,7 +4,7 @@
 local ok, saved = pcall(require, "settings.theme")
 THEME = ok and type(saved) == "table" and saved or {}
 local defaults = {
-    theme = "lumen", gaps_in = 6, gaps_out = 12, border_size = 1, rounding = 16,
+    theme = "lumen", gaps_in = 6, gaps_out = 12, border_size = 1, rounding = 20,
     active = { "0a62d066" }, border_loop = false, border_speed = 5, inactive = "cfd4dd99",
     shadow = "soft", blur = true, motion = "spring", accent = "0a62d0", accent2 = "7b4fe0",
     border_angle = 45, glow = "",
@@ -57,12 +57,12 @@ hl.config({
         rounding_power = 2.4,           -- squircle-like corners where a theme rounds them
         active_opacity = 1.0,
         blur = {
-            size       = 10,
-            passes     = 3,
+            size       = 12,
+            passes     = 4,
             noise      = 0.015,
             contrast   = 1.0,
             brightness = 1.0,
-            vibrancy   = 0.18,
+            vibrancy   = 0.24,
             popups     = true,
         },
     },

@@ -11,6 +11,7 @@ import QtQuick.Effects
 Item {
     required property var dock
     id: win
+    transform: Translate { x: dock.magnify && !dock.vertical ? dock.push(win) : 0; y: dock.magnify && dock.vertical ? dock.push(win) : 0 }   // magnify: make room
     readonly property real radius: Theme.radius   // for the focus ring
     required property var modelData           // HyprlandToplevel
     readonly property var entry: dock.entryFor(modelData.wayland?.appId ?? "")
@@ -76,8 +77,8 @@ Item {
         border { color: win.focused ? Theme.accent : Qt.alpha(dock.ink, 0.2); width: win.focused ? 2 : 1 }
         opacity: win.minimised ? 0.55 : 1
         transformOrigin: dock.edgeOrigin
-        scale: winArea.pressed ? Theme.pressScale : dock.hoverStyle === "grow" && winArea.containsMouse && Theme.moves ? 1.1 : 1
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+        scale: (winArea.pressed ? Theme.pressScale : dock.hoverStyle === "grow" && winArea.containsMouse && Theme.moves ? 1.1 : 1) * (dock.magnify ? dock.swell(win) : 1)
+        Behavior on scale { enabled: !dock.magnify; NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         clip: true
 
         ScreencopyView {

@@ -38,9 +38,10 @@ Singleton {
     readonly property string material: current.shape.material
     readonly property bool glassy: material === "glass"
     readonly property color surfaceColor: c.surface
-    readonly property color glass: glassy ? Qt.alpha(c.surface, 0.78) : c.surface         // bar items, dock, OSD
-    readonly property color glassStrong: glassy ? Qt.alpha(c.surface, 0.92) : c.surface   // panels with text
-    readonly property color menu: c.surface                                                // menus, lists
+    // glass stays above the blur layer rule's ignore_alpha (0.5, modules/rules.lua) or it loses its blur
+    readonly property color glass: glassy ? Qt.alpha(c.surface, light ? 0.56 : 0.62) : c.surface         // bar items, dock, OSD
+    readonly property color glassStrong: glassy ? Qt.alpha(c.surface, light ? 0.72 : 0.78) : c.surface   // panels with text
+    readonly property color menu: glassy ? glassStrong : c.surface                                         // menus, lists
     readonly property color raised: c.raised
     readonly property color sidebar: Qt.alpha("#000000", light ? 0.035 : 0.18)
     readonly property color stroke: c.line

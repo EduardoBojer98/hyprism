@@ -20,7 +20,7 @@ import QtQuick
 //          decor (brackets), sep (a rule between items), sepStyle line|slash|pip (that rule upright or leaning), dimLabels (a readout's word and glyph dimmed, its value
 //          in ink: "cpu 7%"), start / center / end: the items (BarWidget.qml ids)
 // dock     edge (the theme's place for it; the same edge as the bar puts it inside the bar),
-//          shape pill|tile|block, hover lift|grow|plate, mark line|dot|bar, fill glass|surface|ink
+//          shape pill|tile|block, hover lift|grow|plate|magnify, mark line|dot|bar, fill glass|surface|ink
 // popup    depth soft (blurred shadow) | hard (offset block shadow) | glow (accent haze) | none (frame only);
 //          decor brackets (accent corner marks on every panel) | topline (an accent line along the top);
 //          decorColour accent|accent2 (the colour of those marks);

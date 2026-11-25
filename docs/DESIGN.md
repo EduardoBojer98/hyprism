@@ -27,7 +27,7 @@ over ornament, one icon language, motion that confirms an action and never makes
 | `font` | ui, display (clocks, big numbers), mono, size (body px), displayWeight |
 | `shape` | radius, radiusSmall, line (panel border px), material: `solid` or `glass`, density: `compact`, `regular` or `roomy` (spacing in bars, panels and lists) |
 | `bar` | edge, size, floating, segmented (a pill per section), fill (glass, surface, ground, ink, none), line, sep (rules between items), sepStyle (line, slash, pip), voice (icons, words, mixed, caps), mono, ws (dots, filled, text, numbers, blocks, squares, tabs, reticle), clock (plain, accent, display, block, split), decor (brackets), start / center / end items |
-| `dock` | edge (its own place; the bar's edge puts it inside the bar), shape (pill, tile, block), hover (lift, grow, plate), mark (line, dot, bar), fill |
+| `dock` | edge (its own place; the bar's edge puts it inside the bar), shape (pill, tile, block), hover (lift, grow, plate, magnify: icons swell toward the pointer and push their neighbours aside), mark (line, dot, bar), fill |
 | `popup` | depth: soft (blurred shadow), hard (offset block), glow (accent haze), none (frame only); decor: brackets, topline, in decorColour (accent or accent2); tiles: solid or wash (Control Center tiles that are on) |
 | `motion` | enter / exit ms, curve (cubic bezier), travel px out of the trigger's side, start scale, press scale |
 | `launcher`, `notify` | placement, view (home = suggestions first), header (query set large), select (wash or inverse), prompt; corner, kind |
@@ -47,12 +47,12 @@ glass to Lumen, atlas to Poster, console and reactor to Monolith) and migration 
 |---|---|---|---|
 | Ground / text / accent | `#e8ebf1` / `#1c1d21` / clear blue `#0a62d0` (+ violet `#6a3fd0`) | `#141414` / ink `#141414` on paper `#f4f1ea` / `#c71900` (+ `#1b4dff`; the dark half keeps the bright `#ff573d`) | `#07080b` / `#eef2f6` / `#b6ff3b` (+ electric blue `#4f8cff`) |
 | Type | Inter, numerals at 600, 14 px | Archivo Black + Archivo, 14 px | JetBrains Mono, Martian Mono numerals (700), 13 px |
-| Shape · depth | r18, 1 px lines, frosted glass over Hyprland blur · soft shadow | r0, 3 px lines · hard offset block | r0, 1 px lines · faint accent glow; blue corner brackets on panels |
+| Shape · depth | r22, 1 px lines, see-through frosted glass over a strong Hyprland blur · soft shadow | r0, 3 px lines · hard offset block | r0, 1 px lines · faint accent glow; blue corner brackets on panels |
 | Density | regular | regular | regular |
 | Bar | top, 32 px, attached glass strip, dots, the date and time flush right | top, 52 px, attached paper strip, workspace blocks, big clock | top, 26 px, floating mono status line: quick tools, workspace numbers with lime HUD corner marks locked on the current one, then the dock's launchers on the left; media centred; small square pips between items, dim labels with bright values, weather then the date on a raised step and the time in a lime block flush right |
-| Dock | bottom, glass pill, icons grow | bottom, block, hard shadow, lift | inside the top bar |
+| Dock | bottom, rounded glass shelf, icons magnify toward the pointer | bottom, block, hard shadow, lift | inside the top bar |
 | Motion | 260/150 ms with a small spring overshoot, 8 px, scale 0.96 | 200/110 ms expo-out, 28 px slam | 140/90 ms expo-out, 4 px |
-| Windows | gaps 6/12, 1 px faint frame, r16, soft shadow, blur, spring | gaps 8/16, 3 px, r0, hard shadow, slam | gaps 4/8, 2 px, r0, no shadow, snappy |
+| Windows | gaps 6/12, 1 px faint frame, r20, soft shadow, blur, spring | gaps 8/16, 3 px, r0, hard shadow, slam | gaps 4/8, 2 px, r0, no shadow, snappy |
 | Window frame | accent | accent | gradient (lime to electric blue) |
 
 Contrast (WCAG 2): body text on surfaces 11:1 or more; secondary text 5.8:1 or more; hint text and the accent,

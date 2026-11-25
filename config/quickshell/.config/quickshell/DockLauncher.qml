@@ -11,6 +11,7 @@ import QtQuick.Effects
 Item {
     required property var dock
     id: launcher
+    transform: Translate { x: dock.magnify && !dock.vertical ? dock.push(launcher) : 0; y: dock.magnify && dock.vertical ? dock.push(launcher) : 0 }   // magnify: make room
     readonly property real radius: Theme.radius   // for the focus ring
     function activate() { Anchor.take(launcher, dock.edge, dock.origin()); Launcher.toggle() }
     activeFocusOnTab: true
@@ -31,8 +32,9 @@ Item {
         radius: dock.shape === "block" ? 0 : Math.round(dock.iconSize * 0.27)
         color: launcherTile.lit ? Qt.alpha(dock.ink, 0.17) : Qt.alpha(dock.ink, 0.07)
         border { color: Qt.alpha(dock.ink, launcherTile.lit ? 0.3 : 0.15); width: 1 }
-        scale: launcherArea.pressed ? Theme.pressScale : 1
-        Behavior on scale { NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
+        transformOrigin: dock.edgeOrigin
+        scale: (launcherArea.pressed ? Theme.pressScale : 1) * (dock.magnify ? dock.swell(launcher) : 1)
+        Behavior on scale { enabled: !dock.magnify; NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
         Behavior on color { ColorAnimation { duration: Theme.anim } }
 
         Rectangle {   // top sheen, like light on glass
