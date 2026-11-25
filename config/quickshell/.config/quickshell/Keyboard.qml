@@ -19,6 +19,29 @@ Singleton {
     property var catalog: []          // [{ code, variant, name }], layouts first, then variants
     function nameOf(code, variant) { return catalog.find(c => c.code === code && c.variant === (variant ?? ""))?.name ?? (code.toUpperCase() + (variant ? ` (${variant})` : "")) }
 
+    // Caps Lock and Num Lock: on when any keyboard has them on (Hyprland keeps them per keyboard). Read at
+    // start and whenever Hyprland reports one of the keys (binds.lua: pass-through binds call
+    // `qs ipc call keyboard locks`), never on a timer.
+    property bool capsLock: false
+    property bool numLock: false
+    property bool locksKnown: false   // false until the first read: changes before it are the start state, not news
+    function readLocks() { lockReader.running = false; lockReader.running = true }
+    Timer { id: lockLater; interval: 60; onTriggered: root.readLocks() }   // the state changes just after the key
+    Process {
+        id: lockReader
+        running: true
+        command: ["hyprctl", "-j", "devices"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let kbs
+                try { kbs = JSON.parse(text).keyboards ?? [] } catch (e) { return }
+                root.capsLock = kbs.some(k => k.capsLock === true)
+                root.numLock = kbs.some(k => k.numLock === true)
+                root.locksKnown = true
+            }
+        }
+    }
+
     function toggle() { popup.toggle() }
     function refresh() { reader.running = false; reader.running = true }
     Timer { id: retry; interval: 1000; onTriggered: root.refresh() }
@@ -64,6 +87,7 @@ Singleton {
     IpcHandler {
         target: "keyboard"
         function toggle(): void { root.toggle() }
+        function locks(): string { lockLater.restart(); return JSON.stringify({ caps: root.capsLock, num: root.numLock }) }
     }
 
     CursorPopup {

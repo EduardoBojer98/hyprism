@@ -371,6 +371,11 @@ ColumnLayout {
             ConfigChoice { section: "osd"; key: "position"; values: ["bottom", "top", "center"]; labels: ["Bottom", "Top", "Centre"] }
         }
         SettingRow {
+            label: "Screen"
+            hint: Config.osd.screen === "cursor" ? "The screen with the pointer, where you're working" : "The main screen (Settings > Displays), else the one you're working on"
+            ConfigChoice { section: "osd"; key: "screen"; values: ["main", "cursor"]; labels: ["Main display", "Pointer's display"] }
+        }
+        SettingRow {
             label: "Stays for"
             ConfigSlider { section: "osd"; key: "timeoutMs"; from: 600; to: 5000; step: 100; format: v => (v / 1000).toFixed(1) + " s" }
         }

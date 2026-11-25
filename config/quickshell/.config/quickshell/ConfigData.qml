@@ -128,8 +128,9 @@ JsonAdapter {
         property bool brightness: true
         property bool micMute: true
         property bool layout: true
-        property bool capsLock: true            // shows Caps Lock on/off (read from the keyboard light when the key is pressed, if it has one)
+        property bool capsLock: true            // shows Caps Lock and Num Lock on/off (Hyprland's state, read when the key is pressed)
         property string position: "bottom"      // bottom | top | center
+        property string screen: "main"          // main (Settings > Displays' main screen) | cursor (the screen you work on)
     }
     property JsonObject caffeine: JsonObject {
         property int defaultMinutes: 0          // 0 = until turned off
@@ -282,7 +283,7 @@ JsonAdapter {
         property string clearStyle: "clear"      // while see-through: clear (a flat overlay) | fade (an overlay thinning out from
                                                  // the screen edge) | frosted (the desktop blurred behind the overlay)
         property int clearTint: 30               // while see-through: the overlay's strength in the bar's colour, % (0: none)
-        property bool clearHalo: true            // while see-through: a soft halo in the bar's colour behind its items
+        property bool clearHalo: false           // while see-through: a soft halo in the bar's colour behind its items
         // your settings per item, over its bar/items/<id>/defaults.json. Every item understands: enabled, icon,
         // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). A second copy of an item
         // on the bar is "<id>#2" (then #3…) and has its own entry here. Example:

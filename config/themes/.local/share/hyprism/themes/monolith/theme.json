@@ -110,6 +110,7 @@
       "updates",
       "tray",
       "sysinfo",
+      "locks",
       "keyboard",
       "status",
       "notifications",

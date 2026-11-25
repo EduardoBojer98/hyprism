@@ -105,6 +105,7 @@
     "end": [
       "media",
       "tray",
+      "locks",
       "keyboard",
       "weather",
       "updates",

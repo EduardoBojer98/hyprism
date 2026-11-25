@@ -72,8 +72,13 @@ for i = 1, 10 do
     add("send-" .. i,      "Workspaces", "Send window to workspace " .. i, key("SHIFT + " .. k), hl.dsp.window.move({ workspace = i }))
 end
 add("workspace-previous", "Workspaces", "Previous workspace",        key("Tab"), hl.dsp.focus({ workspace = "previous" }))
--- Caps Lock's on-screen note: Hyprland tells the shell when the key is let go (the key still works as usual)
-add("caps-osd", "Keyboard", "Caps Lock note", "Caps_Lock", exec("qs ipc call osd caps"), { release = true, non_consuming = true, fixed = true })
+-- Caps Lock and Num Lock: Hyprland tells the shell when the key is let go, and the shell reads the new state
+-- for its pop-up and the bar (the keys still work as usual). Once a lock is on, its own modifier (CAPS / MOD2)
+-- is held on the release too, so each key has a bind with and without it.
+add("caps-osd",    "Keyboard", "Caps Lock note",       "Caps_Lock",        exec("qs ipc call keyboard locks"), { release = true, non_consuming = true, fixed = true })
+add("caps-osd-on", "Keyboard", "Caps Lock note (on)",  "CAPS + Caps_Lock", exec("qs ipc call keyboard locks"), { release = true, non_consuming = true, fixed = true })
+add("num-osd",     "Keyboard", "Num Lock note",        "Num_Lock",         exec("qs ipc call keyboard locks"), { release = true, non_consuming = true, fixed = true })
+add("num-osd-on",  "Keyboard", "Num Lock note (on)",   "MOD2 + Num_Lock",  exec("qs ipc call keyboard locks"), { release = true, non_consuming = true, fixed = true })
 -- Alt+Tab: hold Alt, Tab through the open windows (most recent first), let go to switch (AltTab.qml)
 add("window-switch",      "Windows", "Switch windows (hold Alt)", "ALT + Tab", exec("qs ipc call alttab next"))
 add("window-switch-back", "Windows", "Switch windows backwards",  "ALT + SHIFT + Tab", exec("qs ipc call alttab prev"))

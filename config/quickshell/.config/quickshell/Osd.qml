@@ -38,7 +38,10 @@ PanelWindow {
 
     Timer { running: true; interval: 2500; onTriggered: osd.armed = true }
 
-    screen: Displays.popupScreen   // the main screen (Settings > Displays), else the one you work on
+    // Settings > Notifications > On-screen display > Screen: the main screen (Settings > Displays; else the one you
+    // work on), or always the screen you work on (Hyprland's focused monitor, which follows the cursor)
+    screen: Config.osd.screen === "cursor" ? (Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Displays.popupScreen)
+                                           : Displays.popupScreen
     anchors.bottom: pos === "bottom"
     anchors.top: pos === "top"
     // above a bottom bar and the dock (a hiding one too, it shows when the pointer is down there)
@@ -71,33 +74,16 @@ PanelWindow {
         function onShortChanged() { osd.show("layout", "\u{F030C}", 0, Keyboard.short) }
     }
 
-    // caps lock: the keyboard's light, if it has one. Read when Hyprland reports the key (binds.lua: a
-    // pass-through bind on Caps_Lock's release calls `qs ipc call osd caps`), never on a timer
-    property string capsFile: ""
-    property int caps: -1
-    Process {
-        running: true
-        command: ["sh", "-c", "ls /sys/class/leds/*capslock/brightness 2>/dev/null | head -1"]
-        stdout: StdioCollector { onStreamFinished: { osd.capsFile = text.trim(); if (osd.capsFile !== "") capsRead.running = true } }   // baseline
+    // Caps Lock and Num Lock as Keyboard reads them from Hyprland (all keyboards, with or without a light)
+    Connections {
+        target: Keyboard
+        function onCapsLockChanged() { if (Keyboard.locksKnown && Config.osd.capsLock) osd.show("capsLock", "\u{F0632}", 0, Keyboard.capsLock ? "Caps Lock on" : "Caps Lock off") }
+        function onNumLockChanged() { if (Keyboard.locksKnown && Config.osd.capsLock) osd.show("capsLock", "\u{F03A0}", 0, Keyboard.numLock ? "Num Lock on" : "Num Lock off") }
     }
-    Process {
-        id: capsRead
-        command: ["cat", osd.capsFile]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const v = parseInt(text)
-                if (isNaN(v)) return
-                const on = v > 0 ? 1 : 0
-                if (osd.caps !== -1 && on !== osd.caps && Config.osd.capsLock) osd.show("capsLock", "\u{F030C}", 0, on ? "Caps Lock on" : "Caps Lock off")
-                osd.caps = on
-            }
-        }
-    }
-    Timer { id: capsLater; interval: 80; onTriggered: if (osd.capsFile !== "") capsRead.running = true }   // the light changes just after the key
 
     IpcHandler {
         target: "osd"
-        function caps(): void { capsLater.restart() }
+        function caps(): void { Keyboard.readLocks() }   // older binds.lua
         function brightness(percent: int): void { Sys.brightness = percent; osd.show("brightness", "\u{F00DF}", percent / 100) }
         function test(kind: string, text: string): void { if (Config.osd[kind]) osd.present("\u{F030C}", 0, text) }
     }
