@@ -29,8 +29,11 @@ Item {
         width: dock.iconSize
         height: dock.iconSize
         radius: dock.shape === "block" ? 0 : Math.round(dock.iconSize * 0.27)
-        color: launcherTile.lit ? Qt.alpha(dock.ink, 0.17) : Qt.alpha(dock.ink, 0.07)
-        border { color: Qt.alpha(dock.ink, launcherTile.lit ? 0.3 : 0.15); width: 1 }
+        // look "none" has no island behind it: a solid tile, like an app icon, so it reads on any wallpaper
+        readonly property bool bare: dock.look === "none"
+        color: bare ? Qt.tint(Theme.surfaceColor, Qt.alpha(dock.ink, launcherTile.lit ? 0.12 : 0))
+                    : launcherTile.lit ? Qt.alpha(dock.ink, 0.17) : Qt.alpha(dock.ink, 0.07)
+        border { color: bare ? Theme.stroke : Qt.alpha(dock.ink, launcherTile.lit ? 0.3 : 0.15); width: 1 }
         transformOrigin: dock.edgeOrigin
         scale: (launcherArea.pressed ? Theme.pressScale : 1) * (dock.magnify ? dock.swell(launcher) : 1)
         Behavior on scale { enabled: !dock.magnify; NumberAnimation { duration: Theme.animFast; easing.type: Theme.easing } }
