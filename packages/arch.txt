@@ -105,6 +105,7 @@ gitleaks                 gitleaks                           repo
 greetd                   greetd                             repo
 regreet                  greetd-regreet                     repo
 cage                     cage                               repo
+wlr-randr                wlr-randr                          repo
 # ASUS laptops (modules/asus)
 asusctl                  asusctl                            repo
 rog-control-center       rog-control-center                 repo

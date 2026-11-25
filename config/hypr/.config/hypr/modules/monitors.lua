@@ -13,8 +13,11 @@ local sok, shared = pcall(require, "settings.shared")
 SHARED = sok and type(shared) == "table" and shared or nil
 -- a list, one entry per monitor handed over; a file from before several could be shared holds one entry itself
 if SHARED and SHARED.output then SHARED = { SHARED } end
+-- name: a connector, or "desc:<description>" for a screen Hyprland no longer lists (it is mirroring)
 local function handed(name)
-    for _, s in ipairs(SHARED or {}) do if s.output == name then return s end end
+    for _, s in ipairs(SHARED or {}) do
+        if s.output == name or (s.description and s.description ~= "" and name == "desc:" .. s.description) then return s end
+    end
 end
 
 -- Saved layouts are keyed by a screen's description ("make model serial"), or by its connector name (HDMI-A-1)
@@ -38,6 +41,15 @@ local function key_of(name)
     return name
 end
 
+-- a connector key (HDMI-A-1) whose screen is also saved under its description: a stale duplicate, left over from
+-- a moment the screen reported no description. Applying both would give one screen two conflicting rules.
+local function stale(key)
+    for _, m in ipairs(hl.get_monitors()) do
+        if m.name == key and m.description ~= "" and m.description ~= key and DISPLAYS[m.description] then return true end
+    end
+    return false
+end
+
 local function monitor(key, overrides)
     local name = resolve(key)
     -- mirror and disabled are always said: Hyprland keeps an earlier value (a hand-off, a Mirror setting) otherwise
@@ -47,9 +59,9 @@ local function monitor(key, overrides)
     spec.mirror = resolve(spec.mirror)
     local s = handed(name)
     if s then
-        spec = { output = name, mode = s.mode, position = "auto", scale = 1, mirror = s.mirror, disabled = false }
+        spec = { output = s.output, mode = s.mode, position = "auto", scale = 1, mirror = s.mirror, disabled = false }
         HANDED = HANDED or {}
-        HANDED[name] = true
+        HANDED[s.output] = true
     end
     hl.monitor(spec)
 end
@@ -62,7 +74,7 @@ local function reannounce()
     for _, m in ipairs(hl.get_monitors()) do shown[m.name] = true end
     local names = {}
     for key, d in pairs(DISPLAYS) do
-        if key:sub(1, 1) ~= "_" and not d.disabled and (d.mirror or "") == "" then names[key] = true end
+        if key:sub(1, 1) ~= "_" and not stale(key) and not d.disabled and (d.mirror or "") == "" then names[key] = true end
     end
     for name in pairs(HANDED or {}) do names[name] = true end -- shared monitors, when they aren't in the saved layout
     for key in pairs(names) do
@@ -83,7 +95,7 @@ end
 
 function apply_displays()
     for name in pairs(DISPLAYS) do
-        if name:sub(1, 1) ~= "_" then monitor(name) end
+        if name:sub(1, 1) ~= "_" and not stale(name) then monitor(name) end
     end
     for _, s in ipairs(SHARED or {}) do
         if not DISPLAYS[key_of(s.output)] then monitor(s.output) end

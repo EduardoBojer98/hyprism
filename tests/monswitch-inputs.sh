@@ -79,6 +79,11 @@ toggle
 check "toggle while mirroring takes it back (mirror off, then laptop input)" 'grep -q "SHARED = nil" "$sw/hypr.log" && grep -q "setvcp 60 0x11" "$sw/ddc.log" && [[ ! -e $sw/cfg/hypr/settings/shared.lua ]]'
 toggle pc
 check "pc while already handed over leaves Hyprland alone" '! grep -q "SHARED =" "$sw/hypr.log"'
+# a hand-off file left by a crashed session while the screen is already ours: laptop removes it
+echo "$own" >"$sw/monitors.json"
+echo 'return {}' >"$sw/cfg/hypr/settings/shared.lua"
+toggle laptop
+check "a stale hand-off file is removed when the screen is already ours" '[[ ! -e $sw/cfg/hypr/settings/shared.lua ]] && grep -q "SHARED = nil" "$sw/hypr.log"'
 echo "$own" >"$sw/monitors.json"
 touch "$sw/refuse"
 toggle

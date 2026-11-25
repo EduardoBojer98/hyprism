@@ -88,8 +88,11 @@ ColumnLayout {
                     required property string modelData
                     readonly property var size: Displays.logicalSize(modelData)
                     readonly property var e: page.edits[modelData]
-                    x: (e.x - stage.bounds.x) * stage.k + (stage.width - stage.bounds.w * stage.k) / 2
-                    y: (e.y - stage.bounds.y) * stage.k + (stage.height - stage.bounds.h * stage.k) / 2
+                    property var live: null   // where it is while dragged, already snapped (logical pixels)
+                    readonly property var at: live ?? e
+                    x: (at.x - stage.bounds.x) * stage.k + (stage.width - stage.bounds.w * stage.k) / 2
+                    y: (at.y - stage.bounds.y) * stage.k + (stage.height - stage.bounds.h * stage.k) / 2
+                    z: live ? 1 : 0
                     width: size.w * stage.k
                     height: size.h * stage.k
                     radius: 8
@@ -98,29 +101,38 @@ ColumnLayout {
 
                     Column {
                         anchors.centerIn: parent
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: Displays.numberOf(page.monitors.find(m => m.key === screenRect.modelData)?.name) + " \u00b7 " + Displays.label(page.monitors.find(m => m.key === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
-                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: screenRect.e.mode.replace("@", " · ") + " Hz"; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                        width: parent.width - 8   // a small screen in the drawing: its text shortens instead of spilling out
+                        Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; text: Displays.numberOf(page.monitors.find(m => m.key === screenRect.modelData)?.name) + " \u00b7 " + Displays.label(page.monitors.find(m => m.key === screenRect.modelData) ?? { name: screenRect.modelData }); color: Theme.text; font { family: Theme.font; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
+                        Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight; text: screenRect.e.mode.replace("@", " · ") + " Hz"; color: Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
                     }
 
+                    // Dragging snaps as it goes, like other systems: the screen clings to the nearest edge of another one
+                    // (lining up with its ends or centre when close) and never overlaps; the others close up on release
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.SizeAllCursor
-                        drag.target: parent
-                        onPressed: page.selected = screenRect.modelData
-                        onReleased: {
-                            // back to logical pixels, snapped to the other screen's edges
-                            let nx = Math.round((parent.x - (stage.width - stage.bounds.w * stage.k) / 2) / stage.k + stage.bounds.x)
-                            let ny = Math.round((parent.y - (stage.height - stage.bounds.h * stage.k) / 2) / stage.k + stage.bounds.y)
-                            for (const o of page.placed) {
-                                if (o === screenRect.modelData) continue
-                                const oe = page.edits[o], os = Displays.logicalSize(o), me = screenRect.size, snap = 80
-                                for (const [a, b] of [[nx, oe.x + os.w], [nx + me.w, oe.x], [nx, oe.x], [nx + me.w, oe.x + os.w], [nx + (me.w - os.w) / 2, oe.x]])
-                                    if (Math.abs(a - b) < snap) { nx += b - a; break }
-                                for (const [a, b] of [[ny, oe.y + os.h], [ny + me.h, oe.y], [ny, oe.y], [ny + me.h, oe.y + os.h]])
-                                    if (Math.abs(a - b) < snap) { ny += b - a; break }
-                            }
-                            page.set("x", Math.round(nx)); page.set("y", Math.round(ny))
+                        preventStealing: true
+                        property point start
+                        property var from: null
+                        onPressed: mouse => {
+                            page.selected = screenRect.modelData
+                            start = mapToItem(stage, mouse.x, mouse.y)
+                            from = { x: screenRect.e.x, y: screenRect.e.y }
                         }
+                        onPositionChanged: mouse => {
+                            if (!pressed || !from) return
+                            const p = mapToItem(stage, mouse.x, mouse.y)
+                            if (!screenRect.live && Math.hypot(p.x - start.x, p.y - start.y) < 4) return   // a click, not a drag
+                            screenRect.live = Displays.snapPosition(screenRect.size, from.x + (p.x - start.x) / stage.k, from.y + (p.y - start.y) / stage.k,
+                                                                    Displays.othersOf(screenRect.modelData), 16 / stage.k)
+                        }
+                        onReleased: {
+                            const l = screenRect.live
+                            screenRect.live = null
+                            from = null
+                            if (l && (l.x !== screenRect.e.x || l.y !== screenRect.e.y)) Displays.place(screenRect.modelData, l.x, l.y)
+                        }
+                        onCanceled: { screenRect.live = null; from = null }
                     }
                 }
             }
@@ -223,7 +235,8 @@ ColumnLayout {
             Choice {
                 readonly property var values: [1, 1.2, 1.25, 1.5, 1.6, 2]
                 options: values.map(v => v + "×")
-                index: values.indexOf(page.selEdit?.scale ?? 1)
+                // the nearest one: Hyprland reports the scale it settled on (1.200000047…)
+                index: { const v = page.selEdit?.scale ?? 1; let best = 0; values.forEach((x, i) => { if (Math.abs(x - v) < Math.abs(values[best] - v)) best = i }); return best }
                 onPicked: i => page.set("scale", values[i])
             }
         }

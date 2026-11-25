@@ -136,6 +136,7 @@ gitleaks                 gitleaks                           repo
 greetd                   greetd                             repo
 regreet                  none                               none
 cage                     cage                               repo
+wlr-randr                wlr-randr                          repo
 # ASUS laptops (modules/asus)
 # asusctl 6.3.8-2.fc44 (also in this COPR: supergfxctl 5.2.7)
 asusctl                  asusctl                            copr:lukenukem/asus-linux

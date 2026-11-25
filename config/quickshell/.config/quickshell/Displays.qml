@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import QtQuick
+import "DisplaySnap.js" as Snap
 
 // The screens: what is connected, the layout being edited, applying it, and the keep-or-revert countdown.
 // Settings > Displays is a view of this. Apply saves the layout in settings.json (displays.layout);
@@ -67,10 +68,24 @@ Singleton {
                     m.key = root.keyOf(m, list)
                     // a screen that's off may report 0x0: its first (preferred) mode then
                     const first = (m.availableModes?.[0] ?? "1920x1080@60").split("@")
+                    const mirror = m.mirrorOf && m.mirrorOf !== "none" ? m.mirrorOf : ""
+                    // Hyprland names the mirrored screen by its id ("0"): the key of that screen instead
+                    const target = mirror ? list.find(o => String(o.id) === mirror || o.name === mirror) : null
                     e[m.key] = { mode: m.width ? m.width + "x" + m.height + "@" + Math.round(m.refreshRate) : first[0] + "@" + Math.round(parseFloat(first[1])), x: m.x, y: m.y,
                                  scale: m.scale, transform: m.transform, vrr: Number(Config.displays.layout[m.key]?.vrr ?? 0),
                                  bitdepth: /2101010/.test(m.currentFormat) ? 10 : 8,
-                                 mirror: m.mirrorOf && m.mirrorOf !== "none" ? m.mirrorOf : "", disabled: m.disabled === true }
+                                 mirror: target ? root.keyOf(target, list) : mirror, disabled: m.disabled === true }
+                    // a screen that's off or mirroring has no place (or mode) of its own live: its saved one, so
+                    // Extend puts it back where it was
+                    const sv = Config.displays.layout[m.key]
+                    if ((e[m.key].disabled || e[m.key].mirror) && sv?.position) {
+                        const [px, py] = String(sv.position).split("x").map(Number)
+                        Object.assign(e[m.key], { x: px, y: py, scale: sv.scale ?? e[m.key].scale, transform: sv.transform ?? e[m.key].transform })
+                        if (e[m.key].disabled && sv.mode) e[m.key].mode = sv.mode
+                        // handed to the other computer (monswitch): its mirror is monswitch's, not your layout
+                        if (m.name === Machine.switchOutput && e[m.key].mirror)
+                            Object.assign(e[m.key], { mode: sv.mode ?? e[m.key].mode, mirror: sv.mirror ?? "", disabled: sv.disabled === true })
+                    }
                 }
                 // unsaved edits survive a screen coming or going, minus the ones for screens that left
                 let next = e
@@ -93,8 +108,8 @@ Singleton {
         }
     }
 
-    function logicalSize(key) {
-        const e = edits[key]
+    function logicalSize(key, all) {
+        const e = (all ?? edits)[key]
         if (!e) return { w: 0, h: 0 }
         const [w, h] = e.mode.split("@")[0].split("x").map(Number)
         const rotated = e.transform % 2 === 1
@@ -104,7 +119,32 @@ Singleton {
     function set(key, field, value) {
         const e = Object.assign({}, edits)
         e[key] = Object.assign({}, e[key], { [field]: value })
-        edits = e
+        // like other systems, the screens stay edge to edge: a screen that changed size keeps its corner and the
+        // others close up around it; one turned on, off or (un)mirrored, around the main screen
+        edits = ["mode", "scale", "transform"].includes(field) ? root.settle(e, key) : ["disabled", "mirror"].includes(field) ? root.settle(e, mainOf(e)) : e
+        dirty = true
+    }
+
+    // ---- snapping: screens always touch edge to edge and never overlap ---------------------------------------
+    function shownOf(e) { return Object.keys(e).filter(n => !e[n].disabled && !e[n].mirror) }
+    function mainOf(e) { const s = shownOf(e); return s.includes(Config.displays.main) ? Config.displays.main : s.find(isInternal) ?? s[0] }
+    function rectIn(e, n) { const s = logicalSize(n, e); return { x: e[n].x, y: e[n].y, w: s.w, h: s.h } }
+    function othersOf(key) { return shownOf(edits).filter(n => n !== key).map(n => rectIn(edits, n)) }
+    function snapPosition(size, x, y, rects, pull) { return Snap.snapPosition(size, x, y, rects, pull) }
+    // `anchor` stays put; the other shown screens close up around it (DisplaySnap.js)
+    function settle(e, anchor) {
+        e = Object.assign({}, e)
+        const rects = {}
+        for (const n of shownOf(e)) rects[n] = rectIn(e, n)
+        const at = Snap.settle(rects, anchor)
+        for (const n of Object.keys(at)) e[n] = Object.assign({}, e[n], at[n])
+        return e
+    }
+    // a screen dropped in the drawing (already snapped): the others close up around it
+    function place(key, x, y) {
+        const e = Object.assign({}, edits)
+        e[key] = Object.assign({}, e[key], { x: x, y: y })
+        edits = root.settle(e, key)
         dirty = true
     }
     function discard() { dirty = false; load() }
@@ -113,6 +153,12 @@ Singleton {
     function problem() {
         const names = Object.keys(edits), shown = names.filter(n => !edits[n].disabled && !edits[n].mirror)
         if (names.length && !names.some(n => !edits[n].disabled)) return "Keep at least one screen on"
+        if (names.length && !shown.length) return "Keep at least one screen showing the desktop"
+        for (const n of names) {
+            const t = edits[n].mirror
+            if (!edits[n].disabled && t && !shown.includes(t))
+                return `${label(monitorOf(n) ?? { name: n })} mirrors a screen that is off or mirroring itself: pick another`
+        }
         for (const a of shown) for (const b of shown) {
             if (a >= b) continue
             const ea = edits[a], eb = edits[b], sa = logicalSize(a), sb = logicalSize(b)
@@ -184,8 +230,9 @@ Singleton {
         const out = {}
         for (const n of names) {
             const o = e[n]
-            if (o.disabled) { out[n] = { disabled: true }; continue }
+            // a screen that's off keeps its mode and place, so turning it back on puts it where it was
             out[n] = { mode: o.mode, position: (o.x - minX) + "x" + (o.y - minY), scale: o.scale, transform: o.transform }
+            if (o.disabled) { out[n].disabled = true; continue }
             if (o.vrr) out[n].vrr = o.vrr
             if (o.bitdepth === 10) out[n].bitdepth = 10
             if (o.mirror) out[n].mirror = o.mirror
@@ -203,7 +250,9 @@ Singleton {
         // screens that aren't plugged in now (a dock's) keep their mode, scale and rotation; their old spot could
         // overlap this layout, so they come back at "auto" and can be placed again
         const away = {}, old = Config.displays.layout ?? {}
-        for (const n of Object.keys(old)) if (!(n in edits)) { away[n] = Object.assign({}, old[n]); delete away[n].position }
+        // a key that names a connected screen another way (its connector, saved while it had no description) is
+        // stale: kept, it would be a second, conflicting rule for that screen
+        for (const n of Object.keys(old)) if (!(n in edits) && !monitors.some(m => matches(n, m))) { away[n] = Object.assign({}, old[n]); delete away[n].position }
         Config.set("displays", "layout", Object.assign(away, layoutOf(edits)))   // SettingsSync writes displays.lua and applies it
         reloadTimer.restart()
         return ""
@@ -220,20 +269,20 @@ Singleton {
         const names = Object.keys(edits), e = {}
         // the picture to mirror or the screen kept on: the main screen, else the laptop panel, else the first screen
         const main = names.includes(Config.displays.main) ? Config.displays.main : names.find(isInternal) ?? names[0]
-        let x = 0
-        for (const n of names.slice().sort((a, b) => (a === main ? -1 : b === main ? 1 : 0))) {
+        for (const n of names) {
             if (how === "external" && isInternal(n) && names.length > 1) { e[n] = Object.assign({}, edits[n], { disabled: true, mirror: "" }); continue }
             const one = Object.assign({}, edits[n], { disabled: false, mirror: "" })
             if (how === "mirror" && n !== main) one.mirror = main
             if (how.startsWith("only:")) one.disabled = n !== how.slice(5)
-            if (how === "extend" || how === "external") { one.x = x; one.y = 0; x += logicalSize(n).w }   // side by side, main screen first
             e[n] = one
         }
-        edits = e
+        // extend: each screen back at its last place (kept while it was off or mirroring), closed up edge to edge
+        edits = how === "extend" || how === "external" ? root.settle(e, mainOf(e)) : e
         return apply(true)
     }
     property bool switcherOpen: false
     DisplaySwitcher {}
+    DisplayConfirm {}
 
     // ---- Identify: a big number on each screen for 2 s, in the order of the list on the Settings page ----------
     property bool identifying: false
@@ -380,6 +429,7 @@ Singleton {
             return root.applyMode(m ? "only:" + m.key : how) || "ok"
         }
         function identify(): void { root.identify() }
+        function keep(): void { root.keep() }   // the keep-or-revert prompt from a script
         function snap(): string { root.snapTogether(); return root.gap() || "ok" }   // edits only: Apply to use them
         function switcher(): void { root.switcherOpen = !root.switcherOpen }
         function save(name: string): string { return root.saveCurrent(name) || "ok" }

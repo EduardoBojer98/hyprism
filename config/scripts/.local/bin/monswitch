@@ -230,8 +230,13 @@ release() {
     [[ -n $MIRROR ]] || return 0 # no screen to mirror: leave Hyprland as it is
     save_layout
     # kept in a file Hyprland's monitors.lua reads, so a reload or a theme change keeps the hand-off
-    local o table="{"
-    for o in "${OUTS[@]}"; do table+=" { output = \"$o\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\" },"; done
+    # the screen's description too: Settings saves a screen under it, and once mirrored Hyprland no longer lists it
+    # by connector, so monitors.lua needs it to recognise the hand-off (else it ends the mirror 600 ms later)
+    local o d table="{"
+    for o in "${OUTS[@]}"; do
+        d=$(hyprctl -j monitors | jq -r --arg o "$o" '.[] | select(.name == $o) | .description // "" | gsub("[\"\\\\]"; "")')
+        table+=" { output = \"$o\", mirror = \"$MIRROR\", mode = \"$MIRROR_MODE\"${d:+, description = \"$d\"} },"
+    done
     table="${table%,} }"
     printf -- '-- Written by monswitch: %s is with the other computer. Removed when it comes back.\nreturn %s\n' "${OUTS[*]}" "$table" >"$SHARED"
     hyprctl eval "SHARED = $table; apply_displays()" >/dev/null
@@ -242,7 +247,12 @@ release() {
     notify-send -a monswitch "Monitor$( ((${#OUTS[@]} > 1)) && echo s) → other computer" "Workspaces moved to $MIRROR"
 }
 reclaim() {
-    out_enabled && return 0
+    if out_enabled; then
+        # already our own screen, but a hand-off left on disk (Hyprland crashed or restarted mid hand-off) would
+        # mirror it again at every reload: drop it
+        [[ -f $SHARED ]] && rm -f "$SHARED" && hyprctl eval "SHARED = nil" >/dev/null
+        return 0
+    fi
     rm -f "$SHARED"
     hyprctl eval "SHARED = nil; apply_displays()" >/dev/null # its own monitor rule again (modules/monitors.lua)
     sleep 1

@@ -1,8 +1,10 @@
 # shellcheck shell=bash
-# Login screen: greetd runs ReGreet inside cage. ReGreet gets the active theme's GTK colours (hyprism.css) and
-# the theme's icons and font; PAM unlocks KDE Wallet with the login password. The old display manager is
-# disabled, greetd enabled; both take effect at the next boot (switching now would end this session).
-for c in greetd regreet cage; do
+# Login screen: greetd runs ReGreet inside cage, on one screen: the laptop panel when its lid is open, else the
+# last one plugged in (cage alone picks the last one, often the external monitor even with the lid open).
+# ReGreet gets the active theme's GTK colours (hyprism.css) and the theme's icons and font; PAM unlocks KDE
+# Wallet with the login password. The old display manager is disabled, greetd enabled; both take effect at the
+# next boot (switching now would end this session).
+for c in greetd regreet cage wlr-randr; do
     command -v "$c" >/dev/null || $DRY || {
         warn "$c isn't installed: login screen left as it is. ./install.sh --only packages installs it (Fedora has no ReGreet)."
         exit 0
@@ -13,8 +15,18 @@ sys_write /etc/greetd/config.toml '[terminal]
 vt = 1
 
 [default_session]
-command = "cage -s -m last -- regreet"
+command = "cage -s -m extend -- sh /etc/greetd/session.sh"
 user = "greeter"'
+
+# runs inside cage before ReGreet: every screen but one goes dark, so the login box isn't stretched over all of them
+# shellcheck disable=SC2016 # a script for later, its $ are its own
+sys_write /etc/greetd/session.sh '# Written by Hyprism (modules/greeter): ReGreet on one screen, see config.toml
+outs=$(wlr-randr | awk '"'"'/^[^ ]/ { print $1 }'"'"')
+keep=$(printf "%s\n" $outs | tail -n 1)
+internal=$(printf "%s\n" $outs | grep -m 1 -E "^(eDP|LVDS|DSI)-")
+grep -qs closed /proc/acpi/button/lid/*/state || keep=${internal:-$keep}
+for o in $outs; do [ "$o" = "$keep" ] || wlr-randr --output "$o" --off; done
+exec regreet'
 
 # gsettings may be missing on a fresh system: fall back to the defaults below
 icons=$(gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'" || true)

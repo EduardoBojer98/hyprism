@@ -86,7 +86,7 @@ cmp -s $state/manifest /tmp/manifest1 || {
 echo "===== INSTALLED"
 [[ $(dm) == greetd.service ]] || fail "greetd is not the display manager ($(dm))"
 ! systemctl is-enabled -q fakedm.service || fail "the old login manager is still enabled"
-grep -q regreet /etc/greetd/config.toml || fail "/etc/greetd/config.toml does not start ReGreet"
+{ grep -q session.sh /etc/greetd/config.toml && grep -q "exec regreet" /etc/greetd/session.sh; } || fail "/etc/greetd does not start ReGreet"
 [[ -f /etc/systemd/logind.conf.d/50-hyprism-lid.conf ]] || fail "the laptop's lid file is missing"
 systemctl is-enabled -q docker.socket || fail "docker.socket is not enabled"
 ! systemctl is-enabled -q docker.service || fail "docker.service starts at boot"
