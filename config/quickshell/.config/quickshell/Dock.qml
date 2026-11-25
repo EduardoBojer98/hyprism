@@ -45,7 +45,8 @@ PanelWindow {
     onPointerNowChanged: if (magnify && hover.hovered) pointer = pointerNow
     function bump(d) { return d >= reach ? 0 : (1 + Math.cos(Math.PI * d / reach)) / 2 }          // 1 at the pointer, 0 at reach
     function bumpArea(a) { return a >= reach ? reach / 2 : a / 2 + reach / (2 * Math.PI) * Math.sin(Math.PI * a / reach) }
-    function centreOf(item) { return vertical ? item.y + item.height / 2 : item.x + item.width / 2 }
+    // each part sits in a Loader in the row (root.items): its place along the row is the Loader's
+    function centreOf(item) { const c = item.parent?.parent === row ? item.parent : item; return vertical ? c.y + c.height / 2 : c.x + c.width / 2 }
     function swell(item) { return 1 + growth * bump(Math.abs(centreOf(item) - pointer)) }
     // how far a part slides away from the pointer: the growth of everything between them
     function push(item) { const d = centreOf(item) - pointer; return Math.sign(d) * growth * iconSize / (slot + row.spacing) * bumpArea(Math.abs(d)) }
@@ -140,7 +141,7 @@ PanelWindow {
         for (const c of cells) {
             const id = c.modelData?.id ?? ""
             if (!(c instanceof DockApp) || !pinnedIds.includes(id)) continue
-            const d = Math.abs((vertical ? c.parent.y + c.parent.height / 2 : c.parent.x + c.parent.width / 2) - x)
+            const d = Math.abs(centreOf(c) - x)
             if (d < best) { best = d; target = id }
         }
         if (!target || target === dragId) return
