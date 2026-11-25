@@ -56,6 +56,12 @@ JsonAdapter {
         property string size: "medium"          // small | medium | large workspace pictures
         property string windows: "all"          // all: every open window when it opens | desktop: only this workspace's
     }
+    property JsonObject powerMenu: JsonObject {
+        property string layout: "theme"         // theme: the theme's own | tiles | row (round buttons) | blocks | list
+        property list<string> actions: ["lock", "suspend", "hibernate", "logout", "reboot", "poweroff"]   // shown, in order
+        property bool confirm: true             // Log out, Restart and Shut down ask for a second press
+        property bool details: true             // the computer's name and uptime under the title
+    }
     property JsonObject launcher: JsonObject {
         property string webSearch: "https://duckduckgo.com/?q=%s"
         property bool showFiles: true

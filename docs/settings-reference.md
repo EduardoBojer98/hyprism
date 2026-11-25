@@ -78,6 +78,15 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `size` | `string` | `"medium"` | small \| medium \| large workspace pictures |
 | `windows` | `string` | `"all"` | all: every open window when it opens \| desktop: only this workspace's |
 
+## powerMenu
+
+| Setting | Type | Default | What it does |
+| --- | --- | --- | --- |
+| `layout` | `string` | `"theme"` | theme: the theme's own \| tiles \| row (round buttons) \| blocks \| list |
+| `actions` | `list<string>` | `["lock", "suspend", "hibernate", "logout", "reboot", "pow...` | shown, in order |
+| `confirm` | `bool` | `true` | Log out, Restart and Shut down ask for a second press |
+| `details` | `bool` | `true` | the computer's name and uptime under the title |
+
 ## launcher
 
 | Setting | Type | Default | What it does |
