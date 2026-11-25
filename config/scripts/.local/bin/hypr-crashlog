@@ -14,6 +14,18 @@ marks=$dir/hypr-crashlog.log # common.sh log() writes here
 case ${1:-report} in
     mark)
         [[ $# -eq 2 ]] || usage 1
+        # which CRTC drives each screen: a screen that came back on another screen's CRTC (a monitor that dropped
+        # while the laptop panel was off) works until sleep, then fails to restore on wake (aquamarine issue 429)
+        map=""
+        for card in "${HYPRISM_ROOT:-}"/sys/class/drm/card[0-9]; do # tests point HYPRISM_ROOT at a made-up /sys
+            drv=$(basename "$(readlink -f "$card/device/driver")" 2>/dev/null) || continue
+            map+=$(timeout 3 modetest -M "$drv" -D "/dev/dri/${card##*/}" -c -e 2>/dev/null | awk '
+                /^Connectors:/ { s = "c" } /^Encoders:/ { s = "e" } $1 !~ /^[0-9]+$/ { next }
+                s == "c" && $3 == "connected" { enc[$1] = $2; name[$1] = $4 }
+                s == "e" { crtc[$1] = $2 }
+                END { for (i in name) printf " %s>%s", name[i], crtc[enc[i]] + 0 }') || true
+        done
+        [[ -z $map ]] || log "crtcs$map"
         log "$2"
         sync # a forced power-off loses whatever is still only in RAM
         ;;
@@ -30,7 +42,7 @@ case ${1:-report} in
         awk '/ sleep$/ { s = $1 " " $2; next } / wake$/ { s = ""; next }
              / session start$/ { if (s) print "  slept " s ", next session " $1 " " $2; s = "" }' "$marks" 2>/dev/null | tail -n 10 || true
         echo "== Last sleep/wake marks ($marks)"
-        tail -n 8 "$marks" 2>/dev/null || echo "  none yet"
+        tail -n 12 "$marks" 2>/dev/null || echo "  none yet"
         echo "== Previous session's Hyprland log, last 25 lines ($dir/hyprland.prev.log)"
         # the black-screen-on-wake signature: Hyprland could not put the screens back after sleep
         n=$(grep -c "failed restore" "$dir/hyprland.prev.log" 2>/dev/null || true)

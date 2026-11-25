@@ -359,6 +359,9 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- Hyprland crashing after a long sleep with an external monitor is now traceable: `hypr-crashlog` notes which CRTC
+  drives each screen at every sleep and wake (a swapped pair fails to restore; aquamarine issue 429), and
+  troubleshooting.md says how to avoid it until aquamarine fixes it.
 - The lock screen's media widget showed "Sample Text": playerctl's `{{ }}` format is hyprlang syntax.
 - The lock clock drew Archivo Black (Poster) as regular Archivo: Pango read the family name as a weight.
 - Changing theme and mode quickly could leave the older wallpaper: a slow first render finished last and won.

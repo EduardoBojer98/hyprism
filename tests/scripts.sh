@@ -175,6 +175,20 @@ XDG_STATE_HOME=$t/hc bash "$bin/hypr-crashlog" mark sleep
 hc=$(XDG_STATE_HOME=$t/hc XDG_CACHE_HOME=$t/hc bash "$bin/hypr-crashlog" 2>&1)
 check "hypr-crashlog reports the sleep that never woke, only that one" '[[ $hc == *"slept 2026-11-10 12:00:00, next session 2026-11-10 14:00:00"* && $hc != *"slept 2026-11-10 09"* ]]'
 check "hypr-crashlog mark writes the mark" '[[ $(tail -n 1 "$t/hc/hyprism/logs/hypr-crashlog.log") == *" sleep" ]]'
+# mark also notes which CRTC drives each connected screen (a swapped pair fails to restore on wake)
+mkdir -p "$t/hc-drm/sys/class/drm/card1/device" "$t/hc-drm/drivers/amdgpu" "$t/hc-drm/bin"
+ln -s "$t/hc-drm/drivers/amdgpu" "$t/hc-drm/sys/class/drm/card1/device/driver"
+cat >"$t/hc-drm/bin/modetest" <<'FAKE'
+#!/bin/sh
+[ "$2" = amdgpu ] || exit 1
+printf 'Connectors:\nid\tencoder\tstatus\t\tname\n101\t100\tconnected\teDP-1\n110\t108\tconnected\tHDMI-A-1\n121\t0\tdisconnected\tDP-1\n'
+printf 'Encoders:\nid\tcrtc\ttype\n100\t91\tTMDS\n108\t87\tTMDS\n120\t0\tTMDS\n'
+FAKE
+chmod +x "$t/hc-drm/bin/modetest"
+HYPRISM_ROOT=$t/hc-drm PATH=$t/hc-drm/bin:$PATH XDG_STATE_HOME=$t/hc-drm bash "$bin/hypr-crashlog" mark wake
+# shellcheck disable=SC2034  # read inside check's condition
+hcm=$(tail -n 2 "$t/hc-drm/hyprism/logs/hypr-crashlog.log")
+check "hypr-crashlog mark notes each screen's CRTC before the mark" '[[ $hcm == *crtcs*eDP-1\>91* && $hcm == *HDMI-A-1\>87* && $hcm != *DP-1\>0* && $hcm == *" wake" ]]'
 # shellcheck disable=SC2034  # read inside check's condition
 hc=$(XDG_STATE_HOME=$t/hc-empty XDG_CACHE_HOME=$t/hc-empty bash "$bin/hypr-crashlog" 2>&1)
 check "hypr-crashlog reports with no state yet" '[[ $hc == *"Previous boot"* ]]'
