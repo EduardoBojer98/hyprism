@@ -215,10 +215,10 @@ Scope {
         layer.enabled: root.clear && Config.bar.clearHalo && !section.empty
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowColor: root.ground
-            blurMax: 6          // a tight, dense halo: an outline more than a glow
-            shadowBlur: 1
-            shadowScale: 1.04
+            // centred on each glyph (no scale: scaling a whole section shifted the halo off its items)
+            shadowColor: Qt.alpha(root.ground, 0.85)
+            blurMax: 10
+            shadowBlur: 0.7
             shadowHorizontalOffset: 0
             shadowVerticalOffset: 0
         }
