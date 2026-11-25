@@ -156,14 +156,14 @@ Item {
                         color: Theme.accent
                         Rectangle { visible: thumb.cards; x: 6; anchors.verticalCenter: parent.verticalCenter; width: 14; height: 14; radius: 7; color: Theme.accentText; opacity: 0.8 }
                     }
-                    Row {   // hud: a tag, then [████░░] cells
+                    Row {   // hud: a tag, then thin VU cells
                         visible: thumb.hud
-                        spacing: 2
+                        spacing: (col.width - 28 - 30 - 14 * 3) / 14
                         Rectangle { width: 22; height: 12; color: Qt.alpha(Theme.text, 0.5) }
                         Item { width: 6; height: 1 }
                         Repeater {
                             model: 14
-                            Rectangle { required property int index; width: (col.width - 28 - 30 - 28) / 14 - 2; height: 12
+                            Rectangle { required property int index; width: 3; height: 12
                                         color: index < 14 * parent.parent.level ? Theme.accent : Qt.alpha(Theme.text, 0.18) }
                         }
                     }
@@ -171,16 +171,16 @@ Item {
             }
         }
     }
-    Component {   // the small buttons: four to a row; two wide ones (cards, hud); a 2x2 block first (bento)
+    Component {   // the small buttons: four to a row; two wide ones (cards); three framed cells (hud); a 2x2 block first (bento)
         id: gridC
         Item {
             id: g
             readonly property var ids: thumb.shown("toggles")
             readonly property int count: ids.length
             readonly property bool big: thumb.bento && count >= 5
-            readonly property int cols: thumb.cards || thumb.hud ? 2 : big ? 4 : thumb.snap.width >= 370 ? 5 : 4
+            readonly property int cols: thumb.hud ? 3 : thumb.cards ? 2 : big ? 4 : thumb.snap.width >= 370 ? 5 : 4
             readonly property real side: (width - thumb.gap * (cols - 1)) / cols
-            readonly property real cellH: thumb.hud ? thumb.lineH : thumb.cards ? 46 : thumb.compact ? side * 0.8 : side * 0.92
+            readonly property real cellH: thumb.hud ? 52 : thumb.cards ? 46 : thumb.compact ? side * 0.8 : side * 0.92
             function cell(i) {   // [column, row, wide, tall], as ControlCenterToggles lays them out
                 if (!big) return [i % cols, Math.floor(i / cols), 1, 1]
                 if (i === 0) return [0, 0, 2, 2]
@@ -201,10 +201,13 @@ Item {
                     x: c[0] * (g.side + thumb.gap); y: c[1] * (g.cellH + thumb.gap)
                     width: c[2] * g.side + (c[2] - 1) * thumb.gap; height: c[3] * g.cellH + (c[3] - 1) * thumb.gap
                     color: thumb.hud ? "transparent" : lit ? thumb.on : Qt.alpha(Theme.text, Theme.light ? 0.08 : 0.10)
-                    // hud and cards: a well beside a name; bento and the classic grid: an icon over its name
-                    Well { visible: thumb.cards || thumb.hud; x: thumb.hud ? 4 : 8; anchors.verticalCenter: parent.verticalCenter; lit: parent.lit; width: thumb.hud ? 16 : 26 }
-                    Bar { visible: thumb.cards || thumb.hud; x: thumb.hud ? 28 : 42; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.42; height: 6
-                          color: thumb.hud && parent.lit ? Theme.accent : Qt.alpha(Theme.text, 0.22) }
+                    border { color: thumb.hud ? (lit ? Theme.accent : Theme.strokeStrong) : Theme.stroke; width: thumb.hud ? 2 : thumb.flat ? 1 : 0 }
+                    // cards: a well beside a name; hud: an icon and its box over the name; bento and the classic grid: an icon over its name
+                    Well { visible: thumb.cards; x: 8; anchors.verticalCenter: parent.verticalCenter; lit: parent.lit; width: 26 }
+                    Bar { visible: thumb.cards; x: 42; anchors.verticalCenter: parent.verticalCenter; width: parent.width * 0.42; height: 6 }
+                    Rectangle { visible: thumb.hud; x: 8; y: 8; width: 12; height: 12; color: parent.lit ? Theme.accent : Qt.alpha(Theme.text, 0.4) }
+                    Well { visible: thumb.hud; x: parent.width - width - 8; y: 7; lit: parent.lit; width: 14 }
+                    Bar { visible: thumb.hud; x: 8; y: parent.height - 14; width: parent.width * 0.55; height: 6 }
                     Rectangle { visible: !thumb.cards && !thumb.hud; anchors.centerIn: parent; anchors.verticalCenterOffset: -6
                                 width: parent.c[3] > 1 ? 30 : 16; height: width; radius: width / 2; color: Theme.subtext; opacity: 0.7 }
                     Bar { visible: !thumb.cards && !thumb.hud; anchors.horizontalCenter: parent.horizontalCenter; y: parent.height - (parent.c[3] > 1 ? 30 : 18)

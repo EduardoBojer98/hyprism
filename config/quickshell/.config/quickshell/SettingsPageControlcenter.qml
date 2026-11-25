@@ -275,8 +275,9 @@ ColumnLayout {
                                                     anchors.fill: parent
                                                     radius: chip.radius
                                                     readonly property bool lit: chip.on && chip.here   // shown and has the hardware: it is in the panel
-                                                    color: lit ? Theme.accentWash : chip.hovered ? Theme.fillHover : "transparent"
-                                                    border { color: lit ? Qt.alpha(Theme.accent, 0.7) : chip.hovered ? Theme.strokeStrong : Theme.stroke; width: 1 }
+                                                    // shown: a quiet filled chip, its icon in the accent; hidden: an outline to add it back
+                                                    color: chip.hovered ? Theme.fillHover : chip.on ? Theme.fill : "transparent"
+                                                    border { color: chip.hovered ? Theme.strokeStrong : Theme.stroke; width: 1 }
                                                     Row {
                                                         id: chipRow
                                                         anchors.centerIn: parent

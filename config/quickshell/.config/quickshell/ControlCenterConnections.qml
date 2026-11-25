@@ -20,7 +20,7 @@ ColumnLayout {
         GridLayout {
             id: grid
             anchors { left: parent.left; right: parent.right }
-            columns: ControlCenter.cards ? 2 : 1
+            columns: ControlCenter.cards || ControlCenter.hud ? 2 : 1
             columnSpacing: ControlCenter.gap
             rowSpacing: ControlCenter.gap
             Repeater {

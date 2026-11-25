@@ -6,7 +6,7 @@ import QtQuick.Layouts
 // Connection tile: an icon well that toggles, then the name and its state; with a list, the rest of the tile
 // opens it and a chevron sits behind a hairline at the right. On: the well fills with the accent (wash
 // themes) or the whole tile turns accent (solid themes). The layout shapes it: a soft card with a round well (cards),
-// a wide block with its name in the display font and a hard shadow (bento), a `[x] wifi  Hyprism-5G  >` line (hud).
+// a wide block with its name in the display font and a hard shadow (bento), a framed cell, `wifi` and its `[x]` box over the network name (hud).
 Rectangle {
     id: conn
     property string glyph
@@ -28,14 +28,15 @@ Rectangle {
     readonly property bool hud: ControlCenter.hud
     Layout.fillWidth: true
     Layout.preferredWidth: 1
-    Layout.preferredHeight: hud ? Math.max(Theme.ccSlider - 6, Theme.hit) : ControlCenter.style === "compact" ? Math.max(Theme.ccTile - 8, Theme.hit) : Theme.ccTile
+    Layout.preferredHeight: hud ? Math.max(Theme.hit, Theme.fontLabel * 4) : ControlCenter.style === "compact" ? Math.max(Theme.ccTile - 8, Theme.hit) : Theme.ccTile
     radius: flat || hud ? Theme.radiusSmall : ControlCenter.cards ? Theme.radiusLarge : Theme.radius
     color: conn.active && !hud ? (rowHover.containsMouse ? Theme.ccTileOnHover : Theme.ccTileOn)
          : rowHover.containsMouse || conn.isExpanded ? Theme.fillHover
          : flat || hud ? "transparent" : Theme.fill
+    border { color: hud ? (conn.active ? Theme.accent : rowHover.containsMouse || conn.isExpanded ? Theme.strokeStrong : Theme.stroke)
+                    : conn.isExpanded ? Theme.strokeStrong : flat && !conn.active ? Theme.stroke : "transparent"; width: 1 }
     PressFeel { id: feel; pressed: rowHover.pressed || discArea.pressed; visible: ControlCenter.bento }
     transform: Translate { x: feel.shift; y: feel.shift + feel.drop }
-    border { color: conn.isExpanded ? Theme.strokeStrong : flat && !conn.active ? Theme.stroke : "transparent"; width: 1 }
     Behavior on color { ColorAnimation { duration: Theme.anim; easing.type: Theme.easing } }
 
     MouseArea {
@@ -51,7 +52,9 @@ Rectangle {
     }
     Rectangle {   // the icon well: toggles (inline: components declared in this file can't nest)
         id: disc
-        anchors { left: parent.left; leftMargin: conn.hud ? Theme.spaceS : Theme.ccInset; verticalCenter: parent.verticalCenter }
+        // hud: the box sits in the cell's top right corner
+        anchors { left: conn.hud ? undefined : parent.left; leftMargin: Theme.ccInset; verticalCenter: conn.hud ? undefined : parent.verticalCenter
+                  right: conn.hud ? parent.right : undefined; top: conn.hud ? parent.top : undefined; rightMargin: Theme.spaceS - 2; topMargin: Theme.spaceS - 2 }
         width: conn.hud ? box.implicitWidth : Theme.ccWell; height: conn.hud ? box.implicitHeight : Theme.ccWell
         radius: ControlCenter.cards && Theme.radius > 0 ? height / 2 : Theme.radiusSmall
         color: conn.hud ? (conn.active ? Theme.accent : "transparent") : conn.active ? Theme.ccWellOn
@@ -86,29 +89,29 @@ Rectangle {
                       capitalization: ControlCenter.bento ? Font.AllUppercase : Font.MixedCase } }
         Text { width: parent.width; text: conn.subtitle; color: conn.active ? Theme.ccOnSubtext : Theme.subtext; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption - 1; font { family: Theme.font; pixelSize: Theme.fontCaption } }
     }
-    Text {   // hud: the mono glyph after the check box
+    Text {   // hud: the glyph and name on top
         id: hudGlyph
         visible: conn.hud
-        anchors { left: disc.right; leftMargin: Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        anchors { left: parent.left; top: parent.top; margins: Theme.spaceS }
         text: conn.glyph
         color: conn.active ? Theme.accent : Theme.subtext
-        font { family: Theme.iconFont; pixelSize: Theme.glyphS }
+        font { family: Theme.iconFont; pixelSize: Theme.glyph }
     }
-    Text {   // hud: `wifi      Hyprism-5G`, the state right-aligned before the `>`
+    Text {
         visible: conn.hud
-        anchors { left: hudGlyph.right; leftMargin: Theme.spaceXs; right: conn.expandable ? chev.left : parent.right; rightMargin: Theme.spaceS; verticalCenter: parent.verticalCenter }
+        anchors { left: hudGlyph.right; leftMargin: Theme.spaceXs; right: disc.left; rightMargin: Theme.spaceXs; verticalCenter: hudGlyph.verticalCenter }
         text: conn.title.toLowerCase()
-        color: Theme.text
+        elide: Text.ElideRight
+        color: conn.active || rowHover.containsMouse ? Theme.text : Theme.subtext
         font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
-        Text {
-            anchors { right: parent.right; verticalCenter: parent.verticalCenter }
-            width: Math.min(implicitWidth, parent.width - parent.implicitWidth - Theme.spaceM)
-            horizontalAlignment: Text.AlignRight
-            elide: Text.ElideRight
-            text: conn.subtitle
-            color: conn.active ? Theme.text : Theme.subtext
-            font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
-        }
+    }
+    Text {   // hud: what it is on (the network, the device) along the bottom
+        visible: conn.hud
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: Theme.spaceS; rightMargin: conn.expandable ? Theme.spaceL + 2 : Theme.spaceS }
+        text: conn.subtitle
+        elide: Text.ElideRight
+        color: conn.active ? Theme.accent : Theme.muted
+        font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
     }
     Rectangle {   // hairline before the chevron: the tile's right end opens the list
         id: rule
@@ -121,7 +124,7 @@ Rectangle {
               anchors { right: parent.right; rightMargin: Theme.spaceXs + 2; verticalCenter: parent.verticalCenter } }
     Text {   // hud: the list opens to the right
         visible: conn.expandable && conn.hud
-        anchors { right: parent.right; rightMargin: Theme.spaceXs + 2; verticalCenter: parent.verticalCenter }
+        anchors { right: parent.right; rightMargin: Theme.spaceS; bottom: parent.bottom; bottomMargin: Theme.spaceS - 3 }
         text: conn.isExpanded ? "v" : ">"
         color: conn.isExpanded ? Theme.accent : Theme.muted
         font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
