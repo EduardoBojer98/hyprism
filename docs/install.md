@@ -108,7 +108,7 @@ the installer prints before you say yes.
 - `regreet`, the login screen of the `greeter` module: that step changes nothing on Fedora.
 - `amberol` (music player) and `resources` (system monitor): on Flathub, `flatpak install flathub io.bassi.Amberol`
   and `net.nokyan.Resources`.
-- `cursors-capitaine`, the Pebble theme's cursor: retired after Fedora 42; Pebble uses the system cursor (Settings >
+- `cursors-capitaine`, the Lumen theme's cursor: retired after Fedora 42; Lumen uses the system cursor (Settings >
   Cursor picks another).
 - `update-check`: nothing is missing, `dnf check-update` counts the updates for the bar.
 

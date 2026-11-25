@@ -16,6 +16,8 @@ trap '$n stop >/dev/null 2>&1 || true' EXIT
 $n start
 $n hypr reload >/dev/null
 sleep 3
+$n hypr reload >/dev/null # a reload straight after start can come too early to clear the banner
+sleep 1
 $n ipc welcome close >/dev/null
 sleep 1
 
@@ -34,8 +36,9 @@ for dir in themes/*/; do
     for mode in dark light; do
         $n ipc config set appearance theme "$id" >/dev/null
         $n ipc config set appearance mode "$mode" >/dev/null
-        want=$id-v # <id>-v<N>.png, or <id>-light-v<N>.png for light when theme.json names one (Poster has one for both)
-        [[ $mode == light ]] && jq -e --arg w "$id-light" '.wall == $w or .alt.wall == $w' "$dir/theme.json" >/dev/null && want=$id-light-v
+        # the wallpaper theme.json names for this half: its own `wall`, or `alt.wall` for the other one (Poster has one for both)
+        want=$(jq -r --argjson d "$([[ $mode == dark ]] && echo true || echo false)" \
+            'if ((if has("dark") then .dark else true end) == $d) then .wall else (.alt.wall // .wall) end' "$dir/theme.json")-v
         for _ in $( # up to 60 s for the theme's own wallpaper (drawn on first use)
             seq 120
         ); do

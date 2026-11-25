@@ -7,7 +7,7 @@ import QtQuick.Layouts
 // One notification: app icon, app name and age, title, body and the app's buttons. Used for the
 // banners and in the notification centre. Click to open it in the app, × to dismiss.
 // It takes a kind (Notifications.kind: Settings, or the theme's notify.kind), banners and the centre alike:
-//   card     a soft card: the icon in a soft circle, a folded group peeks out as two card edges (Pebble)
+//   card     a soft card: the icon in a soft circle, a folded group peeks out as two card edges (Lumen)
 //   bubble   round, a lifted tone and no edge
 //   line     a log line in mono: `23:19 [app] title — body`, actions as `[open] [dismiss]`; types in (Monolith)
 //   block    a thick accent bar on the left, the title in the display font, a hard shadow; red when urgent (Poster)

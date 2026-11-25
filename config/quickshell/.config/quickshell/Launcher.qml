@@ -53,7 +53,7 @@ Singleton {
     // The look comes from the style or the theme; your behaviour options (web search, files, actions, order,
     // recent, clipboard) from Config.launcher.
     readonly property var rl: preset ?? Theme.current.launcher
-    // the theme's structure (theme.json launcher.layout): grid (Pebble: a big search pill, a Recent row, icons on
+    // the theme's structure (theme.json launcher.layout): grid (Lumen: a big search pill, a Recent row, icons on
     // squircle plates, a wash that springs in) | sheet (Poster: the query as a display header, big rows with a tag,
     // an inverse block on a hard shadow, a first-letter index) | prompt (Monolith: a ❯ line, numbered text rows, a >
     // marker, matches in accent, [enter] hints). A style from Settings brings its own structure instead.

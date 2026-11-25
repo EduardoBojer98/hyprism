@@ -7,7 +7,7 @@ Font License 1.1, which allows bundling; each licence sits next to its font). St
 | Font | Theme |
 |---|---|
 | Martian Mono | Console |
-| Outfit | Pebble |
+| Outfit | (spare) |
 | Archivo, Archivo Black | Poster, Atlas |
 | IBM Plex Sans | Glass |
 

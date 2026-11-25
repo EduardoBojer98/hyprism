@@ -1,22 +1,22 @@
 -- How windows look, set by the active theme (Quickshell Themes.qml). ThemeSync writes the theme's
 -- Hyprland values to settings/theme.lua and calls apply_theme() live with hyprctl eval. The
--- defaults below are Pebble's, for the first login before the shell has run.
+-- defaults below are Lumen's, for the first login before the shell has run.
 local ok, saved = pcall(require, "settings.theme")
 THEME = ok and type(saved) == "table" and saved or {}
 local defaults = {
-    theme = "pebble", gaps_in = 8, gaps_out = 16, border_size = 2, rounding = 14,
-    active = { "b9cf8fcc" }, border_loop = false, border_speed = 5, inactive = "3d433fff",
-    shadow = "soft", blur = false, motion = "ease", accent = "b9cf8f", accent2 = "8fa8a3",
+    theme = "lumen", gaps_in = 6, gaps_out = 12, border_size = 1, rounding = 16,
+    active = { "0a62d066" }, border_loop = false, border_speed = 5, inactive = "cfd4dd99",
+    shadow = "soft", blur = true, motion = "spring", accent = "0a62d0", accent2 = "7b4fe0",
     border_angle = 45, glow = "",
-    -- title bars (plugins.lua): Pebble's surface, text, secondary text and raised tone; height from its density
-    bar = "232624ff", bar_text = "e9ece6ff", bar_text_dim = "b0b7b0ff", bar_buttons_dim = "2d312eff",
-    bar_font = "Archivo", bar_height = 31, bar_blur = false,
+    -- title bars (plugins.lua): Lumen's surface, text, secondary text and raised tone; height from its density
+    bar = "f8f9fbff", bar_text = "1c1d21ff", bar_text_dim = "4f535cff", bar_buttons_dim = "e1e5ecff",
+    bar_font = "Inter", bar_height = 31, bar_blur = false,
 }
 for k, v in pairs(defaults) do if THEME[k] == nil then THEME[k] = v end end
 
 -- Shadows by name:
 --   none   flat (Monolith, Console, Atlas)
---   soft   wide and soft: floating depth without a dark halo (Pebble, Glass, Reactor)
+--   soft   wide and soft: floating depth without a dark halo (Lumen)
 --   paper  short and light, like a sheet on a desk (no theme by default; Settings > Themes > Adjust)
 --   hard   a solid offset block in the accent, no blur (Poster)
 local SHADOWS = {

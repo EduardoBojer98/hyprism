@@ -5,11 +5,11 @@ import Quickshell.Io
 JsonAdapter {
     property int version: 8                     // settings format; Config.repair() upgrades older files
     property JsonObject appearance: JsonObject {
-        property string theme: "pebble"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
+        property string theme: "lumen"         // the whole desktop design (Themes.qml): layout, type, shape, colour, motion
         property string mode: "theme"           // theme (each theme's own) | light | dark | wallpaper | mixed: every theme has both halves (Themes.qml alt)
         property string desktopMode: "dark"     // mode "mixed": the bar, dock, panels, lock screen and window frames
         property string appMode: "light"        // mode "mixed": apps (GTK, Qt, KDE, the terminal) and their title bars
-        property var custom: ({})               // your adjustments per theme: { pebble: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
+        property var custom: ({})               // your adjustments per theme: { lumen: { accent: "#ff9e7a", radius: 12, ... } } (Themes.adjustable)
         property bool terminal: true            // Ghostty follows the theme (ThemeSync writes ghostty/theme.conf)
         property bool wallpaper: true           // the theme's own wallpaper; off = keep yours (Settings > Wallpaper)
         property bool wallpaperColours: false   // the accents follow your own wallpaper (WallpaperColours.qml); off = the theme's own

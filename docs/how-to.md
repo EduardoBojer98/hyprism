@@ -8,7 +8,7 @@ Each entry gives the Settings way (`Super+I`, then page → row) and the file or
 A one-line way to set a key from a terminal: `qs ipc call config set SECTION KEY 'JSON'`, for example
 `qs ipc call config set bar hiddenOn '["DP-1"]'`.
 
-`<theme>` below means the id of the theme in use, for example `pebble`.
+`<theme>` below means the id of the theme in use, for example `lumen`.
 
 ## Look
 

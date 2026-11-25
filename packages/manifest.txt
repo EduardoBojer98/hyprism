@@ -74,9 +74,9 @@ fortune                  tools     the bonsai greeting's short quote
 # Look
 adw-gtk-theme            look      GTK3 apps match libadwaita, dark and light
 papirus-icons            look      icon theme for the shell, dock and apps
-breeze-icons             look      Pebble's icon theme (breeze, breeze-dark)
+breeze-icons             look      Lumen's icon theme (breeze, breeze-dark)
 cursors-breeze           look      Monolith's and Poster's cursors (Breeze_Light, breeze_cursors)
-cursors-capitaine        look      Pebble's cursor (capitaine-cursors-light)
+cursors-capitaine        look      Lumen's cursor (capitaine-cursors)
 qt6ct                    look      Qt and KDE apps you add yourself follow the theme colours
 font-inter               look      UI font
 font-cantarell           look      "Cantarell" choice under Appearance > Font

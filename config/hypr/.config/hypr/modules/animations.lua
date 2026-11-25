@@ -4,7 +4,7 @@
 --   crisp    fast and linear-ish, a quick fade
 --   snappy   short slides, no overshoot (Monolith, look Snappy)
 --   slam     fast in with a hard stop, windows drop in from slightly larger (Poster)
---   ease     calm, damped, nothing bouncy (Pebble, look Smooth)
+--   ease     calm, damped, nothing bouncy (look Smooth)
 --   spring   soft springs with a small pop-in (look Springy)
 --   fade     slow cross-fades, workspaces dissolve instead of sliding
 --   minimal  quick fades only, nothing slides or grows (look Minimal, Animations: Reduced)

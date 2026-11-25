@@ -1,0 +1,220 @@
+{
+  "name": "Lumen",
+  "about": "Light through frosted glass: translucent panels over a soft colour field, generous rounded corners, one clear blue, motion with a little spring",
+  "order": 1,
+  "dark": false,
+  "colour": {
+    "ground": "#e8ebf1",
+    "surface": "#f8f9fb",
+    "raised": "#e1e5ec",
+    "line": "#cfd4dd",
+    "text": "#1c1d21",
+    "muted": "#4f535c",
+    "faint": "#646973",
+    "accent": "#0a62d0",
+    "onAccent": "#ffffff",
+    "accent2": "#6a3fd0",
+    "ok": "#17703c",
+    "warn": "#7d5300",
+    "err": "#b3271f"
+  },
+  "alt": {
+    "dark": true,
+    "term": {
+      "palette": [
+        "#2a2c33",
+        "#ff7b72",
+        "#7ee2a0",
+        "#f2cc72",
+        "#6cb2ff",
+        "#c3a2ff",
+        "#6fd8d8",
+        "#b4b8c2",
+        "#5d616b",
+        "#ff9b93",
+        "#9cefb8",
+        "#f7da94",
+        "#93c6ff",
+        "#d4bcff",
+        "#95e6e6",
+        "#f2f3f5"
+      ],
+      "background": "#16171b",
+      "foreground": "#f2f3f5",
+      "cursor": "#5aa5ff",
+      "cursorText": "#0a1628",
+      "selection": "#23395a",
+      "selectionText": "#f2f3f5"
+    },
+    "wall": "lumen-dark",
+    "colour": {
+      "ground": "#16171b",
+      "surface": "#212228",
+      "raised": "#2b2d34",
+      "line": "#3b3e46",
+      "text": "#f2f3f5",
+      "muted": "#b4b8c2",
+      "faint": "#959aa5",
+      "accent": "#5aa5ff",
+      "onAccent": "#0a1628",
+      "accent2": "#b195ff",
+      "ok": "#6fdc96",
+      "warn": "#f0c463",
+      "err": "#ff7d74"
+    },
+    "hypr": {
+      "active": [
+        "5aa5ff80"
+      ],
+      "inactive": "3b3e4699"
+    }
+  },
+  "font": {
+    "ui": "Inter",
+    "display": "Inter",
+    "mono": "JetBrainsMono Nerd Font",
+    "size": 14,
+    "displayWeight": 600
+  },
+  "shape": {
+    "radius": 18,
+    "radiusSmall": 11,
+    "line": 1,
+    "material": "glass",
+    "density": "regular"
+  },
+  "bar": {
+    "edge": "top",
+    "size": 32,
+    "floating": false,
+    "segmented": false,
+    "fill": "glass",
+    "line": 0,
+    "voice": "icons",
+    "mono": false,
+    "ws": "dots",
+    "clock": "plain",
+    "decor": "",
+    "sep": false,
+    "start": [
+      "controls",
+      "launcher",
+      "workspaces"
+    ],
+    "center": [],
+    "end": [
+      "media",
+      "tray",
+      "keyboard",
+      "weather",
+      "updates",
+      "status",
+      "notifications",
+      "clock"
+    ]
+  },
+  "dock": {
+    "edge": "bottom",
+    "shape": "pill",
+    "hover": "grow",
+    "mark": "dot",
+    "fill": "glass"
+  },
+  "popup": {
+    "layout": "cards",
+    "depth": "soft",
+    "decor": "",
+    "tiles": "wash"
+  },
+  "feel": {
+    "press": "scale",
+    "focus": "ring"
+  },
+  "motion": {
+    "enter": 260,
+    "exit": 150,
+    "curve": [
+      0.3,
+      1.25,
+      0.55,
+      1
+    ],
+    "travel": 8,
+    "scale": 0.96,
+    "press": 0.96
+  },
+  "launcher": {
+    "layout": "grid",
+    "placement": "center",
+    "view": "home",
+    "header": "none",
+    "width": 680,
+    "select": "wash",
+    "prompt": ""
+  },
+  "osd": {
+    "style": "bar"
+  },
+  "notify": {
+    "corner": "top-right",
+    "kind": "card"
+  },
+  "hypr": {
+    "gapsIn": 6,
+    "gapsOut": 12,
+    "border": 1,
+    "rounding": 16,
+    "active": [
+      "0a62d066"
+    ],
+    "inactive": "cfd4dd99",
+    "shadow": "soft",
+    "blur": true,
+    "motion": "spring",
+    "frame": "accent"
+  },
+  "lock": {
+    "clock": "big",
+    "align": "top",
+    "scene": "soft"
+  },
+  "power": {
+    "style": "row"
+  },
+  "term": {
+    "palette": [
+      "#1c1d21",
+      "#c62f27",
+      "#1d7f45",
+      "#8f5f00",
+      "#0a62d0",
+      "#7b4fe0",
+      "#0f7a83",
+      "#4f535c",
+      "#6b707a",
+      "#d9443b",
+      "#279553",
+      "#a87000",
+      "#2f7be3",
+      "#9066ee",
+      "#16909a",
+      "#f8f9fb"
+    ],
+    "background": "#f8f9fb",
+    "foreground": "#1c1d21",
+    "cursor": "#0a62d0",
+    "cursorText": "#ffffff",
+    "selection": "#cfe0fa",
+    "selectionText": "#1c1d21",
+    "cursorStyle": "bar",
+    "blink": true,
+    "padding": [
+      16,
+      12
+    ],
+    "prompt": "rounded"
+  },
+  "wall": "lumen",
+  "icons": "breeze",
+  "cursor": "capitaine-cursors"
+}

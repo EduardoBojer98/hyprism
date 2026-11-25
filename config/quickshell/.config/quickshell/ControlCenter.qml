@@ -178,7 +178,7 @@ Singleton {
     property date now: new Date()
 
     readonly property string style: Config.controlCenter.style || "panel"
-    // the theme's structure (theme.json popup.layout): cards (Pebble: soft cards, pill sliders), bento (Poster: tiles of
+    // the theme's structure (theme.json popup.layout): cards (Lumen: soft cards, pill sliders), bento (Poster: tiles of
     // different sizes with hard shadows), hud (Monolith: `// sound` headers, ascii meters, `[x] wifi` lines)
     readonly property string layout: Theme.current.popup?.layout ?? "cards"
     readonly property bool cards: layout === "cards"

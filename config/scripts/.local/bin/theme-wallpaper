@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Makes a theme's wallpaper (once; later calls reuse it) and prints its path.
-#   theme-wallpaper pebble          the theme's own half     -> ~/.cache/hyprism/wallpapers/pebble-v10.png
-#   theme-wallpaper pebble-light    its other half ("-light" or "-dark")
+#   theme-wallpaper lumen           the theme's own half     -> ~/.cache/hyprism/wallpapers/lumen-v10.png
+#   theme-wallpaper lumen-dark      its other half ("-light" or "-dark")
 #   theme-wallpaper --all           make every one (to look at them)
 # A theme folder (~/.config/hyprism/themes/<id> or ~/.local/share/hyprism/themes/<id>) brings either a picture
-# named like the wallpaper (pebble.png, pebble-light.jpg…) or wallpaper.sh, a recipe ImageMagick draws on a
+# named like the wallpaper (lumen.png, lumen-dark.jpg…) or wallpaper.sh, a recipe ImageMagick draws on a
 # 2560x1600 sheet. The result is scaled to fill the largest connected screen (3840x2400 without Hyprland).
 # Bump VERSION after changing a recipe so the cached pictures are made again.
 set -euo pipefail
@@ -70,16 +70,17 @@ for id in "${ids[@]}"; do
         exit 2
     }
     out="$out_dir/$id-v$VERSION.png"
+    tmp="$out.$$.tmp.png"    # one per run: two runs drawing the same picture (Welcome's --all, ThemeSync's) don't collide
     if [[ ! -s $out ]]; then # PNG24: never a banded palette PNG
-        draw "$id" "PNG24:$out.tmp.png" || {
-            rm -f "$out.tmp.png"
+        draw "$id" "PNG24:$tmp" || {
+            rm -f "$tmp"
             die "couldn't draw '$id'"
         }
-        magick "$out.tmp.png" -resize "${TW}x${TH}^" -gravity center -extent "${TW}x${TH}" "PNG24:$out.tmp.png" || {
-            rm -f "$out.tmp.png"
+        magick "$tmp" -resize "${TW}x${TH}^" -gravity center -extent "${TW}x${TH}" "PNG24:$tmp" || {
+            rm -f "$tmp"
             die "couldn't scale '$id'"
         }
-        mv "$out.tmp.png" "$out"
+        mv "$tmp" "$out"
     fi
     echo "$out"
 done

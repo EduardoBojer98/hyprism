@@ -13,7 +13,7 @@ fi; }
 trap 'tests/nested.sh stop >/dev/null 2>&1' EXIT
 tests/nested.sh start >/dev/null || exit 1
 T=$(. "$XDG_RUNTIME_DIR/hyprism-nested-c/env" && echo "$T")
-for id in pebble poster monolith; do
+for id in lumen poster monolith; do
     tests/nested.sh ipc config set appearance theme "$id" >/dev/null
     sleep 2
     accent=$(jq -r .colour.accent "themes/$id/theme.json")

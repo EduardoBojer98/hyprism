@@ -1,6 +1,6 @@
 import QtQuick
 
-// Launcher part: the grid layout's (Pebble) squircle plate behind an app icon; put it inside the icon's box.
+// Launcher part: the grid layout's (Lumen) squircle plate behind an app icon; put it inside the icon's box.
 Rectangle {
     property real pad: Theme.spaceS
     visible: Launcher.layout === "grid"

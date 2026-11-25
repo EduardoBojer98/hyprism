@@ -15,7 +15,7 @@
       "selection": "#f0d2b8",
       "selectionText": "#181a0e"
     },
-    "wall": "pebble-light",
+    "wall": "lumen",
     "colour": {"ground": "#f5f6ea", "surface": "#fdfdf7", "raised": "#eaecda", "line": "#cfd2b4", "text": "#181a0e", "muted": "#4f5238", "faint": "#686b51", "accent": "#b14800", "onAccent": "#ffffff", "accent2": "#5f6e00", "ok": "#16794a", "warn": "#975b00", "err": "#c22745"},
     "hypr": {"active": ["b14800ff", "5f6e00ff"], "inactive": "d9dbc6ff"}
   },
@@ -40,5 +40,5 @@
     "selection": "#3d4510",
     "selectionText": "#f3f6df", "cursorStyle": "bar", "blink": true, "padding": [14, 12], "prompt": "rounded"
   },
-  "wall": "pebble"
+  "wall": "lumen-dark"
 }

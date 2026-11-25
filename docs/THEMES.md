@@ -3,8 +3,8 @@
 A theme is a whole desktop design: colours, fonts, corners, spacing, the bar and dock look, how panels open, the lock
 screen, the terminal colours and the wallpaper. Every theme has a dark and a light half.
 
-Three ship: **Pebble** (calm, the default for new installs), **Poster** (loud) and **Monolith** (terminal). Atlas,
-Console, Glass and Reactor were removed; if you used one, you get its successor (glass to Pebble, atlas to Poster,
+Three ship: **Lumen** (calm, light through frosted glass, the default for new installs), **Poster** (loud) and **Monolith** (terminal). Atlas,
+Console, Glass, Reactor and Pebble were removed; if you used one, you get its successor (pebble and glass to Lumen, atlas to Poster,
 console and reactor to Monolith) with your adjustments moved over.
 
 ## Switch
@@ -25,9 +25,9 @@ its files. **Light or dark** picks each theme's own default, or one mode for all
 Each theme is one folder:
 
 ```
-themes/pebble/
+themes/lumen/
   theme.json      every value of the design
-  wallpaper.sh    how its two wallpapers are drawn (or pictures: pebble.png, pebble-light.png)
+  wallpaper.sh    how its two wallpapers are drawn (or pictures: lumen.png, lumen-dark.png)
 ```
 
 | Folder | Whose |
@@ -77,7 +77,7 @@ corners, gaps, font and motion and is kept in `settings.json`; there is no build
 | `launcher.layout` | The launcher's structure: `grid` (a big search pill on a soft shadow, a Recent row and app icons on squircle plates, a selection wash that springs in), `sheet` (the query as a display-font header, big rows with a first-letter index and a category tag, the selection an inverse block on a hard shadow) or `prompt` (a `❯ query` line with a block caret, numbered text rows with a `>` on the selection, matches in accent, `[enter] open` hints). Empty: the plain list. A style picked in Settings > Search & Launcher brings its own structure instead |
 | `hypr` | Window gaps, border, rounding, border colours, shadow, blur, animation preset, `frame`: `accent`, `gradient` or `rainbow` (the focused window's frame) |
 | `lock` | Lock screen `clock` style, `align`, and `scene`, the composition around it: `soft` (a time-of-day greeting, a shadowed password pill, a now-playing pill), `blocks` (a paper panel with accent and `accent2` blocks, a square field with a hard shadow) or `boot` (a boot log that types in, then `login:`, a `password: ****` line and the keyboard `layout:`; all at once in reduced motion). Settings > Lock Screen's preview draws the same layout |
-| `power` | `style` of the power menu: `tiles` (icon tiles), `blocks` (giant display-type blocks with their key, hard shadows) or `list` (numbered mono lines, `1) lock`). Every style takes the keys L S H O R P and 1–6 |
+| `power` | `style` of the power menu: `tiles` (icon tiles), `row` (one line of round buttons), `blocks` (giant display-type blocks with their key, hard shadows) or `list` (numbered mono lines, `1) lock`). Every style takes the keys L S H O R P and 1–6 |
 | `term` | The terminal's colours: `background`, `foreground`, `cursor`, `cursorText`, `selection`, `selectionText`, `palette` (16 colours), and its look: `cursorStyle` (`block`, `bar`, `underline`, `block_hollow`), `blink`, `padding` `[x, y]`, `prompt`: the starship prompt and fastfetch card preset (`rounded` pills, `blocks` on a heavy rail, `brackets` as an ascii HUD) |
 | `wall` | The wallpaper's name: a picture `<wall>.png` in the folder, or a recipe with that name in `wallpaper.sh` |
 | `icons` | The icon theme it starts with (a folder name; `Papirus` and `breeze` follow light and dark). Settings > Icons can pick another |

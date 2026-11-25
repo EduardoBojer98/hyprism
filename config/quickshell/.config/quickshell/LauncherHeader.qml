@@ -10,7 +10,7 @@ Item {
     height: Launcher.look.field
     z: 1   // above the panel, so the mode buttons' tooltips show over it
 
-    RectangularShadow {   // grid (Pebble): the search pill floats on a soft shadow of its own
+    RectangularShadow {   // grid (Lumen): the search pill floats on a soft shadow of its own
         visible: Launcher.layout === "grid"
         anchors.fill: searchBox
         offset.y: 6

@@ -6,6 +6,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- Mission Control shows every open window (this workspace's first, each badged with its workspace) or just this
+  workspace's (Settings > Mission Control > Windows); type to filter, Delete, a middle click or the ✕ closes a window.
+- Settings > Power > Power Menu: pick the layout from pictures of the real menu (a new Row of round buttons among them),
+  drag the actions into order or take them out, and turn off the second press or the name and uptime line.
 - The terminal greeting fits any window (scripts/greeting-card): the picture beside the card when there's room, a
   smaller Pokémon, the card alone, the card shedding its swatches, usage and hardware rows from the bottom, long
   lines cut with `…`, then one line; a bonsai grows to the window. Checked from 200x60 down to 15x3.
@@ -289,6 +293,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Changed
 
+- Pebble is redesigned as **Lumen**, the new default: frosted glass panels over Hyprland blur, a soft field of
+  coloured light as the wallpaper, larger rounded corners, Inter, one clear blue, a slim glass bar with the date and
+  time on the right, a glass dock whose icons grow, spring motion and the round-button power menu. Light first, with a
+  dark half. Saved `pebble` settings move to `lumen` on their own.
 - The earlier audits moved to `docs/history/audit/`; `docs/ROADMAP.md` is the current plan.
 - Supported systems are stated plainly: Arch, CachyOS, EndeavourOS and Fedora 44+, on x86_64. Manjaro and other
   processors now install with a warning that they are untested, instead of being listed as supported.
@@ -359,6 +367,7 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- A theme's wallpaper could stay unset on first start: two renders of the same picture shared one temporary file.
 - Hyprland crashing after a long sleep with an external monitor is now traceable: `hypr-crashlog` notes which CRTC
   drives each screen at every sleep and wake (a swapped pair fails to restore; aquamarine issue 429), and
   troubleshooting.md says how to avoid it until aquamarine fixes it.

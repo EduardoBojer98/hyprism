@@ -257,9 +257,10 @@ Singleton {
     // After every load: carry old names forward, then put back the default for anything missing or
     // out of range, so a hand edit, an old file or a half-written one never breaks the desktop.
     // A file that isn't JSON at all is kept as settings.json.broken and replaced by the defaults.
-    // every theme that ever shipped -> the one of today's three closest to it (2026-11-15 kept three)
-    readonly property var renamedThemes: ({ workstation: "pebble", canvas: "pebble", zen: "pebble", halo: "pebble", garden: "pebble",
-                                            glass: "pebble", noir: "monolith", console: "monolith", reactor: "monolith",
+    // every theme that ever shipped -> the one of today's three closest to it (2026-11-15 kept three;
+    // 2026-11-25 Pebble was redesigned as Lumen)
+    readonly property var renamedThemes: ({ pebble: "lumen", workstation: "lumen", canvas: "lumen", zen: "lumen", halo: "lumen", garden: "lumen",
+                                            glass: "lumen", noir: "monolith", console: "monolith", reactor: "monolith",
                                             mist: "poster", atlas: "poster" })
     // The saved theme must exist. Only judged once the theme folders are read (Themes.ready), or every
     // theme would look missing during the first moments and your choice would be lost.

@@ -161,7 +161,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 LauncherSelection { on: cell.GridView.isCurrentItem; radius: parent.radius }
             }
-            Item {   // grid (Pebble): the icon on a squircle plate
+            Item {   // grid (Lumen): the icon on a squircle plate
                 visible: !apps.pad
                 anchors.fill: appIcon
                 LauncherPlate {}

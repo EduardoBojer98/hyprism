@@ -13,7 +13,7 @@ Hyprland and a Quickshell shell for Arch, CachyOS and Fedora: one install comman
 
 [Themes](#themes) · [Features](#features) · [Settings](#settings) · [Quick start](#quick-start) · [Keys](#keys) · [Recovery](#uninstall-and-recovery) · [Docs](docs/README.md)
 
-<img src="docs/screenshots/themes/pebble-dark.webp" alt="Hyprism with the Pebble theme: river-stone greys with a lichen-green accent, a floating bar and the launcher open" width="100%">
+<img src="docs/screenshots/themes/lumen-light.webp" alt="Hyprism with the Lumen theme: frosted glass panels over a soft colour field, a clear blue accent and the launcher open" width="100%">
 
 </div>
 
@@ -36,23 +36,23 @@ Hyprland and a Quickshell shell for Arch, CachyOS and Fedora: one install comman
 
 ## Themes
 
-Switch with **Settings → Appearance → Themes**, the menu, or `theme pebble` in a terminal (`theme` lists them).
+Switch with **Settings → Appearance → Themes**, the menu, or `theme lumen` in a terminal (`theme` lists them).
 The left picture is each theme's own default mode.
 
 | Theme | The idea | Bar | Motion |
 |---|---|---|---|
-| **Pebble** (default) | calm and matte: river-stone greys, one lichen accent, light numerals, room to breathe | floating, at the top, clock in the middle | gentle ease-out |
+| **Lumen** (default) | light through frosted glass: translucent panels, generous rounded corners, one clear blue | a slim glass strip at the top, date and time on the right; a glass dock whose icons grow | a little spring |
 | **Poster** | loud and graphic: paper and ink, red, cobalt and yellow, heavy type, hard shadows | a tall paper bar with big workspace blocks and a display clock | slams in |
 | **Monolith** | a neon terminal HUD: mono type, blue-black, acid lime and an electric-blue second colour, corner brackets instead of shadows | a slim floating status line: workspace reticles, your apps, media in the middle | near-instant |
 
 <table>
   <tr>
-    <th>Pebble</th>
+    <th>Lumen</th>
     <th>Poster</th>
     <th>Monolith</th>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/themes/pebble-dark.webp" alt="Pebble, dark"><br><img src="docs/screenshots/themes/pebble-light.webp" alt="Pebble, light"></td>
+    <td><img src="docs/screenshots/themes/lumen-light.webp" alt="Lumen, light"><br><img src="docs/screenshots/themes/lumen-dark.webp" alt="Lumen, dark"></td>
     <td><img src="docs/screenshots/themes/poster-light.webp" alt="Poster, light"><br><img src="docs/screenshots/themes/poster-dark.webp" alt="Poster, dark"></td>
     <td><img src="docs/screenshots/themes/monolith-dark.webp" alt="Monolith, dark"><br><img src="docs/screenshots/themes/monolith-light.webp" alt="Monolith, light"></td>
   </tr>
@@ -65,7 +65,7 @@ What you can change on top of a theme, kept separately for each theme:
   text size, window motion, window shadow, blur behind windows and terminal colours. **Reset** puts it back.
 - **Animations:** Full, Reduced (short fades, nothing moves) or Off.
 - **Bar shape:** edge, size, floating or attached and the dock's place follow the theme you are on.
-- **Icons and cursor:** each theme brings a matching pack (Pebble: Breeze and Capitaine; Poster and Monolith:
+- **Icons and cursor:** each theme brings a matching pack (Lumen: Breeze and Capitaine; Poster and Monolith:
   Papirus with a Breeze cursor). Settings → Appearance → Icons / Cursor picks another or adds your own.
 - **Colours from the wallpaper** (Settings → Appearance → Themes or Wallpaper, off by default): the accents follow
   your own picture; Light or dark → Wallpaper picks the light or dark half by how bright it is (Light or dark → Mixed: the desktop in one half, apps in the other, like Windows' Custom mode), and Settings → Lock

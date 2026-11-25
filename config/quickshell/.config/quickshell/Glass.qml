@@ -2,7 +2,7 @@ import QtQuick
 
 // A panel surface in the active theme's material (Theme.material):
 //   solid  a flat tone step with the theme's border (most themes)
-//   glass  translucent over Hyprland's blur, with a faint top rim (Pebble, Glass)
+//   glass  translucent over Hyprland's blur, with a faint top rim (Lumen, Glass)
 // The name is historical; every surface in the shell is one of these.
 Rectangle {
     id: surface

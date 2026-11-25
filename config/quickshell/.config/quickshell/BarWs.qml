@@ -3,7 +3,7 @@ import QtQuick
 
 // Workspaces of one monitor, drawn in the theme's own way (Themes.qml bar.ws), across a horizontal
 // bar or down a vertical one:
-//   dots     small dots; the current one stretches into an accent pill (Pebble)
+//   dots     small dots; the current one stretches into an accent pill (Lumen)
 //   filled   numbers, the current one on an accent block (Monolith)
 //   text     one readout label, "WS 02" (Console)
 //   numbers  numbers in a recessed pill with the current one filled (Glass)

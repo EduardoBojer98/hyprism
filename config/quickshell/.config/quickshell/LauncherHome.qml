@@ -55,7 +55,7 @@ Column {
         }
     }
 
-    // grid (Pebble): the Recent row first, as icons on plates
+    // grid (Lumen): the Recent row first, as icons on plates
     LauncherHomeLabel { visible: home.plated && home.has("recent") && Search.recentItems.length > 0; text: "Recent" }
     IconGrid { visible: home.plated && home.has("recent"); items: Search.recentItems; section: "recent" }
 

@@ -1,7 +1,7 @@
 import QtQuick
 
 // A button's press, the theme's way (Theme.pressStyle): "shadow" (Poster) sets a hard block in the second accent
-// under the control, and a press pushes the control into it; "sink" (Pebble) drops it 1 px and springs it back on
+// under the control, and a press pushes the control into it; "sink" (Lumen) drops it 1 px and springs it back on
 // release; "scale" does nothing here (the control's own Theme.pressScale). Put one in a control, then move it:
 //   PressFeel { id: feel; pressed: area.pressed }   transform: Translate { x: feel.shift; y: feel.shift + feel.drop }
 Rectangle {
