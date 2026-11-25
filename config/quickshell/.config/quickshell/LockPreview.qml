@@ -11,6 +11,9 @@ Item {
     property int blur: 3                // hyprlock blur passes (0..6)
     property real brightness: 0.72
     property bool live: true            // false: a still clock
+    property string clock: LockScreen.clock   // any clock style and position, for the pictures of each choice
+    property string align: LockScreen.align
+    property string field: "idle"       // the password field's state to show: idle | typing | wrong | caps
 
     readonly property real s: width / 1600
     property date now: new Date()
@@ -39,7 +42,7 @@ Item {
     }
 
     Repeater {   // the blocks scene's composition, in % of the screen from its bottom-left corner
-        model: LockScreen.blocks
+        model: LockScreen.blocksFor(lp.align)
         Rectangle {
             required property var modelData
             x: modelData.x / 100 * lp.width
@@ -51,7 +54,7 @@ Item {
     }
 
     Repeater {
-        model: LockScreen.elements
+        model: LockScreen.layout(lp.clock, lp.align)
         Item {
             id: el
             required property var modelData
@@ -59,14 +62,14 @@ Item {
             readonly property bool isText: !["input", "avatar", "shape"].includes(e.role)
             width: isText ? label.implicitWidth : e.w * lp.s
             height: isText ? label.implicitHeight : e.hgt * lp.s
-            x: e.h === "left" ? e.x * lp.s : e.h === "right" ? lp.width - width - e.x * lp.s : (lp.width - width) / 2 + e.x * lp.s
+            x: e.h === "left" ? e.x * lp.s : e.h === "right" ? lp.width - width + e.x * lp.s : (lp.width - width) / 2 + e.x * lp.s
             y: e.v === "top" ? -e.y * lp.s : e.v === "bottom" ? lp.height - height - e.y * lp.s : (lp.height - height) / 2 - e.y * lp.s
 
             Text {
                 id: label
-                visible: el.isText
+                visible: el.isText && (el.e.role !== "caps" || lp.field === "caps")
                 text: LockScreen.previewText(el.e.role, lp.now)
-                color: el.e.colour === "accent" ? LockScreen.accent : el.e.colour === "muted" ? LockScreen.inkMuted : LockScreen.ink
+                color: LockScreen.inkOf(el.e.colour)
                 font {
                     family: el.e.mono ? Theme.monoFont : el.e.display ? Theme.displayFont : Theme.font
                     pixelSize: Math.max(4, Math.round((el.e.size ?? 10) * 1.33 * lp.s))
@@ -85,24 +88,37 @@ Item {
                 color: LockScreen.tone(el.e.colour)
             }
             Rectangle {   // the password field, styled as LockScreen.conf styles it per scene
+                id: fieldBox
                 readonly property string scene: LockScreen.scene
+                // hyprlock colours the whole field's outline (or, with none, its fill edge) by state
+                readonly property color stateColour: lp.field === "wrong" ? Theme.error : lp.field === "caps" ? Theme.warning : "transparent"
+                readonly property bool typed: lp.field === "typing" || lp.field === "caps"
                 visible: el.e.role === "input"
                 anchors.fill: parent
                 radius: scene === "blocks" || scene === "boot" ? 0 : scene === "soft" || Theme.radius >= 12 ? height / 2 : Theme.radius * lp.s
                 color: scene === "boot" ? "transparent" : Qt.alpha(Theme.surfaceColor, scene === "blocks" ? 1 : scene === "soft" ? 0.78 : 0.85)
-                border { width: scene === "boot" || scene === "soft" ? 0 : Math.max(1, (scene === "blocks" ? 3 : Theme.line) * lp.s)
-                         color: scene === "blocks" ? Theme.text : LockScreen.accent }
+                border { width: (lp.field === "wrong" || lp.field === "caps") && scene !== "boot" ? Math.max(1, 2 * lp.s)
+                                : scene === "boot" || scene === "soft" ? 0 : Math.max(1, (scene === "blocks" ? 3 : Theme.line) * lp.s)
+                         color: fieldBox.stateColour.a > 0 ? fieldBox.stateColour : scene === "blocks" ? Theme.text : LockScreen.accent }
                 Row {
-                    visible: parent.scene !== "boot"
+                    visible: fieldBox.scene !== "boot" && fieldBox.typed
                     anchors.centerIn: parent
-                    spacing: 6 * lp.s
-                    Repeater { model: 4; Rectangle { width: 7 * lp.s; height: width; radius: width / 2; color: Theme.text; opacity: 0.8 } }
+                    spacing: 7 * lp.s
+                    Repeater { model: 6; Rectangle { width: 9 * lp.s; height: width; radius: width / 2; color: Theme.text; opacity: 0.85 } }
+                }
+                Text {   // the placeholder, or the failure hyprlock writes in
+                    visible: fieldBox.scene !== "boot" && !fieldBox.typed
+                    anchors.centerIn: parent
+                    text: lp.field === "wrong" ? "Authentication failed"
+                        : "Enter password" + (Config.lockscreen.widgets.includes("layout") ? "  ·  " + Keyboard.short : "")
+                    color: lp.field === "wrong" ? Theme.error : Theme.subtext
+                    font { family: Theme.font; pixelSize: Math.max(4, Math.round(11 * 1.33 * lp.s)) }
                 }
                 Text {   // boot: the stars of a typed password
-                    visible: parent.scene === "boot"
+                    visible: fieldBox.scene === "boot"
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "****_"
-                    color: LockScreen.ink
+                    text: lp.field === "wrong" ? "denied (1)" : fieldBox.typed ? "******_" : "_"
+                    color: lp.field === "wrong" ? Theme.error : LockScreen.ink
                     font { family: Theme.monoFont; pixelSize: Math.max(4, Math.round(12 * 1.33 * lp.s)) }
                 }
             }

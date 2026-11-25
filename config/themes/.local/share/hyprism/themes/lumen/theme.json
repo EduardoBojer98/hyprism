@@ -175,7 +175,7 @@
   },
   "lock": {
     "clock": "big",
-    "align": "top",
+    "align": "split",
     "scene": "soft"
   },
   "power": {

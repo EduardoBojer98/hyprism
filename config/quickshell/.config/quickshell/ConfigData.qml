@@ -179,11 +179,12 @@ JsonAdapter {
     // Lock screen: LockScreen.qml lays it out, ThemeSync writes it to hypr/settings/hyprlock-theme.conf
     property JsonObject lockscreen: JsonObject {
         property string clock: "theme"          // theme | big | stacked | terminal | readout | small
-        property string position: "theme"       // theme | center | top | bottom | left
+        property string position: "theme"       // theme | split (clock up top, sign-in low down) | center | top | bottom | left
         property bool date: true
         property bool greeting: false           // "Welcome back, <name>" above the clock
+        property bool user: true                // your name over the password field, on your picture or your initial
         property string avatar: ""              // a picture of you (path), "" = none
-        property list<string> widgets: ["battery", "layout"]   // battery, layout (in the password field), media
+        property list<string> widgets: ["battery", "layout"]   // battery (top-right corner), layout (in the password field), media
         property string wallpaper: ""           // full path; empty = the desktop wallpaper
         property int blur: 3                    // blur passes, 0 = sharp
         property real brightness: 0.72

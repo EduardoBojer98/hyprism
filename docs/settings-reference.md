@@ -218,11 +218,12 @@ Every setting, with its type, default and meaning. This file is generated from `
 | Setting | Type | Default | What it does |
 | --- | --- | --- | --- |
 | `clock` | `string` | `"theme"` | theme \| big \| stacked \| terminal \| readout \| small |
-| `position` | `string` | `"theme"` | theme \| center \| top \| bottom \| left |
+| `position` | `string` | `"theme"` | theme \| split (clock up top, sign-in low down) \| center \| top \| bottom \| left |
 | `date` | `bool` | `true` |  |
 | `greeting` | `bool` | `false` | "Welcome back, <name>" above the clock |
+| `user` | `bool` | `true` | your name over the password field, on your picture or your initial |
 | `avatar` | `string` | `""` | a picture of you (path), "" = none |
-| `widgets` | `list<string>` | `["battery", "layout"]` | battery, layout (in the password field), media |
+| `widgets` | `list<string>` | `["battery", "layout"]` | battery (top-right corner), layout (in the password field), media |
 | `wallpaper` | `string` | `""` | full path; empty = the desktop wallpaper |
 | `blur` | `int` | `3` | blur passes, 0 = sharp |
 | `brightness` | `real` | `0.72` |  |

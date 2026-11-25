@@ -3,7 +3,8 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
-// Lock Screen: the theme's design (hypr/lockscreens/<theme.lock>.conf) and your background: the desktop wallpaper
+// Lock Screen: a live preview (with the password field's states), its position and clock picked from pictures
+// of the real layout (LockScreen.layout), what it shows as chips, and your background: the desktop wallpaper
 // or any picture from the wallpaper folders, with blur and brightness. Saved in Config.lockscreen;
 // ThemeSync writes hypr/settings/hyprlock-theme.conf, read the next time the screen locks.
 // The 24-hour setting is shared with the menu bar's clock; fonts and colours come from the theme.
@@ -13,62 +14,224 @@ ColumnLayout {
 
     readonly property var l: Config.lockscreen
     readonly property string picture: l.wallpaper || Wallpapers.still(Wallpapers.current)
+    readonly property var def: Theme.current.lock
+    readonly property var positions: [
+        { id: "theme",  name: "Theme's own", align: def.align },
+        { id: "split",  name: "Split",       align: "split",  hint: "The clock up top, your name and the password field low down" },
+        { id: "center", name: "Centre",      align: "center", hint: "Everything in one column in the middle" },
+        { id: "top",    name: "Top",         align: "top",    hint: "One column from the top, the picture free below" },
+        { id: "bottom", name: "Bottom",      align: "bottom", hint: "One column along the bottom, the picture free above" },
+        { id: "left",   name: "Left",        align: "left",   hint: "One column on the left, the picture free on the right" },
+    ]
+    readonly property var clocks: [
+        { id: "theme",    name: "Theme's own", clock: def.clock },
+        { id: "big",      name: "Big",         clock: "big" },
+        { id: "small",    name: "Small",       clock: "small" },
+        { id: "stacked",  name: "Stacked",     clock: "stacked" },
+        { id: "terminal", name: "Terminal",    clock: "terminal" },
+        { id: "readout",  name: "Readout",     clock: "readout" },
+    ]
+    // what the lock screen shows: on/off settings and the widgets list, as one row of chips
+    readonly property var parts: [
+        { key: "date",     name: "Date",            icon: "\u{F00ED}" },
+        { key: "greeting", name: "Greeting",        icon: "\u{F1821}" },
+        { key: "user",     name: "Your name",       icon: "\u{F0004}" },
+        { widget: "battery", name: "Battery",       icon: "\u{F0079}" },
+        { widget: "layout",  name: "Keyboard layout", icon: "\u{F030C}" },
+        { widget: "media",   name: "Now playing",   icon: "\u{F075A}" },
+    ]
+    function isOn(p) { return p.key ? page.l[p.key] : page.l.widgets.includes(p.widget) }
+    function flip(p) {
+        if (p.key) Config.set("lockscreen", p.key, !page.l[p.key])
+        else Config.set("lockscreen", "widgets", isOn(p) ? page.l.widgets.filter(w => w !== p.widget) : Array.from(page.l.widgets).concat([p.widget]))
+    }
+    property string field: "idle"   // the big preview's password field state (preview only)
+
+    // one choice drawn as the lock screen it gives
+    component Thumb: Item {
+        id: th
+        property string name
+        property bool chosen
+        property string clock: LockScreen.clock
+        property string align: LockScreen.align
+        signal picked()
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignTop
+        implicitHeight: pic.height + Theme.spaceXl + 2
+        activeFocusOnTab: true
+        Keys.onReturnPressed: picked()
+        Keys.onSpacePressed: picked()
+        Accessible.role: Accessible.RadioButton
+        Accessible.name: name
+        Accessible.checked: chosen
+        Accessible.onPressAction: picked()
+        Rectangle {
+            id: pic
+            width: parent.width
+            height: Math.round(width * 10 / 16)
+            radius: Theme.radiusSmall + 2
+            color: "transparent"
+            border { color: th.chosen ? Theme.accent : area.containsMouse ? Theme.strokeStrong : Theme.stroke; width: th.chosen ? 2 : 1 }
+            clip: true
+            LockPreview {
+                anchors { fill: parent; margins: th.chosen ? 2 : 1 }
+                z: -1
+                source: page.picture
+                blur: page.l.blur
+                brightness: page.l.brightness
+                live: false
+                clock: th.clock
+                align: th.align
+            }
+        }
+        MouseArea { id: area; anchors.fill: pic; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: th.picked() }
+        Text {
+            anchors { left: parent.left; top: pic.bottom; topMargin: Theme.spaceS - 2 }
+            text: th.name
+            color: th.chosen ? Theme.accent : Theme.text
+            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: th.chosen ? Font.DemiBold : Font.Normal }
+        }
+        FocusRing {}
+    }
 
     // ---- preview ------------------------------------------------------------------------------
     Rectangle {
         Layout.fillWidth: true
-        Layout.maximumWidth: 760
+        Layout.maximumWidth: 860
         Layout.alignment: Qt.AlignHCenter
         Layout.preferredHeight: width * 10 / 16
-        radius: Theme.radius
+        radius: Theme.radiusLarge
         color: "transparent"
         border { color: Theme.stroke; width: 1 }
         clip: true
         LockPreview {
             anchors { fill: parent; margins: 1 }
+            z: -1
             source: page.picture
             blur: page.l.blur
             brightness: page.l.brightness
+            field: page.field
         }
     }
     // No "try it" button: hyprlock quit without a password (grace period, SIGUSR1) counts as a failed
     // login, and three of those lock the account for 10 minutes (pam_faillock, seen 2026-11-01).
-    Text {
+    RowLayout {
         Layout.fillWidth: true
-        text: "Live preview. The real lock screen follows it the next time the screen locks (Super+L)."
-        wrapMode: Text.Wrap
-        color: Theme.subtext
-        font { family: Theme.font; pixelSize: Theme.fontLabel }
+        spacing: Theme.spaceM
+        Text {
+            Layout.fillWidth: true
+            text: "Live preview. The real lock screen follows it the next time the screen locks (Super+L)."
+            wrapMode: Text.Wrap
+            color: Theme.subtext
+            font { family: Theme.font; pixelSize: Theme.fontLabel }
+        }
+        Choice {   // how the password field looks as you use it
+            accessibleName: "Show the password field"
+            options: ["Waiting", "Typing", "Wrong", "Caps Lock"]
+            index: ["idle", "typing", "wrong", "caps"].indexOf(page.field)
+            onPicked: i => page.field = ["idle", "typing", "wrong", "caps"][i]
+        }
     }
 
     // ---- layout -------------------------------------------------------------------------------
     SettingGroup {
         title: "Layout"
         SettingRow {
-            label: "Clock"
-            hint: "The " + Theme.current.name + " theme's is " + Theme.current.lock.clock
-            ConfigChoice { section: "lockscreen"; key: "clock"; values: ["theme", "big", "stacked", "terminal", "readout", "small"]
-                           labels: ["Default", "Big", "Stacked", "Terminal", "Readout", "Small"] }
-        }
-        SettingRow {
             label: "Position"
-            ConfigChoice { section: "lockscreen"; key: "position"; values: ["theme", "center", "top", "bottom", "left"]
-                           labels: ["Default", "Centre", "Top", "Bottom", "Left"] }
+            hint: Config.lockscreen.position === "theme" ? "The " + Theme.current.name + " theme's: " + (page.positions.find(p => p.id === page.def.align)?.name ?? page.def.align)
+                : page.positions.find(p => p.id === Config.lockscreen.position)?.hint ?? ""
+        }
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.margins: Theme.spaceM
+            Layout.topMargin: 0
+            columns: page.width >= 720 ? 3 : 2
+            columnSpacing: Theme.spaceM
+            rowSpacing: Theme.spaceM
+            Repeater {
+                model: page.positions
+                Thumb {
+                    required property var modelData
+                    name: modelData.name
+                    align: modelData.align
+                    chosen: Config.lockscreen.position === modelData.id
+                    onPicked: Config.set("lockscreen", "position", modelData.id)
+                }
+            }
         }
         SettingRow {
-            label: "Date"
-            ConfigToggle { section: "lockscreen"; key: "date" }
+            label: "Clock"
+            hint: "The " + Theme.current.name + " theme's is " + page.def.clock
         }
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.margins: Theme.spaceM
+            Layout.topMargin: 0
+            columns: page.width >= 720 ? 3 : 2
+            columnSpacing: Theme.spaceM
+            rowSpacing: Theme.spaceM
+            Repeater {
+                model: page.clocks
+                Thumb {
+                    required property var modelData
+                    name: modelData.name
+                    clock: modelData.clock
+                    chosen: Config.lockscreen.clock === modelData.id
+                    onPicked: Config.set("lockscreen", "clock", modelData.id)
+                }
+            }
+        }
+    }
+
+    // ---- what it shows ------------------------------------------------------------------------
+    SettingGroup {
+        title: "On the lock screen"
         SettingRow {
-            label: "Greeting"
-            hint: "\"" + LockScreen.greetingText() + "\" above the clock"
-            ConfigToggle { section: "lockscreen"; key: "greeting" }
+            label: "Shown"
+            hint: "Click to turn one on or off. Caps Lock always warns under the password field"
+        }
+        Flow {
+            Layout.fillWidth: true
+            Layout.margins: Theme.spaceM
+            Layout.topMargin: 0
+            spacing: Theme.spaceS - 2
+            Repeater {
+                model: page.parts
+                Rectangle {
+                    id: chip
+                    required property var modelData
+                    readonly property bool on: page.isOn(modelData)
+                    width: chipRow.implicitWidth + Theme.spaceL + 2
+                    height: Math.max(Theme.hit, chipRow.implicitHeight + Theme.spaceM)
+                    radius: Theme.radius === 0 ? 0 : height / 2
+                    color: chipArea.containsMouse ? Theme.fillHover : on ? Theme.fill : "transparent"
+                    border { color: on ? Theme.accent : chipArea.containsMouse ? Theme.strokeStrong : Theme.stroke; width: 1 }
+                    activeFocusOnTab: true
+                    Keys.onReturnPressed: page.flip(modelData)
+                    Keys.onSpacePressed: page.flip(modelData)
+                    Accessible.role: Accessible.CheckBox
+                    Accessible.name: modelData.name
+                    Accessible.checked: on
+                    Accessible.onPressAction: page.flip(modelData)
+                    Row {
+                        id: chipRow
+                        anchors.centerIn: parent
+                        spacing: Theme.spaceS - 2
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.on ? chip.modelData.icon : "\u{F0415}"
+                               color: chip.on ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.modelData.name; color: chip.on ? Theme.text : Theme.subtext
+                               font { family: Theme.font; pixelSize: Theme.fontLabel } }
+                    }
+                    MouseArea { id: chipArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.flip(chip.modelData) }
+                    FocusRing {}
+                }
+            }
         }
         SettingRow {
             label: "Your picture"
-            hint: page.l.avatar !== "" ? page.l.avatar.split("/").pop() : "A round picture above the clock"
+            hint: page.l.avatar !== "" ? page.l.avatar.split("/").pop() : page.l.user ? "None: your initial on a disc" : "A round picture over the password field"
             Row {
-                spacing: 8
+                spacing: Theme.spaceS
                 PillButton { text: page.l.avatar !== "" ? "Change…" : "Choose…"; onClicked: avatarPick.running = true }
                 PillButton { visible: page.l.avatar !== ""; text: "Remove"; onClicked: Config.set("lockscreen", "avatar", "") }
             }
@@ -77,23 +240,6 @@ ColumnLayout {
                 id: avatarPick
                 command: ["zenity", "--file-selection", "--title=Your picture", "--filename=" + Quickshell.env("HOME") + "/Pictures/", "--file-filter=Pictures | *.png *.jpg *.jpeg *.webp"]
                 stdout: StdioCollector { onStreamFinished: { const f = text.trim(); if (f && /^[^\n#]+$/.test(f)) Config.set("lockscreen", "avatar", f) } }
-            }
-        }
-        Repeater {
-            model: [
-                { id: "battery", name: "Battery", hint: "At the bottom edge, on machines with a battery" },
-                { id: "layout", name: "Keyboard layout", hint: "In the password field, when you use more than one layout" },
-                { id: "media", name: "Now playing", hint: "Title and artist at the bottom edge (playerctl)" }
-            ]
-            SettingRow {
-                required property var modelData
-                label: modelData.name
-                hint: modelData.hint
-                Toggle {
-                    checked: page.l.widgets.includes(modelData.id)
-                    onToggled: on => Config.set("lockscreen", "widgets", on ? Array.from(page.l.widgets).concat([modelData.id])
-                                                                          : page.l.widgets.filter(w => w !== modelData.id))
-                }
             }
         }
     }
