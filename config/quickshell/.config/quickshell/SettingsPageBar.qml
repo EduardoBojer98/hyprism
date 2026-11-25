@@ -90,8 +90,17 @@ ColumnLayout {
         SettingRow {
             visible: page.b.transparent !== "never"
             label: "Look"
-            hint: page.b.clearStyle === "fade" ? "A soft shade from the screen edge that thins out" : "Nothing behind the items at all"
-            ConfigChoice { section: "bar"; key: "clearStyle"; values: ["clear", "fade"]; labels: ["Clear", "Fade"] }
+            hint: ({ clear: "An even overlay, or nothing at all at 0%",
+                     fade: "An overlay that thins out away from the screen edge",
+                     frosted: "The desktop blurred behind the bar, under the overlay" })[page.b.clearStyle] ?? ""
+            ConfigChoice { section: "bar"; key: "clearStyle"; values: ["clear", "fade", "frosted"]; labels: ["Clear", "Fade", "Frosted"] }
+        }
+        SettingRow {
+            visible: page.b.transparent !== "never"
+            label: "Overlay"
+            hint: page.b.clearTint === 0 ? "None: completely transparent" + (page.b.clearStyle === "frosted" ? " over the blur" : "")
+                                         : "The bar's own colour over what's behind it"
+            ConfigSlider { section: "bar"; key: "clearTint"; from: 0; to: 100; step: 5; format: v => v + "%" }
         }
         SettingRow {
             visible: page.b.transparent !== "never"

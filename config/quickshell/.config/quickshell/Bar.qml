@@ -26,11 +26,14 @@ Scope {
     readonly property color ink: Theme.barInk
     // Settings > Menu Bar > See-through: never | always | notMaximised (until a maximised or fullscreen window
     // covers this screen's workspace) | maximised (only then). Clear drops the ground, edge line and shadow;
-    // "fade" leaves a soft shade from the screen edge, and items get a halo so they read over any wallpaper.
+    // Its look: an even overlay (clear), one that thins out from the edge (fade), or the desktop blurred under
+    // it (frosted), at the overlay strength you pick; items get a halo so they read over any wallpaper.
     readonly property var ws: monitor?.activeWorkspace ?? null
     readonly property bool covered: ws !== null && (ws.hasFullscreen || ws.toplevels.values.some(t => t.wayland?.maximized ?? false))
     readonly property bool clear: ({ always: true, notMaximised: !covered, maximised: covered })[Config.bar.transparent] ?? false
-    readonly property bool fade: clear && Config.bar.clearStyle === "fade"
+    readonly property string look: Config.bar.clearStyle
+    readonly property real tint: Config.bar.clearTint / 100   // the overlay's strength (Settings > Menu Bar > Overlay)
+    readonly property bool frosted: look === "frosted" && Config.bar.transparent !== "never"
     property real solid: clear ? 0 : 1   // the ground's share, eased between clear and solid
     Behavior on solid { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     // a floating strip is rounded like the theme's panels (never more than a capsule)
@@ -73,15 +76,15 @@ Scope {
         implicitHeight: root.vertical ? 0 : Theme.barHeight
         implicitWidth: root.vertical ? Theme.barHeight : 0
 
-        // see-through "fade": the ground as a shade that thins out away from the screen edge
+        // see-through "fade": the overlay as a shade that thins out away from the screen edge
         Rectangle {
             anchors.fill: parent
-            visible: root.st.fill !== "none" && opacity > 0
-            opacity: root.fade ? 1 - root.solid : 0
+            visible: root.look === "fade" && root.tint > 0 && opacity > 0
+            opacity: 1 - root.solid
             gradient: Gradient {
                 orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
-                GradientStop { position: 0; color: Qt.alpha(root.ground, root.edge === "top" || root.edge === "left" ? 0.55 : 0) }
-                GradientStop { position: 1; color: Qt.alpha(root.ground, root.edge === "top" || root.edge === "left" ? 0 : 0.55) }
+                GradientStop { position: 0; color: Qt.alpha(root.ground, root.edge === "top" || root.edge === "left" ? root.tint : 0) }
+                GradientStop { position: 1; color: Qt.alpha(root.ground, root.edge === "top" || root.edge === "left" ? 0 : root.tint) }
             }
         }
         // the bar itself: inset from the screen edge and along it when floating
@@ -103,6 +106,14 @@ Scope {
                 offset.y: 4; blur: 18; spread: -2
                 radius: root.corner
                 color: Theme.shadow
+            }
+            // see-through "clear": an even overlay in the bar's shape ("frosted" draws its own, on the blur layer)
+            Rectangle {
+                anchors.fill: parent
+                visible: root.look === "clear" && root.tint > 0 && opacity > 0
+                opacity: 1 - root.solid
+                radius: root.corner
+                color: Qt.alpha(root.ground, root.tint)
             }
             // one ground for the whole strip (segmented themes give each section its own instead)
             Glass {
@@ -168,6 +179,35 @@ Scope {
                 x: root.vertical ? (parent.width - width) / 2 : at
                 y: root.vertical ? at : (parent.height - height) / 2
             }
+        }
+    }
+
+    // see-through "frosted": the overlay on a layer of its own under the bar, which Hyprland blurs at any
+    // strength (rules.lua: qs-barblur, ignore_alpha 0); below windows, so a window over it is never blurred.
+    // Always there while frosted is picked, fully clear when solid, so the stacking never changes.
+    PanelWindow {
+        screen: root.screen
+        visible: root.frosted && win.visible
+        WlrLayershell.namespace: "qs-barblur"
+        WlrLayershell.layer: WlrLayer.Bottom
+        exclusionMode: ExclusionMode.Ignore
+        anchors { top: root.edge !== "bottom"; bottom: root.edge !== "top"; left: root.edge !== "right"; right: root.edge !== "left" }
+        implicitHeight: root.vertical ? 0 : Theme.barHeight
+        implicitWidth: root.vertical ? Theme.barHeight : 0
+        color: "transparent"
+        mask: Region {}
+        Rectangle {
+            anchors {
+                fill: parent
+                topMargin: root.edge === "bottom" ? 0 : root.margin
+                bottomMargin: root.edge === "top" ? 0 : root.margin
+                leftMargin: root.edge === "right" ? 0 : root.margin
+                rightMargin: root.edge === "left" ? 0 : root.margin
+            }
+            radius: root.corner
+            // a trace of colour even at 0%, or Hyprland has nothing to blur behind
+            color: Qt.alpha(root.ground, Math.max(0.01, root.tint))
+            opacity: 1 - root.solid
         }
     }
 

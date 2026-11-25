@@ -142,10 +142,14 @@ Scope {
     // titles in the secondary text and their buttons in the raised tone. Height follows the theme's density
     // (Settings > Windows can pick a size instead).
     readonly property int barHeight: Math.round(28 * Math.sqrt(Theme.density))
+    // a "Frosted" bar (Settings > Menu Bar > See-through) or dock (Settings > Dock > Look) needs Hyprland's
+    // blur, also in themes that leave it off
+    readonly property bool frostedBar: Config.bar.transparent !== "never" && Config.bar.clearStyle === "frosted"
+                                       || Config.dock.enabled && Config.dock.look === "frosted"
     readonly property string hyprLua: `{ theme = ${q(current.id)}, gaps_in = ${n(h.gapsIn)}, gaps_out = ${n(h.gapsOut)}, border_size = ${n(h.border)}, `
         + `rounding = ${n(h.rounding)}, active = { ${borderActive.map(q).join(", ")} }, border_loop = ${borderLoops}, border_speed = ${n(Config.windows.rainbowSpeed)}, `
         + `border_angle = ${n(Config.windows.borderAngle)}, glow = ${q(glow)}, inactive = ${q(h.inactive)}, `
-        + `shadow = ${q(h.shadow)}, blur = ${h.blur === true}, motion = ${q(Theme.hyprMotion)}, accent = ${q(hex(Theme.accent))}, `
+        + `shadow = ${q(h.shadow)}, blur = ${h.blur === true || frostedBar}, motion = ${q(Theme.hyprMotion)}, accent = ${q(hex(Theme.accent))}, `
         + `accent2 = ${q(hex(Theme.accent2))}, cursor = ${q(cursorTheme)}, cursor_size = ${n(cursorSize)}, `
         + `bar = ${q(hex(app.surfaceColor) + (Theme.glassy ? "e6" : "ff"))}, bar_text = ${q(hex(app.text) + "ff")}, `
         + `bar_text_dim = ${q(hex(app.subtext) + "ff")}, bar_buttons_dim = ${q(hex(app.raised) + "ff")}, `

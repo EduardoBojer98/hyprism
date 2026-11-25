@@ -38,6 +38,8 @@ JsonAdapter {
         property list<string> hiddenOn: []      // monitor names (e.g. "eDP-1") without a dock
         property int iconSize: 44               // the dock's size: Settings presets 36 / 44 / 52 / 60, or any size 24-72 on its slider
         property bool autoHide: false           // visible by default; true slides it away until the pointer reaches its edge
+        property string look: "theme"           // the island: theme (its own fill) | clear (a flat overlay) | frosted (the desktop blurred under the overlay)
+        property int tint: 30                   // clear / frosted: the overlay's strength in the dock's colour, % (0: none)
         property bool launcher: true            // the launcher button at the dock's start
         property bool showRunning: true
         property string barLabels: "icon"       // open windows in the dock inside the bar: icon | name (app name) | title (window title)
@@ -277,7 +279,9 @@ JsonAdapter {
         // see-through: never | always | notMaximised (until a maximised or fullscreen window covers the workspace)
         // | maximised (only over one). Works with every theme's fill, edge, floating and segmented bars (Bar.qml)
         property string transparent: "never"
-        property string clearStyle: "clear"      // while see-through: clear (nothing) | fade (a soft shade from the screen edge)
+        property string clearStyle: "clear"      // while see-through: clear (a flat overlay) | fade (an overlay thinning out from
+                                                 // the screen edge) | frosted (the desktop blurred behind the overlay)
+        property int clearTint: 30               // while see-through: the overlay's strength in the bar's colour, % (0: none)
         property bool clearHalo: true            // while see-through: a soft halo in the bar's colour behind its items
         // your settings per item, over its bar/items/<id>/defaults.json. Every item understands: enabled, icon,
         // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). A second copy of an item

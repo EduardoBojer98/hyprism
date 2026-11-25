@@ -56,7 +56,7 @@ Singleton {
             iconTheme: "string", monoTray: "bool", cursorTheme: "string", cursorSize: [16, 64]
         },
         dock: { enabled: "bool", size: ["compact", "regular", "roomy"], hiddenOn: "list",
-                iconSize: [24, 72], autoHide: "bool", launcher: "bool", showRunning: "bool", combine: "bool", barLabels: ["icon", "name", "title"], nameOnly: "bool", previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list", widgets: "list" },
+                iconSize: [24, 72], autoHide: "bool", look: ["theme", "clear", "frosted"], tint: [0, 100], launcher: "bool", showRunning: "bool", combine: "bool", barLabels: ["icon", "name", "title"], nameOnly: "bool", previews: "bool", thumbnails: "bool", thumbRefresh: [10, 86400], pinned: "list", widgets: "list" },
         launcher: { webSearch: "string", showFiles: "bool", usage: "object",
                     style: ["theme", "spotlight", "launchpad", "drawer", "sidebar", "terminal"],
                     columns: [5, 9], startView: ["theme", "home", "apps", "search"], recent: "list", order: "list", clipboardInside: "bool", position: ["center", "pointer", "theme"], besideButton: "bool",
@@ -105,7 +105,7 @@ Singleton {
         bar: { margin: [0, 40], hiddenOn: "list", batteryPercent: ["inside", "beside", "off"],
                clock24: "bool", seconds: "bool",
                windowTitle: "bool", transparent: ["never", "always", "notMaximised", "maximised"],
-               clearStyle: ["clear", "fade"], clearHalo: "bool", items: "object", preset: "string", presets: "object", monitors: "object", layout: "object" },
+               clearStyle: ["clear", "fade", "frosted"], clearTint: [0, 100], clearHalo: "bool", items: "object", preset: "string", presets: "object", monitors: "object", layout: "object" },
         battery: { warn: "bool", warnAt: [5, 50], criticalAt: [2, 20] },
         powerMenu: { layout: ["theme", "tiles", "row", "blocks", "list"], actions: "list", confirm: "bool", details: "bool" },
         missionControl: { screens: ["all", "this"], click: ["switch", "browse"], newTile: "bool", size: ["small", "medium", "large"], windows: ["all", "desktop"] },

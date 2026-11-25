@@ -28,6 +28,14 @@ hl.layer_rule({
     no_anim      = true,  -- the shell animates its own layers (Settings > Appearance > Motion); a Hyprland fade on top doubled it
 })
 
+-- the "Frosted" look of the see-through bar (Bar.qml) and the dock (Dock.qml): their overlay sits on a
+-- layer of its own and is blurred at any strength, down to a trace at 0%
+hl.layer_rule({
+    name  = "blur-frosted-backdrop",
+    match = { namespace = "^qs-(bar|dock)blur$" },
+    ignore_alpha = 0,
+})
+
 -- slurp's area picker (~/.local/bin/screenshot): no fade-out, so the dimmed veil and the accent
 -- selection are gone the moment grim captures (a fading layer showed up tinted in the screenshot)
 hl.layer_rule({

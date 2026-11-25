@@ -110,6 +110,21 @@ ColumnLayout {
             ConfigChoice { section: "dock"; key: "barLabels"; values: ["icon", "name", "title"]; labels: ["Icon", "App name", "Window title"] }
         }
         SettingRow {
+            visible: Config.dock.enabled && !page.inBar
+            label: "Look"
+            hint: ({ theme: "The theme's own " + ({ glass: "glass", surface: "panel", ink: "ink block" })[Theme.dockStyle.fill] ?? "fill",
+                     clear: "An even overlay, or nothing at all at 0%",
+                     frosted: "The desktop blurred behind the dock, under the overlay" })[Config.dock.look] ?? ""
+            ConfigChoice { section: "dock"; key: "look"; values: ["theme", "clear", "frosted"]; labels: ["Theme's", "Clear", "Frosted"] }
+        }
+        SettingRow {
+            visible: Config.dock.enabled && !page.inBar && Config.dock.look !== "theme"
+            label: "Overlay"
+            hint: Config.dock.tint === 0 ? "None: completely transparent" + (Config.dock.look === "frosted" ? " over the blur" : "")
+                                         : "The dock's own colour over what's behind it"
+            ConfigSlider { section: "dock"; key: "tint"; from: 0; to: 100; step: 5; format: v => v + "%" }
+        }
+        SettingRow {
             visible: Config.dock.enabled
             label: "Active window mark"
             hint: "Under each open app" + (page.inBar ? "" : "'s icon") + "; bigger on the focused one. Works the same in the bar."

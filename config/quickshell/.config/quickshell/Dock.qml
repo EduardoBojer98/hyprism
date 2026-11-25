@@ -20,7 +20,10 @@ PanelWindow {
     readonly property string indicator: ds.mark       // line | dot | bar
     readonly property string markSide: ds.markSide ?? "edge"   // edge | inner | left
     readonly property string hoverStyle: ds.hover     // lift | grow | plate
-    readonly property int lift: Theme.dockLift        // gap to the screen edge
+    readonly property int lift: Theme.dockLift
+    readonly property string look: Config.dock.look         // theme | clear | frosted (Settings > Dock > Look)
+    readonly property real tint: Config.dock.tint / 100
+    readonly property color tintBase: ds.fill === "ink" ? Theme.text : Theme.surfaceColor        // gap to the screen edge
     readonly property string edge: Theme.dockEdge
     readonly property bool vertical: Theme.dockVertical
     readonly property int sign: edge === "bottom" || edge === "right" ? 1 : -1   // towards the edge
@@ -225,12 +228,13 @@ PanelWindow {
         width: root.vertical ? Theme.dockThickness : row.implicitWidth + pad * 2 + (root.shape === "pill" ? 8 : 0) + grown
         height: root.vertical ? row.implicitHeight + pad * 2 + (root.shape === "pill" ? 8 : 0) + grown : Theme.dockThickness
         radius: root.shape === "pill" ? across / 2 : root.shape === "tile" ? Theme.radiusPanel : Theme.radius
-        color: ({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[root.ds.fill] ?? Theme.glass
+        color: root.look === "theme" ? (({ glass: Theme.glass, surface: Theme.surfaceColor, ink: Theme.text })[root.ds.fill] ?? Theme.glass)
+             : root.look === "clear" ? Qt.alpha(root.tintBase, root.tint) : "transparent"   // frosted: the overlay is on the blur layer
         border { width: Theme.line; color: root.ds.fill === "ink" ? Theme.text : Theme.stroke }
 
         // the theme's depth: a soft shadow (glass themes) or a hard offset block (Poster), under the island
         RectangularShadow {
-            visible: Theme.depth === "soft" || Theme.depth === "glow"
+            visible: (Theme.depth === "soft" || Theme.depth === "glow") && root.look === "theme"
             z: -1
             anchors.fill: parent
             offset.y: Theme.depth === "glow" ? 0 : 6
@@ -241,7 +245,7 @@ PanelWindow {
         }
         // Poster's hard offset shadow: a block of the line colour drawn under the island (z < 0)
         Rectangle {
-            visible: Theme.depth === "hard"
+            visible: Theme.depth === "hard" && root.look === "theme"
             z: -1
             x: 6; y: 6; width: parent.width; height: parent.height
             color: Theme.stroke
@@ -311,6 +315,29 @@ PanelWindow {
         const s = root.screen, bh = Theme.barShownOn(s) ? Theme.barHeight : 0, be = Theme.barEdge
         return Qt.point(edge === "right" ? s.width - root.width - (be === "right" ? bh : 0) : (be === "left" ? bh : 0),
                         edge === "bottom" ? s.height - root.height - (be === "bottom" ? bh : 0) : (be === "top" ? bh : 0))
+    }
+
+    // Settings > Dock > Look "frosted": the overlay on a full-screen layer of its own under windows, which
+    // Hyprland blurs at any strength (rules.lua: qs-dockblur, ignore_alpha 0), kept on the island's place
+    PanelWindow {
+        screen: root.screen
+        visible: root.look === "frosted" && root.visible
+        WlrLayershell.namespace: "qs-dockblur"
+        WlrLayershell.layer: WlrLayer.Bottom
+        exclusionMode: ExclusionMode.Ignore
+        anchors { top: true; bottom: true; left: true; right: true }
+        color: "transparent"
+        mask: Region {}
+        Rectangle {
+            readonly property point at: root.origin()
+            x: at.x + island.x + (root.vertical ? island.hide : 0)
+            y: at.y + island.y + (root.vertical ? 0 : island.hide)
+            width: island.width; height: island.height
+            radius: island.radius
+            // a trace of colour even at 0%, or Hyprland has nothing to blur behind
+            color: Qt.alpha(root.tintBase, Math.max(0.01, root.tint))
+            opacity: island.opacity
+        }
     }
 
     // the tooltip, beside the island at the hovered icon; hover-to-hover it moves without waiting
