@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
 
@@ -16,11 +17,35 @@ ColumnLayout {
     // every widget: the shown ones in their order, then the rest
     readonly property var widgets: Config.dock.widgets.filter(id => Theme.dockWidgets[id] !== undefined)
     readonly property var widgetList: widgets.concat(Object.keys(Theme.dockWidgets).filter(id => !widgets.includes(id)))
-    function moveWidget(id, by) {
-        const list = Array.from(widgets), i = list.indexOf(id), j = i + by
+    // everything on the dock in its order (DockOrder.arrange): a move saves dock.order, and pinned and widgets in
+    // the same order, so the bar's apps item and the dock's own drag agree with it
+    readonly property var order: DockOrder.arrange(Config.dock.order, Config.dock.launcher, pinned, widgets)
+    function saveOrder(list) {
+        Config.set("dock", "order", list)
+        Config.set("dock", "pinned", list.filter(k => k.startsWith("app:")).map(k => k.slice(4)))
+        Config.set("dock", "widgets", list.filter(k => k.startsWith("widget:")).map(k => k.slice(7)))
+    }
+    function nudge(key, by) {
+        const list = Array.from(order), i = list.indexOf(key), j = i + by
         if (i < 0 || j < 0 || j >= list.length) return
-        list.splice(i, 1); list.splice(j, 0, id)
-        Config.set("dock", "widgets", list)
+        list.splice(i, 1); list.splice(j, 0, key)
+        saveOrder(list)
+    }
+    function placeKey(key, target, after) {
+        if (key === target) return
+        const list = order.filter(k => k !== key)
+        list.splice(list.indexOf(target) + (after ? 1 : 0), 0, key)
+        saveOrder(list)
+    }
+    function removeKey(key) {
+        if (key === "launcher") Config.set("dock", "launcher", false)
+        else if (key.startsWith("app:")) remove(key.slice(4))
+        else if (key.startsWith("widget:")) showWidget(key.slice(7), false)
+    }
+    function nameOf(key) {
+        return key === "launcher" ? "Launcher button" : key === "running" ? "Open apps"
+             : key.startsWith("widget:") ? Theme.dockWidgets[key.slice(7)]?.name ?? key.slice(7)
+             : DesktopEntries.byId(key.slice(4))?.name ?? key.slice(4) + " (not installed)"
     }
     function showWidget(id, on) { Config.set("dock", "widgets", on ? widgets.concat([id]) : widgets.filter(x => x !== id)) }
     readonly property var matches: {
@@ -31,7 +56,7 @@ ColumnLayout {
             .sort((a, b) => a.name.localeCompare(b.name))
             .slice(0, 8)
     }
-    function add(id) { Config.set("dock", "pinned", pinned.concat([id])); query = ""; search.text = "" }
+    function add(id) { Config.set("dock", "pinned", pinned.concat([id])); query = ""; search.text = ""; barSearch.text = "" }
     function remove(id) { Config.set("dock", "pinned", pinned.filter(x => x !== id)) }
     // dragging: `id` before or after `target` (the dock itself reorders the same way)
     function place(id, target, after) {
@@ -260,7 +285,130 @@ ColumnLayout {
         }
     }
 
+    // one list of everything on the dock, in its order: drag a row or use the arrows; add apps and widgets below
     SettingGroup {
+        visible: !page.inBar
+        title: "Order · drag to arrange the whole dock"
+        Repeater {
+            model: page.order
+            DragItem {
+                id: it
+                required property string modelData
+                required property int index
+                readonly property string kind: modelData === "launcher" || modelData === "running" ? modelData : modelData.split(":")[0]
+                Layout.fillWidth: true
+                implicitHeight: 48
+                key: "dockorder"
+                payload: modelData
+                floatOn: page.parent
+                radius: Theme.radius
+                Rectangle { visible: it.index > 0 && !it.dragging; anchors { left: parent.left; right: parent.right; leftMargin: 16 } height: 1; color: Theme.stroke }
+                Text {   // the grip
+                    id: grip
+                    anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+                    text: "\u{F01DD}"
+                    color: it.hovered || it.dragging ? Theme.text : Theme.muted
+                    font { family: Theme.iconFont; pixelSize: Theme.fontSize }
+                }
+                Item {   // what it is: the app's icon, the launcher's own design, or a glyph
+                    id: mark
+                    anchors { left: grip.right; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                    width: 28; height: 28
+                    IconImage {
+                        visible: it.kind === "app"
+                        anchors.centerIn: parent
+                        implicitSize: 24
+                        source: it.kind === "app" ? Quickshell.iconPath(DesktopEntries.byId(it.modelData.slice(4))?.icon ?? "", "application-x-executable") : ""
+                    }
+                    Rectangle {
+                        visible: it.kind !== "app"
+                        anchors.fill: parent
+                        radius: Math.round(width * 0.27)
+                        color: Qt.alpha(Theme.text, 0.08)
+                        DockLauncherIcon { visible: it.kind === "launcher"; anchors.centerIn: parent; size: 28; style: Config.dock.launcherIcon; lit: it.hovered }
+                        Text {
+                            visible: it.kind !== "launcher"
+                            anchors.centerIn: parent
+                            text: it.kind === "running" ? "\u{F05AF}" : "\u{F056E}"
+                            color: it.kind === "running" ? Theme.text : Theme.accent
+                            font { family: Theme.iconFont; pixelSize: Theme.fontSize }
+                        }
+                    }
+                }
+                Column {
+                    anchors { left: mark.right; leftMargin: 12; right: tools.left; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                    Text {
+                        width: parent.width
+                        text: page.nameOf(it.modelData)
+                        elide: Text.ElideRight
+                        color: Theme.text
+                        font { family: Theme.font; pixelSize: Theme.fontSize }
+                    }
+                    Text {
+                        width: parent.width
+                        text: ({ launcher: "Opens Search & Launcher", app: "Pinned app", widget: "Widget",
+                                 running: Config.dock.showRunning ? (Config.dock.combine ? "Apps you have open that aren't pinned" : "Every open window") : "Off: turn on Show open apps above" })[it.kind]
+                        elide: Text.ElideRight
+                        color: Theme.subtext
+                        font { family: Theme.font; pixelSize: Theme.fontCaption }
+                    }
+                }
+                Row {
+                    id: tools
+                    anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                    spacing: 8
+                    ArrowButton { anchors.verticalCenter: parent.verticalCenter; glyph: "\u{F0143}"; tip: "Move " + page.nameOf(it.modelData) + " earlier"; enabled: it.index > 0; onClicked: page.nudge(it.modelData, -1) }
+                    ArrowButton { anchors.verticalCenter: parent.verticalCenter; glyph: "\u{F0140}"; tip: "Move " + page.nameOf(it.modelData) + " later"; enabled: it.index < page.order.length - 1; onClicked: page.nudge(it.modelData, 1) }
+                    PillButton {   // kept in place on "Open apps" (nothing to remove) so the arrows line up
+                        opacity: it.kind === "running" ? 0 : 1
+                        enabled: it.kind !== "running"
+                        text: it.kind === "app" ? "Unpin" : it.kind === "launcher" ? "Hide" : "Remove"
+                        onClicked: page.removeKey(it.modelData)
+                    }
+                }
+                DropSpot { anchors.fill: parent; key: "dockorder"; vertical: true; owner: it; onPlaced: (k, after) => page.placeKey(k, it.modelData, after) }
+            }
+        }
+        SettingRow {
+            label: "Add an app"
+            hint: "Type part of the app's name; it joins after the last app"
+            TextField {
+                id: search
+                width: 220
+                placeholder: "e.g. Files"
+                onTextChanged: page.query = text
+                onAccepted: if (page.matches.length) page.add(page.matches[0].id)
+            }
+        }
+        Repeater {
+            model: page.inBar ? [] : page.matches
+            AppRow {
+                required property var modelData
+                entry: modelData
+                action: "Add"
+                onTriggered: page.add(modelData.id)
+            }
+        }
+        SettingRow {
+            visible: page.widgetList.length > page.widgets.length || !Config.dock.launcher
+            label: "Add to the dock"
+            hint: "Widgets join at the end; drag them anywhere"
+        }
+        Flow {
+            visible: page.widgetList.length > page.widgets.length || !Config.dock.launcher
+            Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.bottomMargin: 12
+            spacing: 8
+            PillButton { visible: !Config.dock.launcher; text: "+ Launcher button"; onClicked: Config.set("dock", "launcher", true) }
+            Repeater {
+                model: page.widgetList.filter(id => !page.widgets.includes(id))
+                PillButton { required property string modelData; text: "+ " + Theme.dockWidgets[modelData].name; onClicked: page.showWidget(modelData, true) }
+            }
+        }
+    }
+
+    // in the bar only pinned apps apply: their order, unpin and add
+    SettingGroup {
+        visible: page.inBar
         title: "Pinned apps · drag to reorder"
         Text {
             visible: page.pinned.length === 0
@@ -297,7 +445,7 @@ ColumnLayout {
             label: "Add an app"
             hint: "Type part of the app's name"
             TextField {
-                id: search
+                id: barSearch
                 width: 220
                 placeholder: "e.g. Files"
                 onTextChanged: page.query = text
@@ -305,47 +453,12 @@ ColumnLayout {
             }
         }
         Repeater {
-            model: page.matches
+            model: page.inBar ? page.matches : []
             AppRow {
                 required property var modelData
                 entry: modelData
                 action: "Add"
                 onTriggered: page.add(modelData.id)
-            }
-        }
-    }
-
-    SettingGroup {
-        visible: Config.dock.enabled && !page.inBar
-        title: "Widgets · small tiles after the open windows"
-        SettingRow { visible: page.widgets.length === 0; label: "No widgets on the dock"; hint: "Add one below" }
-        Repeater {
-            model: page.widgets
-            SettingRow {
-                id: wrow
-                required property string modelData
-                label: Theme.dockWidgets[modelData].name
-                hint: Theme.dockWidgets[modelData].about
-                Row {
-                    spacing: 8
-                    ArrowButton { glyph: "\u{F0143}"; tip: "Move " + wrow.label + " earlier"; enabled: page.widgets.indexOf(wrow.modelData) > 0; onClicked: page.moveWidget(wrow.modelData, -1) }
-                    ArrowButton { glyph: "\u{F0140}"; tip: "Move " + wrow.label + " later"; enabled: page.widgets.indexOf(wrow.modelData) < page.widgets.length - 1; onClicked: page.moveWidget(wrow.modelData, 1) }
-                    PillButton { text: "Remove"; onClicked: page.showWidget(wrow.modelData, false) }
-                }
-            }
-        }
-        SettingRow {
-            visible: page.widgetList.length > page.widgets.length
-            label: "Add a widget"
-            hint: "It goes at the end; move it with the arrows"
-        }
-        Flow {
-            visible: page.widgetList.length > page.widgets.length
-            Layout.fillWidth: true; Layout.leftMargin: 16; Layout.rightMargin: 16; Layout.bottomMargin: 12
-            spacing: 8
-            Repeater {
-                model: page.widgetList.filter(id => !page.widgets.includes(id))
-                PillButton { required property string modelData; text: "+ " + Theme.dockWidgets[modelData].name; onClicked: page.showWidget(modelData, true) }
             }
         }
     }

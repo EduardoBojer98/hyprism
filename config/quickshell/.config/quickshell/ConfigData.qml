@@ -50,6 +50,7 @@ JsonAdapter {
         property bool thumbnails: true          // off: open windows show only their app icon
         property int thumbRefresh: 60           // s between still pictures (live only while hovered)
         property list<string> widgets: []       // small tiles after the open windows, in order: ids of Theme.dockWidgets (clock, date, weather, media, …)
+        property list<string> order: []         // where each thing sits on the dock: "launcher", "app:<id>", "running" (open apps), "widget:<id>"; missing ones take their usual place
         property list<string> pinned: ["firefox", "google-chrome", "com.microsoft.VSCode", "com.mitchellh.ghostty", "org.gnome.Nautilus"]
     }
     property JsonObject missionControl: JsonObject {

@@ -57,7 +57,7 @@ PanelWindow {
     // the keyboard is here (DockFocus, or its menu is open): the dock shows itself and takes the keys
     readonly property bool hasKeys: DockFocus.active && DockFocus.screen?.name === screen?.name || menu.entry !== null
     onHasKeysChanged: if (hasKeys && !menu.entry) takeFocus.restart()
-    Timer { id: takeFocus; interval: 80; onTriggered: if (root.hasKeys && !menu.entry) (launcherPart.visible ? launcherPart : launcherPart.nextItemInFocusChain(true)).forceActiveFocus() }   // the compositor hands over the keys a moment after
+    Timer { id: takeFocus; interval: 80; onTriggered: if (root.hasKeys && !menu.entry) { const first = root.cells[0]; if (first) (first.activeFocusOnTab ? first : first.nextItemInFocusChain(true)).forceActiveFocus() } }   // the compositor hands over the keys a moment after
     readonly property bool shown: !Config.dock.autoHide || hover.hovered || hideTimer.running || emptyWorkspace
                                   || hasKeys || dragId !== "" || runDrag !== ""
     // keys on an icon: Left / Right (Up / Down on a vertical dock) or Tab move, Enter / Space does what a click does,
@@ -111,13 +111,40 @@ PanelWindow {
         return DockOrder.sort(out, "apps", e => e.id, e => out.indexOf(e))   // openWindows is by workspace already
     }
     readonly property var widgetIds: Config.dock.widgets.filter((id, i, a) => Theme.dockWidgets[id] !== undefined && a.indexOf(id) === i)
-    readonly property var appEntries: pinnedEntries.concat(runningEntries)
+    // everything on the dock, in the order Settings > Dock > Order keeps (DockOrder.arrange), with a divider
+    // wherever the kind changes (launcher | apps | open windows | widgets)
+    readonly property var orderKeys: DockOrder.arrange(Config.dock.order, Config.dock.launcher, pinnedIds, widgetIds)
+    readonly property var items: {
+        const out = []
+        let prev = ""
+        const add = (group, kind, key, value) => {
+            if (prev && prev !== group) out.push({ kind: "sep", key: "sep:" + key })
+            prev = group
+            out.push({ kind: kind, key: key, value: value })
+        }
+        for (const k of orderKeys) {
+            if (k === "launcher") add("launcher", "launcher", k, null)
+            else if (k.startsWith("app:")) { const e = pinnedEntries.find(x => x.id === k.slice(4)); if (e) add("apps", "app", k, e) }
+            else if (k === "running") {
+                if (combine) for (const e of runningEntries) add("apps", "app", "run:" + e.id, e)
+                else for (const t of openWindows) add("windows", "window", "win:" + address(t), t)
+            } else add("widgets", "widget", k, k.slice(7))
+        }
+        return out
+    }
+    readonly property var cells: Array.from(row.children).map(c => c.item).filter(c => c && c.visible)
+    // a pinned app dragged along the dock takes the place of the pinned app nearest the pointer
     function dragTo(x) {
         dragX = x
-        const first = Config.dock.launcher ? root.slot + row.spacing * 2 + 1 : 0   // launcher + divider
-        const i = Math.max(0, Math.min(pinnedEntries.length - 1, Math.floor((x - first) / (slot + row.spacing))))
-        const ids = pinnedEntries.map(e => e.id)
-        if (ids[i] === dragId) return
+        let target = "", best = Infinity
+        for (const c of cells) {
+            const id = c.modelData?.id ?? ""
+            if (!(c instanceof DockApp) || !pinnedIds.includes(id)) continue
+            const d = Math.abs((vertical ? c.parent.y + c.parent.height / 2 : c.parent.x + c.parent.width / 2) - x)
+            if (d < best) { best = d; target = id }
+        }
+        if (!target || target === dragId) return
+        const ids = pinnedEntries.map(e => e.id), i = ids.indexOf(target)
         ids.splice(ids.indexOf(dragId), 1)
         ids.splice(i, 0, dragId)
         dragOrder = ids
@@ -142,7 +169,7 @@ PanelWindow {
     function dragRunning(item, pos) {   // pos: the pointer along the dock, in window coordinates
         const group = item.orderGroup, key = item.orderKey
         runDrag = key
-        const tiles = Array.from(row.children).filter(c => c.visible && c.orderGroup === group && c.orderKey)
+        const tiles = cells.filter(c => c.orderGroup === group && c.orderKey)
         tiles.sort((a, b) => middleOf(a) - middleOf(b))
         const before = tiles.find(c => c.orderKey !== key && middleOf(c) > pos)
         DockOrder.move(group, tiles.map(c => c.orderKey), key, before ? before.orderKey : "")
@@ -266,33 +293,23 @@ PanelWindow {
             horizontalItemAlignment: Grid.AlignHCenter
             verticalItemAlignment: Grid.AlignVCenter
 
-            // App menu / Spotlight-style launcher
-            DockLauncher { id: launcherPart; dock: root; visible: Config.dock.launcher }   // Settings > Dock: Launcher button
-
-            DockSeparator { dock: root; visible: Config.dock.launcher }
-
+            // everything in its place (root.items): each cell loads the part for its kind
             Repeater {
-                // ScriptModel keeps existing icons when the list changes (and moves them on reorder)
-                model: ScriptModel { values: root.appEntries }
+                // ScriptModel keeps existing parts when the list changes (and moves them on reorder)
+                model: ScriptModel { values: root.items; objectProp: "key" }
 
-                DockApp { dock: root }
-            }
-
-            DockSeparator { dock: root; visible: !root.combine && root.openWindows.length > 0 }   // before the open windows
-
-            // ---- open windows: a live picture of each, its app's icon in the corner ---------------
-            Repeater {
-                model: ScriptModel { values: root.combine ? [] : root.openWindows }
-
-                DockWindow { dock: root }
-            }
-
-            DockSeparator { dock: root; visible: widgetIds.length > 0 }   // before the widgets (Settings > Dock > Widgets)
-
-            Repeater {
-                model: ScriptModel { values: root.widgetIds }
-
-                DockWidget { dock: root }
+                Loader {
+                    id: cell
+                    required property var modelData
+                    // a widget with nothing to show (no player) takes no place
+                    visible: modelData.kind !== "widget" || (item?.body?.shown ?? false)
+                    sourceComponent: ({ launcher: launcherPart, app: appPart, window: windowPart, widget: widgetPart, sep: sepPart })[modelData.kind]
+                    Component { id: launcherPart; DockLauncher { dock: root } }
+                    Component { id: appPart; DockApp { dock: root; modelData: cell.modelData.value; index: 0 } }
+                    Component { id: windowPart; DockWindow { dock: root; modelData: cell.modelData.value } }
+                    Component { id: widgetPart; DockWidget { dock: root; modelData: cell.modelData.value } }
+                    Component { id: sepPart; DockSeparator { dock: root } }
+                }
             }
         }
     }

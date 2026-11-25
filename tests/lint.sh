@@ -82,6 +82,8 @@ bash tests/clock-format.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 bash tests/display-snap.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
+bash tests/dock-order.sh | grep -v '^ok'
+((PIPESTATUS[0] == 0)) || fail=1
 bash tests/converters.sh | grep -v '^ok'
 ((PIPESTATUS[0] == 0)) || fail=1
 python3 tests/settings-reference.py --check || fail=1

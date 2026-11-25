@@ -69,6 +69,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `thumbnails` | `bool` | `true` | off: open windows show only their app icon |
 | `thumbRefresh` | `int` | `60` | s between still pictures (live only while hovered) |
 | `widgets` | `list<string>` | `[]` | small tiles after the open windows, in order: ids of Theme.dockWidgets (clock, date, weather, media, …) |
+| `order` | `list<string>` | `[]` | where each thing sits on the dock: "launcher", "app:<id>", "running" (open apps), "widget:<id>"; missing ones take their usual place |
 | `pinned` | `list<string>` | `["firefox", "google-chrome", "com.microsoft.VSCode", "com...` |  |
 
 ## missionControl
