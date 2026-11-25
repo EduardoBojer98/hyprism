@@ -24,6 +24,15 @@ Scope {
     // the bar's ground and the ink on it
     readonly property color ground: ({ glass: Theme.glassStrong, surface: Theme.surfaceColor, ground: Theme.base, ink: Theme.text, none: "transparent" })[st.fill] ?? Theme.surfaceColor
     readonly property color ink: Theme.barInk
+    // Settings > Menu Bar > See-through: never | always | notMaximised (until a maximised or fullscreen window
+    // covers this screen's workspace) | maximised (only then). Clear drops the ground, edge line and shadow;
+    // "fade" leaves a soft shade from the screen edge, and items get a halo so they read over any wallpaper.
+    readonly property var ws: monitor?.activeWorkspace ?? null
+    readonly property bool covered: ws !== null && (ws.hasFullscreen || ws.toplevels.values.some(t => t.wayland?.maximized ?? false))
+    readonly property bool clear: ({ always: true, notMaximised: !covered, maximised: covered })[Config.bar.transparent] ?? false
+    readonly property bool fade: clear && Config.bar.clearStyle === "fade"
+    property real solid: clear ? 0 : 1   // the ground's share, eased between clear and solid
+    Behavior on solid { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
     // a floating strip is rounded like the theme's panels (never more than a capsule)
     readonly property real corner: floating || segmented ? Math.min(Theme.radiusLarge, size / 2) : 0
     // items in the mono face for word voices (Monolith, Console)
@@ -64,6 +73,17 @@ Scope {
         implicitHeight: root.vertical ? 0 : Theme.barHeight
         implicitWidth: root.vertical ? Theme.barHeight : 0
 
+        // see-through "fade": the ground as a shade that thins out away from the screen edge
+        Rectangle {
+            anchors.fill: parent
+            visible: root.st.fill !== "none" && opacity > 0
+            opacity: root.fade ? 1 - root.solid : 0
+            gradient: Gradient {
+                orientation: root.vertical ? Gradient.Horizontal : Gradient.Vertical
+                GradientStop { position: 0; color: Qt.alpha(root.ground, root.edge === "top" || root.edge === "left" ? 0.55 : 0) }
+                GradientStop { position: 1; color: Qt.alpha(root.ground, root.edge === "top" || root.edge === "left" ? 0 : 0.55) }
+            }
+        }
         // the bar itself: inset from the screen edge and along it when floating
         Item {
             id: body
@@ -78,6 +98,7 @@ Scope {
             // the theme's depth under a floating strip (segmented pills carry their own)
             RectangularShadow {
                 visible: Theme.depth === "soft" && root.floating && !root.segmented && root.st.fill !== "none"
+                opacity: root.solid
                 anchors.fill: parent
                 offset.y: 4; blur: 18; spread: -2
                 radius: root.corner
@@ -86,13 +107,15 @@ Scope {
             // one ground for the whole strip (segmented themes give each section its own instead)
             Glass {
                 anchors.fill: parent
-                visible: !root.segmented && root.st.fill !== "none"
+                visible: !root.segmented && root.st.fill !== "none" && root.solid > 0
+                opacity: root.solid
                 radius: root.corner
                 color: root.ground
                 border.width: root.floating ? Theme.line : 0
             }
             Rectangle {   // the edge line between an attached bar and the desktop
                 visible: !root.segmented && !root.floating && root.st.line > 0
+                opacity: root.solid
                 color: Theme.stroke
                 x: root.edge === "left" ? parent.width - width : 0
                 y: root.edge === "top" ? parent.height - height : 0
@@ -188,8 +211,20 @@ Scope {
         height: root.vertical ? Math.max(0, Math.min(implicitHeight, room)) : implicitHeight
         clip: root.vertical ? implicitHeight > room : implicitWidth > room
 
+        // see-through: a halo in the ground's colour keeps the items legible over the wallpaper
+        layer.enabled: root.clear && Config.bar.clearHalo && !section.empty
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowColor: root.ground
+            blurMax: 6          // a tight, dense halo: an outline more than a glow
+            shadowBlur: 1
+            shadowScale: 1.04
+            shadowHorizontalOffset: 0
+            shadowVerticalOffset: 0
+        }
         RectangularShadow {
             visible: section.pill && Theme.depth === "soft"
+            opacity: root.solid
             anchors.fill: parent
             offset.y: 4; blur: 16; spread: -2
             radius: root.corner
@@ -197,7 +232,8 @@ Scope {
         }
         Glass {
             anchors.fill: parent
-            visible: section.pill
+            visible: section.pill && root.solid > 0
+            opacity: root.solid
             strong: true
             radius: root.corner
             color: root.ground

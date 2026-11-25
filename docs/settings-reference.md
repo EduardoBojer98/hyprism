@@ -330,6 +330,9 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `seconds` | `bool` | `false` | seconds: the dock clock's hand, and a bar clock's until it has its own |
 | `batteryPercent` | `string` | `"beside"` | the battery's percentage: inside (the icon) \| beside \| off |
 | `windowTitle` | `bool` | `true` | the focused window's title after the app name |
+| `transparent` | `string` | `"never"` |  |
+| `clearStyle` | `string` | `"clear"` | while see-through: clear (nothing) \| fade (a soft shade from the screen edge) |
+| `clearHalo` | `bool` | `true` | while see-through: a soft halo in the bar's colour behind its items |
 | `items` | `var` | `{}` | item or copy ("clock", "clock#2") -> its settings (docs/bar.md) |
 | `preset` | `string` | `"theme"` |  |
 | `presets` | `var` | `{ minimal: { start: ["controls", "launcher", "workspaces"...` |  |

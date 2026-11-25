@@ -73,6 +73,34 @@ ColumnLayout {
         }
     }
 
+    SettingGroup {
+        title: "See-through"
+        SettingRow {
+            label: "Transparent bar"
+            hint: ({ never: "Always on the theme's own ground",
+                     always: "The wallpaper and windows show through it all the time",
+                     notMaximised: "See-through on the desktop; solid once a window is maximised or fullscreen",
+                     maximised: "Solid on the desktop; see-through over a maximised or fullscreen window" })[page.b.transparent] ?? ""
+            ConfigChoice {
+                section: "bar"; key: "transparent"
+                values: ["never", "always", "notMaximised", "maximised"]
+                labels: ["Never", "Always", "Until maximised", "Over maximised"]
+            }
+        }
+        SettingRow {
+            visible: page.b.transparent !== "never"
+            label: "Look"
+            hint: page.b.clearStyle === "fade" ? "A soft shade from the screen edge that thins out" : "Nothing behind the items at all"
+            ConfigChoice { section: "bar"; key: "clearStyle"; values: ["clear", "fade"]; labels: ["Clear", "Fade"] }
+        }
+        SettingRow {
+            visible: page.b.transparent !== "never"
+            label: "Readable items"
+            hint: "A soft halo behind the icons and text, so they read over any wallpaper"
+            ConfigToggle { section: "bar"; key: "clearHalo" }
+        }
+    }
+
     SettingsBarLayout { id: layoutPane; Layout.fillWidth: true; editor: barEditor }
 
     // Reset: the clock's and the bar's defaults; the layout goes back to the theme's own

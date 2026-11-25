@@ -273,6 +273,11 @@ JsonAdapter {
         property bool seconds: false            // seconds: the dock clock's hand, and a bar clock's until it has its own
         property string batteryPercent: "beside"  // the battery's percentage: inside (the icon) | beside | off
         property bool windowTitle: true          // the focused window's title after the app name
+        // see-through: never | always | notMaximised (until a maximised or fullscreen window covers the workspace)
+        // | maximised (only over one). Works with every theme's fill, edge, floating and segmented bars (Bar.qml)
+        property string transparent: "never"
+        property string clearStyle: "clear"      // while see-through: clear (nothing) | fade (a soft shade from the screen edge)
+        property bool clearHalo: true            // while see-through: a soft halo in the bar's colour behind its items
         // your settings per item, over its bar/items/<id>/defaults.json. Every item understands: enabled, icon,
         // format, click, rightClick, scroll, tooltip, warn, critical, interval (docs/bar.md). A second copy of an item
         // on the bar is "<id>#2" (then #3…) and has its own entry here. Example:

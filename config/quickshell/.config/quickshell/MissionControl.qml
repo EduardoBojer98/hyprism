@@ -279,15 +279,32 @@ Singleton {
                                                 asynchronous: true
                                             }
                                             Repeater {
-                                                model: root.clients.filter(c => c.workspace.num === space.num)
-                                                ScreencopyView {
+                                                model: root.clients.filter(c => c.workspace.id === space.num)
+                                                // each window where it sits: a frame with its app's icon, under the
+                                                // picture (Hyprland only pictures windows on a shown workspace)
+                                                Item {
                                                     required property var modelData
+                                                    readonly property var entry: DesktopEntries.heuristicLookup(modelData.class)
                                                     x: (modelData.at[0] - space.modelData.x) * space.s
                                                     y: (modelData.at[1] - space.modelData.y) * space.s
                                                     width: modelData.size[0] * space.s
                                                     height: modelData.size[1] * space.s
-                                                    captureSource: win.visible ? root.toplevel(modelData) : null
-                                                    live: false
+                                                    Rectangle {
+                                                        anchors.fill: parent
+                                                        radius: Theme.radiusSmall / 2
+                                                        color: Theme.glassStrong
+                                                        border { width: 1; color: Theme.stroke }
+                                                    }
+                                                    ScreencopyView {
+                                                        anchors.fill: parent
+                                                        captureSource: win.visible ? root.toplevel(parent.modelData) : null
+                                                        live: false
+                                                    }
+                                                    IconImage {   // which app: always on top, so every workspace reads at a glance
+                                                        anchors.centerIn: parent
+                                                        implicitSize: Math.max(Theme.glyph, Math.min(Theme.glyphL * 2, Math.min(parent.width, parent.height) * 0.45))
+                                                        source: Quickshell.iconPath(parent.entry?.icon ?? "", "application-x-executable")
+                                                    }
                                                 }
                                             }
                                         }
@@ -297,7 +314,13 @@ Singleton {
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: "Workspace " + space.num
+                                        // the apps on it by name, so a full row of workspaces says what is where
+                                        readonly property var apps: root.clients.filter(c => c.workspace.id === space.num)
+                                            .map(c => DesktopEntries.heuristicLookup(c.class)?.name ?? c.class).filter((n, i, a) => n && a.indexOf(n) === i)
+                                        text: "Workspace " + space.num + (apps.length ? " · " + apps.join(", ") : "")
+                                        width: Math.min(implicitWidth, space.modelData.w * space.s + 24)
+                                        elide: Text.ElideRight
+                                        horizontalAlignment: Text.AlignHCenter
                                         color: space.shown ? Theme.text : Theme.subtext
                                         font { family: Theme.font; pixelSize: Theme.fontCaption; weight: space.shown ? Font.DemiBold : Font.Medium }
                                     }
