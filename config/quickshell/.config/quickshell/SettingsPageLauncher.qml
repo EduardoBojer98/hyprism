@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 
 // Search & Launcher: Spotlight (tap Super): its style (the theme's own or a preset, drawn as a gallery; picking
-// one resets the look options so it opens as designed), adjustments over it, suggestions, result order and search. Your own actions are made in Settings > Actions (SettingsPageActions.qml).
+// one resets the look options so it opens as designed), where it opens, its look, suggestions, result order and search. Your own actions are made in Settings > Actions (SettingsPageActions.qml).
 ColumnLayout {
     id: page
     spacing: 20
@@ -24,8 +24,9 @@ ColumnLayout {
     }
 
     // Picking a style starts it as designed: the look options below go back to the style's own, so no two styles
-    // end up looking alike under the same overrides. Your other options (suggestions, order, search) stay.
-    readonly property var lookKeys: ({ position: "theme", startView: "theme", rows: "style", dim: "style", corners: "style", size: 100 })
+    // end up looking alike under the same overrides. Where it opens (Open, beside the button) and your other options
+    // (suggestions, order, search) stay: Open is the one place setting for every style.
+    readonly property var lookKeys: ({ startView: "theme", rows: "style", dim: "style", corners: "style", size: 100 })
     readonly property bool tweaked: Object.keys(lookKeys).some(k => Config.launcher[k] !== lookKeys[k])
     readonly property string styleName: Launcher.preset ? Launcher.preset.name : Theme.current.name + "'s own"
     function asDesigned() { for (const k of Object.keys(lookKeys)) Config.set("launcher", k, lookKeys[k]) }
@@ -71,9 +72,9 @@ ColumnLayout {
         }
     }
 
-    // your adjustments over the chosen style; "Style's own" leaves each to it
+    // where it opens: one setting for every style, kept when you pick another
     SettingGroup {
-        title: "Adjust " + page.styleName
+        title: "Where it opens"
         SettingRow {
             label: "Open"
             hint: Config.launcher.position === "center" ? "In the middle of the screen you're working on"
@@ -86,6 +87,16 @@ ColumnLayout {
             hint: Config.launcher.besideButton ? "A bar or dock button opens it next to that button; shortcuts use Open"
                                                : "Off: the dock, the bar and the shortcuts all open it in the same place"
             ConfigToggle { section: "launcher"; key: "besideButton" }
+        }
+    }
+
+    // your adjustments over the chosen style; "Style's own" leaves each to it
+    SettingGroup {
+        title: "Look of " + page.styleName
+        SettingRow {
+            label: "See it"
+            hint: "Opens the launcher over this window, as you've set it"
+            PillButton { text: "Open launcher"; onClicked: Launcher.show("search") }
         }
         SettingRow {
             label: "Before you type, show"
@@ -104,26 +115,12 @@ ColumnLayout {
             ConfigChoice { section: "launcher"; key: "rows"; values: ["style", "standard", "compact", "cards", "text"]; labels: ["Style's own", "Standard", "Compact", "Cards", "Text"] }
         }
         SettingRow {
-            label: "Screen behind it"
-            ConfigChoice { section: "launcher"; key: "dim"; values: ["style", "none", "light", "dark"]; labels: ["Style's own", "Clear", "Dimmed", "Dark"] }
-        }
-        SettingRow {
             label: "Corners"
             ConfigChoice { section: "launcher"; key: "corners"; values: ["style", "sharp", "soft", "round"]; labels: ["Style's own", "Square", "Soft", "Round"] }
         }
         SettingRow {
-            label: "Back to how " + page.styleName + " is designed"
-            hint: page.tweaked ? "Puts the options above back to the style's own" : "Nothing changed"
-            PillButton { text: "Reset"; enabled: page.tweaked; onClicked: page.asDesigned() }
-        }
-    }
-
-    SettingGroup {
-        title: "Apps and results"
-        SettingRow {
-            label: "Apps per row"
-            hint: "In All apps and Launchpad; fewer when the panel is too narrow for them"
-            ConfigChoice { section: "launcher"; key: "columns"; values: [5, 6, 7, 8, 9] }
+            label: "Screen behind it"
+            ConfigChoice { section: "launcher"; key: "dim"; values: ["style", "none", "light", "dark"]; labels: ["Style's own", "Clear", "Dimmed", "Dark"] }
         }
         SettingRow {
             label: "Second line under results"
@@ -136,8 +133,22 @@ ColumnLayout {
             ConfigToggle { section: "launcher"; key: "hints" }
         }
         SettingRow {
+            label: "Back to how " + page.styleName + " is designed"
+            hint: page.tweaked ? "Puts the look options above back to the style's own" : "Nothing changed"
+            PillButton { text: "Reset"; enabled: page.tweaked; onClicked: page.asDesigned() }
+        }
+    }
+
+    SettingGroup {
+        title: "Results"
+        SettingRow {
             label: "Results at most"
             ConfigSlider { section: "launcher"; key: "maxResults"; from: 10; to: 80; step: 5; format: v => String(v) }
+        }
+        SettingRow {
+            label: "Apps per row"
+            hint: "In All apps and Launchpad; fewer when the panel is too narrow for them"
+            ConfigChoice { section: "launcher"; key: "columns"; values: [5, 6, 7, 8, 9] }
         }
         SettingRow {
             label: "Clipboard button"
