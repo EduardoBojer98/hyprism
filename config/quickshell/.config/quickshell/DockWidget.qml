@@ -14,7 +14,7 @@ Item {
     required property string modelData            // the widget's id
     readonly property var kind: ({ clock: clockBody, date: dateBody, weather: weatherBody, media: mediaBody, volume: volumeBody,
                                    battery: batteryBody, load: loadBody, network: networkBody, screenshot: screenshotBody,
-                                   trash: trashBody, downloads: downloadsBody })[modelData]
+                                   trash: trashBody, downloads: downloadsBody, missionControl: missionBody })[modelData]
     readonly property Item body: loader.item
     readonly property real mid: (dock.vertical ? height : width) / 2
     readonly property real s: dock.iconSize
@@ -32,8 +32,11 @@ Item {
         anchors.verticalCenterOffset: dock.vertical ? 0 : -3 * dock.sign
         width: w.s; height: w.s
         radius: dock.shape === "block" ? 0 : Math.round(w.s * 0.27)
-        color: w.body?.alert ? Qt.alpha(Theme.error, 0.22) : Qt.alpha(dock.ink, lit ? 0.14 : 0.07)
-        border { color: w.body?.alert ? Theme.error : Qt.alpha(dock.ink, lit ? 0.28 : 0.15); width: 1 }
+        // look "none" has no island behind it: a solid tile, like the launcher button, so it reads on any wallpaper
+        readonly property bool bare: dock.look === "none"
+        color: w.body?.alert ? Qt.alpha(Theme.error, 0.22)
+             : bare ? Qt.tint(Theme.surfaceColor, Qt.alpha(dock.ink, lit ? 0.12 : 0)) : Qt.alpha(dock.ink, lit ? 0.14 : 0.07)
+        border { color: w.body?.alert ? Theme.error : bare ? Theme.stroke : Qt.alpha(dock.ink, lit ? 0.28 : 0.15); width: 1 }
         transformOrigin: dock.edgeOrigin
         // hover like an app icon: lift (off the edge) or grow (from the edge); press: a small give
         property real raise: dock.hoverStyle === "lift" && lit && Theme.moves ? -6 * dock.sign : 0
@@ -501,6 +504,36 @@ Item {
                 }
             }
             Badge { n: dl.count }
+        }
+    }
+
+    // --- Mission Control: three windows side by side, the middle one in front; hover spreads them apart
+    Component {
+        id: missionBody
+        Body {
+            tip: "Mission Control  ·  every workspace and window"
+            function primary(widget) { MissionControl.toggle() }
+            Repeater {
+                model: [-1, 1, 0]   // the sides first, so the middle one draws on top
+                Rectangle {
+                    required property int modelData
+                    readonly property bool front: modelData === 0
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: modelData * w.s * (tile.lit && Theme.moves ? 0.3 : 0.23)
+                    width: Math.round(w.s * (front ? 0.4 : 0.28)); height: Math.round(w.s * (front ? 0.32 : 0.24))
+                    radius: Math.round(w.s * 0.05)
+                    color: front ? Theme.accent : Qt.alpha(dock.ink, 0.45)
+                    border { width: front ? 0 : 1; color: Qt.alpha(dock.ink, 0.6) }
+                    Behavior on anchors.horizontalCenterOffset { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
+                    Rectangle {   // the title bar
+                        visible: parent.front
+                        anchors { left: parent.left; right: parent.right; top: parent.top }
+                        height: Math.max(2, Math.round(parent.height * 0.22))
+                        radius: parent.radius
+                        color: Qt.alpha(Theme.accentText, 0.35)
+                    }
+                }
+            }
         }
     }
 }

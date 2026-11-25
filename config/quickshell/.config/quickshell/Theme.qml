@@ -201,7 +201,8 @@ Singleton {
         network: { name: "Network speed", about: "Download and upload speed right now" },
         screenshot: { name: "Screenshot", about: "Click to capture an area; right-click for the other screen tools" },
         trash: { name: "Trash", about: "What's in the trash; right-click twice to empty it" },
-        downloads: { name: "Downloads", about: "Files downloaded today; click to open the folder" }
+        downloads: { name: "Downloads", about: "Files downloaded today; click to open the folder" },
+        missionControl: { name: "Mission Control", about: "Click to see every workspace and window at once" }
     })
     readonly property bool dockReserves: Config.dock.enabled && !dockInBar && !Config.dock.autoHide
     function dockShownOn(screen) { return Config.dock.enabled && !dockInBar && !(screen && Config.dock.hiddenOn.some(k => Displays.matches(k, screen))) }
