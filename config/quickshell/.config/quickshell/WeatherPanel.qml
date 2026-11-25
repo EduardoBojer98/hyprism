@@ -103,7 +103,7 @@ ColumnLayout {
             Text {
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                text: panel.place ? [panel.place.name, panel.place.region].filter(x => x).join(", ") : ""
+                text: panel.place ? [panel.place.name, panel.place.region].filter((x, i, a) => x && a.indexOf(x) === i).join(", ") : ""   // Berlin, not "Berlin, Berlin"
                 color: Theme.text
                 font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold }
             }
@@ -175,6 +175,11 @@ ColumnLayout {
             clip: true
             boundsBehavior: Flickable.StopAtBounds
             flickableDirection: Flickable.HorizontalFlick
+            // a mouse wheel has no sideways: turning it scrolls the hours
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: ev => strip.contentX = Math.max(0, Math.min(strip.contentWidth - strip.width, strip.contentX - (ev.angleDelta.y || ev.angleDelta.x) / 2))
+            }
             Item {
                 id: hourRow
                 readonly property var hs: f ? f.hours : []
@@ -235,6 +240,16 @@ ColumnLayout {
                         }
                     }
                 }
+            }
+        }
+        Rectangle {   // more hours to the right: the strip fades out instead of cutting a column in half
+            visible: strip.contentX < strip.contentWidth - strip.width - 1
+            anchors { right: strip.right; top: strip.top; bottom: strip.bottom }
+            width: Theme.spaceXl
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0; color: Qt.alpha(Theme.fill, 0) }
+                GradientStop { position: 1; color: Theme.fill }
             }
         }
     }

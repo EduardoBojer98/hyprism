@@ -165,7 +165,7 @@ JsonAdapter {
         property list<string> tiles: []
         property list<string> sliders: []
         property list<string> toggles: []
-        property list<string> folded: ["screen", "sound", "power"]   // cards folded to one line (click a card's title): screen, sound, power
+        property list<string> folded: ["screen", "power"]   // cards folded to one line (click a card's title): screen, sound, power
         property list<string> hidden: ["colorpicker", "mission", "airplane", "clipboard", "ocr", "emoji"]
         property var layouts: ({})              // layouts you kept (Settings > Control Center): name -> { style, width, sections, … }
     }

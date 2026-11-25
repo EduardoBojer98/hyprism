@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 
 // Control Center part: the small buttons (Focus, Night Light, Caffeine, Record, Screenshot ...), every cell the
-// same size. Four or three to a row, whichever fills the last row more; a short last row is centred, never
-// stretched. The lists they open (Caffeine's) sit underneath (ControlCenterDrops).
+// same size. Four or three to a row, whichever fills the last row more; a short last row is centred (stretched
+// in cards). The lists they open (Caffeine's) sit underneath (ControlCenterDrops).
 // The layout reshapes the grid: two wide tiles with a subtitle to a row (cards); a bento of the first one as a 2x2
 // block, four beside it, then rows of four whose short last row stretches (bento); two `[x] name` columns (hud).
 ColumnLayout {
@@ -54,9 +54,11 @@ ColumnLayout {
                 readonly property var it: ControlCenter.items[modelData] ?? ({ glyph: "", label: "", status: "" })   // your action tiles: for a moment at start
                 readonly property var c: grid.cell(index)
                 readonly property int inRow: c[1] < grid.rows - 1 || grid.bento || ControlCenter.hud ? grid.perRow : grid.count - c[1] * grid.perRow
-                x: (grid.width - inRow * grid.cellW - (inRow - 1) * grid.colGap) / 2 + c[0] * (grid.cellW + grid.colGap)
+                // cards: a short last row stretches to the edges (wide tiles read as a row, a lone half one as a gap)
+                readonly property real w: ControlCenter.cards && inRow < grid.perRow ? (grid.width - (inRow - 1) * grid.colGap) / inRow : grid.cellW
+                x: (grid.width - inRow * w - (inRow - 1) * grid.colGap) / 2 + (c[0] % grid.perRow) * (w + grid.colGap)
                 y: c[1] * (grid.cellH + grid.gap)
-                width: c[2] * grid.cellW + (c[2] - 1) * grid.colGap
+                width: c[2] * w + (c[2] - 1) * grid.colGap
                 height: c[3] * grid.cellH + (c[3] - 1) * grid.gap
                 big: c[3] > 1
                 host: mod.host

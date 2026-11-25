@@ -83,6 +83,12 @@ Singleton {
                                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.Bold; features: { "tnum": 1 } } }
                     }
                     Item { Layout.fillWidth: true }
+                    Chip {   // in the header, where you look for it, not under a long list
+                        visible: Notifications.history.length > 0
+                        icon: "\u{F0A79}"
+                        label: "Clear all"
+                        onClicked: Notifications.clearAll()
+                    }
                     Chip {
                         icon: Notifications.dnd ? "\u{F009B}" : "\u{F009A}"
                         label: Notifications.dnd ? "Silenced" : "Do Not Disturb"
@@ -110,6 +116,12 @@ Singleton {
                         text: Notifications.dnd ? "Do Not Disturb is on" : "You're all caught up"
                         color: Theme.subtext
                         font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
+                    }
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: Notifications.dnd ? "Only critical notifications show; they still land here" : "New notifications show up here"
+                        color: Theme.muted
+                        font { family: Theme.font; pixelSize: Theme.fontCaption }
                     }
                 }
 
@@ -153,13 +165,6 @@ Singleton {
                     }
                 }
 
-                PillButton {
-                    visible: Notifications.history.length > 0
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.topMargin: 4
-                    text: "Clear all"
-                    onClicked: Notifications.clearAll()
-                }
 
                 // ---- Earlier: the dismissed ones, as plain records; a click opens the app ----
                 RowLayout {
