@@ -1,3 +1,4 @@
+import Quickshell
 import Quickshell.Hyprland
 import QtQuick
 
@@ -11,7 +12,8 @@ import QtQuick
 //   squares  outlined squares, the current one filled (Atlas)
 //   tabs     tmux's window list: number and app ("2 firefox"), the current one an accent block the bar's height
 //   reticle  mono numbers; HUD corner marks lock onto the current one over a faint accent wash (Monolith)
-// Click goes there, scroll steps through them.
+// Click goes there, scroll steps through them. A + at the end (Settings > Workspaces > New workspace button,
+// dynamic workspaces only) opens the lowest free workspace on this screen and goes there.
 Item {
     id: ws
     required property var monitor
@@ -22,6 +24,9 @@ Item {
     property color dim: Theme.subtext
     readonly property var list: Sys.workspacesOf(monitor)
     readonly property int current: list.findIndex(w => w.active)
+    readonly property bool adds: Config.workspaces.newButton && Config.workspaces.mode !== "fixed"
+    // the pointer is on this bar, so this screen has focus: the next empty workspace after this one opens here
+    function addOne() { Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.focus({ workspace = "emptyn" })']) }
     function step(d) { const next = list[current + (d < 0 ? 1 : -1)]; if (next) next.activate() }
     function label(w) { return String(w.id) + (style === "tabs" && !vertical && app(w) !== "" ? " " + app(w) : "") }
     // tabs: the workspace's app, short like tmux's process name ("com.mitchellh.ghostty" -> "ghostty")
@@ -144,6 +149,35 @@ Item {
                     onClicked: cell.modelData.activate()
                     onWheel: w => ws.step(w.angleDelta.y)
                 }
+            }
+        }
+
+        Item {   // new workspace
+            visible: ws.adds
+            readonly property real size: ws.style === "dots" ? 14 : ws.style === "blocks" ? ws.thickness * 0.7 : Math.min(ws.thickness - 6, 22)
+            implicitWidth: size; implicitHeight: size
+            Rectangle {
+                anchors.fill: parent
+                radius: ws.style === "dots" || ws.style === "numbers" ? width / 2 : Theme.radius === 0 ? 0 : Math.min(Theme.radiusSmall, width / 3)
+                color: addArea.pressed ? Qt.alpha(ws.tone, 0.18) : addArea.containsMouse ? Qt.alpha(ws.tone, 0.11) : "transparent"
+                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+            }
+            Text {
+                anchors.centerIn: parent
+                text: "\u{F0415}"
+                color: addArea.containsMouse ? ws.tone : ws.dim
+                font { family: Theme.iconFont; pixelSize: ws.style === "dots" ? Theme.glyphXs : Theme.glyphS }
+            }
+            MouseArea {
+                id: addArea
+                Accessible.role: Accessible.Button
+                Accessible.name: "New workspace"
+                Accessible.onPressAction: ws.addOne()
+                anchors.fill: parent
+                anchors.margins: -4
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: ws.addOne()
             }
         }
     }

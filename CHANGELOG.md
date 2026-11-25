@@ -6,6 +6,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Added
 
+- A + after the bar's workspaces opens a new one on that screen and goes there (Settings > Workspaces > New workspace
+  button; dynamic workspaces only).
 - Mission Control shows every open window (this workspace's first, each badged with its workspace) or just this
   workspace's (Settings > Mission Control > Windows); type to filter, Delete, a middle click or the ✕ closes a window.
 - Settings > Power > Power Menu: pick the layout from pictures of the real menu (a new Row of round buttons among them),

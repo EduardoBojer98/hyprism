@@ -441,6 +441,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `mode` | `string` | `"dynamic"` | dynamic: made when needed on the screen you're on \| fixed: always there, each on its screen |
 | `count` | `int` | `10` | fixed: how many (Super+1..0 reach the first ten) |
 | `screens` | `var` | `{}` | fixed: workspace number -> output name; missing = the screen you're on |
+| `newButton` | `bool` | `true` | dynamic: a + after the bar's workspaces opens a new one |
 
 ## capture
 

@@ -40,6 +40,12 @@ ColumnLayout {
             ConfigChoice { section: "workspaces"; key: "mode"; values: ["dynamic", "fixed"]; labels: ["Dynamic", "Fixed"] }
         }
         SettingRow {
+            visible: !page.fixed
+            label: "New workspace button"
+            hint: "A + after the workspaces in the bar: a click opens a new one on that screen and goes there"
+            ConfigToggle { section: "workspaces"; key: "newButton" }
+        }
+        SettingRow {
             visible: page.fixed
             label: "How many"
             hint: "Super+1 … Super+0 go to them; Super+Shift+number sends a window there"

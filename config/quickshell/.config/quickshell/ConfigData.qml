@@ -382,6 +382,7 @@ JsonAdapter {
         property string mode: "dynamic"          // dynamic: made when needed on the screen you're on | fixed: always there, each on its screen
         property int count: 10                   // fixed: how many (Super+1..0 reach the first ten)
         property var screens: ({})               // fixed: workspace number -> output name; missing = the screen you're on
+        property bool newButton: true            // dynamic: a + after the bar's workspaces opens a new one
     }
     property JsonObject capture: JsonObject {   // screenshots and recordings (~/.local/bin/screenshot, record)
         property string folder: "~/Pictures/Screenshots"
