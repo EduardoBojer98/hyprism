@@ -57,7 +57,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `hiddenOn` | `list<string>` | `[]` | monitor names (e.g. "eDP-1") without a dock |
 | `iconSize` | `int` | `44` | the dock's size: Settings presets 36 / 44 / 52 / 60, or any size 24-72 on its slider |
 | `autoHide` | `bool` | `false` | visible by default; true slides it away until the pointer reaches its edge |
-| `look` | `string` | `"theme"` | the island: theme (its own fill) \| clear (a flat overlay) \| frosted (the desktop blurred under the overlay) |
+| `look` | `string` | `"theme"` | the island: theme (its own fill) \| clear (a flat overlay) \| frosted (the desktop blurred under the overlay) \| none (icons only) |
 | `tint` | `int` | `30` | clear / frosted: the overlay's strength in the dock's colour, % (0: none) |
 | `launcher` | `bool` | `true` | the launcher button at the dock's start |
 | `showRunning` | `bool` | `true` |  |
@@ -139,8 +139,12 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `maxVisible` | `int` | `4` | popups on screen at once; the rest wait in the notification centre |
 | `groupByApp` | `bool` | `true` | one popup per app (with a count) and the history grouped by app |
 | `showIcons` | `bool` | `true` | the app's icon or the notification's picture |
-| `size` | `int` | `100` | banners and the notification centre, % (text, icons, width) |
-| `style` | `string` | `"theme"` | popup look: theme \| card \| bubble \| line \| block \| tag \| compact |
+| `showActions` | `bool` | `true` | the app's buttons (Reply, Mark as read…) on popups and in the centre |
+| `size` | `int` | `100` | text and icons of popups and the notification centre, % |
+| `width` | `int` | `360` | popups and the notification centre's cards (px) |
+| `density` | `string` | `"compact"` | compact \| regular \| roomy: padding, icon size and lines of text before it cuts off |
+| `style` | `string` | `"theme"` | popup look: theme \| card \| bubble \| line \| block \| tag \| compact \| pill \| minimal |
+| `effect` | `string` | `"theme"` | how a popup comes and goes: theme (the style's own) \| slide \| fade \| scale \| none |
 | `position` | `string` | `"theme"` | theme \| top-left \| top \| top-right \| bottom-left \| bottom \| bottom-right |
 | `dndSchedule` | `bool` | `false` | Do Not Disturb every day between dndFrom and dndTo |
 | `dndFrom` | `string` | `"22:00"` |  |
@@ -162,8 +166,11 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `brightness` | `bool` | `true` |  |
 | `micMute` | `bool` | `true` |  |
 | `layout` | `bool` | `true` |  |
-| `capsLock` | `bool` | `true` | shows Caps Lock on/off (read from the keyboard light when the key is pressed, if it has one) |
+| `capsLock` | `bool` | `true` | shows Caps Lock and Num Lock on/off (Hyprland's state, read when the key is pressed) |
 | `position` | `string` | `"bottom"` | bottom \| top \| center |
+| `screen` | `string` | `"main"` | main (Settings > Displays' main screen) \| cursor (the screen you work on) |
+| `style` | `string` | `"theme"` | theme (theme.json osd.style) \| bar \| numeral (a big number) \| ascii (a mono meter) |
+| `size` | `string` | `"regular"` | compact \| regular \| large |
 
 ## caffeine
 
@@ -336,7 +343,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `transparent` | `string` | `"never"` |  |
 | `clearStyle` | `string` | `"clear"` | while see-through: clear (a flat overlay) \| fade (an overlay thinning out from |
 | `clearTint` | `int` | `30` | while see-through: the overlay's strength in the bar's colour, % (0: none) |
-| `clearHalo` | `bool` | `true` | while see-through: a soft halo in the bar's colour behind its items |
+| `clearHalo` | `bool` | `false` | while see-through: a soft halo in the bar's colour behind its items |
 | `items` | `var` | `{}` | item or copy ("clock", "clock#2") -> its settings (docs/bar.md) |
 | `preset` | `string` | `"theme"` |  |
 | `presets` | `var` | `{ minimal: { start: ["controls", "launcher", "workspaces"...` |  |

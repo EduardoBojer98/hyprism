@@ -13,6 +13,9 @@ import QtQuick.Layouts
 //   block    a thick accent bar on the left, the title in the display font, a hard shadow; red when urgent (Poster)
 //   tag      a card with the app's name as an accent tag
 //   compact  one row: a small icon, the title and one line of body
+//   pill     the compact row in a fully round capsule, a lifted tone and no edge
+//   minimal  the title and text only: no icon, app row or edge
+// Padding, icon and type sizes and how many lines of text show come from Notifications (Settings > Density, Text size).
 // Settings draws each kind with a sample (kindOverride) to choose from. How a banner arrives is Notifications.qml's.
 Glass {
     id: card
@@ -32,8 +35,11 @@ Glass {
     readonly property string kind: kindOverride || Notifications.kind
     readonly property bool isLine: kind === "line"
     readonly property bool isBlock: kind === "block"
-    readonly property bool isCompact: kind === "compact"
-    readonly property int pad: isCompact || isLine ? Theme.spaceS + 2 : Theme.spaceM
+    readonly property bool isPill: kind === "pill"
+    readonly property bool isMinimal: kind === "minimal"
+    readonly property bool isCompact: kind === "compact" || isPill   // one row
+    readonly property int pad: isCompact || isLine ? Math.max(Theme.spaceS, Notifications.pad - Theme.spaceXs) : Notifications.pad
+    readonly property bool showButtons: Config.notifications.showActions && (banner || stacked === 0)
     // block: an urgent one is a red card, its text in the colour that reads on red
     readonly property bool red: isBlock && critical
     readonly property color ink: red ? Theme.errorText : Theme.text
@@ -57,13 +63,13 @@ Glass {
 
     implicitHeight: (isLine ? log : content).implicitHeight + pad * 2
     strong: !isLine
-    radius: flat ? Theme.radius : kind === "bubble" ? Math.min(height / 2, 26) : Theme.radiusLarge
+    radius: isPill && Theme.radius > 0 ? height / 2 : flat ? Theme.radius : kind === "bubble" ? Math.min(height / 2, 26) : Theme.radiusLarge
     color: red ? Theme.error
          : isBlock ? (flat ? Theme.raised : Qt.alpha(Theme.glassStrong, 1))   // opaque: the hard shadow must not show through
          : isLine && flat ? (area.containsMouse ? Theme.fillHover : "transparent")   // the centre: plain lines on the panel
-         : flat ? Theme.fill : kind === "bubble" ? Theme.raised : Theme.glassStrong   // bubble: a lifted tone instead of an edge
+         : flat ? Theme.fill : kind === "bubble" || isPill ? Theme.raised : Theme.glassStrong   // bubble, pill: a lifted tone instead of an edge
     border.color: red ? Theme.stroke : isLine ? "transparent" : critical ? Theme.warning : Theme.stroke   // line: urgent is its red tag and hairline
-    border.width: isBlock ? Math.max(1, Theme.line) : (isLine || kind === "bubble") && !critical ? 0 : (critical || !flat ? Math.max(1, Theme.line) : 0)
+    border.width: isBlock ? Math.max(1, Theme.line) : (isLine || isMinimal || isPill || kind === "bubble") && !critical ? 0 : (critical || !flat ? Math.max(1, Theme.line) : 0)
 
     Rectangle {   // block: the hard shadow, an offset block in the second accent like Poster's panels (PopupDepth)
         visible: card.isBlock
@@ -116,7 +122,7 @@ Glass {
             readonly property string src: card.notification ? Notifications.iconOf(card.notification) : ""
             readonly property bool soft: card.kind === "card"
             Layout.alignment: card.isCompact ? Qt.AlignVCenter : Qt.AlignTop
-            visible: src !== "" && Config.notifications.showIcons
+            visible: src !== "" && Config.notifications.showIcons && !card.isMinimal
             implicitWidth: soft ? Notifications.iconSize + Theme.spaceS : image.implicitSize
             implicitHeight: implicitWidth
             radius: width / 2
@@ -131,10 +137,10 @@ Glass {
 
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 2
+            spacing: card.isCompact ? 0 : 2
 
             RowLayout {
-                visible: !card.isCompact
+                visible: !card.isCompact && !card.isMinimal
                 Layout.fillWidth: true
                 Layout.rightMargin: closeButton.visible ? closeButton.width : 0   // the × sits over this row
                 Rectangle {   // missed: an accent dot before the app's name
@@ -172,7 +178,7 @@ Glass {
             }
             Text {
                 Layout.fillWidth: true
-                Layout.rightMargin: card.isCompact && closeButton.visible ? closeButton.width : 0
+                Layout.rightMargin: (card.isCompact || card.isMinimal) && closeButton.visible ? closeButton.width : 0
                 visible: text !== ""
                 text: card.notification?.summary ?? ""
                 color: card.ink
@@ -188,12 +194,12 @@ Glass {
                 color: card.inkSoft
                 textFormat: Text.StyledText
                 wrapMode: Text.Wrap
-                maximumLineCount: card.isCompact ? 1 : card.banner ? 3 : 5
+                maximumLineCount: card.isCompact ? 1 : Notifications.lines + (card.banner ? 0 : 1)
                 elide: Text.ElideRight
                 font { family: Theme.font; pixelSize: Notifications.fontBody }
             }
             RowLayout {
-                visible: card.buttons.length > 0 && (card.banner || card.stacked === 0)
+                visible: card.buttons.length > 0 && card.showButtons
                 Layout.topMargin: Theme.spaceXs
                 spacing: Theme.spaceXs
                 Repeater {
@@ -265,7 +271,7 @@ Glass {
             text: card.logText(card.typed < 0 ? card.logLength : card.typed)
             textFormat: Text.StyledText
             wrapMode: Text.Wrap
-            maximumLineCount: card.banner ? 3 : 4
+            maximumLineCount: Notifications.lines + (card.banner ? 0 : 1)
             elide: Text.ElideRight
             font { family: Theme.monoFont; pixelSize: Notifications.fontBody }
         }
@@ -278,7 +284,7 @@ Glass {
                 word: "open"; onClicked: card.open()
             }
             Repeater {
-                model: card.banner || card.stacked === 0 ? card.buttons.slice(0, 3) : []
+                model: card.showButtons ? card.buttons.slice(0, 3) : []
                 LogAction { required property var modelData; word: modelData.text.toLowerCase(); onClicked: modelData.invoke() }
             }
             LogAction { visible: card.stacked > 0; word: "+" + card.stacked + " more"; onClicked: card.banner ? card.open() : card.expandRequested() }
@@ -297,8 +303,9 @@ Glass {
     // dismiss, shown on hover (line: `[dismiss]` is always there instead)
     Rectangle {
         id: closeButton
-        anchors { top: parent.top; right: parent.right; margins: Theme.spaceS }
-        width: 22; height: 22; radius: 11
+        anchors { top: parent.top; right: parent.right; rightMargin: Theme.spaceXs + 2
+                  topMargin: card.isCompact ? Math.round((card.height - height) / 2) : Theme.spaceXs + 2 }
+        width: Theme.glyphL + 2; height: width; radius: width / 2
         visible: !card.isLine && (card.hovered || card.activeFocus) && (card.banner || card.stacked === 0)
         color: closeArea.containsMouse ? Theme.fillActive : Theme.fillHover
         Text { anchors.centerIn: parent; text: "\u{F0156}"; color: card.ink; font { family: Theme.iconFont; pixelSize: Theme.glyphXs } }

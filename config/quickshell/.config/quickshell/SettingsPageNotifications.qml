@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Notifications: how popups look and where they appear (each style drawn with a sample), a test notification
-// through the shell's own server, how long each urgency stays and how it sounds, Do Not Disturb with a daily
-// schedule, apps kept quiet, the notification centre's history and the on-screen display.
+// Notifications: a live preview drawn with the real card (it replays its entrance as you change things), the popup
+// style from samples of every look, density, width, text size and effect as chips and sliders, where they appear,
+// a test through the shell's own server, how long each urgency stays and how it sounds, Do Not Disturb with a daily
+// schedule, apps kept quiet, the notification centre, and the on-screen display with samples of its looks.
 ColumnLayout {
     id: page
-    spacing: 20
+    spacing: Theme.spaceXl
 
     readonly property var c: Config.notifications
     readonly property var soundIds: [""].concat(Object.keys(Notifications.sounds))
@@ -18,16 +19,22 @@ ColumnLayout {
         line: { name: "Line", about: "A log line in mono; it types in" },
         block: { name: "Block", about: "An accent bar, a bold title, a hard shadow" },
         tag: { name: "Tag", about: "The app's name on an accent tag" },
-        compact: { name: "Compact", about: "One slim row: the title and a line of text" }
+        compact: { name: "One line", about: "One slim row: the title and a line of text" },
+        pill: { name: "Pill", about: "The slim row in a round capsule" },
+        minimal: { name: "Minimal", about: "Title and text only, no icon or edge" }
     })
-    readonly property var styleIds: ["theme", "card", "bubble", "line", "block", "tag", "compact"]
-    // what the style samples show: a plain record, like a notification kept from an earlier session
+    readonly property var styleIds: ["theme", "card", "bubble", "line", "block", "tag", "compact", "pill", "minimal"]
+    // what the samples show: plain records, like notifications kept from an earlier session
     readonly property var sample: ({ id: "sample", appName: "Mail", appIcon: "internet-mail", image: "", desktopEntry: "",
                                      summary: "Lunch at one?", body: "Booked a table by the window. Bring the slides if you can.",
                                      urgency: 1, actions: [], hints: ({}) })
+    readonly property var sampleWithButtons: Object.assign({}, sample, { id: "sample-buttons",
+        actions: [{ identifier: "reply", text: "Reply", invoke: () => {} }, { identifier: "later", text: "Later", invoke: () => {} }] })
+    readonly property var sampleMusic: ({ id: "sample-music", appName: "Music", appIcon: "multimedia-audio-player", image: "", desktopEntry: "",
+                                          summary: "Now playing", body: "Slow Morning — The Quiet Hours", urgency: 1, actions: [], hints: ({}) })
     readonly property var places: [["top-left", "Top left"], ["top", "Top"], ["top-right", "Top right"],
                                    ["bottom-left", "Bottom left"], ["bottom", "Bottom"], ["bottom-right", "Bottom right"]]
-    readonly property string placeNow: c.position === "theme" ? Theme.current.notify.corner : c.position
+    readonly property string placeNow: Notifications.corner
 
     // a sound for one urgency: picking one plays it
     component SoundRow: SettingRow {
@@ -46,109 +53,216 @@ ColumnLayout {
             }
         }
     }
-
-    // ---- look and place ---------------------------------------------------------------------------
-    SettingGroup {
-        title: "Popups"
-
-        Text {
-            Layout.fillWidth: true
-            Layout.margins: 16
-            Layout.bottomMargin: 0
-            text: "Style"
-            color: Theme.text
-            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.Medium }
+    // a picture to choose: a patch of desktop with `content` on it, a name and a line under it (style samples)
+    component Pick: Rectangle {
+        id: pick
+        property bool chosen
+        property string name
+        property string about
+        default property alias content: patch.data
+        property real patchHeight: 0
+        signal picked()
+        Layout.fillWidth: true
+        Layout.alignment: Qt.AlignTop
+        implicitHeight: pickCol.implicitHeight + Theme.spaceM * 2
+        radius: Theme.radius
+        color: chosen ? Theme.accentWash : pickArea.containsMouse ? Theme.fillHover : "transparent"
+        border { color: chosen ? Theme.accent : Theme.stroke; width: chosen ? 2 : 1 }
+        activeFocusOnTab: true
+        Keys.onSpacePressed: picked()
+        Keys.onReturnPressed: picked()
+        FocusRing {}
+        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+        Column {
+            id: pickCol
+            anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
+            spacing: Theme.spaceS
+            Rectangle { id: patch; width: parent.width; height: pick.patchHeight; radius: Theme.radiusSmall; color: Theme.base; clip: true }
+            Text {
+                width: parent.width
+                text: (pick.chosen ? "\u{F012C}  " : "") + pick.name
+                elide: Text.ElideRight
+                color: pick.chosen ? Theme.accent : Theme.text
+                font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+            }
+            Text {
+                width: parent.width
+                visible: text !== ""
+                text: pick.about
+                wrapMode: Text.Wrap
+                color: Theme.subtext
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
         }
-        GridLayout {
-            id: styleGrid
+        MouseArea {
+            id: pickArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            Accessible.role: Accessible.RadioButton
+            Accessible.name: pick.name
+            Accessible.checked: pick.chosen
+            Accessible.onPressAction: pick.picked()
+            onClicked: pick.picked()
+        }
+    }
+
+    // ---- preview: the real card with your settings, at its real size where it fits -----------------------
+    SettingGroup {
+        title: "Preview"
+        Rectangle {
+            id: stage
             Layout.fillWidth: true
-            Layout.margins: 12
-            Layout.topMargin: 8
-            columns: Math.min(4, Math.max(2, Math.floor((width + columnSpacing) / (230 + columnSpacing))))   // samples big enough to read
-            columnSpacing: 12
-            rowSpacing: 12
-            Repeater {
-                model: page.styleIds
-                Rectangle {
-                    id: opt
-                    required property string modelData
-                    readonly property string kind: modelData === "theme" ? Theme.current.notify.kind : modelData
-                    readonly property bool chosen: page.c.style === modelData
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                    implicitHeight: optCol.implicitHeight + 20
-                    radius: Theme.radius
-                    color: chosen ? Theme.accentWash : optArea.containsMouse ? Theme.fillHover : "transparent"
-                    border { color: chosen ? Theme.accent : Theme.stroke; width: chosen ? 2 : 1 }
-                    activeFocusOnTab: true
-                    Keys.onSpacePressed: Config.set("notifications", "style", modelData)
-                    Keys.onReturnPressed: Config.set("notifications", "style", modelData)
-                    FocusRing {}
-                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                    Column {
-                        id: optCol
-                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
-                        spacing: 8
-                        Rectangle {   // a patch of desktop with the sample on it, the size it has on screen, scaled
+            Layout.margins: Theme.spaceM
+            implicitHeight: stack.height * stack.scale + Theme.spaceL * 2 + (page.c.groupByApp ? Theme.spaceM : 0)   // room for the folded stack
+            radius: Theme.radiusSmall
+            color: Theme.base
+            border { color: Theme.stroke; width: 1 }
+            clip: true
+            // the entrance, replayed when the look changes: t goes 0 -> 1 the way Notifications.effect brings a popup in
+            property real t: 1
+            readonly property string fx: Notifications.effect
+            readonly property real side: page.placeNow.endsWith("left") ? -1 : 1
+            function replay() { if (fx !== "none") { replayAnim.restart() } }
+            NumberAnimation { id: replayAnim; target: stage; property: "t"; from: 0; to: 1; duration: Math.max(Theme.enter, Theme.anim)
+                              easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve }
+            Connections {
+                target: Notifications
+                function onKindChanged() { stage.replay() }
+                function onEffectChanged() { stage.replay() }
+                function onDensityChanged() { stage.replay() }
+                function onCornerChanged() { stage.replay() }
+            }
+            Column {
+                id: stack
+                readonly property real room: stage.width - Theme.spaceL * 2
+                scale: Math.min(1, room / Notifications.cardWidth)
+                transformOrigin: page.placeNow.endsWith("left") ? Item.TopLeft : page.placeNow.endsWith("right") ? Item.TopRight : Item.Top
+                width: Notifications.cardWidth
+                y: Theme.spaceL
+                x: page.placeNow.endsWith("left") ? Theme.spaceL : page.placeNow.endsWith("right") ? stage.width - width - Theme.spaceL : (stage.width - width) / 2
+                spacing: page.c.groupByApp && Notifications.kind !== "line" ? Notifications.gap + Theme.spaceS : Notifications.gap
+                Repeater {
+                    model: [page.sampleWithButtons, page.sampleMusic]
+                    Item {
+                        id: slot
+                        required property var modelData
+                        required property int index
+                        width: stack.width
+                        height: shot.height
+                        NotificationCard {
+                            id: shot
                             width: parent.width
-                            height: sampleCard.height * sampleCard.scale + 20
-                            radius: Theme.radiusSmall
-                            color: Theme.base
-                            clip: true
-                            NotificationCard {
-                                id: sampleCard
-                                x: 10; y: 10
-                                width: 344
-                                scale: (parent.width - 20) / 344
-                                transformOrigin: Item.TopLeft
-                                banner: true
-                                enabled: false
-                                kindOverride: opt.kind
-                                notification: page.sample
-                            }
+                            banner: true
+                            enabled: false
+                            kindOverride: Notifications.kind
+                            notification: slot.modelData
+                            stacked: slot.index === 1 && page.c.groupByApp ? 2 : 0   // grouped: the second app's folded stack
+                            opacity: stage.fx === "none" ? 1 : stage.t
+                            x: stage.fx === "slide" && Theme.moves ? stage.side * (1 - stage.t) * stack.width : 0
+                            y: stage.fx === "drop" ? (page.placeNow.startsWith("bottom") ? 1 : -1) * (1 - stage.t) * Theme.travel : 0
+                            scale: stage.fx === "scale" && Theme.moves ? 0.85 + 0.15 * stage.t : 1
                         }
-                        Text {
-                            width: parent.width
-                            text: (opt.chosen ? "\u{F012C}  " : "") + (opt.modelData === "theme" ? "The theme's (" + (page.styles[opt.kind]?.name ?? opt.kind) + ")" : page.styles[opt.modelData].name)
-                            elide: Text.ElideRight
-                            color: opt.chosen ? Theme.accent : Theme.text
-                            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
-                        }
-                        Text {
-                            width: parent.width
-                            text: opt.modelData === "theme" ? "Changes with the theme" : page.styles[opt.modelData].about
-                            wrapMode: Text.Wrap
-                            color: Theme.subtext
-                            font { family: Theme.font; pixelSize: Theme.fontCaption }
-                        }
-                    }
-                    MouseArea {
-                        id: optArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        Accessible.role: Accessible.RadioButton
-                        Accessible.name: (opt.modelData === "theme" ? "The theme's style" : page.styles[opt.modelData].name) + " popup style"
-                        Accessible.checked: opt.chosen
-                        Accessible.onPressAction: Config.set("notifications", "style", opt.modelData)
-                        onClicked: Config.set("notifications", "style", opt.modelData)
                     }
                 }
             }
         }
+        SettingRow {
+            label: "Send a test notification"
+            hint: Notifications.dnd ? "Do Not Disturb is on: only a critical one pops up" : "A real one, through the shell's own notification server"
+            Row {
+                spacing: Theme.spaceXs + 2
+                PillButton { text: "Normal"; primary: true; onClicked: Notifications.test("normal") }
+                PillButton { text: "Low"; onClicked: Notifications.test("low") }
+                PillButton { text: "Critical"; onClicked: Notifications.test("critical") }
+                PillButton { text: "Replay"; onClicked: stage.replay() }
+            }
+        }
+    }
 
+    // ---- look -------------------------------------------------------------------------------------------
+    SettingGroup {
+        title: "Look"
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.margins: Theme.spaceM
+            columns: Math.min(4, Math.max(2, Math.floor((width + columnSpacing) / (230 + columnSpacing))))   // samples big enough to read
+            columnSpacing: Theme.spaceM
+            rowSpacing: Theme.spaceM
+            Repeater {
+                model: page.styleIds
+                Pick {
+                    id: opt
+                    required property string modelData
+                    readonly property string kind: modelData === "theme" ? Theme.current.notify.kind : modelData
+                    chosen: page.c.style === modelData
+                    name: modelData === "theme" ? "The theme's (" + (page.styles[kind]?.name ?? kind) + ")" : page.styles[modelData].name
+                    about: modelData === "theme" ? "Changes with the theme" : page.styles[modelData].about
+                    patchHeight: sampleCard.height * sampleCard.scale + Theme.spaceM * 2
+                    onPicked: Config.set("notifications", "style", modelData)
+                    NotificationCard {   // the sample, the size it has on screen, scaled
+                        id: sampleCard
+                        x: Theme.spaceM; y: Theme.spaceM
+                        width: Notifications.cardWidth
+                        scale: (opt.width - Theme.spaceM * 4) / Notifications.cardWidth
+                        transformOrigin: Item.TopLeft
+                        banner: true
+                        enabled: false
+                        kindOverride: opt.kind
+                        notification: page.sample
+                    }
+                }
+            }
+        }
+        SettingRow {
+            label: "Density"
+            hint: ({ compact: "Tight padding, small icons, two lines of text", regular: "More room, three lines of text",
+                     roomy: "Big icons and type, four lines of text" })[page.c.density] ?? ""
+            ConfigChoice { section: "notifications"; key: "density"; values: ["compact", "regular", "roomy"]; labels: ["Compact", "Regular", "Roomy"] }
+        }
+        SettingRow {
+            label: "Width"
+            hint: "Popups and the notification centre"
+            ConfigSlider { section: "notifications"; key: "width"; from: 280; to: 560; step: 20; format: v => v + " px" }
+        }
+        SettingRow {
+            label: "Text size"
+            hint: "Text and icons, on top of the density"
+            ConfigSlider { section: "notifications"; key: "size"; from: 80; to: 150; step: 10; format: v => v + "%" }
+        }
+        SettingRow {
+            label: "Coming and going"
+            hint: page.c.effect === "theme" ? "The style's own: " + ({ drop: "a short drop with a fade", slide: "a slide from the side", fade: "a fade" })[Notifications.effect]
+                : Theme.moves ? "" : "Animations are reduced (Settings > Appearance): only the fade shows"
+            ConfigChoice { section: "notifications"; key: "effect"; values: ["theme", "slide", "fade", "scale", "none"]; labels: ["Style's own", "Slide", "Fade", "Scale", "None"] }
+        }
+        SettingRow {
+            label: "App icons and pictures"
+            hint: "Off: text only, in popups and the notification centre"
+            ConfigToggle { section: "notifications"; key: "showIcons" }
+        }
+        SettingRow {
+            label: "App buttons"
+            hint: "Reply, Mark as read and the like. Off: click the notification to open it"
+            ConfigToggle { section: "notifications"; key: "showActions" }
+        }
+    }
+
+    // ---- place ------------------------------------------------------------------------------------------
+    SettingGroup {
+        title: "Where and how many"
         SettingRow {
             label: "Position"
             hint: page.c.position === "theme" ? "The theme's place. Click a spot on the screen to choose your own." : "Click a spot on the screen to move them."
             Column {
-                spacing: 8
+                spacing: Theme.spaceS
                 Rectangle {   // the screen, its bar, and the six places a popup can go
                     id: screen
                     width: 216; height: 135
                     radius: Theme.radiusSmall
                     color: Theme.base
                     border { color: Theme.stroke; width: 1 }
-                    readonly property real inset: 8
+                    readonly property real inset: Theme.spaceS
                     Rectangle {   // the bar, at its edge
                         readonly property string edge: Theme.barEdge
                         x: edge === "right" ? parent.width - width - 3 : 3
@@ -202,41 +316,10 @@ ColumnLayout {
                 }
             }
         }
-
-        SettingRow {
-            label: "Send a test notification"
-            hint: Notifications.dnd ? "Do Not Disturb is on: only a critical one pops up" : "Through the shell's own notification server, like an app's"
-            Row {
-                spacing: 6
-                PillButton { text: "Normal"; primary: true; onClicked: Notifications.test("normal") }
-                PillButton { text: "Low"; onClicked: Notifications.test("low") }
-                PillButton { text: "Critical"; onClicked: Notifications.test("critical") }
-            }
-        }
-    }
-
-    // ---- behaviour --------------------------------------------------------------------------------
-    SettingGroup {
-        title: "Behaviour"
         SettingRow {
             label: "On screen at once"
             hint: "More wait their turn; all of them are in the notification centre"
             ConfigSlider { section: "notifications"; key: "maxVisible"; from: 1; to: 8; step: 1; format: v => v === 1 ? "1 popup" : v + " popups" }
-        }
-        SettingRow {
-            label: "Group by app"
-            hint: "One popup per app with a count of the rest, and the history grouped by app"
-            ConfigToggle { section: "notifications"; key: "groupByApp" }
-        }
-        SettingRow {
-            label: "App icons and pictures"
-            hint: "Off: text only, in popups and the notification centre"
-            ConfigToggle { section: "notifications"; key: "showIcons" }
-        }
-        SettingRow {
-            label: "Size"
-            hint: "Text, icons and width of popups and the notification centre"
-            ConfigSlider { section: "notifications"; key: "size"; from: 80; to: 150; step: 10; format: v => v + "%" }
         }
     }
 
@@ -343,6 +426,11 @@ ColumnLayout {
     SettingGroup {
         title: "Notification centre"
         SettingRow {
+            label: "Group by app"
+            hint: "One popup per app with a count of the rest, and the notification centre folded by app"
+            ConfigToggle { section: "notifications"; key: "groupByApp" }
+        }
+        SettingRow {
             label: "Keep in history"
             ConfigChoice { section: "notifications"; key: "historyMax"; values: [50, 100, 300]; labels: ["50", "100", "300"] }
         }
@@ -366,6 +454,43 @@ ColumnLayout {
     SettingGroup {
         title: "On-screen display"
         DesktopPreview { show: "osd"; Layout.fillWidth: true; Layout.topMargin: 4 }
+        GridLayout {   // each look drawn with the real card at your size
+            Layout.fillWidth: true
+            Layout.margins: Theme.spaceM
+            columns: page.width >= 1100 ? 4 : 2   // samples big enough to read
+            columnSpacing: Theme.spaceM
+            rowSpacing: Theme.spaceM
+            Repeater {
+                model: ["theme", "bar", "numeral", "ascii"]
+                Pick {
+                    id: osdPick
+                    required property string modelData
+                    readonly property string themeLook: Theme.current.osd?.style ?? "bar"
+                    readonly property string shown: modelData === "theme" ? themeLook : modelData
+                    readonly property var names: ({ bar: "Bar", numeral: "Numeral", ascii: "Meter" })
+                    chosen: Config.osd.style === modelData
+                    name: modelData === "theme" ? "The theme's (" + names[themeLook] + ")" : names[modelData]
+                    about: ({ theme: "Changes with the theme", bar: "A thin level bar and the number", numeral: "A big number over ten blocks",
+                              ascii: "A terminal meter in the mono font" })[modelData]
+                    patchHeight: osdSample.height * osdSample.scale + Theme.spaceM * 2
+                    onPicked: Config.set("osd", "style", modelData)
+                    OsdCard {
+                        id: osdSample
+                        anchors.centerIn: parent
+                        width: implicitWidth; height: implicitHeight
+                        scale: Math.min(1, (osdPick.width - Theme.spaceM * 4) / implicitWidth)
+                        icon: "\u{F057E}"
+                        level: 0.6
+                        look: osdPick.shown
+                        size: Config.osd.size
+                    }
+                }
+            }
+        }
+        SettingRow {
+            label: "Size"
+            ConfigChoice { section: "osd"; key: "size"; values: ["compact", "regular", "large"]; labels: ["Compact", "Regular", "Large"] }
+        }
         SettingRow {
             label: "Position"
             ConfigChoice { section: "osd"; key: "position"; values: ["bottom", "top", "center"]; labels: ["Bottom", "Top", "Centre"] }
@@ -378,6 +503,11 @@ ColumnLayout {
         SettingRow {
             label: "Stays for"
             ConfigSlider { section: "osd"; key: "timeoutMs"; from: 600; to: 5000; step: 100; format: v => (v / 1000).toFixed(1) + " s" }
+        }
+        SettingRow {
+            label: "Show a sample"
+            hint: "The real one, on screen, with these settings"
+            PillButton { text: "Show"; primary: true; onClicked: SettingsApp.osdDemo() }
         }
         SettingRow { label: "Volume"; hint: "A pop-up when the volume or mute changes"; ConfigToggle { section: "osd"; key: "volume" } }
         SettingRow { label: "Brightness"; ConfigToggle { section: "osd"; key: "brightness" } }

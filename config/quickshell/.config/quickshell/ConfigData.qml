@@ -108,8 +108,12 @@ JsonAdapter {
         property int maxVisible: 4                       // popups on screen at once; the rest wait in the notification centre
         property bool groupByApp: true                   // one popup per app (with a count) and the history grouped by app
         property bool showIcons: true                    // the app's icon or the notification's picture
-        property int size: 100                           // banners and the notification centre, % (text, icons, width)
-        property string style: "theme"                   // popup look: theme | card | bubble | line | block | tag | compact
+        property bool showActions: true                  // the app's buttons (Reply, Mark as read…) on popups and in the centre
+        property int size: 100                           // text and icons of popups and the notification centre, %
+        property int width: 360                          // popups and the notification centre's cards (px)
+        property string density: "compact"               // compact | regular | roomy: padding, icon size and lines of text before it cuts off
+        property string style: "theme"                   // popup look: theme | card | bubble | line | block | tag | compact | pill | minimal
+        property string effect: "theme"                  // how a popup comes and goes: theme (the style's own) | slide | fade | scale | none
         property string position: "theme"               // theme | top-left | top | top-right | bottom-left | bottom | bottom-right
         property bool dndSchedule: false                 // Do Not Disturb every day between dndFrom and dndTo
         property string dndFrom: "22:00"
@@ -131,6 +135,8 @@ JsonAdapter {
         property bool capsLock: true            // shows Caps Lock and Num Lock on/off (Hyprland's state, read when the key is pressed)
         property string position: "bottom"      // bottom | top | center
         property string screen: "main"          // main (Settings > Displays' main screen) | cursor (the screen you work on)
+        property string style: "theme"          // theme (theme.json osd.style) | bar | numeral (a big number) | ascii (a mono meter)
+        property string size: "regular"         // compact | regular | large
     }
     property JsonObject caffeine: JsonObject {
         property int defaultMinutes: 0          // 0 = until turned off

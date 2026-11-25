@@ -13,6 +13,7 @@ Singleton {
     id: root
 
     property bool open: false
+    signal osdDemo()                         // Settings > Notifications: Osd.qml shows a sample
     property string section: "appearance"   // the group open in the sidebar
     property string pageId: "appearance"    // the page shown
 

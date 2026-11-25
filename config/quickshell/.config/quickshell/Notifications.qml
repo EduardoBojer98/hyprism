@@ -90,15 +90,22 @@ Singleton {
     }
     function muted(n) { return Config.notifications.mutedApps.includes(n.appName || "Other") }
 
-    // sizes for the banners and the centre's cards, scaled by Settings > Notifications > Size
+    // sizes for the banners and the centre's cards: Settings > Notifications > Density, then Text size (zoom) and Width
+    readonly property string density: c.density
+    readonly property int dense: density === "compact" ? 0 : density === "regular" ? 1 : 2
     readonly property real zoom: c.size / 100
-    readonly property int cardWidth: Math.round(400 * zoom)
-    readonly property int fontMeta: Math.round(Theme.fontLabel * zoom)    // app name, age, buttons
-    readonly property int fontBody: Math.round(Theme.fontSize * zoom)
-    readonly property int fontHead: Math.round(Theme.fontTitle * zoom)    // the title
-    readonly property int fontDisplay: Math.round((Theme.fontTitle + 4) * zoom)   // block: the title in the display font
-    readonly property int iconSize: Math.round(40 * zoom)
-    readonly property int iconSmall: Math.round(28 * zoom)               // compact, and inside card's soft circle
+    readonly property int cardWidth: c.width
+    readonly property int pad: [Theme.spaceS, Theme.spaceM, Theme.spaceL][dense]
+    readonly property int gap: [Theme.spaceXs, Theme.spaceS, Theme.spaceM][dense]          // between banners and cards
+    readonly property int lines: [2, 3, 4][dense]                                           // body lines in a banner (the centre: one more)
+    readonly property int fontMeta: Math.round([Theme.fontCaption, Theme.fontLabel, Theme.fontLabel][dense] * zoom)    // app name, age, buttons
+    readonly property int fontBody: Math.round([Theme.fontLabel, Theme.fontSize, Theme.fontSize][dense] * zoom)
+    readonly property int fontHead: Math.round([Theme.fontSize, Theme.fontTitle, Theme.fontTitle][dense] * zoom)       // the title
+    readonly property int fontDisplay: Math.round(fontHead * 1.25)                         // block: the title in the display font
+    readonly property int iconSize: Math.round([Theme.iconMedium + 2, Theme.iconLarge, Theme.iconApp - Theme.spaceS][dense] * zoom)
+    readonly property int iconSmall: Math.round(iconSize * 0.7)                            // compact and pill, and inside card's soft circle
+    // how a banner comes and goes: Settings, or the style's own ("theme")
+    readonly property string effect: c.effect !== "theme" ? c.effect : kind === "block" ? "slide" : kind === "line" ? "fade" : "drop"
 
     function hidePopup(n) { popups = popups.filter(x => x !== n) }
     // Click: the app's default action if it has one (invoke() closes it unless it is resident), and its window to
@@ -308,7 +315,7 @@ Singleton {
         margins { top: Theme.reserveTop + 10; bottom: Theme.reserveBottom + 10; right: Theme.reserveRight + 12; left: Theme.reserveLeft + 12 }
         implicitWidth: root.cardWidth
         // grouped: the last stack's peek (not lines: they say "+n more"); block: its hard shadow
-        implicitHeight: Math.max(1, list.contentHeight + (root.c.groupByApp && root.kind !== "line" ? 14 : 0) + list.anchors.bottomMargin)
+        implicitHeight: Math.max(1, list.contentHeight + (root.c.groupByApp && root.kind !== "line" ? Theme.spaceM + 2 : 0) + list.anchors.bottomMargin)
         exclusiveZone: 0
         color: "transparent"
         // held while the Control Center or the notification centre is open: they'd land on it, and the
@@ -325,27 +332,43 @@ Singleton {
             // block: room for the hard shadow right and below
             anchors { rightMargin: root.kind === "block" ? Theme.shadowOffset : 0; bottomMargin: root.kind === "block" ? Theme.shadowOffset : 0 }
             // grouped: room for a folded stack peeking out underneath; lines sit close, like a log
-            spacing: root.kind === "line" ? 2 : root.c.groupByApp ? 14 : 8
+            spacing: root.kind === "line" ? 2 : root.c.groupByApp ? root.gap + Theme.spaceS : root.gap
             interactive: false
             model: ScriptModel { values: root.shown }
 
-            // in the kind's way, out with a quick fade:
-            //   card and the rest  slide from the corner's edge with a fade (Theme.travel, its curve)
-            //   block              slide in from the left with a small overshoot (full motion; a fade otherwise)
-            //   line               a fade; the line types itself in (NotificationCard)
-            add: root.kind === "block" ? slideIn : root.kind === "line" ? fadeIn : dropIn
+            // root.effect, out the way it came (reduced motion: Theme.moves off, so only the fades are left):
+            //   drop   from the corner's edge a little, with a fade (Theme.travel, its curve): card and the rest
+            //   slide  in from the screen's side, with a small overshoot for block (Poster)
+            //   fade   a fade; a line also types itself in (NotificationCard)
+            //   scale  grows from smaller with a fade
+            //   none   just there
+            readonly property real side: root.corner.endsWith("left") ? -1 : 1   // the screen edge a slide comes from
+            add: ({ drop: dropIn, slide: slideIn, fade: fadeIn, scale: scaleIn })[root.effect] ?? null
+            remove: ({ slide: slideOut, scale: scaleOut, none: null })[root.effect] ?? fadeOut
             property Transition dropIn: Transition { ParallelAnimation {
                 NumberAnimation { property: "y"; from: (root.corner.startsWith("bottom") ? 1 : -1) * Theme.travel; duration: Theme.enter
                                   easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve }
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Theme.easing }
             } }
             property Transition slideIn: Transition { ParallelAnimation {
-                NumberAnimation { property: "x"; from: Theme.moves ? -list.width : 0; to: 0; duration: Theme.pop
-                                  easing.type: Easing.OutBack; easing.overshoot: Theme.popOvershoot }
+                NumberAnimation { property: "x"; from: Theme.moves ? list.side * list.width : 0; to: 0; duration: root.kind === "block" ? Theme.pop : Theme.enter
+                                  easing.type: root.kind === "block" ? Easing.OutBack : Theme.easing; easing.overshoot: Theme.popOvershoot }
                 NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Theme.easing }
             } }
             property Transition fadeIn: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter } }
-            remove: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.exit } }
+            property Transition scaleIn: Transition { ParallelAnimation {
+                NumberAnimation { property: "scale"; from: Theme.moves ? 0.85 : 1; to: 1; duration: Theme.enter; easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve }
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Theme.enter; easing.type: Theme.easing }
+            } }
+            property Transition fadeOut: Transition { NumberAnimation { property: "opacity"; to: 0; duration: Theme.exit } }
+            property Transition slideOut: Transition { ParallelAnimation {
+                NumberAnimation { property: "x"; to: Theme.moves ? list.side * list.width : 0; duration: Theme.exit; easing.type: Theme.easing }
+                NumberAnimation { property: "opacity"; to: 0; duration: Theme.exit }
+            } }
+            property Transition scaleOut: Transition { ParallelAnimation {
+                NumberAnimation { property: "scale"; to: Theme.moves ? 0.85 : 1; duration: Theme.exit; easing.type: Theme.easing }
+                NumberAnimation { property: "opacity"; to: 0; duration: Theme.exit }
+            } }
             displaced: Transition { NumberAnimation { property: "y"; duration: Theme.anim; easing.type: Theme.easing } }
 
             delegate: NotificationCard {

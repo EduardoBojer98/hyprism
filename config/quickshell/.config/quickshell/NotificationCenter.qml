@@ -29,7 +29,7 @@ Singleton {
         id: popup
         name: "notifications"
         placement: "topRight"
-        boxWidth: Notifications.cardWidth + Theme.spaceM * 2
+        boxWidth: Math.max(Notifications.cardWidth, header.implicitWidth) + Theme.spaceM * 2   // the header never clips
         boxHeight: column.implicitHeight + Theme.spaceM * 2
         focusItem: column
         onOpened: { Notifications.seenBefore = Notifications.seenAt; Notifications.seenAt = Date.now()
@@ -44,7 +44,7 @@ Singleton {
             ColumnLayout {
                 id: column
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: Theme.spaceM }
-                spacing: 8
+                spacing: Notifications.gap + Theme.spaceXs
                 readonly property Item focused: Window.activeFocusItem
                 Keys.onDownPressed: root.step(focused ?? column, true)
                 Keys.onUpPressed: root.step(focused ?? column, false)
@@ -66,6 +66,7 @@ Singleton {
 
                 // ---- header: title and count, Do Not Disturb, Clear all ----
                 RowLayout {
+                    id: header
                     Layout.fillWidth: true
                     Layout.leftMargin: 4
                     spacing: 8
@@ -135,7 +136,7 @@ Singleton {
                         Layout.fillWidth: true
                         // room for the folded stack (lines say "+n more" instead); lines sit close, like a log
                         Layout.bottomMargin: unfolded || Notifications.kind === "line" ? 0 : 12
-                        spacing: Notifications.kind === "line" ? 0 : 6
+                        spacing: Notifications.kind === "line" ? 0 : Notifications.gap
 
                         RowLayout {
                             visible: group.modelData.items.length > 1 && group.unfolded
