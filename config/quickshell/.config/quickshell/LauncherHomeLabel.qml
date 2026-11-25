@@ -1,6 +1,7 @@
 import QtQuick
 
-// Launcher part: a small section heading on the home view and over result groups. A theme with
+// Launcher part: a small section heading on the home view and over result groups, set in small caps so it reads
+// as a heading and not as one more row. A theme with
 // launcher.labels "rule" (Monolith) sets it as a pane title: the name in the second accent, a hairline to the edge.
 Item {
     id: label
@@ -17,7 +18,7 @@ Item {
         x: label.leftPad
         y: label.topPad
         color: Launcher.ruled ? Theme.accent2 : Theme.subtext
-        font { family: Launcher.rowFont; pixelSize: Theme.fontCaption; weight: Font.DemiBold; letterSpacing: Launcher.ruled ? 0.6 : 0 }
+        font { family: Launcher.rowFont; pixelSize: Theme.fontCaption; weight: Font.DemiBold; capitalization: Font.AllUppercase; letterSpacing: 0.8 }
     }
     Rectangle {
         visible: Launcher.ruled

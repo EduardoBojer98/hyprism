@@ -37,17 +37,25 @@ Column {
                 width: (glance.width - glance.spacing * (glance.tiles.length - 1)) / glance.tiles.length
                 height: 52
                 radius: Launcher.corner === 0 ? 0 : Theme.radius
-                color: tileArea.containsMouse ? Theme.fillHover : Theme.fill
-                Text {
+                color: tileArea.containsMouse ? Theme.fillHover : "transparent"
+                border { width: 1; color: Theme.stroke }
+                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+                Rectangle {   // the glyph on a disc tinted with the accent, so the tile reads as live information
                     id: tileGlyph
-                    anchors { left: parent.left; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-                    text: tile.modelData.glyph
-                    color: Theme.subtext
-                    font { family: Theme.iconFont; pixelSize: Theme.iconMedium - 2 }
+                    anchors { left: parent.left; leftMargin: Theme.spaceS + 2; verticalCenter: parent.verticalCenter }
+                    width: Theme.iconMedium + Theme.spaceS; height: width
+                    radius: Launcher.corner === 0 ? 0 : width / 2
+                    color: Theme.accentWash
+                    Text {
+                        anchors.centerIn: parent
+                        text: tile.modelData.glyph
+                        color: Theme.accent
+                        font { family: Theme.iconFont; pixelSize: Theme.glyph }
+                    }
                 }
                 Column {
                     anchors { left: tileGlyph.right; leftMargin: Theme.spaceM; right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-                    Text { width: parent.width; text: tile.modelData.title; elide: Text.ElideRight; maximumLineCount: 1; color: Theme.text; font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: Font.Medium } }
+                    Text { width: parent.width; text: tile.modelData.title; elide: Text.ElideRight; maximumLineCount: 1; color: Theme.text; font { family: Launcher.rowFont; pixelSize: Theme.fontSize; weight: Font.DemiBold } }
                     Text { width: parent.width; text: tile.modelData.sub; elide: Text.ElideRight; color: Theme.subtext; font { family: Launcher.rowFont; pixelSize: Theme.fontCaption } }
                 }
                 MouseArea { id: tileArea; Accessible.role: Accessible.Button; Accessible.name: tile.modelData.title; Accessible.onPressAction: tile.modelData.run(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tile.modelData.run() }
@@ -73,23 +81,15 @@ Column {
     }
 
     LauncherHomeLabel { visible: home.has("quick"); text: "Quick actions" }
-    Grid {
+    // quick actions as chips that wrap, each with its whole name (columns cut them off)
+    Flow {
         id: quick
         visible: home.has("quick")
         width: parent.width
-        columns: Math.max(1, Math.min(3, Math.floor(home.width / 200)))
-        columnSpacing: Theme.spaceXs
-        rowSpacing: Theme.spaceXs
+        spacing: Theme.spaceS
         Repeater {
-            model: Search.quickActions
-            LauncherHomeRow {
-                required property var modelData
-                required property int index
-                width: (home.width - Theme.spaceXs * (quick.columns - 1)) / quick.columns
-                item: modelData
-                at: Launcher.homeOffset("quick") + index
-                lead: quick.columns === 1
-            }
+            model: Launcher.open && quick.visible ? Search.quickActions : []
+            LauncherChip { required property var modelData; required property int index; item: modelData; at: Launcher.homeOffset("quick") + index }
         }
     }
 

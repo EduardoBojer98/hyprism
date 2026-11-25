@@ -153,13 +153,12 @@ ListView {
                     font { family: Launcher.rowFont; pixelSize: Theme.fontCaption }
                 }
             }
-            Text {
+            LauncherKind {
                 id: kindLabel
                 anchors { right: parent.right; rightMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
-                visible: row.current && !Launcher.layout
-                text: "↵"
-                color: Launcher.selSub
-                font { family: Launcher.rowFont; pixelSize: Theme.fontSize }
+                item: row.modelData
+                current: row.current
+                kindShown: row.topHit && row.look !== "text"   // the other rows sit under their group's heading
             }
             LauncherTag { id: tag; anchors { right: parent.right; rightMargin: Theme.spaceM + Theme.shadowOffset; verticalCenter: parent.verticalCenter } item: row.modelData; current: row.current }
             MouseArea {

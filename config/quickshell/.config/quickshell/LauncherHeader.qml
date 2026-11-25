@@ -38,9 +38,27 @@ Item {
             color: typed ? Theme.accent : Theme.subtext
             font { family: typed ? Theme.monoFont : Theme.iconFont; pixelSize: typed ? field.font.pixelSize : Theme.iconMedium; weight: Font.Bold }
         }
+        // the mode you're in, named after the lens (Backspace on an empty field goes back to Search)
+        Rectangle {
+            id: token
+            visible: Launcher.mode !== "search"
+            anchors { left: lens.visible ? lens.right : parent.left; leftMargin: lens.visible ? Theme.spaceS : Theme.spaceL; verticalCenter: parent.verticalCenter }
+            width: visible ? tokenText.implicitWidth + Theme.spaceM * 2 : 0
+            height: tokenText.implicitHeight + Theme.spaceXs * 2
+            radius: Launcher.corner === 0 ? 0 : Launcher.look.corners === "round" ? height / 2 : Theme.radiusSmall
+            color: Theme.accentWash
+            border { width: 1; color: Qt.alpha(Theme.accent, 0.35) }
+            Text {
+                id: tokenText
+                anchors.centerIn: parent
+                text: Launcher.modes.find(m => m.id === Launcher.mode)?.name ?? ""
+                color: Theme.accent
+                font { family: Launcher.rowFont; pixelSize: Theme.fontLabel; weight: Font.DemiBold }
+            }
+        }
         TextInput {
             id: field
-            anchors { left: lens.visible ? lens.right : parent.left; leftMargin: lens.visible ? Theme.spaceM : Theme.spaceL + 2; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
+            anchors { left: token.visible ? token.right : lens.visible ? lens.right : parent.left; leftMargin: token.visible || lens.visible ? Theme.spaceM : Theme.spaceL + 2; right: parent.right; rightMargin: Theme.spaceL; verticalCenter: parent.verticalCenter }
             color: Theme.text
             selectionColor: Theme.accent
             selectedTextColor: Theme.accentText
@@ -102,6 +120,7 @@ Item {
                     return
                 }
                 if (event.key === Qt.Key_Down || event.key === Qt.Key_Up) Launcher.browsed = true
+                if (event.key === Qt.Key_Backspace && field.text === "" && Launcher.mode !== "search") { Launcher.enter("search"); event.accepted = true; return }
                 // Menu key or Shift+F10: the selected app's menu
                 if ((event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) && Launcher.view !== "clip") {
                     if (Launcher.view === "home") Launcher.menuFor(Launcher.homeItems[Launcher.homeIndex])
