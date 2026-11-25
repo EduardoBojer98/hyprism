@@ -6,7 +6,7 @@
 // Edge snap: while a floating window is dragged near a screen edge the Lua snap_preview() shows where it will go,
 // and edge_snap() places it when dropped (modules/windows.lua). Chrome's tab drag closes the window and opens a new
 // one at the drop, so that new window is floated and snapped the same way (tab_drop()).
-// Hyprland tells every app it is maximised (so apps skip their own borders), and an app button that already
+// Hyprland tells every Wayland app it is maximised (so apps skip their own borders), watch() tells X11 apps too, and an app button that already
 // asked to un-maximise stays dead. A window floated after it opened, without a title bar, is told it isn't, until
 // it is tiled or maximised again, so its own maximise button works.
 // Built and loaded by ~/.local/bin/hypr-plugins.
@@ -191,6 +191,8 @@ static void opened(PHLWINDOW w) {
 }
 
 static void watch(PHLWINDOW w) {
+    // X11 apps too (Hyprland tells only Wayland ones): ONLYOFFICE told it isn't drew its own frame and shadow in the tile
+    w->backend().setMaximized(true);
     const auto top = toplevelOf(w);
     if (!top)
         return;
