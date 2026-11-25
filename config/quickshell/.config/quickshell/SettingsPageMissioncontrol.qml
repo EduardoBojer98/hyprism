@@ -7,6 +7,16 @@ ColumnLayout {
     spacing: 20
 
     SettingGroup {
+        title: "Windows"
+        SettingRow {
+            label: "Opens on"
+            hint: Config.missionControl.windows === "desktop" ? "This workspace's windows; the chip under them shows every window"
+                                                             : "Every open window, this workspace's first, each marked with its workspace"
+            ConfigChoice { section: "missionControl"; key: "windows"; values: ["all", "desktop"]; labels: ["All windows", "This workspace"] }
+        }
+    }
+
+    SettingGroup {
         title: "Workspaces along the top"
         SettingRow {
             label: "Screens"
@@ -34,7 +44,7 @@ ColumnLayout {
 
     Text {
         Layout.fillWidth: true
-        text: "Open it with Super+W, a three-finger swipe up, or a hot corner. Keys: arrows pick a window, Enter goes to it, 1–9 go to a workspace, Escape closes."
+        text: "Open it with Super+W, a three-finger swipe up, or a hot corner. Keys: type to filter windows, arrows pick one, Enter goes to it, Delete or a middle click closes it, 1–9 go to a workspace, Escape clears the filter, then closes."
         color: Theme.subtext
         wrapMode: Text.Wrap
         font { family: Theme.font; pixelSize: Theme.fontCaption }

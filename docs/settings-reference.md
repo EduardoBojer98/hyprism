@@ -76,6 +76,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `click` | `string` | `"switch"` | a workspace clicked: switch (go there and close) \| browse (show its windows first) |
 | `newTile` | `bool` | `true` | the "New workspace" tile at the end of the row |
 | `size` | `string` | `"medium"` | small \| medium \| large workspace pictures |
+| `windows` | `string` | `"all"` | all: every open window when it opens \| desktop: only this workspace's |
 
 ## launcher
 

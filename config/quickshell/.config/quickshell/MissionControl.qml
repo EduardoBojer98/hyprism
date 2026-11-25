@@ -8,8 +8,9 @@ import QtQuick
 import QtQuick.Effects
 
 // Mission Control (Super+W, Spotlight "Mission Control", `qs ipc call overview toggle`): on the
-// focused screen, the windows of the current desktop spread out with live previews, and every
-// desktop of this screen in a strip along the top.
+// focused screen, every open window spread out with live previews (or only the current desktop's:
+// Settings > Mission Control > Windows, or the buttons at the bottom), and the desktops in a strip along the top.
+//   Type to filter the windows by app or title · middle-click or ✕ closes a window
 //   Click a window to go to it · drag it onto a desktop to move it there (drop on + for a new one)
 //   · click a desktop (or press 1-9) to switch · arrows/Tab + Enter pick a window · Esc closes.
 //   A click on empty space does nothing: it stays open until you pick something or press Esc.
@@ -29,6 +30,8 @@ Singleton {
     property int nextSpace: 1        // lowest workspace id no screen is using
     property int viewing: 0          // the workspace whose windows are laid out (browse: the one picked above)
     property int selected: -1
+    property bool everything: false  // every open window, not only the desktop being viewed
+    property string query: ""        // typed while open: filters the windows by app name, class or title
     property var dragging: null      // client being dragged
     property string wallpaper: ""    // shown behind the desktop thumbnails
     property bool snapping: false    // the overlay is up but see-through, taking the screen copy
@@ -39,11 +42,19 @@ Singleton {
                                       easing.type: Easing.BezierSpline; easing.bezierCurve: Theme.curve } }
     readonly property bool flies: Theme.travel > 0   // themes with no travel (and reduced motion) only fade
 
-    // most recently used first, like macOS
-    readonly property var current: clients.filter(c => c.workspace.id === viewing).sort((a, b) => a.focusHistoryID - b.focusHistoryID)
+    // the windows laid out: this desktop's first, then the other desktops in order; most recently used first within one
+    readonly property var current: {
+        const q = query.toLowerCase()
+        const pool = everything ? clients.filter(c => mc.screens !== "this" || c.monitor === mon?.id) : clients.filter(c => c.workspace.id === viewing)
+        const here = c => c.workspace.id === viewing ? 0 : 1
+        return pool.filter(c => !q || [c.title, c.class, DesktopEntries.heuristicLookup(c.class)?.name ?? ""].some(x => (x ?? "").toLowerCase().includes(q)))
+                   .sort((a, b) => here(a) - here(b) || (everything ? a.workspace.id - b.workspace.id : 0) || a.focusHistoryID - b.focusHistoryID)
+    }
+    function closeWindow(c) { dispatch(`hl.dsp.window.close({ window = "address:${c.address}" })`); reread.restart() }
+    function showAll(on) { everything = on; selected = 0 }
 
     function toggle() { if (open) hide(); else show() }
-    function show() { reader.running = true }
+    function show() { everything = mc.windows !== "desktop"; query = ""; reader.running = true }
     function hide() { open = false; snapping = false; dragging = null }
     function dispatch(lua) { Quickshell.execDetached(["hyprctl", "dispatch", lua]) }
     function toplevel(c) { return Hyprland.toplevels.values.find(t => "0x" + t.address === c.address)?.wayland ?? null }
@@ -55,6 +66,7 @@ Singleton {
     function pick(id) {
         if (mc.click !== "browse" || id === viewing) { goTo(id); return }
         viewing = id
+        everything = false
         selected = 0
     }
     function moveTo(c, id) {
@@ -155,11 +167,17 @@ Singleton {
 
             Keys.onPressed: event => {
                 const n = root.current.length
-                if (event.key === Qt.Key_Escape) root.hide()
+                // typing filters; digits go to a workspace until something has been typed
+                const typed = event.text.length === 1 && event.text.trim() !== "" && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier))
+                if (event.key === Qt.Key_Escape && root.query !== "") { root.query = ""; root.selected = 0 }
+                else if (event.key === Qt.Key_Backspace && root.query !== "") { root.query = root.query.slice(0, -1); root.selected = 0 }
+                else if (typed && (root.query !== "" || !/[1-9]/.test(event.text))) { root.query += event.text; root.selected = 0 }
+                else if (event.key === Qt.Key_Escape) root.hide()
                 else if ((event.key === Qt.Key_Right || event.key === Qt.Key_Tab || event.key === Qt.Key_Down) && n) root.selected = (root.selected + 1) % n
                 else if ((event.key === Qt.Key_Left || event.key === Qt.Key_Backtab || event.key === Qt.Key_Up) && n) root.selected = (root.selected - 1 + n) % n
                 else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && root.current[root.selected]) root.focusWindow(root.current[root.selected])
                 else if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9) root.goTo(event.key - Qt.Key_0)
+                else if (event.key === Qt.Key_Delete && root.current[root.selected]) root.closeWindow(root.current[root.selected])
                 else return
                 event.accepted = true
             }
@@ -362,7 +380,7 @@ Singleton {
                     width: empty.implicitWidth + Theme.spaceL * 2
                     height: empty.implicitHeight + Theme.spaceL * 2
                     Accessible.role: Accessible.StaticText
-                    Accessible.name: "No windows on this workspace"
+                    Accessible.name: emptyTitle.text
                     Column {
                         id: empty
                         anchors.centerIn: parent
@@ -374,14 +392,15 @@ Singleton {
                             font { family: Theme.iconFont; pixelSize: Theme.iconLarge }
                         }
                         Text {
+                            id: emptyTitle
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "No windows on this workspace"
+                            text: root.query !== "" ? `Nothing matches "${root.query}"` : root.everything ? "No open windows" : "No windows on this workspace"
                             color: Theme.text
                             font { family: Theme.font; pixelSize: Theme.fontTitle; weight: Font.DemiBold }
                         }
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Pick another workspace above, or press 1–9"
+                            text: root.query !== "" ? "Backspace to change it, Escape to clear it" : root.everything ? "Open an app from the dock or the launcher" : "Pick another workspace above, or press 1–9"
                             color: Theme.subtext
                             font { family: Theme.font; pixelSize: Theme.fontLabel }
                         }
@@ -397,13 +416,15 @@ Singleton {
                         readonly property bool lit: (area.containsMouse || root.selected === index) && !area.drag.active && root.t === 1   // rings and labels wait for the windows to land
                         readonly property var entry: DesktopEntries.heuristicLookup(modelData.client.class)
                         // f: 0 where the window really is on screen, 1 in its place in the grid
-                        readonly property real f: root.flies ? root.t : 1
                         readonly property var c: modelData.client
+                        readonly property bool onScreen: c.workspace.id === root.mon?.ws
+                        readonly property real f: root.flies && onScreen ? root.t : 1
+                        opacity: onScreen ? 1 : root.t
                         x: (c.at[0] - (root.mon?.x ?? 0) - field.x) * (1 - f) + modelData.x * f
                         y: (c.at[1] - (root.mon?.y ?? 0) - field.y) * (1 - f) + modelData.y * f
                         width: modelData.w; height: modelData.h
                         transformOrigin: Item.TopLeft
-                        scale: c.size[0] / modelData.w * (1 - f) + f
+                        scale: onScreen ? c.size[0] / modelData.w * (1 - f) + f : 0.94 + 0.06 * root.t
                         z: area.drag.active ? 10 : root.selected === index ? 1 : 0
 
                         // selection ring in the theme's selection colour, lifted with the window (kept
@@ -456,6 +477,16 @@ Singleton {
                                 color: "transparent"
                                 border { width: 1; color: Theme.strokeStrong }
                             }
+                            Rectangle {   // every window shown: which workspace it is on
+                                visible: root.everything && root.spaces.length > 1
+                                anchors { left: parent.left; top: parent.top; margins: Theme.spaceS }
+                                width: Math.max(height, wsNum.implicitWidth + Theme.spaceS * 2); height: 22
+                                radius: Math.min(Theme.radiusSmall, height / 2)
+                                color: slot.onScreen ? Theme.accent : Theme.glassStrong
+                                border { width: 1; color: Theme.strokeStrong }
+                                Text { id: wsNum; anchors.centerIn: parent; text: slot.c.workspace.name; color: slot.onScreen ? Theme.accentText : Theme.text
+                                       font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold; features: { "tnum": 1 } } }
+                            }
                             MouseArea {
                                 id: area
                                 Accessible.role: Accessible.Button
@@ -465,17 +496,47 @@ Singleton {
                                 cursorShape: Qt.PointingHandCursor
                                 drag.target: tile
                                 drag.threshold: 12
+                                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                                 onEntered: root.selected = slot.index
-                                onPressed: root.dragging = slot.modelData.client
-                                onReleased: {
+                                onPressed: mouse => { if (mouse.button === Qt.LeftButton) root.dragging = slot.modelData.client }
+                                onReleased: mouse => {
+                                    if (mouse.button === Qt.MiddleButton) { root.closeWindow(slot.modelData.client); return }
                                     // dropped on a desktop: gone from here until the list is read again
                                     if (drag.active) { if (tile.Drag.drop() !== Qt.IgnoreAction) tile.visible = false }
                                     else root.focusWindow(slot.modelData.client)
                                     tile.x = 0; tile.y = 0
                                 }
                             }
+                            Rectangle {   // close, on the window under the pointer
+                                anchors { right: parent.right; top: parent.top; margins: -10 }
+                                width: 26; height: 26; radius: 13
+                                visible: opacity > 0
+                                opacity: (area.containsMouse || closeArea.containsMouse) && !area.drag.active && root.t === 1 ? 1 : 0
+                                Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
+                                color: closeArea.containsMouse ? Theme.error : Theme.glassStrong
+                                border { width: 1; color: Theme.strokeStrong }
+                                Text { anchors.centerIn: parent; text: "\u{F0156}"; color: closeArea.containsMouse ? Theme.accentText : Theme.text; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
+                                MouseArea { id: closeArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                            Accessible.role: Accessible.Button; Accessible.name: "Close " + (slot.entry?.name ?? slot.c.title)
+                                            onClicked: root.closeWindow(slot.c) }
+                            }
                         }
 
+                        Row {   // the app under every window, so a screen full of them still reads at a glance
+                            anchors { top: tile.bottom; topMargin: Theme.spaceM + 6; horizontalCenter: tile.horizontalCenter }
+                            spacing: Theme.spaceXs + 2
+                            opacity: slot.lit || area.drag.active ? 0 : root.t
+                            IconImage { anchors.verticalCenter: parent.verticalCenter; implicitSize: 16; source: Quickshell.iconPath(slot.entry?.icon ?? "", "application-x-executable") }
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: Math.min(implicitWidth, Math.max(80, slot.width - 24))
+                                text: slot.entry?.name ?? slot.c.class
+                                elide: Text.ElideRight
+                                color: Theme.text
+                                style: Text.Outline; styleColor: Qt.alpha(Theme.backdrop, 0.5)
+                                font { family: Theme.font; pixelSize: Theme.fontCaption; weight: Font.DemiBold }
+                            }
+                        }
                         // app icon and title under the window, for the one under the pointer or keys
                         Glass {
                             anchors { top: tile.bottom; topMargin: Theme.spaceM; horizontalCenter: tile.horizontalCenter }
@@ -505,6 +566,39 @@ Singleton {
                             }
                         }
                     }
+                }
+            }
+
+            // ---- below the windows: what is typed to filter them, and which windows are shown ----
+            Glass {
+                anchors { horizontalCenter: parent.horizontalCenter; top: field.bottom; topMargin: Theme.spaceM }
+                width: findRow.implicitWidth + Theme.spaceS * 2
+                height: findRow.implicitHeight + Theme.spaceXs * 2
+                radius: height / 2
+                strong: true
+                opacity: root.t
+                Row {
+                    id: findRow
+                    anchors.centerIn: parent
+                    spacing: Theme.spaceXs
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        leftPadding: Theme.spaceS; rightPadding: Theme.spaceM
+                        spacing: Theme.spaceS
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "\u{F0349}"; color: root.query !== "" ? Theme.accent : Theme.subtext
+                               font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: Math.min(implicitWidth, 260)
+                            elide: Text.ElideLeft
+                            text: root.query !== "" ? root.query : "Type to filter windows"
+                            color: root.query !== "" ? Theme.text : Theme.subtext
+                            font { family: Theme.font; pixelSize: Theme.fontLabel; weight: root.query !== "" ? Font.DemiBold : Font.Normal }
+                        }
+                    }
+                    Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 1; height: Theme.fontLabel + 4; color: Theme.stroke }
+                    Chip { anchors.verticalCenter: parent.verticalCenter; label: "All windows"; active: root.everything; onClicked: root.showAll(true) }
+                    Chip { anchors.verticalCenter: parent.verticalCenter; label: "This workspace"; active: !root.everything; onClicked: root.showAll(false) }
                 }
             }
         }

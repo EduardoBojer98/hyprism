@@ -54,6 +54,7 @@ JsonAdapter {
         property string click: "switch"         // a workspace clicked: switch (go there and close) | browse (show its windows first)
         property bool newTile: true             // the "New workspace" tile at the end of the row
         property string size: "medium"          // small | medium | large workspace pictures
+        property string windows: "all"          // all: every open window when it opens | desktop: only this workspace's
     }
     property JsonObject launcher: JsonObject {
         property string webSearch: "https://duckduckgo.com/?q=%s"
