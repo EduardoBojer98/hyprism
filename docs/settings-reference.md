@@ -60,6 +60,7 @@ Every setting, with its type, default and meaning. This file is generated from `
 | `look` | `string` | `"theme"` | the island: theme (its own fill) \| clear (a flat overlay) \| frosted (the desktop blurred under the overlay) \| none (icons only) |
 | `tint` | `int` | `30` | clear / frosted: the overlay's strength in the dock's colour, % (0: none) |
 | `launcher` | `bool` | `true` | the launcher button at the dock's start |
+| `launcherIcon` | `string` | `"grid"` | the launcher button's design: grid \| orbit \| bloom \| search (a lens) \| stack \| pulse; each animates on hover |
 | `showRunning` | `bool` | `true` |  |
 | `barLabels` | `string` | `"icon"` | open windows in the dock inside the bar: icon \| name (app name) \| title (window title) |
 | `nameOnly` | `bool` | `false` | open windows show just their app's name, no icon, picture or title (dock and bar) |

@@ -41,6 +41,7 @@ JsonAdapter {
         property string look: "theme"           // the island: theme (its own fill) | clear (a flat overlay) | frosted (the desktop blurred under the overlay) | none (icons only)
         property int tint: 30                   // clear / frosted: the overlay's strength in the dock's colour, % (0: none)
         property bool launcher: true            // the launcher button at the dock's start
+        property string launcherIcon: "grid"    // the launcher button's design: grid | orbit | bloom | search (a lens) | stack | pulse; each animates on hover
         property bool showRunning: true
         property string barLabels: "icon"       // open windows in the dock inside the bar: icon | name (app name) | title (window title)
         property bool nameOnly: false           // open windows show just their app's name, no icon, picture or title (dock and bar)

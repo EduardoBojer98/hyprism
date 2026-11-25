@@ -167,6 +167,60 @@ ColumnLayout {
             ConfigToggle { section: "dock"; key: "launcher" }
         }
         SettingRow {
+            visible: Config.dock.launcher && !page.inBar
+            label: "Launcher icon"
+            hint: "Point at one to see how it moves; it plays on the dock when you point at the button or the launcher is open"
+            Flow {   // section "dock", key "launcherIcon": each design drawn live; hover plays it
+                spacing: 8
+                Repeater {
+                    model: iconSample.styles
+                    Rectangle {
+                        id: pick
+                        required property var modelData
+                        readonly property bool chosen: Config.dock.launcherIcon === modelData[0]
+                        function choose() { Config.set("dock", "launcherIcon", modelData[0]) }
+                        width: 64; height: 70
+                        radius: Theme.radius
+                        color: chosen ? Theme.accentWash : pickArea.containsMouse ? Qt.alpha(Theme.text, 0.06) : "transparent"
+                        border { color: chosen ? Theme.accent : Qt.alpha(Theme.text, 0.15); width: chosen ? 2 : 1 }
+                        activeFocusOnTab: true
+                        Keys.onPressed: e => { if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter || e.key === Qt.Key_Space) { pick.choose(); e.accepted = true } }
+                        FocusRing {}
+                        Rectangle {   // the dock's tile behind it
+                            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 7 }
+                            width: 40; height: 40; radius: Math.round(40 * 0.27)
+                            color: Qt.alpha(Theme.text, pickArea.containsMouse ? 0.17 : 0.07)
+                            DockLauncherIcon {
+                                anchors.centerIn: parent
+                                style: pick.modelData[0]
+                                size: 40
+                                lit: pickArea.containsMouse || pick.activeFocus
+                            }
+                        }
+                        Text {
+                            anchors { horizontalCenter: parent.horizontalCenter; bottom: parent.bottom; bottomMargin: 5 }
+                            text: pick.modelData[1]
+                            color: pick.chosen ? Theme.text : Theme.subtext
+                            font { family: Theme.font; pixelSize: Theme.fontCaption }
+                        }
+                        MouseArea {
+                            id: pickArea
+                            Accessible.role: Accessible.RadioButton
+                            Accessible.name: "Launcher icon " + pick.modelData[1]
+                            Accessible.checkable: true
+                            Accessible.checked: pick.chosen
+                            Accessible.onPressAction: pick.choose()
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: pick.choose()
+                        }
+                    }
+                }
+                DockLauncherIcon { id: iconSample; visible: false }   // only for its list of designs
+            }
+        }
+        SettingRow {
             label: "Show open apps"
             hint: Config.dock.combine ? "Open apps that aren't pinned join after the pinned ones" : "Each window as its own tile, after the pinned apps"
             ConfigToggle { section: "dock"; key: "showRunning" }

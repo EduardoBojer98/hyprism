@@ -5,7 +5,7 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Effects
 
-// Dock part: the all-apps button at the start of the dock (a frosted tile with a 2 x 2 grid).
+// Dock part: the all-apps button at the start of the dock (a frosted tile with a DockLauncherIcon design).
 // Used by Dock.qml, which passes itself in as `dock`.
 // App menu / Spotlight-style launcher
 Item {
@@ -21,8 +21,7 @@ Item {
     width: dock.vertical ? dock.cellCross : dock.slot
     height: dock.vertical ? dock.slot : dock.cellCross
 
-    // a frosted tile with a 2 x 2 grid; on hover the grid turns a quarter and one square
-    // becomes an accent dot
+    // a frosted tile; the design inside (Config.dock.launcherIcon) animates on hover
     Rectangle {
         id: launcherTile
         readonly property bool lit: Launcher.open || launcherArea.containsMouse
@@ -47,26 +46,12 @@ Item {
             }
         }
 
-        Grid {
-            id: dots
-            readonly property real cell: dock.iconSize * 0.2
+        DockLauncherIcon {
             anchors.centerIn: parent
-            columns: 2
-            spacing: dock.iconSize * 0.09
-            rotation: launcherTile.lit && Theme.moves ? 45 : 0
-            Behavior on rotation { NumberAnimation { duration: Theme.anim; easing.type: Theme.easing } }
-            Repeater {
-                model: 4
-                Rectangle {
-                    required property int index
-                    readonly property bool dot: index === 1 && launcherTile.lit
-                    width: dots.cell; height: dots.cell
-                    radius: dot ? dots.cell / 2 : dots.cell * 0.3
-                    color: index === 1 ? Theme.accent : dock.ink
-                    opacity: index === 1 ? 1 : 0.88
-                    Behavior on radius { NumberAnimation { duration: Theme.anim } }
-                }
-            }
+            style: Config.dock.launcherIcon
+            size: dock.iconSize
+            lit: launcherTile.lit
+            ink: dock.ink
         }
     }
 
