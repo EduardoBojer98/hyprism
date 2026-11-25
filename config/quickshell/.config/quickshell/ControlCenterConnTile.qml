@@ -51,10 +51,10 @@ Rectangle {
     }
     Rectangle {   // the icon well: toggles (inline: components declared in this file can't nest)
         id: disc
-        anchors { left: parent.left; leftMargin: Theme.ccInset; verticalCenter: parent.verticalCenter }
-        width: conn.hud ? box.implicitWidth : Theme.ccWell; height: Theme.ccWell
+        anchors { left: parent.left; leftMargin: conn.hud ? Theme.spaceS : Theme.ccInset; verticalCenter: parent.verticalCenter }
+        width: conn.hud ? box.implicitWidth : Theme.ccWell; height: conn.hud ? box.implicitHeight : Theme.ccWell
         radius: ControlCenter.cards && Theme.radius > 0 ? height / 2 : Theme.radiusSmall
-        color: conn.hud ? "transparent" : conn.active ? Theme.ccWellOn
+        color: conn.hud ? (conn.active ? Theme.accent : "transparent") : conn.active ? Theme.ccWellOn
              : discArea.containsMouse ? Theme.fillActive : Theme.fillHover
         scale: discArea.pressed ? Theme.pressScale : 1
         Behavior on color { ColorAnimation { duration: Theme.anim; easing.type: Theme.easing } }
@@ -72,7 +72,7 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             visible: conn.hud
             text: conn.active ? "[x]" : "[ ]"
-            color: conn.active ? Theme.accent : discArea.containsMouse ? Theme.text : Theme.subtext
+            color: conn.active ? Theme.accentText : discArea.containsMouse ? Theme.text : Theme.subtext
             font { family: Theme.monoFont; pixelSize: Theme.fontLabel; weight: Font.Bold }
         }
         MouseArea { id: discArea; Accessible.role: Accessible.Button; Accessible.name: (conn.active ? "Turn off " : "Turn on ") + conn.title; Accessible.onPressAction: conn.toggled(); anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: conn.toggled() }
@@ -106,7 +106,7 @@ Rectangle {
             horizontalAlignment: Text.AlignRight
             elide: Text.ElideRight
             text: conn.subtitle
-            color: conn.active ? Theme.accent : Theme.subtext
+            color: conn.active ? Theme.text : Theme.subtext
             font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
         }
     }
@@ -123,7 +123,7 @@ Rectangle {
         visible: conn.expandable && conn.hud
         anchors { right: parent.right; rightMargin: Theme.spaceXs + 2; verticalCenter: parent.verticalCenter }
         text: conn.isExpanded ? "v" : ">"
-        color: conn.isExpanded ? Theme.accent : Theme.subtext
-        font { family: Theme.monoFont; pixelSize: Theme.fontLabel; weight: Font.Bold }
+        color: conn.isExpanded ? Theme.accent : Theme.muted
+        font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
     }
 }

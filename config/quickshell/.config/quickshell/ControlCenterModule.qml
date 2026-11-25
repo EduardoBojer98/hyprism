@@ -41,6 +41,7 @@ ControlCenterTile {
                           verticalCenter: headerTitle.verticalCenter }
                 text: "·".repeat(160)
                 clip: true
+                opacity: 0.4
                 color: Theme.muted
                 font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
             }

@@ -41,7 +41,7 @@ Item {
 
     Rectangle {   // the icon well: mutes when the slider has a hint, otherwise just names the slider
         id: well
-        anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+        anchors { left: parent.left; leftMargin: bar.hud ? Theme.spaceS : 0; verticalCenter: parent.verticalCenter }
         z: 2   // pill: over the track it sits in
         width: bar.hud ? tagText.implicitWidth + Theme.spaceXs : Theme.ccWell; height: Theme.ccWell
         radius: bar.pill && bar.round ? height / 2 : Theme.radiusSmall
@@ -99,10 +99,10 @@ Item {
             id: meter
             visible: bar.hud
             anchors.verticalCenter: parent.verticalCenter
-            readonly property int cells: Math.max(4, Math.floor(slide.width / Math.max(1, mfm.advanceWidth("\u2588"))) - 2)
+            readonly property int cells: Math.max(4, Math.floor(slide.width / Math.max(1, mfm.advanceWidth("\u2503"))) - 2)
             readonly property int on: Math.round(bar.v * cells)
             Repeater {
-                model: [["[", Theme.subtext], ["\u2588".repeat(meter.on), Theme.accent], ["\u2591".repeat(meter.cells - meter.on), Theme.subtext], ["]", Theme.subtext]]
+                model: [["[", Theme.muted], ["\u2503".repeat(meter.on), Theme.accent], ["\u00b7".repeat(meter.cells - meter.on), Theme.muted], ["]", Theme.muted]]
                 Text { required property var modelData; text: modelData[0]; color: modelData[1]; font: mfm.font }
             }
             FontMetrics { id: mfm; font { family: Theme.monoFont; pixelSize: Theme.fontLabel } }

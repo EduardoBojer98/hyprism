@@ -20,13 +20,14 @@ ColumnLayout {
         Layout.fillWidth: true
         readonly property int count: mod.ids.length
         readonly property int gap: ControlCenter.gap
+        readonly property int colGap: gap
         // 5: 3+2, 6: 3+3, 7: 4+3, 9: 3+3+3, 10: 4+4+2; up to four in one row
         readonly property bool bento: ControlCenter.bento && count >= 5   // fewer: one plain row
-        readonly property int perRow: ControlCenter.cards || ControlCenter.hud ? 2
+        readonly property int perRow: ControlCenter.hud ? 3 : ControlCenter.cards ? 2
                                     : bento ? 4 : count <= 4 ? Math.max(3, count) : (count % 3 || 3) / 3 > (count % 4 || 4) / 4 ? 3 : 4
         readonly property int rows: bento ? 2 + Math.ceil((count - 5) / 4) : Math.ceil(count / perRow)
-        readonly property real cellW: (width - (perRow - 1) * gap) / perRow
-        readonly property int cellH: ControlCenter.hud ? Math.max(Theme.hit, Theme.fontLabel * 2)
+        readonly property real cellW: (width - (perRow - 1) * colGap) / perRow
+        readonly property int cellH: ControlCenter.hud ? Math.max(Theme.hit, Theme.fontLabel * 4)
                                    : ControlCenter.cards ? Theme.ccTile - Theme.spaceS
                                    : ControlCenter.style === "compact" ? Theme.ccToggle - 8 : Theme.ccToggle
         // a tile's [column, row, columns wide, rows tall]
@@ -53,9 +54,9 @@ ColumnLayout {
                 readonly property var it: ControlCenter.items[modelData] ?? ({ glyph: "", label: "", status: "" })   // your action tiles: for a moment at start
                 readonly property var c: grid.cell(index)
                 readonly property int inRow: c[1] < grid.rows - 1 || grid.bento || ControlCenter.hud ? grid.perRow : grid.count - c[1] * grid.perRow
-                x: (grid.width - inRow * grid.cellW - (inRow - 1) * grid.gap) / 2 + c[0] * (grid.cellW + grid.gap)
+                x: (grid.width - inRow * grid.cellW - (inRow - 1) * grid.colGap) / 2 + c[0] * (grid.cellW + grid.colGap)
                 y: c[1] * (grid.cellH + grid.gap)
-                width: c[2] * grid.cellW + (c[2] - 1) * grid.gap
+                width: c[2] * grid.cellW + (c[2] - 1) * grid.colGap
                 height: c[3] * grid.cellH + (c[3] - 1) * grid.gap
                 big: c[3] > 1
                 host: mod.host

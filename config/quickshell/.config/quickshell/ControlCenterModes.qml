@@ -15,7 +15,7 @@ Item {
     readonly property bool bento: ControlCenter.bento
 
     Layout.fillWidth: true
-    implicitHeight: hud ? Theme.hit : Theme.ccTile
+    implicitHeight: hud ? Math.max(Theme.hit, Math.round(Theme.fontLabel * 2.2)) : Theme.ccTile
     activeFocusOnTab: true
     function step(d) { const i = Math.max(0, Math.min(options.length - 1, Math.max(0, current) + d)); if (i !== current) picked(i) }
     Keys.onLeftPressed: step(-1)

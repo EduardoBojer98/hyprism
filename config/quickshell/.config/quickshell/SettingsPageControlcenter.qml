@@ -25,6 +25,11 @@ ColumnLayout {
         Config.set("controlCenter", group, list)
     }
     function setShown(id, on) { Config.set("controlCenter", "hidden", on ? hidden.filter(x => x !== id) : hidden.concat([id])) }
+    // a hidden tile you bring back joins the end of the shown ones, where you'll see it
+    function add(group, id) { place(group, id, "", false); setShown(id, true) }
+    // the page's scroll view, so the preview can stay in sight while you work down a long list
+    property Item flick: null
+    Component.onCompleted: { let p = parent; while (p && p.contentY === undefined) p = p.parent; flick = p }
 
     Text {
         Layout.fillWidth: true
@@ -210,6 +215,8 @@ ColumnLayout {
                                         Text {
                                             width: parent.width
                                             text: sec.on ? sec.inf.about ?? "" : "Hidden"
+                                            wrapMode: Text.Wrap
+                                            maximumLineCount: 2
                                             elide: Text.ElideRight
                                             color: Theme.subtext
                                             font { family: Theme.font; pixelSize: Theme.fontCaption }
@@ -244,7 +251,7 @@ ColumnLayout {
                                         spacing: 6
                                         Repeater {
                                             id: chipRep
-                                            model: sec.inf.group ? ControlCenter.order(sec.inf.group) : []
+                                            model: sec.inf.group ? ControlCenter.order(sec.inf.group).filter(x => !page.hidden.includes(x)).concat(ControlCenter.order(sec.inf.group).filter(x => page.hidden.includes(x))) : []
                                             DragItem {
                                                 id: chip
                                                 required property string modelData
@@ -256,31 +263,41 @@ ColumnLayout {
                                                 key: sec.chipKey
                                                 payload: modelData
                                                 floatOn: page.parent
+                                                draggable: on   // a hidden tile is added with a click; then it can move
                                                 radius: Theme.radius === 0 ? 0 : 15
-                                                onClicked: page.setShown(modelData, !on)
+                                                onClicked: on ? page.setShown(modelData, false) : page.add(sec.inf.group, modelData)
                                                 Accessible.role: Accessible.CheckBox
-                                                Accessible.name: inf.label
+                                                Accessible.name: (on ? "" : "Add ") + inf.label
+                                                Accessible.description: on ? "Click to hide, drag to move" : ""
                                                 Accessible.checked: on
                                                 Accessible.onPressAction: page.setShown(modelData, !on)
                                                 Rectangle {
                                                     anchors.fill: parent
                                                     radius: chip.radius
-                                                    color: chip.on ? Theme.accentWash : chip.hovered ? Theme.fillHover : "transparent"
-                                                    border { color: chip.on ? Qt.alpha(Theme.accent, 0.7) : Theme.stroke; width: 1 }
+                                                    readonly property bool lit: chip.on && chip.here   // shown and has the hardware: it is in the panel
+                                                    color: lit ? Theme.accentWash : chip.hovered ? Theme.fillHover : "transparent"
+                                                    border { color: lit ? Qt.alpha(Theme.accent, 0.7) : chip.hovered ? Theme.strokeStrong : Theme.stroke; width: 1 }
                                                     Row {
                                                         id: chipRow
                                                         anchors.centerIn: parent
                                                         spacing: 6
-                                                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.on ? chip.inf.glyph : "\u{F0209}"; color: chip.on ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
+                                                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.on ? chip.inf.glyph : "\u{F0415}"; color: chip.on && chip.here ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
                                                         Text {
                                                             anchors.verticalCenter: parent.verticalCenter
-                                                            text: chip.inf.label + (chip.here ? "" : " (not on this computer)")
-                                                            color: chip.on ? Theme.text : Theme.subtext
-                                                            font { family: Theme.font; pixelSize: Theme.fontLabel; strikeout: !chip.on }
+                                                            text: chip.inf.label
+                                                            color: chip.on && chip.here ? Theme.text : Theme.subtext
+                                                            font { family: Theme.font; pixelSize: Theme.fontLabel }
+                                                        }
+                                                        Text {   // shown, but this computer lacks the hardware, so the panel leaves it out
+                                                            visible: !chip.here
+                                                            anchors.verticalCenter: parent.verticalCenter
+                                                            text: "not here"
+                                                            color: Theme.muted
+                                                            font { family: Theme.font; pixelSize: Theme.fontCaption }
                                                         }
                                                     }
                                                 }
-                                                DropSpot { anchors.fill: parent; key: chip.key; owner: chip; onPlaced: (id, after) => page.place(sec.inf.group, id, chip.modelData, after) }
+                                                DropSpot { enabled: chip.on && !chip.dragging; anchors.fill: parent; key: chip.key; owner: chip; onPlaced: (id, after) => page.place(sec.inf.group, id, chip.modelData, after) }
                                             }
                                         }
                                     }
@@ -297,7 +314,9 @@ ColumnLayout {
         ColumnLayout {
             id: previewCol
             x: page.wide ? parent.width - width : (parent.width - width) / 2
-            y: page.wide ? 0 : editor.height + 20
+            // wide: rides down beside the editor as you scroll, never past its end
+            readonly property real scrolled: page.flick ? (page.flick.contentY, parent.y, page.y, page.flick.contentY - parent.mapToItem(page.flick.contentItem, 0, 0).y + 16) : 0
+            y: page.wide ? Math.max(0, Math.min(scrolled, parent.height - height)) : editor.height + 20
             width: page.wide ? Math.min(ControlCenter.customWidth, page.width * 0.46) : Math.min(ControlCenter.customWidth, page.width)
             spacing: 8
             Text {
@@ -330,7 +349,7 @@ ColumnLayout {
             }
             Text {
                 Layout.fillWidth: true
-                text: "Media shows only while something plays. Tiles marked \"not on this computer\" need hardware this one doesn't have."
+                text: "Media shows only while something plays. Tiles marked \"not here\" need hardware this computer doesn't have."
                 color: Theme.subtext
                 wrapMode: Text.Wrap
                 font { family: Theme.font; pixelSize: Theme.fontCaption }

@@ -23,6 +23,14 @@ ColumnLayout {
         ControlCenterPower { host: body.host; inPanel: true; Layout.row: ControlCenter.row("power"); visible: ControlCenter.shows("power") }
     }
 
+    Rectangle {   // hud: a rule closes the readout above the footer, like a status line
+        visible: ControlCenter.hud
+        Layout.fillWidth: true
+        Layout.bottomMargin: -ControlCenter.groupGap / 2
+        implicitHeight: 1
+        color: Theme.stroke
+    }
+
     // ---- footer: the battery as a readout, then the panel's own buttons, quieter than the tiles ----
     RowLayout {
         Layout.fillWidth: true

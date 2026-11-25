@@ -33,7 +33,8 @@ Rectangle {
     color: active && !hud ? (qtArea.containsMouse ? Theme.ccTileOnHover : Theme.ccTileOn)
          : qtArea.containsMouse || isExpanded ? Theme.fillHover
          : flat || hud ? "transparent" : Theme.fill
-    border { color: isExpanded && !hud ? Theme.strokeStrong : flat && !active && !hud ? Theme.stroke : "transparent"; width: 1 }
+    border { color: hud ? (active ? Theme.accent : qtArea.containsMouse || isExpanded ? Theme.strokeStrong : Theme.stroke)
+                  : isExpanded ? Theme.strokeStrong : flat && !active ? Theme.stroke : "transparent"; width: 1 }
     scale: qtArea.pressed && !ControlCenter.bento ? Theme.pressScale : 1
     PressFeel { id: feel; pressed: qtArea.pressed; visible: ControlCenter.bento }
     transform: Translate { x: feel.shift; y: feel.shift + feel.drop }
@@ -92,20 +93,30 @@ Rectangle {
         Text { width: parent.width; text: qt.label; elide: Text.ElideRight; color: qt.active ? Theme.ccOnText : Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
         Text { width: parent.width; visible: text !== ""; text: qt.status; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption - 1; color: qt.active ? Theme.ccOnSubtext : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
     }
-    Row {   // hud: `[x]  night light`, a mono glyph between; an action that only runs reads `[>]`
-        id: hudRow
+    // hud: a framed cell, the glyph and its `[x]` box on top, the name below; on, the frame and box go lime
+    readonly property color hudInk: active || qtArea.containsMouse ? Theme.text : Theme.subtext
+    Text {
+        id: hudGlyph
         visible: qt.hud
-        readonly property color ink: qt.active ? Theme.accent : qtArea.containsMouse ? Theme.text : Theme.subtext
-        anchors { left: parent.left; leftMargin: Theme.spaceXs; right: parent.right; rightMargin: qt.expandable ? Theme.spaceL : Theme.spaceXs; verticalCenter: parent.verticalCenter }
-        spacing: Theme.spaceXs
-        Text { id: hudBox; anchors.verticalCenter: parent.verticalCenter; text: qt.status === "" ? "[>]" : qt.active ? "[x]" : "[ ]"; color: hudRow.ink; font { family: Theme.monoFont; pixelSize: Theme.fontLabel } }
-        Text { id: hudGlyph; anchors.verticalCenter: parent.verticalCenter; text: qt.glyph; color: hudRow.ink; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            width: Math.max(0, hudRow.width - hudBox.width - hudGlyph.width - 2 * hudRow.spacing)
-            text: qt.label.toLowerCase(); elide: Text.ElideRight; color: hudRow.ink
-            font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
-        }
+        anchors { left: parent.left; top: parent.top; margins: Theme.spaceS }
+        text: qt.glyph; color: qt.active ? Theme.accent : qt.hudInk
+        font { family: Theme.iconFont; pixelSize: Theme.glyph }
+    }
+    Rectangle {   // on: the box in reverse video, like a terminal's selected cell
+        id: hudBox
+        visible: qt.hud
+        anchors { right: parent.right; top: parent.top; margins: Theme.spaceS - 2 }
+        width: hudBoxText.implicitWidth; height: hudBoxText.implicitHeight
+        color: qt.active ? Theme.accent : "transparent"
+        Behavior on color { ColorAnimation { duration: Theme.animFast } }
+        Text { id: hudBoxText; text: qt.status === "" ? "[>]" : qt.active ? "[x]" : "[ ]"; color: qt.active ? Theme.accentText : qt.hudInk
+               font { family: Theme.monoFont; pixelSize: Theme.fontCaption; weight: Font.Bold } }
+    }
+    Text {
+        visible: qt.hud
+        anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: Theme.spaceS; rightMargin: qt.expandable ? Theme.spaceL + 2 : Theme.spaceS }
+        text: qt.label.toLowerCase(); elide: Text.ElideRight; color: qt.hudInk
+        font { family: Theme.monoFont; pixelSize: Theme.fontCaption }
     }
     MouseArea {
         id: qtArea
@@ -133,7 +144,7 @@ Rectangle {
         readonly property bool block: ControlCenter.bento && qt.isExpanded
         visible: qt.expandable
         anchors { right: parent.right; rightMargin: ControlCenter.bento ? 0 : 3 }
-        y: ControlCenter.bento ? 0 : (parent.height - height) / 2
+        y: ControlCenter.bento ? 0 : qt.hud ? parent.height - height - 3 : (parent.height - height) / 2
         width: ControlCenter.bento ? 20 : 18; height: width
         radius: ControlCenter.bento ? 0 : height / 2
         color: block ? Theme.accent2 : chevArea.containsMouse ? (qt.active ? Qt.alpha(Theme.ccOnText, 0.16) : Theme.fillHover) : "transparent"
@@ -150,8 +161,8 @@ Rectangle {
             visible: qt.hud
             anchors.centerIn: parent
             text: qt.isExpanded ? "v" : ">"
-            color: qt.isExpanded ? Theme.accent : chevArea.containsMouse ? Theme.text : Theme.subtext
-            font { family: Theme.monoFont; pixelSize: Theme.fontLabel; weight: Font.Bold }
+            color: qt.isExpanded ? Theme.accent : chevArea.containsMouse ? Theme.text : Theme.muted
+            font { family: Theme.monoFont; pixelSize: Theme.fontLabel }
         }
         MouseArea { id: chevArea; Accessible.role: Accessible.Button; Accessible.name: "Options for " + qt.label; Accessible.onPressAction: qt.expand(); anchors { fill: parent; margins: -4 } hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: qt.expand() }
     }
