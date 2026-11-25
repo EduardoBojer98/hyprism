@@ -153,11 +153,12 @@ Singleton {
     readonly property color selSub: inverse ? Qt.alpha(Theme.accentText, 0.78) : Theme.subtext
     readonly property string prompt: rl.prompt ?? ""     // a typed prompt instead of the lens (terminal themes)
 
+    // hint: the placeholder after the mode's token in the search field (LauncherHeader), so it can be short
     readonly property var modes: [
-        { id: "apps",    name: "Applications", glyph: "\u{F003B}", hint: "Search applications" },
-        { id: "files",   name: "Files",        glyph: "\u{F024B}", hint: "Search files and folders, or type ~/path" },
-        { id: "actions", name: "Actions",      glyph: "\u{F0E7}",  hint: "Search actions" },
-        { id: "clip",    name: "Clipboard",    glyph: "\u{F014C}", hint: "Search clipboard history" },
+        { id: "apps",    name: "Applications", glyph: "\u{F003B}", hint: "Filter apps" },
+        { id: "files",   name: "Files",        glyph: "\u{F024B}", hint: "A name, or a ~/path" },
+        { id: "actions", name: "Actions",      glyph: "\u{F0E7}",  hint: "Filter actions" },
+        { id: "clip",    name: "Clipboard",    glyph: "\u{F014C}", hint: "Filter the history" },
     ]
     property string mode: "search"            // search | apps | files | actions | clip
     // What the panel shows: an empty search opens on suggestions or the apps grid (Config.launcher.startView)
