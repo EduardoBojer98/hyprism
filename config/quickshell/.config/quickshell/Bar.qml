@@ -11,7 +11,8 @@ import QtQuick.Effects
 Scope {
     id: root
     required property ShellScreen screen
-    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
+    // by name, re-read when monitors change: after a display switch Hyprland makes new monitor objects and monitorFor() stays stale
+    readonly property HyprlandMonitor monitor: Hyprland.monitors.values.find(m => m.name === screen?.name) ?? null
     readonly property var st: Theme.barStyle
     readonly property var layout: Theme.barLayoutFor(screen?.name ?? "")   // this screen's items (a preset or the theme's)
     readonly property string edge: Theme.barEdge

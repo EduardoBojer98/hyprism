@@ -14,7 +14,7 @@ Item {
     readonly property int count: DesktopEntries.applications.values.length   // lookups re-run once apps have loaded
     function entryFor(appId) { return count ? DesktopEntries.heuristicLookup(appId) : null }
     function addr(t) { return "0x" + String(t.address).replace(/^0x/, "") }
-    readonly property var running: DockOrder.sort(Hyprland.toplevels.values.filter(t => t.wayland && t.workspace?.monitor === bar.monitor),
+    readonly property var running: DockOrder.sort(Hyprland.toplevels.values.filter(t => t.wayland && !!bar.monitor && t.workspace?.monitor?.name === bar.monitor.name),
                                                   "windows", addr, DockOrder.ws)
     // like the floating dock: launchers, then (unless Settings > Dock > Combine) each open window after a rule
     readonly property bool combine: Config.dock.combine

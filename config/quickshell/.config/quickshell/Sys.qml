@@ -135,7 +135,7 @@ Singleton {
 
     // ---- workspaces of one monitor, in order ---------------------------------------------------
     function workspacesOf(monitor) {
-        return Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor === monitor).sort((a, b) => a.id - b.id)
+        return Hyprland.workspaces.values.filter(w => w.id > 0 && !!monitor && w.monitor?.name === monitor.name).sort((a, b) => a.id - b.id)
     }
     function roman(n) {
         const r = [[10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]]; let s = ""

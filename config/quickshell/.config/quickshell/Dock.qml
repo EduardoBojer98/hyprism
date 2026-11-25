@@ -27,7 +27,8 @@ PanelWindow {
     readonly property color ink: ds.fill === "ink" ? Theme.base : Theme.text
     readonly property int slot: iconSize + 4          // one icon's cell, along the dock
     readonly property int cellCross: iconSize + 8     // and across it (room for the mark)
-    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
+    // by name, re-read when monitors change: after a display switch Hyprland makes new monitor objects and monitorFor() stays stale
+    readonly property HyprlandMonitor monitor: Hyprland.monitors.values.find(m => m.name === screen?.name) ?? null
     readonly property bool emptyWorkspace: (monitor?.activeWorkspace?.toplevels.values.length ?? 0) === 0
     // the keyboard is here (DockFocus, or its menu is open): the dock shows itself and takes the keys
     readonly property bool hasKeys: DockFocus.active && DockFocus.screen?.name === screen?.name || menu.entry !== null
@@ -109,7 +110,7 @@ PanelWindow {
     property var homes: ({})
     readonly property var openWindows: Config.dock.showRunning ? DockOrder.sort(Hyprland.toplevels.values.filter(t => {
         if (!t.wayland) return false
-        if (!isMinimised(t)) { if (t.monitor) homes[t.address] = t.monitor.name; return t.monitor === monitor }
+        if (!isMinimised(t)) { if (t.monitor) homes[t.address] = t.monitor.name; return !!monitor && t.monitor?.name === monitor.name }
         return (homes[t.address] ?? t.monitor?.name) === monitor?.name
     }), "windows", address, DockOrder.ws) : []
     // an open app or window dragged along its own group takes its place at once (DockOrder, by workspace until then)

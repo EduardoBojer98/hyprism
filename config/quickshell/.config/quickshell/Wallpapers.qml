@@ -151,7 +151,7 @@ Singleton {
             id: player
             required property ShellScreen modelData
             readonly property string sock: Quickshell.env("XDG_RUNTIME_DIR") + "/hyprism-wallpaper-" + modelData.name + ".sock"
-            readonly property var ws: Hyprland.monitorFor(modelData)?.activeWorkspace ?? null
+            readonly property var ws: Hyprland.monitors.values.find(m => m.name === modelData.name)?.activeWorkspace ?? null
             readonly property bool paused: root.userPaused || root.batteryPause
                 || (ws !== null && (root.c.livePause === "windows" ? ws.toplevels.values.length > 0 : ws.hasFullscreen))
             function send(cmd) {
