@@ -54,7 +54,7 @@ ColumnLayout {
         open: drops.host.expanded === "bt"
         title: "Bluetooth"
         switchOn: Sys.adapter?.enabled ?? false
-        onSwitched: if (Sys.adapter) Sys.adapter.enabled = !Sys.adapter.enabled
+        onSwitched: Sys.setBluetooth(!Sys.btOn)
         settingsLabel: "Bluetooth Settings…"
         settingsPage: "bluetooth"
 

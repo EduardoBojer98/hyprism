@@ -81,6 +81,12 @@ Singleton {
     // ---- Bluetooth -----------------------------------------------------------------------------------
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool btOn: adapter?.enabled ?? false
+    // On/off through rfkill: systemd-rfkill saves the block and puts it back at boot, before bluez's AutoEnable
+    // would power the adapter on again (bluez itself forgets Powered=false). Unblocking makes bluez power it on.
+    function setBluetooth(on) {
+        Quickshell.execDetached(["rfkill", on ? "unblock" : "block", "bluetooth"])
+        if (on && adapter && adapter.state !== BluetoothAdapterState.Blocked) adapter.enabled = true   // powered off without a block
+    }
     function btGlyph(icon) {
         return ({ "audio-headset": "\u{F02CE}", "audio-headphones": "\u{F02CB}", "audio-card": "\u{F04C3}", "input-mouse": "\u{F037D}",
                   "input-keyboard": "\u{F030C}", "input-gaming": "\u{F0297}", "phone": "\u{F011C}", "computer": "\u{F0322}" })[icon] ?? "\u{F00AF}"

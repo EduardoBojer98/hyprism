@@ -74,7 +74,7 @@ Singleton {
     function tile(id, name, icon, run, extra) { return Object.assign({ id: id, name: name, icon: icon, kind: "button", run: run, showIn: ["controlcenter"] }, extra ?? {}) }
     readonly property var tiles: [
         tile("wifi-toggle", "Wi-Fi on / off", "\u{F05A9}", fn(() => { Networking.wifiEnabled = !Networking.wifiEnabled }), toggle(() => Networking.wifiEnabled, { when: { hardware: "wifi" } })),
-        tile("bt", "Bluetooth on / off", "\u{F00AF}", fn(() => { if (Sys.adapter) Sys.adapter.enabled = !Sys.adapter.enabled }), toggle(() => Sys.adapter?.enabled ?? false, { when: { hardware: "bluetooth" } })),
+        tile("bt", "Bluetooth on / off", "\u{F00AF}", fn(() => Sys.setBluetooth(!Sys.btOn)), toggle(() => Sys.adapter?.enabled ?? false, { when: { hardware: "bluetooth" } })),
         tile("record-toggle", "Record the screen under the mouse", "\u{F044A}",
              fn(() => { if (!Sys.recording) ControlCenter.hide(); Quickshell.execDetached(["sh", "-c", "sleep 0.3; record " + (Sys.recording ? "stop" : "screen")]) }),
              toggle(() => Sys.recording)),
@@ -83,7 +83,7 @@ Singleton {
              toggle(() => Config.windows.floatAll)),
         tile("micmute", "Microphone on / off", "\u{F036C}", fn(() => { if (Sys.source?.audio) Sys.source.audio.muted = !Sys.source.audio.muted }),
              toggle(() => !(Sys.source?.audio?.muted ?? true), { when: { hardware: "mic" } })),
-        tile("airplane", "Airplane mode", "\u{F001D}", fn(() => { const on = ControlCenter.airplane; Networking.wifiEnabled = on; if (Sys.adapter) Sys.adapter.enabled = on }),
+        tile("airplane", "Airplane mode", "\u{F001D}", fn(() => { const on = ControlCenter.airplane; Networking.wifiEnabled = on; Sys.setBluetooth(on) }),
              toggle(() => ControlCenter.airplane, { when: { hardware: "wifi" } })),
         tile("keylight", "Keyboard light: next level", "\u{F0E5B}", fn(() => ControlCenter.setKbd((ControlCenter.kbdLight + 1) % 4)),
              toggle(() => ControlCenter.kbdLight > 0, { when: { hardware: "keylight" } })),

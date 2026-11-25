@@ -19,7 +19,7 @@ ColumnLayout {
             label: "Bluetooth"
             hint: !page.adapter ? "No Bluetooth adapter found"
                 : page.adapter.enabled ? page.adapter.name : "Off: turn it on to connect headphones, keyboards, mice and more"
-            Toggle { checked: page.adapter?.enabled ?? false; onToggled: v => { if (page.adapter) page.adapter.enabled = v } }
+            Toggle { checked: page.adapter?.enabled ?? false; onToggled: v => Sys.setBluetooth(v) }
         }
         SettingRow {
             visible: page.on
