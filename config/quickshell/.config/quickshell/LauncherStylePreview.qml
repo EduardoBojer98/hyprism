@@ -16,7 +16,7 @@ Item {
     readonly property bool sideBar: Theme.barEdge === "left" || Theme.barEdge === "right"
     // the theme's structure (launcher.layout, Launcher.qml): grid | sheet | prompt; a style has none
     readonly property string layout: spec.layout ?? ""
-    readonly property bool split: spec.split ?? (layout === "grid" || Theme.glassy && spec.placement === "center")
+    readonly property bool split: spec.split ?? false   // as Launcher.look.style: one sheet unless the style splits it
     readonly property string corners: spec.corners && spec.corners !== "theme" ? spec.corners : layout === "grid" ? "round" : Theme.radius === 0 ? "sharp" : "round"
     readonly property real r: corners === "sharp" ? 0 : 4 * s
     readonly property bool grid: spec.view === "grid" || spec.view === "start" || layout === "grid"
@@ -169,14 +169,6 @@ Item {
                                 radius: card.corners === "sharp" ? 0 : width * 0.3
                                 color: parent.index === 0 && card.inverse ? Theme.accentText : Theme.subtext
                                 opacity: 0.55
-                                Rectangle {   // grid: the squircle plate under the icon
-                                    visible: card.layout === "grid"
-                                    anchors.centerIn: parent
-                                    z: -1
-                                    width: parent.width * 1.4; height: width; radius: width * 0.32
-                                    color: Theme.fill
-                                    border { width: 1; color: Theme.stroke }
-                                }
                             }
                         }
                     }

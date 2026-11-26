@@ -28,8 +28,7 @@ Row {
         width: Math.max(height, cap.implicitWidth + Theme.spaceS); height: cap.implicitHeight + 2
         radius: Math.min(Theme.radiusSmall, 5)
         color: Launcher.inverse ? Qt.alpha(Launcher.selText, 0.18) : Theme.fill
-        border { width: 1; color: Launcher.inverse ? Qt.alpha(Launcher.selText, 0.3) : Theme.stroke }
-        Text {
+                Text {
             id: cap
             anchors.centerIn: parent
             text: "↵"

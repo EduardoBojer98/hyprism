@@ -95,7 +95,6 @@ ListView {
                 anchors { left: kindTag.visible ? kindTag.right : lead.right; leftMargin: kindTag.visible ? 0 : Theme.spaceM; verticalCenter: parent.verticalCenter }
                 width: row.iconSize; height: width
                 visible: row.iconSize > 0
-                LauncherPlate { pad: Theme.spaceXs + 1 }
                 IconImage {
                     anchors.fill: parent
                     visible: !!row.modelData.icon

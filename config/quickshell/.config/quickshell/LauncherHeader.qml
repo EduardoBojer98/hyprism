@@ -1,7 +1,6 @@
 import Quickshell
 import Quickshell.Widgets
 import QtQuick
-import QtQuick.Effects
 
 // Launcher part: the search pill (lens, text field, key handling) and the round mode buttons.
 // Used by Launcher.qml; reads the panel's state from the Launcher singleton.
@@ -9,16 +8,6 @@ Item {
     property alias input: field
     height: Launcher.look.field
     z: 1   // above the panel, so the mode buttons' tooltips show over it
-
-    RectangularShadow {   // grid (Lumen): the search pill floats on a soft shadow of its own
-        visible: Launcher.layout === "grid"
-        anchors.fill: searchBox
-        offset.y: 6
-        blur: 22
-        spread: -2
-        radius: searchBox.radius
-        color: Theme.shadow
-    }
 
     Glass {
         id: searchBox
@@ -31,7 +20,7 @@ Item {
 
         Text {
             id: lens
-            anchors { left: parent.left; leftMargin: Theme.spaceL + 2; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: Theme.spaceL + Theme.spaceXs; verticalCenter: parent.verticalCenter }
             visible: Launcher.layout !== "sheet" || Launcher.mode !== "search"   // the sheet: the query alone is the header
             readonly property bool typed: Launcher.prompt !== "" && Launcher.mode === "search"
             text: typed ? Launcher.prompt : Launcher.mode === "search" ? "\u{F0349}" : Launcher.modes.find(m => m.id === Launcher.mode)?.glyph ?? ""

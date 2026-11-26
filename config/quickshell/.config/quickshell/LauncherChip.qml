@@ -17,7 +17,7 @@ Rectangle {
         anchors { fill: parent; rightMargin: chip.sheet ? Theme.shadowOffset : 0 }
         radius: parent.radius
         color: chipArea.containsMouse && !chip.current ? Theme.fillHover : chip.sheet ? "transparent" : Theme.fill
-        border { width: 1; color: chip.sheet ? Theme.text : Theme.stroke }
+        border { width: chip.sheet ? 1 : 0; color: Theme.text }   // only the sheet rules its chips in ink
         Behavior on color { ColorAnimation { duration: Theme.animFast } }
     }
     LauncherSelection { on: chip.current; radius: chip.radius }

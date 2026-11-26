@@ -161,11 +161,6 @@ Item {
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 LauncherSelection { on: cell.GridView.isCurrentItem; radius: parent.radius }
             }
-            Item {   // grid (Lumen): the icon on a squircle plate
-                visible: !apps.pad
-                anchors.fill: appIcon
-                LauncherPlate {}
-            }
             IconImage {
                 id: appIcon
                 anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: Theme.spaceM }

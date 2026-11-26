@@ -6,8 +6,8 @@ import QtQuick
 Item {
     id: label
     property alias text: name.text
-    property real leftPad: Theme.spaceXs
-    property real topPad: Theme.spaceXs
+    property real leftPad: Theme.spaceS   // the home view's edge (spaceM) plus this lines up with the lens and the rows
+    property real topPad: Theme.spaceS   // more air above a heading than below it
     property real bottomPad: 0
     width: parent ? parent.width : 0
     implicitHeight: name.implicitHeight + topPad + bottomPad

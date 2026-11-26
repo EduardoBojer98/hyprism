@@ -53,8 +53,8 @@ Singleton {
     // The look comes from the style or the theme; your behaviour options (web search, files, actions, order,
     // recent, clipboard) from Config.launcher.
     readonly property var rl: preset ?? Theme.current.launcher
-    // the theme's structure (theme.json launcher.layout): grid (Lumen: a big search pill, a Recent row, icons on
-    // squircle plates, a wash that springs in) | sheet (Poster: the query as a display header, big rows with a tag,
+    // the theme's structure (theme.json launcher.layout): grid (Lumen: one glass sheet, a Recent row, bare app
+    // icons, a soft wash) | sheet (Poster: the query as a display header, big rows with a tag,
     // an inverse block on a hard shadow, a first-letter index) | prompt (Monolith: a ❯ line, numbered text rows, a >
     // marker, matches in accent, [enter] hints). A style from Settings brings its own structure instead.
     readonly property string layout: preset ? "" : Theme.current.launcher.layout ?? ""
@@ -115,7 +115,8 @@ Singleton {
     property bool fromClick: false   // opened by clicking a bar item: then it stays beside that item
     readonly property var look: Object.assign({}, Config.launcher, {
         placement: pad ? "fullscreen" : Config.launcher.position === "center" ? "center" : pointer ? "cursor" : rl.placement,
-        style: preset ? (preset.split ? "split" : "unified") : layout === "grid" ? "split" : Theme.glassy && rl.placement === "center" ? "split" : "unified",
+        // one sheet with the search field in it; only a style that asks for it (Spotlight, Launchpad) splits them
+        style: preset?.split ? "split" : "unified",
         width: pad ? Math.min(rl.width * size, screenW - 80) : pointer ? Math.min((rl.width > 0 ? rl.width : 680) * size, 1100, screenW - Theme.spaceL * 2) : rl.placement === "strip" ? screenW - Theme.reserveLeft - Theme.reserveRight
              : rl.placement === "half" ? Math.round((screenW - Theme.reserveRight) / 2)
              : rl.placement === "fullscreen" ? Math.min(rl.width * size, screenW - 80)
@@ -137,7 +138,7 @@ Singleton {
     // Monolith: section headings as a ruled line in accent2; the theme's type, so it holds in every style
     readonly property bool ruled: (Theme.current.launcher.labels ?? "plain") === "rule"
     readonly property string rowFont: preset?.mono ? Theme.monoFont : Theme.font
-    readonly property color surface: Theme.surface("glass")
+    readonly property color surface: Theme.menu   // the opaque glass panels with text use: the launcher is all text
     readonly property real corner: look.corners === "sharp" ? 0 : look.corners === "round" ? Math.max(Theme.radiusLarge, 18) : Theme.radiusLarge
     // the most the panel under the search field can take: from where CursorPopup.place() puts the top (the
     // centred ones sit lower; bottom-anchored ones grow upwards) down to the dock

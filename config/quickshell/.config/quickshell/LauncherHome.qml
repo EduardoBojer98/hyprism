@@ -38,7 +38,6 @@ Column {
                 height: 52
                 radius: Launcher.corner === 0 ? 0 : Theme.radius
                 color: tileArea.containsMouse ? Theme.fillHover : "transparent"
-                border { width: 1; color: Theme.stroke }
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
                 Rectangle {   // the glyph on a disc tinted with the accent, so the tile reads as live information
                     id: tileGlyph
@@ -124,8 +123,7 @@ Column {
                 Item {
                     id: freqIcon
                     anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: Theme.spaceM }
-                    width: 44; height: width
-                    LauncherPlate {}
+                    width: Theme.iconApp; height: width
                     IconImage {
                         anchors.fill: parent
                         visible: !!app.modelData.icon
@@ -140,7 +138,7 @@ Column {
                     }
                 }
                 Text {
-                    anchors { left: parent.left; right: parent.right; top: freqIcon.bottom; topMargin: Theme.spaceXs + (Launcher.layout === "grid" ? Theme.spaceS : 0); margins: Theme.spaceXs }
+                    anchors { left: parent.left; right: parent.right; top: freqIcon.bottom; topMargin: Theme.spaceS; margins: Theme.spaceXs }
                     horizontalAlignment: Text.AlignHCenter
                     id: appName
                     text: app.modelData.title

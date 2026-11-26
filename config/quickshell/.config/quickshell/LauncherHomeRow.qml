@@ -24,7 +24,6 @@ Rectangle {
         anchors { left: hrLead.right; leftMargin: Theme.spaceM; verticalCenter: parent.verticalCenter }
         width: hr.look === "text" ? 0 : Launcher.layout === "prompt" ? Theme.iconSmall : hr.look === "compact" ? 18 : hr.look === "cards" ? 32 : Theme.iconMedium; height: width
         visible: width > 0
-        LauncherPlate { pad: Theme.spaceXs + 1 }
         IconImage { anchors.fill: parent; visible: !!hr.item.icon; source: hr.item.icon ? Quickshell.iconPath(hr.item.icon, "application-x-executable") : "" }
         Text { anchors.centerIn: parent; visible: !hr.item.icon; text: hr.item.glyph ?? ""; color: hr.current ? Launcher.selText : Theme.text; font { family: Theme.iconFont; pixelSize: Math.max(12, hrIcon.width - 4) } }
     }

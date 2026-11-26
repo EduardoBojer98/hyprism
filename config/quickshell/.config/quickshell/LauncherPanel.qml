@@ -121,7 +121,6 @@ Glass {
                         width: Math.max(height, cap.implicitWidth + 10); height: cap.implicitHeight + 4
                         radius: Math.min(Theme.radiusSmall, 5)
                         color: Theme.fill
-                        border { width: 1; color: Theme.stroke }
                         Text {
                             id: cap
                             anchors.centerIn: parent
