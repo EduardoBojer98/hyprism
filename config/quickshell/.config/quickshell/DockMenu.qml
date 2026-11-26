@@ -40,7 +40,10 @@ Glass {
     Keys.onReturnPressed: if (rows[cur]) runRow(rows[cur])
     Keys.onEnterPressed: if (rows[cur]) runRow(rows[cur])
     // a click anywhere outside the dock closes it (clicks on the dock itself are its icons' own)
-    HyprlandFocusGrab { windows: [menu.dock]; active: menu.entry !== null; onCleared: menu.done() }
+    // armed a beat after opening: Hyprland clears a grab that starts in the same commit as the dock's new mask
+    HyprlandFocusGrab { id: grab; windows: [menu.dock]; onCleared: menu.done() }
+    Timer { id: arm; interval: 150; onTriggered: grab.active = menu.entry !== null }
+    onEntryChanged: if (entry) arm.restart(); else { arm.stop(); grab.active = false }
 
     visible: entry !== null
     strong: true
