@@ -166,6 +166,34 @@ IS_LOG=$t/is/log HYPRISM_ROOT=$t/is/bat PATH=$t/is/off:$t/is/bin:$PATH bash "$bi
 isorder=$(grep -o "dpms\|sleep 8\|suspend" "$t/is/log" | tr '\n' ' ')
 check "idle-sleep turns screens on, waits, then sleeps" '[[ $isorder == "dpms sleep 8 suspend " ]]'
 
+# screens: next to an external monitor the panel goes dark by backlight and keeps DPMS on (aquamarine issue 429)
+mkdir -p "$t/sc/bin"
+cat >"$t/sc/bin/hyprctl" <<'FAKE'
+#!/bin/sh
+[ "$1" = monitors ] && { cat "$SC_MONS"; exit 0; }
+echo "hyprctl $*" >>"$SC_LOG"
+FAKE
+printf '#!/bin/sh\necho "brightnessctl $*" >>"$SC_LOG"\n' >"$t/sc/bin/brightnessctl"
+chmod +x "$t/sc/bin/hyprctl" "$t/sc/bin/brightnessctl"
+echo '[{"name": "eDP-1"}, {"name": "HDMI-A-1"}]' >"$t/sc/two"
+echo '[{"name": "eDP-1"}]' >"$t/sc/one"
+# screens_run MONITORS_FILE off|on: what it ran
+screens_run() {
+    : >"$t/sc/log"
+    SC_LOG=$t/sc/log SC_MONS=$1 XDG_RUNTIME_DIR=$t/sc PATH=$t/sc/bin:$PATH bash "$bin/screens" "$2" >/dev/null 2>&1
+    cat "$t/sc/log"
+}
+# shellcheck disable=SC2034  # read inside check's conditions
+{
+    sc_off=$(screens_run "$t/sc/two" off) sc_on=$(screens_run "$t/sc/two" on)
+    sc_off1=$(screens_run "$t/sc/one" off) sc_on1=$(screens_run "$t/sc/one" on)
+}
+check "screens off with an external: only the external DPMS off, the panel's backlight to 0" \
+    '[[ $sc_off == *"monitor = \"HDMI-A-1\""* && $sc_off != *eDP* && $sc_off == *"brightnessctl -q set 0"* ]]'
+check "screens on after that: DPMS on and the panel's backlight restored" '[[ $sc_on == *enable* && $sc_on == *"brightnessctl -q -r"* ]]'
+check "screens off and on with the panel alone: plain DPMS, backlight untouched" \
+    '[[ $sc_off1 == *disable* && $sc_off1 != *monitor* && $sc_off1$sc_on1 != *brightnessctl* ]]'
+
 # hypr-crashlog: a sleep with no wake before the next session start is reported as a freeze
 mkdir -p "$t/hc/hyprism/logs"
 printf '%s\n' '2026-11-10 08:00:00 session start' '2026-11-10 09:00:00 sleep' '2026-11-10 09:30:00 wake' \

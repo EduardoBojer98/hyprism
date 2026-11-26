@@ -14,7 +14,7 @@ import QtQuick
 Scope {
     id: sync
 
-    readonly property string screensOn: "hyprctl dispatch 'hl.dsp.dpms({ action = \"enable\" })'"
+    readonly property string screensOn: "screens on"
     readonly property var shortcuts: ["grp:alt_shift_toggle", "grp:ctrl_shift_toggle", "grp:caps_toggle", ""]
 
     // ---- the files, as text from Config --------------------------------------------------------------
@@ -24,7 +24,7 @@ Scope {
             if (lockMin * 60 > 60)   // a dim first: half a minute's warning before the lock (any input brings it back)
                 blocks.push("# 30 s before the lock: dim\nlistener {\n    timeout    = " + (lockMin * 60 - 30) + "\n    on-timeout = brightnessctl -s set 30%\n    on-resume  = brightnessctl -r\n}")
             blocks.push("# " + lockMin + " min: lock\nlistener {\n    timeout    = " + lockMin * 60 + "\n    on-timeout = loginctl lock-session\n}")
-            blocks.push("# 30 s later: screens off\nlistener {\n    timeout    = " + (lockMin * 60 + 30) + "\n    on-timeout = hyprctl dispatch 'hl.dsp.dpms({ action = \"disable\" })'\n    on-resume  = " + screensOn + "\n}")
+            blocks.push("# 30 s later: screens off\nlistener {\n    timeout    = " + (lockMin * 60 + 30) + "\n    on-timeout = " + (lockMin * 60 > 60 ? "" : "brightnessctl -q -s; ") + "screens off\n    on-resume  = " + screensOn + "\n}")
         }
         // one sleep listener per distinct non-zero time; idle-sleep decides at that moment which one applies (battery or mains)
         for (const m of [...new Set([sleepMin, powerMin])].filter(m => m > 0).sort((a, b) => a - b))

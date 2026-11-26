@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Screens off and back on, for hypridle (the screens-off listener, before and after sleep).
+#
+#   screens off   with an external monitor attached: externals DPMS off, laptop panel dark by backlight only
+#   screens on    every screen DPMS on, and the panel's backlight back if `off` darkened it
+#
+# The panel stays DPMS on next to an external monitor: a DPMS-off panel frees its CRTC, a monitor that drops out
+# meanwhile (its auto input scan or deep sleep) takes it, and the next wake fails to restore both screens and
+# crashes Hyprland (aquamarine issues 429 and 466; crashes 2026-11-25 and 2026-11-26). The backlight is restored
+# from brightnessctl's save, which the dim listener (or the listener itself, when there is no dim) wrote first.
+set -euo pipefail
+# shellcheck source=config/scripts/.local/lib/hyprism/common.sh
+. "${HYPRISM_LIB:-$HOME/.local/lib/hyprism}/common.sh"
+
+dark=${XDG_RUNTIME_DIR:-/run/user/$UID}/hyprism-panel-dark
+panel='^(eDP|LVDS|DSI)-'
+
+case ${1:-} in
+    off)
+        mons=$(hyprctl monitors -j)
+        mapfile -t ext < <(jq -r --arg p "$panel" '.[] | select(.name | test($p) | not) | .name' <<<"$mons")
+        if ((${#ext[@]})) && jq -e --arg p "$panel" 'any(.[]; .name | test($p))' <<<"$mons" >/dev/null; then
+            for m in "${ext[@]}"; do hyprctl dispatch "hl.dsp.dpms({ action = \"disable\", monitor = \"$m\" })"; done
+            touch "$dark"
+            brightnessctl -q set 0
+        else
+            hyprctl dispatch 'hl.dsp.dpms({ action = "disable" })'
+        fi
+        ;;
+    on)
+        hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' || true
+        if [[ -e $dark ]]; then
+            rm -f "$dark"
+            brightnessctl -q -r
+        fi
+        ;;
+    -h | --help) usage ;;
+    *) usage 1 ;;
+esac

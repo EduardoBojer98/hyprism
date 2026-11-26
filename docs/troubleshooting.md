@@ -47,12 +47,15 @@ screen can come back black. Check `./install.sh modules` shows `nvidia-hybrid` o
 ## Black screen, then a crash, after a long sleep with an external monitor
 
 An upstream bug (aquamarine 0.16.0, issues 429 and 466; no fix released yet). While the laptop panel is off, a
-monitor that drops and comes back takes the panel's CRTC. That works until the next sleep; on wake both screens
-fail to restore (`failed restore` in `hypr-crashlog`), and the monitor's next hotplug crashes Hyprland. The
-`crtcs` lines that `hypr-crashlog` writes at each sleep and wake show it: `eDP-1>91 HDMI-A-1>87` is swapped,
-`eDP-1>87 HDMI-A-1>91` is normal. If a `sleep` mark shows a swapped pair, log out and back in before the next long
-sleep: a new session assigns the CRTCs in order again. Stopping the monitor from deep-sleeping in its own menu
-(often "deep sleep", "auto input" or "HDMI CEC") stops it dropping out while the panel is off.
+monitor that drops and comes back (its auto input scan switching to another input, or its deep sleep) takes the
+panel's CRTC. That works until the next sleep; on wake both screens fail to restore (`failed restore` in
+`hypr-crashlog`), and the monitor's next hotplug crashes Hyprland. Hyprism avoids it: with an external monitor
+attached, screens-off (`screens off`, from hypridle) turns the externals off but only darkens the panel's
+backlight, so the panel keeps its CRTC. If it still happens (a lid-closed panel is disabled too), Aquamarine's own
+log shows the swap: `Connecting connector HDMI-A-1, CRTC ID 87` where it first got 91. The `crtcs` lines in
+`hypr-crashlog` read the kernel's view, which can still look normal. Log out and back in before the next long
+sleep: a new session assigns the CRTCs in order again. Turning off the monitor's "auto input" or "deep sleep" in its
+own menu stops it dropping out while the panel is off.
 
 ## The second graphics card never sleeps
 

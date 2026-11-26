@@ -369,6 +369,10 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 
 ### Fixed
 
+- Hyprland no longer crashes on waking from a long sleep with an external monitor (crashes 2026-11-25 and 26):
+  with an external attached, screens-off now turns the laptop panel dark by backlight and keeps it on, so a monitor
+  that drops out while off (its auto input scan or deep sleep) can no longer take the panel's CRTC (new
+  `scripts/screens`; aquamarine issues 429 and 466).
 - A theme's wallpaper could stay unset on first start: two renders of the same picture shared one temporary file.
 - Hyprland crashing after a long sleep with an external monitor is now traceable: `hypr-crashlog` notes which CRTC
   drives each screen at every sleep and wake (a swapped pair fails to restore; aquamarine issue 429), and
