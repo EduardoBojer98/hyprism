@@ -145,6 +145,7 @@
     "press": 0.96
   },
   "launcher": {
+    "style": "spotlight",
     "layout": "grid",
     "placement": "center",
     "view": "home",

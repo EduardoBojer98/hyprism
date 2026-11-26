@@ -26,9 +26,10 @@ Singleton {
     // cards: tall rows, big icons | text: no icons, a kind column), `home` (the suggestions it shows: glance,
     // frequent, recent, quick) and `bare` (Launchpad: icons straight on the dimmed screen, no sheet; dark themes).
     readonly property var styles: ({
-        spotlight: { name: "Spotlight", about: "Like macOS: one search bar, results only once you type",
-                     placement: "center", view: "inline", header: "none", width: 680, select: "inverse", prompt: "",
-                     split: true, corners: "round", field: 54, dim: 0, rows: "compact", home: ["frequent", "recent"],
+        spotlight: { name: "Spotlight", about: "Like macOS: one search bar, your apps as a row of icons until you type",
+                     placement: "center", view: "home", header: "none", width: 680, select: "inverse", prompt: "",
+                     split: true, corners: "round", field: 54, dim: 0, rows: "compact", iconHome: true,
+                     home: ["frequent", "recent", "quick"],
                      hints: false, placeholder: "Spotlight Search", queryLight: true },
         launchpad: { name: "Launchpad", about: "Every app as big icons over the whole darkened screen; typing filters them",
                      placement: "fullscreen", view: "grid", header: "none", width: 1320, select: "wash", prompt: "",
@@ -44,11 +45,12 @@ Singleton {
                      split: false, corners: "sharp", field: 50, dim: 0.2, fill: 1, rows: "compact",
                      home: ["recent", "quick", "frequent"] },
         terminal:  { name: "Terminal", about: "Keyboard first: a prompt, one-line mono rows",
-                     placement: "center", view: "inline", header: "query", width: 720, select: "inverse", prompt: "❯",
+                     placement: "center", view: "home", header: "query", width: 720, select: "inverse", prompt: "❯",
                      split: false, corners: "sharp", field: 60, dim: 0.24, mono: true, rows: "compact", home: ["recent", "quick"] },
     })
     readonly property var styleIds: Object.keys(styles)
-    readonly property var preset: styles[Config.launcher.style] ?? null
+    // "theme": the theme's own, which may itself name a style (theme.json launcher.style; Lumen: spotlight)
+    readonly property var preset: styles[(Config.launcher.style ?? "theme") === "theme" ? Theme.current.launcher.style : Config.launcher.style] ?? null
 
     // The look comes from the style or the theme; your behaviour options (web search, files, actions, order,
     // recent, clipboard) from Config.launcher.
@@ -75,7 +77,7 @@ Singleton {
     // the home sections in the order the home view draws them (grid: the Recent row first)
     readonly property var homeOrder: layout === "grid" ? ["recent", "frequent", "quick"] : ["frequent", "recent", "quick"]
     // frequent apps as icons (not rows); the sheet and the prompt keep everything a list
-    readonly property bool iconHome: rows !== "text" && rows !== "compact" && layout !== "sheet" && layout !== "prompt"
+    readonly property bool iconHome: rl.iconHome ?? (rows !== "text" && rows !== "compact" && layout !== "sheet" && layout !== "prompt")
     // where a home section starts in keyboard order
     function homeOffset(h) {
         let n = 0

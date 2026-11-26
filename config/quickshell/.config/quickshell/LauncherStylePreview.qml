@@ -21,7 +21,7 @@ Item {
     readonly property real r: corners === "sharp" ? 0 : 4 * s
     readonly property bool grid: spec.view === "grid" || spec.view === "start" || layout === "grid"
     readonly property bool inverse: layout === "sheet" || layout !== "grid" && layout !== "prompt" && (spec.select ?? "wash") === "inverse"
-    // what makes each style itself: Spotlight is the bar alone until you type, Launchpad has no sheet,
+    // what makes each style itself: the bar alone until you type (Open on: Search, split styles), Launchpad has no sheet,
     // and the rows are drawn the style's way (compact lines, tall cards, text with a kind column)
     readonly property bool barOnly: spec.view === "inline" && split
     readonly property bool bare: (spec.bare ?? false) && !Theme.light

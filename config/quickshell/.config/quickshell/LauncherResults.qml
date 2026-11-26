@@ -105,7 +105,7 @@ ListView {
                     visible: !row.modelData.icon
                     text: row.modelData.glyph ?? ""
                     color: row.ListView.isCurrentItem ? Launcher.selText : Theme.text
-                    font { family: Theme.iconFont; pixelSize: Math.max(12, row.iconSize - 6) }
+                    font { family: Theme.iconFont; pixelSize: row.look === "compact" ? Math.max(14, row.iconSize - 4) : Math.max(12, row.iconSize - 6) }   // compact: a glyph as big as the icons beside it
                 }
             }
             Column {

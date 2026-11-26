@@ -58,7 +58,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignTop
                     // the chosen one as you adjusted it, the rest as designed
-                    spec: Object.assign({}, style ?? Theme.current.launcher, !chosen ? {} : Object.assign(
+                    spec: Object.assign({}, style ?? Launcher.styles[Theme.current.launcher.style] ?? Theme.current.launcher, !chosen ? {} : Object.assign(
                         Config.launcher.position !== "theme" ? { placement: "center" } : {},
                         ({ home: { view: "home" }, apps: { view: "grid" }, search: { view: "inline" } })[Config.launcher.startView] ?? {},
                         Config.launcher.rows !== "style" ? { rows: Config.launcher.rows } : {},

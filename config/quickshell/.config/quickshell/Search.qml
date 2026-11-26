@@ -231,11 +231,13 @@ Singleton {
         return null
     }
 
-    // most launched apps, topped up with the dock's pinned apps
+    // most launched apps, lately launched ones first among similar counts (up to +2 for the last of 12 recent), topped
+    // up with the dock's pinned apps
     readonly property var frequentApps: {
         if (!DesktopEntries.applications.values.length) return []
-        const u = Config.launcher.usage ?? {}
-        const used = Object.keys(u).filter(k => k.startsWith("app:")).sort((a, b) => u[b] - u[a])
+        const u = Config.launcher.usage ?? {}, rec = Config.launcher.recent ?? []
+        const score = k => Math.log2(u[k] + 1) + (rec.includes(k) ? (12 - rec.indexOf(k)) / 6 : 0)
+        const used = Object.keys(u).filter(k => k.startsWith("app:")).sort((a, b) => score(b) - score(a))
         const pinned = Config.dock.pinned.map(n => DesktopEntries.heuristicLookup(n)).filter(e => e).map(e => "app:" + e.id)
         return used.concat(pinned).filter((k, i, a) => a.indexOf(k) === i).map(resolve).filter(r => r).slice(0, 8)
     }
