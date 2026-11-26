@@ -88,7 +88,7 @@ Rectangle {
     }
     Column {
         visible: ControlCenter.cards
-        anchors { left: well.right; leftMargin: Theme.spaceS; right: parent.right; rightMargin: qt.expandable ? listMark.width + 3 + Theme.spaceXs * 2 + 1 : Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        anchors { left: well.right; leftMargin: Theme.spaceS; right: parent.right; rightMargin: qt.expandable ? listMark.width + 6 + Theme.spaceXs * 2 + 1 : Theme.spaceXs; verticalCenter: parent.verticalCenter }
         spacing: 1
         Text { width: parent.width; text: qt.label; elide: Text.ElideRight; color: qt.active ? Theme.ccOnText : Theme.text; font { family: Theme.font; pixelSize: Theme.fontLabel; weight: Font.DemiBold } }
         Text { width: parent.width; visible: text !== ""; text: qt.status; elide: Text.ElideRight; fontSizeMode: Text.HorizontalFit; minimumPixelSize: Theme.fontCaption - 1; color: qt.active ? Theme.ccOnSubtext : Theme.subtext; font { family: Theme.font; pixelSize: Theme.fontCaption } }
@@ -143,7 +143,7 @@ Rectangle {
         id: listMark
         readonly property bool block: ControlCenter.bento && qt.isExpanded
         visible: qt.expandable
-        anchors { right: parent.right; rightMargin: ControlCenter.bento ? 0 : 3 }
+        anchors { right: parent.right; rightMargin: ControlCenter.bento ? 0 : 6 }
         y: ControlCenter.bento ? 0 : qt.hud ? parent.height - height - 3 : (parent.height - height) / 2
         width: ControlCenter.bento ? 20 : 18; height: width
         radius: ControlCenter.bento ? 0 : height / 2

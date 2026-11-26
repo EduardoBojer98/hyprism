@@ -52,9 +52,10 @@ Rectangle {
     }
     Rectangle {   // the icon well: toggles (inline: components declared in this file can't nest)
         id: disc
-        // hud: the box sits in the cell's top right corner
-        anchors { left: conn.hud ? undefined : parent.left; leftMargin: Theme.ccInset; verticalCenter: conn.hud ? undefined : parent.verticalCenter
-                  right: conn.hud ? parent.right : undefined; top: conn.hud ? parent.top : undefined; rightMargin: Theme.spaceS - 2; topMargin: Theme.spaceS - 2 }
+        // hud: the box sits in the cell's top right corner. x/y, not anchors: an anchor bound to `undefined` is not
+        // released when the theme changes, so after Monolith the well stayed stretched across the tile
+        x: conn.hud ? conn.width - width - (Theme.spaceS - 2) : Theme.ccInset
+        y: conn.hud ? Theme.spaceS - 2 : (conn.height - height) / 2
         width: conn.hud ? box.implicitWidth : Theme.ccWell; height: conn.hud ? box.implicitHeight : Theme.ccWell
         radius: ControlCenter.cards && Theme.radius > 0 ? height / 2 : Theme.radiusSmall
         color: conn.hud ? (conn.active ? Theme.accent : "transparent") : conn.active ? Theme.ccWellOn
@@ -115,13 +116,13 @@ Rectangle {
     }
     Rectangle {   // hairline before the chevron: the tile's right end opens the list
         id: rule
-        visible: conn.expandable && !conn.hud
-        anchors { right: chev.left; rightMargin: Theme.spaceXs; verticalCenter: parent.verticalCenter }
+        visible: conn.expandable && ControlCenter.cards   // cards only, like the switches: in bento it read as a heavy ink bar
+        anchors { right: chev.left; rightMargin: Theme.spaceS - 2; verticalCenter: parent.verticalCenter }
         width: 1; height: Math.round(conn.height * 0.42)
         color: conn.active ? Qt.alpha(Theme.ccOnText, 0.22) : Theme.stroke
     }
     Chevron { id: chev; visible: conn.expandable && !conn.hud; open: conn.isExpanded; size: 14; color: conn.isExpanded && !conn.active ? Theme.accent : conn.active ? Theme.ccOnText : Theme.subtext
-              anchors { right: parent.right; rightMargin: Theme.spaceXs + 2; verticalCenter: parent.verticalCenter } }
+              anchors { right: parent.right; rightMargin: Theme.spaceS; verticalCenter: parent.verticalCenter } }
     Text {   // hud: the list opens to the right
         visible: conn.expandable && conn.hud
         anchors { right: parent.right; rightMargin: Theme.spaceS; bottom: parent.bottom; bottomMargin: Theme.spaceS - 3 }

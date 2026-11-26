@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 // Control Center building block (used by ControlCenter.qml and its parts).
 // Slider row: the icon (click it to mute when there is a hint), a thick track whose accent fill carries the
-// handle at its end, the value, and (expandable) a chevron that opens its device list. The whole row height
+// handle at its end (cards: the fill's round end is the handle), the value, and (expandable) a chevron that opens its device list. The whole row height
 // grabs the track; the wheel and Left / Right (Tab to it) step by 5 %.
 // The layout shapes it: a fat pill with the icon inside the track (cards), an ink-edged block (bento), or an ascii
 // meter `vol [████████░░] 80` whose short name mutes (hud). Every one still drags, scrolls and steps.
@@ -109,10 +109,10 @@ Item {
         }
         Rectangle {
             id: knob
-            visible: !bar.hud
+            visible: !bar.hud && !bar.pill   // pill: the fill's round end is the handle, no extra mark on it
             x: slide.width * bar.v - width / 2
             anchors.verticalCenter: parent.verticalCenter
-            width: bar.pill ? 3 : bar.knob; height: bar.pill ? Math.round(bar.trackH / 2) : bar.knob
+            width: bar.knob; height: bar.knob
             radius: bar.round ? width / 2 : 0
             color: Theme.accentText   // reads on the fill it rides on, in every theme
             scale: dragArea.pressed ? 1.15 : dragArea.containsMouse || bar.activeFocus ? 1.08 : 1

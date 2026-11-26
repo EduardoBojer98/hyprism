@@ -27,6 +27,16 @@ ColumnLayout {
     function setShown(id, on) { Config.set("controlCenter", "hidden", on ? hidden.filter(x => x !== id) : hidden.concat([id])) }
     // a hidden tile you bring back joins the end of the shown ones, where you'll see it
     function add(group, id) { place(group, id, "", false); setShown(id, true) }
+    // keyboard: move `id` one step along its row (sections: all of them; tiles: the shown ones)
+    function nudge(group, id, step) {
+        const list = ControlCenter.order(group).filter(x => group === "sections" || !hidden.includes(x))
+        const i = list.indexOf(id), j = i + step
+        if (i < 0 || j < 0 || j >= list.length) return
+        refocus = group + ":" + id
+        place(group, id, list[j], step > 0)
+    }
+    // the row is rebuilt after a move, so the moved piece takes focus back when it is made again
+    property string refocus
     // the page's scroll view, so the preview can stay in sight while you work down a long list
     property Item flick: null
     Component.onCompleted: { let p = parent; while (p && p.contentY === undefined) p = p.parent; flick = p }
@@ -160,15 +170,109 @@ ColumnLayout {
         FocusRing {}
     }
 
-    Item {   // wide: the editor, the preview beside it; narrow: the preview under it
+    // a tile in the editor: shown ones drag (between Large and Small too) and click to hide; hidden ones click to add.
+    // Keyboard: Left / Right move it, Space shows or hides it.
+    component Chip: DragItem {
+        id: chip
+        required property string modelData
+        property var editor            // the page (inline components can't see its id)
+        property string group
+        readonly property var inf: ControlCenter.info(modelData)
+        readonly property bool on: !editor.hidden.includes(modelData)
+        readonly property bool here: ControlCenter.available(modelData)
+        function flip() { on ? editor.setShown(modelData, false) : editor.add(group, modelData) }
+        width: chipRow.implicitWidth + 18
+        height: 30
+        payload: modelData
+        floatOn: editor.parent
+        draggable: on   // a hidden tile is added with a click; then it can move
+        radius: Theme.radius === 0 ? 0 : 15
+        onClicked: flip()
+        activeFocusOnTab: true
+        Keys.onSpacePressed: flip()
+        Keys.onReturnPressed: flip()
+        Keys.onLeftPressed: if (on) editor.nudge(group, modelData, -1)
+        Keys.onRightPressed: if (on) editor.nudge(group, modelData, 1)
+        Component.onCompleted: if (editor.refocus === group + ":" + modelData) { forceActiveFocus(); editor.refocus = "" }
+        Accessible.role: Accessible.CheckBox
+        Accessible.name: (on ? "" : "Add ") + inf.label
+        Accessible.description: on ? "Space hides it; drag or Left and Right move it" : ""
+        Accessible.checked: on
+        Accessible.onPressAction: flip()
+        Rectangle {
+            anchors.fill: parent
+            radius: chip.radius
+            // shown: a quiet filled chip, its icon in the accent; hidden: a dashed-looking outline to add it back
+            color: chip.hovered ? Theme.fillHover : chip.on ? Theme.fill : "transparent"
+            border { color: chip.hovered ? Theme.strokeStrong : Theme.stroke; width: 1 }
+            Row {
+                id: chipRow
+                anchors.centerIn: parent
+                spacing: 6
+                Text { anchors.verticalCenter: parent.verticalCenter; text: chip.on ? chip.inf.glyph : "\u{F0415}"; color: chip.on && chip.here ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: chip.inf.label
+                    color: chip.on && chip.here ? Theme.text : Theme.subtext
+                    font { family: Theme.font; pixelSize: Theme.fontLabel }
+                }
+                Text {   // shown, but this computer lacks the hardware, so the panel leaves it out
+                    visible: !chip.here
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "not here"
+                    color: Theme.muted
+                    font { family: Theme.font; pixelSize: Theme.fontCaption }
+                }
+            }
+        }
+        DropSpot { enabled: chip.on && !chip.dragging; anchors.fill: parent; key: chip.key; owner: chip; onPlaced: (id, after) => chip.editor.place(chip.group, id, chip.modelData, after) }
+        FocusRing { radius: chip.radius + 3 }
+    }
+
+    Item {   // wide: the look and the editor, the preview beside them; narrow: the preview under them
         Layout.fillWidth: true
-        implicitHeight: page.wide ? Math.max(editor.implicitHeight, previewCol.implicitHeight) : editor.implicitHeight + 20 + previewCol.implicitHeight
+        implicitHeight: page.wide ? Math.max(leftCol.implicitHeight, previewCol.implicitHeight) : leftCol.implicitHeight + 20 + previewCol.implicitHeight
+
+      ColumnLayout {
+        id: leftCol
+        width: page.wide ? parent.width - previewCol.width - 24 : parent.width
+        spacing: 20
+
+        // ---- the look: next to the preview, so each change shows at once ---------------------------------
+        SettingGroup {
+            title: "Look"
+            Layout.fillWidth: true
+            SettingRow {
+                label: "Panel style"
+                hint: ({ panel: "Tiles on soft fills, the panel's large corners", compact: "Smaller tiles and tighter spacing", borderless: "Flat tiles with hairline edges, no panel border" })[Config.controlCenter.style] ?? ""
+                ConfigChoice { section: "controlCenter"; key: "style"; values: ["panel", "compact", "borderless"]; labels: ["Panel", "Compact", "Borderless"] }
+            }
+            SettingRow {
+                label: "Width"
+                hint: "The flyouts of the bar's items take it too"
+                ConfigSlider { section: "controlCenter"; key: "width"; from: 280; to: 460; step: 10; format: v => v + " px" }
+            }
+            SettingRow {
+                label: "CPU temperature in Power mode"
+                hint: "Shown beside the power mode; click it for the hardware settings"
+                ConfigToggle { section: "controlCenter"; key: "showHardware" }
+            }
+        }
 
         // ---- the editor: sections, and the tiles inside them ------------------------------------------
         SettingGroup {
             id: editor
-            title: "Layout"
-            width: page.wide ? parent.width - previewCol.width - 24 : parent.width
+            title: "Sections"
+            Layout.fillWidth: true
+            Text {
+                Layout.fillWidth: true
+                Layout.margins: 12
+                Layout.bottomMargin: 0
+                text: "Drag a section or tile to move it; drag a tile between Large and Small to resize it. Click a tile to hide it; click one under Hidden to add it back. With the keyboard: Tab to it, arrows move it, Space shows or hides it."
+                color: Theme.subtext
+                wrapMode: Text.Wrap
+                font { family: Theme.font; pixelSize: Theme.fontCaption }
+            }
 
             ColumnLayout {
                 Layout.fillWidth: true
@@ -190,6 +294,15 @@ ColumnLayout {
                         payload: modelData
                         floatOn: page.parent
                         radius: Theme.radiusSmall + 2
+                        activeFocusOnTab: true   // keyboard: Up / Down move it, Space shows or hides it
+                        Keys.onUpPressed: page.nudge("sections", modelData, -1)
+                        Keys.onDownPressed: page.nudge("sections", modelData, 1)
+                        Keys.onSpacePressed: page.setShown(modelData, !on)
+                        Component.onCompleted: if (page.refocus === "sections:" + modelData) { forceActiveFocus(); page.refocus = "" }
+                        Accessible.role: Accessible.ListItem
+                        Accessible.name: inf.label + (on ? "" : ", hidden")
+                        Accessible.description: "Up and Down move it, Space shows or hides it"
+                        FocusRing { radius: sec.radius + 3 }
                         Rectangle {
                             anchors.fill: parent
                             radius: sec.radius
@@ -251,56 +364,21 @@ ColumnLayout {
                                         spacing: 6
                                         Repeater {
                                             id: chipRep
-                                            model: sec.inf.group ? ControlCenter.order(sec.inf.group).filter(x => !page.hidden.includes(x)).concat(ControlCenter.order(sec.inf.group).filter(x => page.hidden.includes(x))) : []
-                                            DragItem {
-                                                id: chip
-                                                required property string modelData
-                                                readonly property var inf: ControlCenter.info(modelData)
-                                                readonly property bool on: !page.hidden.includes(modelData)
-                                                readonly property bool here: ControlCenter.available(modelData)
-                                                width: chipRow.implicitWidth + 18
-                                                height: 30
-                                                key: sec.chipKey
-                                                payload: modelData
-                                                floatOn: page.parent
-                                                draggable: on   // a hidden tile is added with a click; then it can move
-                                                radius: Theme.radius === 0 ? 0 : 15
-                                                onClicked: on ? page.setShown(modelData, false) : page.add(sec.inf.group, modelData)
-                                                Accessible.role: Accessible.CheckBox
-                                                Accessible.name: (on ? "" : "Add ") + inf.label
-                                                Accessible.description: on ? "Click to hide, drag to move" : ""
-                                                Accessible.checked: on
-                                                Accessible.onPressAction: page.setShown(modelData, !on)
-                                                Rectangle {
-                                                    anchors.fill: parent
-                                                    radius: chip.radius
-                                                    readonly property bool lit: chip.on && chip.here   // shown and has the hardware: it is in the panel
-                                                    // shown: a quiet filled chip, its icon in the accent; hidden: an outline to add it back
-                                                    color: chip.hovered ? Theme.fillHover : chip.on ? Theme.fill : "transparent"
-                                                    border { color: chip.hovered ? Theme.strokeStrong : Theme.stroke; width: 1 }
-                                                    Row {
-                                                        id: chipRow
-                                                        anchors.centerIn: parent
-                                                        spacing: 6
-                                                        Text { anchors.verticalCenter: parent.verticalCenter; text: chip.on ? chip.inf.glyph : "\u{F0415}"; color: chip.on && chip.here ? Theme.accent : Theme.muted; font { family: Theme.iconFont; pixelSize: Theme.glyphS } }
-                                                        Text {
-                                                            anchors.verticalCenter: parent.verticalCenter
-                                                            text: chip.inf.label
-                                                            color: chip.on && chip.here ? Theme.text : Theme.subtext
-                                                            font { family: Theme.font; pixelSize: Theme.fontLabel }
-                                                        }
-                                                        Text {   // shown, but this computer lacks the hardware, so the panel leaves it out
-                                                            visible: !chip.here
-                                                            anchors.verticalCenter: parent.verticalCenter
-                                                            text: "not here"
-                                                            color: Theme.muted
-                                                            font { family: Theme.font; pixelSize: Theme.fontCaption }
-                                                        }
-                                                    }
-                                                }
-                                                DropSpot { enabled: chip.on && !chip.dragging; anchors.fill: parent; key: chip.key; owner: chip; onPlaced: (id, after) => page.place(sec.inf.group, id, chip.modelData, after) }
-                                            }
+                                            model: sec.inf.group ? ControlCenter.order(sec.inf.group).filter(x => !page.hidden.includes(x)) : []
+                                            Chip { editor: page; group: sec.inf.group; key: sec.chipKey }
                                         }
+                                    }
+                                }
+                                Flow {   // the hidden ones, apart, to add back
+                                    visible: sec.inf.group !== undefined && sec.on && offRep.count > 0
+                                    Layout.fillWidth: true
+                                    Layout.leftMargin: 26
+                                    spacing: 6
+                                    Text { height: 30; verticalAlignment: Text.AlignVCenter; rightPadding: 2; text: "Hidden"; color: Theme.muted; font { family: Theme.font; pixelSize: Theme.fontCaption } }
+                                    Repeater {
+                                        id: offRep
+                                        model: sec.inf.group ? ControlCenter.order(sec.inf.group).filter(x => page.hidden.includes(x)) : []
+                                        Chip { editor: page; group: sec.inf.group; key: sec.chipKey }
                                     }
                                 }
                             }
@@ -310,14 +388,15 @@ ColumnLayout {
                 }
             }
         }
+      }
 
         // ---- the preview: the real panel body, drawn here and not clickable --------------------------------
         ColumnLayout {
             id: previewCol
             x: page.wide ? parent.width - width : (parent.width - width) / 2
             // wide: rides down beside the editor as you scroll, never past its end
-            readonly property real scrolled: page.flick ? (page.flick.contentY, parent.y, page.y, page.flick.contentY - parent.mapToItem(page.flick.contentItem, 0, 0).y + 16) : 0
-            y: page.wide ? Math.max(0, Math.min(scrolled, parent.height - height)) : editor.height + 20
+            readonly property real scrolled: page.flick ? (page.flick.contentY, parent.y, page.y, page.flick.contentY - parent.mapToItem(page.flick.contentItem, 0, 0).y + 56) : 0
+            y: page.wide ? Math.max(0, Math.min(scrolled, parent.height - height)) : leftCol.height + 20
             width: page.wide ? Math.min(ControlCenter.customWidth, page.width * 0.46) : Math.min(ControlCenter.customWidth, page.width)
             spacing: 8
             Text {
@@ -355,71 +434,6 @@ ColumnLayout {
                 wrapMode: Text.Wrap
                 font { family: Theme.font; pixelSize: Theme.fontCaption }
             }
-        }
-    }
-
-    SettingGroup {
-        title: "Look"
-        SettingRow {
-            label: "Panel style"
-            hint: ({ panel: "Tiles on soft fills, the panel's large corners", compact: "Smaller tiles and tighter spacing", borderless: "Flat tiles with hairline edges, no panel border" })[Config.controlCenter.style] ?? ""
-        }
-        RowLayout {   // each style drawn with your layout in it
-            Layout.fillWidth: true
-            Layout.margins: 12
-            Layout.topMargin: 0
-            spacing: 12
-            Repeater {
-                model: [{ id: "panel", name: "Panel" }, { id: "compact", name: "Compact" }, { id: "borderless", name: "Borderless" }]
-                Item {
-                    id: st
-                    required property var modelData
-                    readonly property bool chosen: ControlCenter.style === modelData.id
-                    function pick() { Config.set("controlCenter", "style", modelData.id) }
-                    Layout.fillWidth: true
-                    implicitHeight: stShot.height + 26
-                    activeFocusOnTab: true
-                    Keys.onReturnPressed: pick()
-                    Keys.onSpacePressed: pick()
-                    Accessible.role: Accessible.RadioButton
-                    Accessible.name: "Panel style " + modelData.name
-                    Accessible.checked: chosen
-                    Accessible.onPressAction: pick()
-                    Rectangle {
-                        id: stShot
-                        width: parent.width
-                        height: Math.min(150, width * 0.75)
-                        radius: Theme.radiusSmall + 2
-                        color: stArea.containsMouse && !st.chosen ? Theme.fillHover : Theme.fill
-                        border { color: st.chosen ? Theme.accent : stArea.containsMouse ? Theme.strokeStrong : Theme.stroke; width: st.chosen ? 2 : 1 }
-                        clip: true
-                        ControlCenterThumb {   // only the top of the panel: enough to see the corners and spacing
-                            x: 14; y: 12
-                            width: parent.width - 28
-                            height: width * 1.6
-                            snap: Object.assign(ControlCenter.current(), { style: st.modelData.id })
-                        }
-                    }
-                    MouseArea { id: stArea; anchors.fill: stShot; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: st.pick() }
-                    Text {
-                        anchors { left: parent.left; top: stShot.bottom; topMargin: 6 }
-                        text: st.modelData.name
-                        color: st.chosen ? Theme.accent : Theme.text
-                        font { family: Theme.font; pixelSize: Theme.fontLabel; weight: st.chosen ? Font.DemiBold : Font.Normal }
-                    }
-                    FocusRing {}
-                }
-            }
-        }
-        SettingRow {
-            label: "Width"
-            hint: "The flyouts of the bar's items take it too"
-            ConfigSlider { section: "controlCenter"; key: "width"; from: 280; to: 460; step: 10; format: v => v + " px" }
-        }
-        SettingRow {
-            label: "CPU temperature in Power mode"
-            hint: "Shown beside the power mode; click it for the hardware settings"
-            ConfigToggle { section: "controlCenter"; key: "showHardware" }
         }
     }
 
