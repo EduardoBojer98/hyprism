@@ -90,6 +90,16 @@ function fmt(v) {
     if (a !== 0 && (a >= 1e15 || a < 1e-6)) return v.toExponential(4)
     return String(Number(v.toPrecision(a >= 1e6 ? 10 : 6)))
 }
+// what a unit answer shows: 2 decimals from 1 up, 3 significant digits below; the copy keeps fmt's precision
+function short(v) {
+    const a = Math.abs(v)
+    if (!isFinite(v) || a >= 1e15 || a !== 0 && a < 1e-6) return fmt(v)
+    return String(Number(a >= 1 ? v.toFixed(2) : v.toPrecision(3)))
+}
+function unitAnswer(out, B, v, A) {
+    const exact = short(out) === fmt(out) ? "" : " · exactly " + fmt(out)
+    return { kind: "units", title: short(out) + " " + B, subtitle: fmt(v) + " " + A + exact, copy: fmt(out) }
+}
 function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()) }
 function showDate(d) {
     return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()] + " " + d.getDate() + " "
@@ -178,13 +188,13 @@ function units(q, rates) {
         const A = TEMP[a], B = TEMP[b]
         const c = A === "°C" ? v : A === "°F" ? (v - 32) * 5 / 9 : v - 273.15
         const out = B === "°C" ? c : B === "°F" ? c * 9 / 5 + 32 : c + 273.15
-        return { kind: "units", title: fmt(out) + " " + B, subtitle: fmt(v) + " " + A, copy: fmt(out) }
+        return unitAnswer(out, B, v, A)
     }
     const ua = UNITS[a], ub = UNITS[b]
     if (ua && ub) {
         if (ua.dim !== ub.dim) return null
         const out = v * ua.f / ub.f
-        return { kind: "units", title: fmt(out) + " " + ub.name, subtitle: fmt(v) + " " + ua.name, copy: fmt(out) }
+        return unitAnswer(out, ub.name, v, ua.name)
     }
     // currencies: ISO codes the rates know (EUR based)
     const A = a.toUpperCase(), B = b.toUpperCase()

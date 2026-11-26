@@ -25,8 +25,8 @@ QtObject {
         const now = new Date(2026, 10, 18, 12, 0)   // Wed 18 Nov 2026
         const rates = C.parseRates("<Cube time='2026-11-17'><Cube currency='USD' rate='1.0500'/><Cube currency='RON' rate='5.0000'/></Cube>")
         const cases = [
-            ["5 km in mi", "3.10686 mi"], ["70 f to c", "21.1111 °C"], ["2 gb in mb", "2000 mb"], ["0 c in k", "273.15 K"],
-            ["1 lb to g", "453.592 g"], ["100 km/h in mph", "62.1371 mph"], ["90 min to h", "1.5 h"], ["5 km in kg", null], ["2,5 km in m", "2500 m"], ["1,000 m in km", "1 km"],
+            ["5 km in mi", "3.11 mi"], ["70 f to c", "21.11 °C"], ["2 gb in mb", "2000 mb"], ["0 c in k", "273.15 K"],
+            ["1 lb to g", "453.59 g"], ["100 km/h in mph", "62.14 mph"], ["1 m in mi", "0.000621 mi"], ["90 min to h", "1.5 h"], ["5 km in kg", null], ["2,5 km in m", "2500 m"], ["1,000 m in km", "1 km"],
             ["100 eur to ron", "500 RON"], ["100 usd in eur", "95.24 EUR"], ["€20 to usd", "21 USD"], ["100 xyz to ron", null],
             ["days until 25 dec", "37 days"], ["days until 1 jan", "44 days"], ["days since 1 nov", "17 days"],
             ["today + 90 days", "Tue 16 Feb 2027"], ["today - 2 weeks", "Wed 4 Nov 2026"], ["2026-12-25 + 1 day", "Sat 26 Dec 2026"],
@@ -43,8 +43,9 @@ QtObject {
         if (tz2?.city !== "new_york" || tz2.at !== "") { bad++; console.log("xx time in new york -> " + JSON.stringify(tz2)) }
         if (tz3?.zone !== "America/New_York" || tz3.at !== "10:30") { bad++; console.log("xx 10:30 est -> " + JSON.stringify(tz3)) }
         if (!C.parse("100 eur to ron", now, {})?.need) { bad++; console.log("xx no rates: should ask for them") }
+        if (C.parse("5 km in mi", now, {})?.copy !== "3.10686") { bad++; console.log("xx 5 km in mi: the copy lost its precision") }
         if (rates.date !== "2026-11-17") { bad++; console.log("xx rates date " + rates.date) }
-        console.log(bad ? "xx converters: " + bad + " wrong" : "ok: converters (" + (cases.length + 5) + " cases)")
+        console.log(bad ? "xx converters: " + bad + " wrong" : "ok: converters (" + (cases.length + 6) + " cases)")
         Qt.exit(bad ? 1 : 0)
     }
 }

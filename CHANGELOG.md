@@ -301,6 +301,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
   the ones you launched lately first among similar counts.
 - Launcher: a selected app icon (suggestions, Apps) is a soft tint instead of a solid block, and the clipboard
   inside Spotlight lists plain rows on the sheet instead of a box per entry.
+- Unit converters show a short answer ("3.11 mi", 2 decimals) with the exact value beside it; Enter still copies
+  the exact one.
 - Pebble is redesigned as **Lumen**, the new default: frosted glass panels over Hyprland blur, a soft field of
   coloured light as the wallpaper, larger rounded corners, Inter, one clear blue, a slim glass bar with the date and
   time on the right, a glass dock whose icons grow, spring motion and the round-button power menu. Light first, with a
