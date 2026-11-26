@@ -8,6 +8,7 @@ Item {
     id: view
     readonly property var current: Clipboard.shown[list.currentIndex] ?? null
     readonly property alias list: list
+    property bool plain: false   // inside the launcher: rows on the sheet, not a box each
 
     function up() { list.decrementCurrentIndex() }
     function down() { list.incrementCurrentIndex() }
@@ -41,9 +42,9 @@ Item {
             readonly property bool current: ListView.isCurrentItem
             readonly property bool expanded: Clipboard.expandedId === modelData?.id
             width: list.width
-            height: Math.max(48, content.implicitHeight + Theme.spaceM * 2)
+            height: Math.max(view.plain ? 40 : 48, content.implicitHeight + (view.plain ? Theme.spaceS : Theme.spaceM) * 2)
             radius: Theme.radiusSmall
-            color: current ? Theme.fillActive : area.containsMouse ? Theme.fillHover : Theme.fill
+            color: current ? Theme.fillActive : area.containsMouse ? Theme.fillHover : view.plain ? "transparent" : Theme.fill
             border { color: current ? Theme.strokeStrong : "transparent"; width: 1 }
 
             MouseArea {

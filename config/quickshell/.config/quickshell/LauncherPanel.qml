@@ -57,6 +57,7 @@ Glass {
     ClipboardView {
         id: clipView
         visible: Launcher.view === "clip"
+        plain: true
         anchors { fill: parent; margins: Theme.spaceS; bottomMargin: keys.height }
     }
 

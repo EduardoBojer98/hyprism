@@ -299,6 +299,8 @@ All notable changes to Hyprism. The format follows [Keep a Changelog](https://ke
 - Every launcher style opens on suggestions: Spotlight shows your apps as a row of icons and the quick actions until
   you type, Terminal its recent items and quick actions (Launchpad stays the apps screen). Frequently used apps rank
   the ones you launched lately first among similar counts.
+- Launcher: a selected app icon (suggestions, Apps) is a soft tint instead of a solid block, and the clipboard
+  inside Spotlight lists plain rows on the sheet instead of a box per entry.
 - Pebble is redesigned as **Lumen**, the new default: frosted glass panels over Hyprland blur, a soft field of
   coloured light as the wallpaper, larger rounded corners, Inter, one clear blue, a slim glass bar with the date and
   time on the right, a glass dock whose icons grow, spring motion and the round-button power menu. Light first, with a

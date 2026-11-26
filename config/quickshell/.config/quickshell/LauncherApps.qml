@@ -159,7 +159,7 @@ Item {
                 radius: Launcher.corner === 0 ? 0 : Theme.radius
                 color: cellArea.containsMouse && !cell.GridView.isCurrentItem ? Theme.fillHover : "transparent"
                 Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                LauncherSelection { on: cell.GridView.isCurrentItem; radius: parent.radius }
+                LauncherSelection { on: cell.GridView.isCurrentItem; radius: parent.radius; wash: true }
             }
             IconImage {
                 id: appIcon
@@ -180,7 +180,7 @@ Item {
                 wrapMode: Text.Wrap
                 maximumLineCount: 2
                 lineHeight: 0.95
-                color: apps.pad ? "white" : cell.GridView.isCurrentItem ? Launcher.selText : Theme.text
+                color: apps.pad ? "white" : Theme.text
                 style: apps.pad ? Text.Raised : Text.Normal   // a shadow so names hold over any wallpaper
                 styleColor: Qt.alpha("black", 0.55)
                 font { family: Launcher.rowFont; pixelSize: apps.pad ? Theme.fontSize : Theme.fontLabel; weight: apps.pad ? Font.Medium : Font.Normal }

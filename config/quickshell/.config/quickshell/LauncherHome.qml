@@ -118,7 +118,7 @@ Column {
                     anchors { fill: parent; margins: 3 }
                     radius: Launcher.corner === 0 ? 0 : Theme.radius
                     color: appArea.containsMouse && !app.current ? Theme.fillHover : "transparent"
-                    LauncherSelection { on: app.current; radius: parent.radius }
+                    LauncherSelection { on: app.current; radius: parent.radius; wash: true }
                 }
                 Item {
                     id: freqIcon
@@ -133,7 +133,7 @@ Column {
                         anchors.centerIn: parent
                         visible: !app.modelData.icon
                         text: app.modelData.glyph ?? ""
-                        color: app.current ? Launcher.selText : Theme.text
+                        color: Theme.text
                         font { family: Theme.iconFont; pixelSize: Theme.iconMedium }
                     }
                 }
@@ -145,7 +145,7 @@ Column {
                     elide: Text.ElideRight
                     wrapMode: Text.Wrap
                     maximumLineCount: 2
-                    color: app.current ? Launcher.selText : Theme.text
+                    color: Theme.text
                     font { family: Launcher.rowFont; pixelSize: Theme.fontLabel }
                 }
                 ToolTipText { gap: -Theme.spaceS; shown: appArea.containsMouse && appName.truncated; text: app.modelData.title }

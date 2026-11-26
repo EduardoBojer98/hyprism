@@ -8,6 +8,7 @@ Item {
     property bool on: false
     property real radius: 0
     property real inset: 0
+    property bool wash: false   // icon tiles: a soft tint, never a solid block (the icon carries the colour)
     readonly property bool sheet: Launcher.layout === "sheet"
     anchors.fill: parent
     Rectangle {   // the hard shadow, in ink, offset down and right
@@ -23,7 +24,7 @@ Item {
         width: parent.width - sel.inset - (sel.sheet ? Theme.shadowOffset : 0)
         height: parent.height
         radius: sel.radius
-        color: Launcher.selection
+        color: sel.wash ? Theme.accentWash : Launcher.selection
         opacity: sel.on ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
     }
